@@ -1,4 +1,4 @@
 barbican
 ========
 
-An agent providing secure access to encryption materials.
+A server providing secure, audited access to encryption materials.
