@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<div class="page-header">
+    <h1>Users</h1>
+</div>
+<ul>
+    {% for user in users %}
+        <li>{{ user.name }}</li>
+    {% else %}
+        <li><em>No users yet.</em></li>
+    {% endfor %}
+</ul>
+{% endblock %}
