@@ -20,7 +20,7 @@ from flask.ext import login, wtf
 from flask.ext.login import login_user
 from barbican_api import api
 from database import db_session, init_db
-from models import User
+from models import User, Tenant
 
 
 app = Flask(__name__)
@@ -29,6 +29,7 @@ app.register_blueprint(api)
 
 admin = Admin(app, name="Barbican Admin")
 admin.add_view(ModelView(User, db_session))
+admin.add_view(ModelView(Tenant, db_session))
 
 login_manager = login.LoginManager()
 login_manager.init_app(app)
@@ -38,7 +39,7 @@ login_manager.login_view = 'login'
 @app.route("/")
 @login.login_required
 def hello():
-    return "Hello world!"
+    return render_template("index.html")
 
 
 #

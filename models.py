@@ -8,6 +8,7 @@
     :copyright: (c) 2013 by Jarret Raim
     :license: Apache 2.0, see LICENSE for details
 """
+from uuid import uuid4
 from sqlalchemy import Column, Integer, String
 from database import Base
 
@@ -38,3 +39,16 @@ class User(Base):
 
     def __repr__(self):
         return '<User %r>' % self.name
+
+
+class Tenant(Base):
+    __tablename__ = 'tenants'
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), unique=True)
+
+    def __init__(self, uuid=None):
+        if uuid is None:
+            self.uuid = str(uuid4())
+
+    def __repr__(self):
+        return '<Tenant %s>' % self.uuid
