@@ -67,7 +67,7 @@ class Key(Base):
     secret = Column(Text)
 
     tenant_id = Column(Integer, ForeignKey('tenants.id'))
-    tenant = relationship("Tenant", backref=backref('tenants', order_by=id))
+    tenant = relationship("Tenant", backref=backref('keys', order_by=id))
 
     def __init__(self, uuid=None):
         if uuid is None:
@@ -75,3 +75,19 @@ class Key(Base):
 
     def __repr__(self):
         return '<Key %s >' % self.uuid
+
+
+class Policy(Base):
+    __tablename__ = 'policies'
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), unique=True)
+
+    tenant_id = Column(Integer, ForeignKey('tenants.id'))
+    tenant = relationship("Tenant", backref=backref('policies', order_by=id))
+
+    def __init__(self, uuid=None):
+        if uuid is None:
+            self.uuid = str(uuid4())
+
+    def __repr__(self):
+        return '<Policy %s >' % self.uuid
