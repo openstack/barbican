@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
     Barbican
-    ~~~~~~
+    ~~~~~~~~
 
     A proof of concept implementation of a key management server for
     use with the postern agent (https://github.com/cloudkeep/postern).

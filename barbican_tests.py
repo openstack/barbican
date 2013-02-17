@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
     Barbican Tests
-    ~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~
 
     Tests the Barbican application.
 
