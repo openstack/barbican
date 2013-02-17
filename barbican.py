@@ -20,7 +20,7 @@ from flask.ext import login, wtf
 from flask.ext.login import login_user
 from barbican_api import api
 from database import db_session, init_db
-from models import User, Tenant
+from models import User, Tenant, Key
 
 
 app = Flask(__name__)
@@ -30,6 +30,7 @@ app.register_blueprint(api)
 admin = Admin(app, name="Barbican Admin")
 admin.add_view(ModelView(User, db_session))
 admin.add_view(ModelView(Tenant, db_session))
+admin.add_view(ModelView(Key, db_session))
 
 login_manager = login.LoginManager()
 login_manager.init_app(app)

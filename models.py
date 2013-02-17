@@ -9,7 +9,9 @@
     :license: Apache 2.0, see LICENSE for details
 """
 from uuid import uuid4
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy.schema import ForeignKey
 from database import Base
 
 
@@ -45,6 +47,7 @@ class Tenant(Base):
     __tablename__ = 'tenants'
     id = Column(Integer, primary_key=True)
     uuid = Column(String(36), unique=True)
+    #keys = relationship('Key', backref='tenant', lazy='dynamic')
 
     def __init__(self, uuid=None):
         if uuid is None:
@@ -52,3 +55,23 @@ class Tenant(Base):
 
     def __repr__(self):
         return '<Tenant %s>' % self.uuid
+
+
+class Key(Base):
+    __tablename__ = 'keys'
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), unique=True)
+    filename = Column(String(128))
+    mime_type = Column(String(128))
+    expires = Column(DateTime)
+    secret = Column(Text)
+
+    tenant_id = Column(Integer, ForeignKey('tenants.id'))
+    tenant = relationship("Tenant", backref=backref('tenants', order_by=id))
+
+    def __init__(self, uuid=None):
+        if uuid is None:
+            self.uuid = str(uuid4())
+
+    def __repr__(self):
+        return '<Key %s >' % self.uuid
