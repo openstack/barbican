@@ -21,7 +21,6 @@ from models import User
 
 app = Flask(__name__)
 app.register_blueprint(api)
-app.config['DEBUG'] = True
 
 
 @app.route("/")
@@ -43,4 +42,4 @@ def shutdown_session(exception=None):
 if __name__ == '__main__':
     if not os.path.exists('/tmp/barbican.db'):
         init_db()
-    app.run()
+    app.run(debug=True)
