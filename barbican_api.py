@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
     Barbican API
-    ~~~~~~
+    ~~~~~~~~~~~~
 
     The API for Barbican.
 
