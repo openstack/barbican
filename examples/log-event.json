@@ -1,0 +1,7 @@
+{
+    "agent_id": "869b81e0-6181-4afc-bf5b-3f785f2d503f",
+    "received_on": "2013-02-26T19:53:14+18:00",
+    "severity": "INFO",
+    "key_id": "331d341c-b171-47f9-9a7b-7a15e8d85893",
+    "message": "Key accessed by user 'apache'."
+}

@@ -47,7 +47,6 @@ class Tenant(Base):
     __tablename__ = 'tenants'
     id = Column(Integer, primary_key=True)
     uuid = Column(String(36), unique=True)
-    #keys = relationship('Key', backref='tenant', lazy='dynamic')
 
     def __init__(self, uuid=None):
         if uuid is None:
@@ -104,15 +103,30 @@ class Event(Base):
     tenant_id = Column(Integer, ForeignKey('tenants.id'))
     tenant = relationship("Tenant", backref=backref('events', order_by=id))
 
-    def __init__(self, tenant_id=None, agent_id=None, received_on=None, severity=None, message=None):
+    key_id = Column(Integer, ForeignKey('keys.id'))
+    key = relationship("Key", backref=backref('events', order_by=id))
+
+    def __init__(self, tenant_id=None, agent_id=None, received_on=None, severity=None,
+                 message=None, tenant=None, key=None):
         self.tenant_id = tenant_id
         self.agent_id = agent_id
         self.received_on = received_on
         self.severity = severity
         self.message = message
+        self.key = key
+        self.tenant = tenant
 
     def __repr__(self):
         return '<Event %s [%s] - %s >' % (self.received_on, self.severity, self.message[:25])
 
     def as_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        json = {
+            'id': self.id,
+            'agent_id': self.agent_id,
+            'received_on': self.received_on.isoformat(),
+            'severity': self.severity,
+            'tenant_id': self.tenant_id,
+            'key_id': self.key_id,
+            'message': self.message
+        }
+        return json
