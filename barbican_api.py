@@ -15,7 +15,7 @@ import uuid
 import datetime
 from dateutil.parser import parse
 from flask import Blueprint, request, jsonify, Response, json
-from models import Event, Tenant, Key
+from models import Event, Tenant, Key, Agent
 from database import db_session
 
 api = Blueprint('api', __name__, url_prefix="/api")
@@ -26,8 +26,23 @@ def root():
     return jsonify(hello='World')
 
 
+@api.route('/<int:tenant_id>/agents/', methods=['GET', 'POST'])
+def agents(tenant_id):
+    if request.method == 'POST':
+        tenant = Tenant.query.get(tenant_id)
+        agent = Agent(tenant=tenant, uuid=request.json['uuid'])
+        db_session.add(agent)
+        db_session.commit()
+        return jsonify(agent.as_dict())
+    else:
+        agents = Agent.query.filter_by(tenant_id=tenant_id)
+        agents_dicts = map(Agent.as_dict, agents.all())
+        return Response(json.dumps(agents_dicts, cls=DateTimeJsonEncoder), mimetype='application/json')
+
+
+
 @api.route('/<int:tenant_id>/logs/', methods=['GET', 'POST'])
-def log(tenant_id):
+def logs(tenant_id):
     if request.method == 'POST':
         agent_id = uuid.UUID(request.json['agent_id'])
         received_on = parse(request.json['received_on'])

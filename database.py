@@ -30,4 +30,5 @@ def init_db():
     import models
     Base.metadata.create_all(bind=engine)
     db_session.add(models.User('admin', 'admin@localhost', 'Passw0rd'))
+    db_session.add(models.Tenant(id=123))
     db_session.commit()
