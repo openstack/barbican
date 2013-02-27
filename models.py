@@ -48,9 +48,12 @@ class Tenant(Base):
     id = Column(Integer, primary_key=True)
     uuid = Column(String(36), unique=True)
 
-    def __init__(self, uuid=None):
+    def __init__(self, uuid=None, id=None):
+        self.id = id
         if uuid is None:
             self.uuid = str(uuid4())
+        else:
+            self.uuid = uuid
 
     def __repr__(self):
         return '<Tenant %s>' % self.uuid
@@ -73,7 +76,33 @@ class Key(Base):
             self.uuid = str(uuid4())
 
     def __repr__(self):
-        return '<Key %s >' % self.uuid
+        return '<Key %s>' % self.uuid
+
+
+class Agent(Base):
+    __tablename__ = 'agents'
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), unique=True)
+
+    tenant_id = Column(Integer, ForeignKey('tenants.id'))
+    tenant = relationship("Tenant", backref=backref('agents', order_by=id))
+
+    def __init__(self, tenant=None, uuid=None):
+        self.tenant = tenant
+        if uuid is None:
+            self.uuid = str(uuid4())
+        else:
+            self.uuid = uuid
+
+    def __repr__(self):
+        return '<Agent %s>' % self.uuid
+
+    def as_dict(self):
+        agent = {
+            'tenant_id': self.tenant_id,
+            'uuid': self.uuid
+        }
+        return agent
 
 
 class Policy(Base):
