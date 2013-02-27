@@ -9,7 +9,7 @@
     :license: Apache 2.0, see LICENSE for details
 """
 from uuid import uuid4
-from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import ForeignKey
 from database import Base
@@ -47,7 +47,6 @@ class Tenant(Base):
     __tablename__ = 'tenants'
     id = Column(Integer, primary_key=True)
     uuid = Column(String(36), unique=True)
-    #keys = relationship('Key', backref='tenant', lazy='dynamic')
 
     def __init__(self, uuid=None):
         if uuid is None:
@@ -91,3 +90,43 @@ class Policy(Base):
 
     def __repr__(self):
         return '<Policy %s >' % self.uuid
+
+
+class Event(Base):
+    __tablename__ = 'events'
+    id = Column(Integer, primary_key=True)
+    agent_id = Column(String(36))
+    received_on = Column(DateTime())
+    severity = Column(String(10))
+    message = Column(Text())
+
+    tenant_id = Column(Integer, ForeignKey('tenants.id'))
+    tenant = relationship("Tenant", backref=backref('events', order_by=id))
+
+    key_id = Column(Integer, ForeignKey('keys.id'))
+    key = relationship("Key", backref=backref('events', order_by=id))
+
+    def __init__(self, tenant_id=None, agent_id=None, received_on=None, severity=None,
+                 message=None, tenant=None, key=None):
+        self.tenant_id = tenant_id
+        self.agent_id = agent_id
+        self.received_on = received_on
+        self.severity = severity
+        self.message = message
+        self.key = key
+        self.tenant = tenant
+
+    def __repr__(self):
+        return '<Event %s [%s] - %s >' % (self.received_on, self.severity, self.message[:25])
+
+    def as_dict(self):
+        json = {
+            'id': self.id,
+            'agent_id': self.agent_id,
+            'received_on': self.received_on.isoformat(),
+            'severity': self.severity,
+            'tenant_id': self.tenant_id,
+            'key_id': self.key_id,
+            'message': self.message
+        }
+        return json
