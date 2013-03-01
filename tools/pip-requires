@@ -1,0 +1,11 @@
+falcon
+uWSGI>=1.4.5
+wsgiref>=0.1.2
+pymongo>=2.4.2
+
+# Right now this is the location for oslo-config (its not in PyPi yet)
+http://tarballs.openstack.org/oslo-config/oslo-config-2013.1b3.tar.gz#egg=oslo-config
+
+# SQLAlchemy 0.7.10 typically has issues installing via pip, since it
+# will be removed as a dependency soon we will just grab the tarball
+https://pypi.python.org/packages/source/S/SQLAlchemy/SQLAlchemy-0.7.10.tar.gz#md5=ecc0cd1cd906d17818a5f08fe13ae19e
