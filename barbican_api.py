@@ -15,7 +15,7 @@ import uuid
 import datetime
 from dateutil.parser import parse
 from flask import Blueprint, request, jsonify, Response, json
-from models import Event, Tenant, Key, Agent
+from models import Event, Tenant, Key, Agent, Policy
 from database import db_session
 
 api = Blueprint('api', __name__, url_prefix="/api")
@@ -24,6 +24,35 @@ api = Blueprint('api', __name__, url_prefix="/api")
 @api.route('/')
 def root():
     return jsonify(hello='World')
+
+
+@api.route('/<int:tenant_id>/policies/', methods=['GET', 'POST'])
+def policies(tenant_id):
+    if request.method == 'POST':
+        for policy in request.json['policies']:
+            keys = []
+            for k in policy['keys']:
+                key = Key(uuid=k['uuid'], filename=k['filename'], mime_type=k['mime_type'],
+                          expiration=parse(k['expiration']), secret=k['secret'], owner=k['owner'],
+                          group=k['group'], cacheable=k['cacheable'])
+                keys.append(key)
+
+            policy = Policy(uuid=policy['uuid'], name=policy['name'], tenant_id=tenant_id,
+                            directory_name=policy['directory_name'],
+                            max_key_accesses=policy['max_key_accesses'],
+                            time_available_after_reboot=policy['time_available_after_reboot'])
+            policy.keys.extend(keys)
+            db_session.add(policy)
+        db_session.commit()
+
+        return Response(status=200)
+    else:
+        policy = Policy.query.filter_by(tenant_id=tenant_id).first()
+
+        if policy is None:
+            return Response('No policies defined for tenant', status=404)
+
+        return jsonify(policy.as_dict())
 
 
 @api.route('/<int:tenant_id>/agents/', methods=['GET', 'POST'])

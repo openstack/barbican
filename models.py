@@ -65,18 +65,46 @@ class Key(Base):
     uuid = Column(String(36), unique=True)
     filename = Column(String(128))
     mime_type = Column(String(128))
-    expires = Column(DateTime)
+    expiration = Column(DateTime)
     secret = Column(Text)
+    owner = Column(String(33))
+    group = Column(String(33))
+    cacheable = Column(Boolean)
 
-    tenant_id = Column(Integer, ForeignKey('tenants.id'))
-    tenant = relationship("Tenant", backref=backref('keys', order_by=id))
+    policy_id = Column(Integer, ForeignKey('policies.id'))
+    policy = relationship("Policy", backref=backref('keys'))
 
-    def __init__(self, uuid=None):
+    def __init__(self, uuid=None, filename=None, mime_type=None, expiration=None, secret=None,
+                 owner=None, group=None, cacheable=None, policy_id=None):
         if uuid is None:
             self.uuid = str(uuid4())
+        else:
+            self.uuid = uuid
+
+        self.filename = filename
+        self.mime_type = mime_type
+        self.expiration = expiration
+        self.secret = secret
+        self.owner = owner
+        self.group = group
+        self.cacheable = cacheable
+        self.policy_id = policy_id
 
     def __repr__(self):
         return '<Key %s>' % self.uuid
+
+    def as_dict(self):
+        json = {
+            'uuid': self.uuid,
+            'filename': self.filename,
+            'mime_type': self.mime_type,
+            'expiration': self.expiration.isoformat(),
+            'secret': self.secret,
+            'owner': self.owner,
+            'group': self.group,
+            'cachecable': self.cacheable
+        }
+        return json
 
 
 class Agent(Base):
@@ -109,16 +137,43 @@ class Policy(Base):
     __tablename__ = 'policies'
     id = Column(Integer, primary_key=True)
     uuid = Column(String(36), unique=True)
+    name = Column(String(100))
+    directory_name = Column(String(254))
+    max_key_accesses = Column(Integer)
+    time_available_after_reboot = Column(Integer)
 
     tenant_id = Column(Integer, ForeignKey('tenants.id'))
     tenant = relationship("Tenant", backref=backref('policies', order_by=id))
 
-    def __init__(self, uuid=None):
+    def __init__(self, uuid=None, name=None, directory_name=None, max_key_accesses=None,
+                 time_available_after_reboot=None, tenant_id=None):
         if uuid is None:
             self.uuid = str(uuid4())
+        else:
+            self.uuid = uuid
+
+        self.name = name
+        self.directory_name = directory_name
+        self.max_key_accesses = max_key_accesses
+        self.time_available_after_reboot = time_available_after_reboot
+        self.tenant_id = tenant_id
 
     def __repr__(self):
         return '<Policy %s >' % self.uuid
+
+    def as_dict(self):
+        keys = map(Key.as_dict, self.keys)
+
+        json = {
+            'uuid': self.uuid,
+            'name': self.name,
+            'directory_name': self.directory_name,
+            'max_key_accesses': self.max_key_accesses,
+            'time_available_after_reboot': self.time_available_after_reboot,
+            'tenant_id': self.tenant_id,
+            'keys': keys
+        }
+        return json
 
 
 class Event(Base):
