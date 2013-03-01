@@ -1,0 +1,23 @@
+{
+    "policies": [
+        {
+            "uuid": "01fb57ff-058c-4d68-85e9-d81844dd0089",
+            "name": "Available after reboot",
+            "directory_name": "my-app-key",
+            "max_key_accesses": 1,
+            "time_available_after_reboot": 10,
+            "keys": [
+                {
+                    "uuid": "e2b633c7-fda5-4be8-b42c-9a2c9280284d",
+                    "filename": "configuration_key",
+                    "mime_type": "application/aes-256-cbc",
+                    "expiration": "2014-02-28T19:14:44.180394",
+                    "secret": "b7990b786ee9659b43e6b1cd6136de07d9c5aa06513afe5d091c04bde981b280",
+                    "owner": "myapp",
+                    "group": "myapp",
+                    "cacheable": false
+                }
+            ]
+        }
+    ]
+}
