@@ -57,6 +57,13 @@ class Tenant(Base):
 
     def __repr__(self):
         return '<Tenant %s>' % self.uuid
+    
+    def as_dict(self):
+        json = {
+            'id': self.id,
+            'uuid': self.uuid
+        }
+        return json
 
 
 class Key(Base):

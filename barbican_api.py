@@ -33,16 +33,17 @@ def tenant(tenant_id):
             tenant = Tenant(id=tenant_id)
             db_session.add(tenant)
             db_session.commit()
-            return Response("Tenant created!", status=201)
+            return jsonify(tenant.as_dict()), 201
         else:
-            return Response("Tenant already exists!", status=200)
-        return Response(status=201)
+            return jsonify(tenant.as_dict())
+        
+     
     else:
         tenant = Tenant.query.filter_by(id=tenant_id).first()
         if tenant is None:
             return Response("No tenant found!", status=404)
         else:
-            return Response("Tenant found!", status=200)
+            return jsonify(tenant.as_dict())
 
 @api.route('/<int:tenant_id>/policies/', methods=['GET', 'POST'])
 def policies(tenant_id):
