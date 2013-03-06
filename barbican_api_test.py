@@ -103,8 +103,22 @@ class BarbicanAPITesting:
         response = requests.get(the_url)
         return response.text
     
+    def get_tenant(self, tenant_id):
+        the_url = self.url + str(tenant_id) + "/"
+        response = requests.get(the_url)
+        return response.text
+    
+    def create_tenant(self, tenant_id):
+        the_url = self.url + str(tenant_id) + "/"
+        response = requests.post(the_url)
+        return response.text
+    
       
 test1 = BarbicanAPITesting()
+print test1.get_tenant(123)
+print test1.get_tenant(1234)
+print test1.create_tenant(12345)
+print test1.create_tenant(234)
 print test1.add_agent(123)
 test1.get_agents(123)
 

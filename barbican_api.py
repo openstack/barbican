@@ -25,6 +25,24 @@ api = Blueprint('api', __name__, url_prefix="/api")
 def root():
     return jsonify(hello='World')
 
+@api.route('/<int:tenant_id>/', methods=['GET', 'POST'])
+def tenant(tenant_id):
+    if request.method == 'POST':
+        tenant = Tenant.query.filter_by(id=tenant_id).first()
+        if tenant is None:
+            tenant = Tenant(id=tenant_id)
+            db_session.add(tenant)
+            db_session.commit()
+            return Response("Tenant created!", status=201)
+        else:
+            return Response("Tenant already exists!", status=200)
+        return Response(status=201)
+    else:
+        tenant = Tenant.query.filter_by(id=tenant_id).first()
+        if tenant is None:
+            return Response("No tenant found!", status=404)
+        else:
+            return Response("Tenant found!", status=200)
 
 @api.route('/<int:tenant_id>/policies/', methods=['GET', 'POST'])
 def policies(tenant_id):
