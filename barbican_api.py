@@ -116,6 +116,20 @@ def logs(tenant_id):
         events_dicts = map(Event.as_dict, events.all())
         return Response(json.dumps(events_dicts, cls=DateTimeJsonEncoder), mimetype='application/json')
 
+@api.route('/alllogs/', methods=['GET'])
+def alllogs(timestamp=None):
+    events = Event.query.order_by(Event.received_on)
+    helper = Helper()
+    json_str = '''{
+		 	"aaData":[ 
+		'''
+    for event in events.all():
+         json_str += '''["%s","%s","%s","%s","%s","%s",	"%s"
+                     ],'''  % (event.id,event.received_on, event.tenant_id, event.key_id, event.agent_id, event.severity, helper.html_escape(event.message))
+    json_str = json_str[:-1]
+    json_str += ''']
+		}'''
+    return Response(json_str, mimetype='application/json')
 
 class DateTimeJsonEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -123,3 +137,16 @@ class DateTimeJsonEncoder(json.JSONEncoder):
             return obj.isoformat()
         else:
             return super(DateTimeJsonEncoder, self).default(obj)
+
+class Helper:
+    def __init__(self):
+       self.html_escape_table = {
+        "&": "&amp;",
+        '"': "&quot;",
+        "'": "&apos;",
+        ">": "&gt;",
+        "<": "&lt;",
+        }
+    
+    def html_escape(self,text):
+       return "".join(self.html_escape_table.get(c,c) for c in text)

@@ -83,16 +83,16 @@ class BarbicanAPITesting:
         response = requests.get(the_url)
         print response.json
 
-    def add_log(self, tenant_id):
+    def add_log(self, tenant_id=123, severity="INFO", message="Key accessed by user 'apache'." ):
         payload = '''
         {
     "agent_id": "%s",
     "received_on": "%s",
-    "severity": "INFO",
+    "severity": "%s",
     "key_id": "%s",
-    "message": "Key accessed by user 'apache'."
+    "message": "%s"
         }
-        ''' % (self.agent_id, datetime.datetime.isoformat(datetime.datetime.now()),  self.key_id)
+        ''' % (self.agent_id, datetime.datetime.isoformat(datetime.datetime.now()), severity, self.key_id, message)
         the_url = self.url + str(tenant_id) + "/logs/"
         headers = {'content-type': 'application/json'}
         response = requests.post(the_url,data=payload, headers=headers)
@@ -100,6 +100,11 @@ class BarbicanAPITesting:
     
     def get_log(self, tenant_id):
         the_url = self.url + str(tenant_id) + "/logs/"
+        response = requests.get(the_url)
+        return response.text
+    
+    def get_alllogs(self):
+        the_url = self.url + "alllogs/"
         response = requests.get(the_url)
         return response.text
     
@@ -125,5 +130,11 @@ test1.get_agents(1234)
 print test1.add_policy("Before start up", 1234)
 print test1.get_policy(1234)
 
+for k in range(1,50):
+   test1.create_tenant(k)
+   #test1.add_log(k, severity="INFO", message="Access from agent")
+   print test1.add_log(k, severity="INFO", message='Error while trying to <script>accessing the key')
+   #test1.add_log(k, severity="DEBUG", message="for debugging purpose")  
 print test1.add_log(1234)
 print test1.get_log(123)
+print test1.get_alllogs()
