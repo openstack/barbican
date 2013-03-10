@@ -14,9 +14,10 @@
 import uuid
 import datetime
 from dateutil.parser import parse
-from flask import Blueprint, request, jsonify, Response, json
+from flask import Blueprint, request, jsonify, Response, json, Markup
 from models import Event, Tenant, Key, Agent, Policy
 from database import db_session
+
 
 api = Blueprint('api', __name__, url_prefix="/api")
 
@@ -119,13 +120,12 @@ def logs(tenant_id):
 @api.route('/alllogs/', methods=['GET'])
 def alllogs(timestamp=None):
     events = Event.query.order_by(Event.received_on)
-    helper = Helper()
     json_str = '''{
 		 	"aaData":[ 
 		'''
     for event in events.all():
          json_str += '''["%s","%s","%s","%s","%s","%s",	"%s"
-                     ],'''  % (event.id,event.received_on, event.tenant_id, event.key_id, event.agent_id, event.severity, helper.html_escape(event.message))
+                     ],'''  % (event.id,event.received_on, event.tenant_id, event.key_id, event.agent_id, event.severity, Markup.escape(event.message))
     json_str = json_str[:-1]
     json_str += ''']
 		}'''
@@ -138,15 +138,3 @@ class DateTimeJsonEncoder(json.JSONEncoder):
         else:
             return super(DateTimeJsonEncoder, self).default(obj)
 
-class Helper:
-    def __init__(self):
-       self.html_escape_table = {
-        "&": "&amp;",
-        '"': "&quot;",
-        "'": "&apos;",
-        ">": "&gt;",
-        "<": "&lt;",
-        }
-    
-    def html_escape(self,text):
-       return "".join(self.html_escape_table.get(c,c) for c in text)
