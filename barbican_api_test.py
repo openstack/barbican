@@ -16,7 +16,7 @@ import uuid
 import datetime
 import requests
 import json
-from models import Event, Tenant, Key, Agent, Policy
+from models import Event, Tenant, Key, Agent, Policy, Tag
 
 
 class BarbicanAPITesting:
@@ -27,10 +27,28 @@ class BarbicanAPITesting:
 
         new_uuid = uuid.uuid4()
         self.agent_id = new_uuid
-        pay_load = {"uuid": str(new_uuid)}
+        payload = '''
+        {
+    "agent_version": "v1.1", 
+    "hostname": "barbican.example.com", 
+    "os_version": "windows8", 
+    "tags": [
+        {
+            "name": "tag1", 
+            "value": "value1"
+        }, 
+        {
+            "name": "tag2", 
+            "value": "value2"
+        }
+    ], 
+    "tenant_id": %d, 
+    "uuid": "%s"
+}
+        ''' % (tenant_id, new_uuid)
         the_url = self.url + str(tenant_id) + "/agents/"
         headers = {'content-type': 'application/json'}
-        response = requests.post(the_url,data=json.dumps(pay_load), headers=headers)
+        response = requests.post(the_url,data=payload, headers=headers)
         try:
             the_uuid = response.json["uuid"]
         except Exception as e:
@@ -117,16 +135,24 @@ class BarbicanAPITesting:
         the_url = self.url + str(tenant_id) + "/"
         response = requests.post(the_url)
         return response.text
+
+tag1 = Tag("tag1", "value1")
+tag2 = Tag("tag2", "value2")
     
-      
+'''tenant = Tenant(id=10)
+agent = Agent(tenant, uuid=None, hostname='barbican.example.com', os_version='windows8', agent_version='v1.1')
+agent.tags = [tag1, tag2]
+#print tenant.as_dict()
+print agent.as_dict()
+'''      
 test1 = BarbicanAPITesting()
 print test1.get_tenant(123)
 print test1.get_tenant(1234)
 print test1.create_tenant(123456)
 print test1.create_tenant(2349)
-print test1.add_agent(1234)
-test1.get_agents(1234)
-
+print test1.add_agent(123)
+print test1.get_agents(123)
+'''
 print test1.add_policy("Before start up", 1234)
 print test1.get_policy(1234)
 
@@ -138,3 +164,4 @@ for k in range(1,50):
 print test1.add_log(1234)
 print test1.get_log(123)
 print test1.get_alllogs()
+'''

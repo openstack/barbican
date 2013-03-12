@@ -15,7 +15,7 @@ import uuid
 import datetime
 from dateutil.parser import parse
 from flask import Blueprint, request, jsonify, Response, json, Markup
-from models import Event, Tenant, Key, Agent, Policy
+from models import Event, Tenant, Key, Agent, Policy, Tag
 from database import db_session
 
 
@@ -79,7 +79,14 @@ def policies(tenant_id):
 def agents(tenant_id):
     if request.method == 'POST':
         tenant = Tenant.query.get(tenant_id)
-        agent = Agent(tenant=tenant, uuid=request.json['uuid'])
+        agent = Agent(tenant=tenant, uuid=request.json['uuid'], hostname=request.json['hostname'],
+                      os_version=request.json['os_version'], agent_version=request.json['agent_version'])
+        tags = []
+        for t in request.json['tags']:
+            tag = Tag(name=t["name"], value=t["value"])
+            tags.append(tag)
+        
+        agent.tags.extend(tags)
         db_session.add(agent)
         db_session.commit()
         return jsonify(agent.as_dict())
@@ -130,6 +137,32 @@ def alllogs(timestamp=None):
     json_str += ''']
 		}'''
     return Response(json_str, mimetype='application/json')
+
+@api.route('/allagents/', methods=['GET'])
+def allagents(timestamp=None):
+    agents = Agent.query.order_by(Agent.id)
+    json_str = '''{
+             "aaData":[ 
+        '''
+    for agent in agents.all():
+         tags = Tag.query.filter(Tag.agent_id==agent.id).all()
+         tag_json='{'
+         for tag in tags:
+             tag_json += "'%s':'%s'," % (tag.name, tag.value)
+         tag_json = tag_json[:-1]
+         tag_json += '}'
+             
+         if agent.paired == True:
+             paired_checkbox = "<input type='checkbox' name='check%d' value='%d' checked>" % (agent.id, agent.id)
+         else:
+             paired_checkbox = "<input type='checkbox' name='check%d' value='%d'>" % (agent.id, agent.id)
+         json_str += '''["%s","%s","%s","%s","%s","%s", "%s", "%s"
+                     ],'''  % (agent.id,agent.uuid, agent.tenant_id, agent.hostname, agent.os_version, agent.agent_version, tag_json, paired_checkbox)
+    json_str = json_str[:-1]
+    json_str += ''']
+        }'''
+    return Response(json_str, mimetype='application/json')
+
 
 class DateTimeJsonEncoder(json.JSONEncoder):
     def default(self, obj):

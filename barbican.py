@@ -20,8 +20,8 @@ from flask.ext import login, wtf
 from flask.ext.login import login_user
 from barbican_api import api
 from database import db_session, init_db
-from models import User, Tenant, Key, Policy, Event
-
+from models import User, Tenant, Key, Policy, Event, Agent, Tag
+import re
 
 app = Flask(__name__)
 app.secret_key = '79f9823f1f0---DEVELOPMENT---c46cebdd1c8f3d0742e02'
@@ -33,6 +33,8 @@ admin.add_view(ModelView(Tenant, db_session))
 admin.add_view(ModelView(Key, db_session))
 admin.add_view(ModelView(Policy, db_session))
 admin.add_view(ModelView(Event, db_session))
+admin.add_view(ModelView(Agent,db_session))
+admin.add_view(ModelView(Tag, db_session))
 
 login_manager = login.LoginManager()
 login_manager.init_app(app)
@@ -45,9 +47,34 @@ def hello():
     return render_template("index.html")
 
 @app.route("/events")
+@login.login_required
 def events():
     return render_template("events.html")
 
+@app.route("/agents", methods=["GET", "POST"])
+@login.login_required
+def agents():
+    if request.method == 'POST':
+        # need to update all agents since it is possible to disable pairing for them all
+        all_datas = request.form
+        ids=[]
+        for k in all_datas:
+            m = re.match('check(\d+)', k)
+            if m is not None:
+                id = m.group(1)
+                ids.append(int(id))
+        
+        agents = Agent.query.order_by(Agent.id)
+        for agent in agents.all():
+            if agent.id in ids:
+                agent.paired = True
+            else:
+                agent.paried = False
+                db_session.commit()
+        
+        return render_template("agents.html")
+    else:
+        return render_template("agents.html")
 
 #
 #   Login forms
