@@ -63,13 +63,13 @@ def agents():
             if m is not None:
                 id = m.group(1)
                 ids.append(int(id))
-        
+        print ids
         agents = Agent.query.order_by(Agent.id)
         for agent in agents.all():
             if agent.id in ids:
                 agent.paired = True
             else:
-                agent.paried = False
+                agent.paired = False
                 db_session.commit()
         
         return render_template("agents.html")
