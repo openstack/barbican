@@ -56,16 +56,22 @@ def events():
 def agents():
     if request.method == 'POST':
         # need to update all agents since it is possible to disable pairing for them all
-        all_datas = request.form
+        all_data = request.form
+        length = int(all_data["example_length"])
         ids=[]
-        for k in all_datas:
+        for k in all_data:
             m = re.match('check(\d+)', k)
             if m is not None:
                 id = m.group(1)
                 ids.append(int(id))
-        print ids
+        min_id = min(ids)/length * length +1 
+        id_range = range(min_id, min_id+length)
         agents = Agent.query.order_by(Agent.id)
         for agent in agents.all():
+            if agent.id not in id_range:
+            # this is needed because POST from the datatable only contains current page
+            # We only change the agent that falls within this range. 
+                continue
             if agent.id in ids:
                 agent.paired = True
             else:
