@@ -26,6 +26,7 @@ api = Blueprint('api', __name__, url_prefix="/api")
 def root():
     return jsonify(hello='World')
 
+
 @api.route('/<int:tenant_id>/', methods=['GET', 'POST'])
 def tenant(tenant_id):
     if request.method == 'POST':
@@ -37,14 +38,13 @@ def tenant(tenant_id):
             return jsonify(tenant.as_dict()), 201
         else:
             return jsonify(tenant.as_dict())
-        
-     
     else:
         tenant = Tenant.query.filter_by(id=tenant_id).first()
         if tenant is None:
             return Response("No tenant found!", status=404)
         else:
             return jsonify(tenant.as_dict())
+
 
 @api.route('/<int:tenant_id>/policies/', methods=['GET', 'POST'])
 def policies(tenant_id):
@@ -96,7 +96,6 @@ def agents(tenant_id):
         return Response(json.dumps(agents_dicts, cls=DateTimeJsonEncoder), mimetype='application/json')
 
 
-
 @api.route('/<int:tenant_id>/logs/', methods=['GET', 'POST'])
 def logs(tenant_id):
     if request.method == 'POST':
@@ -124,6 +123,7 @@ def logs(tenant_id):
         events_dicts = map(Event.as_dict, events.all())
         return Response(json.dumps(events_dicts, cls=DateTimeJsonEncoder), mimetype='application/json')
 
+
 @api.route('/alllogs/', methods=['GET'])
 def alllogs(timestamp=None):
     events = Event.query.order_by(Event.received_on)
@@ -137,6 +137,7 @@ def alllogs(timestamp=None):
     json_str += ''']
 		}'''
     return Response(json_str, mimetype='application/json')
+
 
 @api.route('/allagents/', methods=['GET'])
 def allagents(timestamp=None):
