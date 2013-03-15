@@ -57,6 +57,13 @@ class Tenant(Base):
 
     def __repr__(self):
         return '<Tenant %s>' % self.uuid
+    
+    def as_dict(self):
+        json = {
+            'id': self.id,
+            'uuid': self.uuid
+        }
+        return json
 
 
 class Key(Base):
@@ -111,24 +118,44 @@ class Agent(Base):
     __tablename__ = 'agents'
     id = Column(Integer, primary_key=True)
     uuid = Column(String(36), unique=True)
-
+    hostname = Column(String(128))
+    os_version = Column(String(128))
+    agent_version = Column(String(33))
+    paired = Column(Boolean)
+    
     tenant_id = Column(Integer, ForeignKey('tenants.id'))
     tenant = relationship("Tenant", backref=backref('agents', order_by=id))
 
-    def __init__(self, tenant=None, uuid=None):
+    def __init__(self, tenant=None, uuid=None, hostname=None, os_version=None, agent_version=None, paired=None):
         self.tenant = tenant
+        self.tenant_id = tenant.id
         if uuid is None:
             self.uuid = str(uuid4())
         else:
             self.uuid = uuid
+        
+        if paired is None:
+            self.paired = False
+        else:
+            self.paired = paired
+        self.hostname = hostname
+        self.os_version = os_version
+        self.agent_version = agent_version
+        
 
     def __repr__(self):
         return '<Agent %s>' % self.uuid
 
     def as_dict(self):
+        tags = map(Tag.as_dict, self.tags)
         agent = {
             'tenant_id': self.tenant_id,
-            'uuid': self.uuid
+            'uuid': self.uuid,
+            'hostname': self.hostname,
+            'os_version': self.os_version,
+            'agent_version': self.agent_version,
+            'paired': self.paired,
+            'tags': tags
         }
         return agent
 
@@ -212,5 +239,29 @@ class Event(Base):
             'tenant_id': self.tenant_id,
             'key_id': self.key_id,
             'message': self.message
+        }
+        return json
+
+
+class Tag(Base):
+    __tablename__ = 'tags'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(128))
+    value = Column(String(1024))
+
+    agent_id = Column(Integer, ForeignKey('agents.id'))
+    agent = relationship("Agent", backref=backref('tags'))
+
+    def __init__(self, name=None, value=None):
+        self.name = name 
+        self.value = value 
+ 
+    def __repr__(self):
+        return '<Tag %s>' % self.id
+    
+    def as_dict(self):
+        json = {
+            'name': self.name,
+            'value': self.value
         }
         return json
