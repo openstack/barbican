@@ -141,7 +141,6 @@ class Agent(Base):
         self.hostname = hostname
         self.os_version = os_version
         self.agent_version = agent_version
-        
 
     def __repr__(self):
         return '<Agent %s>' % self.uuid
