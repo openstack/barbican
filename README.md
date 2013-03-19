@@ -1,4 +1,4 @@
 barbican
 ========
 
-A server providing secure, audited access to encryption materials.
+A ReST API for Key Management including symmetric and asymmetric keys with support for public and private SSL certificates.
