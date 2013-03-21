@@ -83,6 +83,9 @@ def policies(tenant_id):
 @api.route('/<int:tenant_id>/agents/', methods=['GET', 'POST'])
 def agents(tenant_id):
     if request.method == 'POST':
+        if isinstance(request.json, type('string')):
+            request.json = json.loads(request.json)
+
         tenant = Tenant.query.get(tenant_id)
         agent = Agent(tenant=tenant, uuid=request.json['uuid'], hostname=request.json['hostname'],
                       os_version=request.json['os_version'], agent_version=request.json['agent_version'])
@@ -97,13 +100,16 @@ def agents(tenant_id):
         return jsonify(agent.as_dict())
     else:
         agents = Agent.query.filter_by(tenant_id=tenant_id)
-        agents_dicts = map(Agent.as_dict, agents.all())
+        agents_dicts =  map(Agent.as_dict, agents.all())
         return Response(json.dumps(agents_dicts, cls=DateTimeJsonEncoder), mimetype='application/json')
 
 
 @api.route('/<int:tenant_id>/logs/', methods=['GET', 'POST'])
 def logs(tenant_id):
     if request.method == 'POST':
+        if isinstance(request.json, type('string')):
+            request.json = json.loads(request.json)
+            
         agent_id = uuid.UUID(request.json['agent_id'])
         received_on = parse(request.json['received_on'])
         key_id = uuid.UUID(request.json['key_id'])
