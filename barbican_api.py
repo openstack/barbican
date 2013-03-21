@@ -114,7 +114,7 @@ def logs(tenant_id):
         received_on = parse(request.json['received_on'])
         key_id = uuid.UUID(request.json['key_id'])
 
-        if request.json['severity'] in ['DEBUG', 'INFO', 'WARN', 'FATAL']:
+        if request.json['severity'] in ['DEBUG', 'INFO', 'WARN', 'FATAL', 'PANIC']:
             severity = request.json['severity']
         else:
             severity = 'UNKNOWN'
