@@ -72,7 +72,12 @@ def policies(tenant_id):
         if policy is None:
             return Response('No policies defined for tenant', status=404)
 
-        return jsonify(policy.as_dict())
+        # Hack for Matt's agent
+        p = []
+        p.append(policy.as_dict())
+        policies = {'policies': p }
+
+        return jsonify(policies)
 
 
 @api.route('/<int:tenant_id>/agents/', methods=['GET', 'POST'])
