@@ -89,12 +89,12 @@ def agents(tenant_id):
         tenant = Tenant.query.get(tenant_id)
         agent = Agent(tenant=tenant, uuid=request.json['uuid'], hostname=request.json['hostname'],
                       os_version=request.json['os_version'], agent_version=request.json['agent_version'])
-        tags = []
-        for t in request.json['tags']:
-            tag = Tag(name=t["name"], value=t["value"])
-            tags.append(tag)
+        #tags = []
+        #for t in request.json['tags']:
+        #    tag = Tag(name=t["name"], value=t["value"])
+        #    tags.append(tag)
         
-        agent.tags.extend(tags)
+        #agent.tags.extend(tags)
         db_session.add(agent)
         db_session.commit()
         return jsonify(agent.as_dict())
@@ -109,7 +109,7 @@ def logs(tenant_id):
     if request.method == 'POST':
         if isinstance(request.json, type('string')):
             request.json = json.loads(request.json)
-            
+
         agent_id = uuid.UUID(request.json['agent_id'])
         received_on = parse(request.json['received_on'])
         key_id = uuid.UUID(request.json['key_id'])
