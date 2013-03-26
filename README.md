@@ -36,6 +36,6 @@ For the symmetric and asymmetric key types, Barbican supports full lifecycle man
 2. Support reasonable compliance regimes through reporting and auditability.
 3. Application adoption costs should be minimal or non-existent.
 4. Build a community and ecosystem by being open-source and extensible.
-5. Improve security through sane defaults and centralized management of key policies. 
+5. Improve security through sane defaults and centralized management of [policies for all secrets](https://github.com/cloudkeep/barbican/wiki/Policies).
 6. Out of band communication mechanism to notify and protect sensitive assets.
 
