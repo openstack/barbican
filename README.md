@@ -32,7 +32,7 @@ For the symmetric and asymmetric key types, Barbican supports full lifecycle man
 
 ## Design Goals
 
-1. Provide a central key-store capable of distributing keying material to all types of deployments including ephemeral Cloud instances.
+1. Provide a central secret-store capable of distributing secret / keying material to all types of deployments including ephemeral Cloud instances.
 2. Support reasonable compliance regimes through reporting and auditability.
 3. Application adoption costs should be minimal or non-existent.
 4. Build a community and ecosystem by being open-source and extensible.
