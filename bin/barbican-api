@@ -12,7 +12,7 @@ CMMD=uwsgi
 OWNER=barbican
 
 NAME=barbican-api
-DESC='Cloudkeep's Barbican API start script'
+DESC='Cloudkeep Barbican API start script'
 CONF_FILE=/etc/$PKG/barbican-api.ini
 
 set -e
