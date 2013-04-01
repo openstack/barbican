@@ -40,3 +40,6 @@ nosetests.xml
 # Sqlite databases
 *.sqlite3
 *.db
+
+# Misc. generated files
+versiononly.txt

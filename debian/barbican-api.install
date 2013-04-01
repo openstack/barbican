@@ -1,0 +1,3 @@
+etc/barbican/barbican-api.ini etc/barbican
+etc/barbican/config.py etc/barbican
+usr/bin/barbican-api

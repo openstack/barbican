@@ -1,0 +1,11 @@
+include ChangeLog
+include README.rst
+include MANIFEST.in pylintrc
+include Authors
+include HACKING.rst
+include LICENSE
+include setup.cfg
+include babel.cfg tox.ini
+include barbican/tests/api/resources_test.py
+graft tools
+graft etc

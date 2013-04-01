@@ -14,5 +14,8 @@
 #    under the License.
 
 """
-Cloudkeep's Barbican module root
+Cloudkeep's Barbican version
 """
+
+__version__ = '0.1.74dev'
+__version_info__ = tuple(__version__.split('.'))

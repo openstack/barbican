@@ -14,5 +14,5 @@
 #    under the License.
 
 """
-Cloudkeep's Barbican module root
+Database-specific implementations
 """

@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -e
+
+case $1 in
+    purge)
+	echo "Purging barbican. Backup of /var/lib/barbican can be found at /var/lib/barbican.tar.bz2" >&2
+	if ( getent passwd barbican) > /dev/null 2>&1; then
+	    userdel barbican || true
+	fi
+
+	if ( getent group barbican) > /dev/null 2>&1; then
+	    groupdel barbican || true
+	fi
+
+	[ -e /var/lib/barbican ] && rm -rf /var/lib/barbican
+	[ -e /var/log/barbican ] && rm -rf /var/log/barbican
+	;;
+esac
+
+#DEBHELPER#
