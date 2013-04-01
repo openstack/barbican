@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# barbican-api - Use uwsgi to run Cloudkeep's Barbican python and wsgi web app.
+
+PKG=barbican
+PATH=/opt/uwsgi:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/etc/$PKG
+#VENV=.v$PKG
+CMMD=uwsgi
+#CMMD=/usr/local/bin/$VENV/bin/uwsgi
+#DAEMON=/opt/uwsgi/uwsgi
+
+OWNER=barbican
+
+NAME=barbican-api
+DESC='Cloudkeep's Barbican API start script'
+CONF_FILE=/etc/$PKG/barbican-api.ini
+
+set -e
+
+CMMD_OPTS="--ini $CONF_FILE"
+$CMMD $CMMD_OPTS
