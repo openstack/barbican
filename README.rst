@@ -2,7 +2,7 @@
 Barbican
 ====
 
-TBD: Make this Barbican specific....test change here...
+TBD: Make this Barbican specific....
 
 Glance is a project that defines services for discovering, registering,
 retrieving and storing virtual machine images. The discovery and registration
