@@ -1,5 +1,5 @@
-barbican (0.1.7dev-1) stable; urgency=high
+barbican (0.1.7-1) stable; urgency=high
 
   * Updated version.
 
- -- John Wood <john.wood@rackspace.com>  Tue, 02 Apr 2013 09:53:57 -0500
+ -- John Wood <john.wood@rackspace.com>  Tue, 02 Apr 2013 11:00:10 -0500
