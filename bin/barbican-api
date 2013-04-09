@@ -1,21 +1,19 @@
 #!/bin/bash
 
-# barbican-api - Use uwsgi to run Cloudkeep's Barbican python and wsgi web app.
+# barbican-api - Script run Cloudkeep's Barbican API app.
 
 PKG=barbican
-PATH=/opt/uwsgi:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/etc/$PKG
-#VENV=.v$PKG
-CMMD=uwsgi
-#CMMD=/usr/local/bin/$VENV/bin/uwsgi
-#DAEMON=/opt/uwsgi/uwsgi
 
-OWNER=barbican
+# For local development, set VENV_PYTHON equal to the path to your virtual environment's site-packages location
+VENV_PYTHON=./.venv_barbican/lib/python2.7/site-packages
 
-NAME=barbican-api
-DESC='Cloudkeep Barbican API start script'
+PATH=/opt/uwsgi:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/etc/$PKG:$PATH
 CONF_FILE=/etc/$PKG/barbican-api.ini
+if [ ! -f $CONF_FILE ];
+then
+  CONF_FILE=./etc/$PKG/barbican-api.ini
+  PYTHONPATH=$VENV_PYTHON:$PYTHONPATH
+fi
 
-set -e
-
-CMMD_OPTS="--ini $CONF_FILE"
-$CMMD $CMMD_OPTS
+echo 'Running barbican-api uwsgi process, using init file here: ' $CONF_FILE
+uwsgi --ini $CONF_FILE
