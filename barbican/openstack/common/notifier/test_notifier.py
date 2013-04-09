@@ -1,4 +1,4 @@
-# Copyright 2010-2011 OpenStack LLC.
+# Copyright 2011 OpenStack Foundation.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Cloudkeep's Barbican version
-"""
 
-__version__ = '0.1.15dev'
-__version_info__ = tuple(__version__.split('.'))
+NOTIFICATIONS = []
+
+
+def notify(_context, message):
+    """Test notifier, stores notifications in memory for unittests."""
+    NOTIFICATIONS.append(message)
