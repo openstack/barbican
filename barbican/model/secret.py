@@ -29,7 +29,7 @@ from sqlalchemy.ext.declarative import declarative_base, declared_attr
 #
 # class Secret(Base):
 #     """
-#     A secret is any information that needs to be stored and protected within 
+#     A secret is any information that needs to be stored and protected within
 #     Cloudkeep's Barbican.
 #     """
 #
@@ -40,4 +40,3 @@ from sqlalchemy.ext.declarative import declarative_base, declared_attr
 #
 #     def __init__(self, secret_id):
 #         self.secret_id = secret_id
-

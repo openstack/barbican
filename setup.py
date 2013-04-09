@@ -25,18 +25,20 @@ except ImportError:
     from setuptools.command.sdist import sdist
 
 # Determine version of this application.
-# TBD: Revisit version flows and processing once integrating with OpenStack, see glance setup.py
+# TBD: Revisit version flows and processing once integrating with OpenStack,
+#   see glance setup.py
 PKG = "barbican"
-VERSIONFILE = os.path.join(PKG, "version.py") 
+VERSIONFILE = os.path.join(PKG, "version.py")
 version = "unknown"
-try: 
+try:
     version_file = open(VERSIONFILE, "r")
     for line in version_file:
         if '__version__' in line:
             version = line.split("'")[1]
             break
 except EnvironmentError:
-    pass # Okay, there is no version file.
+    pass  # Okay, there is no version file.
+
 
 class local_sdist(sdist):
     """Customized sdist hook - builds the ChangeLog file from VC first"""
@@ -46,19 +48,20 @@ class local_sdist(sdist):
 
 cmdclass = {'sdist': local_sdist}
 
-# TDB: Revisit sphinx documentation needs once move to OpenStack...see glance setup.py
+# TDB: Revisit sphinx documentation needs once move to OpenStack...
+#   see glance setup.py
 
 setup(
-    name = 'barbican',
-    version = version,
-    description = 'The Barbican project provides a service for storing '
-                  'sensitive client information such as encryption keys',
+    name='barbican',
+    version=version,
+    description='The Barbican project provides a service for storing '
+                'sensitive client information such as encryption keys',
     license='Apache License (2.0)',
-    author = 'OpenStack',
-    author_email = 'john.wood@rackspace.com',
+    author='OpenStack',
+    author_email='john.wood@rackspace.com',
     url='http://barbican.openstack.org/',
-    packages = find_packages(exclude=['bin']),
-    test_suite = 'nose.collector',
+    packages=find_packages(exclude=['bin']),
+    test_suite='nose.collector',
     cmdclass=cmdclass,
     include_package_data=True,
     classifiers=[

@@ -1,8 +1,10 @@
 #from oslo.config import cfg
 #from barbican.config import get_config
 
+
 # Handler configuration options
-#datasource_group = cfg.OptGroup(name='datasource', title='Datasource Configuration Options')
+# datasource_group = cfg.OptGroup(name='datasource', title='Datasource
+#   Configuration Options')
 #get_config().register_group(datasource_group)
 
 #HANDLER_OPTIONS = [
@@ -53,6 +55,7 @@ class DatasourceHandlerManager():
 
 _DATASOURCE_HANDLERS = DatasourceHandlerManager()
 
+
 class DatasourceHandler():
 
     status = STATUS_NEW
@@ -74,4 +77,3 @@ class DatasourceHandler():
 
     def delete(self, object_name, object_id):
         raise NotImplementedError
-

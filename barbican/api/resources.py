@@ -13,11 +13,14 @@ from barbican.model.tenant import Tenant, Secret
 def _tenant_not_found():
     abort(falcon.HTTP_404, 'Unable to locate tenant.')
 
+
 def _tenant_already_exists():
     abort(falcon.HTTP_400, 'Tenant already exists.')
 
+
 def _secret_not_found():
     abort(falcon.HTTP_400, 'Unable to locate secret profile.')
+
 
 def format_tenant(tenant):
     if not isinstance(tenant, dict):
@@ -105,8 +108,9 @@ class SecretsResource(ApiResource):
         # Check if the tenant already has a secret with this name
         for secret in tenant.secrets:
             if secret.name == secret_name:
-                abort(falcon.HTTP_400, 'Secret with name {0} already exists.'
-                .format(secret.name, secret.id))
+                abort(falcon.HTTP_400,
+                      'Secret with name {0} already exists.'.format(
+                      secret.name, secret.id))
 
         # Create the new secret
         new_secret = Secret(tenant.id, secret_name)
@@ -133,7 +137,7 @@ class SecretResource(ApiResource):
 
         #verify the secret exists
         secret = find_secret(self.db, id=secret_id,
-                                    when_not_found=_secret_not_found)
+                             when_not_found=_secret_not_found)
 
         #verify the secret belongs to the tenant
         if not secret in tenant.secrets:

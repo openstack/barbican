@@ -29,7 +29,8 @@ from sqlalchemy.ext.declarative import declarative_base, declared_attr
 
 class Tenant(Base):
     """
-    Tenants are users that wish to store secret information within Cloudkeep's Barbican.
+    Tenants are users that wish to store secret information within
+    Cloudkeep's Barbican.
     """
 
     logging.debug('In Tenant table setup')
@@ -44,7 +45,6 @@ class Tenant(Base):
     #                     order_by="desc(Secret.name)",
     #                     primaryjoin="Secret.tenant_id==Tenant.id")
 
-
     def __init__(self, username):
         self.username = username
 
@@ -54,12 +54,13 @@ class Tenant(Base):
 
     def format(self):
         return {'id': self.id,
-            'username': self.username}
+                'username': self.username}
 
 
 class Secret(Base):
     """
-    A secret is any information that needs to be stored and protected within Cloudkeep's Barbican.
+    A secret is any information that needs to be stored and protected within
+    Cloudkeep's Barbican.
     """
 
     __tablename__ = "secrets"
@@ -83,4 +84,3 @@ class Secret(Base):
         return {'id': self.id,
                 'name': self.username,
                 'tenant_id': self.tenant_id}
-

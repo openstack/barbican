@@ -58,7 +58,7 @@ def run_command(cmd, redirect_output=True, check_exit_code=True):
 HAS_EASY_INSTALL = bool(run_command(['which', 'easy_install'],
                                     check_exit_code=False).strip())
 HAS_VIRTUALENV = bool(run_command(['which', 'virtualenv'],
-                                    check_exit_code=False).strip())
+                      check_exit_code=False).strip())
 
 
 def check_dependencies():
@@ -108,7 +108,8 @@ def install_dependencies(venv=VENV):
 
     # Tell the virtual env how to "import barbican"
     py_ver = _detect_python_version(venv)
-    pthfile = os.path.join(venv, "lib", py_ver, "site-packages", "barbican.pth")
+    pthfile = os.path.join(venv, "lib", py_ver,
+                           "site-packages", "barbican.pth")
     f = open(pthfile, 'w')
     f.write("%s\n" % ROOT)
 
@@ -128,8 +129,8 @@ def print_help():
  Barbican development uses virtualenv to track and manage Python dependencies
  while in development and testing.
 
- To activate the Barbican virtualenv for the extent of your current shell session
- you can run:
+ To activate the Barbican virtualenv for the extent of your current shell
+ session you can run:
 
  $ source .venv/bin/activate
 
