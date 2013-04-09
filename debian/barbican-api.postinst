@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "configure" ]
+then
+
+    # TBD: If we need to ask the user for config info such as 'use lightweight/standalone mode?', 
+    #   then look at Glance's glance-api.postinst
+    # . /usr/share/debconf/confmodule
+
+    chown barbican:barbican /var/lib/barbican -R
+fi
+
+#DEBHELPER#

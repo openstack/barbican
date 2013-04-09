@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -e
+
+case $1 in
+    remove|purge)
+        if [ -x /etc/init.d/barbican-api ]; then
+            invoke-rc.d barbican-api stop || true
+        fi
+        ;;
+esac
+
+#DEBHELPER#
+
