@@ -17,69 +17,24 @@
 API application handler for Cloudkeep's Barbican
 """
 
-
 import falcon
 
 from barbican.api.resources import VersionResource
 from barbican.api.resources import TenantsResource, TenantResource
 from barbican.api.resources import SecretsResource, SecretResource
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.orm import scoped_session, sessionmaker
-from barbican.model.tenant import Base
-
-# TBD: Remove this odd dependency
-from config import config
-
-
-"""
-Locally scoped db session
-"""
-_Session = scoped_session(sessionmaker())
-_engine = None
-
-
-def db_session():
-    return _Session
-
-
-def _engine_from_config(configuration):
-    configuration = dict(configuration)
-    url = configuration.pop('url')
-
-    return create_engine(url, **configuration)
-
-
-def init_tenant_model():
-    _engine = _engine_from_config(config['sqlalchemy'])
-    from barbican.model.tenant import Tenant, Secret
-    Base.metadata.create_all(_engine)
-    _Session.bind = _engine
-
-
-# Initialize the data model
-init_tenant_model()
-
-# test the database out
-#from barbican.model.tenant import Tenant, Secret
-#jw_user = Tenant("jwoody")
-#_Session.add(jw_user)
-
-# select all and print out all the results sorted by id
-#for instance in _Session.query(Tenant).order_by(Tenant.id):
-#    print instance.username
 
 # Resources
-versions = VersionResource()
-tenants = TenantsResource(db_session())
-tenant = TenantResource(db_session())
-secrets = SecretsResource(db_session())
-secret = SecretResource(db_session())
+VERSIONS = VersionResource()
+TENANTS = TenantsResource()
+TENANT = TenantResource()
+SECRETS = SecretsResource()
+SECRET = SecretResource()
 
 # Routing
 application = falcon.API()
 api = application
-api.add_route('/', versions)
-api.add_route('/v1', tenants)
-api.add_route('/v1/{tenant_id}', tenant)
-api.add_route('/v1/{tenant_id}/secrets', secrets)
-api.add_route('/v1/{tenant_id}/secrets/{secret_id}', secret)
+api.add_route('/', VERSIONS)
+api.add_route('/tenant', TENANTS)
+api.add_route('/{tenant_id}', TENANT)
+api.add_route('/{tenant_id}/secrets', SECRETS)
+api.add_route('/{tenant_id}/secrets/{secret_id}', SECRET)

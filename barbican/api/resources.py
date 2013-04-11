@@ -4,11 +4,8 @@ import logging
 
 from barbican.version import __version__
 from barbican.api import ApiResource, load_body, abort
-from barbican.model.util import find_tenant
-from barbican.model.util import find_secret
 from barbican.model.tenant import Tenant, Secret
-# from barbican.model.secret import Secret
-
+import barbican.model.repositories
 
 def _tenant_not_found():
     abort(falcon.HTTP_404, 'Unable to locate tenant.')
@@ -41,14 +38,14 @@ class VersionResource(ApiResource):
 class TenantsResource(ApiResource):
 
     def __init__(self, db_session):
-        self.db = db_session
+        self.repo = TenantRepo() 
 
     def on_post(self, req, resp):
         body = load_body(req)
         username = body['username']
         logging.debug('Username is {0}'.format(username))
 
-        tenant = find_tenant(self.db, username=username)
+        tenant = self.repo.find_by_name(username, False)
 
         if tenant:
             abort(falcon.HTTP_400, 'Tenant with username {0} '
