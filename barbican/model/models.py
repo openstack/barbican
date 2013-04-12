@@ -62,9 +62,14 @@ class ModelBase(object):
 
     def delete(self, session=None):
         """Delete this object"""
-        self.deleted = True
-        self.deleted_at = timeutils.utcnow()
-        self.save(session=session)
+        import barbican.model.repositories
+        session = session or barbican.model.repositories.get_session()
+        session.delete(self)
+        
+        # TBD: Soft delete instead?
+        # self.deleted = True
+        # self.deleted_at = timeutils.utcnow()
+        # self.save(session=session)
 
     def update(self, values):
         """dict.update() behaviour."""

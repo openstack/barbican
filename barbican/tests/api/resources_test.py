@@ -7,6 +7,7 @@ from mock import MagicMock
 
 import falcon
 import unittest
+from barbican.common import exception
 
 
 def suite():
@@ -67,6 +68,46 @@ class WhenCreatingTenantsUsingTenantsResource(unittest.TestCase):
             self.resource.on_post(self.req, self.resp)
 
         self.tenant_repo.find_by_name.assert_called_once_with(name=self.username, suppress_exception=True)
+
+
+class WhenGettingOrDeletingTenantUsingTenantResource(unittest.TestCase):
+
+    def setUp(self):
+        self.username = '1234'
+        self.tenant = Tenant()
+        self.tenant.id = "id1"
+        self.tenant.username = self.username
+        
+        self.tenant_repo = MagicMock()
+        self.tenant_repo.get.return_value = self.tenant
+        self.tenant_repo.delete_entity.return_value = None
+
+        self.req = MagicMock()
+        self.resp = MagicMock()
+        self.resource = TenantResource(self.tenant_repo)
+
+    def test_should_get_tenant(self):
+        self.resource.on_get(self.req, self.resp, self.tenant.id)
+
+        self.tenant_repo.get.assert_called_once_with(entity_id=self.tenant.id)
+
+    def test_should_delete_tenant(self):
+        self.resource.on_delete(self.req, self.resp, self.tenant.id)
+
+        self.tenant_repo.get.assert_called_once_with(entity_id=self.tenant.id)
+        self.tenant_repo.delete_entity.assert_called_once_with(self.tenant)
+
+    def test_should_throw_exception_for_get_when_tenant_not_found(self):
+        self.tenant_repo.get.side_effect = exception.NotFound("Test not found exception")
+        
+        with self.assertRaises(exception.NotFound):
+            self.resource.on_get(self.req, self.resp, self.tenant.id)
+
+    def test_should_throw_exception_for_delete_when_tenant_not_found(self):
+        self.tenant_repo.get.side_effect = exception.NotFound("Test not found exception")
+        
+        with self.assertRaises(exception.NotFound):
+            self.resource.on_delete(self.req, self.resp, self.tenant.id)
 
 
 if __name__ == '__main__':
