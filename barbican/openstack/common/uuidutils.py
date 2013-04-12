@@ -1,8 +1,6 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
-# Copyright 2010 United States Government as represented by the
-# Administrator of the National Aeronautics and Space Administration.
-# Copyright 2011 Justin Santa Barbara
+# Copyright (c) 2012 Intel Corporation.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -17,19 +15,25 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Base class for all model objects."""
+"""
+UUID related utilities and helper functions.
+"""
 
-from sqlalchemy import Column
-from sqlalchemy import Integer, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base, declared_attr
+import uuid
 
 
-class Persisted(object):
+def generate_uuid():
+    return str(uuid.uuid4())
 
-    id = Column(Integer, primary_key=True)
 
-    @declared_attr
-    def __tablename__(self):
-        return self.__name__.lower()
+def is_uuid_like(val):
+    """Returns validation of a value as a UUID.
 
-Base = declarative_base(cls=Persisted)
+    For our purposes, a UUID is a canonical form string:
+    aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+
+    """
+    try:
+        return str(uuid.UUID(val)) == val
+    except (TypeError, ValueError, AttributeError):
+        return False

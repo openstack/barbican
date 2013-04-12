@@ -2,7 +2,7 @@ import os
 import unittest
 
 from oslo.config import cfg
-from barbican.config import init_config, get_config
+from barbican.common import config
 import logging
 
 # Configuration test configuration options
@@ -16,6 +16,8 @@ CFG_TEST_OPTIONS = [
                      """
                 )
 ]
+
+CONF = cfg.CONF
 
 LOG = logging.getLogger(__name__)
 
@@ -32,16 +34,10 @@ class WhenConfiguring(unittest.TestCase):
 
         LOG.debug("In test 'test_loading'")
 
-        try:
-            init_config(['--config-file', './etc/barbican/barbican.conf'])
-        except:
-            init_config(['--config-file', '../etc/barbican/barbican.conf'])
+        CONF.register_group(test_group)
+        CONF.register_opts(CFG_TEST_OPTIONS, group=test_group)
 
-        conf = get_config()
-        conf.register_group(test_group)
-        conf.register_opts(CFG_TEST_OPTIONS, group=test_group)
-
-        self.assertTrue(conf.test.should_pass)
+        self.assertTrue(CONF.test.should_pass)
 
 
 if __name__ == '__main__':

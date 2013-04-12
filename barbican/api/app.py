@@ -21,20 +21,20 @@ import falcon
 
 from barbican.api.resources import VersionResource
 from barbican.api.resources import TenantsResource, TenantResource
-from barbican.api.resources import SecretsResource, SecretResource
+# TBD: from barbican.api.resources import SecretsResource, SecretResource
 
 # Resources
 VERSIONS = VersionResource()
 TENANTS = TenantsResource()
 TENANT = TenantResource()
-SECRETS = SecretsResource()
-SECRET = SecretResource()
+# TBD: SECRETS = SecretsResource()
+# TBD: SECRET = SecretResource()
 
 # Routing
 application = falcon.API()
 api = application
 api.add_route('/', VERSIONS)
-api.add_route('/tenant', TENANTS)
-api.add_route('/{tenant_id}', TENANT)
-api.add_route('/{tenant_id}/secrets', SECRETS)
-api.add_route('/{tenant_id}/secrets/{secret_id}', SECRET)
+api.add_route('/tenants', TENANTS)
+api.add_route('/tenants/{tenant_id}', TENANT)
+# TBD: api.add_route('/{tenant_id}/secrets', SECRETS)
+# TBD: api.add_route('/{tenant_id}/secrets/{secret_id}', SECRET)

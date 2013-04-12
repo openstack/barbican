@@ -23,15 +23,18 @@ import logging
 import time
 
 from oslo.config import cfg
+
 import sqlalchemy
 import sqlalchemy.orm as sa_orm
 import sqlalchemy.sql as sa_sql
 
 from barbican.common import exception
+from barbican.common import config
 # TBD: from barbican.db.sqlalchemy import migration
 from barbican.model import models
 import barbican.openstack.common.log as os_logging
 from barbican.openstack.common import timeutils
+from barbican.openstack.common.gettextutils import _
 
 
 _ENGINE = None
@@ -50,7 +53,8 @@ db_opts = [
     cfg.IntOpt('sql_idle_timeout', default=3600),
     cfg.IntOpt('sql_max_retries', default=60),
     cfg.IntOpt('sql_retry_interval', default=1),
-    cfg.BoolOpt('db_auto_create', default=False),
+    cfg.BoolOpt('db_auto_create', default=True),
+    cfg.StrOpt('sql_connection', default=None),
 ]
 
 CONF = cfg.CONF
@@ -68,6 +72,8 @@ def setup_db_env():
     _MAX_RETRIES = CONF.sql_max_retries
     _RETRY_INTERVAL = CONF.sql_retry_interval
     _CONNECTION = CONF.sql_connection
+    # TBD: Remove:
+    print "Conn = %s" % _CONNECTION
     sa_logger = logging.getLogger('sqlalchemy.engine')
     if CONF.debug:
         sa_logger.setLevel(logging.DEBUG)
@@ -111,6 +117,8 @@ def get_engine():
             'convert_unicode': True}
 
         try:
+            # TBD: Remove
+            print "Conn: %s; Args: %s" % (_CONNECTION, engine_args)
             _ENGINE = sqlalchemy.create_engine(_CONNECTION, **engine_args)
 
 # TBD:          if 'mysql' in connection_dict.drivername:
@@ -131,7 +139,6 @@ def get_engine():
         if CONF.db_auto_create:
             LOG.info(_('auto-creating barbican registry DB'))
             models.register_models(_ENGINE)
-            LOG.warn(_('(Not doing this yet!) auto-creating barbican registry DB'))
 # TBD:      try:
 # TBD:          migration.version_control()
 # TBD:      except exception.DatabaseMigrationError:
@@ -204,18 +211,23 @@ class BaseRepo(object):
     """
 
     def __init__(self):
-        pass    
+        print "BaseRepo"
+        LOG.debug("BaseRepo init...")
+        configure_db()    
     
     def get_session(self, session=None):
+        print "Getting session..."
         return session or get_session()
     
-    def find_by_name(self, name, suppress_exception, session=None):
+    def find_by_name(self, name, suppress_exception=False, session=None):
         session = self.get_session(session)
     
         try:
+            print "Starting find by name steps..."
             query = self._do_build_query_by_name(name, session)
-        
+            print "...query = %s" % `query`        
             entity = query.one()
+            print "...post query.one()"        
     
         except sa_orm.exc.NoResultFound:
             entity = None
@@ -225,7 +237,7 @@ class BaseRepo(object):
     
         return entity
     
-    def get(self, entity_id, force_show_deleted=False, session=None):
+    def get(self, entity_id, force_show_deleted=False, suppress_exception=False, session=None):
         """Get an entity or raise if it does not exist."""
         session = self.get_session(session)
     
@@ -239,8 +251,10 @@ class BaseRepo(object):
             entity = query.one()
     
         except sa_orm.exc.NoResultFound:
-            raise exception.NotFound("No %s found with ID %s"
-                                     % (self._do_entity_name(), entity_id))
+            entity = None
+            if not suppress_exception:
+                raise exception.NotFound("No %s found with ID %s"
+                                         % (self._do_entity_name(), entity_id))
     
         return entity
 
@@ -284,6 +298,13 @@ class BaseRepo(object):
         :raises NotFound if entity does not exist.
         """
         return self._update(values, entity_id, purge_props)
+
+    def delete_entity(self, entity):
+        """Remove the entity"""
+        
+        session = get_session()
+        with session.begin():
+            entity.delete(session=session)
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
@@ -384,7 +405,7 @@ class TenantRepo(BaseRepo):
     def _do_build_query_by_name(self, name, session):
         """Sub-class hook: find entity by name."""
         return session.query(models.Tenant)\
-                             .filter_by(name=name)
+                             .filter_by(username=name)
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""

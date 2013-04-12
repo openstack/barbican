@@ -1,6 +1,7 @@
 from datetime import datetime
 from barbican.api.resources import *
-from barbican.model.tenant import Tenant
+from barbican.model.models import Tenant
+from barbican.common import config
 
 from mock import MagicMock
 
@@ -38,29 +39,34 @@ class WhenTestingVersionResource(unittest.TestCase):
 class WhenCreatingTenantsUsingTenantsResource(unittest.TestCase):
 
     def setUp(self):
-        db_filter = MagicMock()
-        db_filter.one.return_value = Tenant('tenant_id')
-
-        db_query = MagicMock()
-        db_query.filter_by.return_value = db_filter
-
-        self.db_session = MagicMock()
-        self.db_session.query.return_value = db_query
+        self.username = '1234'
+        
+        self.tenant_repo = MagicMock()
+        self.tenant_repo.find_by_name.return_value = None
+        self.tenant_repo.create_from.return_value = None
 
         self.stream = MagicMock()
-        self.stream.read.return_value = u'{ "username" : "1234" }'
+        self.stream.read.return_value = u'{ "username" : "%s" }' % self.username
 
         self.req = MagicMock()
         self.req.stream = self.stream
 
         self.resp = MagicMock()
-        self.resource = TenantsResource(self.db_session)
+        self.resource = TenantsResource(self.tenant_repo)
+
+    def test_should_add_new_tenant(self):
+        self.resource.on_post(self.req, self.resp)
+
+        self.tenant_repo.find_by_name.assert_called_once_with(name=self.username, suppress_exception=True)
+        # TBD: Make this work: self.tenant_repo.create_from.assert_called_once_with(unittest.mock.ANY)
 
     def test_should_throw_exception_for_tenants_that_exist(self):
+        self.tenant_repo.find_by_name.return_value = Tenant()
+        
         with self.assertRaises(falcon.HTTPError):
             self.resource.on_post(self.req, self.resp)
 
-        self.db_session.query.assert_called_once_with(Tenant)
+        self.tenant_repo.find_by_name.assert_called_once_with(name=self.username, suppress_exception=True)
 
 
 if __name__ == '__main__':
