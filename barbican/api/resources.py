@@ -4,8 +4,9 @@ import logging
 
 from barbican.version import __version__
 from barbican.api import ApiResource, load_body, abort
-from barbican.model.models import Tenant
+from barbican.model.models import Tenant, States
 from barbican.model.repositories import TenantRepo
+from barbican.queue.resources import QueueResource, StartCSRMessage
 from barbican.common import config
 
 LOG = logging.getLogger(__name__)
@@ -54,9 +55,11 @@ class TenantsResource(ApiResource):
         if tenant:
             abort(falcon.HTTP_400, 'Tenant with username {0} '
                                    'already exists'.format(username))
+        # TBD: Encrypte fields
 
         new_tenant = Tenant()
         new_tenant.username = username
+        new_tenant.status = States.ACTIVE
         self.repo.create_from(new_tenant)
 
         print '...post create from'
@@ -91,9 +94,10 @@ class TenantResource(ApiResource):
 class CSRsResource(ApiResource):
     """Handles CSR (SSL certificate request) creation and lists requests"""
 
-    def __init__(self, csr_repo=None):
+    def __init__(self, csr_repo=None, queue_resource=None):
         LOG.debug('Creating CSRsResource')
         self.repo = csr_repo or CSRRepo()
+        self.queue = queue_resource or QueueResource()
 
     def on_post(self, req, resp, tenent_id):
         body = load_body(req)
@@ -110,6 +114,8 @@ class CSRsResource(ApiResource):
         #    abort(falcon.HTTP_400, 'Tenant with username {0} '
         #                           'already exists'.format(username))
 
+        # TBD: Encrypt fields
+
         new_csr = CSR()
         new_csr.requestor = requestor
         self.repo.create_from(new_csr)
@@ -117,10 +123,13 @@ class CSRsResource(ApiResource):
         # TBD: Remove:
         print '...post create from'
 
-        resp.status = falcon.HTTP_201
-        resp.set_header('Location', '/{0}'.format(new_csr.id))
+        # Send to workers to process.
+        self.queue.send(StartCSRMessage(new_csr.id))
+
+        resp.status = falcon.HTTP_202
+        resp.set_header('Location', '/{0}/csrs/{1}'.format(tenent_id, new_csr.id))
         # TBD: Generate URL...
-        url = 'http://localhost:8080:/csrs/%s' % new_csr.id
+        url = 'http://localhost:8080:/%s/csrs/%s' % (tenent_id, new_csr.id)
         resp.body = json.dumps({'ref': url})
 
 
@@ -134,6 +143,7 @@ class CSRResource(ApiResource):
         csr = self.repo.get(entity_id=csr_id)
 
         resp.status = falcon.HTTP_200
+        
         resp.body = json.dumps(csr.to_dict_fields(), default=json_handler)
 
     def on_delete(self, req, resp, tenent_id, csr_id):

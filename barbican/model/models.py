@@ -30,6 +30,10 @@ from barbican.openstack.common import uuidutils
 
 BASE = declarative_base()
 
+# Allowed entity states
+class States(object):
+    PENDING = 'PENDING'
+    ACTIVE = 'ACTIVE'
 
 @compiles(BigInteger, 'sqlite')
 def compile_big_int_sqlite(type_, compiler, **kw):
@@ -51,6 +55,8 @@ class ModelBase(object):
                         nullable=False, onupdate=timeutils.utcnow)
     deleted_at = Column(DateTime)
     deleted = Column(Boolean, nullable=False, default=False)
+
+    status = Column(String(20), nullable=False, default=States.PENDING)
 
     def save(self, session=None):
         """Save this object"""
@@ -106,7 +112,8 @@ class ModelBase(object):
         """Returns a dictionary of just the db fields of this entity."""
         dict_fields = {'id':self.id,
                        'created':self.created_at,
-                       'updated':self.updated_at}
+                       'updated':self.updated_at,
+                       'status':self.status}
         if self.deleted_at:
             dict_fields['deleted'] = self.deleted_at
         if self.deleted:
@@ -146,11 +153,15 @@ class CSR(BASE, ModelBase):
     
     __tablename__ = 'csrs'
 
+    tenant_id = Column(String(36), ForeignKey('tenants.id'),
+                      nullable=False)
+    tenant = relationship(Tenant, backref=backref('csrs'))
+
     requestor = Column(String(255))
     
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        return {'requestor':self.requestor}
+        return {'requestor':self.requestor, 'tenant_id':self.tenant_id}
     
 
 class Certificate(BASE, ModelBase):
@@ -161,12 +172,23 @@ class Certificate(BASE, ModelBase):
     
     __tablename__ = 'certificates'
 
-    private_key = Column(String(255))
-    public_key = Column(String(255))
+    tenant_id = Column(String(36), ForeignKey('tenants.id'),
+                      nullable=False)
+    tenant = relationship(Tenant, backref=backref('certificates'))
+
+    csr_id = Column(String(36), ForeignKey('csrs.id'),
+                      nullable=False)
+    csr= relationship(CSR, backref=backref('certificates'))
+
+    private_key = Column(Text)
+    public_key = Column(Text)
     
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        return {'private_key':self.private_key, 'public_key':self.public_key}
+        return {'private_key':self.private_key,
+                'public_key':self.public_key,
+                'tenant_id':self.tenant_id,
+                'csr_id':self.tenant_id}
 
 
 # Keep this tuple synchronized with the models in the file
