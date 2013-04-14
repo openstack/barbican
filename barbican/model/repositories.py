@@ -415,3 +415,51 @@ class TenantRepo(BaseRepo):
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
+
+
+class CSRRepo(BaseRepo):
+    """Repository for the CSR entity."""
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "CSR"   
+
+    def _do_create_instance(self):
+        return models.CSR()
+
+    def _do_build_query_by_name(self, name, session):
+        """Sub-class hook: find entity by name."""
+        raise TypeError(_("No support for retrieving by 'name' a CSR record."))
+
+    def _do_build_get_query(self, entity_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.CSR)\
+                             .filter_by(id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
+class CertificateRepo(BaseRepo):
+    """Repository for the Certificate entity."""
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "Certificate"   
+
+    def _do_create_instance(self):
+        return models.Certificate()
+
+    def _do_build_query_by_name(self, name, session):
+        """Sub-class hook: find entity by name."""
+        raise TypeError(_("No support for retrieving by 'name' a Certificate record."))
+
+    def _do_build_get_query(self, entity_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.Certificate)\
+                             .filter_by(id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass

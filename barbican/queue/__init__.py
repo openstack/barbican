@@ -19,6 +19,7 @@ Queue objects for Cloudkeep's Barbican
 
 from oslo.config import cfg
 from barbican.common import config
+from barbican.openstack.common.gettextutils import _
 
 queue_opts = [
     cfg.StrOpt('queue_api', default='barbican.queue.simple',

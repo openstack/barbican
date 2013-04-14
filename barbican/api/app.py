@@ -21,6 +21,8 @@ import falcon
 
 from barbican.api.resources import VersionResource
 from barbican.api.resources import TenantsResource, TenantResource
+from barbican.api.resources import CSRsResource, CSRResource
+from barbican.api.resources import CertificatesResource, CertificateResource
 # TBD: from barbican.api.resources import SecretsResource, SecretResource
 
 # Resources
@@ -31,7 +33,7 @@ TENANT = TenantResource()
 # TBD: SECRET = SecretResource()
 CSRS = CSRsResource()
 CSR = CSRResource()
-CERTS = CertifcatesResource()
+CERTS = CertificatesResource()
 CERT = CertificateResource()
 
 # Routing

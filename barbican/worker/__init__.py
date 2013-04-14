@@ -19,6 +19,7 @@ Worker objects for Cloudkeep's Barbican
 
 from oslo.config import cfg
 from barbican.common import config
+from barbican.openstack.common.gettextutils import _
 
 worker_opts = [
     cfg.StrOpt('worker_api', default='barbican.worker.simple',

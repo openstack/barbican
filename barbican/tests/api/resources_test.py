@@ -1,6 +1,6 @@
 from datetime import datetime
 from barbican.api.resources import *
-from barbican.model.models import Tenant
+from barbican.model.models import *
 from barbican.common import config
 
 from mock import MagicMock
@@ -59,7 +59,8 @@ class WhenCreatingTenantsUsingTenantsResource(unittest.TestCase):
         self.resource.on_post(self.req, self.resp)
 
         self.tenant_repo.find_by_name.assert_called_once_with(name=self.username, suppress_exception=True)
-        # TBD: Make this work: self.tenant_repo.create_from.assert_called_once_with(unittest.mock.ANY)
+        args, kwargs = self.tenant_repo.create_from.call_args
+        assert isinstance(args[0], Tenant)
 
     def test_should_throw_exception_for_tenants_that_exist(self):
         self.tenant_repo.find_by_name.return_value = Tenant()
@@ -108,6 +109,75 @@ class WhenGettingOrDeletingTenantUsingTenantResource(unittest.TestCase):
         
         with self.assertRaises(exception.NotFound):
             self.resource.on_delete(self.req, self.resp, self.tenant.id)
+
+
+class WhenCreatingCSRsUsingTenantsResource(unittest.TestCase):
+
+    def setUp(self):
+        self.requestor = 'requestor1234'
+        self.tenant_id = 'tenant1234'
+        
+        self.csr_repo = MagicMock()
+        self.csr_repo.create_from.return_value = None
+        
+        self.queue_resource = MagicMock()
+        self.queue_resource.send.return_value = None
+
+        self.stream = MagicMock()
+        self.stream.read.return_value = u'{ "requestor" : "%s" }' % self.requestor
+
+        self.req = MagicMock()
+        self.req.stream = self.stream
+
+        self.resp = MagicMock()
+        self.resource = CSRsResource(self.csr_repo, self.queue_resource)
+
+    def test_should_add_new_csr(self):
+        self.resource.on_post(self.req, self.resp, self.tenant_id)
+
+        args, kwargs = self.csr_repo.create_from.call_args
+        assert isinstance(args[0], CSR)
+
+
+class WhenGettingOrDeletingCSRUsingCSRResource(unittest.TestCase):
+
+    def setUp(self):
+        self.tenant_id = 'tenant1234'
+        self.requestor = 'requestor1234'
+        self.csr = CSR()
+        self.csr.id = "id1"
+        self.csr.requestor = self.requestor
+        
+        self.csr_repo = MagicMock()
+        self.csr_repo.get.return_value = self.csr
+        self.csr_repo.delete_entity.return_value = None
+
+        self.req = MagicMock()
+        self.resp = MagicMock()
+        self.resource = CSRResource(self.csr_repo)
+
+    def test_should_get_csr(self):
+        self.resource.on_get(self.req, self.resp, self.tenant_id, self.csr.id)
+
+        self.csr_repo.get.assert_called_once_with(entity_id=self.csr.id)
+
+    def test_should_delete_csr(self):
+        self.resource.on_delete(self.req, self.resp, self.tenant_id, self.csr.id)
+
+        self.csr_repo.get.assert_called_once_with(entity_id=self.csr.id)
+        self.csr_repo.delete_entity.assert_called_once_with(self.csr)
+
+    def test_should_throw_exception_for_get_when_csr_not_found(self):
+        self.csr_repo.get.side_effect = exception.NotFound("Test not found exception")
+        
+        with self.assertRaises(exception.NotFound):
+            self.resource.on_get(self.req, self.resp, self.tenant_id, self.csr.id)
+
+    def test_should_throw_exception_for_delete_when_csr_not_found(self):
+        self.csr_repo.get.side_effect = exception.NotFound("Test not found exception")
+        
+        with self.assertRaises(exception.NotFound):
+            self.resource.on_delete(self.req, self.resp, self.tenant_id, self.csr.id)
 
 
 if __name__ == '__main__':

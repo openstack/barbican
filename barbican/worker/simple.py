@@ -18,8 +18,13 @@ Simple Worker API implementation.
 """
 from barbican.queue.resources import StartCSRMessage
 
+
 class StartCSRProcessor(object):
-    print "Processing CSR with ID = ", csr_id
+    """Process the start of CSR processing."""
+    
+    def process(self, message):
+        print "Processing CSR with ID = ", message.csr_id
+
 
 PROCESSES = {StartCSRMessage : StartCSRProcessor()}
 

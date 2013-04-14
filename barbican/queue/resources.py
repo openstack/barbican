@@ -17,12 +17,13 @@
 Queue Resources related objects and functions.
 """
 from oslo.config import cfg
+from barbican.openstack.common import importutils
 
 
 CONF = cfg.CONF
 
 def get_queue_api():
-    return importutils.import_module(CONF.queue_api)
+    return importutils.import_module(CONF.queue.queue_api)
 
 
 class StartCSRMessage(object):

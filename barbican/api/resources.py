@@ -4,8 +4,8 @@ import logging
 
 from barbican.version import __version__
 from barbican.api import ApiResource, load_body, abort
-from barbican.model.models import Tenant, States
-from barbican.model.repositories import TenantRepo
+from barbican.model.models import Tenant, States, CSR, Certificate
+from barbican.model.repositories import TenantRepo, CSRRepo, CertificateRepo
 from barbican.queue.resources import QueueResource, StartCSRMessage
 from barbican.common import config
 
