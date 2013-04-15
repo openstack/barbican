@@ -5,15 +5,17 @@
 PKG=barbican
 
 # For local development, set VENV_PYTHON equal to the path to your virtual environment's site-packages location
-VENV_PYTHON=./.venv_barbican/lib/python2.7/site-packages
+VENV_PYTHON=./.venv/lib/python2.7/site-packages
 
 PATH=/opt/uwsgi:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/etc/$PKG:$PATH
-CONF_FILE=/etc/$PKG/barbican-api.ini
+CONF_FILE=/etc/barbican-api.ini
+OPTS=''
 if [ ! -f $CONF_FILE ];
 then
-  CONF_FILE=./etc/$PKG/barbican-api.ini
+  CONF_FILE=./etc/barbican-api.ini
   PYTHONPATH=$VENV_PYTHON:$PYTHONPATH
+  OPTS='-H ./.venv'
 fi
 
 echo 'Running barbican-api uwsgi process, using init file here: ' $CONF_FILE
-uwsgi --ini $CONF_FILE
+uwsgi --ini $CONF_FILE $OPTS
