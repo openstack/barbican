@@ -18,7 +18,6 @@ API-facing resource controllers.
 """
 
 
-import json
 import falcon
 
 from barbican.version import __version__
@@ -31,6 +30,7 @@ from barbican.crypto.fields import encrypt, decrypt
 from barbican.common import config
 from barbican.openstack.common.gettextutils import _
 import barbican.openstack.common.log as logging
+from barbican.openstack.common import jsonutils as json
 
 LOG = logging.getLogger(__name__)
 
