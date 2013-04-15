@@ -138,10 +138,32 @@ class Tenant(BASE, ModelBase):
 
     username = Column(String(255))
     
+    csrs = relationship("CSR")
+    certificates = relationship("Certificate")
+    
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
         return {'username':self.username}
     
+
+class Secret(BASE, ModelBase):
+    """
+    Represents a Secret in the datastore
+    
+    Secrets are any information Tenants wish to store within
+    Cloudkeep's Barbican.
+    """
+    
+    __tablename__ = 'secrets'
+
+    name = Column(String(255))
+    secret = Column(Text)
+    
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {'name':self.name,
+                'secret':self.secret}    
+
 
 class CSR(BASE, ModelBase):
     """
@@ -155,9 +177,11 @@ class CSR(BASE, ModelBase):
 
     tenant_id = Column(String(36), ForeignKey('tenants.id'),
                       nullable=False)
-    tenant = relationship(Tenant, backref=backref('csrs'))
+#    tenant = relationship(Tenant, backref=backref('csr_assocs'))
 
     requestor = Column(String(255))
+    
+    certificates = relationship("Certificate")
     
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -174,11 +198,11 @@ class Certificate(BASE, ModelBase):
 
     tenant_id = Column(String(36), ForeignKey('tenants.id'),
                       nullable=False)
-    tenant = relationship(Tenant, backref=backref('certificates'))
+#    tenant = relationship(Tenant, backref=backref('certificate_assocs'))
 
     csr_id = Column(String(36), ForeignKey('csrs.id'),
                       nullable=False)
-    csr= relationship(CSR, backref=backref('certificates'))
+#    csr = relationship(CSR, backref=backref('certificates'))
 
     private_key = Column(Text)
     public_key = Column(Text)
@@ -192,7 +216,7 @@ class Certificate(BASE, ModelBase):
 
 
 # Keep this tuple synchronized with the models in the file
-MODELS = [Tenant, CSR, Certificate]
+MODELS = [Tenant, Secret, CSR, Certificate]
 
 
 def register_models(engine):

@@ -273,6 +273,7 @@ class BaseRepo(object):
             msg = "Must supply %s with id=None(i.e. new entity)." % self._do_entity_name
             raise exception.Invalid(msg)
         
+        print "Begin create from..."
         session = get_session()
         with session.begin():
             
@@ -284,6 +285,7 @@ class BaseRepo(object):
             values = self._do_validate(entity.to_dict())
     
             try:
+                print "Saving entity..."
                 entity.save(session=session)
             except sqlalchemy.exc.IntegrityError:
                 raise exception.Duplicate("Entity ID %s already exists!"
@@ -352,7 +354,8 @@ class BaseRepo(object):
         Used internally by create() and update()
     
         :param values: A dict of attributes to set
-        :param entity_id: If None, create the entity, otherwise, find and update it
+        :param entity_id: If None, create the entity, otherwise,
+                          find and update it
         """
         session = get_session()
         with session.begin():
@@ -410,6 +413,31 @@ class TenantRepo(BaseRepo):
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.Tenant)\
+                             .filter_by(id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
+class SecretRepo(BaseRepo):
+    """Repository for the Secret entity."""
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "Secret"   
+
+    def _do_create_instance(self):
+        return models.Secret()
+
+    def _do_build_query_by_name(self, name, session):
+        """Sub-class hook: find entity by name."""
+        return session.query(models.Secret)\
+                             .filter_by(name=name)
+
+    def _do_build_get_query(self, entity_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.Secret)\
                              .filter_by(id=entity_id)
 
     def _do_validate(self, values):

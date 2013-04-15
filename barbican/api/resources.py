@@ -1,12 +1,33 @@
+# Copyright (c) 2013 Rackspace, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+API-facing resource controllers.
+"""
+
+
 import json
 import falcon
 import logging
 
 from barbican.version import __version__
 from barbican.api import ApiResource, load_body, abort
-from barbican.model.models import Tenant, States, CSR, Certificate
-from barbican.model.repositories import TenantRepo, CSRRepo, CertificateRepo
+from barbican.model.models import Tenant, Secret, States, CSR, Certificate
+from barbican.model.repositories import TenantRepo, SecretRepo, CSRRepo, CertificateRepo
 from barbican.queue.resources import QueueResource, StartCSRMessage
+from barbican.crypto.fields import encrypt, decrypt
 from barbican.common import config
 
 LOG = logging.getLogger(__name__)
@@ -55,7 +76,6 @@ class TenantsResource(ApiResource):
         if tenant:
             abort(falcon.HTTP_400, 'Tenant with username {0} '
                                    'already exists'.format(username))
-        # TBD: Encrypte fields
 
         new_tenant = Tenant()
         new_tenant.username = username
@@ -67,7 +87,7 @@ class TenantsResource(ApiResource):
         resp.status = falcon.HTTP_201
         resp.set_header('Location', '/{0}'.format(new_tenant.id))
         # TBD: Generate URL...
-        url = 'http://localhost:8080:/tenants/%s' % new_tenant.id
+        url = 'http://localhost:8080/tenants/%s' % new_tenant.id
         resp.body = json.dumps({'ref': url})
 
 
@@ -89,17 +109,93 @@ class TenantResource(ApiResource):
         self.repo.delete_entity(tenant)
 
         resp.status = falcon.HTTP_200
+
+
+class SecretsResource(ApiResource):
+    """Handles Secret creation requests"""
+
+    def __init__(self, tenant_repo=None, secret_repo=None):
+        LOG.debug('Creating SecretsResource')
+        self.tenant_repo = tenant_repo or TenantRepo()
+        self.secret_repo = secret_repo or SecretRepo()
+
+    def on_post(self, req, resp, tenant_id):
+        tenant = self.tenant_repo.get(tenant_id)
+
+        body = load_body(req)
+
+        # TBD: Remove:
+        print 'Start on_post...%s' % body
+
+        name = body['name']
+        # LOG.debug('Username is {0}'.format(username))
+        print 'name is %s' % name
+
+        secret = self.secret_repo.find_by_name(name=name, suppress_exception=True)
+        if secret:
+            abort(falcon.HTTP_400, 'Secret with name {0} '
+                                   'already exists'.format(name))
+
+        # Encrypt fields
+        encrypt(body)
+        secret_value = body['secret']
+        print 'encrypted secret is %s' % secret_value
+
+        new_secret = Secret()
+        new_secret.name = name
+        new_secret.secret = secret_value
+        new_secret.tenant_id = tenant.id
+        self.secret_repo.create_from(new_secret)
+
+        # TBD: Remove:
+        print '...post create from'
+
+        resp.status = falcon.HTTP_202
+        resp.set_header('Location', '/{0}/secrets/{1}'.format(tenant_id, new_secret.id))
+        # TBD: Generate URL...
+        url = 'http://localhost:8080/%s/secrets/%s' % (tenant_id, new_secret.id)
+        resp.body = json.dumps({'ref': url})
+
+
+class SecretResource(ApiResource):
+    """Handles Secret retrieval and deletion requests"""
+
+    def __init__(self, secret_repo=None):
+        self.repo = secret_repo or SecretRepo() 
+
+    def on_get(self, req, resp, tenant_id, secret_id):
+        secret = self.repo.get(entity_id=secret_id)
+        fields = secret.to_dict_fields()
+        print 'read encrypted secret as %s' % fields['secret']
+
+        # Decrypt fields
+        decrypt(fields)
+        secret_value = fields['secret']
+        print 'decrypted secret is %s' % secret_value
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(fields, default=json_handler)
+
+    def on_delete(self, req, resp, tenant_id, secret_id):
+        secret = self.repo.get(entity_id=secret_id)
+
+        self.repo.delete_entity(secret)
+
+        resp.status = falcon.HTTP_200
         
 
 class CSRsResource(ApiResource):
     """Handles CSR (SSL certificate request) creation and lists requests"""
 
-    def __init__(self, csr_repo=None, queue_resource=None):
+    def __init__(self, tenant_repo=None, csr_repo=None, queue_resource=None):
         LOG.debug('Creating CSRsResource')
-        self.repo = csr_repo or CSRRepo()
+        self.tenant_repo = tenant_repo or TenantRepo()
+        self.csr_repo = csr_repo or CSRRepo()
         self.queue = queue_resource or QueueResource()
 
-    def on_post(self, req, resp, tenent_id):
+    def on_post(self, req, resp, tenant_id):
+        tenant = self.tenant_repo.get(tenant_id)
+
         body = load_body(req)
         # TBD: Remove:
         print 'Start on_post...%s' % body
@@ -108,7 +204,7 @@ class CSRsResource(ApiResource):
         print 'requestor is %s' % requestor
 
         # TBD: What criteria to restrict multiple concurrent SSL requests per tenant?
-        # csr = self.repo.find_by_name(name=requestor, suppress_exception=True)
+        # csr = self.csr_repo.find_by_name(name=requestor, suppress_exception=True)
         #
         #if csr:
         #    abort(falcon.HTTP_400, 'Tenant with username {0} '
@@ -118,7 +214,8 @@ class CSRsResource(ApiResource):
 
         new_csr = CSR()
         new_csr.requestor = requestor
-        self.repo.create_from(new_csr)
+        new_csr.tenant_id = tenant.id
+        self.csr_repo.create_from(new_csr)
 
         # TBD: Remove:
         print '...post create from'
@@ -127,9 +224,9 @@ class CSRsResource(ApiResource):
         self.queue.send(StartCSRMessage(new_csr.id))
 
         resp.status = falcon.HTTP_202
-        resp.set_header('Location', '/{0}/csrs/{1}'.format(tenent_id, new_csr.id))
+        resp.set_header('Location', '/{0}/csrs/{1}'.format(tenant_id, new_csr.id))
         # TBD: Generate URL...
-        url = 'http://localhost:8080:/%s/csrs/%s' % (tenent_id, new_csr.id)
+        url = 'http://localhost:8080/%s/csrs/%s' % (tenant_id, new_csr.id)
         resp.body = json.dumps({'ref': url})
 
 
@@ -139,14 +236,14 @@ class CSRResource(ApiResource):
     def __init__(self, csr_repo=None):
         self.repo = csr_repo or CSRRepo() 
 
-    def on_get(self, req, resp, tenent_id, csr_id):
+    def on_get(self, req, resp, tenant_id, csr_id):
         csr = self.repo.get(entity_id=csr_id)
 
         resp.status = falcon.HTTP_200
         
         resp.body = json.dumps(csr.to_dict_fields(), default=json_handler)
 
-    def on_delete(self, req, resp, tenent_id, csr_id):
+    def on_delete(self, req, resp, tenant_id, csr_id):
         csr = self.repo.get(entity_id=csr_id)
 
         self.repo.delete_entity(csr)
@@ -161,11 +258,11 @@ class CertificatesResource(ApiResource):
         LOG.debug('Creating CertificatesResource')
         self.repo = cert_repo or CertificateRepo()
 
-    def on_post(self, req, resp, tenent_id):
+    def on_post(self, req, resp, tenant_id):
         resp.status = falcon.HTTP_405
         # TBD: I18n this!
-        resp.body = u"To create SSL certificates, you must first issue a CSR"
-
+        msg = u"To create SSL certificates, you must first issue a CSR."
+        abort(falcon.HTTP_405, msg)
 
 class CertificateResource(ApiResource):
     """Handles Cert (SSL certificates) retrieval and deletion requests"""
@@ -173,8 +270,15 @@ class CertificateResource(ApiResource):
     def __init__(self, cert_repo=None):
         self.repo = cert_repo or CertificateRepo() 
 
-    def on_get(self, req, resp, tenent_id, cert_id):
+    def on_get(self, req, resp, tenant_id, cert_id):
         cert = self.repo.get(entity_id=cert_id)
 
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps(cert.to_dict_fields(), default=json_handler)
+        resp.body = json.dumps(cert.to_dict_fields(), default=json_handler)        
+        
+    def on_delete(self, req, resp, tenant_id, cert_id):
+        cert = self.repo.get(entity_id=cert_id)
+
+        self.repo.delete_entity(cert)
+
+        resp.status = falcon.HTTP_200
