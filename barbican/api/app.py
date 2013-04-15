@@ -36,15 +36,20 @@ CSR = CSRResource()
 CERTS = CertificatesResource()
 CERT = CertificateResource()
 
-# Routing
-application = falcon.API()
-api = application
-api.add_route('/', VERSIONS)
-api.add_route('/tenants', TENANTS)
-api.add_route('/tenants/{tenant_id}', TENANT)
-api.add_route('/{tenant_id}/secrets', SECRETS)
-api.add_route('/{tenant_id}/secrets/{secret_id}', SECRET)
-api.add_route('/{tenant_id}/csrs', CSRS)
-api.add_route('/{tenant_id}/csrs/{csr_id}', CSR)
-api.add_route('/{tenant_id}/certificates', CERTS)
-api.add_route('/{tenant_id}/certificates/{cert_id}', CERT)
+
+def create_main_app(global_config, **local_conf):
+    """uWSGI factory method for the Barbican-API application"""
+
+    wsgi_app = api = falcon.API()
+    api.add_route('/', VERSIONS)
+    api.add_route('/tenants', TENANTS)
+    api.add_route('/tenants/{tenant_id}', TENANT)
+    api.add_route('/{tenant_id}/secrets', SECRETS)
+    api.add_route('/{tenant_id}/secrets/{secret_id}', SECRET)
+    api.add_route('/{tenant_id}/csrs', CSRS)
+    api.add_route('/{tenant_id}/csrs/{csr_id}', CSR)
+    api.add_route('/{tenant_id}/certificates', CERTS)
+    api.add_route('/{tenant_id}/certificates/{cert_id}', CERT)
+    
+    return wsgi_app
+    
