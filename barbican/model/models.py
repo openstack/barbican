@@ -16,7 +16,7 @@
 """
 Defines database models for Barbican
 """
-import json
+
 
 from sqlalchemy import Column, Integer, String, BigInteger
 from sqlalchemy.ext.compiler import compiles
@@ -27,6 +27,7 @@ from sqlalchemy import Index, UniqueConstraint
 
 from barbican.openstack.common import timeutils
 from barbican.openstack.common import uuidutils
+from barbican.openstack.common import jsonutils as json
 import barbican.openstack.common.log as logging
 
 LOG = logging.getLogger(__name__)
@@ -227,7 +228,7 @@ def register_models(engine):
     """
     Creates database tables for all models with the given engine
     """
-    LOG.debug("models: %s" % repr(MODELS))
+    LOG.debug("Models: {0}".format(repr(MODELS)))
     for model in MODELS:
         model.metadata.create_all(engine)
 

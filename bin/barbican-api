@@ -8,12 +8,14 @@ PKG=barbican
 VENV_PYTHON=./.venv_barbican/lib/python2.7/site-packages
 
 PATH=/opt/uwsgi:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/etc/$PKG:$PATH
-CONF_FILE=/etc/$PKG/barbican-api.ini
+CONF_FILE=/etc/barbican-api.ini
+OPTS=''
 if [ ! -f $CONF_FILE ];
 then
-  CONF_FILE=./etc/$PKG/barbican-api.ini
+  CONF_FILE=./etc/barbican-api.ini
   PYTHONPATH=$VENV_PYTHON:$PYTHONPATH
+  OPTS='-H ./.venv_barbican'
 fi
 
 echo 'Running barbican-api uwsgi process, using init file here: ' $CONF_FILE
-uwsgi --ini $CONF_FILE
+uwsgi --ini $CONF_FILE $OPTS
