@@ -17,18 +17,25 @@
 Simple Worker API implementation.
 """
 from barbican.queue.resources import StartCSRMessage
+import barbican.openstack.common.log as logging
+
+LOG = logging.getLogger(__name__)
 
 
 class StartCSRProcessor(object):
     """Process the start of CSR processing."""
-    
+
     def process(self, message):
-        print "Processing CSR with ID = ", message.csr_id
+        LOG.debug("Processing CSR with ID = ", message.csr_id)
 
 
-PROCESSES = {StartCSRMessage : StartCSRProcessor()}
+PROCESSES = {StartCSRMessage: StartCSRProcessor()}
+
 
 def process(message):
-    """Handle the specified message but simply passing through to the Worker Resource."""
+    """
+    Handle the specified message but simply passing
+    through to the Worker Resource.
+    """
     processor = PROCESSES[message.__class__]
     processor.process(message)

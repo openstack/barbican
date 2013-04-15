@@ -19,8 +19,9 @@ TBD: The top part of this file was 'borrowed' from Glance, but seems
 quite intense for sqlalchemy, and maybe could be simplified.
 """
 
-import logging
+
 import time
+import logging
 
 from oslo.config import cfg
 
@@ -32,10 +33,11 @@ from barbican.common import exception
 from barbican.common import config
 # TBD: from barbican.db.sqlalchemy import migration
 from barbican.model import models
-import barbican.openstack.common.log as os_logging
 from barbican.openstack.common import timeutils
 from barbican.openstack.common.gettextutils import _
+import barbican.openstack.common.log as os_logging
 
+LOG = os_logging.getLogger(__name__)
 
 _ENGINE = None
 _MAKER = None
@@ -43,7 +45,6 @@ _MAX_RETRIES = None
 _RETRY_INTERVAL = None
 BASE = models.BASE
 sa_logger = None
-LOG = os_logging.getLogger(__name__)
 
 
 STATUSES = ['active', 'saving', 'queued', 'killed', 'pending_delete',
@@ -72,8 +73,7 @@ def setup_db_env():
     _MAX_RETRIES = CONF.sql_max_retries
     _RETRY_INTERVAL = CONF.sql_retry_interval
     _CONNECTION = CONF.sql_connection
-    # TBD: Remove:
-    print "Conn = %s" % _CONNECTION
+    LOG.debug("Sql connection = %s" % _CONNECTION)
     sa_logger = logging.getLogger('sqlalchemy.engine')
     if CONF.debug:
         sa_logger.setLevel(logging.DEBUG)
@@ -102,7 +102,7 @@ def get_session(autocommit=True, expire_on_commit=False):
 def get_engine():
     """Return a SQLAlchemy engine."""
     """May assign _ENGINE if not already assigned"""
-    global _ENGINE, sa_logger, _CONNECTION, _IDLE_TIMEOUT, _MAX_RETRIES,\
+    global _ENGINE, sa_logger, _CONNECTION, _IDLE_TIMEOUT, _MAX_RETRIES, \
         _RETRY_INTERVAL
 
     if not _ENGINE:
@@ -117,8 +117,8 @@ def get_engine():
             'convert_unicode': True}
 
         try:
-            # TBD: Remove
-            print "Conn: %s; Args: %s" % (_CONNECTION, engine_args)
+            LOG.debug("Sql connection: %s; Args: %s" % (_CONNECTION,
+                                                        engine_args))
             _ENGINE = sqlalchemy.create_engine(_CONNECTION, **engine_args)
 
 # TBD:          if 'mysql' in connection_dict.drivername:
@@ -191,8 +191,8 @@ def wrap_db_error(f):
                 try:
                     return f(*args, **kwargs)
                 except sqlalchemy.exc.OperationalError as e:
-                    if (remaining_attempts == 0 or
-                        not is_db_connection_error(e.args[0])):
+                    if (remaining_attempts == 0 or not
+                        is_db_connection_error(e.args[0])):
                         raise
                 except sqlalchemy.exc.DBAPIError:
                     raise
@@ -205,57 +205,57 @@ def wrap_db_error(f):
 class BaseRepo(object):
     """
     Base repository for the barbican entities.
-    
+
     This class provides template methods that allow sub-classes to hook
     specific functionality as needed.
     """
 
     def __init__(self):
-        print "BaseRepo"
         LOG.debug("BaseRepo init...")
-        configure_db()    
-    
+        configure_db()
+
     def get_session(self, session=None):
-        print "Getting session..."
+        LOG.debug("Getting session...")
         return session or get_session()
-    
+
     def find_by_name(self, name, suppress_exception=False, session=None):
         session = self.get_session(session)
-    
+
         try:
-            print "Starting find by name steps..."
+            LOG.debug("Starting find by name steps...")
             query = self._do_build_query_by_name(name, session)
-            print "...query = %s" % `query`        
+            LOG.debug("...query = %s" % repr(query))
             entity = query.one()
-            print "...post query.one()"        
-    
+            LOG.debug("...post query.one()")
+
         except sa_orm.exc.NoResultFound:
             entity = None
             if not suppress_exception:
                 raise exception.NotFound("No %s found with name %s"
                                          % (self._do_entity_name(), name))
-    
+
         return entity
-    
-    def get(self, entity_id, force_show_deleted=False, suppress_exception=False, session=None):
+
+    def get(self, entity_id, force_show_deleted=False,
+            suppress_exception=False, session=None):
         """Get an entity or raise if it does not exist."""
         session = self.get_session(session)
-    
+
         try:
             query = self._do_build_get_query(entity_id, session)
-    
+
             # filter out deleted entities if requested
             if not force_show_deleted:
                 query = query.filter_by(deleted=False)
-    
+
             entity = query.one()
-    
+
         except sa_orm.exc.NoResultFound:
             entity = None
             if not suppress_exception:
                 raise exception.NotFound("No %s found with ID %s"
                                          % (self._do_entity_name(), entity_id))
-    
+
         return entity
 
     def create(self, values):
@@ -264,57 +264,59 @@ class BaseRepo(object):
 
     def create_from(self, entity):
         """Sub-class hook: create from Tenant entity."""
-        
+
         if not entity:
             msg = "Must supply non-None %s." % self._do_entity_name
-            raise exception.Invalid(msg)        
-        
+            raise exception.Invalid(msg)
+
         if entity.id:
             msg = "Must supply %s with id=None(i.e. new entity)." % self._do_entity_name
             raise exception.Invalid(msg)
-        
-        print "Begin create from..."
+
+        LOG.debug("Begin create from...")
         session = get_session()
         with session.begin():
-            
+
             # Validate the attributes before we go any further. From my
             # (unknown Glance developer) investigation, the @validates
             # decorator does not validate
             # on new records, only on existing records, which is, well,
             # idiotic.
             values = self._do_validate(entity.to_dict())
-    
+
             try:
-                print "Saving entity..."
+                LOG.debug("Saving entity...")
                 entity.save(session=session)
             except sqlalchemy.exc.IntegrityError:
                 raise exception.Duplicate("Entity ID %s already exists!"
                                           % values['id'])
-    
+
         return self.get(entity.id)
 
     def update(self, entity_id, values, purge_props=False):
         """
         Set the given properties on an entity and update it.
-    
+
         :raises NotFound if entity does not exist.
         """
         return self._update(values, entity_id, purge_props)
 
     def delete_entity(self, entity):
         """Remove the entity"""
-        
+
         session = get_session()
         with session.begin():
             entity.delete(session=session)
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
-        return "Entity"   
+        return "Entity"
 
     def _do_create_instance(self):
-        """Sub-class hook: return new entity instance (in Python, not in db)."""
-        return None   
+        """
+        Sub-class hook: return new entity instance (in Python, not in db).
+        """
+        return None
 
     def _do_build_query_by_name(self, name, session):
         """Sub-class hook: find entity by name."""
@@ -325,16 +327,19 @@ class BaseRepo(object):
         return None
 
     def _do_convert_values(self, values):
-        """Sub-class hook: convert text-based values to target types for the database."""
+        """
+        Sub-class hook: convert text-based values to
+        target types for the database.
+        """
         pass
 
     def _do_validate(self, values):
         """
         Sub-class hook: validate values.
-        
+
         Validates the incoming data and raises a Invalid exception
         if anything is out of order.
-    
+
         :param values: Mapping of entity metadata to check
         """
         status = values.get('status', None)
@@ -342,37 +347,38 @@ class BaseRepo(object):
             # TBD: I18n this!
             msg = "%s status is required." % self._do_entity_name()
             raise exception.Invalid(msg)
-    
+
         if status not in STATUSES:
-            msg = "Invalid status '%s' for %s." % (status, self._do_entity_name())
+            msg = "Invalid status '%s' for %s." % (status,
+                                                   self._do_entity_name())
             raise exception.Invalid(msg)
-    
+
         return values
 
     def _update(values, entity_id, purge_props=False):
         """
         Used internally by create() and update()
-    
+
         :param values: A dict of attributes to set
         :param entity_id: If None, create the entity, otherwise,
                           find and update it
         """
         session = get_session()
         with session.begin():
-        
+
             if entity_id:
                 entity_ref = self._do_get(entity_id, session=session)
                 values['updated_at'] = timeutils.utcnow()
             else:
                 self._do_convert_values(values)
                 entity_ref = self._do_create_instance()
-    
+
             # Need to canonicalize ownership
             if 'owner' in values and not values['owner']:
                 values['owner'] = None
-    
+
             entity_ref.update(values)
-    
+
             # Validate the attributes before we go any further. From my
             # (unknown Glance developer) investigation, the @validates
             # decorator does not validate
@@ -380,13 +386,13 @@ class BaseRepo(object):
             # idiotic.
             values = self._do_validate(entity_ref.to_dict())
             self._update_values(entity_ref, values)
-    
+
             try:
                 entity_ref.save(session=session)
             except sqlalchemy.exc.IntegrityError:
                 raise exception.Duplicate("Entity ID %s already exists!"
                                           % values['id'])
-    
+
         return self.get(entity_ref.id)
 
     def _update_values(entity_ref, values):
@@ -400,20 +406,18 @@ class TenantRepo(BaseRepo):
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
-        return "Tenant"   
+        return "Tenant"
 
     def _do_create_instance(self):
         return models.Tenant()
 
     def _do_build_query_by_name(self, name, session):
         """Sub-class hook: find entity by name."""
-        return session.query(models.Tenant)\
-                             .filter_by(username=name)
+        return session.query(models.Tenant).filter_by(username=name)
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
-        return session.query(models.Tenant)\
-                             .filter_by(id=entity_id)
+        return session.query(models.Tenant).filter_by(id=entity_id)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
@@ -425,20 +429,18 @@ class SecretRepo(BaseRepo):
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
-        return "Secret"   
+        return "Secret"
 
     def _do_create_instance(self):
         return models.Secret()
 
     def _do_build_query_by_name(self, name, session):
         """Sub-class hook: find entity by name."""
-        return session.query(models.Secret)\
-                             .filter_by(name=name)
+        return session.query(models.Secret).filter_by(name=name)
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
-        return session.query(models.Secret)\
-                             .filter_by(id=entity_id)
+        return session.query(models.Secret).filter_by(id=entity_id)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
@@ -450,7 +452,7 @@ class CSRRepo(BaseRepo):
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
-        return "CSR"   
+        return "CSR"
 
     def _do_create_instance(self):
         return models.CSR()
@@ -461,8 +463,7 @@ class CSRRepo(BaseRepo):
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
-        return session.query(models.CSR)\
-                             .filter_by(id=entity_id)
+        return session.query(models.CSR).filter_by(id=entity_id)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
@@ -474,19 +475,19 @@ class CertificateRepo(BaseRepo):
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
-        return "Certificate"   
+        return "Certificate"
 
     def _do_create_instance(self):
         return models.Certificate()
 
     def _do_build_query_by_name(self, name, session):
         """Sub-class hook: find entity by name."""
-        raise TypeError(_("No support for retrieving by 'name' a Certificate record."))
+        raise TypeError(_("No support for retrieving by "
+                          "'name' a Certificate record."))
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
-        return session.query(models.Certificate)\
-                             .filter_by(id=entity_id)
+        return session.query(models.Certificate).filter_by(id=entity_id)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""

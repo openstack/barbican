@@ -22,15 +22,16 @@ from barbican.openstack.common import importutils
 
 CONF = cfg.CONF
 
+
 def get_worker_api():
     return importutils.import_module(CONF.worker.worker_api)
 
+
 class WorkerResource(object):
     """Handles Queue related requests"""
-    
+
     def __init__(self, worker_api=None):
-        self.api = worker_api or get_worker_api() 
+        self.api = worker_api or get_worker_api()
 
     def receive(self, message):
         self.api.process(message)
-    

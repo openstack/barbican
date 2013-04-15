@@ -18,21 +18,24 @@ Field-level encryption/decryption.
 
 These utilities are intended to be applied onto a dictionary of field
 value, independent of the entity type, as long as these fields match
-a list of protection-fields below. 
+a list of protection-fields below.
 """
 
 
-FIELDS_TO_PROTECT = ['secret','private_key','public_key']
+FIELDS_TO_PROTECT = ['secret', 'private_key', 'public_key']
+
 
 def encrypt_value(value):
     """Encrypt the supplied value"""
     # TBD: Supply algorithm
     return value if value is None else '[encrypt-this]%s' % value
 
+
 def encrypt(fields):
     """Encrypt in-place the data of any fields found in FIELDS_TO_PROTECT"""
     for key in (key for key in FIELDS_TO_PROTECT if key in fields):
-        fields[key] = encrypt_value(fields[key])      
+        fields[key] = encrypt_value(fields[key])
+
 
 def decrypt_value(value):
     """Decrypt the supplied value"""
@@ -41,6 +44,7 @@ def decrypt_value(value):
         return None
     prefix = '[encrypt-this]'
     return value[len(prefix):] if value.startswith(prefix) else value
+
 
 def decrypt(fields):
     """Decrypt in-place the data of any fields found in FIELDS_TO_PROTECT"""

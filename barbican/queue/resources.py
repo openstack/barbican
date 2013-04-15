@@ -22,6 +22,7 @@ from barbican.openstack.common import importutils
 
 CONF = cfg.CONF
 
+
 def get_queue_api():
     return importutils.import_module(CONF.queue.queue_api)
 
@@ -35,10 +36,9 @@ class StartCSRMessage(object):
 
 class QueueResource(object):
     """Handles Queue related requests"""
-    
+
     def __init__(self, queue_api=None):
         self.api = queue_api or get_queue_api()
 
     def send(self, message):
         self.api.send(message)
-    

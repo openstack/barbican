@@ -18,7 +18,11 @@ Simple Queue API implementation.
 """
 from barbican.worker.resources import WorkerResource
 
+
 def send(message):
-    """Handle the specified message by simply passing through to the Worker Resource."""
+    """
+    Handle the specified message by simply passing through to the
+    Worker Resource.
+    """
     worker = WorkerResource()
     worker.receive(message)
