@@ -6,6 +6,8 @@ eventlet>=0.12.1
 oslo.config>=1.1.0
 iso8601>=0.1.4
 kombu>=2.5.9
+webob>=1.2.3
+PasteDeploy>=1.5.0
 
 # SQLAlchemy 0.7.10 typically has issues installing via pip, since it
 # will be removed as a dependency soon we will just grab the tarball
