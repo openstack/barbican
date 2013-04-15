@@ -73,7 +73,7 @@ def setup_db_env():
     _MAX_RETRIES = CONF.sql_max_retries
     _RETRY_INTERVAL = CONF.sql_retry_interval
     _CONNECTION = CONF.sql_connection
-    LOG.debug("Sql connection = %s" % _CONNECTION)
+    LOG.debug("Sql connection = {0}".format(_CONNECTION))
     sa_logger = logging.getLogger('sqlalchemy.engine')
     if CONF.debug:
         sa_logger.setLevel(logging.DEBUG)
@@ -117,8 +117,8 @@ def get_engine():
             'convert_unicode': True}
 
         try:
-            LOG.debug("Sql connection: %s; Args: %s" % (_CONNECTION,
-                                                        engine_args))
+            LOG.debug("Sql connection: {0}; Args: {1}".format(_CONNECTION,
+                                                              engine_args))
             _ENGINE = sqlalchemy.create_engine(_CONNECTION, **engine_args)
 
 # TBD:          if 'mysql' in connection_dict.drivername:
@@ -224,7 +224,7 @@ class BaseRepo(object):
         try:
             LOG.debug("Starting find by name steps...")
             query = self._do_build_query_by_name(name, session)
-            LOG.debug("...query = %s" % repr(query))
+            LOG.debug("...query = {0}".format(repr(query)))
             entity = query.one()
             LOG.debug("...post query.one()")
 
@@ -266,11 +266,11 @@ class BaseRepo(object):
         """Sub-class hook: create from Tenant entity."""
 
         if not entity:
-            msg = "Must supply non-None %s." % self._do_entity_name
+            msg = "Must supply non-None {0}.".format(self._do_entity_name)
             raise exception.Invalid(msg)
 
         if entity.id:
-            msg = "Must supply %s with id=None(i.e. new entity)." % self._do_entity_name
+            msg = "Must supply {0} with id=None(i.e. new entity).".format(self._do_entity_name)
             raise exception.Invalid(msg)
 
         LOG.debug("Begin create from...")
@@ -345,11 +345,11 @@ class BaseRepo(object):
         status = values.get('status', None)
         if not status:
             # TBD: I18n this!
-            msg = "%s status is required." % self._do_entity_name()
+            msg = "{0} status is required.".format(self._do_entity_name())
             raise exception.Invalid(msg)
 
         if status not in STATUSES:
-            msg = "Invalid status '%s' for %s." % (status,
+            msg = "Invalid status '{0}' for {1}.".format(status,
                                                    self._do_entity_name())
             raise exception.Invalid(msg)
 
