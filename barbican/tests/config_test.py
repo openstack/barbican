@@ -1,8 +1,24 @@
+# Copyright (c) 2013 Rackspace, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 import os
 import unittest
 
 from oslo.config import cfg
-from barbican.config import init_config, get_config
+from barbican.common import config
 import logging
 
 # Configuration test configuration options
@@ -17,7 +33,10 @@ CFG_TEST_OPTIONS = [
                 )
 ]
 
+CONF = cfg.CONF
+
 LOG = logging.getLogger(__name__)
+
 
 def suite():
     suite = unittest.TestSuite()
@@ -32,16 +51,10 @@ class WhenConfiguring(unittest.TestCase):
 
         LOG.debug("In test 'test_loading'")
 
-        try:
-            init_config(['--config-file', './etc/barbican/barbican.conf'])
-        except:
-            init_config(['--config-file', '../etc/barbican/barbican.conf'])
+        CONF.register_group(test_group)
+        CONF.register_opts(CFG_TEST_OPTIONS, group=test_group)
 
-        conf = get_config()
-        conf.register_group(test_group)
-        conf.register_opts(CFG_TEST_OPTIONS, group=test_group)
-
-        self.assertTrue(conf.test.should_pass)
+        self.assertTrue(CONF.test.should_pass)
 
 
 if __name__ == '__main__':

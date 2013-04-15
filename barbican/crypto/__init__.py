@@ -14,5 +14,5 @@
 # limitations under the License.
 
 """
-Model objects for Cloudkeep's Barbican
+Encryption/decryption services for Barbican.
 """

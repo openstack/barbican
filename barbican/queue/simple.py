@@ -14,5 +14,15 @@
 # limitations under the License.
 
 """
-Model objects for Cloudkeep's Barbican
+Simple Queue API implementation.
 """
+from barbican.worker.resources import WorkerResource
+
+
+def send(message):
+    """
+    Handle the specified message by simply passing through to the
+    Worker Resource.
+    """
+    worker = WorkerResource()
+    worker.receive(message)

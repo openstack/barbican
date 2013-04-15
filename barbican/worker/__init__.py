@@ -14,5 +14,17 @@
 # limitations under the License.
 
 """
-Model objects for Cloudkeep's Barbican
+Worker objects for Cloudkeep's Barbican
 """
+
+from oslo.config import cfg
+from barbican.common import config
+from barbican.openstack.common.gettextutils import _
+
+worker_opts = [
+    cfg.StrOpt('worker_api', default='barbican.worker.simple',
+               help=_('Python module path of worker implementation API')),
+]
+
+CONF = cfg.CONF
+CONF.register_opts(worker_opts, group='worker')

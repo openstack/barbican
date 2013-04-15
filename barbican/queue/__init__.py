@@ -14,5 +14,17 @@
 # limitations under the License.
 
 """
-Model objects for Cloudkeep's Barbican
+Queue objects for Cloudkeep's Barbican
 """
+
+from oslo.config import cfg
+from barbican.common import config
+from barbican.openstack.common.gettextutils import _
+
+queue_opts = [
+    cfg.StrOpt('queue_api', default='barbican.queue.simple',
+               help=_('Python module path of queue implementation API')),
+]
+
+CONF = cfg.CONF
+CONF.register_opts(queue_opts, group='queue')

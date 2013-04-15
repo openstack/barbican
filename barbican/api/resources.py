@@ -1,13 +1,38 @@
+# Copyright (c) 2013 Rackspace, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+API-facing resource controllers.
+"""
+
+
 import json
 import falcon
-import logging
 
 from barbican.version import __version__
 from barbican.api import ApiResource, load_body, abort
-from barbican.model.util import find_tenant
-from barbican.model.util import find_secret
-from barbican.model.tenant import Tenant, Secret
-# from barbican.model.secret import Secret
+from barbican.model.models import Tenant, Secret, States, CSR, Certificate
+from barbican.model.repositories import TenantRepo, SecretRepo
+from barbican.model.repositories import CSRRepo, CertificateRepo
+from barbican.queue.resources import QueueResource, StartCSRMessage
+from barbican.crypto.fields import encrypt, decrypt
+from barbican.common import config
+from barbican.openstack.common.gettextutils import _
+import barbican.openstack.common.log as logging
+
+LOG = logging.getLogger(__name__)
 
 
 def _tenant_not_found():
@@ -22,15 +47,13 @@ def _secret_not_found():
     abort(falcon.HTTP_400, 'Unable to locate secret profile.')
 
 
-def format_tenant(tenant):
-    if not isinstance(tenant, dict):
-        tenant = tenant.__dict__
-
-    return {'id': tenant['id'],
-            'tenant_id': tenant['tenant_id']}
+def json_handler(obj):
+    """Convert objects into json-friendly equivalents."""
+    return obj.isoformat() if hasattr(obj, 'isoformat') else obj
 
 
 class VersionResource(ApiResource):
+    """Returns service and build version information"""
 
     def on_get(self, req, resp):
         resp.status = falcon.HTTP_200
@@ -39,150 +62,222 @@ class VersionResource(ApiResource):
 
 
 class TenantsResource(ApiResource):
+    """Handles Tenant creation requests"""
 
-    def __init__(self, db_session):
-        self.db = db_session
+    def __init__(self, tenant_repo=None):
+        LOG.debug('Creating TenantsResource')
+        self.repo = tenant_repo or TenantRepo()
 
     def on_post(self, req, resp):
         body = load_body(req)
+        LOG.debug('Start on_post...%s' % body)
         username = body['username']
-        logging.debug('Username is {0}'.format(username))
+        # LOG.debug('Username is {0}'.format(username))
+        LOG.debug('Tenant username is %s' % username)
 
-        tenant = find_tenant(self.db, username=username)
+        tenant = self.repo.find_by_name(name=username, suppress_exception=True)
 
         if tenant:
             abort(falcon.HTTP_400, 'Tenant with username {0} '
                                    'already exists'.format(username))
 
-        new_tenant = Tenant(username)
-        self.db.add(new_tenant)
-        self.db.commit()
+        new_tenant = Tenant()
+        new_tenant.username = username
+        new_tenant.status = States.ACTIVE
+        self.repo.create_from(new_tenant)
+
+        LOG.debug('...post create from')
 
         resp.status = falcon.HTTP_201
-        resp.set_header('Location', '/v1/{0}'.format(new_tenant.id))
+        resp.set_header('Location', '/{0}'.format(new_tenant.id))
+        # TBD: Generate URL...
+        url = 'http://localhost:8080/tenants/%s' % new_tenant.id
+        resp.body = json.dumps({'ref': url})
 
 
 class TenantResource(ApiResource):
+    """Handles Tenant retrieval and deletion requests"""
 
-    def __init__(self, db_session):
-        self.db = db_session
+    def __init__(self, tenant_repo=None):
+        self.repo = tenant_repo or TenantRepo()
 
     def on_get(self, req, resp, tenant_id):
-        tenant = find_tenant(self.db, id=tenant_id,
-                             when_not_found=_tenant_not_found)
+        tenant = self.repo.get(entity_id=tenant_id)
 
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps(tenant.format())
+        resp.body = json.dumps(tenant.to_dict_fields(), default=json_handler)
 
     def on_delete(self, req, resp, tenant_id):
-        tenant = find_tenant(self.db, id=tenant_id,
-                             when_not_found=_tenant_not_found)
+        tenant = self.repo.get(entity_id=tenant_id)
 
-        self.db.delete(tenant)
-        self.db.commit()
+        self.repo.delete_entity(tenant)
 
         resp.status = falcon.HTTP_200
 
 
 class SecretsResource(ApiResource):
+    """Handles Secret creation requests"""
 
-    def __init__(self, db_session):
-        self.db = db_session
-
-    def on_get(self, req, resp, tenant_id):
-        tenant = find_tenant(self.db, id=tenant_id,
-                             when_not_found=_tenant_not_found)
-
-        resp.status = falcon.HTTP_200
-
-        #jsonify a list of formatted secrets
-        resp.body = json.dumps([s.format() for s in tenant.secrets])
+    def __init__(self, tenant_repo=None, secret_repo=None):
+        LOG.debug('Creating SecretsResource')
+        self.tenant_repo = tenant_repo or TenantRepo()
+        self.secret_repo = secret_repo or SecretRepo()
 
     def on_post(self, req, resp, tenant_id):
-        tenant = find_tenant(self.db, id=tenant_id,
-                             when_not_found=_tenant_not_found)
+        tenant = self.tenant_repo.get(tenant_id)
 
         body = load_body(req)
-        secret_name = body['name']
 
-        # Check if the tenant already has a secret with this name
-        for secret in tenant.secrets:
-            if secret.name == secret_name:
-                abort(falcon.HTTP_400,
-                      'Secret with name {0} already exists.'.format(
-                      secret.name, secret.id))
+        LOG.debug('Start on_post...%s' % body)
 
-        # Create the new secret
-        new_secret = Secret(tenant.id, secret_name)
-        tenant.secrets.append(new_secret)
+        name = body['name']
+        LOG.debug('Secret name is %s' % name)
 
-        self.db.add(new_secret)
-        self.db.commit()
+        secret = self.secret_repo.find_by_name(name=name,
+                                               suppress_exception=True)
+        if secret:
+            abort(falcon.HTTP_400, 'Secret with name {0} '
+                                   'already exists'.format(name))
 
-        resp.status = falcon.HTTP_201
-        resp.set_header('Location',
-                        '/v1/{0}/secrets/{1}'
-                        .format(tenant_id, new_secret.id))
+        # Encrypt fields
+        encrypt(body)
+        secret_value = body['secret']
+        LOG.debug('Encrypted secret is %s' % secret_value)
+
+        new_secret = Secret()
+        new_secret.name = name
+        new_secret.secret = secret_value
+        new_secret.tenant_id = tenant.id
+        new_secret.status = States.ACTIVE
+        self.secret_repo.create_from(new_secret)
+
+        resp.status = falcon.HTTP_202
+        resp.set_header('Location', '/{0}/secrets/{1}'.format(tenant_id,
+                                                              new_secret.id))
+        # TBD: Generate URL...
+        url = 'http://localhost:8080/%s/secrets/%s' % (tenant_id,
+                                                       new_secret.id)
+        resp.body = json.dumps({'ref': url})
 
 
 class SecretResource(ApiResource):
+    """Handles Secret retrieval and deletion requests"""
 
-    def __init__(self, db_session):
-        self.db = db_session
+    def __init__(self, secret_repo=None):
+        self.repo = secret_repo or SecretRepo()
 
     def on_get(self, req, resp, tenant_id, secret_id):
-        #verify the tenant exists
-        tenant = find_tenant(self.db, tenant_id=tenant_id,
-                             when_not_found=_tenant_not_found)
+        secret = self.repo.get(entity_id=secret_id)
+        fields = secret.to_dict_fields()
+        LOG.debug('Read encrypted secret as %s' % fields['secret'])
 
-        #verify the secret exists
-        secret = find_secret(self.db, id=secret_id,
-                             when_not_found=_secret_not_found)
-
-        #verify the secret belongs to the tenant
-        if not secret in tenant.secrets:
-            _secret_not_found()
+        # Decrypt fields
+        decrypt(fields)
+        secret_value = fields['secret']
 
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps(secret.format())
-
-    def on_put(self, req, resp, tenant_id, secret_id):
-        #verify the tenant exists
-        tenant = find_tenant(self.db, tenant_id=tenant_id,
-                             when_not_found=_tenant_not_found)
-
-        #verify the secret exists
-        secret = find_secret(self.db, id=secret_id,
-                             when_not_found=_secret_not_found)
-
-        #verify the secret belongs to the tenant
-        if not secret in tenant.secrets:
-            _secret_not_found()
-
-        #load the message
-        body = load_body(req)
-
-        #if attributes are present in message, update the secret
-        if 'name' in body.keys():
-            secret.name = body['name']
-
-        self.db.commit()
-        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(fields, default=json_handler)
 
     def on_delete(self, req, resp, tenant_id, secret_id):
-        #verify the tenant exists
-        tenant = find_tenant(self.db, tenant_id=tenant_id,
-                             when_not_found=_tenant_not_found)
+        secret = self.repo.get(entity_id=secret_id)
 
-        #verify the secret exists
-        secret = find_secret(self.db, id=secret_id,
-                             when_not_found=_secret_not_found)
+        self.repo.delete_entity(secret)
 
-        #verify the secret belongs to the tenant
-        if not secret in tenant.secrets:
-            _secret_not_found()
+        resp.status = falcon.HTTP_200
 
-        self.db.delete(secret)
-        self.db.commit()
+
+class CSRsResource(ApiResource):
+    """Handles CSR (SSL certificate request) creation and lists requests"""
+
+    def __init__(self, tenant_repo=None, csr_repo=None, queue_resource=None):
+        LOG.debug('Creating CSRsResource')
+        self.tenant_repo = tenant_repo or TenantRepo()
+        self.csr_repo = csr_repo or CSRRepo()
+        self.queue = queue_resource or QueueResource()
+
+    def on_post(self, req, resp, tenant_id):
+        tenant = self.tenant_repo.get(tenant_id)
+
+        body = load_body(req)
+        LOG.debug('Start on_post...%s' % body)
+        requestor = body['requestor']
+        LOG.debug('CSR requestor is %s' % requestor)
+
+        # TBD: What criteria to restrict multiple concurrent SSL
+        #      requests per tenant?
+        # csr = self.csr_repo.find_by_name(name=requestor,
+        #                                  suppress_exception=True)
+        # if csr:
+        #    abort(falcon.HTTP_400, 'Tenant with username {0} '
+        #                           'already exists'.format(username))
+
+        # TBD: Encrypt fields
+
+        new_csr = CSR()
+        new_csr.requestor = requestor
+        new_csr.tenant_id = tenant.id
+        self.csr_repo.create_from(new_csr)
+
+        # Send to workers to process.
+        self.queue.send(StartCSRMessage(new_csr.id))
+
+        resp.status = falcon.HTTP_202
+        resp.set_header('Location', '/{0}/csrs/{1}'.format(tenant_id,
+                                                           new_csr.id))
+        # TBD: Generate URL...
+        url = 'http://localhost:8080/%s/csrs/%s' % (tenant_id, new_csr.id)
+        resp.body = json.dumps({'ref': url})
+
+
+class CSRResource(ApiResource):
+    """Handles CSR retrieval and deletion requests"""
+
+    def __init__(self, csr_repo=None):
+        self.repo = csr_repo or CSRRepo()
+
+    def on_get(self, req, resp, tenant_id, csr_id):
+        csr = self.repo.get(entity_id=csr_id)
+
+        resp.status = falcon.HTTP_200
+
+        resp.body = json.dumps(csr.to_dict_fields(), default=json_handler)
+
+    def on_delete(self, req, resp, tenant_id, csr_id):
+        csr = self.repo.get(entity_id=csr_id)
+
+        self.repo.delete_entity(csr)
+
+        resp.status = falcon.HTTP_200
+
+
+class CertificatesResource(ApiResource):
+    """Handles Certs (SSL certificates) lists per Tenant requests"""
+
+    def __init__(self, cert_repo=None):
+        LOG.debug('Creating CertificatesResource')
+        self.repo = cert_repo or CertificateRepo()
+
+    def on_post(self, req, resp, tenant_id):
+        resp.status = falcon.HTTP_405
+        msg = _("To create SSL certificates, you must first issue a CSR.")
+        abort(falcon.HTTP_405, msg)
+
+
+class CertificateResource(ApiResource):
+    """Handles Cert (SSL certificates) retrieval and deletion requests"""
+
+    def __init__(self, cert_repo=None):
+        self.repo = cert_repo or CertificateRepo()
+
+    def on_get(self, req, resp, tenant_id, cert_id):
+        cert = self.repo.get(entity_id=cert_id)
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(cert.to_dict_fields(), default=json_handler)
+
+    def on_delete(self, req, resp, tenant_id, cert_id):
+        cert = self.repo.get(entity_id=cert_id)
+
+        self.repo.delete_entity(cert)
 
         resp.status = falcon.HTTP_200
