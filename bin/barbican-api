@@ -9,14 +9,14 @@ VENV=.venv_barbican
 VENV_PYTHON=./$VENV/lib/python2.7/site-packages
 
 PATH=/opt/uwsgi:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/etc/$PKG:$PATH
-CONF_FILE=/etc/barbican-api.ini
-PASTE_FILE=/etc/barbican-api-paste.ini
+CONF_FILE=/etc/$PKG/barbican-api.ini
+PASTE_FILE=/etc/$PKG/barbican-api-paste.ini
 OPTS=''
 if [ ! -f $CONF_FILE ];
 then
-  CONF_FILE=./etc/barbican-api.ini
+  CONF_FILE=./etc/$PKG/barbican-api.ini
   PYTHONPATH=$VENV_PYTHON:$PYTHONPATH
-  PASTE_FILE=$PWD/etc/barbican-api-paste.ini
+  PASTE_FILE=$PWD/etc/$PKG/barbican-api-paste.ini
   OPTS='-H ./'$VENV
 fi
 
