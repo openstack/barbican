@@ -1,0 +1,2 @@
+[report]
+omit = etc/*,setup.py,*egg*,.tox/*,barbican/tests/*,barbican/openstack/*

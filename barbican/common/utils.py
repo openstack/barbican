@@ -14,28 +14,16 @@
 # limitations under the License.
 
 """
-Simple Worker API implementation.
+Common utilities for Barbican.
 """
-from barbican.queue.resources import StartCSRMessage
-from barbican.common import utils
 
-LOG = utils.getLogger(__name__)
+import barbican.openstack.common.log as logging
 
 
-class StartCSRProcessor(object):
-    """Process the start of CSR processing."""
+# Return a logger instance.
+#   Note: Centralize access to the logger to avoid the dreaded
+#   'ArgsAlreadyParsedError: arguments already parsed: cannot register CLI option'
+#   error.
+def getLogger(name):
+    return logging.getLogger(name)
 
-    def process(self, message):
-        LOG.debug("Processing CSR with ID = ", message.csr_id)
-
-
-PROCESSES = {StartCSRMessage: StartCSRProcessor()}
-
-
-def process(message):
-    """
-    Handle the specified message but simply passing
-    through to the Worker Resource.
-    """
-    processor = PROCESSES[message.__class__]
-    processor.process(message)

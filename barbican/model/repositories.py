@@ -30,14 +30,14 @@ import sqlalchemy.orm as sa_orm
 import sqlalchemy.sql as sa_sql
 
 from barbican.common import exception
-from barbican.common import config
 # TBD: from barbican.db.sqlalchemy import migration
 from barbican.model import models
 from barbican.openstack.common import timeutils
 from barbican.openstack.common.gettextutils import _
-import barbican.openstack.common.log as os_logging
+from barbican.common import utils
 
-LOG = os_logging.getLogger(__name__)
+LOG = utils.getLogger(__name__)
+
 
 _ENGINE = None
 _MAKER = None

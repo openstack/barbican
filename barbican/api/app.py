@@ -24,21 +24,26 @@ from barbican.api.resources import TenantsResource, TenantResource
 from barbican.api.resources import CSRsResource, CSRResource
 from barbican.api.resources import CertificatesResource, CertificateResource
 from barbican.api.resources import SecretsResource, SecretResource
-
-# Resources
-VERSIONS = VersionResource()
-TENANTS = TenantsResource()
-TENANT = TenantResource()
-SECRETS = SecretsResource()
-SECRET = SecretResource()
-CSRS = CSRsResource()
-CSR = CSRResource()
-CERTS = CertificatesResource()
-CERT = CertificateResource()
+from barbican.openstack.common import log
+from barbican.common import config
 
 
 def create_main_app(global_config, **local_conf):
     """uWSGI factory method for the Barbican-API application"""
+
+    config.parse_args()
+    log.setup('barbican')
+
+    # Resources
+    VERSIONS = VersionResource()
+    TENANTS = TenantsResource()
+    TENANT = TenantResource()
+    SECRETS = SecretsResource()
+    SECRET = SecretResource()
+    CSRS = CSRsResource()
+    CSR = CSRResource()
+    CERTS = CertificatesResource()
+    CERT = CertificateResource()
 
     wsgi_app = api = falcon.API()
     api.add_route('/', VERSIONS)
@@ -52,4 +57,3 @@ def create_main_app(global_config, **local_conf):
     api.add_route('/{tenant_id}/certificates/{cert_id}', CERT)
     
     return wsgi_app
-    

@@ -27,12 +27,11 @@ from barbican.model.repositories import TenantRepo, SecretRepo
 from barbican.model.repositories import CSRRepo, CertificateRepo
 from barbican.queue.resources import QueueResource, StartCSRMessage
 from barbican.crypto.fields import encrypt, decrypt
-from barbican.common import config
 from barbican.openstack.common.gettextutils import _
-import barbican.openstack.common.log as logging
 from barbican.openstack.common import jsonutils as json
+from barbican.common import utils
 
-LOG = logging.getLogger(__name__)
+LOG = utils.getLogger(__name__)
 
 
 def _tenant_not_found():
