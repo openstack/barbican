@@ -25,8 +25,8 @@ from oslo.config import cfg
 CONF_FILES = cfg.find_config_files(prog='barbican-api')
 
 #CONF_FILES = cfg.find_config_files(project='barbican', prog='barbican-api')
-CONF_FILES.append('./etc/barbican-api.conf')
-CONF_FILES.append('../etc/barbican-api.conf')
+CONF_FILES.append('./etc/barbican/barbican-api.conf')
+CONF_FILES.append('../etc/barbican/barbican-api.conf')
 CONF_FILES = [cfile for cfile in CONF_FILES if os.path.isfile(cfile)]
 
 # Set configuration files
