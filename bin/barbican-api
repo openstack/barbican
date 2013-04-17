@@ -12,12 +12,21 @@ PATH=/opt/uwsgi:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/etc/$PKG:$PATH
 CONF_FILE=/etc/$PKG/barbican-api.ini
 PASTE_FILE=/etc/$PKG/barbican-api-paste.ini
 OPTS=''
+
+# Configure for a local deployment environment:
 if [ ! -f $CONF_FILE ];
 then
   CONF_FILE=./etc/$PKG/barbican-api.ini
   PYTHONPATH=$VENV_PYTHON:$PYTHONPATH
   PASTE_FILE=$PWD/etc/$PKG/barbican-api-paste.ini
   OPTS='-H ./'$VENV
+
+  # Copy conf file to home directory so oslo.config can find it
+  LOCAL_CONF_FILE=~/barbican-api.conf
+  if [ ! -f $LOCAL_CONF_FILE ];
+  then
+    cp ./etc/$PKG/barbican-api.conf ~
+  fi
 fi
 
 echo 'Running barbican-api uwsgi process, using init file here: ' $CONF_FILE

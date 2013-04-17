@@ -20,15 +20,11 @@ A filter middleware that just outputs to logs, for instructive/sample purposes o
 """
 
 from oslo.config import cfg
-
 from barbican.api.middleware import Middleware
+from barbican.common import utils
 
-import barbican.openstack.common.log as logging
-
-
+LOG = utils.getLogger(__name__)
 CONF = cfg.CONF
-
-LOG = logging.getLogger(__name__)
 
 
 class SimpleFilter(Middleware):

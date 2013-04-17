@@ -17,7 +17,6 @@
 Defines database models for Barbican
 """
 
-
 from sqlalchemy import Column, Integer, String, BigInteger
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
@@ -28,9 +27,9 @@ from sqlalchemy import Index, UniqueConstraint
 from barbican.openstack.common import timeutils
 from barbican.openstack.common import uuidutils
 from barbican.openstack.common import jsonutils as json
-import barbican.openstack.common.log as logging
+from barbican.common import utils
 
-LOG = logging.getLogger(__name__)
+LOG = utils.getLogger(__name__)
 BASE = declarative_base()
 
 
