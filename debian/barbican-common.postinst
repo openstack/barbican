@@ -22,6 +22,9 @@ then
     # TBD: Replace these pip requirements with a true Debian package equivalent (via stdeb perhaps).
     pip install uwsgi
     pip install falcon
+    pip install oslo.config
+    pip install webob
+    pip install PasteDeploy
 fi
 
 #DEBHELPER#
