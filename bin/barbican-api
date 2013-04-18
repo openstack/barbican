@@ -5,7 +5,7 @@
 PKG=barbican
 
 # For local development, set VENV_PYTHON equal to the path to your virtual environment's site-packages location
-VENV=.venv_barbican
+VENV=.venv
 VENV_PYTHON=./$VENV/lib/python2.7/site-packages
 
 PATH=/opt/uwsgi:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/etc/$PKG:$PATH

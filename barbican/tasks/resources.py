@@ -14,17 +14,21 @@
 # limitations under the License.
 
 """
-Worker objects for Cloudkeep's Barbican
+Task resources for the Barbican API.
 """
+from barbican.model.repositories import CSRRepo
+from barbican.common import utils
 
-from oslo.config import cfg
-from barbican.common import config
-from barbican.openstack.common.gettextutils import _
+LOG = utils.getLogger(__name__)
 
-worker_opts = [
-    cfg.StrOpt('worker_api', default='barbican.worker.simple',
-               help=_('Python module path of worker implementation API')),
-]
 
-CONF = cfg.CONF
-CONF.register_opts(worker_opts, group='worker')
+class BeginCSR(object):
+    """Handles beginning the processing of a CSR"""
+
+    def __init__(self, csr_repo=None):
+        self.repo = csr_repo or CSRRepo()
+
+    def process(self, csr_id):
+        """Process the beginning of CSR processing."""
+        LOG.debug("Processing CSR with ID = {0}".format(csr_id))
+        return None

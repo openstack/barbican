@@ -14,28 +14,20 @@
 # limitations under the License.
 
 """
-Simple Worker API implementation.
+Simple Queue Resources related objects and functions, making direct calls to the
+worker tasks.
 """
-from barbican.queue.resources import StartCSRMessage
+from oslo.config import cfg
+from barbican.tasks.resources import BeginCSR
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
 
-
-class StartCSRProcessor(object):
-    """Process the start of CSR processing."""
-
-    def process(self, message):
-        LOG.debug("Processing CSR with ID = ", message.csr_id)
+CONF = cfg.CONF
 
 
-PROCESSES = {StartCSRMessage: StartCSRProcessor()}
-
-
-def process(message):
-    """
-    Handle the specified message but simply passing
-    through to the Worker Resource.
-    """
-    processor = PROCESSES[message.__class__]
-    processor.process(message)
+def begin_csr(csr_id):
+    """Process the beginning of CSR processing."""
+    LOG.debug('CSR id is {0}'.format(csr_id))
+    task = BeginCSR()
+    return task.process(csr_id)

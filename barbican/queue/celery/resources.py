@@ -14,31 +14,22 @@
 # limitations under the License.
 
 """
-Queue Resources related objects and functions.
+Celery Queue Resources related objects and functions.
 """
-from oslo.config import cfg
-from barbican.openstack.common import importutils
+from celery import Celery
 
+from oslo.config import cfg
+from barbican.tasks.resources import BeginCSR
+from barbican.common import utils
+
+LOG = utils.getLogger(__name__)
 
 CONF = cfg.CONF
 
 
-def get_queue_api():
-    return importutils.import_module(CONF.queue.queue_api)
-
-
-class StartCSRMessage(object):
-    """Message to start the CSR process"""
-
-    def __init__(self, csr_id):
-        self.csr_id = csr_id
-
-
-class QueueResource(object):
-    """Handles Queue related requests"""
-
-    def __init__(self, queue_api=None):
-        self.api = queue_api or get_queue_api()
-
-    def send(self, message):
-        self.api.send(message)
+@celery.task
+def begin_csr(csr_id):
+    """Process the beginning of CSR processing."""
+    LOG.debug('CSR id is {0}'.format(csr_id))
+    task = BeginCSR()
+    return task.process(csr_id)

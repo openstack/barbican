@@ -25,10 +25,10 @@ from barbican.api import ApiResource, load_body, abort
 from barbican.model.models import Tenant, Secret, States, CSR, Certificate
 from barbican.model.repositories import TenantRepo, SecretRepo
 from barbican.model.repositories import CSRRepo, CertificateRepo
-from barbican.queue.resources import QueueResource, StartCSRMessage
 from barbican.crypto.fields import encrypt, decrypt
 from barbican.openstack.common.gettextutils import _
 from barbican.openstack.common import jsonutils as json
+from barbican.queue import get_queue_api
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
@@ -192,7 +192,7 @@ class CSRsResource(ApiResource):
         LOG.debug('Creating CSRsResource')
         self.tenant_repo = tenant_repo or TenantRepo()
         self.csr_repo = csr_repo or CSRRepo()
-        self.queue = queue_resource or QueueResource()
+        self.queue = queue_resource or get_queue_api()
 
     def on_post(self, req, resp, tenant_id):
         tenant = self.tenant_repo.get(tenant_id)
@@ -218,7 +218,7 @@ class CSRsResource(ApiResource):
         self.csr_repo.create_from(new_csr)
 
         # Send to workers to process.
-        self.queue.send(StartCSRMessage(new_csr.id))
+        self.queue.begin_csr(csr_id=new_csr.id)
 
         resp.status = falcon.HTTP_202
         resp.set_header('Location', '/{0}/csrs/{1}'.format(tenant_id,

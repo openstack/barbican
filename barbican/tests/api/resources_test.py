@@ -239,7 +239,7 @@ class WhenCreatingCSRsUsingCSRsResource(unittest.TestCase):
         self.csr_repo.create_from.return_value = None
         
         self.queue_resource = MagicMock()
-        self.queue_resource.send.return_value = None
+        self.queue_resource.begin_csr.return_value = None
 
         self.stream = MagicMock()
         self.stream.read.return_value = u'{ "requestor" : "%s" }' % self.requestor
@@ -252,6 +252,8 @@ class WhenCreatingCSRsUsingCSRsResource(unittest.TestCase):
 
     def test_should_add_new_csr(self):
         self.resource.on_post(self.req, self.resp, self.tenant_id)
+
+        self.queue_resource.begin_csr.assert_called_once_with(csr_id=None)
 
         args, kwargs = self.csr_repo.create_from.call_args
         assert isinstance(args[0], CSR)
