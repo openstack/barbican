@@ -55,5 +55,5 @@ def create_main_app(global_config, **local_conf):
     api.add_route('/{tenant_id}/csrs/{csr_id}', CSR)
     api.add_route('/{tenant_id}/certificates', CERTS)
     api.add_route('/{tenant_id}/certificates/{cert_id}', CERT)
-    
+
     return wsgi_app

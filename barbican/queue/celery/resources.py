@@ -20,15 +20,28 @@ from celery import Celery
 
 from oslo.config import cfg
 from barbican.tasks.resources import BeginCSR
-from barbican.common import utils
+from barbican.common import config, utils
+
 
 LOG = utils.getLogger(__name__)
 
 CONF = cfg.CONF
+CONF.import_opt('sql_connection', 'barbican.model.repositories')
+
+# Celery instance used by client to register @celery.task's and by
+#   the bin/barbican-worker to boot up a Celery worker server instance.
+celery = Celery('barbican.queue.celery.resources',
+                broker='amqp://guest@localhost//',
+                # backend='amqp://',
+                include=['barbican.queue.celery.resources'])
+
+
+def begin_csr(csr_id):
+    return begin_csr_wrapper.delay(csr_id)
 
 
 @celery.task
-def begin_csr(csr_id):
+def begin_csr_wrapper(csr_id):
     """Process the beginning of CSR processing."""
     LOG.debug('CSR id is {0}'.format(csr_id))
     task = BeginCSR()

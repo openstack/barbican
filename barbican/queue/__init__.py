@@ -21,6 +21,9 @@ from oslo.config import cfg
 from barbican.common import config
 from barbican.openstack.common.gettextutils import _
 from barbican.openstack.common import importutils
+from barbican.common import utils
+
+LOG = utils.getLogger(__name__)
 
 queue_opts = [
     cfg.StrOpt('queue_api', default='barbican.queue.simple.resources',

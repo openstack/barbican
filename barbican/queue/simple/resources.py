@@ -14,8 +14,8 @@
 # limitations under the License.
 
 """
-Simple Queue Resources related objects and functions, making direct calls to the
-worker tasks.
+Simple Queue Resources related objects and functions, making direct calls
+to the worker tasks.
 """
 from oslo.config import cfg
 from barbican.tasks.resources import BeginCSR

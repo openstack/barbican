@@ -16,7 +16,10 @@
 """
 Task resources for the Barbican API.
 """
+from time import sleep
+
 from barbican.model.repositories import CSRRepo
+from barbican.model.models import States
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
@@ -31,4 +34,18 @@ class BeginCSR(object):
     def process(self, csr_id):
         """Process the beginning of CSR processing."""
         LOG.debug("Processing CSR with ID = {0}".format(csr_id))
+
+        # Notify CA that we have a CSR to process
+        csr = self.repo.get(entity_id=csr_id)
+        self._notify_ca(csr)
+
+        # Indicate we are done with CSR processing
+        csr.status = States.ACTIVE
+        self.repo.save(csr)
+
         return None
+
+    def _notify_ca(self, csr):
+        LOG.debug("Notifying CA of request for certificate...")
+        sleep(20.0)
+        LOG.debug("...done notifying.")
