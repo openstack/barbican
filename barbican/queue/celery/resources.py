@@ -25,24 +25,37 @@ from barbican.common import config, utils
 
 LOG = utils.getLogger(__name__)
 
+opt_group = cfg.OptGroup(name='celery',
+                         title='Options for Celery queue interface')
+
+celery_opts = [
+    cfg.StrOpt('project', default='barbican.queue.celery.resources'),
+    cfg.StrOpt('broker', default='amqp://guest@localhost//'),
+    cfg.StrOpt('include', default='barbican.queue.celery.resources'),
+]
+
 CONF = cfg.CONF
-CONF.import_opt('sql_connection', 'barbican.model.repositories')
+CONF.register_group(opt_group)
+CONF.register_opts(celery_opts, opt_group)
+CONF.import_opt('debug', 'barbican.openstack.common.log')
+
 
 # Celery instance used by client to register @celery.task's and by
 #   the bin/barbican-worker to boot up a Celery worker server instance.
-celery = Celery('barbican.queue.celery.resources',
-                broker='amqp://guest@localhost//',
+celery = Celery(CONF.celery.project,
+                broker=CONF.celery.broker,
                 # backend='amqp://',
-                include=['barbican.queue.celery.resources'])
+                include=[CONF.celery.include])
 
 
 def begin_csr(csr_id):
+    """Process the beginning of CSR processing."""
     return begin_csr_wrapper.delay(csr_id)
 
 
 @celery.task
 def begin_csr_wrapper(csr_id):
-    """Process the beginning of CSR processing."""
+    """(Celery wrapped task) Process the beginning of CSR processing."""
     LOG.debug('CSR id is {0}'.format(csr_id))
     task = BeginCSR()
     return task.process(csr_id)

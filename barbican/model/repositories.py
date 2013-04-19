@@ -119,8 +119,6 @@ def get_engine():
         try:
             LOG.debug("Sql connection: {0}; Args: {1}".format(_CONNECTION,
                                                               engine_args))
-            print ("Sql connection: {0}; Args: {1}".format(_CONNECTION,
-                                                           engine_args))
             _ENGINE = sqlalchemy.create_engine(_CONNECTION, **engine_args)
 
 # TBD:          if 'mysql' in connection_dict.drivername:
