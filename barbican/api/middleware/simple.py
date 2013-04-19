@@ -16,7 +16,8 @@
 #    under the License.
 
 """
-A filter middleware that just outputs to logs, for instructive/sample purposes only.
+A filter middleware that just outputs to logs, for instructive/sample
+purposes only.
 """
 
 from oslo.config import cfg

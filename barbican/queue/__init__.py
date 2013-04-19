@@ -20,11 +20,20 @@ Queue objects for Cloudkeep's Barbican
 from oslo.config import cfg
 from barbican.common import config
 from barbican.openstack.common.gettextutils import _
+from barbican.openstack.common import importutils
+from barbican.common import utils
+
+LOG = utils.getLogger(__name__)
 
 queue_opts = [
-    cfg.StrOpt('queue_api', default='barbican.queue.simple',
+    cfg.StrOpt('queue_api', default='barbican.queue.simple.resources',
                help=_('Python module path of queue implementation API')),
 ]
 
 CONF = cfg.CONF
 CONF.register_opts(queue_opts, group='queue')
+
+
+def get_queue_api():
+    """Return the configured queue API module."""
+    return importutils.import_module(CONF.queue.queue_api)

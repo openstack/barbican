@@ -14,31 +14,5 @@
 # limitations under the License.
 
 """
-Queue Resources related objects and functions.
+Simple (i.e. no actual queue) queuing resources.
 """
-from oslo.config import cfg
-from barbican.openstack.common import importutils
-
-
-CONF = cfg.CONF
-
-
-def get_queue_api():
-    return importutils.import_module(CONF.queue.queue_api)
-
-
-class StartCSRMessage(object):
-    """Message to start the CSR process"""
-
-    def __init__(self, csr_id):
-        self.csr_id = csr_id
-
-
-class QueueResource(object):
-    """Handles Queue related requests"""
-
-    def __init__(self, queue_api=None):
-        self.api = queue_api or get_queue_api()
-
-    def send(self, message):
-        self.api.send(message)

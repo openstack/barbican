@@ -14,15 +14,5 @@
 # limitations under the License.
 
 """
-Simple Queue API implementation.
+Task processing objects for Cloudkeep's Barbican
 """
-from barbican.worker.resources import WorkerResource
-
-
-def send(message):
-    """
-    Handle the specified message by simply passing through to the
-    Worker Resource.
-    """
-    worker = WorkerResource()
-    worker.receive(message)

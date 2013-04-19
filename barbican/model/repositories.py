@@ -119,6 +119,8 @@ def get_engine():
         try:
             LOG.debug("Sql connection: {0}; Args: {1}".format(_CONNECTION,
                                                               engine_args))
+            print ("Sql connection: {0}; Args: {1}".format(_CONNECTION,
+                                                           engine_args))
             _ENGINE = sqlalchemy.create_engine(_CONNECTION, **engine_args)
 
 # TBD:          if 'mysql' in connection_dict.drivername:
@@ -192,7 +194,7 @@ def wrap_db_error(f):
                     return f(*args, **kwargs)
                 except sqlalchemy.exc.OperationalError as e:
                     if (remaining_attempts == 0 or not
-                        is_db_connection_error(e.args[0])):
+                            is_db_connection_error(e.args[0])):
                         raise
                 except sqlalchemy.exc.DBAPIError:
                     raise
@@ -260,7 +262,7 @@ class BaseRepo(object):
 
     def create(self, values):
         """Create an entity from the values dictionary."""
-        return self._update(values, None, False)
+        return self._update(None, values, False)
 
     def create_from(self, entity):
         """Sub-class hook: create from Tenant entity."""
@@ -270,7 +272,8 @@ class BaseRepo(object):
             raise exception.Invalid(msg)
 
         if entity.id:
-            msg = "Must supply {0} with id=None(i.e. new entity).".format(self._do_entity_name)
+            msg = "Must supply {0} with id=None(i.e. new entity).".format(
+                self._do_entity_name)
             raise exception.Invalid(msg)
 
         LOG.debug("Begin create from...")
@@ -293,13 +296,36 @@ class BaseRepo(object):
 
         return self.get(entity.id)
 
+    def save(self, entity):
+        """
+        Saves the state of the entity.
+
+        :raises NotFound if entity does not exist.
+        """
+        session = get_session()
+        with session.begin():
+            entity.updated_at = timeutils.utcnow()
+
+            # Validate the attributes before we go any further. From my
+            # (unknown Glance developer) investigation, the @validates
+            # decorator does not validate
+            # on new records, only on existing records, which is, well,
+            # idiotic.
+            self._do_validate(entity.to_dict())
+
+            try:
+                entity.save(session=session)
+            except sqlalchemy.exc.IntegrityError:
+                raise exception.NotFound("Entity ID %s not found"
+                                         % entity_id)
+
     def update(self, entity_id, values, purge_props=False):
         """
         Set the given properties on an entity and update it.
 
         :raises NotFound if entity does not exist.
         """
-        return self._update(values, entity_id, purge_props)
+        return self._update(entity_id, values, purge_props)
 
     def delete_entity(self, entity):
         """Remove the entity"""
@@ -349,13 +375,13 @@ class BaseRepo(object):
             raise exception.Invalid(msg)
 
         if status not in STATUSES:
-            msg = "Invalid status '{0}' for {1}.".format(status,
-                                                   self._do_entity_name())
+            msg = "Invalid status '{0}' for {1}.".format(
+                status, self._do_entity_name())
             raise exception.Invalid(msg)
 
         return values
 
-    def _update(values, entity_id, purge_props=False):
+    def _update(self, entity_id, values, purge_props=False):
         """
         Used internally by create() and update()
 
@@ -367,7 +393,7 @@ class BaseRepo(object):
         with session.begin():
 
             if entity_id:
-                entity_ref = self._do_get(entity_id, session=session)
+                entity_ref = self.get(entity_id, session=session)
                 values['updated_at'] = timeutils.utcnow()
             else:
                 self._do_convert_values(values)
@@ -384,18 +410,22 @@ class BaseRepo(object):
             # decorator does not validate
             # on new records, only on existing records, which is, well,
             # idiotic.
-            values = self._do_validate(entity_ref.to_dict())
+            self._do_validate(entity_ref.to_dict())
             self._update_values(entity_ref, values)
 
             try:
                 entity_ref.save(session=session)
             except sqlalchemy.exc.IntegrityError:
-                raise exception.Duplicate("Entity ID %s already exists!"
-                                          % values['id'])
+                if entity_id:
+                    raise exception.NotFound("Entity ID %s not found"
+                                             % entity_id)
+                else:
+                    raise exception.Duplicate("Entity ID %s already exists!"
+                                              % values['id'])
 
         return self.get(entity_ref.id)
 
-    def _update_values(entity_ref, values):
+    def _update_values(self, entity_ref, values):
         for k in values:
             if getattr(entity_ref, k) != values[k]:
                 setattr(entity_ref, k, values[k])

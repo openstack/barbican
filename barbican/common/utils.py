@@ -22,8 +22,8 @@ import barbican.openstack.common.log as logging
 
 # Return a logger instance.
 #   Note: Centralize access to the logger to avoid the dreaded
-#   'ArgsAlreadyParsedError: arguments already parsed: cannot register CLI option'
+#   'ArgsAlreadyParsedError: arguments already parsed: cannot
+#   register CLI option'
 #   error.
 def getLogger(name):
     return logging.getLogger(name)
-

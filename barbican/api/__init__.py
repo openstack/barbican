@@ -47,7 +47,8 @@ def load_body(req):
         abort(falcon.HTTP_500, 'Read Error')
 
     try:
-        # TBD: Investigate how to get UTF8 format via openstack jsonutils: parsed_body = json.loads(raw_json, 'utf-8')
+        # TBD: Investigate how to get UTF8 format via openstack jsonutils:
+        #     parsed_body = json.loads(raw_json, 'utf-8')
         parsed_body = json.loads(raw_json)
     except ValueError:
         abort(falcon.HTTP_400, 'Malformed JSON')

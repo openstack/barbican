@@ -14,17 +14,20 @@
 # limitations under the License.
 
 """
-Worker objects for Cloudkeep's Barbican
+Simple Queue Resources related objects and functions, making direct calls
+to the worker tasks.
 """
-
 from oslo.config import cfg
-from barbican.common import config
-from barbican.openstack.common.gettextutils import _
+from barbican.tasks.resources import BeginCSR
+from barbican.common import utils
 
-worker_opts = [
-    cfg.StrOpt('worker_api', default='barbican.worker.simple',
-               help=_('Python module path of worker implementation API')),
-]
+LOG = utils.getLogger(__name__)
 
 CONF = cfg.CONF
-CONF.register_opts(worker_opts, group='worker')
+
+
+def begin_csr(csr_id):
+    """Process the beginning of CSR processing."""
+    LOG.debug('CSR id is {0}'.format(csr_id))
+    task = BeginCSR()
+    return task.process(csr_id)
