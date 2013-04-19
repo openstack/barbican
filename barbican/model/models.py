@@ -76,7 +76,7 @@ class ModelBase(object):
         session = session or barbican.model.repositories.get_session()
         session.delete(self)
 
-        # TBD: Soft delete instead?
+        #TODO: Soft delete instead?
         # self.deleted = True
         # self.deleted_at = timeutils.utcnow()
         # self.save(session=session)
