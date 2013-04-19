@@ -31,9 +31,9 @@ queue_opts = [
 ]
 
 CONF = cfg.CONF
-CONF.register_opts(queue_opts, group='queue')
+CONF.register_opts(queue_opts)
 
 
 def get_queue_api():
     """Return the configured queue API module."""
-    return importutils.import_module(CONF.queue.queue_api)
+    return importutils.import_module(CONF.queue_api)
