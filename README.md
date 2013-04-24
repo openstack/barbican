@@ -11,10 +11,10 @@ Additional documentation can be found on the [Github Wiki](https://github.com/cl
 
 ## Getting Started
 
-* Installation
+* [Installation](https://github.com/cloudkeep/barbican/wiki/Developer-Guide)
 * Contributing
-* API Documentation
-* Technology
+* [API Documentation](https://github.com/cloudkeep/barbican/wiki/High-Level-API-Proposal)
+* [Technology](https://github.com/cloudkeep/barbican/wiki/Architecture)
 * FAQ
 
 ## Why Should You Use Barbican?
