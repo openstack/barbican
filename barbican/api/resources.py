@@ -89,7 +89,7 @@ class TenantsResource(ApiResource):
 
         resp.status = falcon.HTTP_201
         resp.set_header('Location', '/{0}'.format(new_tenant.id))
-        # TBD: Generate URL...
+        #TODO: Generate URL...
         url = 'http://localhost:8080/tenants/%s' % new_tenant.id
         resp.body = json.dumps({'ref': url})
 
@@ -153,7 +153,7 @@ class SecretsResource(ApiResource):
         resp.status = falcon.HTTP_202
         resp.set_header('Location', '/{0}/secrets/{1}'.format(tenant_id,
                                                               new_secret.id))
-        # TBD: Generate URL...
+        #TODO: Generate URL...Use .format() approach here too
         url = 'http://localhost:8080/%s/secrets/%s' % (tenant_id,
                                                        new_secret.id)
         resp.body = json.dumps({'ref': url})
@@ -166,6 +166,7 @@ class SecretResource(ApiResource):
         self.repo = secret_repo or SecretRepo()
 
     def on_get(self, req, resp, tenant_id, secret_id):
+        #TODO: Use a falcon exception here
         secret = self.repo.get(entity_id=secret_id)
         fields = secret.to_dict_fields()
         LOG.debug('Read encrypted secret as %s' % fields['secret'])
@@ -202,7 +203,7 @@ class CSRsResource(ApiResource):
         requestor = body['requestor']
         LOG.debug('CSR requestor is %s' % requestor)
 
-        # TBD: What criteria to restrict multiple concurrent SSL
+        #TODO: What criteria to restrict multiple concurrent SSL
         #      requests per tenant?
         # csr = self.csr_repo.find_by_name(name=requestor,
         #                                  suppress_exception=True)
@@ -210,7 +211,7 @@ class CSRsResource(ApiResource):
         #    abort(falcon.HTTP_400, 'Tenant with username {0} '
         #                           'already exists'.format(username))
 
-        # TBD: Encrypt fields
+        #TODO: Encrypt fields
 
         new_csr = CSR()
         new_csr.requestor = requestor
@@ -223,7 +224,7 @@ class CSRsResource(ApiResource):
         resp.status = falcon.HTTP_202
         resp.set_header('Location', '/{0}/csrs/{1}'.format(tenant_id,
                                                            new_csr.id))
-        # TBD: Generate URL...
+        #TODO: Generate URL...
         url = 'http://localhost:8080/%s/csrs/%s' % (tenant_id, new_csr.id)
         resp.body = json.dumps({'ref': url})
 

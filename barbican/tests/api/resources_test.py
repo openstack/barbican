@@ -34,7 +34,16 @@ from barbican.common import exception
 
 def suite():
     suite = unittest.TestSuite()
+
     suite.addTest(WhenTestingVersionResource())
+    suite.addTest(WhenCreatingTenantsUsingTenantsResource())
+    suite.addTest(WhenGettingOrDeletingTenantUsingTenantResource())
+    suite.addTest(WhenCreatingSecretsUsingSecretsResource())
+    suite.addTest(WhenGettingOrDeletingSecretUsingSecretResource())
+    suite.addTest(WhenCreatingCSRsUsingCSRsResource())
+    suite.addTest(WhenGettingOrDeletingCSRUsingCSRResource())
+    suite.addTest(WhenCreatingCertsUsingCertsResource())
+    suite.addTest(WhenGettingOrDeletingCertsUsingCertResource())
 
     return suite
 

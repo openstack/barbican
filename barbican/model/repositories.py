@@ -15,7 +15,8 @@
 
 """
 Defines interface for DB access that Resource controllers may reference
-TBD: The top part of this file was 'borrowed' from Glance, but seems
+
+TODO: The top part of this file was 'borrowed' from Glance, but seems
 quite intense for sqlalchemy, and maybe could be simplified.
 """
 
@@ -30,7 +31,7 @@ import sqlalchemy.orm as sa_orm
 import sqlalchemy.sql as sa_sql
 
 from barbican.common import exception
-# TBD: from barbican.db.sqlalchemy import migration
+#TODO: from barbican.db.sqlalchemy import migration
 from barbican.model import models
 from barbican.openstack.common import timeutils
 from barbican.openstack.common.gettextutils import _
@@ -121,8 +122,8 @@ def get_engine():
                                                               engine_args))
             _ENGINE = sqlalchemy.create_engine(_CONNECTION, **engine_args)
 
-# TBD:          if 'mysql' in connection_dict.drivername:
-# TBD:          sqlalchemy.event.listen(_ENGINE, 'checkout', ping_listener)
+#TODO:          if 'mysql' in connection_dict.drivername:
+#TODO:          sqlalchemy.event.listen(_ENGINE, 'checkout', ping_listener)
 
             _ENGINE.connect = wrap_db_error(_ENGINE.connect)
             _ENGINE.connect()
@@ -139,11 +140,11 @@ def get_engine():
         if CONF.db_auto_create:
             LOG.info(_('auto-creating barbican registry DB'))
             models.register_models(_ENGINE)
-# TBD:      try:
-# TBD:          migration.version_control()
-# TBD:      except exception.DatabaseMigrationError:
-# TBD:          # only arises when the DB exists and is under version control
-# TBD:          pass
+#TODO:      try:
+#TODO:          migration.version_control()
+#TODO:      except exception.DatabaseMigrationError:
+#TODO:          # only arises when the DB exists and is under version control
+#TODO:          pass
         else:
             LOG.info(_('not auto-creating barbican registry DB'))
 
@@ -368,7 +369,7 @@ class BaseRepo(object):
         """
         status = values.get('status', None)
         if not status:
-            # TBD: I18n this!
+            #TODO: I18n this!
             msg = "{0} status is required.".format(self._do_entity_name())
             raise exception.Invalid(msg)
 

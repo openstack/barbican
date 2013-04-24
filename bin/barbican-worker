@@ -24,7 +24,8 @@ import gettext
 import os
 import sys
 
-# If ../glance/__init__.py exists, add ../ to Python search path, so that
+# 'Borrowed' from the Glance project:
+# If ../barbican/__init__.py exists, add ../ to Python search path, so that
 # it will override what happens to be installed in /usr/(local/)lib/python...
 possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
                                    os.pardir,
@@ -41,6 +42,7 @@ from barbican.common import exception
 from barbican.openstack.common import log
 from barbican.queue.celery.resources import celery
 
+
 def fail(returncode, e):
     sys.stderr.write("ERROR: {0}\n".format(e))
     sys.exit(returncode)
@@ -50,7 +52,7 @@ if __name__ == '__main__':
     try:
         config.parse_args()
         log.setup('barbican')
-        
+    
         celery.worker_main()
     except RuntimeError as e:
         fail(1, e)

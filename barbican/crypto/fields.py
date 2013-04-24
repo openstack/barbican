@@ -27,7 +27,7 @@ FIELDS_TO_PROTECT = ['secret', 'private_key', 'public_key']
 
 def encrypt_value(value):
     """Encrypt the supplied value"""
-    # TBD: Supply algorithm
+    #TODO: Supply algorithm
     return value if value is None else '[encrypt-this]%s' % value
 
 
@@ -39,7 +39,7 @@ def encrypt(fields):
 
 def decrypt_value(value):
     """Decrypt the supplied value"""
-    # TBD: Supply algorithm
+    #TODO: Supply algorithm
     if value is None:
         return None
     prefix = '[encrypt-this]'
