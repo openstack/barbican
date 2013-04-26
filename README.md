@@ -7,7 +7,7 @@ Barbican is part of a set of applications that make up the CloudKeep ecosystem. 
 * [Palisade](https://github.com/cloudkeep/palisade) - AngularJS based web ui for the Barbican API.
 * [Keep](https://github.com/cloudkeep/keep) - A python-based command line client for the Barbican API.
 
-Additional documentation can be found on the [Github Wiki](https://github.com/cloudkeep/barbican/wiki). For questions, comments or concerns, hop on the [mailing list](https://groups.google.com/forum/#!forum/cloudkeep) and let us know what you think.
+Additional documentation can be found on the [Github Wiki](https://github.com/cloudkeep/barbican/wiki). For questions, comments or concerns, hop on the [OpenStack dev mailing list](openstack-dev@lists.openstack.org) and let us know what you think, just add `[openstack-dev][barbican]` to the title. You can also join our Freenode IRC at `#openstack-cloudkeep`.
 
 ## Getting Started
 
