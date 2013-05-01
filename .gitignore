@@ -38,6 +38,7 @@ coverage.xml
 
 # Pycharm
 .idea
+*.iml
 
 # Sqlite databases
 *.sqlite3
