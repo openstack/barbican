@@ -21,20 +21,25 @@ value, independent of the entity type, as long as these fields match
 a list of protection-fields below.
 """
 
-
-FIELDS_TO_PROTECT = ['secret', 'private_key', 'public_key']
+FIELDS_ENCRYPT_DECRYPT = {'plain_text': 'cypher_text'}
 
 
 def encrypt_value(value):
     """Encrypt the supplied value"""
     #TODO: Supply algorithm
-    return value if value is None else '[encrypt-this]%s' % value
+    return value if value is None else '[encrypt-this]{0}'.format(value)
 
 
 def encrypt(fields):
     """Encrypt in-place the data of any fields found in FIELDS_TO_PROTECT"""
-    for key in (key for key in FIELDS_TO_PROTECT if key in fields):
-        fields[key] = encrypt_value(fields[key])
+        
+    for pt in (pt for pt,ct in FIELDS_ENCRYPT_DECRYPT.iteritems() if pt in fields):
+        ct = FIELDS_ENCRYPT_DECRYPT[pt]
+        fields[ct] = encrypt_value(fields[pt])
+        if pt != ct:
+            del fields[pt]
+
+    fields['kek_metadata'] = "dummymetadata"
 
 
 def decrypt_value(value):
@@ -48,5 +53,8 @@ def decrypt_value(value):
 
 def decrypt(fields):
     """Decrypt in-place the data of any fields found in FIELDS_TO_PROTECT"""
-    for key in (key for key in FIELDS_TO_PROTECT if key in fields):
-        fields[key] = decrypt_value(fields[key])
+    for pt in (pt for pt,ct in FIELDS_ENCRYPT_DECRYPT.iteritems() if ct in fields):
+        ct = FIELDS_ENCRYPT_DECRYPT[pt]
+        fields[pt] = decrypt_value(fields[ct])
+        if pt != ct:
+            del fields[ct]

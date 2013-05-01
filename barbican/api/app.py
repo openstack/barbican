@@ -19,11 +19,9 @@ API application handler for Cloudkeep's Barbican
 
 import falcon
 
-from barbican.api.resources import VersionResource
-from barbican.api.resources import TenantsResource, TenantResource
-from barbican.api.resources import CSRsResource, CSRResource
-from barbican.api.resources import CertificatesResource, CertificateResource
-from barbican.api.resources import SecretsResource, SecretResource
+from barbican.api.resources import (VersionResource,
+                                    SecretsResource, SecretResource,
+                                    OrdersResource, OrderResource)
 from barbican.openstack.common import log
 from barbican.common import config
 
@@ -36,24 +34,16 @@ def create_main_app(global_config, **local_conf):
 
     # Resources
     VERSIONS = VersionResource()
-    TENANTS = TenantsResource()
-    TENANT = TenantResource()
     SECRETS = SecretsResource()
     SECRET = SecretResource()
-    CSRS = CSRsResource()
-    CSR = CSRResource()
-    CERTS = CertificatesResource()
-    CERT = CertificateResource()
+    ORDERS = OrdersResource()
+    ORDER = OrderResource()
 
     wsgi_app = api = falcon.API()
     api.add_route('/', VERSIONS)
-    api.add_route('/v1/tenants', TENANTS)
-    api.add_route('/v1/tenants/{tenant_id}', TENANT)
     api.add_route('/v1/{tenant_id}/secrets', SECRETS)
     api.add_route('/v1/{tenant_id}/secrets/{secret_id}', SECRET)
-    api.add_route('/v1/{tenant_id}/csrs', CSRS)
-    api.add_route('/v1/{tenant_id}/csrs/{csr_id}', CSR)
-    api.add_route('/v1/{tenant_id}/certificates', CERTS)
-    api.add_route('/v1/{tenant_id}/certificates/{cert_id}', CERT)
+    api.add_route('/v1/{tenant_id}/orders', ORDERS)
+    api.add_route('/v1/{tenant_id}/orders/{order_id}', ORDER)
 
     return wsgi_app

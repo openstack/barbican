@@ -442,7 +442,7 @@ class TenantRepo(BaseRepo):
 
     def _do_build_query_by_name(self, name, session):
         """Sub-class hook: find entity by name."""
-        return session.query(models.Tenant).filter_by(username=name)
+        raise TypeError(_("No support for retrieving by 'name' an Tenant record."))
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
@@ -451,6 +451,25 @@ class TenantRepo(BaseRepo):
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
+
+
+    def find_by_keystone_id(self, keystone_id, suppress_exception=False, session=None):
+        session = self.get_session(session)
+
+        try:
+            LOG.debug("Starting find by keystone_id steps...")
+            query = session.query(models.Tenant).filter_by(keystone_id=keystone_id)
+            LOG.debug("...query = {0}".format(repr(query)))
+            entity = query.one()
+            LOG.debug("...post query.one()")
+
+        except sa_orm.exc.NoResultFound:
+            entity = None
+            if not suppress_exception:
+                raise exception.NotFound("No %s found with keystone-ID %s"
+                                         % (self._do_entity_name(), keystone_id))
+
+        return entity
 
 
 class SecretRepo(BaseRepo):
@@ -476,47 +495,72 @@ class SecretRepo(BaseRepo):
         pass
 
 
-class CSRRepo(BaseRepo):
-    """Repository for the CSR entity."""
+class EncryptedDatumRepo(BaseRepo):
+    """
+    Repository for the EncryptedDatum entity (that stores encrypted
+    information on behalf of a Secret.
+    """
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
-        return "CSR"
+        return "EncryptedDatum"
 
     def _do_create_instance(self):
-        return models.CSR()
+        return models.EncryptedDatum()
 
     def _do_build_query_by_name(self, name, session):
         """Sub-class hook: find entity by name."""
-        raise TypeError(_("No support for retrieving by 'name' a CSR record."))
+        raise TypeError(_("No support for retrieving by 'name' an EncryptedDatum record."))
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
-        return session.query(models.CSR).filter_by(id=entity_id)
+        return session.query(models.EncryptedDatum).filter_by(id=entity_id)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
 
 
-class CertificateRepo(BaseRepo):
-    """Repository for the Certificate entity."""
+class TenantSecretRepo(BaseRepo):
+    """Repository for the TenantSecret entity."""
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
-        return "Certificate"
+        return "TenantSecret"
 
     def _do_create_instance(self):
-        return models.Certificate()
+        return models.TenantSecret()
 
     def _do_build_query_by_name(self, name, session):
         """Sub-class hook: find entity by name."""
-        raise TypeError(_("No support for retrieving by "
-                          "'name' a Certificate record."))
+        raise TypeError(_("No support for retrieving by 'name' an Tenant record."))
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
-        return session.query(models.Certificate).filter_by(id=entity_id)
+        return session.query(models.TenantSecret).filter_by(id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
+class OrderRepo(BaseRepo):
+    """Repository for the Order entity."""
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "Order"
+
+    def _do_create_instance(self):
+        return models.Order()
+
+    def _do_build_query_by_name(self, name, session):
+        """Sub-class hook: find entity by name."""
+        raise TypeError(_("No support for retrieving by 'name' an Order record."))
+
+    def _do_build_get_query(self, entity_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.Order).filter_by(id=entity_id)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""

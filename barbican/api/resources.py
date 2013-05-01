@@ -22,9 +22,11 @@ import falcon
 
 from barbican.version import __version__
 from barbican.api import ApiResource, load_body, abort
-from barbican.model.models import Tenant, Secret, States, CSR, Certificate
-from barbican.model.repositories import TenantRepo, SecretRepo
-from barbican.model.repositories import CSRRepo, CertificateRepo
+from barbican.model.models import (Tenant, Secret, TenantSecret,
+                                   EncryptedDatum, Order, States)
+from barbican.model.repositories import (TenantRepo, SecretRepo,
+                                         OrderRepo, TenantSecretRepo,
+                                         EncryptedDatumRepo)
 from barbican.crypto.fields import encrypt, decrypt
 from barbican.openstack.common.gettextutils import _
 from barbican.openstack.common import jsonutils as json
@@ -60,102 +62,79 @@ class VersionResource(ApiResource):
                                 'build': __version__})
 
 
-class TenantsResource(ApiResource):
-    """Handles Tenant creation requests"""
-
-    def __init__(self, tenant_repo=None):
-        LOG.debug('Creating TenantsResource')
-        self.repo = tenant_repo or TenantRepo()
-
-    def on_post(self, req, resp):
-        body = load_body(req)
-        LOG.debug('Start on_post...%s' % body)
-        username = body['username']
-        # LOG.debug('Username is {0}'.format(username))
-        LOG.debug('Tenant username is %s' % username)
-
-        tenant = self.repo.find_by_name(name=username, suppress_exception=True)
-
-        if tenant:
-            abort(falcon.HTTP_400, 'Tenant with username {0} '
-                                   'already exists'.format(username))
-
-        new_tenant = Tenant()
-        new_tenant.username = username
-        new_tenant.status = States.ACTIVE
-        self.repo.create_from(new_tenant)
-
-        LOG.debug('...post create from')
-
-        resp.status = falcon.HTTP_201
-        resp.set_header('Location', '/{0}'.format(new_tenant.id))
-        #TODO: Generate URL...
-        url = 'http://localhost:8080/tenants/%s' % new_tenant.id
-        resp.body = json.dumps({'ref': url})
-
-
-class TenantResource(ApiResource):
-    """Handles Tenant retrieval and deletion requests"""
-
-    def __init__(self, tenant_repo=None):
-        self.repo = tenant_repo or TenantRepo()
-
-    def on_get(self, req, resp, tenant_id):
-        tenant = self.repo.get(entity_id=tenant_id)
-
-        resp.status = falcon.HTTP_200
-        resp.body = json.dumps(tenant.to_dict_fields(), default=json_handler)
-
-    def on_delete(self, req, resp, tenant_id):
-        tenant = self.repo.get(entity_id=tenant_id)
-
-        self.repo.delete_entity(tenant)
-
-        resp.status = falcon.HTTP_200
-
-
 class SecretsResource(ApiResource):
     """Handles Secret creation requests"""
 
-    def __init__(self, tenant_repo=None, secret_repo=None):
+    def __init__(self, tenant_repo=None, secret_repo=None,
+                 tenant_secret_repo=None, datum_repo=None):
         LOG.debug('Creating SecretsResource')
         self.tenant_repo = tenant_repo or TenantRepo()
         self.secret_repo = secret_repo or SecretRepo()
+        self.tenant_secret_repo = tenant_secret_repo or TenantSecretRepo()
+        self.datum_repo = datum_repo or EncryptedDatumRepo()
 
     def on_post(self, req, resp, tenant_id):
-        tenant = self.tenant_repo.get(tenant_id)
 
+        LOG.debug('Start on_post for tenant-ID {0}:'.format(tenant_id))
+   
         body = load_body(req)
+   
+        # Retrieve Tenant, or else create new Tenant
+        #   if this is a request from a new tenant.
+        tenant = self.tenant_repo.get(tenant_id, suppress_exception=True)
+        if not tenant:
+            LOG.debug('Creating tenant for {0}'.format(tenant_id))
+            tenant = Tenant()
+            tenant.keystone_id = tenant_id
+            tenant.status = States.ACTIVE
+            self.tenant_repo.create_from(tenant)
 
-        LOG.debug('Start on_post...%s' % body)
-
+        # Verify secret doesn't already exist.
         name = body['name']
-        LOG.debug('Secret name is %s' % name)
-
+        LOG.debug('Secret name is {0}'.format(name))
         secret = self.secret_repo.find_by_name(name=name,
                                                suppress_exception=True)
         if secret:
             abort(falcon.HTTP_400, 'Secret with name {0} '
                                    'already exists'.format(name))
 
-        # Encrypt fields
+        # Encrypt fields.
         encrypt(body)
-        secret_value = body['secret']
-        LOG.debug('Encrypted secret is %s' % secret_value)
+        LOG.debug('Post-encrypted fields...{0}'.format(body))
+        secret_value = body['cypher_text']
+        LOG.debug('Encrypted secret is {0}'.format(secret_value))
 
+        # Create Secret entity.
         new_secret = Secret()
         new_secret.name = name
-        new_secret.secret = secret_value
-        new_secret.tenant_id = tenant.id
+#TODO:  new_secret.expiration = ...
         new_secret.status = States.ACTIVE
         self.secret_repo.create_from(new_secret)
+
+        # Create Tenant/Secret entity.
+        new_assoc = TenantSecret()
+        new_assoc.tenant_id = tenant.id
+        new_assoc.secret_id = new_secret.id
+        new_assoc.role = "admin"
+        new_assoc.status = States.ACTIVE
+        self.tenant_secret_repo.create_from(new_assoc)
+
+        # Create EncryptedDatum entity.
+        new_datum = EncryptedDatum()
+        new_datum.secret_id = new_secret.id
+        new_datum.mime_type = body['mime_type']
+        new_datum.cypher_text = secret_value
+        new_datum.kek_metadata = body['kek_metadata']
+        new_datum.status = States.ACTIVE
+        self.datum_repo.create_from(new_datum)
 
         resp.status = falcon.HTTP_202
         resp.set_header('Location', '/{0}/secrets/{1}'.format(tenant_id,
                                                               new_secret.id))
         #TODO: Generate URL...Use .format() approach here too
-        url = 'http://localhost:8080/%s/secrets/%s' % (tenant_id,
-                                                       new_secret.id)
+        url = 'http://localhost:8080/{0}/secrets/{1}'.format(tenant_id,
+                                                             new_secret.id)
+        LOG.debug('URI to secret is {0}'.format(url))
         resp.body = json.dumps({'ref': url})
 
 
@@ -168,15 +147,8 @@ class SecretResource(ApiResource):
     def on_get(self, req, resp, tenant_id, secret_id):
         #TODO: Use a falcon exception here
         secret = self.repo.get(entity_id=secret_id)
-        fields = secret.to_dict_fields()
-        LOG.debug('Read encrypted secret as %s' % fields['secret'])
-
-        # Decrypt fields
-        decrypt(fields)
-        secret_value = fields['secret']
-
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps(fields, default=json_handler)
+        resp.body = json.dumps(secret.to_dict_fields(), default=json_handler)
 
     def on_delete(self, req, resp, tenant_id, secret_id):
         secret = self.repo.get(entity_id=secret_id)
@@ -186,98 +158,76 @@ class SecretResource(ApiResource):
         resp.status = falcon.HTTP_200
 
 
-class CSRsResource(ApiResource):
-    """Handles CSR (SSL certificate request) creation and lists requests"""
+class OrdersResource(ApiResource):
+    """Handles Order requests for Secret creation"""
 
-    def __init__(self, tenant_repo=None, csr_repo=None, queue_resource=None):
-        LOG.debug('Creating CSRsResource')
+    def __init__(self, tenant_repo=None, order_repo=None, queue_resource=None):
+        LOG.debug('Creating OrdersResource')
         self.tenant_repo = tenant_repo or TenantRepo()
-        self.csr_repo = csr_repo or CSRRepo()
+        self.order_repo = order_repo or OrderRepo()
         self.queue = queue_resource or get_queue_api()
 
     def on_post(self, req, resp, tenant_id):
-        tenant = self.tenant_repo.get(tenant_id)
+
+        # Retrieve Tenant, or else create new Tenant
+        #   if this is a request from a new tenant.
+        tenant = self.tenant_repo.get(tenant_id, suppress_exception=True)
+        if not tenant:
+            tenant = Tenant()
+            tenant.keystone_id = tenant_id
+            tenant.status = States.ACTIVE
+            self.tenant_repo.create_from(tenant)
 
         body = load_body(req)
-        LOG.debug('Start on_post...%s' % body)
-        requestor = body['requestor']
-        LOG.debug('CSR requestor is %s' % requestor)
+        LOG.debug('Start on_post...{0}'.format(body))
+        name = body['secret_name']
+        LOG.debug('Secret to create is {0}'.format(name))
 
-        #TODO: What criteria to restrict multiple concurrent SSL
+
+        #TODO: What criteria to restrict multiple concurrent Order
         #      requests per tenant?
-        # csr = self.csr_repo.find_by_name(name=requestor,
+        # order = self.order_repo.find_by_name(name=secret_name,
         #                                  suppress_exception=True)
-        # if csr:
-        #    abort(falcon.HTTP_400, 'Tenant with username {0} '
+        # if order:
+        #    abort(falcon.HTTP_400, 'Order with username {0} '
         #                           'already exists'.format(username))
 
-        #TODO: Encrypt fields
+        #TODO: Encrypt fields as needed
 
-        new_csr = CSR()
-        new_csr.requestor = requestor
-        new_csr.tenant_id = tenant.id
-        self.csr_repo.create_from(new_csr)
+        new_order = Order()
+        new_order.secret_name = body['secret_name']
+        new_order.secret_mime_type = body['secret_mime_type']
+#TODO:        new_order.secret_expiration = body['secret_expiration']
+        new_order.tenant_id = tenant.id
+        self.order_repo.create_from(new_order)
 
         # Send to workers to process.
-        self.queue.begin_csr(csr_id=new_csr.id)
+        self.queue.process_order(order_id=new_order.id)
 
         resp.status = falcon.HTTP_202
-        resp.set_header('Location', '/{0}/csrs/{1}'.format(tenant_id,
-                                                           new_csr.id))
+        resp.set_header('Location', '/{0}/orders/{1}'.format(tenant_id,
+                                                             new_order.id))
         #TODO: Generate URL...
-        url = 'http://localhost:8080/%s/csrs/%s' % (tenant_id, new_csr.id)
+        url = 'http://localhost:8080/{0}/orders/{1}'.format(tenant_id,
+                                                            new_order.id)
         resp.body = json.dumps({'ref': url})
 
 
-class CSRResource(ApiResource):
-    """Handles CSR retrieval and deletion requests"""
+class OrderResource(ApiResource):
+    """Handles Order retrieval and deletion requests"""
 
-    def __init__(self, csr_repo=None):
-        self.repo = csr_repo or CSRRepo()
+    def __init__(self, order_repo=None):
+        self.repo = order_repo or OrderRepo()
 
-    def on_get(self, req, resp, tenant_id, csr_id):
-        csr = self.repo.get(entity_id=csr_id)
-
+    def on_get(self, req, resp, tenant_id, order_id):
+        #TODO: Use a falcon exception here
+        order = self.repo.get(entity_id=order_id)
         resp.status = falcon.HTTP_200
+        resp.body = json.dumps(order.to_dict_fields(), default=json_handler)
 
-        resp.body = json.dumps(csr.to_dict_fields(), default=json_handler)
+    def on_delete(self, req, resp, tenant_id, order_id):
+        order = self.repo.get(entity_id=order_id)
 
-    def on_delete(self, req, resp, tenant_id, csr_id):
-        csr = self.repo.get(entity_id=csr_id)
-
-        self.repo.delete_entity(csr)
-
-        resp.status = falcon.HTTP_200
-
-
-class CertificatesResource(ApiResource):
-    """Handles Certs (SSL certificates) lists per Tenant requests"""
-
-    def __init__(self, cert_repo=None):
-        LOG.debug('Creating CertificatesResource')
-        self.repo = cert_repo or CertificateRepo()
-
-    def on_post(self, req, resp, tenant_id):
-        resp.status = falcon.HTTP_405
-        msg = _("To create SSL certificates, you must first issue a CSR.")
-        abort(falcon.HTTP_405, msg)
-
-
-class CertificateResource(ApiResource):
-    """Handles Cert (SSL certificates) retrieval and deletion requests"""
-
-    def __init__(self, cert_repo=None):
-        self.repo = cert_repo or CertificateRepo()
-
-    def on_get(self, req, resp, tenant_id, cert_id):
-        cert = self.repo.get(entity_id=cert_id)
-
-        resp.status = falcon.HTTP_200
-        resp.body = json.dumps(cert.to_dict_fields(), default=json_handler)
-
-    def on_delete(self, req, resp, tenant_id, cert_id):
-        cert = self.repo.get(entity_id=cert_id)
-
-        self.repo.delete_entity(cert)
+        self.repo.delete_entity(order)
 
         resp.status = falcon.HTTP_200
