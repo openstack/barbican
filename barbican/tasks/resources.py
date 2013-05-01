@@ -28,7 +28,7 @@ LOG = utils.getLogger(__name__)
 class BeginOrder(object):
     """Handles beginning processing an Order"""
 
-    def __init__(self, order_repo=None, secret_repo):
+    def __init__(self, order_repo=None):
         self.repo = order_repo or OrderRepo()
 
     def process(self, order_id):
@@ -48,7 +48,5 @@ class BeginOrder(object):
     def _handle_order(self, order):
         LOG.debug("Handling order for secret type of {0}...".format(order.secret_mime_type))
         sleep(20.0)
-        
-        pppp
         
         LOG.debug("...done creating order's secret.")

@@ -22,7 +22,8 @@ import falcon
 
 from barbican.version import __version__
 from barbican.api import ApiResource, load_body, abort
-from barbican.model.models import Tenant, Secret, States
+from barbican.model.models import (Tenant, Secret, TenantSecret,
+                                   EncryptedDatum, Order, States)
 from barbican.model.repositories import (TenantRepo, SecretRepo,
                                          OrderRepo, TenantSecretRepo,
                                          EncryptedDatumRepo)
@@ -73,18 +74,20 @@ class SecretsResource(ApiResource):
         self.datum_repo = datum_repo or EncryptedDatumRepo()
 
     def on_post(self, req, resp, tenant_id):
-        
+
+        LOG.debug('Start on_post for tenant-ID {0}:'.format(tenant_id))
+   
+        body = load_body(req)
+   
         # Retrieve Tenant, or else create new Tenant
         #   if this is a request from a new tenant.
         tenant = self.tenant_repo.get(tenant_id, suppress_exception=True)
         if not tenant:
+            LOG.debug('Creating tenant for {0}'.format(tenant_id))
             tenant = Tenant()
             tenant.keystone_id = tenant_id
             tenant.status = States.ACTIVE
             self.tenant_repo.create_from(tenant)
-
-        body = load_body(req)
-        LOG.debug('Start on_post...{0}'.format(body))
 
         # Verify secret doesn't already exist.
         name = body['name']
@@ -97,6 +100,7 @@ class SecretsResource(ApiResource):
 
         # Encrypt fields.
         encrypt(body)
+        LOG.debug('Post-encrypted fields...{0}'.format(body))
         secret_value = body['cypher_text']
         LOG.debug('Encrypted secret is {0}'.format(secret_value))
 
@@ -129,7 +133,8 @@ class SecretsResource(ApiResource):
                                                               new_secret.id))
         #TODO: Generate URL...Use .format() approach here too
         url = 'http://localhost:8080/{0}/secrets/{1}'.format(tenant_id,
-                                                            new_secret.id)
+                                                             new_secret.id)
+        LOG.debug('URI to secret is {0}'.format(url))
         resp.body = json.dumps({'ref': url})
 
 
@@ -142,14 +147,8 @@ class SecretResource(ApiResource):
     def on_get(self, req, resp, tenant_id, secret_id):
         #TODO: Use a falcon exception here
         secret = self.repo.get(entity_id=secret_id)
-        fields = secret.to_dict_fields()
-        LOG.debug('Read encrypted secret as {0}'.format(fields['cypher_text']))
-
-        # Decrypt fields
-        decrypt(fields)
-
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps(fields, default=json_handler)
+        resp.body = json.dumps(secret.to_dict_fields(), default=json_handler)
 
     def on_delete(self, req, resp, tenant_id, secret_id):
         secret = self.repo.get(entity_id=secret_id)
@@ -185,12 +184,12 @@ class OrdersResource(ApiResource):
         LOG.debug('Secret to create is {0}'.format(name))
 
 
-        #TODO: What criteria to restrict multiple concurrent SSL
+        #TODO: What criteria to restrict multiple concurrent Order
         #      requests per tenant?
-        # csr = self.csr_repo.find_by_name(name=requestor,
+        # order = self.order_repo.find_by_name(name=secret_name,
         #                                  suppress_exception=True)
-        # if csr:
-        #    abort(falcon.HTTP_400, 'Tenant with username {0} '
+        # if order:
+        #    abort(falcon.HTTP_400, 'Order with username {0} '
         #                           'already exists'.format(username))
 
         #TODO: Encrypt fields as needed
@@ -198,7 +197,7 @@ class OrdersResource(ApiResource):
         new_order = Order()
         new_order.secret_name = body['secret_name']
         new_order.secret_mime_type = body['secret_mime_type']
-        new_order.secret_expiration = body['secret_expiration']
+#TODO:        new_order.secret_expiration = body['secret_expiration']
         new_order.tenant_id = tenant.id
         self.order_repo.create_from(new_order)
 
@@ -212,3 +211,23 @@ class OrdersResource(ApiResource):
         url = 'http://localhost:8080/{0}/orders/{1}'.format(tenant_id,
                                                             new_order.id)
         resp.body = json.dumps({'ref': url})
+
+
+class OrderResource(ApiResource):
+    """Handles Order retrieval and deletion requests"""
+
+    def __init__(self, order_repo=None):
+        self.repo = order_repo or OrderRepo()
+
+    def on_get(self, req, resp, tenant_id, order_id):
+        #TODO: Use a falcon exception here
+        order = self.repo.get(entity_id=order_id)
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(order.to_dict_fields(), default=json_handler)
+
+    def on_delete(self, req, resp, tenant_id, order_id):
+        order = self.repo.get(entity_id=order_id)
+
+        self.repo.delete_entity(order)
+
+        resp.status = falcon.HTTP_200

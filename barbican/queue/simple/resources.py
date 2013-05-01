@@ -18,7 +18,7 @@ Simple Queue Resources related objects and functions, making direct calls
 to the worker tasks.
 """
 from oslo.config import cfg
-from barbican.tasks.resources import BeginCSR
+from barbican.tasks.resources import BeginOrder
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)

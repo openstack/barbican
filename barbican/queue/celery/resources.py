@@ -19,7 +19,7 @@ Celery Queue Resources related objects and functions.
 from celery import Celery
 
 from oslo.config import cfg
-from barbican.tasks.resources import BeginCSR
+from barbican.tasks.resources import BeginOrder
 from barbican.common import config, utils
 
 

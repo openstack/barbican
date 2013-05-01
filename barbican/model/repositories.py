@@ -446,12 +446,30 @@ class TenantRepo(BaseRepo):
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
-        # NOTE: Perform gets by Keystone identity ID rather than internal ID.
-        return session.query(models.Tenant).filter_by(keystone_id=entity_id)
+        return session.query(models.Tenant).filter_by(id=entity_id)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
+
+
+    def find_by_keystone_id(self, keystone_id, suppress_exception=False, session=None):
+        session = self.get_session(session)
+
+        try:
+            LOG.debug("Starting find by keystone_id steps...")
+            query = session.query(models.Tenant).filter_by(keystone_id=keystone_id)
+            LOG.debug("...query = {0}".format(repr(query)))
+            entity = query.one()
+            LOG.debug("...post query.one()")
+
+        except sa_orm.exc.NoResultFound:
+            entity = None
+            if not suppress_exception:
+                raise exception.NotFound("No %s found with keystone-ID %s"
+                                         % (self._do_entity_name(), keystone_id))
+
+        return entity
 
 
 class SecretRepo(BaseRepo):
@@ -519,7 +537,6 @@ class TenantSecretRepo(BaseRepo):
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
-        # NOTE: Perform gets by Keystone identity ID rather than internal ID.
         return session.query(models.TenantSecret).filter_by(id=entity_id)
 
     def _do_validate(self, values):

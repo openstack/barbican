@@ -32,11 +32,14 @@ def encrypt_value(value):
 
 def encrypt(fields):
     """Encrypt in-place the data of any fields found in FIELDS_TO_PROTECT"""
+        
     for pt in (pt for pt,ct in FIELDS_ENCRYPT_DECRYPT.iteritems() if pt in fields):
         ct = FIELDS_ENCRYPT_DECRYPT[pt]
         fields[ct] = encrypt_value(fields[pt])
         if pt != ct:
             del fields[pt]
+
+    fields['kek_metadata'] = "dummymetadata"
 
 
 def decrypt_value(value):
