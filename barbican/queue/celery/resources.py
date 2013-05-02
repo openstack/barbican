@@ -19,7 +19,7 @@ Celery Queue Resources related objects and functions.
 from celery import Celery
 
 from oslo.config import cfg
-from barbican.tasks.resources import BeginCSR
+from barbican.tasks.resources import BeginOrder
 from barbican.common import config, utils
 
 
@@ -48,14 +48,13 @@ celery = Celery(CONF.celery.project,
                 include=[CONF.celery.include])
 
 
-def begin_csr(csr_id):
-    """Process the beginning of CSR processing."""
-    return begin_csr_wrapper.delay(csr_id)
-
+def process_order(order_id):
+    """Process Order."""
+    return process_order_wrapper.delay(order_id)
 
 @celery.task
-def begin_csr_wrapper(csr_id):
-    """(Celery wrapped task) Process the beginning of CSR processing."""
-    LOG.debug('CSR id is {0}'.format(csr_id))
-    task = BeginCSR()
-    return task.process(csr_id)
+def process_order_wrapper(order_id):
+    """(Celery wrapped task) Process Order."""
+    LOG.debug('Order id is {0}'.format(order_id))
+    task = BeginOrder()
+    return task.process(order_id)

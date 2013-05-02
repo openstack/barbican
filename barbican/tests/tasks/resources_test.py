@@ -18,12 +18,12 @@ import json
 import unittest
 
 from datetime import datetime
-from barbican.tasks.resources import BeginCSR
-from barbican.model.models import CSR
-from barbican.model.repositories import CSRRepo
-from barbican.model.models import States
+from barbican.tasks.resources import BeginOrder
+from barbican.model.models import Order, States
+from barbican.model.repositories import OrderRepo
 from barbican.common import config
 from barbican.common import exception
+from barbican.openstack.common import timeutils
 
 
 def suite():
@@ -33,25 +33,30 @@ def suite():
     return suite
 
 
-class WhenBeginningCSR(unittest.TestCase):
+class WhenBeginningOrder(unittest.TestCase):
 
     def setUp(self):
         self.requestor = 'requestor1234'
-        self.csr = CSR()
-        self.csr.id = "id1"
-        self.csr.requestor = self.requestor
-        self.csr.status = States.PENDING
+        self.order = Order()
+        self.order.id = "id1"
+        self.order.requestor = self.requestor
+        
+        self.secret_name = "name"
+        self.secret_mime_type = "type"
+        self.secret_expiration = timeutils.utcnow
 
-        self.csr_repo = MagicMock()
-        self.csr_repo.get.return_value = self.csr
+        self.order.status = States.PENDING
 
-        self.resource = BeginCSR(self.csr_repo)
+        self.order_repo = MagicMock()
+        self.order_repo.get.return_value = self.order
 
-    def test_should_process_csr(self):
-        self.resource.process(self.csr.id)
+        self.resource = BeginOrder(self.order_repo)
 
-        self.csr_repo.get.assert_called_once_with(entity_id=self.csr.id)
-        assert self.csr.status == States.ACTIVE
+    def test_should_process_order(self):
+        self.resource.process(self.order.id)
+
+        self.order_repo.get.assert_called_once_with(entity_id=self.order.id)
+        assert self.order.status == States.ACTIVE
 
 
 if __name__ == '__main__':

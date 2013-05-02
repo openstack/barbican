@@ -19,14 +19,11 @@ import json
 import unittest
 
 from datetime import datetime
-from barbican.api.resources import VersionResource
-from barbican.api.resources import TenantsResource, TenantResource
-from barbican.api.resources import CSRsResource, CSRResource
-from barbican.api.resources import CertificatesResource, CertificateResource
-from barbican.api.resources import SecretsResource, SecretResource
-from barbican.model.models import Certificate, CSR, Secret, Tenant
-from barbican.model.repositories import CSRRepo, CertificateRepo
-from barbican.model.repositories import TenantRepo, SecretRepo
+from barbican.api.resources import (VersionResource,
+                                    SecretsResource, SecretResource,
+                                    OrdersResource, OrderResource)
+from barbican.model.models import (Secret, Tenant, TenantSecret,
+                                   Order, EncryptedDatum)
 from barbican.crypto.fields import decrypt_value, encrypt_value
 from barbican.common import config
 from barbican.common import exception
@@ -36,14 +33,10 @@ def suite():
     suite = unittest.TestSuite()
 
     suite.addTest(WhenTestingVersionResource())
-    suite.addTest(WhenCreatingTenantsUsingTenantsResource())
-    suite.addTest(WhenGettingOrDeletingTenantUsingTenantResource())
     suite.addTest(WhenCreatingSecretsUsingSecretsResource())
     suite.addTest(WhenGettingOrDeletingSecretUsingSecretResource())
-    suite.addTest(WhenCreatingCSRsUsingCSRsResource())
-    suite.addTest(WhenGettingOrDeletingCSRUsingCSRResource())
-    suite.addTest(WhenCreatingCertsUsingCertsResource())
-    suite.addTest(WhenGettingOrDeletingCertsUsingCertResource())
+    suite.addTest(WhenCreatingOrdersUsingOrdersResource())
+    suite.addTest(WhenGettingOrDeletingOrderUsingOrderResource())
 
     return suite
 
@@ -68,98 +61,21 @@ class WhenTestingVersionResource(unittest.TestCase):
         self.assertEqual('current', parsed_body['v1'])
 
 
-class WhenCreatingTenantsUsingTenantsResource(unittest.TestCase):
-
-    def setUp(self):
-        self.username = '1234'
-        self.json = u'{ "username" : "%s" }' % self.username
-
-        self.tenant_repo = MagicMock()
-        self.tenant_repo.find_by_name.return_value = None
-        self.tenant_repo.create_from.return_value = None
-
-        self.stream = MagicMock()
-        self.stream.read.return_value = self.json
-
-        self.req = MagicMock()
-        self.req.stream = self.stream
-
-        self.resp = MagicMock()
-        self.resource = TenantsResource(self.tenant_repo)
-
-    def test_should_add_new_tenant(self):
-        self.resource.on_post(self.req, self.resp)
-
-        self.tenant_repo.find_by_name.assert_called_once_with(
-            name=self.username, suppress_exception=True)
-        args, kwargs = self.tenant_repo.create_from.call_args
-        assert isinstance(args[0], Tenant)
-
-    def test_should_throw_exception_for_tenants_that_exist(self):
-        self.tenant_repo.find_by_name.return_value = Tenant()
-
-        with self.assertRaises(falcon.HTTPError):
-            self.resource.on_post(self.req, self.resp)
-
-        self.tenant_repo.find_by_name.assert_called_once_with(
-            name=self.username, suppress_exception=True)
-
-
-class WhenGettingOrDeletingTenantUsingTenantResource(unittest.TestCase):
-
-    def setUp(self):
-        self.username = '1234'
-
-        self.tenant = Tenant()
-        self.tenant.id = "id1"
-        self.tenant.username = self.username
-
-        self.tenant_repo = MagicMock()
-        self.tenant_repo.get.return_value = self.tenant
-        self.tenant_repo.delete_entity.return_value = None
-
-        self.req = MagicMock()
-        self.resp = MagicMock()
-        self.resource = TenantResource(self.tenant_repo)
-
-    def test_should_get_tenant(self):
-        self.resource.on_get(self.req, self.resp, self.tenant.id)
-
-        self.tenant_repo.get.assert_called_once_with(entity_id=self.tenant.id)
-
-    def test_should_delete_tenant(self):
-        self.resource.on_delete(self.req, self.resp, self.tenant.id)
-
-        self.tenant_repo.get.assert_called_once_with(entity_id=self.tenant.id)
-        self.tenant_repo.delete_entity.assert_called_once_with(self.tenant)
-
-    def test_should_throw_exception_for_get_when_tenant_not_found(self):
-        self.tenant_repo.get.side_effect = exception.NotFound(
-            "Test not found exception")
-
-        with self.assertRaises(exception.NotFound):
-            self.resource.on_get(self.req, self.resp, self.tenant.id)
-
-    def test_should_throw_exception_for_delete_when_tenant_not_found(self):
-        self.tenant_repo.get.side_effect = exception.NotFound(
-            "Test not found exception")
-
-        with self.assertRaises(exception.NotFound):
-            self.resource.on_delete(self.req, self.resp, self.tenant.id)
-
-
 class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
 
     def setUp(self):
         self.name = 'name'
-        self.secret = 'secret'
-        self.json = u'{"name":"%s","secret":"%s"}' % (self.name, self.secret)
+        self.plain_text = 'not-encrypted'
+        self.mime_type = 'type'
+        json_template = u'{{"name":"{0}", "plain_text":"{1}", "mime_type":"{2}"}}'
+        self.json = json_template.format(self.name, self.plain_text,
+                                         self.mime_type)
 
-        self.username = 'user1234'
+        self.keystone_id = 'keystone1234'
         self.tenant_id = 'tenantid1234'
         self.tenant = Tenant()
         self.tenant.id = self.tenant_id
-        self.tenant.username = self.username
+        self.tenant.keystone_id = self.keystone_id
         self.tenant_repo = MagicMock()
         self.tenant_repo.get.return_value = self.tenant
 
@@ -167,6 +83,12 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.secret_repo.create_from.return_value = None
         self.secret_repo.find_by_name.return_value = None
 
+        self.tenant_secret_repo = MagicMock()
+        self.tenant_secret_repo.create_from.return_value = None
+
+        self.datum_repo = MagicMock()
+        self.datum_repo.create_from.return_value = None
+
         self.stream = MagicMock()
         self.stream.read.return_value = self.json
 
@@ -174,7 +96,9 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.req.stream = self.stream
 
         self.resp = MagicMock()
-        self.resource = SecretsResource(self.tenant_repo, self.secret_repo)
+        self.resource = SecretsResource(self.tenant_repo, self.secret_repo,
+                                        self.tenant_secret_repo,
+                                        self.datum_repo)
 
     def test_should_add_new_secret(self):
         self.resource.on_post(self.req, self.resp, self.tenant_id)
@@ -183,7 +107,37 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         secret = args[0]
         assert isinstance(secret, Secret)
 
-        assert encrypt_value(self.secret) == secret.secret
+        args, kwargs = self.tenant_secret_repo.create_from.call_args
+        tenant_secret = args[0]
+        assert isinstance(tenant_secret, TenantSecret)
+        assert tenant_secret.tenant_id == self.tenant_id
+        assert tenant_secret.secret_id == secret.id
+
+        args, kwargs = self.datum_repo.create_from.call_args
+        datum = args[0]
+        assert isinstance(datum, EncryptedDatum)
+        assert encrypt_value(self.plain_text) == datum.cypher_text
+
+    def test_should_add_new_secret_tenant_not_exist(self):
+        self.tenant_repo.get.return_value = None
+        
+        self.resource.on_post(self.req, self.resp, self.tenant_id)
+
+        args, kwargs = self.secret_repo.create_from.call_args
+        secret = args[0]
+        assert isinstance(secret, Secret)
+
+        args, kwargs = self.tenant_secret_repo.create_from.call_args
+        tenant_secret = args[0]
+        assert isinstance(tenant_secret, TenantSecret)
+        assert not tenant_secret.tenant_id
+        assert tenant_secret.secret_id == secret.id
+
+        args, kwargs = self.datum_repo.create_from.call_args
+        datum = args[0]
+        assert isinstance(datum, EncryptedDatum)
+        assert encrypt_value(self.plain_text) == datum.cypher_text
+
 
 
 class WhenGettingOrDeletingSecretUsingSecretResource(unittest.TestCase):
@@ -191,12 +145,10 @@ class WhenGettingOrDeletingSecretUsingSecretResource(unittest.TestCase):
     def setUp(self):
         self.tenant_id = 'tenant1234'
         self.name = 'name1234'
-        self.secret_value = 'secretvalue'
 
         self.secret = Secret()
         self.secret.id = "id1"
         self.secret.name = self.name
-        self.secret.secret = encrypt_value(self.secret_value)
 
         self.secret_repo = MagicMock()
         self.secret_repo.get.return_value = self.secret
@@ -236,157 +188,95 @@ class WhenGettingOrDeletingSecretUsingSecretResource(unittest.TestCase):
                                     self.secret.id)
 
 
-class WhenCreatingCSRsUsingCSRsResource(unittest.TestCase):
+class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
 
     def setUp(self):
-        self.username = 'user1234'
-        self.requestor = 'requestor1234'
-        self.tenant_id = 'tenantid1234'
+        self.secret_name = 'name'
+        self.secret_mime_type = 'type'
+        self.tenant_internal_id = 'tenantid1234'
+        self.tenant_keystone_id = 'keystoneid1234'
 
         self.tenant = Tenant()
-        self.tenant.id = self.tenant_id
-        self.tenant.username = self.username
+        self.tenant.id = self.tenant_internal_id
+        self.tenant.keystone_id = self.tenant_keystone_id
 
         self.tenant_repo = MagicMock()
         self.tenant_repo.get.return_value = self.tenant
 
-        self.csr_repo = MagicMock()
-        self.csr_repo.create_from.return_value = None
+        self.order_repo = MagicMock()
+        self.order_repo.create_from.return_value = None
 
         self.queue_resource = MagicMock()
-        self.queue_resource.begin_csr.return_value = None
+        self.queue_resource.process_order.return_value = None
 
         self.stream = MagicMock()
-        ret_read = u'{ "requestor" : "%s" }' % self.requestor
-        self.stream.read.return_value = ret_read
+
+        json_template = u'{{"secret_name":"{0}", "secret_mime_type":"{1}"}}'
+        self.json = json_template.format(self.secret_name,
+                                         self.secret_mime_type)
+        self.stream.read.return_value = self.json
 
         self.req = MagicMock()
         self.req.stream = self.stream
 
         self.resp = MagicMock()
-        self.resource = CSRsResource(self.tenant_repo, self.csr_repo,
-                                     self.queue_resource)
+        self.resource = OrdersResource(self.tenant_repo, self.order_repo,
+                                       self.queue_resource)
 
-    def test_should_add_new_csr(self):
-        self.resource.on_post(self.req, self.resp, self.tenant_id)
+    def test_should_add_new_order(self):
+        self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
 
-        self.queue_resource.begin_csr.assert_called_once_with(csr_id=None)
+        self.queue_resource.process_order.assert_called_once_with(order_id=None)
 
-        args, kwargs = self.csr_repo.create_from.call_args
-        assert isinstance(args[0], CSR)
+        args, kwargs = self.order_repo.create_from.call_args
+        assert isinstance(args[0], Order)
 
 
-class WhenGettingOrDeletingCSRUsingCSRResource(unittest.TestCase):
+class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
 
     def setUp(self):
-        self.tenant_id = 'tenant1234'
+        self.tenant_keystone_id = 'keystoneid1234'
         self.requestor = 'requestor1234'
-        self.csr = CSR()
-        self.csr.id = "id1"
-        self.csr.requestor = self.requestor
+        self.order = Order()
+        self.order.id = "id1"
+        self.order.secret_name = "name"
+        self.order.secret_mime_type = "name"
 
-        self.csr_repo = MagicMock()
-        self.csr_repo.get.return_value = self.csr
-        self.csr_repo.delete_entity.return_value = None
-
-        self.req = MagicMock()
-        self.resp = MagicMock()
-        self.resource = CSRResource(self.csr_repo)
-
-    def test_should_get_csr(self):
-        self.resource.on_get(self.req, self.resp, self.tenant_id, self.csr.id)
-
-        self.csr_repo.get.assert_called_once_with(entity_id=self.csr.id)
-
-    def test_should_delete_csr(self):
-        self.resource.on_delete(self.req, self.resp, self.tenant_id,
-                                self.csr.id)
-
-        self.csr_repo.get.assert_called_once_with(entity_id=self.csr.id)
-        self.csr_repo.delete_entity.assert_called_once_with(self.csr)
-
-    def test_should_throw_exception_for_get_when_csr_not_found(self):
-        self.csr_repo.get.side_effect = exception.NotFound(
-            "Test not found exception")
-
-        with self.assertRaises(exception.NotFound):
-            self.resource.on_get(self.req, self.resp, self.tenant_id,
-                                 self.csr.id)
-
-    def test_should_throw_exception_for_delete_when_csr_not_found(self):
-        self.csr_repo.get.side_effect = exception.NotFound(
-            "Test not found exception")
-
-        with self.assertRaises(exception.NotFound):
-            self.resource.on_delete(self.req, self.resp, self.tenant_id,
-                                    self.csr.id)
-
-
-class WhenCreatingCertsUsingCertsResource(unittest.TestCase):
-
-    def setUp(self):
-        self.tenant_id = 'tenant1234'
-
-        self.certs_repo = MagicMock()
-        self.certs_repo.create_from.side_effect = falcon.HTTPError(
-            falcon.HTTP_405, "Error")
+        self.order_repo = MagicMock()
+        self.order_repo.get.return_value = self.order
+        self.order_repo.delete_entity.return_value = None
 
         self.req = MagicMock()
         self.resp = MagicMock()
-        self.resource = CertificatesResource(self.certs_repo)
+        self.resource = OrderResource(self.order_repo)
 
-    def test_should_fail_to_add_new_cert_directly(self):
-        with self.assertRaises(falcon.HTTPError):
-            self.resource.on_post(self.req, self.resp, self.tenant_id)
+    def test_should_get_order(self):
+        self.resource.on_get(self.req, self.resp, self.tenant_keystone_id, self.order.id)
 
+        self.order_repo.get.assert_called_once_with(entity_id=self.order.id)
 
-class WhenGettingOrDeletingCertsUsingCertResource(unittest.TestCase):
+    def test_should_delete_order(self):
+        self.resource.on_delete(self.req, self.resp, self.tenant_keystone_id,
+                                self.order.id)
 
-    def setUp(self):
-        self.tenant_id = 'tenant1234'
-        self.public_key = 'public_key'
-        self.private_key = 'private_key'
-        self.cert = Certificate()
-        self.cert.id = "id1"
-        self.cert.private_key = self.private_key
-        self.cert.public_key = self.public_key
+        self.order_repo.get.assert_called_once_with(entity_id=self.order.id)
+        self.order_repo.delete_entity.assert_called_once_with(self.order)
 
-        self.cert_repo = MagicMock()
-        self.cert_repo.get.return_value = self.cert
-        self.cert_repo.delete_entity.return_value = None
-
-        self.req = MagicMock()
-        self.resp = MagicMock()
-        self.resource = CertificateResource(self.cert_repo)
-
-    def test_should_get_cert(self):
-        self.resource.on_get(self.req, self.resp, self.tenant_id,
-                             self.cert.id)
-
-        self.cert_repo.get.assert_called_once_with(entity_id=self.cert.id)
-
-    def test_should_delete_cert(self):
-        self.resource.on_delete(self.req, self.resp, self.tenant_id,
-                                self.cert.id)
-
-        self.cert_repo.get.assert_called_once_with(entity_id=self.cert.id)
-        self.cert_repo.delete_entity.assert_called_once_with(self.cert)
-
-    def test_should_throw_exception_for_get_when_cert_not_found(self):
-        self.cert_repo.get.side_effect = exception.NotFound(
+    def test_should_throw_exception_for_get_when_order_not_found(self):
+        self.order_repo.get.side_effect = exception.NotFound(
             "Test not found exception")
 
         with self.assertRaises(exception.NotFound):
-            self.resource.on_get(self.req, self.resp, self.tenant_id,
-                                 self.cert.id)
+            self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
+                                 self.order.id)
 
-    def test_should_throw_exception_for_delete_when_cert_not_found(self):
-        self.cert_repo.get.side_effect = exception.NotFound(
+    def test_should_throw_exception_for_delete_when_order_not_found(self):
+        self.order_repo.get.side_effect = exception.NotFound(
             "Test not found exception")
 
         with self.assertRaises(exception.NotFound):
-            self.resource.on_delete(self.req, self.resp, self.tenant_id,
-                                    self.cert.id)
+            self.resource.on_delete(self.req, self.resp, self.tenant_keystone_id,
+                                    self.order.id)
 
 
 if __name__ == '__main__':

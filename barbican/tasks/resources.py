@@ -18,34 +18,35 @@ Task resources for the Barbican API.
 """
 from time import sleep
 
-from barbican.model.repositories import CSRRepo
+from barbican.model.repositories import OrderRepo
 from barbican.model.models import States
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
 
 
-class BeginCSR(object):
-    """Handles beginning the processing of a CSR"""
+class BeginOrder(object):
+    """Handles beginning processing an Order"""
 
-    def __init__(self, csr_repo=None):
-        self.repo = csr_repo or CSRRepo()
+    def __init__(self, order_repo=None):
+        self.repo = order_repo or OrderRepo()
 
-    def process(self, csr_id):
-        """Process the beginning of CSR processing."""
-        LOG.debug("Processing CSR with ID = {0}".format(csr_id))
+    def process(self, order_id):
+        """Process the beginning of an Order."""
+        LOG.debug("Processing Order with ID = {0}".format(order_id))
 
-        # Notify CA that we have a CSR to process
-        csr = self.repo.get(entity_id=csr_id)
-        self._notify_ca(csr)
+        # Retrieve the order.
+        order = self.repo.get(entity_id=order_id)
+        self._handle_order(order)
 
-        # Indicate we are done with CSR processing
-        csr.status = States.ACTIVE
-        self.repo.save(csr)
+        # Indicate we are done with Order processing
+        order.status = States.ACTIVE
+        self.repo.save(order)
 
         return None
 
-    def _notify_ca(self, csr):
-        LOG.debug("Notifying CA of request for certificate...")
+    def _handle_order(self, order):
+        LOG.debug("Handling order for secret type of {0}...".format(order.secret_mime_type))
         sleep(20.0)
-        LOG.debug("...done notifying.")
+        
+        LOG.debug("...done creating order's secret.")

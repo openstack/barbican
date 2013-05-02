@@ -18,7 +18,7 @@ Simple Queue Resources related objects and functions, making direct calls
 to the worker tasks.
 """
 from oslo.config import cfg
-from barbican.tasks.resources import BeginCSR
+from barbican.tasks.resources import BeginOrder
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
@@ -26,8 +26,8 @@ LOG = utils.getLogger(__name__)
 CONF = cfg.CONF
 
 
-def begin_csr(csr_id):
-    """Process the beginning of CSR processing."""
-    LOG.debug('CSR id is {0}'.format(csr_id))
-    task = BeginCSR()
-    return task.process(csr_id)
+def process_order(order_id):
+    """Process Order."""
+    LOG.debug('Order id is {0}'.format(order_id))
+    task = BeginOrder()
+    return task.process(order_id)
