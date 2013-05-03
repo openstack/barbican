@@ -27,6 +27,7 @@ from barbican.model.models import (Tenant, Secret, TenantSecret,
 from barbican.model.repositories import (TenantRepo, SecretRepo,
                                          OrderRepo, TenantSecretRepo,
                                          EncryptedDatumRepo)
+from barbican.common.resources import create_secret_single_type
 from barbican.crypto.fields import encrypt, decrypt
 from barbican.openstack.common.gettextutils import _
 from barbican.openstack.common import jsonutils as json
@@ -78,55 +79,13 @@ class SecretsResource(ApiResource):
         LOG.debug('Start on_post for tenant-ID {0}:'.format(tenant_id))
    
         body = load_body(req)
-   
-        # Retrieve Tenant, or else create new Tenant
-        #   if this is a request from a new tenant.
-        tenant = self.tenant_repo.get(tenant_id, suppress_exception=True)
-        if not tenant:
-            LOG.debug('Creating tenant for {0}'.format(tenant_id))
-            tenant = Tenant()
-            tenant.keystone_id = tenant_id
-            tenant.status = States.ACTIVE
-            self.tenant_repo.create_from(tenant)
 
-        # Verify secret doesn't already exist.
-        name = body['name']
-        LOG.debug('Secret name is {0}'.format(name))
-        secret = self.secret_repo.find_by_name(name=name,
-                                               suppress_exception=True)
-        if secret:
-            abort(falcon.HTTP_400, 'Secret with name {0} '
-                                   'already exists'.format(name))
-
-        # Encrypt fields.
-        encrypt(body)
-        LOG.debug('Post-encrypted fields...{0}'.format(body))
-        secret_value = body['cypher_text']
-        LOG.debug('Encrypted secret is {0}'.format(secret_value))
-
-        # Create Secret entity.
-        new_secret = Secret()
-        new_secret.name = name
-#TODO:  new_secret.expiration = ...
-        new_secret.status = States.ACTIVE
-        self.secret_repo.create_from(new_secret)
-
-        # Create Tenant/Secret entity.
-        new_assoc = TenantSecret()
-        new_assoc.tenant_id = tenant.id
-        new_assoc.secret_id = new_secret.id
-        new_assoc.role = "admin"
-        new_assoc.status = States.ACTIVE
-        self.tenant_secret_repo.create_from(new_assoc)
-
-        # Create EncryptedDatum entity.
-        new_datum = EncryptedDatum()
-        new_datum.secret_id = new_secret.id
-        new_datum.mime_type = body['mime_type']
-        new_datum.cypher_text = secret_value
-        new_datum.kek_metadata = body['kek_metadata']
-        new_datum.status = States.ACTIVE
-        self.datum_repo.create_from(new_datum)
+        # Create Secret
+        new_secret = create_secret_single_type(body, tenant_id,
+                                               self.tenant_repo,
+                                               self.secret_repo,
+                                               self.tenant_secret_repo,
+                                               self.datum_repo)
 
         resp.status = falcon.HTTP_202
         resp.set_header('Location', '/{0}/secrets/{1}'.format(tenant_id,

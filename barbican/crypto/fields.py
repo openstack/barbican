@@ -32,8 +32,13 @@ def encrypt_value(value):
 
 def encrypt(fields):
     """Encrypt in-place the data of any fields found in FIELDS_TO_PROTECT"""
-        
-    for pt in (pt for pt,ct in FIELDS_ENCRYPT_DECRYPT.iteritems() if pt in fields):
+    
+    if "plain_text" not in fields:
+        #TODO: Generate secret of mime-type here
+        fields['plain_text'] = "TODO: Generate real secret here"
+    
+    for pt in (pt for pt, ct in FIELDS_ENCRYPT_DECRYPT.iteritems() if
+               pt in fields):
         ct = FIELDS_ENCRYPT_DECRYPT[pt]
         fields[ct] = encrypt_value(fields[pt])
         if pt != ct:
@@ -53,7 +58,8 @@ def decrypt_value(value):
 
 def decrypt(fields):
     """Decrypt in-place the data of any fields found in FIELDS_TO_PROTECT"""
-    for pt in (pt for pt,ct in FIELDS_ENCRYPT_DECRYPT.iteritems() if ct in fields):
+    for pt in (pt for pt, ct in FIELDS_ENCRYPT_DECRYPT.iteritems() if
+               ct in fields):
         ct = FIELDS_ENCRYPT_DECRYPT[pt]
         fields[pt] = decrypt_value(fields[ct])
         if pt != ct:

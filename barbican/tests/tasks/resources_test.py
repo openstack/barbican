@@ -19,7 +19,8 @@ import unittest
 
 from datetime import datetime
 from barbican.tasks.resources import BeginOrder
-from barbican.model.models import Order, States
+from barbican.model.models import (Tenant, Secret, TenantSecret,
+                                   EncryptedDatum, Order, States)
 from barbican.model.repositories import OrderRepo
 from barbican.common import config
 from barbican.common import exception
@@ -43,20 +44,62 @@ class WhenBeginningOrder(unittest.TestCase):
         
         self.secret_name = "name"
         self.secret_mime_type = "type"
-        self.secret_expiration = timeutils.utcnow
+        self.secret_expiration = timeutils.utcnow()
+
+        self.keystone_id = 'keystone1234'
+        self.tenant_id = 'tenantid1234'
+        self.tenant = Tenant()
+        self.tenant.id = self.tenant_id
+        self.tenant.keystone_id = self.keystone_id
+        self.tenant_repo = MagicMock()
+        self.tenant_repo.get.return_value = self.tenant
 
         self.order.status = States.PENDING
+        self.order.tenant_id = self.tenant_id
+        self.order.secret_name = self.secret_name
+        self.order.secret_expiration = self.secret_expiration
+        self.order.secret_mime_type = self.secret_mime_type
 
         self.order_repo = MagicMock()
         self.order_repo.get.return_value = self.order
 
-        self.resource = BeginOrder(self.order_repo)
+        self.secret_repo = MagicMock()
+        self.secret_repo.create_from.return_value = None
+
+        self.tenant_secret_repo = MagicMock()
+        self.tenant_secret_repo.create_from.return_value = None
+
+        self.datum_repo = MagicMock()
+        self.datum_repo.create_from.return_value = None
+
+        self.resource = BeginOrder(self.tenant_repo, self.order_repo,
+                                   self.secret_repo, self.tenant_secret_repo,
+                                   self.datum_repo)
 
     def test_should_process_order(self):
         self.resource.process(self.order.id)
 
         self.order_repo.get.assert_called_once_with(entity_id=self.order.id)
         assert self.order.status == States.ACTIVE
+
+        args, kwargs = self.secret_repo.create_from.call_args
+        secret = args[0]
+        assert isinstance(secret, Secret)
+        assert secret.name == self.secret_name
+        assert secret.expiration == self.secret_expiration
+
+        args, kwargs = self.tenant_secret_repo.create_from.call_args
+        tenant_secret = args[0]
+        assert isinstance(tenant_secret, TenantSecret)
+        assert tenant_secret.tenant_id == self.tenant_id
+        assert tenant_secret.secret_id == secret.id
+
+        args, kwargs = self.datum_repo.create_from.call_args
+        datum = args[0]
+        assert isinstance(datum, EncryptedDatum)
+        assert self.secret_mime_type == datum.mime_type
+        assert datum.cypher_text != None
+        assert datum.kek_metadata != None
 
 
 if __name__ == '__main__':

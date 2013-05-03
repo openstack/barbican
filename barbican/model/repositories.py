@@ -533,7 +533,8 @@ class TenantSecretRepo(BaseRepo):
 
     def _do_build_query_by_name(self, name, session):
         """Sub-class hook: find entity by name."""
-        raise TypeError(_("No support for retrieving by 'name' an Tenant record."))
+        raise TypeError(_("No support for retrieving by "
+                          "'name' an Tenant record."))
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
@@ -556,7 +557,8 @@ class OrderRepo(BaseRepo):
 
     def _do_build_query_by_name(self, name, session):
         """Sub-class hook: find entity by name."""
-        raise TypeError(_("No support for retrieving by 'name' an Order record."))
+        raise TypeError(_("No support for retrieving by "
+                          "'name' an Order record."))
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""

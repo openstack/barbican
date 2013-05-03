@@ -106,7 +106,8 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
         assert isinstance(secret, Secret)
-
+        assert secret.name == self.name
+        
         args, kwargs = self.tenant_secret_repo.create_from.call_args
         tenant_secret = args[0]
         assert isinstance(tenant_secret, TenantSecret)
@@ -117,6 +118,8 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         datum = args[0]
         assert isinstance(datum, EncryptedDatum)
         assert encrypt_value(self.plain_text) == datum.cypher_text
+        assert self.mime_type == datum.mime_type
+        assert datum.kek_metadata != None
 
     def test_should_add_new_secret_tenant_not_exist(self):
         self.tenant_repo.get.return_value = None
@@ -126,6 +129,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
         assert isinstance(secret, Secret)
+        assert secret.name == self.name
 
         args, kwargs = self.tenant_secret_repo.create_from.call_args
         tenant_secret = args[0]
@@ -137,7 +141,8 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         datum = args[0]
         assert isinstance(datum, EncryptedDatum)
         assert encrypt_value(self.plain_text) == datum.cypher_text
-
+        assert self.mime_type == datum.mime_type
+        assert datum.kek_metadata != None
 
 
 class WhenGettingOrDeletingSecretUsingSecretResource(unittest.TestCase):
