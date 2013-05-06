@@ -27,6 +27,7 @@ from barbican.model.models import (Secret, Tenant, TenantSecret,
 from barbican.crypto.fields import decrypt_value, encrypt_value
 from barbican.common import config
 from barbican.common import exception
+from barbican.openstack.common import jsonutils
 
 
 def suite():
@@ -150,10 +151,20 @@ class WhenGettingOrDeletingSecretUsingSecretResource(unittest.TestCase):
     def setUp(self):
         self.tenant_id = 'tenant1234'
         self.name = 'name1234'
+        secret_id = "idsecret1"
+        datum_id = "iddatum1"
+
+        self.datum = EncryptedDatum()
+        self.datum.id = datum_id
+        self.datum.secret_id = secret_id
+        self.datum.mime_type = "text/plain"
+        self.datum.cypher_text = "cypher_text"
+        self.datum.kek_metadata = "kekedata"
 
         self.secret = Secret()
-        self.secret.id = "id1"
+        self.secret.id = secret_id
         self.secret.name = self.name
+        self.secret.encrypted_data = [self.datum]
 
         self.secret_repo = MagicMock()
         self.secret_repo.get.return_value = self.secret
@@ -168,6 +179,12 @@ class WhenGettingOrDeletingSecretUsingSecretResource(unittest.TestCase):
                              self.secret.id)
 
         self.secret_repo.get.assert_called_once_with(entity_id=self.secret.id)
+        
+        self.assertEquals(self.resp.status, falcon.HTTP_200)
+
+        resp_body = jsonutils.loads(self.resp.body)
+        self.assertTrue('content_types' in resp_body)
+        self.assertTrue(self.datum.mime_type in resp_body['content_types'].itervalues())
 
     def test_should_delete_secret(self):
         self.resource.on_delete(self.req, self.resp, self.tenant_id,

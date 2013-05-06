@@ -27,7 +27,8 @@ from barbican.model.models import (Tenant, Secret, TenantSecret,
 from barbican.model.repositories import (TenantRepo, SecretRepo,
                                          OrderRepo, TenantSecretRepo,
                                          EncryptedDatumRepo)
-from barbican.common.resources import create_secret_single_type
+from barbican.common.resources import (create_secret_single_type,
+                                       augment_fields_with_content_types)
 from barbican.crypto.fields import encrypt, decrypt
 from barbican.openstack.common.gettextutils import _
 from barbican.openstack.common import jsonutils as json
@@ -104,10 +105,20 @@ class SecretResource(ApiResource):
         self.repo = secret_repo or SecretRepo()
 
     def on_get(self, req, resp, tenant_id, secret_id):
+
+        print "req: ",dir(req)
+        print "req accept: ",req.accept
+        print "req content: ",req.content_type
+        print "resp: ",dir(resp)
+
         #TODO: Use a falcon exception here
         secret = self.repo.get(entity_id=secret_id)
+
+        print "secret data: ",secret.encrypted_data
+
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps(secret.to_dict_fields(), default=json_handler)
+        resp.body = json.dumps(augment_fields_with_content_types(secret),
+                               default=json_handler)
 
     def on_delete(self, req, resp, tenant_id, secret_id):
         secret = self.repo.get(entity_id=secret_id)

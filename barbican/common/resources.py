@@ -95,3 +95,30 @@ def create_secret_single_type(data, tenant_id, tenant_repo,
     datum_repo.create_from(new_datum)
     
     return new_secret
+
+
+# Maps mime-types used to specify secret data formats to the types that can
+#   be requested for secrets via GET calls.
+CTYPES_PLAIN = {'default': 'text/plain'}
+CTYPES_AES = {'default': 'application/aes'}
+CTYPES_MAPPINGS = {'text/plain': CTYPES_PLAIN,
+                   'application/aes': CTYPES_AES}
+
+
+def augment_fields_with_content_types(secret):
+    # Based on the data associated with the secret, generate a list of content
+    #   types.
+    
+    fields = secret.to_dict_fields()
+
+    if not secret.encrypted_data:
+        return fields
+
+    # TODO: How deal with merging more than one datum instance?
+    for datum in secret.encrypted_data:
+        if datum.mime_type in CTYPES_MAPPINGS:
+            fields.update({'content_types': CTYPES_MAPPINGS[datum.mime_type]})
+
+    print " zzzzz ",fields
+
+    return fields

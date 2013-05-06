@@ -183,12 +183,26 @@ class Secret(BASE, ModelBase):
     expiration = Column(DateTime, default=timeutils.utcnow,
                         nullable=False)
 
-    encrypted_data = relationship("EncryptedDatum")
+    # TODO: Performance - Consider avoiding full load of all datum attributes here.
+    encrypted_data = relationship("EncryptedDatum", lazy='joined')
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
         return {'name': self.name,
                 'expiration': self.expiration}
+
+        if not self.encrypted_data:            
+            return {'name': self.name,
+                    'expiration': self.expiration}
+        else:
+            
+            # types = ','.join([datum.mime_type for datum in self.encrypted_data])
+            types_raw = ['yada', 'foo', 'bar']
+#            types = ','.join(['"' + datum.mime_type + '"' for datum in self.encrypted_data])
+            types = ','.join(['"' + t + '"' for t in types_raw])
+            return {'name': self.name,
+                    'expiration': self.expiration,
+                    'content-types': '[' + types + ']'}
 
 
 class EncryptedDatum(BASE, ModelBase):
