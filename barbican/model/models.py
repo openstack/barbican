@@ -130,17 +130,13 @@ class ModelBase(object):
         return {}
 
 
-# Association table between Tenants and Secrets
-#tenant_secret_table = Table('tenant_secret', BASE.metadata,
-#    Column('tenant_id', Integer, ForeignKey('tenants.id')),
-#    Column('secret_id', Integer, ForeignKey('secrets.id')),
-#    Column('role', Text)
-#)
-
-
 class TenantSecret(BASE, ModelBase):
+    """
+    Represents an association between a Tenant and a Secret.
+    """
+
     __tablename__ = 'tenant_secret'
-    
+
     tenant_id = Column(Integer, ForeignKey('tenants.id'), primary_key=True)
     secret_id = Column(Integer, ForeignKey('secrets.id'), primary_key=True)
     role = Column(String(255))
@@ -175,6 +171,13 @@ class Secret(BASE, ModelBase):
     Cloudkeep's Barbican, though the actual encrypted data
     is stored in one or more EncryptedData entities on behalf
     of a Secret.
+
+    Note that the mime_type here is the 'master' MIME type for
+    the secret, which is used for PUTS and POSTS only. Barbican
+    may then produce other MIME representations for the secret
+    which are then stored as the EncryptedDatum for this secret,
+    hence the need for EncryptedDatum records to have their own
+    mime_type attributes.
     """
 
     __tablename__ = 'secrets'
@@ -182,24 +185,31 @@ class Secret(BASE, ModelBase):
     name = Column(String(255))
     expiration = Column(DateTime, default=timeutils.utcnow,
                         nullable=False)
+    mime_type = Column(String(255))
 
-    encrypted_data = relationship("EncryptedDatum")
+    # TODO: Performance - Consider avoiding full load of all
+    #   datum attributes here.
+    encrypted_data = relationship("EncryptedDatum", lazy='joined')
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
         return {'name': self.name,
-                'expiration': self.expiration}
+                'expiration': self.expiration,
+                'mime_type': self.mime_type}
 
 
 class EncryptedDatum(BASE, ModelBase):
     """
     Represents a the encrypted data for a Secret.
+
+    Note that the mime_type below may or may not match that in the Secret
+    record (see the Secret docstring for more details)
     """
 
     __tablename__ = 'encrypted_data'
 
     secret_id = Column(String(36), ForeignKey('secrets.id'),
-                    nullable=False)
+                       nullable=False)
 
     mime_type = Column(String(255))
     cypher_text = Column(Text)
@@ -209,7 +219,8 @@ class EncryptedDatum(BASE, ModelBase):
         """Sub-class hook method: return dict of fields."""
         return {'name': self.name,
                 'mime_type': self.mime_type,
-                'cypher_text': self.secret}
+                'cypher_text': self.secret,
+                'kek_metadata': self.kek_metadata}
 
 
 class Order(BASE, ModelBase):
@@ -230,7 +241,7 @@ class Order(BASE, ModelBase):
     secret_name = Column(String(255))
     secret_mime_type = Column(String(255))
     secret_expiration = Column(DateTime, default=timeutils.utcnow,
-                        nullable=False)
+                               nullable=False)
 
     secret_id = Column(String(36), ForeignKey('secrets.id'),
                        nullable=True)
