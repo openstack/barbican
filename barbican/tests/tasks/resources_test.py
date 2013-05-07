@@ -41,7 +41,7 @@ class WhenBeginningOrder(unittest.TestCase):
         self.order = Order()
         self.order.id = "id1"
         self.order.requestor = self.requestor
-        
+
         self.secret_name = "name"
         self.secret_mime_type = "type"
         self.secret_expiration = timeutils.utcnow()
@@ -98,8 +98,8 @@ class WhenBeginningOrder(unittest.TestCase):
         datum = args[0]
         assert isinstance(datum, EncryptedDatum)
         assert self.secret_mime_type == datum.mime_type
-        assert datum.cypher_text != None
-        assert datum.kek_metadata != None
+        assert datum.cypher_text is not None
+        assert datum.kek_metadata is not None
 
 
 if __name__ == '__main__':

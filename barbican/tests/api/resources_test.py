@@ -68,9 +68,9 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.name = 'name'
         self.plain_text = 'not-encrypted'
         self.mime_type = 'text/plain'
-        json_template = u'{{"name":"{0}", "plain_text":"{1}", "mime_type":"{2}"}}'
-        self.json = json_template.format(self.name, self.plain_text,
-                                         self.mime_type)
+        template = u'{{"name":"{0}", "plain_text":"{1}","mime_type":"{2}"}}'
+        self.json = template.format(self.name, self.plain_text,
+                                    self.mime_type)
 
         self.keystone_id = 'keystone1234'
         self.tenant_id = 'tenantid1234'
@@ -108,7 +108,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         secret = args[0]
         assert isinstance(secret, Secret)
         assert secret.name == self.name
-        
+
         args, kwargs = self.tenant_secret_repo.create_from.call_args
         tenant_secret = args[0]
         assert isinstance(tenant_secret, TenantSecret)
@@ -120,11 +120,11 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         assert isinstance(datum, EncryptedDatum)
         assert encrypt_value(self.plain_text) == datum.cypher_text
         assert self.mime_type == datum.mime_type
-        assert datum.kek_metadata != None
+        assert datum.kek_metadata is not None
 
     def test_should_add_new_secret_tenant_not_exist(self):
         self.tenant_repo.get.return_value = None
-        
+
         self.resource.on_post(self.req, self.resp, self.tenant_id)
 
         args, kwargs = self.secret_repo.create_from.call_args
@@ -143,7 +143,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         assert isinstance(datum, EncryptedDatum)
         assert encrypt_value(self.plain_text) == datum.cypher_text
         assert self.mime_type == datum.mime_type
-        assert datum.kek_metadata != None
+        assert datum.kek_metadata is not None
 
     def test_should_add_new_secret_no_plain_text(self):
         json_template = u'{{"name":"{0}", "mime_type":"{1}"}}'
@@ -171,19 +171,21 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
     def setUp(self):
         self.tenant_id = 'tenant1234'
         self.name = 'name1234'
+        self.mime_type = 'text/plain'
         secret_id = "idsecret1"
         datum_id = "iddatum1"
 
         self.datum = EncryptedDatum()
         self.datum.id = datum_id
         self.datum.secret_id = secret_id
-        self.datum.mime_type = "text/plain"
+        self.datum.mime_type = self.mime_type
         self.datum.cypher_text = "cypher_text"
         self.datum.kek_metadata = "kekedata"
 
         self.secret = Secret()
         self.secret.id = secret_id
         self.secret.name = self.name
+        self.secret.mime_type = self.mime_type
         self.secret.encrypted_data = [self.datum]
 
         self.secret_repo = MagicMock()
@@ -209,32 +211,80 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
 
         self.secret_repo.get.assert_called_once_with(entity_id=self.secret.id,
                                                      suppress_exception=True)
-        
+
         self.assertEquals(self.resp.status, falcon.HTTP_200)
 
         resp_body = jsonutils.loads(self.resp.body)
         self.assertTrue('content_types' in resp_body)
-        self.assertTrue(self.datum.mime_type in resp_body['content_types'].itervalues())
+        self.assertTrue(self.datum.mime_type in
+                        resp_body['content_types'].itervalues())
 
     def test_should_get_secret_as_plain(self):
         self.req.accept = 'text/plain'
-        
+
         self.resource.on_get(self.req, self.resp, self.tenant_id,
                              self.secret.id)
 
         self.secret_repo.get.assert_called_once_with(entity_id=self.secret.id,
                                                      suppress_exception=True)
-        
+
         self.assertEquals(self.resp.status, falcon.HTTP_200)
 
         resp_body = self.resp.body
         assert resp_body
 
-    def test_should_fail_put_secret_as_json(self):
-        pass  # TODO
-
     def test_should_put_secret_as_plain(self):
-        pass  # TODO
+        self._setup_for_puts()
+
+        self.resource.on_put(self.req, self.resp, self.tenant_id,
+                             self.secret.id)
+
+        args, kwargs = self.datum_repo.create_from.call_args
+        datum = args[0]
+        assert isinstance(datum, EncryptedDatum)
+        assert encrypt_value(self.plain_text) == datum.cypher_text
+        assert self.mime_type == datum.mime_type
+        assert datum.kek_metadata is not None
+
+    def test_should_fail_put_secret_as_json(self):
+        self._setup_for_puts()
+
+        # Force error, as content_type of PUT doesn't match
+        #   the secret's mime-type.
+        self.req.content_type = 'application/json'
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_put(self.req, self.resp, self.tenant_id,
+                                 self.secret.id)
+
+        exception = cm.exception
+        assert falcon.HTTP_415 == exception.status
+
+    def test_should_fail_put_secret_not_found(self):
+        self._setup_for_puts()
+
+        # Force error, due to secret not found.
+        self.secret_repo.get.return_value = None
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_put(self.req, self.resp, self.tenant_id,
+                                 self.secret.id)
+
+        exception = cm.exception
+        assert falcon.HTTP_400 == exception.status
+
+    def test_should_fail_put_secret_no_plain_text(self):
+        self._setup_for_puts()
+
+        # Force error due to no data passed in the request.
+        self.stream.read.return_value = None
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_put(self.req, self.resp, self.tenant_id,
+                                 self.secret.id)
+
+        exception = cm.exception
+        assert falcon.HTTP_400 == exception.status
 
     def test_should_delete_secret(self):
         self.resource.on_delete(self.req, self.resp, self.tenant_id,
@@ -258,6 +308,18 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         with self.assertRaises(exception.NotFound):
             self.resource.on_delete(self.req, self.resp, self.tenant_id,
                                     self.secret.id)
+
+    def _setup_for_puts(self):
+        self.plain_text = "plain_text"
+        self.req.accept = self.mime_type
+        self.req.content_type = self.mime_type
+
+        self.tenant_secret_repo = MagicMock()
+        self.tenant_secret_repo.create_from.return_value = None
+
+        self.stream = MagicMock()
+        self.stream.read.return_value = self.plain_text
+        self.req.stream = self.stream
 
 
 class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
@@ -298,7 +360,8 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
     def test_should_add_new_order(self):
         self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
 
-        self.queue_resource.process_order.assert_called_once_with(order_id=None)
+        self.queue_resource.process_order.assert_called_once_with(order_id=
+                                                                  None)
 
         args, kwargs = self.order_repo.create_from.call_args
         assert isinstance(args[0], Order)
@@ -323,7 +386,8 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
         self.resource = OrderResource(self.order_repo)
 
     def test_should_get_order(self):
-        self.resource.on_get(self.req, self.resp, self.tenant_keystone_id, self.order.id)
+        self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
+                             self.order.id)
 
         self.order_repo.get.assert_called_once_with(entity_id=self.order.id)
 
@@ -347,7 +411,8 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
             "Test not found exception")
 
         with self.assertRaises(exception.NotFound):
-            self.resource.on_delete(self.req, self.resp, self.tenant_keystone_id,
+            self.resource.on_delete(self.req, self.resp,
+                                    self.tenant_keystone_id,
                                     self.order.id)
 
 

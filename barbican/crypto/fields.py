@@ -45,7 +45,7 @@ def encrypt(fields, ok_to_generate=False):
 
     if ok_to_generate and 'plain_text' not in fields:
         generate_dek(fields)
-    
+
     for pt in (pt for pt, ct in FIELDS_ENCRYPT_DECRYPT.iteritems() if
                pt in fields):
         ct = FIELDS_ENCRYPT_DECRYPT[pt]
@@ -73,15 +73,18 @@ def decrypt(fields):
         fields[pt] = decrypt_value(fields[ct])
         if pt != ct:
             del fields[ct]
-    
+
 
 def dumps(accepts, secret):
     """
     Handles decrypting and formatting secret information, typically for
     response to a requesting http client.
     """
-    response = None
     
+    print "dumps",accepts
+    
+    response = None
+
     if not accepts or not secret or not secret.encrypted_data:
         return response
 
@@ -94,7 +97,9 @@ def dumps(accepts, secret):
     # TODO: Deal with non-direct matches (i.e. that require conversion)
     if not response:
         pass
-        
+
+    print "dumps...response: ",response
+
     return response
 
 

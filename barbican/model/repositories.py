@@ -442,7 +442,8 @@ class TenantRepo(BaseRepo):
 
     def _do_build_query_by_name(self, name, session):
         """Sub-class hook: find entity by name."""
-        raise TypeError(_("No support for retrieving by 'name' an Tenant record."))
+        raise TypeError(_("No support for retrieving by 'name' "
+                          "an Tenant record."))
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
@@ -452,13 +453,14 @@ class TenantRepo(BaseRepo):
         """Sub-class hook: validate values."""
         pass
 
-
-    def find_by_keystone_id(self, keystone_id, suppress_exception=False, session=None):
+    def find_by_keystone_id(self, keystone_id, suppress_exception=False,
+                            session=None):
         session = self.get_session(session)
 
         try:
             LOG.debug("Starting find by keystone_id steps...")
-            query = session.query(models.Tenant).filter_by(keystone_id=keystone_id)
+            query = session.query(models.Tenant).filter_by(keystone_id=
+                                                           keystone_id)
             LOG.debug("...query = {0}".format(repr(query)))
             entity = query.one()
             LOG.debug("...post query.one()")
@@ -467,7 +469,8 @@ class TenantRepo(BaseRepo):
             entity = None
             if not suppress_exception:
                 raise exception.NotFound("No %s found with keystone-ID %s"
-                                         % (self._do_entity_name(), keystone_id))
+                                         % (self._do_entity_name(),
+                                            keystone_id))
 
         return entity
 
@@ -510,7 +513,8 @@ class EncryptedDatumRepo(BaseRepo):
 
     def _do_build_query_by_name(self, name, session):
         """Sub-class hook: find entity by name."""
-        raise TypeError(_("No support for retrieving by 'name' an EncryptedDatum record."))
+        raise TypeError(_("No support for retrieving by 'name' "
+                          "an EncryptedDatum record."))
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""

@@ -95,7 +95,7 @@ def create_secret(data, tenant_id, tenant_repo,
         new_datum.kek_metadata = data['kek_metadata']
         new_datum.status = States.ACTIVE
         datum_repo.create_from(new_datum)
-        
+
     return new_secret
 
 
@@ -137,9 +137,9 @@ def create_encrypted_datum(secret, plain_text,
     # Create EncryptedDatum entity.
     new_datum = EncryptedDatum()
     new_datum.secret_id = secret.id
-    new_datum.mime_type = data['mime_type']
+    new_datum.mime_type = fields['mime_type']
     new_datum.cypher_text = secret_value
-    new_datum.kek_metadata = data['kek_metadata']
+    new_datum.kek_metadata = fields['kek_metadata']
     new_datum.status = States.ACTIVE
     datum_repo.create_from(new_datum)
 

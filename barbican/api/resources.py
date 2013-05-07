@@ -56,7 +56,15 @@ def _client_content_mismatch_to_secret():
     secret's mime-type.
     """
     abort(falcon.HTTP_400, "Request content-type doesn't match secret's.")
- 
+
+
+def _failed_to_create_encrypted_datum():
+    """
+    Throw exception we could not create an EncryptedDatum
+    record for the secret.
+    """
+    abort(falcon.HTTP_400, "Could not add secret data to Barbican.")
+
 
 def json_handler(obj):
     """Convert objects into json-friendly equivalents."""
@@ -86,7 +94,7 @@ class SecretsResource(ApiResource):
     def on_post(self, req, resp, tenant_id):
 
         LOG.debug('Start on_post for tenant-ID {0}:'.format(tenant_id))
-   
+
         body = load_body(req)
 
         # Create Secret
@@ -117,32 +125,22 @@ class SecretResource(ApiResource):
 
     def on_get(self, req, resp, tenant_id, secret_id):
 
-        print "req: ",dir(req)
-        print "req accept: ",req.accept
-        print "req content: ",req.content_type
-        print "resp: ",dir(resp)
-
         secret = self.repo.get(entity_id=secret_id, suppress_exception=True)
         if not secret:
             _secret_not_found()
-
-        print "secret data: ",secret.encrypted_data
 
         resp.status = falcon.HTTP_200
 
         if not req.accept or req.accept == 'application/json':
             # Metadata-only response, no decryption necessary.
+            resp.set_header('Content-Type', 'application/json')
             resp.body = json.dumps(augment_fields_with_content_types(secret),
                                    default=json_handler)
         else:
+            resp.set_header('Content-Type', req.accept)
             resp.body = dumps(req.accept, secret)
 
     def on_put(self, req, resp, tenant_id, secret_id):
-
-        print "req: ",dir(req)
-        print "req accept: ",req.accept
-        print "req content: ",req.content_type
-        print "resp: ",dir(resp)
 
         if not req.content_type or req.content_type == 'application/json':
             _put_accept_incorrect(req.content_type)
@@ -158,13 +156,17 @@ class SecretResource(ApiResource):
         except IOError:
             abort(falcon.HTTP_500, 'Read Error')
 
-        print "uploaded secret data: ",plain_text
-
         resp.status = falcon.HTTP_200
-        
-        resp.body = create_encrypted_datum(secret, plain_text, 
-                                           tenant_id, tenant_secret_repo,
-                                           datum_repo)
+
+        try:
+            resp.body = create_encrypted_datum(secret, plain_text,
+                                               tenant_id,
+                                               self.tenant_secret_repo,
+                                               self.datum_repo)
+        except ValueError:
+            LOG.error('Problem creating an encrypted datum for the secret.',
+                      exc_info=True)
+            _failed_to_create_encrypted_datum()
 
     def on_delete(self, req, resp, tenant_id, secret_id):
         secret = self.repo.get(entity_id=secret_id)
@@ -200,8 +202,7 @@ class OrdersResource(ApiResource):
         name = body['secret_name']
         LOG.debug('Secret to create is {0}'.format(name))
 
-
-        #TODO: What criteria to restrict multiple concurrent Order
+        # TODO: What criteria to restrict multiple concurrent Order
         #      requests per tenant?
         # order = self.order_repo.find_by_name(name=secret_name,
         #                                  suppress_exception=True)
@@ -209,7 +210,7 @@ class OrdersResource(ApiResource):
         #    abort(falcon.HTTP_400, 'Order with username {0} '
         #                           'already exists'.format(username))
 
-        #TODO: Encrypt fields as needed
+        # TODO: Encrypt fields as needed
 
         new_order = Order()
         new_order.secret_name = body['secret_name']
