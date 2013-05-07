@@ -286,6 +286,19 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         exception = cm.exception
         assert falcon.HTTP_400 == exception.status
 
+    def test_should_fail_put_secret_with_existing_datum(self):
+        self._setup_for_puts()
+
+        # Force error due to secret already having data
+        self.secret.encrypted_data = [self.datum]
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_put(self.req, self.resp, self.tenant_id,
+                                 self.secret.id)
+
+        exception = cm.exception
+        assert falcon.HTTP_409 == exception.status
+
     def test_should_delete_secret(self):
         self.resource.on_delete(self.req, self.resp, self.tenant_id,
                                 self.secret.id)
@@ -313,6 +326,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.plain_text = "plain_text"
         self.req.accept = self.mime_type
         self.req.content_type = self.mime_type
+
+        self.secret.encrypted_data = []
 
         self.tenant_secret_repo = MagicMock()
         self.tenant_secret_repo.create_from.return_value = None
