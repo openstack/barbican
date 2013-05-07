@@ -40,9 +40,9 @@ def ensure_expiration(data):
     return expiration
 
 
-def create_secret_single_type(data, tenant_id, tenant_repo,
-                              secret_repo, tenant_secret_repo,
-                              datum_repo):
+def create_secret(data, tenant_id, tenant_repo,
+                  secret_repo, tenant_secret_repo,
+                  datum_repo, ok_to_generate=False):
     # Create a Secret and a single EncryptedDatum for that Secret. Create
     #   a Tenant if one doesn't already exist.
     tenant = tenant_repo.get(tenant_id, suppress_exception=True)
@@ -65,15 +65,16 @@ def create_secret_single_type(data, tenant_id, tenant_repo,
     #                           'already exists'.format(name))
 
     # Encrypt fields.
-    encrypt(data)
+    encrypt(data, ok_to_generate)
     LOG.debug('Post-encrypted fields...{0}'.format(data))
-    secret_value = data['cypher_text']
+    secret_value = data['cypher_text'] if 'cypher_text' in data else None
     LOG.debug('Encrypted secret is {0}'.format(secret_value))
 
     # Create Secret entity.
     new_secret = Secret()
     new_secret.name = data['name']
     new_secret.expiration = ensure_expiration(data)
+    new_secret.mime_type = data['mime_type']
     new_secret.status = States.ACTIVE
     secret_repo.create_from(new_secret)
 
@@ -85,40 +86,61 @@ def create_secret_single_type(data, tenant_id, tenant_repo,
     new_assoc.status = States.ACTIVE
     tenant_secret_repo.create_from(new_assoc)
 
+    # Create EncryptedDatum entity if plain-text provided with secret request.
+    if secret_value:
+        new_datum = EncryptedDatum()
+        new_datum.secret_id = new_secret.id
+        new_datum.mime_type = data['mime_type']
+        new_datum.cypher_text = secret_value
+        new_datum.kek_metadata = data['kek_metadata']
+        new_datum.status = States.ACTIVE
+        datum_repo.create_from(new_datum)
+        
+    return new_secret
+
+
+def create_encrypted_datum(secret, plain_text,
+                           tenant_id, tenant_secret_repo, datum_repo):
+    """
+    Modifies the secret to add the plain_text secret information.
+
+    :param secret: the secret entity to associate the secret data to
+    :param plain_text: plain-text of the secret data to store
+    :param tenant_id: the tenant's id
+    :param tenant_secret_repo: the tenant/secret association repository
+    :param datum_repo: the encrypted datum repository
+    :retval The response body, None if N/A
+    """
+    if not plain_text:
+        raise ValueError('Must provide plain-text to encrypt.')
+
+    fields = secret.to_dict_fields()
+    fields['plain_text'] = plain_text
+
+    # Encrypt fields.
+    encrypt(fields)
+    LOG.debug('Post-encrypted fields...{0}'.format(fields))
+    if 'cypher_text' not in fields:
+        raise ValueError('Could not encrypt information '
+                         'and store in Barbican')
+    secret_value = fields['cypher_text']
+    LOG.debug('Encrypted secret is {0}'.format(secret_value))
+
+    # Create Tenant/Secret entity.
+    new_assoc = TenantSecret()
+    new_assoc.tenant_id = tenant_id
+    new_assoc.secret_id = secret.id
+    new_assoc.role = "admin"
+    new_assoc.status = States.ACTIVE
+    tenant_secret_repo.create_from(new_assoc)
+
     # Create EncryptedDatum entity.
     new_datum = EncryptedDatum()
-    new_datum.secret_id = new_secret.id
+    new_datum.secret_id = secret.id
     new_datum.mime_type = data['mime_type']
     new_datum.cypher_text = secret_value
     new_datum.kek_metadata = data['kek_metadata']
     new_datum.status = States.ACTIVE
     datum_repo.create_from(new_datum)
-    
-    return new_secret
 
-
-# Maps mime-types used to specify secret data formats to the types that can
-#   be requested for secrets via GET calls.
-CTYPES_PLAIN = {'default': 'text/plain'}
-CTYPES_AES = {'default': 'application/aes'}
-CTYPES_MAPPINGS = {'text/plain': CTYPES_PLAIN,
-                   'application/aes': CTYPES_AES}
-
-
-def augment_fields_with_content_types(secret):
-    # Based on the data associated with the secret, generate a list of content
-    #   types.
-    
-    fields = secret.to_dict_fields()
-
-    if not secret.encrypted_data:
-        return fields
-
-    # TODO: How deal with merging more than one datum instance?
-    for datum in secret.encrypted_data:
-        if datum.mime_type in CTYPES_MAPPINGS:
-            fields.update({'content_types': CTYPES_MAPPINGS[datum.mime_type]})
-
-    print " zzzzz ",fields
-
-    return fields
+    return new_datum

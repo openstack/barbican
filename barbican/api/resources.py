@@ -27,9 +27,10 @@ from barbican.model.models import (Tenant, Secret, TenantSecret,
 from barbican.model.repositories import (TenantRepo, SecretRepo,
                                          OrderRepo, TenantSecretRepo,
                                          EncryptedDatumRepo)
-from barbican.common.resources import (create_secret_single_type,
-                                       augment_fields_with_content_types)
-from barbican.crypto.fields import encrypt, decrypt
+from barbican.common.resources import (create_secret,
+                                       create_encrypted_datum)
+from barbican.crypto.fields import (encrypt, decrypt,
+                                    dumps, augment_fields_with_content_types)
 from barbican.openstack.common.gettextutils import _
 from barbican.openstack.common import jsonutils as json
 from barbican.queue import get_queue_api
@@ -38,17 +39,24 @@ from barbican.common import utils
 LOG = utils.getLogger(__name__)
 
 
-def _tenant_not_found():
-    abort(falcon.HTTP_404, 'Unable to locate tenant.')
-
-
-def _tenant_already_exists():
-    abort(falcon.HTTP_400, 'Tenant already exists.')
-
-
 def _secret_not_found():
+    """Throw exception indicating secret not found."""
     abort(falcon.HTTP_400, 'Unable to locate secret profile.')
 
+
+def _put_accept_incorrect(ct):
+    """Throw exception indicating request content-type is not supported."""
+    abort(falcon.HTTP_415, "Content-Type of '{0}' "
+          "is not supported.".format(ct))
+
+
+def _client_content_mismatch_to_secret():
+    """
+    Throw exception indicating client content-type doesn't match
+    secret's mime-type.
+    """
+    abort(falcon.HTTP_400, "Request content-type doesn't match secret's.")
+ 
 
 def json_handler(obj):
     """Convert objects into json-friendly equivalents."""
@@ -82,16 +90,16 @@ class SecretsResource(ApiResource):
         body = load_body(req)
 
         # Create Secret
-        new_secret = create_secret_single_type(body, tenant_id,
-                                               self.tenant_repo,
-                                               self.secret_repo,
-                                               self.tenant_secret_repo,
-                                               self.datum_repo)
+        new_secret = create_secret(body, tenant_id,
+                                   self.tenant_repo,
+                                   self.secret_repo,
+                                   self.tenant_secret_repo,
+                                   self.datum_repo)
 
         resp.status = falcon.HTTP_202
         resp.set_header('Location', '/{0}/secrets/{1}'.format(tenant_id,
                                                               new_secret.id))
-        #TODO: Generate URL...Use .format() approach here too
+        #TODO: Generate URL
         url = 'http://localhost:8080/{0}/secrets/{1}'.format(tenant_id,
                                                              new_secret.id)
         LOG.debug('URI to secret is {0}'.format(url))
@@ -101,8 +109,11 @@ class SecretsResource(ApiResource):
 class SecretResource(ApiResource):
     """Handles Secret retrieval and deletion requests"""
 
-    def __init__(self, secret_repo=None):
+    def __init__(self, secret_repo=None,
+                 tenant_secret_repo=None, datum_repo=None):
         self.repo = secret_repo or SecretRepo()
+        self.tenant_secret_repo = tenant_secret_repo or TenantSecretRepo()
+        self.datum_repo = datum_repo or EncryptedDatumRepo()
 
     def on_get(self, req, resp, tenant_id, secret_id):
 
@@ -111,14 +122,49 @@ class SecretResource(ApiResource):
         print "req content: ",req.content_type
         print "resp: ",dir(resp)
 
-        #TODO: Use a falcon exception here
-        secret = self.repo.get(entity_id=secret_id)
+        secret = self.repo.get(entity_id=secret_id, suppress_exception=True)
+        if not secret:
+            _secret_not_found()
 
         print "secret data: ",secret.encrypted_data
 
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps(augment_fields_with_content_types(secret),
-                               default=json_handler)
+
+        if not req.accept or req.accept == 'application/json':
+            # Metadata-only response, no decryption necessary.
+            resp.body = json.dumps(augment_fields_with_content_types(secret),
+                                   default=json_handler)
+        else:
+            resp.body = dumps(req.accept, secret)
+
+    def on_put(self, req, resp, tenant_id, secret_id):
+
+        print "req: ",dir(req)
+        print "req accept: ",req.accept
+        print "req content: ",req.content_type
+        print "resp: ",dir(resp)
+
+        if not req.content_type or req.content_type == 'application/json':
+            _put_accept_incorrect(req.content_type)
+
+        secret = self.repo.get(entity_id=secret_id, suppress_exception=True)
+        if not secret:
+            _secret_not_found()
+        if secret.mime_type != req.content_type:
+            _client_content_mismatch_to_secret()
+
+        try:
+            plain_text = req.stream.read()
+        except IOError:
+            abort(falcon.HTTP_500, 'Read Error')
+
+        print "uploaded secret data: ",plain_text
+
+        resp.status = falcon.HTTP_200
+        
+        resp.body = create_encrypted_datum(secret, plain_text, 
+                                           tenant_id, tenant_secret_repo,
+                                           datum_repo)
 
     def on_delete(self, req, resp, tenant_id, secret_id):
         secret = self.repo.get(entity_id=secret_id)
@@ -131,7 +177,8 @@ class SecretResource(ApiResource):
 class OrdersResource(ApiResource):
     """Handles Order requests for Secret creation"""
 
-    def __init__(self, tenant_repo=None, order_repo=None, queue_resource=None):
+    def __init__(self, tenant_repo=None, order_repo=None,
+                 queue_resource=None):
         LOG.debug('Creating OrdersResource')
         self.tenant_repo = tenant_repo or TenantRepo()
         self.order_repo = order_repo or OrderRepo()

@@ -24,18 +24,27 @@ a list of protection-fields below.
 FIELDS_ENCRYPT_DECRYPT = {'plain_text': 'cypher_text'}
 
 
+def generate_dek(fields):
+    """
+    Generate a data encryption key based on the input parameters,
+    placing the result in the 'plain_text' key of the same
+    input parameters.
+    """
+    #TODO: Supply algorithm
+    fields['plain_text'] = "TODO: Gen a dek based on input params"
+
+
 def encrypt_value(value):
     """Encrypt the supplied value"""
     #TODO: Supply algorithm
     return value if value is None else '[encrypt-this]{0}'.format(value)
 
 
-def encrypt(fields):
+def encrypt(fields, ok_to_generate=False):
     """Encrypt in-place the data of any fields found in FIELDS_TO_PROTECT"""
-    
-    if "plain_text" not in fields:
-        #TODO: Generate secret of mime-type here
-        fields['plain_text'] = "TODO: Generate real secret here"
+
+    if ok_to_generate and 'plain_text' not in fields:
+        generate_dek(fields)
     
     for pt in (pt for pt, ct in FIELDS_ENCRYPT_DECRYPT.iteritems() if
                pt in fields):
@@ -64,3 +73,51 @@ def decrypt(fields):
         fields[pt] = decrypt_value(fields[ct])
         if pt != ct:
             del fields[ct]
+    
+
+def dumps(accepts, secret):
+    """
+    Handles decrypting and formatting secret information, typically for
+    response to a requesting http client.
+    """
+    response = None
+    
+    if not accepts or not secret or not secret.encrypted_data:
+        return response
+
+    # Look for first direct match to encrypted data.
+    for datum in secret.encrypted_data:
+        if datum.mime_type == accepts:
+            response = decrypt_value(datum.cypher_text)
+            break
+
+    # TODO: Deal with non-direct matches (i.e. that require conversion)
+    if not response:
+        pass
+        
+    return response
+
+
+# Maps mime-types used to specify secret data formats to the types that can
+#   be requested for secrets via GET calls.
+CTYPES_PLAIN = {'default': 'text/plain'}
+CTYPES_AES = {'default': 'application/aes'}
+CTYPES_MAPPINGS = {'text/plain': CTYPES_PLAIN,
+                   'application/aes': CTYPES_AES}
+
+
+def augment_fields_with_content_types(secret):
+    # Generate a dict of content types based on the data associated
+    #   with the specified secret.
+
+    fields = secret.to_dict_fields()
+
+    if not secret.encrypted_data:
+        return fields
+
+    # TODO: How deal with merging more than one datum instance?
+    for datum in secret.encrypted_data:
+        if datum.mime_type in CTYPES_MAPPINGS:
+            fields.update({'content_types': CTYPES_MAPPINGS[datum.mime_type]})
+
+    return fields

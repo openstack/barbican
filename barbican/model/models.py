@@ -175,6 +175,13 @@ class Secret(BASE, ModelBase):
     Cloudkeep's Barbican, though the actual encrypted data
     is stored in one or more EncryptedData entities on behalf
     of a Secret.
+    
+    Note that the mime_type here is the 'master' MIME type for
+    the secret, which is used for PUTS and POSTS only. Barbican
+    may then produce other MIME representations for the secret
+    which are then stored as the EncryptedDatum for this secret,
+    hence the need for EncryptedDatum records to have their own
+    mime_type attributes.
     """
 
     __tablename__ = 'secrets'
@@ -182,6 +189,7 @@ class Secret(BASE, ModelBase):
     name = Column(String(255))
     expiration = Column(DateTime, default=timeutils.utcnow,
                         nullable=False)
+    mime_type = Column(String(255))
 
     # TODO: Performance - Consider avoiding full load of all datum attributes here.
     encrypted_data = relationship("EncryptedDatum", lazy='joined')
@@ -208,6 +216,9 @@ class Secret(BASE, ModelBase):
 class EncryptedDatum(BASE, ModelBase):
     """
     Represents a the encrypted data for a Secret.
+    
+    Note that the mime_type below may or may not match that in the Secret
+    record (see the Secret docstring for more details)
     """
 
     __tablename__ = 'encrypted_data'

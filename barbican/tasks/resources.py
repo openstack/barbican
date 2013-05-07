@@ -21,7 +21,7 @@ from time import sleep
 from barbican.model.repositories import (OrderRepo, TenantRepo, SecretRepo,
                                          TenantSecretRepo, EncryptedDatumRepo)
 from barbican.model.models import States
-from barbican.common.resources import create_secret_single_type
+from barbican.common.resources import create_secret
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
@@ -59,18 +59,18 @@ class BeginOrder(object):
         process of creating a secret (such as for SSL certificate
         generation.
         """
-        LOG.debug("Handling order for secret type of {0}...".format(order.secret_mime_type))
+        LOG.debug("Handling order for secret type of {0}..."
+                  .format(order.secret_mime_type))
 
         data = {"name": order.secret_name,
                 "mime_type": order.secret_mime_type,
                 "expiration": order.secret_expiration}
 
         # Create Secret
-        new_secret = create_secret_single_type(data, order.tenant_id,
-                                               self.tenant_repo,
-                                               self.secret_repo,
-                                               self.tenant_secret_repo,
-                                               self.datum_repo)
+        new_secret = create_secret(data, order.tenant_id,
+                                   self.tenant_repo, self.secret_repo,
+                                   self.tenant_secret_repo, self.datum_repo,
+                                   ok_to_generate=True)
         order.secret_id = new_secret.id
 
         LOG.debug("...done creating order's secret.")
