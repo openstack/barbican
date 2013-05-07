@@ -41,13 +41,13 @@ LOG = utils.getLogger(__name__)
 
 def _secret_not_found():
     """Throw exception indicating secret not found."""
-    abort(falcon.HTTP_400, 'Unable to locate secret profile.')
+    abort(falcon.HTTP_400, _('Unable to locate secret profile.'))
 
 
 def _put_accept_incorrect(ct):
     """Throw exception indicating request content-type is not supported."""
-    abort(falcon.HTTP_415, "Content-Type of '{0}' "
-          "is not supported.".format(ct))
+    abort(falcon.HTTP_415, _("Content-Type of '{0}' "
+          "is not supported.").format(ct))
 
 
 def _client_content_mismatch_to_secret():
@@ -55,7 +55,7 @@ def _client_content_mismatch_to_secret():
     Throw exception indicating client content-type doesn't match
     secret's mime-type.
     """
-    abort(falcon.HTTP_400, "Request content-type doesn't match secret's.")
+    abort(falcon.HTTP_400, _("Request content-type doesn't match secret's."))
 
 
 def _failed_to_create_encrypted_datum():
@@ -63,7 +63,14 @@ def _failed_to_create_encrypted_datum():
     Throw exception we could not create an EncryptedDatum
     record for the secret.
     """
-    abort(falcon.HTTP_400, "Could not add secret data to Barbican.")
+    abort(falcon.HTTP_400, _("Could not add secret data to Barbican."))
+
+
+def _secret_already_has_data():
+    """
+    Throw exception that the secret already has data.
+    """
+    abort(falcon.HTTP_409, _("Secret already has data, cannot modify it."))
 
 
 def json_handler(obj):
@@ -150,6 +157,8 @@ class SecretResource(ApiResource):
             _secret_not_found()
         if secret.mime_type != req.content_type:
             _client_content_mismatch_to_secret()
+        if secret.encrypted_data:
+            _secret_already_has_data()
 
         try:
             plain_text = req.stream.read()
@@ -159,10 +168,10 @@ class SecretResource(ApiResource):
         resp.status = falcon.HTTP_200
 
         try:
-            resp.body = create_encrypted_datum(secret, plain_text,
-                                               tenant_id,
-                                               self.tenant_secret_repo,
-                                               self.datum_repo)
+            create_encrypted_datum(secret, plain_text,
+                                   tenant_id,
+                                   self.tenant_secret_repo,
+                                   self.datum_repo)
         except ValueError:
             LOG.error('Problem creating an encrypted datum for the secret.',
                       exc_info=True)

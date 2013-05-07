@@ -114,6 +114,9 @@ def create_encrypted_datum(secret, plain_text,
     if not plain_text:
         raise ValueError('Must provide plain-text to encrypt.')
 
+    if secret.encrypted_data:
+        raise ValueError('Secret already has encrypted data stored for it.')
+
     fields = secret.to_dict_fields()
     fields['plain_text'] = plain_text
 
