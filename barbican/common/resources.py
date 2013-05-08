@@ -32,14 +32,6 @@ from barbican.common import utils
 LOG = utils.getLogger(__name__)
 
 
-def ensure_expiration(data):
-    expiration = data.get('expiration', None)
-    if not expiration:
-        expiration = timeutils.utcnow()
-    data['expiration'] = expiration
-    return expiration
-
-
 def create_secret(data, tenant_id, tenant_repo,
                   secret_repo, tenant_secret_repo,
                   datum_repo, ok_to_generate=False):
@@ -73,7 +65,10 @@ def create_secret(data, tenant_id, tenant_repo,
     # Create Secret entity.
     new_secret = Secret()
     new_secret.name = data['name']
-    new_secret.expiration = ensure_expiration(data)
+    new_secret.expiration = data.get('expiration', None)
+    new_secret.algorithm = data.get('algorithm', None)
+    new_secret.bit_length = data.get('bit_length', None)
+    new_secret.cypher_type = data.get('cypher_type', None)
     new_secret.mime_type = data['mime_type']
     new_secret.status = States.ACTIVE
     secret_repo.create_from(new_secret)
