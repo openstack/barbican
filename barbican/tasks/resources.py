@@ -62,12 +62,11 @@ class BeginOrder(object):
         LOG.debug("Handling order for secret type of {0}..."
                   .format(order.secret_mime_type))
 
-        data = {"name": order.secret_name,
-                "mime_type": order.secret_mime_type,
-                "expiration": order.secret_expiration}
+        order_info = order.to_dict_fields()
+        secret_info = order_info['secret']
 
         # Create Secret
-        new_secret = create_secret(data, order.tenant_id,
+        new_secret = create_secret(secret_info, order.tenant_id,
                                    self.tenant_repo, self.secret_repo,
                                    self.tenant_secret_repo, self.datum_repo,
                                    ok_to_generate=True)

@@ -28,9 +28,11 @@ from barbican.model.repositories import (TenantRepo, SecretRepo,
                                          OrderRepo, TenantSecretRepo,
                                          EncryptedDatumRepo)
 from barbican.common.resources import (create_secret,
-                                       create_encrypted_datum)
+                                       create_encrypted_datum,
+                                       ensure_expiration)
 from barbican.crypto.fields import (encrypt, decrypt,
-                                    dumps, augment_fields_with_content_types)
+                                    generate_response_for,
+                                    augment_fields_with_content_types)
 from barbican.openstack.common.gettextutils import _
 from barbican.openstack.common import jsonutils as json
 from barbican.queue import get_queue_api
@@ -71,6 +73,13 @@ def _secret_already_has_data():
     Throw exception that the secret already has data.
     """
     abort(falcon.HTTP_409, _("Secret already has data, cannot modify it."))
+
+
+def _secret_not_in_order():
+    """
+    Throw exception that secret information is not available in the order.
+    """
+    abort(falcon.HTTP_400, _("Secret metadata expected but not received."))
 
 
 def json_handler(obj):
@@ -145,7 +154,7 @@ class SecretResource(ApiResource):
                                    default=json_handler)
         else:
             resp.set_header('Content-Type', req.accept)
-            resp.body = dumps(req.accept, secret)
+            resp.body = generate_response_for(req.accept, secret)
 
     def on_put(self, req, resp, tenant_id, secret_id):
 
@@ -208,7 +217,12 @@ class OrdersResource(ApiResource):
 
         body = load_body(req)
         LOG.debug('Start on_post...{0}'.format(body))
-        name = body['secret_name']
+
+        if 'secret' not in body:
+            _secret_not_in_order()
+        secret_info = body['secret']
+        ensure_expiration(secret_info)
+        name = secret_info['name']
         LOG.debug('Secret to create is {0}'.format(name))
 
         # TODO: What criteria to restrict multiple concurrent Order
@@ -222,9 +236,12 @@ class OrdersResource(ApiResource):
         # TODO: Encrypt fields as needed
 
         new_order = Order()
-        new_order.secret_name = body['secret_name']
-        new_order.secret_mime_type = body['secret_mime_type']
-#TODO:        new_order.secret_expiration = body['secret_expiration']
+        new_order.secret_name = secret_info['name']
+        new_order.secret_algorithm = secret_info['algorithm']
+        new_order.secret_bit_length = secret_info['bit_length']
+        new_order.secret_cypher_type = secret_info['cypher_type']
+        new_order.secret_mime_type = secret_info['mime_type']
+        new_order.secret_expiration = secret_info['expiration']
         new_order.tenant_id = tenant.id
         self.order_repo.create_from(new_order)
 

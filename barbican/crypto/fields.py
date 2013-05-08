@@ -75,10 +75,10 @@ def decrypt(fields):
             del fields[ct]
 
 
-def dumps(accepts, secret):
+def generate_response_for(accepts, secret):
     """
     Handles decrypting and formatting secret information, typically for
-    response to a requesting http client.
+    response to a requesting http client with the specified accepts.
     """
     
     print "dumps",accepts

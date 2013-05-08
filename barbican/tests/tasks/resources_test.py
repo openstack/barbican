@@ -43,7 +43,10 @@ class WhenBeginningOrder(unittest.TestCase):
         self.order.requestor = self.requestor
 
         self.secret_name = "name"
-        self.secret_mime_type = "type"
+        self.secret_algorithm = "algo"
+        self.secret_bit_length = 512
+        self.secret_cypher_type = "cytype"
+        self.secret_mime_type = "mimetype"
         self.secret_expiration = timeutils.utcnow()
 
         self.keystone_id = 'keystone1234'
@@ -57,6 +60,9 @@ class WhenBeginningOrder(unittest.TestCase):
         self.order.status = States.PENDING
         self.order.tenant_id = self.tenant_id
         self.order.secret_name = self.secret_name
+        self.order.secret_algorithm = self.secret_algorithm
+        self.order.secret_bit_length = self.secret_bit_length
+        self.order.secret_cypher_type = self.secret_cypher_type
         self.order.secret_expiration = self.secret_expiration
         self.order.secret_mime_type = self.secret_mime_type
 
