@@ -174,6 +174,9 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.mime_type = 'text/plain'
         secret_id = "idsecret1"
         datum_id = "iddatum1"
+        self.secret_algorithm = "algo"
+        self.secret_bit_length = 512
+        self.secret_cypher_type = "cytype"
 
         self.datum = EncryptedDatum()
         self.datum.id = datum_id
@@ -186,6 +189,9 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.secret.id = secret_id
         self.secret.name = self.name
         self.secret.mime_type = self.mime_type
+        self.secret.algorithm = self.secret_algorithm
+        self.secret.bit_length = self.secret_bit_length
+        self.secret.cypher_type = self.secret_cypher_type
         self.secret.encrypted_data = [self.datum]
 
         self.secret_repo = MagicMock()
@@ -342,6 +348,10 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
     def setUp(self):
         self.secret_name = 'name'
         self.secret_mime_type = 'type'
+        self.secret_algorithm = "algo"
+        self.secret_bit_length = 512
+        self.secret_cypher_type = "cytype"
+
         self.tenant_internal_id = 'tenantid1234'
         self.tenant_keystone_id = 'keystoneid1234'
 
@@ -360,9 +370,12 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
 
         self.stream = MagicMock()
 
-        json_template = u'{{"secret_name":"{0}", "secret_mime_type":"{1}"}}'
-        self.json = json_template.format(self.secret_name,
-                                         self.secret_mime_type)
+        order_req = {'secret': {'name': self.secret_name,
+                                'mime_type': self.secret_mime_type,
+                                'algorithm': self.secret_algorithm,
+                                'bit_length': self.secret_bit_length,
+                                'cypher_type': self.secret_cypher_type}}
+        self.json = json.dumps(order_req)
         self.stream.read.return_value = self.json
 
         self.req = MagicMock()

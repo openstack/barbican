@@ -20,7 +20,7 @@ Defines database models for Barbican
 from sqlalchemy import Column, Integer, String, BigInteger
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import ForeignKey, DateTime, Boolean, Text
+from sqlalchemy import ForeignKey, DateTime, Boolean, Text, LargeBinary
 from sqlalchemy.orm import relationship, backref, object_mapper
 from sqlalchemy import Index, UniqueConstraint
 
@@ -186,6 +186,9 @@ class Secret(BASE, ModelBase):
     expiration = Column(DateTime, default=timeutils.utcnow,
                         nullable=False)
     mime_type = Column(String(255))
+    algorithm = Column(String(255))
+    bit_length = Column(Integer)
+    cypher_type = Column(String(255))
 
     # TODO: Performance - Consider avoiding full load of all
     #   datum attributes here.
@@ -195,7 +198,10 @@ class Secret(BASE, ModelBase):
         """Sub-class hook method: return dict of fields."""
         return {'name': self.name,
                 'expiration': self.expiration,
-                'mime_type': self.mime_type}
+                'mime_type': self.mime_type,
+                'algorithm': self.algorithm,
+                'bit_length': self.bit_length,
+                'cypher_type': self.cypher_type}
 
 
 class EncryptedDatum(BASE, ModelBase):
@@ -212,7 +218,7 @@ class EncryptedDatum(BASE, ModelBase):
                        nullable=False)
 
     mime_type = Column(String(255))
-    cypher_text = Column(Text)
+    cypher_text = Column(LargeBinary)
     kek_metadata = Column(Text)
 
     def _do_extra_dict_fields(self):
@@ -236,9 +242,11 @@ class Order(BASE, ModelBase):
 
     tenant_id = Column(String(36), ForeignKey('tenants.id'),
                        nullable=False)
-#    tenant = relationship(Tenant, backref=backref('csr_assocs'))
 
     secret_name = Column(String(255))
+    secret_algorithm = Column(String(255))
+    secret_bit_length = Column(Integer)
+    secret_cypher_type = Column(String(255))
     secret_mime_type = Column(String(255))
     secret_expiration = Column(DateTime, default=timeutils.utcnow,
                                nullable=False)
@@ -248,9 +256,12 @@ class Order(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        return {'secret_name': self.secret_name,
-                'secret_mime_type': self.secret_mime_type,
-                'secret_expiration': self.secret_expiration,
+        return {'secret': {'name': self.secret_name,
+                           'mime_type': self.secret_mime_type,
+                           'algorithm': self.secret_algorithm,
+                           'bit_length': self.secret_bit_length,
+                           'cypher_type': self.secret_cypher_type,
+                           'expiration': self.secret_expiration},
                 'secret_id': self.secret_id,
                 'tenant_id': self.tenant_id}
 
