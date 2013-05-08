@@ -1,0 +1,53 @@
+HOST: https://dfw.barbican.api.rackspacecloud.com/v1/
+
+--- Barbican API v1 ---
+---
+Barbican is a ReST based key management service. It is built with 
+[OpenStack](http://www.openstack.org/) in mind, but can bse used outside 
+an OpenStack implementation.
+
+More information can be found on [GitHub](https://github.com/cloudkeep/barbican).
+---
+
+--
+Secrets Resource
+The following is a description of the resources dealing with generic secrets. 
+These can be encryption keys or anything else a user wants to store in a secure,
+auditable manner
+--
+Allows a user to list all secrets in a tenant. Note: the actual secret 
+should not be listed here, a user must make a separate call to get the 
+secret details to view the secret.
+GET /secrets
+< 200
+< Content-Type: application/json
+{
+  "name": "AES key"
+  "algorithm": "AES"
+  "cypher_type": "CDC"
+  "bit_length": 256
+  "content_types": {
+    "default": "text/plain"
+  }
+  "expiration": "2013-05-08T16:21:38.134160"
+  "id": "2eb5a8d8-2202-4f46-b64d-89e26eb25487"
+  "mime_type": "text/plain"
+}
+
+Allows a user to create a new secret. This call expects the user to 
+provide a secret. To have the API generate a secret, see the provisioning
+API.
+POST /secrets
+> Content-Type: application/json
+{ "product":"1AB23ORM", "quantity": 2 }
+< 201
+< Content-Type: application/json
+{ "status": "created", "url": "/shopping-cart/2" }
+
+
+-- Payment Resources --
+This resource allows you to submit payment information to process your *shopping cart* items
+POST /payment
+{ "cc": "12345678900", "cvc": "123", "expiry": "0112" }
+< 200
+{ "receipt": "/payment/receipt/1" }
