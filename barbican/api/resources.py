@@ -28,8 +28,7 @@ from barbican.model.repositories import (TenantRepo, SecretRepo,
                                          OrderRepo, TenantSecretRepo,
                                          EncryptedDatumRepo)
 from barbican.common.resources import (create_secret,
-                                       create_encrypted_datum,
-                                       ensure_expiration)
+                                       create_encrypted_datum)
 from barbican.crypto.fields import (encrypt, decrypt,
                                     generate_response_for,
                                     augment_fields_with_content_types)
@@ -87,6 +86,33 @@ def json_handler(obj):
     return obj.isoformat() if hasattr(obj, 'isoformat') else obj
 
 
+def convert_secret_to_href(tenant_id, secret_id):
+    """Convert the tenant/secret IDs to a HATEOS-style href"""
+    if secret_id:
+        resource = 'secrets/' + secret_id
+    else:
+        resource = 'secrets/????'
+    return utils.hostname_for_refs(tenant_id=tenant_id, resource=resource)
+
+
+def convert_order_to_href(tenant_id, order_id):
+    """Convert the tenant/order IDs to a HATEOS-style href"""
+    if order_id:
+        resource = 'orders/' + order_id
+    else:
+        resource = 'orders/????'
+    return utils.hostname_for_refs(tenant_id=tenant_id, resource=resource)
+
+
+def convert_to_hrefs(tenant_id, fields):
+    """Convert id's within a fields dict to HATEOS-style hrefs"""
+    if 'secret_id' in fields:
+        fields['secret_ref'] = convert_secret_to_href(tenant_id,
+                                                      fields['secret_id'])
+        del fields['secret_id']
+    return fields
+
+
 class VersionResource(ApiResource):
     """Returns service and build version information"""
 
@@ -123,11 +149,9 @@ class SecretsResource(ApiResource):
         resp.status = falcon.HTTP_202
         resp.set_header('Location', '/{0}/secrets/{1}'.format(tenant_id,
                                                               new_secret.id))
-        #TODO: Generate URL
-        url = 'http://localhost:8080/{0}/secrets/{1}'.format(tenant_id,
-                                                             new_secret.id)
+        url = convert_secret_to_href(tenant_id, new_secret.id)
         LOG.debug('URI to secret is {0}'.format(url))
-        resp.body = json.dumps({'ref': url})
+        resp.body = json.dumps({'secret_ref': url})
 
 
 class SecretResource(ApiResource):
@@ -221,7 +245,6 @@ class OrdersResource(ApiResource):
         if 'secret' not in body:
             _secret_not_in_order()
         secret_info = body['secret']
-        ensure_expiration(secret_info)
         name = secret_info['name']
         LOG.debug('Secret to create is {0}'.format(name))
 
@@ -237,11 +260,12 @@ class OrdersResource(ApiResource):
 
         new_order = Order()
         new_order.secret_name = secret_info['name']
-        new_order.secret_algorithm = secret_info['algorithm']
-        new_order.secret_bit_length = secret_info['bit_length']
-        new_order.secret_cypher_type = secret_info['cypher_type']
+        new_order.secret_algorithm = secret_info.get('algorithm', None)
+        new_order.secret_bit_length = secret_info.get('bit_length', None)
+        new_order.secret_cypher_type = secret_info.get('cypher_type', None)
         new_order.secret_mime_type = secret_info['mime_type']
-        new_order.secret_expiration = secret_info['expiration']
+        new_order.secret_expiration = secret_info.get('expiration', None)
+
         new_order.tenant_id = tenant.id
         self.order_repo.create_from(new_order)
 
@@ -251,10 +275,8 @@ class OrdersResource(ApiResource):
         resp.status = falcon.HTTP_202
         resp.set_header('Location', '/{0}/orders/{1}'.format(tenant_id,
                                                              new_order.id))
-        #TODO: Generate URL...
-        url = 'http://localhost:8080/{0}/orders/{1}'.format(tenant_id,
-                                                            new_order.id)
-        resp.body = json.dumps({'ref': url})
+        url = convert_order_to_href(tenant_id, new_order.id)
+        resp.body = json.dumps({'order_ref': url})
 
 
 class OrderResource(ApiResource):
@@ -267,7 +289,9 @@ class OrderResource(ApiResource):
         #TODO: Use a falcon exception here
         order = self.repo.get(entity_id=order_id)
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps(order.to_dict_fields(), default=json_handler)
+        resp.body = json.dumps(convert_to_hrefs(order.tenant_id,
+                                                order.to_dict_fields()),
+                               default=json_handler)
 
     def on_delete(self, req, resp, tenant_id, order_id):
         order = self.repo.get(entity_id=order_id)

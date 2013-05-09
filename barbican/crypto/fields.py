@@ -80,9 +80,6 @@ def generate_response_for(accepts, secret):
     Handles decrypting and formatting secret information, typically for
     response to a requesting http client with the specified accepts.
     """
-    
-    print "dumps",accepts
-    
     response = None
 
     if not accepts or not secret or not secret.encrypted_data:
@@ -97,8 +94,6 @@ def generate_response_for(accepts, secret):
     # TODO: Deal with non-direct matches (i.e. that require conversion)
     if not response:
         pass
-
-    print "dumps...response: ",response
 
     return response
 

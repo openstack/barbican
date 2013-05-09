@@ -68,9 +68,17 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.name = 'name'
         self.plain_text = 'not-encrypted'
         self.mime_type = 'text/plain'
-        template = u'{{"name":"{0}", "plain_text":"{1}","mime_type":"{2}"}}'
-        self.json = template.format(self.name, self.plain_text,
-                                    self.mime_type)
+        self.secret_algorithm = "algo"
+        self.secret_bit_length = 512
+        self.secret_cypher_type = "cytype"
+
+        self.secret_req = {'name': self.name,
+                           'mime_type': self.mime_type,
+                           'algorithm': self.secret_algorithm,
+                           'bit_length': self.secret_bit_length,
+                           'cypher_type': self.secret_cypher_type,
+                           'plain_text': self.plain_text}
+        self.json = json.dumps(self.secret_req)
 
         self.keystone_id = 'keystone1234'
         self.tenant_id = 'tenantid1234'
@@ -108,6 +116,10 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         secret = args[0]
         assert isinstance(secret, Secret)
         assert secret.name == self.name
+        assert secret.algorithm == self.secret_algorithm
+        assert secret.bit_length == self.secret_bit_length
+        assert secret.cypher_type == self.secret_cypher_type
+        assert secret.mime_type == self.mime_type
 
         args, kwargs = self.tenant_secret_repo.create_from.call_args
         tenant_secret = args[0]

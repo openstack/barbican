@@ -114,8 +114,7 @@ class ModelBase(object):
 
     def to_dict_fields(self):
         """Returns a dictionary of just the db fields of this entity."""
-        dict_fields = {'id': self.id,
-                       'created': self.created_at,
+        dict_fields = {'created': self.created_at,
                        'updated': self.updated_at,
                        'status': self.status}
         if self.deleted_at:
@@ -183,9 +182,8 @@ class Secret(BASE, ModelBase):
     __tablename__ = 'secrets'
 
     name = Column(String(255))
-    expiration = Column(DateTime, default=timeutils.utcnow,
-                        nullable=False)
-    mime_type = Column(String(255))
+    expiration = Column(DateTime, default=timeutils.utcnow)
+    mime_type = Column(String(255), nullable=False)
     algorithm = Column(String(255))
     bit_length = Column(Integer)
     cypher_type = Column(String(255))
@@ -248,8 +246,7 @@ class Order(BASE, ModelBase):
     secret_bit_length = Column(Integer)
     secret_cypher_type = Column(String(255))
     secret_mime_type = Column(String(255))
-    secret_expiration = Column(DateTime, default=timeutils.utcnow,
-                               nullable=False)
+    secret_expiration = Column(DateTime, default=timeutils.utcnow)
 
     secret_id = Column(String(36), ForeignKey('secrets.id'),
                        nullable=True)
@@ -262,8 +259,7 @@ class Order(BASE, ModelBase):
                            'bit_length': self.secret_bit_length,
                            'cypher_type': self.secret_cypher_type,
                            'expiration': self.secret_expiration},
-                'secret_id': self.secret_id,
-                'tenant_id': self.tenant_id}
+                'secret_id': self.secret_id}
 
 
 # Keep this tuple synchronized with the models in the file
