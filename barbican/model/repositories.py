@@ -29,6 +29,7 @@ from oslo.config import cfg
 import sqlalchemy
 import sqlalchemy.orm as sa_orm
 import sqlalchemy.sql as sa_sql
+from sqlalchemy import or_
 
 from barbican.common import exception
 #TODO: from barbican.db.sqlalchemy import migration
@@ -57,6 +58,7 @@ db_opts = [
     cfg.IntOpt('sql_retry_interval', default=1),
     cfg.BoolOpt('db_auto_create', default=True),
     cfg.StrOpt('sql_connection', default=None),
+    cfg.IntOpt('max_limit_paging', default=2),
 ]
 
 CONF = cfg.CONF
@@ -477,6 +479,40 @@ class TenantRepo(BaseRepo):
 
 class SecretRepo(BaseRepo):
     """Repository for the Secret entity."""
+
+    def get_by_create_date(self, offset_arg=None, limit_arg=None,
+                           suppress_exception=False, session=None):
+        """
+        Returns a list of secrets, ordered by the date they were created at
+        and paged based on the offset and limit fields.
+        """
+
+        offset = int(offset_arg) if offset_arg else 0
+        offset = offset if offset >= 0 else 0
+
+        limit = int(limit_arg) if limit_arg else CONF.max_limit_paging
+        limit = limit if limit >= 2 else 2
+
+        print " limit=", limit," offset=",offset
+
+        session = self.get_session(session)
+        utcnow = timeutils.utcnow()
+
+        try:
+            query = session.query(models.Secret).order_by(models.Secret.created_at)
+            query = query.filter_by(deleted=False)
+#            query = query.filter(or_(models.Secret.created_at == None,
+#                                     models.Secret.created_at > utcnow))
+
+            entities = query[offset:(offset + limit)]
+
+        except sa_orm.exc.NoResultFound:
+            entities = None
+            if not suppress_exception:
+                raise exception.NotFound("No %s's found"
+                                         % (self._do_entity_name()))
+
+        return (entities, offset, limit)
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""

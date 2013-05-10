@@ -51,12 +51,13 @@ def _put_accept_incorrect(ct):
           "is not supported.").format(ct))
 
 
-def _client_content_mismatch_to_secret():
+def _client_content_mismatch_to_secret(expected, actual):
     """
     Throw exception indicating client content-type doesn't match
     secret's mime-type.
     """
-    abort(falcon.HTTP_400, _("Request content-type doesn't match secret's."))
+    abort(falcon.HTTP_400, _("Request content-type of '{0}' doesn't match "
+                             "secret's of '{1}'.").format(actual, expected))
 
 
 def _failed_to_create_encrypted_datum():
@@ -110,7 +111,53 @@ def convert_to_hrefs(tenant_id, fields):
         fields['secret_ref'] = convert_secret_to_href(tenant_id,
                                                       fields['secret_id'])
         del fields['secret_id']
+    if 'order_id' in fields:
+        fields['order_ref'] = convert_order_to_href(tenant_id,
+                                                    fields['order_id'])
+        del fields['secret_id']
     return fields
+
+
+def convert_list_to_href(resources_name, tenant_id, offset, limit):
+    """
+    Convert the tenant ID and offset/limit info to a HATEOS-style href
+    suitable for use in a list navigation paging interface.
+    """
+    resource = '{0}?limit={1}&offset={2}'.format(resources_name, limit, offset)
+    return utils.hostname_for_refs(tenant_id=tenant_id, resource=resource)
+
+
+def previous_href(resources_name, tenant_id, offset, limit):
+    """
+    Create a HATEOS-style 'previous' href suitable for use in a list
+    navigation paging interface, assuming the provided values are the
+    currently viewed page.
+    """
+    offset = max(0, offset - limit)
+    return convert_list_to_href(resources_name, tenant_id, offset, limit)
+
+
+def next_href(resources_name, tenant_id, offset, limit):
+    """
+    Create a HATEOS-style 'next' href suitable for use in a list
+    navigation paging interface, assuming the provided values are the
+    currently viewed page.
+    """
+    offset = offset + limit
+    return convert_list_to_href(resources_name, tenant_id, offset, limit)
+
+
+def add_secrets_nav_hrefs(tenant_id, offset, limit, data):
+    if offset > 0:
+        data.update({'previous':previous_href('secrets',
+                                              tenant_id,
+                                              offset,
+                                              limit),})
+    data.update({'next':next_href('secrets',
+                                  tenant_id,
+                                  offset,
+                                  limit),})
+    return data
 
 
 class VersionResource(ApiResource):
@@ -137,7 +184,11 @@ class SecretsResource(ApiResource):
 
         LOG.debug('Start on_post for tenant-ID {0}:'.format(tenant_id))
 
+        print " req: ",req
+
         body = load_body(req)
+
+        print " body: ",body
 
         # Create Secret
         new_secret = create_secret(body, tenant_id,
@@ -152,6 +203,29 @@ class SecretsResource(ApiResource):
         url = convert_secret_to_href(tenant_id, new_secret.id)
         LOG.debug('URI to secret is {0}'.format(url))
         resp.body = json.dumps({'secret_ref': url})
+
+    def on_get(self, req, resp, tenant_id):
+        LOG.debug('Start secrets on_get for tenant-ID {0}:'.format(tenant_id))
+
+        params = req._params
+
+        result = self.secret_repo.get_by_create_date(
+                                    offset_arg=params.get('offset', None),
+                                    limit_arg=params.get('limit', None),
+                                    suppress_exception=True)
+        secrets, offset, limit = result
+
+        if not secrets:
+            _secret_not_found()
+        else:
+            secrets_resp = [convert_to_hrefs(tenant_id,
+                                augment_fields_with_content_types(s)) for s in
+                                secrets]
+            secrets_resp_overall = add_secrets_nav_hrefs(
+                                        tenant_id, offset, limit,
+                                        {'secrets': secrets_resp})
+            resp.body = json.dumps(secrets_resp_overall,
+                                   default=json_handler)
 
 
 class SecretResource(ApiResource):
@@ -174,8 +248,10 @@ class SecretResource(ApiResource):
         if not req.accept or req.accept == 'application/json':
             # Metadata-only response, no decryption necessary.
             resp.set_header('Content-Type', 'application/json')
-            resp.body = json.dumps(augment_fields_with_content_types(secret),
-                                   default=json_handler)
+            resp.body = json.dumps(
+                            convert_to_hrefs(tenant_id,
+                                augment_fields_with_content_types(secret)),
+                                default=json_handler)
         else:
             resp.set_header('Content-Type', req.accept)
             resp.body = generate_response_for(req.accept, secret)
@@ -189,7 +265,7 @@ class SecretResource(ApiResource):
         if not secret:
             _secret_not_found()
         if secret.mime_type != req.content_type:
-            _client_content_mismatch_to_secret()
+            _client_content_mismatch_to_secret(secret.mime_type, req.content_type)
         if secret.encrypted_data:
             _secret_already_has_data()
 
@@ -197,6 +273,8 @@ class SecretResource(ApiResource):
             plain_text = req.stream.read()
         except IOError:
             abort(falcon.HTTP_500, 'Read Error')
+
+        print " plain-text: ",len(plain_text)," -- ",plain_text[:20]
 
         resp.status = falcon.HTTP_200
 
