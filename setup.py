@@ -72,5 +72,12 @@ setup(
         'Environment :: No Input/Output (Daemon)',
     ],
     scripts=['bin/barbican-api'],
-    py_modules=[]
+    py_modules=[],
+    entry_points="""
+    [barbican.crypto.extension]
+    simple_crypto = barbican.crypto.plugin:SimpleCryptoPlugin
+
+    [barbican.test.crypto.extension]
+    test_crypto = barbican.tests.crypto.test_plugin:TestCryptoPlugin
+    """
 )

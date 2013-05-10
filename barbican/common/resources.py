@@ -32,11 +32,9 @@ from barbican.common import utils
 LOG = utils.getLogger(__name__)
 
 
-def create_secret(data, tenant_id, tenant_repo,
-                  secret_repo, tenant_secret_repo,
-                  datum_repo, ok_to_generate=False):
-    # Create a Secret and a single EncryptedDatum for that Secret. Create
-    #   a Tenant if one doesn't already exist.
+def get_or_create_tenant(tenant_id, tenant_repo):
+    """Returns tenant with matching tenant_id.  Creates it if it does
+    not exist."""
     tenant = tenant_repo.get(tenant_id, suppress_exception=True)
     if not tenant:
         LOG.debug('Creating tenant for {0}'.format(tenant_id))
@@ -44,6 +42,15 @@ def create_secret(data, tenant_id, tenant_repo,
         tenant.keystone_id = tenant_id
         tenant.status = States.ACTIVE
         tenant_repo.create_from(tenant)
+    return tenant
+
+
+def create_secret(data, tenant_id, tenant_repo,
+                  secret_repo, tenant_secret_repo,
+                  datum_repo, ok_to_generate=False):
+    # Create a Secret and a single EncryptedDatum for that Secret. Create
+    #   a Tenant if one doesn't already exist.
+    tenant = get_or_create_tenant(tenant_id, tenant_repo)
 
     # TODO: What if any criteria to restrict new secrets vs existing ones?
     # Verify secret doesn't already exist.
@@ -63,14 +70,10 @@ def create_secret(data, tenant_id, tenant_repo,
     LOG.debug('Encrypted secret is {0}'.format(secret_value))
 
     # Create Secret entity.
-    new_secret = Secret()
-    new_secret.name = data['name']
-    new_secret.expiration = data.get('expiration', None)
-    new_secret.algorithm = data.get('algorithm', None)
-    new_secret.bit_length = data.get('bit_length', None)
-    new_secret.cypher_type = data.get('cypher_type', None)
-    new_secret.mime_type = data['mime_type']
-    new_secret.status = States.ACTIVE
+    new_secret = Secret(data)
+
+    # encrypt(new_secret)
+
     secret_repo.create_from(new_secret)
 
     # Create Tenant/Secret entity.

@@ -20,22 +20,27 @@ API-facing resource controllers.
 
 import falcon
 
-from barbican.version import __version__
 from barbican.api import ApiResource, load_body, abort
+from barbican.common.resources import (create_secret,
+                                       create_encrypted_datum,
+                                       get_or_create_tenant)
+from barbican.common import utils
+from barbican.crypto.extension_manager import (
+    CryptoMimeTypeNotSupportedException
+)
+from barbican.crypto.fields import (encrypt, decrypt,
+                                    generate_response_for,
+                                    augment_fields_with_content_types)
 from barbican.model.models import (Tenant, Secret, TenantSecret,
                                    EncryptedDatum, Order, States)
 from barbican.model.repositories import (TenantRepo, SecretRepo,
                                          OrderRepo, TenantSecretRepo,
                                          EncryptedDatumRepo)
-from barbican.common.resources import (create_secret,
-                                       create_encrypted_datum)
-from barbican.crypto.fields import (encrypt, decrypt,
-                                    generate_response_for,
-                                    augment_fields_with_content_types)
 from barbican.openstack.common.gettextutils import _
 from barbican.openstack.common import jsonutils as json
 from barbican.queue import get_queue_api
-from barbican.common import utils
+from barbican.version import __version__
+
 
 LOG = utils.getLogger(__name__)
 
@@ -125,26 +130,43 @@ class VersionResource(ApiResource):
 class SecretsResource(ApiResource):
     """Handles Secret creation requests"""
 
-    def __init__(self, tenant_repo=None, secret_repo=None,
+    def __init__(self, crypto_manager,
+                 tenant_repo=None, secret_repo=None,
                  tenant_secret_repo=None, datum_repo=None):
         LOG.debug('Creating SecretsResource')
         self.tenant_repo = tenant_repo or TenantRepo()
         self.secret_repo = secret_repo or SecretRepo()
         self.tenant_secret_repo = tenant_secret_repo or TenantSecretRepo()
         self.datum_repo = datum_repo or EncryptedDatumRepo()
+        self.crypto_manager = crypto_manager
 
     def on_post(self, req, resp, tenant_id):
-
         LOG.debug('Start on_post for tenant-ID {0}:'.format(tenant_id))
 
-        body = load_body(req)
+        data = load_body(req)
 
-        # Create Secret
-        new_secret = create_secret(body, tenant_id,
-                                   self.tenant_repo,
-                                   self.secret_repo,
-                                   self.tenant_secret_repo,
-                                   self.datum_repo)
+        tenant = get_or_create_tenant(tenant_id, self.tenant_repo)
+
+        new_secret = Secret(data)
+        self.secret_repo.create_from(new_secret)
+
+        # Create Tenant/Secret entity.
+        new_assoc = TenantSecret()
+        new_assoc.tenant_id = tenant.id
+        new_assoc.secret_id = new_secret.id
+        new_assoc.role = "admin"
+        new_assoc.status = States.ACTIVE
+        self.tenant_secret_repo.create_from(new_assoc)
+
+        if 'plain_text' in data:
+            LOG.debug('Encrypting plain_text secret')
+            try:
+                new_datum = self.crypto_manager.encrypt(data['plain_text'],
+                                                        new_secret, tenant)
+                self.datum_repo.create_from(new_datum)
+            except CryptoMimeTypeNotSupportedException as e:
+                # TODO: return error
+                LOG.error(e.message)
 
         resp.status = falcon.HTTP_202
         resp.set_header('Location', '/{0}/secrets/{1}'.format(tenant_id,

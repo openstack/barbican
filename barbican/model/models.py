@@ -192,6 +192,20 @@ class Secret(BASE, ModelBase):
     #   datum attributes here.
     encrypted_data = relationship("EncryptedDatum", lazy='joined')
 
+    def __init__(self, parsed_request):
+        """Creates secret from a dict."""
+        super(ModelBase, self).__init__()
+
+        self.name = parsed_request['name']
+        self.mime_type = parsed_request['mime_type']
+
+        self.expiration = parsed_request.get('expiration', None)
+        self.algorithm = parsed_request.get('algorithm', None)
+        self.bit_length = parsed_request.get('bit_length', None)
+        self.cypher_type = parsed_request.get('cypher_type', None)
+
+        self.status = States.ACTIVE
+
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
         return {'name': self.name,
