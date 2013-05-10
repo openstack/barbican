@@ -22,6 +22,7 @@ import falcon
 
 from barbican.version import __version__
 from barbican.api import ApiResource, load_body, abort
+from barbican.api import policy
 from barbican.model.models import (Tenant, Secret, TenantSecret,
                                    EncryptedDatum, Order, States)
 from barbican.model.repositories import (TenantRepo, SecretRepo,
@@ -56,7 +57,12 @@ def json_handler(obj):
 class VersionResource(ApiResource):
     """Returns service and build version information"""
 
+    def __init__(self, policy_enforcer=None):
+        LOG.debug('=== Creating VersionResource ===')
+        self.policy = policy_enforcer or policy.Enforcer()
+
     def on_get(self, req, resp):
+        LOG.debug('=== Authenticated and policy satisfied VersionResource ===')
         resp.status = falcon.HTTP_200
         resp.body = json.dumps({'v1': 'current',
                                 'build': __version__})
@@ -66,12 +72,15 @@ class SecretsResource(ApiResource):
     """Handles Secret creation requests"""
 
     def __init__(self, tenant_repo=None, secret_repo=None,
-                 tenant_secret_repo=None, datum_repo=None):
+                 tenant_secret_repo=None, datum_repo=None,
+                 policy_enforcer=None):
         LOG.debug('Creating SecretsResource')
         self.tenant_repo = tenant_repo or TenantRepo()
         self.secret_repo = secret_repo or SecretRepo()
         self.tenant_secret_repo = tenant_secret_repo or TenantSecretRepo()
         self.datum_repo = datum_repo or EncryptedDatumRepo()
+        self.policy = policy_enforcer or policy.Enforcer()
+        
 
     def on_post(self, req, resp, tenant_id):
 
@@ -141,8 +150,9 @@ class SecretsResource(ApiResource):
 class SecretResource(ApiResource):
     """Handles Secret retrieval and deletion requests"""
 
-    def __init__(self, secret_repo=None):
+    def __init__(self, secret_repo=None, policy_enforcer=None):
         self.repo = secret_repo or SecretRepo()
+        self.policy = policy_enforcer or policy.Enforcer()
 
     def on_get(self, req, resp, tenant_id, secret_id):
         #TODO: Use a falcon exception here
@@ -161,12 +171,13 @@ class SecretResource(ApiResource):
 class OrdersResource(ApiResource):
     """Handles Order requests for Secret creation"""
 
-    def __init__(self, tenant_repo=None, order_repo=None, queue_resource=None):
+    def __init__(self, tenant_repo=None, order_repo=None, 
+                  queue_resource=None, policy_enforcer=None):
         LOG.debug('Creating OrdersResource')
         self.tenant_repo = tenant_repo or TenantRepo()
         self.order_repo = order_repo or OrderRepo()
         self.queue = queue_resource or get_queue_api()
-
+        self.policy = policy_enforcer or policy.Enforcer()
     def on_post(self, req, resp, tenant_id):
 
         # Retrieve Tenant, or else create new Tenant
@@ -216,8 +227,9 @@ class OrdersResource(ApiResource):
 class OrderResource(ApiResource):
     """Handles Order retrieval and deletion requests"""
 
-    def __init__(self, order_repo=None):
+    def __init__(self, order_repo=None, policy_enforcer=None):
         self.repo = order_repo or OrderRepo()
+        self.policy = policy_enforcer or policy.Enforcer()
 
     def on_get(self, req, resp, tenant_id, order_id):
         #TODO: Use a falcon exception here
