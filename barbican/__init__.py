@@ -16,3 +16,7 @@
 """
 Cloudkeep's Barbican module root
 """
+
+import gettext
+
+gettext.install('barbican', unicode=1)

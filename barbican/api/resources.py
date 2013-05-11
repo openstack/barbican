@@ -36,6 +36,7 @@ from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
 
+PORT = 9311
 
 def _tenant_not_found():
     abort(falcon.HTTP_404, 'Unable to locate tenant.')
@@ -62,7 +63,6 @@ class VersionResource(ApiResource):
         self.policy = policy_enforcer or policy.Enforcer()
 
     def on_get(self, req, resp):
-        LOG.debug('=== Authenticated and policy satisfied VersionResource ===')
         resp.status = falcon.HTTP_200
         resp.body = json.dumps({'v1': 'current',
                                 'build': __version__})
@@ -141,8 +141,9 @@ class SecretsResource(ApiResource):
         resp.set_header('Location', '/{0}/secrets/{1}'.format(tenant_id,
                                                               new_secret.id))
         #TODO: Generate URL...Use .format() approach here too
-        url = 'http://localhost:8080/{0}/secrets/{1}'.format(tenant_id,
-                                                             new_secret.id)
+        url = 'http://localhost:{0}/{1}/secrets/{2}'.format(PORT,
+                                                            TENANT_id,
+                                                            new_secret.id)
         LOG.debug('URI to secret is {0}'.format(url))
         resp.body = json.dumps({'ref': url})
 
@@ -208,7 +209,7 @@ class OrdersResource(ApiResource):
         new_order = Order()
         new_order.secret_name = body['secret_name']
         new_order.secret_mime_type = body['secret_mime_type']
-#TODO:        new_order.secret_expiration = body['secret_expiration']
+        #TODO: new_order.secret_expiration = body['secret_expiration']
         new_order.tenant_id = tenant.id
         self.order_repo.create_from(new_order)
 
@@ -219,8 +220,9 @@ class OrdersResource(ApiResource):
         resp.set_header('Location', '/{0}/orders/{1}'.format(tenant_id,
                                                              new_order.id))
         #TODO: Generate URL...
-        url = 'http://localhost:8080/{0}/orders/{1}'.format(tenant_id,
-                                                            new_order.id)
+        url = 'http://localhost:{0}/{1}/orders/{2}'.format(PORT,
+                                                           tenant_id,
+                                                           new_order.id)
         resp.body = json.dumps({'ref': url})
 
 
