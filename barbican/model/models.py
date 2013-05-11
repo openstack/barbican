@@ -20,7 +20,7 @@ Defines database models for Barbican
 from sqlalchemy import Column, Integer, String, BigInteger
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import ForeignKey, DateTime, Boolean, Text
+from sqlalchemy import ForeignKey, DateTime, Boolean, Text, LargeBinary
 from sqlalchemy.orm import relationship, backref, object_mapper
 from sqlalchemy import Index, UniqueConstraint
 
@@ -114,8 +114,7 @@ class ModelBase(object):
 
     def to_dict_fields(self):
         """Returns a dictionary of just the db fields of this entity."""
-        dict_fields = {'id': self.id,
-                       'created': self.created_at,
+        dict_fields = {'created': self.created_at,
                        'updated': self.updated_at,
                        'status': self.status}
         if self.deleted_at:
@@ -130,17 +129,13 @@ class ModelBase(object):
         return {}
 
 
-# Association table between Tenants and Secrets
-#tenant_secret_table = Table('tenant_secret', BASE.metadata,
-#    Column('tenant_id', Integer, ForeignKey('tenants.id')),
-#    Column('secret_id', Integer, ForeignKey('secrets.id')),
-#    Column('role', Text)
-#)
-
-
 class TenantSecret(BASE, ModelBase):
+    """
+    Represents an association between a Tenant and a Secret.
+    """
+
     __tablename__ = 'tenant_secret'
-    
+
     tenant_id = Column(Integer, ForeignKey('tenants.id'), primary_key=True)
     secret_id = Column(Integer, ForeignKey('secrets.id'), primary_key=True)
     role = Column(String(255))
@@ -175,41 +170,61 @@ class Secret(BASE, ModelBase):
     Cloudkeep's Barbican, though the actual encrypted data
     is stored in one or more EncryptedData entities on behalf
     of a Secret.
+
+    Note that the mime_type here is the 'master' MIME type for
+    the secret, which is used for PUTS and POSTS only. Barbican
+    may then produce other MIME representations for the secret
+    which are then stored as the EncryptedDatum for this secret,
+    hence the need for EncryptedDatum records to have their own
+    mime_type attributes.
     """
 
     __tablename__ = 'secrets'
 
     name = Column(String(255))
-    expiration = Column(DateTime, default=timeutils.utcnow,
-                        nullable=False)
+    expiration = Column(DateTime, default=timeutils.utcnow)
+    mime_type = Column(String(255), nullable=False)
+    algorithm = Column(String(255))
+    bit_length = Column(Integer)
+    cypher_type = Column(String(255))
 
-    encrypted_data = relationship("EncryptedDatum")
+    # TODO: Performance - Consider avoiding full load of all
+    #   datum attributes here.
+    encrypted_data = relationship("EncryptedDatum", lazy='joined')
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
         return {'name': self.name,
-                'expiration': self.expiration}
+                'expiration': self.expiration,
+                'mime_type': self.mime_type,
+                'algorithm': self.algorithm,
+                'bit_length': self.bit_length,
+                'cypher_type': self.cypher_type}
 
 
 class EncryptedDatum(BASE, ModelBase):
     """
     Represents a the encrypted data for a Secret.
+
+    Note that the mime_type below may or may not match that in the Secret
+    record (see the Secret docstring for more details)
     """
 
     __tablename__ = 'encrypted_data'
 
     secret_id = Column(String(36), ForeignKey('secrets.id'),
-                    nullable=False)
+                       nullable=False)
 
     mime_type = Column(String(255))
-    cypher_text = Column(Text)
+    cypher_text = Column(LargeBinary)
     kek_metadata = Column(Text)
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
         return {'name': self.name,
                 'mime_type': self.mime_type,
-                'cypher_text': self.secret}
+                'cypher_text': self.secret,
+                'kek_metadata': self.kek_metadata}
 
 
 class Order(BASE, ModelBase):
@@ -225,23 +240,26 @@ class Order(BASE, ModelBase):
 
     tenant_id = Column(String(36), ForeignKey('tenants.id'),
                        nullable=False)
-#    tenant = relationship(Tenant, backref=backref('csr_assocs'))
 
     secret_name = Column(String(255))
+    secret_algorithm = Column(String(255))
+    secret_bit_length = Column(Integer)
+    secret_cypher_type = Column(String(255))
     secret_mime_type = Column(String(255))
-    secret_expiration = Column(DateTime, default=timeutils.utcnow,
-                        nullable=False)
+    secret_expiration = Column(DateTime, default=timeutils.utcnow)
 
     secret_id = Column(String(36), ForeignKey('secrets.id'),
                        nullable=True)
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        return {'secret_name': self.secret_name,
-                'secret_mime_type': self.secret_mime_type,
-                'secret_expiration': self.secret_expiration,
-                'secret_id': self.secret_id,
-                'tenant_id': self.tenant_id}
+        return {'secret': {'name': self.secret_name,
+                           'mime_type': self.secret_mime_type,
+                           'algorithm': self.secret_algorithm,
+                           'bit_length': self.secret_bit_length,
+                           'cypher_type': self.secret_cypher_type,
+                           'expiration': self.secret_expiration},
+                'secret_id': self.secret_id}
 
 
 # Keep this tuple synchronized with the models in the file

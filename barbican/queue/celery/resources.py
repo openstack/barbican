@@ -52,6 +52,7 @@ def process_order(order_id):
     """Process Order."""
     return process_order_wrapper.delay(order_id)
 
+
 @celery.task
 def process_order_wrapper(order_id):
     """(Celery wrapped task) Process Order."""
