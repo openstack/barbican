@@ -33,6 +33,7 @@ def create_main_app(global_config, **local_conf):
     log.setup('barbican')
 
     # Resources
+    # TODO: No longer need constants!
     VERSIONS = VersionResource()
     SECRETS = SecretsResource()
     SECRET = SecretResource()

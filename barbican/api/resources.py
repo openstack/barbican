@@ -244,8 +244,8 @@ class SecretsResource(ApiResource):
 class SecretResource(ApiResource):
     """Handles Secret retrieval and deletion requests"""
 
-    def __init__(self, secret_repo=None, policy_enforcer=None,
-                 tenant_secret_repo=None, datum_repo=None):
+    def __init__(self, secret_repo=None, tenant_secret_repo=None,
+                 datum_repo=None, policy_enforcer=None):
         self.repo = secret_repo or SecretRepo()
         self.tenant_secret_repo = tenant_secret_repo or TenantSecretRepo()
         self.datum_repo = datum_repo or EncryptedDatumRepo()
