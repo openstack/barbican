@@ -98,26 +98,3 @@ def generate_response_for(accepts, secret):
     return response
 
 
-# Maps mime-types used to specify secret data formats to the types that can
-#   be requested for secrets via GET calls.
-CTYPES_PLAIN = {'default': 'text/plain'}
-CTYPES_AES = {'default': 'application/aes'}
-CTYPES_MAPPINGS = {'text/plain': CTYPES_PLAIN,
-                   'application/aes': CTYPES_AES}
-
-
-def augment_fields_with_content_types(secret):
-    # Generate a dict of content types based on the data associated
-    #   with the specified secret.
-
-    fields = secret.to_dict_fields()
-
-    if not secret.encrypted_data:
-        return fields
-
-    # TODO: How deal with merging more than one datum instance?
-    for datum in secret.encrypted_data:
-        if datum.mime_type in CTYPES_MAPPINGS:
-            fields.update({'content_types': CTYPES_MAPPINGS[datum.mime_type]})
-
-    return fields

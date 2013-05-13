@@ -27,6 +27,14 @@ class CryptoMimeTypeNotSupportedException(BarbicanException):
             _('Crypto Mime Type not supported {0}'.format(mime_type))
         )
 
+class CryptoAccpetNotSupportedException(BarbicanException):
+    """Raised when requested decripted format is not
+    available in any active plugin."""
+    def __init__(self, accept):
+        super(CryptoAccpetNotSupportedException, self).__init__(
+            _('Crypto Accept not supported {0}'.format(accept))
+        )
+
 
 class CryptoExtensionManager(named.NamedExtensionManager):
     def __init__(self, namespace, names,
@@ -46,3 +54,11 @@ class CryptoExtensionManager(named.NamedExtensionManager):
                 return ext.obj.encrypt(unencrypted, secret, tenant)
         else:
             raise CryptoMimeTypeNotSupportedException(secret.mime_type)
+
+    def decrypt(self, accept, secret, tenant):
+        """Delegates decryption to active plugins."""
+        for ext in self.extensions:
+            if ext.obj.supports(accept):
+                return ext.obj.decrypt(accept, secret, tenant)
+        else:
+            raise CryptoAccpetNotSupportedException(accept)

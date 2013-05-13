@@ -16,13 +16,13 @@
 """
 Shared business logic.
 """
+from barbican.crypto.extension_manager import CryptoMimeTypeNotSupportedException
 
 from barbican.model.models import (Tenant, Secret, TenantSecret,
                                    EncryptedDatum, Order, States)
 from barbican.model.repositories import (TenantRepo, SecretRepo,
                                          OrderRepo, TenantSecretRepo,
                                          EncryptedDatumRepo)
-from barbican.crypto.fields import encrypt, decrypt
 from barbican.openstack.common import timeutils
 from barbican.openstack.common.gettextutils import _
 from barbican.openstack.common import jsonutils as json
@@ -45,12 +45,11 @@ def get_or_create_tenant(tenant_id, tenant_repo):
     return tenant
 
 
-def create_secret(data, tenant_id, tenant_repo,
-                  secret_repo, tenant_secret_repo,
-                  datum_repo, ok_to_generate=False):
-    # Create a Secret and a single EncryptedDatum for that Secret. Create
-    #   a Tenant if one doesn't already exist.
-    tenant = get_or_create_tenant(tenant_id, tenant_repo)
+def create_secret(data, tenant, crypto_manager,
+                  secret_repo, tenant_secret_repo, datum_repo,
+                  ok_to_generate=False):
+
+    # TODO: revisit ok_to_generate
 
     # TODO: What if any criteria to restrict new secrets vs existing ones?
     # Verify secret doesn't already exist.
@@ -63,17 +62,7 @@ def create_secret(data, tenant_id, tenant_repo,
     #    abort(falcon.HTTP_400, 'Secret with name {0} '
     #                           'already exists'.format(name))
 
-    # Encrypt fields.
-    encrypt(data, ok_to_generate)
-    LOG.debug('Post-encrypted fields...{0}'.format(data))
-    secret_value = data['cypher_text'] if 'cypher_text' in data else None
-    LOG.debug('Encrypted secret is {0}'.format(secret_value))
-
-    # Create Secret entity.
     new_secret = Secret(data)
-
-    # encrypt(new_secret)
-
     secret_repo.create_from(new_secret)
 
     # Create Tenant/Secret entity.
@@ -84,27 +73,29 @@ def create_secret(data, tenant_id, tenant_repo,
     new_assoc.status = States.ACTIVE
     tenant_secret_repo.create_from(new_assoc)
 
-    # Create EncryptedDatum entity if plain-text provided with secret request.
-    if secret_value:
-        new_datum = EncryptedDatum()
-        new_datum.secret_id = new_secret.id
-        new_datum.mime_type = data['mime_type']
-        new_datum.cypher_text = secret_value
-        new_datum.kek_metadata = data['kek_metadata']
-        new_datum.status = States.ACTIVE
-        datum_repo.create_from(new_datum)
+    if 'plain_text' in data:
+        LOG.debug('Encrypting plain_text secret')
+        try:
+            new_datum = crypto_manager.encrypt(data['plain_text'],
+                                               new_secret,
+                                               tenant)
+            datum_repo.create_from(new_datum)
+        except CryptoMimeTypeNotSupportedException as e:
+            # TODO: return error
+            LOG.error(e.message)
 
     return new_secret
 
 
-def create_encrypted_datum(secret, plain_text,
-                           tenant_id, tenant_secret_repo, datum_repo):
+def create_encrypted_datum(secret, plain_text, tenant, crypto_manager,
+                           tenant_secret_repo, datum_repo):
     """
     Modifies the secret to add the plain_text secret information.
 
     :param secret: the secret entity to associate the secret data to
     :param plain_text: plain-text of the secret data to store
-    :param tenant_id: the tenant's id
+    :param tenant: the tenant who owns the secret
+    :param crypto_manager: the crypto plugin manager
     :param tenant_secret_repo: the tenant/secret association repository
     :param datum_repo: the encrypted datum repository
     :retval The response body, None if N/A
@@ -118,30 +109,23 @@ def create_encrypted_datum(secret, plain_text,
     fields = secret.to_dict_fields()
     fields['plain_text'] = plain_text
 
-    # Encrypt fields.
-    encrypt(fields)
-    LOG.debug('Post-encrypted fields...{0}'.format(fields))
-    if 'cypher_text' not in fields:
-        raise ValueError('Could not encrypt information '
-                         'and store in Barbican')
-    secret_value = fields['cypher_text']
-    LOG.debug('Encrypted secret is {0}'.format(secret_value))
+    # Encrypt plain_text
+    LOG.debug('Encrypting plain_text secret')
+    try:
+        new_datum = crypto_manager.encrypt(plain_text,
+                                           secret,
+                                           tenant)
+        datum_repo.create_from(new_datum)
+    except CryptoMimeTypeNotSupportedException as e:
+        # TODO: return error
+        LOG.error(e.message)
 
     # Create Tenant/Secret entity.
     new_assoc = TenantSecret()
-    new_assoc.tenant_id = tenant_id
+    new_assoc.tenant_id = tenant
     new_assoc.secret_id = secret.id
     new_assoc.role = "admin"
     new_assoc.status = States.ACTIVE
     tenant_secret_repo.create_from(new_assoc)
-
-    # Create EncryptedDatum entity.
-    new_datum = EncryptedDatum()
-    new_datum.secret_id = secret.id
-    new_datum.mime_type = fields['mime_type']
-    new_datum.cypher_text = secret_value
-    new_datum.kek_metadata = fields['kek_metadata']
-    new_datum.status = States.ACTIVE
-    datum_repo.create_from(new_datum)
 
     return new_datum

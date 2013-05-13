@@ -28,6 +28,10 @@ class TestCryptoPlugin(CryptoPluginBase):
         datum.kek_metadata = json.dumps({'plugin': 'TestCryptoPlugin'})
         return datum
 
+    def decrypt(self, secret_type, secret, tenant):
+        encrypted_datum = secret.encrypted_data
+        return 'plain-data'
+
     def create(self, secret_type):
         return "insecure_key"
 

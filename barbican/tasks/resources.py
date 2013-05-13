@@ -21,7 +21,7 @@ from time import sleep
 from barbican.model.repositories import (OrderRepo, TenantRepo, SecretRepo,
                                          TenantSecretRepo, EncryptedDatumRepo)
 from barbican.model.models import States
-from barbican.common.resources import create_secret
+from barbican.common.resources import create_secret, get_or_create_tenant
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
@@ -66,7 +66,8 @@ class BeginOrder(object):
         secret_info = order_info['secret']
 
         # Create Secret
-        new_secret = create_secret(secret_info, order.tenant_id,
+        tenant = get_or_create_tenant(order.tenant_id, self.tenant_repo)
+        new_secret = create_secret(secret_info, tenant,
                                    self.tenant_repo, self.secret_repo,
                                    self.tenant_secret_repo, self.datum_repo,
                                    ok_to_generate=True)

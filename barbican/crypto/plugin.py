@@ -29,6 +29,11 @@ class CryptoPluginBase(object):
         secret and tenant"""
 
     @abc.abstractmethod
+    def decrypt(self, secret_type, secret, tenant):
+        """Decrypt secret into secret_type in the context of the
+        provided tenant"""
+
+    @abc.abstractmethod
     def create(self, secret_type):
         """Create a new key."""
 
@@ -40,6 +45,8 @@ class CryptoPluginBase(object):
 class SimpleCryptoPlugin(CryptoPluginBase):
     """Insecure implementation of the crypto plugin."""
 
+    #TODO: Use PyCrypto to aes encode secrets
+
     def __init__(self):
         self.supported_types = ['application/aes-256-cbc']
 
@@ -47,6 +54,10 @@ class SimpleCryptoPlugin(CryptoPluginBase):
         encrypted_datum = EncryptedDatum()
         encrypted_datum.cypher_text = 'encrypted-data'
         return encrypted_datum
+
+    def decrypt(self, secret_type, secret, tenant):
+        encrypted_datum = secret.encrypted_data
+        return 'plain-data'
 
     def create(self, secret_type):
         return "insecure_key"

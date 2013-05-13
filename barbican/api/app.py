@@ -42,7 +42,7 @@ def create_main_app(global_config, **local_conf):
     # Resources
     VERSIONS = VersionResource()
     SECRETS = SecretsResource(crypto_mgr)
-    SECRET = SecretResource()
+    SECRET = SecretResource(crypto_mgr)
     ORDERS = OrdersResource()
     ORDER = OrderResource()
 

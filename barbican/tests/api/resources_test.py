@@ -25,7 +25,6 @@ from barbican.api.resources import (VersionResource,
 from barbican.crypto.extension_manager import CryptoExtensionManager
 from barbican.model.models import (Secret, Tenant, TenantSecret,
                                    Order, EncryptedDatum)
-from barbican.crypto.fields import decrypt_value, encrypt_value
 from barbican.common import config
 from barbican.common import exception
 from barbican.openstack.common import jsonutils
@@ -213,6 +212,12 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.secret = Secret(self.parsed_data)
         self.secret.encrypted_data = [self.datum]
 
+        self.tenant_id = 'tenantid1234'
+        self.tenant = Tenant()
+        self.tenant.id = self.tenant_id
+        self.tenant_repo = MagicMock()
+        self.tenant_repo.get.return_value = self.tenant
+
         self.secret_repo = MagicMock()
         self.secret_repo.get.return_value = self.secret
         self.secret_repo.delete_entity.return_value = None
@@ -226,7 +231,13 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.req = MagicMock()
         self.req.accept = 'application/json'
         self.resp = MagicMock()
-        self.resource = SecretResource(self.secret_repo,
+        self.crypto_mgr = CryptoExtensionManager(
+            'barbican.test.crypto.extension',
+            ['test_crypto']
+        )
+        self.resource = SecretResource(self.crypto_mgr,
+                                       self.tenant_repo,
+                                       self.secret_repo,
                                        self.tenant_secret_repo,
                                        self.datum_repo)
 
@@ -267,7 +278,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
         assert isinstance(datum, EncryptedDatum)
-        assert encrypt_value(self.plain_text) == datum.cypher_text
+        self.assertEqual('cypher_text', datum.cypher_text)
         assert self.mime_type == datum.mime_type
         assert datum.kek_metadata is not None
 

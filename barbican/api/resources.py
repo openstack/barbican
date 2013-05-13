@@ -17,7 +17,6 @@
 API-facing resource controllers.
 """
 
-
 import falcon
 
 from barbican.api import ApiResource, load_body, abort
@@ -28,9 +27,7 @@ from barbican.common import utils
 from barbican.crypto.extension_manager import (
     CryptoMimeTypeNotSupportedException
 )
-from barbican.crypto.fields import (encrypt, decrypt,
-                                    generate_response_for,
-                                    augment_fields_with_content_types)
+from barbican.crypto.mime_types import augment_fields_with_content_types
 from barbican.model.models import (Tenant, Secret, TenantSecret,
                                    EncryptedDatum, Order, States)
 from barbican.model.repositories import (TenantRepo, SecretRepo,
@@ -128,7 +125,7 @@ class VersionResource(ApiResource):
 
 
 class SecretsResource(ApiResource):
-    """Handles Secret creation requests"""
+    """Handles Secret creation requests."""
 
     def __init__(self, crypto_manager,
                  tenant_repo=None, secret_repo=None,
@@ -144,29 +141,11 @@ class SecretsResource(ApiResource):
         LOG.debug('Start on_post for tenant-ID {0}:'.format(tenant_id))
 
         data = load_body(req)
-
         tenant = get_or_create_tenant(tenant_id, self.tenant_repo)
 
-        new_secret = Secret(data)
-        self.secret_repo.create_from(new_secret)
-
-        # Create Tenant/Secret entity.
-        new_assoc = TenantSecret()
-        new_assoc.tenant_id = tenant.id
-        new_assoc.secret_id = new_secret.id
-        new_assoc.role = "admin"
-        new_assoc.status = States.ACTIVE
-        self.tenant_secret_repo.create_from(new_assoc)
-
-        if 'plain_text' in data:
-            LOG.debug('Encrypting plain_text secret')
-            try:
-                new_datum = self.crypto_manager.encrypt(data['plain_text'],
-                                                        new_secret, tenant)
-                self.datum_repo.create_from(new_datum)
-            except CryptoMimeTypeNotSupportedException as e:
-                # TODO: return error
-                LOG.error(e.message)
+        new_secret = create_secret(data, tenant, self.crypto_manager,
+                                   self.secret_repo, self.tenant_secret_repo,
+                                   self.datum_repo)
 
         resp.status = falcon.HTTP_202
         resp.set_header('Location', '/{0}/secrets/{1}'.format(tenant_id,
@@ -179,8 +158,10 @@ class SecretsResource(ApiResource):
 class SecretResource(ApiResource):
     """Handles Secret retrieval and deletion requests"""
 
-    def __init__(self, secret_repo=None,
+    def __init__(self, crypto_manager, tenant_repo=None, secret_repo=None,
                  tenant_secret_repo=None, datum_repo=None):
+        self.crypto_manager = crypto_manager
+        self.tenant_repo = tenant_repo or TenantRepo()
         self.repo = secret_repo or SecretRepo()
         self.tenant_secret_repo = tenant_secret_repo or TenantSecretRepo()
         self.datum_repo = datum_repo or EncryptedDatumRepo()
@@ -199,8 +180,9 @@ class SecretResource(ApiResource):
             resp.body = json.dumps(augment_fields_with_content_types(secret),
                                    default=json_handler)
         else:
+            tenant = get_or_create_tenant(tenant_id, self.tenant_repo)
             resp.set_header('Content-Type', req.accept)
-            resp.body = generate_response_for(req.accept, secret)
+            resp.body = self.crypto_manager.decrypt(req.accept, secret, tenant)
 
     def on_put(self, req, resp, tenant_id, secret_id):
 
@@ -223,8 +205,10 @@ class SecretResource(ApiResource):
         resp.status = falcon.HTTP_200
 
         try:
-            create_encrypted_datum(secret, plain_text,
+            create_encrypted_datum(secret,
+                                   plain_text,
                                    tenant_id,
+                                   self.crypto_manager,
                                    self.tenant_secret_repo,
                                    self.datum_repo)
         except ValueError:
