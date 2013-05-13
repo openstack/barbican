@@ -204,9 +204,10 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
         self.secret_algorithm = "algo"
         self.secret_bit_length = 512
         self.secret_cypher_type = "cytype"
+        self.params = {'offset': 2, 'limit': 2}
 
         self.num_secrets = 10
-        self.offset = 0
+        self.offset = 2
         self.limit = 2
 
         secret_params = {'mime_type': self.mime_type,
@@ -216,8 +217,8 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
                          'cypher_type': self.secret_cypher_type,
                          'encrypted_datum': None}
 
-        self.secrets = [create_secret(id='id' + id, **secret_params) for id
-                        in xrange(self.num_secrets)]
+        self.secrets = [create_secret(id='id' + str(id), **secret_params) for
+                        id in xrange(self.num_secrets)]
 
         self.secret_repo = MagicMock()
         self.secret_repo.get_by_create_date.return_value = (self.secrets,
@@ -234,25 +235,62 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
 
         self.req = MagicMock()
         self.req.accept = 'application/json'
-        self.req._params = {'offset': 2, 'limit': 2}
+        self.req._params = self.params
         self.resp = MagicMock()
         self.resource = SecretsResource(self.tenant_repo, self.secret_repo,
                                         self.tenant_secret_repo,
                                         self.datum_repo)
 
     def test_should_get_list_secrets(self):
-        self.resource.on_get(self.req, self.resp, self.tenant_id,
-                             self.secret.id)
+        self.resource.on_get(self.req, self.resp, self.tenant_id)
 
         self.secret_repo.get_by_create_date.assert_called_once_with(
-                                    offset_arg=params.get('offset',
-                                                          self.offset),
-                                    limit_arg=params.get('limit',
-                                                         self.limit),
+                                    offset_arg=self.params.get('offset',
+                                                               self.offset),
+                                    limit_arg=self.params.get('limit',
+                                                              self.limit),
                                     suppress_exception=True)
 
+        resp_body = jsonutils.loads(self.resp.body)
+        self.assertTrue('previous' in resp_body)
+        self.assertTrue('next' in resp_body)
 
-class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
+        url_nav_next = self._create_url(self.tenant_id,
+                                        self.offset + self.limit, self.limit)
+        self.assertTrue(self.resp.body.count(url_nav_next) == 1)
+
+        url_nav_prev = self._create_url(self.tenant_id,
+                                        0, self.limit)
+        self.assertTrue(self.resp.body.count(url_nav_prev) == 1)
+
+        url_hrefs = self._create_url(self.tenant_id)
+        self.assertTrue(self.resp.body.count(url_hrefs) ==
+                        (self.num_secrets + 2))
+
+    def test_should_fail_no_secrets(self):
+
+        del self.secrets[:]
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_get(self.req, self.resp, self.tenant_id)
+
+        exception = cm.exception
+        assert falcon.HTTP_400 == exception.status
+
+    def _create_url(self, tenant_id, offset_arg=None, limit_arg=None):
+        if limit_arg:
+            offset = int(offset_arg)
+            limit = int(limit_arg)
+            return '/v1/{0}/secrets?limit={1}&offset={2}'.format(
+                            tenant_id,
+                            limit,
+                            offset)
+        else:
+            return '/v1/{0}/secrets'.format(self.tenant_id)
+
+
+class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
+    unittest.TestCase):
 
     def setUp(self):
         self.tenant_id = 'tenant1234'
@@ -273,7 +311,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
 
         self.secret = create_secret(self.mime_type, id = secret_id,
                                     name = self.name,
-                                    mime_type = self.mime_type,
                                     algorithm = self.secret_algorithm,
                                     bit_length = self.secret_bit_length,
                                     cypher_type = self.secret_cypher_type,
