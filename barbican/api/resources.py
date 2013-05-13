@@ -42,7 +42,12 @@ LOG = utils.getLogger(__name__)
 
 def _secret_not_found():
     """Throw exception indicating secret not found."""
-    abort(falcon.HTTP_400, _('Unable to locate secret profile.'))
+    abort(falcon.HTTP_400, _('Unable to locate secret.'))
+
+
+def _order_not_found():
+    """Throw exception indicating order not found."""
+    abort(falcon.HTTP_400, _('Unable to locate order.'))
 
 
 def _put_accept_incorrect(ct):
@@ -114,7 +119,7 @@ def convert_to_hrefs(tenant_id, fields):
     if 'order_id' in fields:
         fields['order_ref'] = convert_order_to_href(tenant_id,
                                                     fields['order_id'])
-        del fields['secret_id']
+        del fields['order_id']
     return fields
 
 
@@ -147,13 +152,13 @@ def next_href(resources_name, tenant_id, offset, limit):
     return convert_list_to_href(resources_name, tenant_id, offset, limit)
 
 
-def add_secrets_nav_hrefs(tenant_id, offset, limit, data):
+def add_nav_hrefs(resources_name, tenant_id, offset, limit, data):
     if offset > 0:
-        data.update({'previous':previous_href('secrets',
+        data.update({'previous':previous_href(resources_name,
                                               tenant_id,
                                               offset,
                                               limit),})
-    data.update({'next':next_href('secrets',
+    data.update({'next':next_href(resources_name,
                                   tenant_id,
                                   offset,
                                   limit),})
@@ -221,7 +226,7 @@ class SecretsResource(ApiResource):
             secrets_resp = [convert_to_hrefs(tenant_id,
                                 augment_fields_with_content_types(s)) for s in
                                 secrets]
-            secrets_resp_overall = add_secrets_nav_hrefs(
+            secrets_resp_overall = add_nav_hrefs('secrets',
                                         tenant_id, offset, limit,
                                         {'secrets': secrets_resp})
             resp.body = json.dumps(secrets_resp_overall,
@@ -274,8 +279,6 @@ class SecretResource(ApiResource):
         except IOError:
             abort(falcon.HTTP_500, 'Read Error')
 
-        print " plain-text: ",len(plain_text)," -- ",plain_text[:20]
-
         resp.status = falcon.HTTP_200
 
         try:
@@ -287,6 +290,8 @@ class SecretResource(ApiResource):
             LOG.error('Problem creating an encrypted datum for the secret.',
                       exc_info=True)
             _failed_to_create_encrypted_datum()
+
+        print " plain-text: ",len(plain_text)," -- ",plain_text[:20]
 
     def on_delete(self, req, resp, tenant_id, secret_id):
         secret = self.repo.get(entity_id=secret_id)
@@ -355,6 +360,27 @@ class OrdersResource(ApiResource):
                                                              new_order.id))
         url = convert_order_to_href(tenant_id, new_order.id)
         resp.body = json.dumps({'order_ref': url})
+
+    def on_get(self, req, resp, tenant_id):
+        LOG.debug('Start orders on_get for tenant-ID {0}:'.format(tenant_id))
+
+        params = req._params
+
+        result = self.order_repo.get_by_create_date(
+                                    offset_arg=params.get('offset', None),
+                                    limit_arg=params.get('limit', None),
+                                    suppress_exception=True)
+        orders, offset, limit = result
+
+        if not orders:
+            _order_not_found()
+        else:
+            orders_resp = [convert_to_hrefs(tenant_id, o) for o in orders]
+            secrets_resp_overall = add_nav_hrefs('orders',
+                                        tenant_id, offset, limit,
+                                        {'orders': secrets_resp})
+            resp.body = json.dumps(orders_resp_overall,
+                                   default=json_handler)
 
 
 class OrderResource(ApiResource):

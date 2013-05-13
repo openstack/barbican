@@ -42,6 +42,22 @@ def suite():
     return suite
 
 
+def create_secret(mime_type, id = "id", name = "name",
+                  algorithm = None, bit_length = None,
+                  cypher_type = None, encrypted_datum = None):
+    """Generate a Secret entity instance."""
+    secret = Secret()
+    secret.id = id
+    secret.name = name
+    secret.mime_type = mime_type
+    secret.algorithm = algorithm
+    secret.bit_length = bit_length
+    secret.cypher_type = cypher_type
+    if encrypted_datum:
+        secret.encrypted_data = [encrypted_datum]
+    return secret
+
+
 class WhenTestingVersionResource(unittest.TestCase):
 
     def setUp(self):
@@ -178,6 +194,64 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         assert not self.datum_repo.create_from.called
 
 
+class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
+
+    def setUp(self):
+        self.tenant_id = 'tenant1234'
+        self.name = 'name1234'
+        self.mime_type = 'text/plain'
+        secret_id_base = "idsecret"
+        self.secret_algorithm = "algo"
+        self.secret_bit_length = 512
+        self.secret_cypher_type = "cytype"
+
+        self.num_secrets = 10
+        self.offset = 0
+        self.limit = 2
+
+        secret_params = {'mime_type': self.mime_type,
+                         'name': self.name,
+                         'algorithm': self.secret_algorithm,
+                         'bit_length': self.secret_bit_length,
+                         'cypher_type': self.secret_cypher_type,
+                         'encrypted_datum': None}
+
+        self.secrets = [create_secret(id='id' + id, **secret_params) for id
+                        in xrange(self.num_secrets)]
+
+        self.secret_repo = MagicMock()
+        self.secret_repo.get_by_create_date.return_value = (self.secrets,
+                                                            self.offset,
+                                                            self.limit)
+
+        self.tenant_repo = MagicMock()
+
+        self.tenant_secret_repo = MagicMock()
+        self.tenant_secret_repo.create_from.return_value = None
+
+        self.datum_repo = MagicMock()
+        self.datum_repo.create_from.return_value = None
+
+        self.req = MagicMock()
+        self.req.accept = 'application/json'
+        self.req._params = {'offset': 2, 'limit': 2}
+        self.resp = MagicMock()
+        self.resource = SecretsResource(self.tenant_repo, self.secret_repo,
+                                        self.tenant_secret_repo,
+                                        self.datum_repo)
+
+    def test_should_get_list_secrets(self):
+        self.resource.on_get(self.req, self.resp, self.tenant_id,
+                             self.secret.id)
+
+        self.secret_repo.get_by_create_date.assert_called_once_with(
+                                    offset_arg=params.get('offset',
+                                                          self.offset),
+                                    limit_arg=params.get('limit',
+                                                         self.limit),
+                                    suppress_exception=True)
+
+
 class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
 
     def setUp(self):
@@ -197,14 +271,13 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.datum.cypher_text = "cypher_text"
         self.datum.kek_metadata = "kekedata"
 
-        self.secret = Secret()
-        self.secret.id = secret_id
-        self.secret.name = self.name
-        self.secret.mime_type = self.mime_type
-        self.secret.algorithm = self.secret_algorithm
-        self.secret.bit_length = self.secret_bit_length
-        self.secret.cypher_type = self.secret_cypher_type
-        self.secret.encrypted_data = [self.datum]
+        self.secret = create_secret(self.mime_type, id = secret_id,
+                                    name = self.name,
+                                    mime_type = self.mime_type,
+                                    algorithm = self.secret_algorithm,
+                                    bit_length = self.secret_bit_length,
+                                    cypher_type = self.secret_cypher_type,
+                                    encrypted_datum = self.datum)
 
         self.secret_repo = MagicMock()
         self.secret_repo.get.return_value = self.secret

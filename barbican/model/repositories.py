@@ -501,7 +501,7 @@ class SecretRepo(BaseRepo):
         try:
             query = session.query(models.Secret).order_by(models.Secret.created_at)
             query = query.filter_by(deleted=False)
-#            query = query.filter(or_(models.Secret.created_at == None,
+# TODO:           query = query.filter(or_(models.Secret.created_at == None,
 #                                     models.Secret.created_at > utcnow))
 
             entities = query[offset:(offset + limit)]
@@ -587,6 +587,37 @@ class TenantSecretRepo(BaseRepo):
 
 class OrderRepo(BaseRepo):
     """Repository for the Order entity."""
+
+    def get_by_create_date(self, offset_arg=None, limit_arg=None,
+                           suppress_exception=False, session=None):
+        """
+        Returns a list of orders, ordered by the date they were created at
+        and paged based on the offset and limit fields.
+        """
+
+        offset = int(offset_arg) if offset_arg else 0
+        offset = offset if offset >= 0 else 0
+
+        limit = int(limit_arg) if limit_arg else CONF.max_limit_paging
+        limit = limit if limit >= 2 else 2
+
+        print " limit=", limit," offset=",offset
+
+        session = self.get_session(session)
+
+        try:
+            query = session.query(models.Order).order_by(models.Order.created_at)
+            query = query.filter_by(deleted=False)
+
+            entities = query[offset:(offset + limit)]
+
+        except sa_orm.exc.NoResultFound:
+            entities = None
+            if not suppress_exception:
+                raise exception.NotFound("No %s's found"
+                                         % (self._do_entity_name()))
+
+        return (entities, offset, limit)
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
