@@ -83,6 +83,16 @@ def create_secret(data, tenant, crypto_manager,
         except CryptoMimeTypeNotSupportedException as e:
             # TODO: return error
             LOG.error(e.message)
+    elif ok_to_generate:
+        try:
+            # TODO: Generate a good key
+            new_datum = crypto_manager.encrypt('plain_text_key',
+                                               new_secret,
+                                               tenant)
+            datum_repo.create_from(new_datum)
+        except CryptoMimeTypeNotSupportedException as e:
+            # TODO: return error
+            LOG.error(e.message)
 
     return new_secret
 

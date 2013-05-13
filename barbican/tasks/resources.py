@@ -17,7 +17,7 @@
 Task resources for the Barbican API.
 """
 from time import sleep
-
+from barbican.crypto.extension_manager import CryptoExtensionManager
 from barbican.model.repositories import (OrderRepo, TenantRepo, SecretRepo,
                                          TenantSecretRepo, EncryptedDatumRepo)
 from barbican.model.models import States
@@ -30,14 +30,19 @@ LOG = utils.getLogger(__name__)
 class BeginOrder(object):
     """Handles beginning processing an Order"""
 
-    def __init__(self, tenant_repo=None, order_repo=None, secret_repo=None,
-                 tenant_secret_repo=None, datum_repo=None):
+    def __init__(self, crypto_manager=None, tenant_repo=None, order_repo=None,
+                 secret_repo=None, tenant_secret_repo=None, datum_repo=None):
         LOG.debug('Creating BeginOrder task processor')
         self.order_repo = order_repo or OrderRepo()
         self.tenant_repo = tenant_repo or TenantRepo()
         self.secret_repo = secret_repo or SecretRepo()
         self.tenant_secret_repo = tenant_secret_repo or TenantSecretRepo()
         self.datum_repo = datum_repo or EncryptedDatumRepo()
+        self.crypto_manager = crypto_manager or CryptoExtensionManager(
+            'barbican.crypto.extension',
+            ['simple_crypto']  # TODO: grab this list from cfg or reuse some
+                               # other crypto_mgr instance.
+        )
 
     def process(self, order_id):
         """Process the beginning of an Order."""
@@ -68,7 +73,7 @@ class BeginOrder(object):
         # Create Secret
         tenant = get_or_create_tenant(order.tenant_id, self.tenant_repo)
         new_secret = create_secret(secret_info, tenant,
-                                   self.tenant_repo, self.secret_repo,
+                                   self.crypto_manager, self.secret_repo,
                                    self.tenant_secret_repo, self.datum_repo,
                                    ok_to_generate=True)
         order.secret_id = new_secret.id
