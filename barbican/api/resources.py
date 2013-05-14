@@ -395,8 +395,10 @@ class OrderResource(ApiResource):
         self.policy = policy_enforcer or policy.Enforcer()
 
     def on_get(self, req, resp, tenant_id, order_id):
-        #TODO: Use a falcon exception here
-        order = self.repo.get(entity_id=order_id)
+        order = self.repo.get(entity_id=order_id, suppress_exception=True)
+        if not order:
+            _order_not_found()
+
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(convert_to_hrefs(order.tenant_id,
                                                 order.to_dict_fields()),

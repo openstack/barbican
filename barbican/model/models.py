@@ -182,7 +182,7 @@ class Secret(BASE, ModelBase):
     __tablename__ = 'secrets'
 
     name = Column(String(255))
-    expiration = Column(DateTime)
+    expiration = Column(DateTime, default=None)
     mime_type = Column(String(255), nullable=False)
     algorithm = Column(String(255))
     bit_length = Column(Integer)
@@ -247,7 +247,7 @@ class Order(BASE, ModelBase):
     secret_bit_length = Column(Integer)
     secret_cypher_type = Column(String(255))
     secret_mime_type = Column(String(255))
-    secret_expiration = Column(DateTime, default=timeutils.utcnow)
+    secret_expiration = Column(DateTime, default=None)
 
     secret_id = Column(String(36), ForeignKey('secrets.id'),
                        nullable=True)

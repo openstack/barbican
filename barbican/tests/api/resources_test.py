@@ -656,7 +656,8 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
         self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
                              self.order.id)
 
-        self.order_repo.get.assert_called_once_with(entity_id=self.order.id)
+        self.order_repo.get.assert_called_once_with(entity_id=self.order.id,
+                                                    suppress_exception=True)
 
     def test_should_delete_order(self):
         self.resource.on_delete(self.req, self.resp, self.tenant_keystone_id,

@@ -58,7 +58,7 @@ db_opts = [
     cfg.IntOpt('sql_retry_interval', default=1),
     cfg.BoolOpt('db_auto_create', default=True),
     cfg.StrOpt('sql_connection', default=None),
-    cfg.IntOpt('max_limit_paging', default=2),
+    cfg.IntOpt('max_limit_paging', default=10),
 ]
 
 CONF = cfg.CONF
@@ -333,6 +333,7 @@ class BaseRepo(object):
 
         session = get_session()
         with session.begin():
+            entity.deleted_at = timeutils.utcnow()
             entity.delete(session=session)
 
     def _do_entity_name(self):
@@ -497,10 +498,10 @@ class SecretRepo(BaseRepo):
         utcnow = timeutils.utcnow()
 
         try:
-            query = session.query(models.Secret).order_by(models.Secret.created_at)
-            query = query.filter_by(deleted=False)
-# TODO:           query = query.filter(or_(models.Secret.created_at == None,
-#                                     models.Secret.created_at > utcnow))
+            query = session.query(models.Secret).order_by(
+                        models.Secret.created_at).filter_by(deleted=False)
+            query = query.filter(or_(models.Secret.expiration == None,
+                                     models.Secret.expiration > utcnow))
 
             entities = query[offset:(offset + limit)]
 
@@ -521,11 +522,17 @@ class SecretRepo(BaseRepo):
 
     def _do_build_query_by_name(self, name, session):
         """Sub-class hook: find entity by name."""
-        return session.query(models.Secret).filter_by(name=name)
+        utcnow = timeutils.utcnow()
+        return session.query(models.Secret).filter_by(name=name).filter(
+                        or_(models.Secret.expiration == None,
+                            models.Secret.expiration > utcnow))
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
-        return session.query(models.Secret).filter_by(id=entity_id)
+        utcnow = timeutils.utcnow()
+        return session.query(models.Secret).filter_by(id=entity_id).filter(
+                        or_(models.Secret.expiration == None,
+                            models.Secret.expiration > utcnow))
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
