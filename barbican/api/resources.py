@@ -196,12 +196,7 @@ class SecretsResource(ApiResource):
     def on_post(self, req, resp, tenant_id):
 
         LOG.debug('Start on_post for tenant-ID {0}:'.format(tenant_id))
-
-        print " req: ",req
-
         body = load_body(req)
-
-        print " body: ",body
 
         # Create Secret
         new_secret = create_secret(body, tenant_id,
@@ -300,8 +295,6 @@ class SecretResource(ApiResource):
                       exc_info=True)
             _failed_to_create_encrypted_datum()
 
-        print " plain-text: ",len(plain_text)," -- ",plain_text[:20]
-
     def on_delete(self, req, resp, tenant_id, secret_id):
         secret = self.repo.get(entity_id=secret_id)
 
@@ -385,10 +378,11 @@ class OrdersResource(ApiResource):
         if not orders:
             _order_not_found()
         else:
-            orders_resp = [convert_to_hrefs(tenant_id, o) for o in orders]
-            secrets_resp_overall = add_nav_hrefs('orders',
+            orders_resp = [convert_to_hrefs(tenant_id, o.to_dict_fields())
+                           for o in orders]
+            orders_resp_overall = add_nav_hrefs('orders',
                                         tenant_id, offset, limit,
-                                        {'orders': secrets_resp})
+                                        {'orders': orders_resp})
             resp.body = json.dumps(orders_resp_overall,
                                    default=json_handler)
 

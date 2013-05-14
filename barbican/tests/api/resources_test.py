@@ -58,6 +58,20 @@ def create_secret(mime_type, id = "id", name = "name",
     return secret
 
 
+def create_order(mime_type, id = "id", name = "name",
+                  algorithm = None, bit_length = None,
+                  cypher_type = None):
+    """Generate an Order entity instance."""
+    order = Order()
+    order.id = id
+    order.secret_name = name
+    order.secret_mime_type = mime_type
+    order.secret_algorithm = algorithm
+    order.secret_bit_length = bit_length
+    order.secret_cypher_type = cypher_type
+    return order
+
+
 class WhenTestingVersionResource(unittest.TestCase):
 
     def setUp(self):
@@ -527,15 +541,106 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
         assert isinstance(args[0], Order)
 
 
+class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
+
+    def setUp(self):
+        self.tenant_id = 'tenant1234'
+        self.name = 'name1234'
+        self.mime_type = 'text/plain'
+        secret_id_base = "idsecret"
+        self.secret_algorithm = "algo"
+        self.secret_bit_length = 512
+        self.secret_cypher_type = "cytype"
+        self.params = {'offset': 2, 'limit': 2}
+
+        self.num_orders = 10
+        self.offset = 2
+        self.limit = 2
+
+        order_params = {'mime_type': self.mime_type,
+                        'name': self.name,
+                        'algorithm': self.secret_algorithm,
+                        'bit_length': self.secret_bit_length,
+                        'cypher_type': self.secret_cypher_type}
+
+        self.orders = [create_order(id='id' + str(id), **order_params) for
+                       id in xrange(self.num_orders)]
+
+        self.order_repo = MagicMock()
+        self.order_repo.get_by_create_date.return_value = (self.orders,
+                                                           self.offset,
+                                                           self.limit)
+
+        self.tenant_repo = MagicMock()
+
+        self.queue_resource = MagicMock()
+        self.queue_resource.process_order.return_value = None
+
+        self.policy = MagicMock()
+
+        self.req = MagicMock()
+        self.req.accept = 'application/json'
+        self.req._params = self.params
+        self.resp = MagicMock()
+        self.resource = OrdersResource(self.tenant_repo, self.order_repo,
+                                       self.queue_resource, self.policy)
+
+    def test_should_get_list_orders(self):
+        self.resource.on_get(self.req, self.resp, self.tenant_id)
+
+        self.order_repo.get_by_create_date.assert_called_once_with(
+                                    offset_arg=self.params.get('offset',
+                                                               self.offset),
+                                    limit_arg=self.params.get('limit',
+                                                              self.limit),
+                                    suppress_exception=True)
+
+        resp_body = jsonutils.loads(self.resp.body)
+        self.assertTrue('previous' in resp_body)
+        self.assertTrue('next' in resp_body)
+
+        url_nav_next = self._create_url(self.tenant_id,
+                                        self.offset + self.limit, self.limit)
+        self.assertTrue(self.resp.body.count(url_nav_next) == 1)
+
+        url_nav_prev = self._create_url(self.tenant_id,
+                                        0, self.limit)
+        self.assertTrue(self.resp.body.count(url_nav_prev) == 1)
+
+        url_hrefs = self._create_url(self.tenant_id)
+        self.assertTrue(self.resp.body.count(url_hrefs) ==
+                        (self.num_orders + 2))
+
+    def test_should_fail_no_orders(self):
+
+        del self.orders[:]
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_get(self.req, self.resp, self.tenant_id)
+
+        exception = cm.exception
+        assert falcon.HTTP_400 == exception.status
+
+    def _create_url(self, tenant_id, offset_arg=None, limit_arg=None):
+        if limit_arg:
+            offset = int(offset_arg)
+            limit = int(limit_arg)
+            return '/v1/{0}/orders?limit={1}&offset={2}'.format(
+                            tenant_id,
+                            limit,
+                            offset)
+        else:
+            return '/v1/{0}/orders'.format(self.tenant_id)
+
+
 class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
 
     def setUp(self):
         self.tenant_keystone_id = 'keystoneid1234'
         self.requestor = 'requestor1234'
-        self.order = Order()
-        self.order.id = "id1"
-        self.order.secret_name = "name"
-        self.order.secret_mime_type = "name"
+
+        self.order = create_order(id = "id1", name = "name",
+                                  mime_type = "name")
 
         self.order_repo = MagicMock()
         self.order_repo.get.return_value = self.order

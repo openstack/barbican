@@ -493,8 +493,6 @@ class SecretRepo(BaseRepo):
         limit = int(limit_arg) if limit_arg else CONF.max_limit_paging
         limit = limit if limit >= 2 else 2
 
-        print " limit=", limit," offset=",offset
-
         session = self.get_session(session)
         utcnow = timeutils.utcnow()
 
@@ -600,8 +598,6 @@ class OrderRepo(BaseRepo):
 
         limit = int(limit_arg) if limit_arg else CONF.max_limit_paging
         limit = limit if limit >= 2 else 2
-
-        print " limit=", limit," offset=",offset
 
         session = self.get_session(session)
 

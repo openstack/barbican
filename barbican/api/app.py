@@ -33,18 +33,17 @@ def create_main_app(global_config, **local_conf):
     log.setup('barbican')
 
     # Resources
-    # TODO: No longer need constants!
-    VERSIONS = VersionResource()
-    SECRETS = SecretsResource()
-    SECRET = SecretResource()
-    ORDERS = OrdersResource()
-    ORDER = OrderResource()
+    versions = VersionResource()
+    secrets = SecretsResource()
+    secret = SecretResource()
+    orders = OrdersResource()
+    order = OrderResource()
 
     wsgi_app = api = falcon.API()
-    api.add_route('/', VERSIONS)
-    api.add_route('/v1/{tenant_id}/secrets', SECRETS)
-    api.add_route('/v1/{tenant_id}/secrets/{secret_id}', SECRET)
-    api.add_route('/v1/{tenant_id}/orders', ORDERS)
-    api.add_route('/v1/{tenant_id}/orders/{order_id}', ORDER)
+    api.add_route('/', versions)
+    api.add_route('/v1/{tenant_id}/secrets', secrets)
+    api.add_route('/v1/{tenant_id}/secrets/{secret_id}', secret)
+    api.add_route('/v1/{tenant_id}/orders', orders)
+    api.add_route('/v1/{tenant_id}/orders/{order_id}', order)
 
     return wsgi_app
