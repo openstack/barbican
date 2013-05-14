@@ -131,7 +131,6 @@ class Enforcer(object):
         LOG.debug("== policy.enforce satisfied ==")
         return self._check(context, action, target,
                            exception.Forbidden, action=action)
-        
 
     def check(self, context, action, target):
         """Verifies that the action is valid on the target in this context.
@@ -142,4 +141,3 @@ class Enforcer(object):
            :returns: A non-False value if access is allowed.
         """
         return self._check(context, action, target)
-

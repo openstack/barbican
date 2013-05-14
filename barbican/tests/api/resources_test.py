@@ -22,9 +22,9 @@ from datetime import datetime
 from barbican.api.resources import (VersionResource,
                                     SecretsResource, SecretResource,
                                     OrdersResource, OrderResource)
+from barbican.crypto.extension_manager import CryptoExtensionManager
 from barbican.model.models import (Secret, Tenant, TenantSecret,
                                    Order, EncryptedDatum)
-from barbican.crypto.fields import decrypt_value, encrypt_value
 from barbican.common import config
 from barbican.common import exception
 from barbican.openstack.common import jsonutils
@@ -47,7 +47,8 @@ class WhenTestingVersionResource(unittest.TestCase):
     def setUp(self):
         self.req = MagicMock()
         self.resp = MagicMock()
-        self.resource = VersionResource()
+        self.policy = MagicMock()
+        self.resource = VersionResource(self.policy)
 
     def test_should_return_200_on_get(self):
         self.resource.on_get(self.req, self.resp)
@@ -105,7 +106,16 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.req.stream = self.stream
 
         self.resp = MagicMock()
-        self.resource = SecretsResource(self.tenant_repo, self.secret_repo,
+        self.crypto_mgr = CryptoExtensionManager(
+            'barbican.test.crypto.extension',
+            ['test_crypto']
+        )
+        self.policy = MagicMock()
+
+        self.resource = SecretsResource(self.crypto_mgr,
+                                        self.policy,
+                                        self.tenant_repo,
+                                        self.secret_repo,
                                         self.tenant_secret_repo,
                                         self.datum_repo)
 
@@ -129,10 +139,10 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
 
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
-        assert isinstance(datum, EncryptedDatum)
-        assert encrypt_value(self.plain_text) == datum.cypher_text
-        assert self.mime_type == datum.mime_type
-        assert datum.kek_metadata is not None
+        self.assertIsInstance(datum, EncryptedDatum)
+        self.assertEqual('cypher_text', datum.cypher_text)
+        self.assertEqual(self.mime_type, datum.mime_type)
+        self.assertIsNotNone(datum.kek_metadata)
 
     def test_should_add_new_secret_tenant_not_exist(self):
         self.tenant_repo.get.return_value = None
@@ -153,7 +163,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
         assert isinstance(datum, EncryptedDatum)
-        assert encrypt_value(self.plain_text) == datum.cypher_text
+        self.assertEqual('cypher_text', datum.cypher_text)
         assert self.mime_type == datum.mime_type
         assert datum.kek_metadata is not None
 
@@ -197,14 +207,20 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.datum.cypher_text = "cypher_text"
         self.datum.kek_metadata = "kekedata"
 
-        self.secret = Secret()
-        self.secret.id = secret_id
-        self.secret.name = self.name
-        self.secret.mime_type = self.mime_type
-        self.secret.algorithm = self.secret_algorithm
-        self.secret.bit_length = self.secret_bit_length
-        self.secret.cypher_type = self.secret_cypher_type
+        self.parsed_data = {'id': secret_id,
+                            'name': self.name,
+                            'mime_type': self.mime_type,
+                            'algorithm': self.secret_algorithm,
+                            'bit_length': self.secret_bit_length,
+                            'cypher_type': self.secret_cypher_type}
+        self.secret = Secret(self.parsed_data)
         self.secret.encrypted_data = [self.datum]
+
+        self.tenant_id = 'tenantid1234'
+        self.tenant = Tenant()
+        self.tenant.id = self.tenant_id
+        self.tenant_repo = MagicMock()
+        self.tenant_repo.get.return_value = self.tenant
 
         self.secret_repo = MagicMock()
         self.secret_repo.get.return_value = self.secret
@@ -219,7 +235,15 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.req = MagicMock()
         self.req.accept = 'application/json'
         self.resp = MagicMock()
-        self.resource = SecretResource(self.secret_repo,
+        self.crypto_mgr = CryptoExtensionManager(
+            'barbican.test.crypto.extension',
+            ['test_crypto']
+        )
+        self.policy = MagicMock()
+        self.resource = SecretResource(self.crypto_mgr,
+                                       self.policy,
+                                       self.tenant_repo,
+                                       self.secret_repo,
                                        self.tenant_secret_repo,
                                        self.datum_repo)
 
@@ -260,7 +284,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
         assert isinstance(datum, EncryptedDatum)
-        assert encrypt_value(self.plain_text) == datum.cypher_text
+        self.assertEqual('cypher_text', datum.cypher_text)
         assert self.mime_type == datum.mime_type
         assert datum.kek_metadata is not None
 
@@ -394,8 +418,9 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
         self.req.stream = self.stream
 
         self.resp = MagicMock()
+        self.policy = MagicMock()
         self.resource = OrdersResource(self.tenant_repo, self.order_repo,
-                                       self.queue_resource)
+                                       self.queue_resource, self.policy)
 
     def test_should_add_new_order(self):
         self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
@@ -423,7 +448,9 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
 
         self.req = MagicMock()
         self.resp = MagicMock()
-        self.resource = OrderResource(self.order_repo)
+        self.policy = MagicMock()
+
+        self.resource = OrderResource(self.order_repo, self.policy)
 
     def test_should_get_order(self):
         self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,

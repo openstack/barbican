@@ -18,6 +18,7 @@ import json
 import unittest
 
 from datetime import datetime
+from barbican.crypto.extension_manager import CryptoExtensionManager
 from barbican.tasks.resources import BeginOrder
 from barbican.model.models import (Tenant, Secret, TenantSecret,
                                    EncryptedDatum, Order, States)
@@ -46,7 +47,7 @@ class WhenBeginningOrder(unittest.TestCase):
         self.secret_algorithm = "algo"
         self.secret_bit_length = 512
         self.secret_cypher_type = "cytype"
-        self.secret_mime_type = "mimetype"
+        self.secret_mime_type = "text/plain"
         self.secret_expiration = timeutils.utcnow()
 
         self.keystone_id = 'keystone1234'
@@ -78,7 +79,13 @@ class WhenBeginningOrder(unittest.TestCase):
         self.datum_repo = MagicMock()
         self.datum_repo.create_from.return_value = None
 
-        self.resource = BeginOrder(self.tenant_repo, self.order_repo,
+        self.crypto_mgr = CryptoExtensionManager(
+            'barbican.test.crypto.extension',
+            ['test_crypto']
+        )
+
+        self.resource = BeginOrder(self.crypto_mgr,
+                                   self.tenant_repo, self.order_repo,
                                    self.secret_repo, self.tenant_secret_repo,
                                    self.datum_repo)
 
@@ -102,8 +109,8 @@ class WhenBeginningOrder(unittest.TestCase):
 
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
-        assert isinstance(datum, EncryptedDatum)
-        assert self.secret_mime_type == datum.mime_type
+        self.assertIsInstance(datum, EncryptedDatum)
+        self.assertEqual(self.secret_mime_type, datum.mime_type)
         assert datum.cypher_text is not None
         assert datum.kek_metadata is not None
 

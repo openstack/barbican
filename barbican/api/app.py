@@ -22,8 +22,9 @@ import falcon
 from barbican.api.resources import (VersionResource,
                                     SecretsResource, SecretResource,
                                     OrdersResource, OrderResource)
-from barbican.openstack.common import log
 from barbican.common import config
+from barbican.crypto.extension_manager import CryptoExtensionManager
+from barbican.openstack.common import log
 
 
 def create_main_app(global_config, **local_conf):
@@ -32,10 +33,16 @@ def create_main_app(global_config, **local_conf):
     config.parse_args()
     log.setup('barbican')
 
+    # Crypto Plugin Manager
+    crypto_mgr = CryptoExtensionManager(
+        'barbican.crypto.extension',
+        ['simple_crypto']  # TODO: grab this list from cfg
+    )
+
     # Resources
     VERSIONS = VersionResource()
-    SECRETS = SecretsResource()
-    SECRET = SecretResource()
+    SECRETS = SecretsResource(crypto_mgr)
+    SECRET = SecretResource(crypto_mgr)
     ORDERS = OrdersResource()
     ORDER = OrderResource()
 
