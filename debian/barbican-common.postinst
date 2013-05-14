@@ -25,6 +25,7 @@ then
     pip install oslo.config
     pip install webob
     pip install PasteDeploy
+    pip install stevedore
 fi
 
 #DEBHELPER#
