@@ -128,7 +128,7 @@ class VersionResource(ApiResource):
 class SecretsResource(ApiResource):
     """Handles Secret creation requests."""
 
-    def __init__(self, crypto_manager, policy_enforcer,
+    def __init__(self, crypto_manager, policy_enforcer=None,
                  tenant_repo=None, secret_repo=None,
                  tenant_secret_repo=None, datum_repo=None):
         LOG.debug('Creating SecretsResource')

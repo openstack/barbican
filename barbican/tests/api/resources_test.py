@@ -47,7 +47,8 @@ class WhenTestingVersionResource(unittest.TestCase):
     def setUp(self):
         self.req = MagicMock()
         self.resp = MagicMock()
-        self.resource = VersionResource()
+        self.policy = MagicMock()
+        self.resource = VersionResource(self.policy)
 
     def test_should_return_200_on_get(self):
         self.resource.on_get(self.req, self.resp)
@@ -109,7 +110,10 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
             'barbican.test.crypto.extension',
             ['test_crypto']
         )
+        self.policy = MagicMock()
+
         self.resource = SecretsResource(self.crypto_mgr,
+                                        self.policy,
                                         self.tenant_repo,
                                         self.secret_repo,
                                         self.tenant_secret_repo,
@@ -235,7 +239,9 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
             'barbican.test.crypto.extension',
             ['test_crypto']
         )
+        self.policy = MagicMock()
         self.resource = SecretResource(self.crypto_mgr,
+                                       self.policy,
                                        self.tenant_repo,
                                        self.secret_repo,
                                        self.tenant_secret_repo,
@@ -412,8 +418,9 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
         self.req.stream = self.stream
 
         self.resp = MagicMock()
+        self.policy = MagicMock()
         self.resource = OrdersResource(self.tenant_repo, self.order_repo,
-                                       self.queue_resource)
+                                       self.queue_resource, self.policy)
 
     def test_should_add_new_order(self):
         self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
@@ -441,7 +448,9 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
 
         self.req = MagicMock()
         self.resp = MagicMock()
-        self.resource = OrderResource(self.order_repo)
+        self.policy = MagicMock()
+
+        self.resource = OrderResource(self.order_repo, self.policy)
 
     def test_should_get_order(self):
         self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
