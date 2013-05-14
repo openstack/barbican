@@ -27,6 +27,7 @@ class CryptoMimeTypeNotSupportedException(BarbicanException):
             _('Crypto Mime Type not supported {0}'.format(mime_type))
         )
 
+
 class CryptoAccpetNotSupportedException(BarbicanException):
     """Raised when requested decripted format is not
     available in any active plugin."""

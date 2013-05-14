@@ -16,17 +16,10 @@
 """
 Shared business logic.
 """
-from barbican.crypto.extension_manager import CryptoMimeTypeNotSupportedException
-
-from barbican.model.models import (Tenant, Secret, TenantSecret,
-                                   EncryptedDatum, Order, States)
-from barbican.model.repositories import (TenantRepo, SecretRepo,
-                                         OrderRepo, TenantSecretRepo,
-                                         EncryptedDatumRepo)
-from barbican.openstack.common import timeutils
-from barbican.openstack.common.gettextutils import _
-from barbican.openstack.common import jsonutils as json
-from barbican.queue import get_queue_api
+from barbican.crypto.extension_manager import (
+    CryptoMimeTypeNotSupportedException
+)
+from barbican.model.models import (Tenant, Secret, TenantSecret, States)
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
