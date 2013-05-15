@@ -154,14 +154,14 @@ def next_href(resources_name, tenant_id, offset, limit):
 
 def add_nav_hrefs(resources_name, tenant_id, offset, limit, data):
     if offset > 0:
-        data.update({'previous':previous_href(resources_name,
-                                              tenant_id,
-                                              offset,
-                                              limit),})
-    data.update({'next':next_href(resources_name,
-                                  tenant_id,
-                                  offset,
-                                  limit),})
+        data.update({'previous': previous_href(resources_name,
+                                               tenant_id,
+                                               offset,
+                                               limit)})
+    data.update({'next': next_href(resources_name,
+                                   tenant_id,
+                                   offset,
+                                   limit)})
     return data
 
 
@@ -278,7 +278,8 @@ class SecretResource(ApiResource):
         if not secret:
             _secret_not_found()
         if secret.mime_type != req.content_type:
-            _client_content_mismatch_to_secret(secret.mime_type, req.content_type)
+            _client_content_mismatch_to_secret(secret.mime_type,
+                                               req.content_type)
         if secret.encrypted_data:
             _secret_already_has_data()
 
@@ -386,9 +387,9 @@ class OrdersResource(ApiResource):
         else:
             orders_resp = [convert_to_hrefs(tenant_id, o.to_dict_fields())
                            for o in orders]
-            orders_resp_overall = add_nav_hrefs('orders',
-                                        tenant_id, offset, limit,
-                                        {'orders': orders_resp})
+            orders_resp_overall = add_nav_hrefs('orders', tenant_id, offset,
+                                                limit,
+                                                {'orders': orders_resp})
             resp.body = json.dumps(orders_resp_overall,
                                    default=json_handler)
 

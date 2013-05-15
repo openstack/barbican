@@ -275,7 +275,7 @@ class Order(BASE, ModelBase):
                            'cypher_type': self.secret_cypher_type,
                            'expiration': self.secret_expiration},
                 'secret_id': self.secret_id,
-                'order_id': self.id,}
+                'order_id': self.id}
 
 
 # Keep this tuple synchronized with the models in the file

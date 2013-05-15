@@ -42,9 +42,9 @@ def suite():
     return suite
 
 
-def create_secret(mime_type, id = "id", name = "name",
-                  algorithm = None, bit_length = None,
-                  cypher_type = None, encrypted_datum = None):
+def create_secret(mime_type, id="id", name="name",
+                  algorithm=None, bit_length=None,
+                  cypher_type=None, encrypted_datum=None):
     """Generate a Secret entity instance."""
     info = {'id': id,
             'name': name,
@@ -58,9 +58,9 @@ def create_secret(mime_type, id = "id", name = "name",
     return secret
 
 
-def create_order(mime_type, id = "id", name = "name",
-                  algorithm = None, bit_length = None,
-                  cypher_type = None):
+def create_order(mime_type, id="id", name="name",
+                  algorithm=None, bit_length=None,
+                  cypher_type=None):
     """Generate an Order entity instance."""
     order = Order()
     order.id = id
@@ -325,7 +325,7 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
 
 
 class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
-    unittest.TestCase):
+        unittest.TestCase):
 
     def setUp(self):
         self.tenant_id = 'tenant1234'
@@ -344,12 +344,13 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
         self.datum.cypher_text = "cypher_text"
         self.datum.kek_metadata = "kekedata"
 
-        self.secret = create_secret(self.mime_type, id = secret_id,
-                                    name = self.name,
-                                    algorithm = self.secret_algorithm,
-                                    bit_length = self.secret_bit_length,
-                                    cypher_type = self.secret_cypher_type,
-                                    encrypted_datum = self.datum)
+        self.secret = create_secret(self.mime_type,
+                                    id=secret_id,
+                                    name=self.name,
+                                    algorithm=self.secret_algorithm,
+                                    bit_length=self.secret_bit_length,
+                                    cypher_type=self.secret_cypher_type,
+                                    encrypted_datum=self.datum)
 
         self.tenant_id = 'tenantid1234'
         self.tenant = Tenant()
@@ -654,10 +655,9 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
         if limit_arg:
             offset = int(offset_arg)
             limit = int(limit_arg)
-            return '/v1/{0}/orders?limit={1}&offset={2}'.format(
-                            tenant_id,
-                            limit,
-                            offset)
+            return '/v1/{0}/orders?limit={1}&offset={2}'.format(tenant_id,
+                                                                limit,
+                                                                offset)
         else:
             return '/v1/{0}/orders'.format(self.tenant_id)
 
@@ -668,8 +668,8 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
         self.tenant_keystone_id = 'keystoneid1234'
         self.requestor = 'requestor1234'
 
-        self.order = create_order(id = "id1", name = "name",
-                                  mime_type = "name")
+        self.order = create_order(id="id1", name="name",
+                                  mime_type="name")
 
         self.order_repo = MagicMock()
         self.order_repo.get.return_value = self.order

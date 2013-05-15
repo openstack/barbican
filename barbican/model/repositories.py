@@ -500,7 +500,7 @@ class SecretRepo(BaseRepo):
         try:
             query = session.query(models.Secret).order_by(
                         models.Secret.created_at).filter_by(deleted=False)
-            query = query.filter(or_(models.Secret.expiration == None,
+            query = query.filter(or_(models.Secret.expiration is None,
                                      models.Secret.expiration > utcnow))
 
             entities = query[offset:(offset + limit)]
@@ -524,14 +524,14 @@ class SecretRepo(BaseRepo):
         """Sub-class hook: find entity by name."""
         utcnow = timeutils.utcnow()
         return session.query(models.Secret).filter_by(name=name).filter(
-                        or_(models.Secret.expiration == None,
+                        or_(models.Secret.expiration is None,
                             models.Secret.expiration > utcnow))
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
         utcnow = timeutils.utcnow()
         return session.query(models.Secret).filter_by(id=entity_id).filter(
-                        or_(models.Secret.expiration == None,
+                        or_(models.Secret.expiration is None,
                             models.Secret.expiration > utcnow))
 
     def _do_validate(self, values):
@@ -609,7 +609,8 @@ class OrderRepo(BaseRepo):
         session = self.get_session(session)
 
         try:
-            query = session.query(models.Order).order_by(models.Order.created_at)
+            query = session.query(models.Order).order_by(
+                                    models.Order.created_at)
             query = query.filter_by(deleted=False)
 
             entities = query[offset:(offset + limit)]

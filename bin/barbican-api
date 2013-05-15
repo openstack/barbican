@@ -9,7 +9,7 @@ VENV=.venv
 VENV_PYTHON=./$VENV/lib/python2.7/site-packages
 
 PATH=/opt/uwsgi:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/etc/$PKG:$PATH
-PKD_DIR=/etc/$PKG
+PKG_DIR=/etc/$PKG
 CONF_FILE=$PKG_DIR/barbican-api.ini
 PASTE_FILE=$PKG_DIR/barbican-api-paste.ini
 POLICY_FILE=$PKG_DIR/policy.json
