@@ -32,18 +32,19 @@ then
   fi
 fi
 
-if [! -f $POLICY_FILE ];
-then 
-  LOCAL_POLICY_FILE=./etc/$PKG/policy.json
-  mkdir -p $PKG_DIR
-  sudo cp $LOCAL_POLICY_FILE POLICY_FILE
-fi
-
-if [! -f $SIGNING_DIR ];
-then 
-  echo "making "$SIGNING_DIR
-  sudo mkdir -p $SIGNING_DIR 
-fi
+# TODO: This is breaking deployment...need to analyze.
+#if [ ! -f $POLICY_FILE ];
+#then 
+#  LOCAL_POLICY_FILE=./etc/$PKG/policy.json
+#  mkdir -p $PKG_DIR
+#  sudo cp $LOCAL_POLICY_FILE POLICY_FILE
+#fi
+#
+#if [ ! -f $SIGNING_DIR ];
+#then 
+#  echo "making "$SIGNING_DIR
+#  sudo mkdir -p $SIGNING_DIR 
+#fi
 
 echo 'Running barbican-api uwsgi process, using init file here: ' $CONF_FILE
 uwsgi --paste config:$PASTE_FILE --ini $CONF_FILE $OPTS
