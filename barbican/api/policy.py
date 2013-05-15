@@ -15,7 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Policy Engine For Glance"""
+"""Policy Engine For Barbican"""
 
 import json
 import os.path

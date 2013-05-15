@@ -182,7 +182,7 @@ class Secret(BASE, ModelBase):
     __tablename__ = 'secrets'
 
     name = Column(String(255))
-    expiration = Column(DateTime, default=timeutils.utcnow)
+    expiration = Column(DateTime, default=None)
     mime_type = Column(String(255), nullable=False)
     algorithm = Column(String(255))
     bit_length = Column(Integer)
@@ -208,7 +208,8 @@ class Secret(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        return {'name': self.name,
+        return {'secret_id': self.id,
+                'name': self.name,
                 'expiration': self.expiration,
                 'mime_type': self.mime_type,
                 'algorithm': self.algorithm,
@@ -260,7 +261,7 @@ class Order(BASE, ModelBase):
     secret_bit_length = Column(Integer)
     secret_cypher_type = Column(String(255))
     secret_mime_type = Column(String(255))
-    secret_expiration = Column(DateTime, default=timeutils.utcnow)
+    secret_expiration = Column(DateTime, default=None)
 
     secret_id = Column(String(36), ForeignKey('secrets.id'),
                        nullable=True)
@@ -273,7 +274,8 @@ class Order(BASE, ModelBase):
                            'bit_length': self.secret_bit_length,
                            'cypher_type': self.secret_cypher_type,
                            'expiration': self.secret_expiration},
-                'secret_id': self.secret_id}
+                'secret_id': self.secret_id,
+                'order_id': self.id}
 
 
 # Keep this tuple synchronized with the models in the file

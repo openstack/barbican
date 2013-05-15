@@ -41,7 +41,12 @@ LOG = utils.getLogger(__name__)
 
 def _secret_not_found():
     """Throw exception indicating secret not found."""
-    abort(falcon.HTTP_400, _('Unable to locate secret profile.'))
+    abort(falcon.HTTP_400, _('Unable to locate secret.'))
+
+
+def _order_not_found():
+    """Throw exception indicating order not found."""
+    abort(falcon.HTTP_400, _('Unable to locate order.'))
 
 
 def _put_accept_incorrect(ct):
@@ -50,12 +55,13 @@ def _put_accept_incorrect(ct):
           "is not supported.").format(ct))
 
 
-def _client_content_mismatch_to_secret():
+def _client_content_mismatch_to_secret(expected, actual):
     """
     Throw exception indicating client content-type doesn't match
     secret's mime-type.
     """
-    abort(falcon.HTTP_400, _("Request content-type doesn't match secret's."))
+    abort(falcon.HTTP_400, _("Request content-type of '{0}' doesn't match "
+                             "secret's of '{1}'.").format(actual, expected))
 
 
 def _failed_to_create_encrypted_datum():
@@ -109,7 +115,54 @@ def convert_to_hrefs(tenant_id, fields):
         fields['secret_ref'] = convert_secret_to_href(tenant_id,
                                                       fields['secret_id'])
         del fields['secret_id']
+    if 'order_id' in fields:
+        fields['order_ref'] = convert_order_to_href(tenant_id,
+                                                    fields['order_id'])
+        del fields['order_id']
     return fields
+
+
+def convert_list_to_href(resources_name, tenant_id, offset, limit):
+    """
+    Convert the tenant ID and offset/limit info to a HATEOS-style href
+    suitable for use in a list navigation paging interface.
+    """
+    resource = '{0}?limit={1}&offset={2}'.format(resources_name, limit,
+                                                 offset)
+    return utils.hostname_for_refs(tenant_id=tenant_id, resource=resource)
+
+
+def previous_href(resources_name, tenant_id, offset, limit):
+    """
+    Create a HATEOS-style 'previous' href suitable for use in a list
+    navigation paging interface, assuming the provided values are the
+    currently viewed page.
+    """
+    offset = max(0, offset - limit)
+    return convert_list_to_href(resources_name, tenant_id, offset, limit)
+
+
+def next_href(resources_name, tenant_id, offset, limit):
+    """
+    Create a HATEOS-style 'next' href suitable for use in a list
+    navigation paging interface, assuming the provided values are the
+    currently viewed page.
+    """
+    offset = offset + limit
+    return convert_list_to_href(resources_name, tenant_id, offset, limit)
+
+
+def add_nav_hrefs(resources_name, tenant_id, offset, limit, data):
+    if offset > 0:
+        data.update({'previous': previous_href(resources_name,
+                                               tenant_id,
+                                               offset,
+                                               limit)})
+    data.update({'next': next_href(resources_name,
+                                   tenant_id,
+                                   offset,
+                                   limit)})
+    return data
 
 
 class VersionResource(ApiResource):
@@ -128,9 +181,10 @@ class VersionResource(ApiResource):
 class SecretsResource(ApiResource):
     """Handles Secret creation requests."""
 
-    def __init__(self, crypto_manager, policy_enforcer=None,
+    def __init__(self, crypto_manager,
                  tenant_repo=None, secret_repo=None,
-                 tenant_secret_repo=None, datum_repo=None):
+                 tenant_secret_repo=None, datum_repo=None,
+                 policy_enforcer=None):
         LOG.debug('Creating SecretsResource')
         self.tenant_repo = tenant_repo or TenantRepo()
         self.secret_repo = secret_repo or SecretRepo()
@@ -156,13 +210,37 @@ class SecretsResource(ApiResource):
         LOG.debug('URI to secret is {0}'.format(url))
         resp.body = json.dumps({'secret_ref': url})
 
+    def on_get(self, req, resp, tenant_id):
+        LOG.debug('Start secrets on_get for tenant-ID {0}:'.format(tenant_id))
+
+        params = req._params
+
+        result = self.secret_repo.get_by_create_date(
+                                    offset_arg=params.get('offset', None),
+                                    limit_arg=params.get('limit', None),
+                                    suppress_exception=True)
+        secrets, offset, limit = result
+
+        if not secrets:
+            _secret_not_found()
+        else:
+            secrets_resp = [convert_to_hrefs(tenant_id,
+                                augment_fields_with_content_types(s)) for s in
+                                secrets]
+            secrets_resp_overall = add_nav_hrefs('secrets',
+                                        tenant_id, offset, limit,
+                                        {'secrets': secrets_resp})
+            resp.body = json.dumps(secrets_resp_overall,
+                                   default=json_handler)
+
 
 class SecretResource(ApiResource):
     """Handles Secret retrieval and deletion requests"""
 
-    def __init__(self, crypto_manager, policy_enforcer=None,
+    def __init__(self, crypto_manager,
                  tenant_repo=None, secret_repo=None,
-                 tenant_secret_repo=None, datum_repo=None):
+                 tenant_secret_repo=None, datum_repo=None,
+                 policy_enforcer=None):
         self.crypto_manager = crypto_manager
         self.tenant_repo = tenant_repo or TenantRepo()
         self.repo = secret_repo or SecretRepo()
@@ -181,12 +259,15 @@ class SecretResource(ApiResource):
         if not req.accept or req.accept == 'application/json':
             # Metadata-only response, no decryption necessary.
             resp.set_header('Content-Type', 'application/json')
-            resp.body = json.dumps(augment_fields_with_content_types(secret),
-                                   default=json_handler)
+            resp.body = json.dumps(
+                            convert_to_hrefs(tenant_id,
+                                augment_fields_with_content_types(secret)),
+                                default=json_handler)
         else:
             tenant = get_or_create_tenant(tenant_id, self.tenant_repo)
             resp.set_header('Content-Type', req.accept)
-            resp.body = self.crypto_manager.decrypt(req.accept, secret, tenant)
+            resp.body = self.crypto_manager.decrypt(req.accept, secret,
+                                                    tenant)
 
     def on_put(self, req, resp, tenant_id, secret_id):
 
@@ -197,7 +278,8 @@ class SecretResource(ApiResource):
         if not secret:
             _secret_not_found()
         if secret.mime_type != req.content_type:
-            _client_content_mismatch_to_secret()
+            _client_content_mismatch_to_secret(secret.mime_type,
+                                               req.content_type)
         if secret.encrypted_data:
             _secret_already_has_data()
 
@@ -289,6 +371,28 @@ class OrdersResource(ApiResource):
         url = convert_order_to_href(tenant_id, new_order.id)
         resp.body = json.dumps({'order_ref': url})
 
+    def on_get(self, req, resp, tenant_id):
+        LOG.debug('Start orders on_get for tenant-ID {0}:'.format(tenant_id))
+
+        params = req._params
+
+        result = self.order_repo.get_by_create_date(
+                                    offset_arg=params.get('offset', None),
+                                    limit_arg=params.get('limit', None),
+                                    suppress_exception=True)
+        orders, offset, limit = result
+
+        if not orders:
+            _order_not_found()
+        else:
+            orders_resp = [convert_to_hrefs(tenant_id, o.to_dict_fields())
+                           for o in orders]
+            orders_resp_overall = add_nav_hrefs('orders', tenant_id, offset,
+                                                limit,
+                                                {'orders': orders_resp})
+            resp.body = json.dumps(orders_resp_overall,
+                                   default=json_handler)
+
 
 class OrderResource(ApiResource):
     """Handles Order retrieval and deletion requests"""
@@ -298,8 +402,10 @@ class OrderResource(ApiResource):
         self.policy = policy_enforcer or policy.Enforcer()
 
     def on_get(self, req, resp, tenant_id, order_id):
-        #TODO: Use a falcon exception here
-        order = self.repo.get(entity_id=order_id)
+        order = self.repo.get(entity_id=order_id, suppress_exception=True)
+        if not order:
+            _order_not_found()
+
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(convert_to_hrefs(order.tenant_id,
                                                 order.to_dict_fields()),
