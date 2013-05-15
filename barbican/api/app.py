@@ -23,7 +23,7 @@ from barbican.api.resources import (VersionResource,
                                     SecretsResource, SecretResource,
                                     OrdersResource, OrderResource)
 from barbican.common import config
-from barbican.crypto.extension_manager import CryptoExtensionManager
+from barbican.crypto import extension_manager as ext
 from barbican.openstack.common import log
 
 
@@ -34,10 +34,7 @@ def create_main_app(global_config, **local_conf):
     log.setup('barbican')
 
     # Crypto Plugin Manager
-    crypto_mgr = CryptoExtensionManager(
-        'barbican.crypto.extension',
-        ['simple_crypto']  # TODO: grab this list from cfg
-    )
+    crypto_mgr = ext.CryptoExtensionManager(config.CONF)
 
     # Resources
     versions = VersionResource()
