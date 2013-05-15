@@ -194,7 +194,7 @@ class Secret(BASE, ModelBase):
 
     def __init__(self, parsed_request):
         """Creates secret from a dict."""
-        super(ModelBase, self).__init__()
+        super(Secret, self).__init__()
 
         self.name = parsed_request['name']
         self.mime_type = parsed_request['mime_type']
@@ -233,6 +233,16 @@ class EncryptedDatum(BASE, ModelBase):
     mime_type = Column(String(255))
     cypher_text = Column(LargeBinary)
     kek_metadata = Column(Text)
+
+    def __init__(self, secret=None):
+        """Creates encrypted datum from a secret."""
+        super(EncryptedDatum, self).__init__()
+
+        if secret:
+            self.secret_id = secret.id
+            self.mime_type = secret.mime_type
+
+        self.status = States.ACTIVE
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""

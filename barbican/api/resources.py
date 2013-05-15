@@ -30,6 +30,7 @@ from barbican.model.models import (Tenant, Secret, TenantSecret,
 from barbican.model.repositories import (TenantRepo, SecretRepo,
                                          OrderRepo, TenantSecretRepo,
                                          EncryptedDatumRepo)
+from barbican.crypto import extension_manager as em
 from barbican.openstack.common.gettextutils import _
 from barbican.openstack.common import jsonutils as json
 from barbican.queue import get_queue_api
@@ -37,6 +38,11 @@ from barbican.version import __version__
 
 
 LOG = utils.getLogger(__name__)
+
+
+def _general_failure(message):
+    """Throw exception a general processing failure."""
+    abort(falcon.HTTP_500, _(message))
 
 
 def _secret_not_found():
@@ -53,6 +59,18 @@ def _put_accept_incorrect(ct):
     """Throw exception indicating request content-type is not supported."""
     abort(falcon.HTTP_415, _("Content-Type of '{0}' "
           "is not supported.").format(ct))
+
+
+def _get_accept_not_supported(accept):
+    """Throw exception indicating request's accept is not supported."""
+    abort(falcon.HTTP_406, _("Accept of '{0}' "
+          "is not supported.").format(accept))
+
+
+def _secret_mime_type_not_supported(mt, exception=None):
+    """Throw exception indicating secret mime-type is not supported."""
+    abort(falcon.HTTP_400, _("Mime-type of '{0}' "
+          "is not supported.").format(mt))
 
 
 def _client_content_mismatch_to_secret(expected, actual):
@@ -84,6 +102,13 @@ def _secret_not_in_order():
     Throw exception that secret information is not available in the order.
     """
     abort(falcon.HTTP_400, _("Secret metadata expected but not received."))
+
+
+def _secret_create_failed():
+    """
+    Throw exception that secret creation attempt failed.
+    """
+    abort(falcon.HTTP_500, _("Unabled to create secret."))
 
 
 def json_handler(obj):
@@ -199,9 +224,17 @@ class SecretsResource(ApiResource):
         data = load_body(req)
         tenant = get_or_create_tenant(tenant_id, self.tenant_repo)
 
-        new_secret = create_secret(data, tenant, self.crypto_manager,
-                                   self.secret_repo, self.tenant_secret_repo,
-                                   self.datum_repo)
+        try:
+            new_secret = create_secret(data, tenant, self.crypto_manager,
+                                       self.secret_repo,
+                                       self.tenant_secret_repo,
+                                       self.datum_repo)
+        except em.CryptoMimeTypeNotSupportedException as cmtnse:
+            LOG.exception('Secret creation failed - mime-type not supported')
+            _secret_mime_type_not_supported(cmtnse.mime_type)
+        except Exception as e:
+            LOG.exception('Secret creation failed - unknown')
+            _general_failure('Secret creation failed - unknown')
 
         resp.status = falcon.HTTP_202
         resp.set_header('Location', '/{0}/secrets/{1}'.format(tenant_id,
@@ -266,8 +299,16 @@ class SecretResource(ApiResource):
         else:
             tenant = get_or_create_tenant(tenant_id, self.tenant_repo)
             resp.set_header('Content-Type', req.accept)
-            resp.body = self.crypto_manager.decrypt(req.accept, secret,
-                                                    tenant)
+            try:
+                resp.body = self.crypto_manager.decrypt(req.accept, secret,
+                                                        tenant)
+            except em.CryptoAcceptNotSupportedException as canse:
+                LOG.exception('Secret decryption failed - '
+                              'accept not supported')
+                _get_accept_not_supported(canse.accept)
+            except Exception as e:
+                LOG.exception('Secret decryption failed - unknown')
+                _failed_to_decrypt_data()
 
     def on_put(self, req, resp, tenant_id, secret_id):
 
@@ -297,9 +338,11 @@ class SecretResource(ApiResource):
                                    self.crypto_manager,
                                    self.tenant_secret_repo,
                                    self.datum_repo)
-        except ValueError:
-            LOG.error('Problem creating an encrypted datum for the secret.',
-                      exc_info=True)
+        except em.CryptoMimeTypeNotSupportedException as cmtnse:
+            LOG.exception('Secret creation failed - mime-type not supported')
+            _secret_mime_type_not_supported(cmtnse.mime_type)
+        except Exception as e:
+            LOG.exception('Secret creation failed - unknown')
             _failed_to_create_encrypted_datum()
 
     def on_delete(self, req, resp, tenant_id, secret_id):

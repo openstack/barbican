@@ -22,7 +22,7 @@ class TestCryptoPlugin(CryptoPluginBase):
     """Crypto plugin implementation for testing the plugin manager."""
 
     def encrypt(self, unencrypted, secret, tenant):
-        datum = EncryptedDatum()
+        datum = EncryptedDatum(secret)
         datum.cypher_text = 'cypher_text'
         datum.mime_type = 'text/plain'
         datum.kek_metadata = json.dumps({'plugin': 'TestCryptoPlugin'})
@@ -36,4 +36,4 @@ class TestCryptoPlugin(CryptoPluginBase):
         return "insecure_key"
 
     def supports(self, secret_type):
-        return True
+        return secret_type == 'text/plain'

@@ -67,25 +67,21 @@ def create_secret(data, tenant, crypto_manager,
     tenant_secret_repo.create_from(new_assoc)
 
     if 'plain_text' in data:
-        LOG.debug('Encrypting plain_text secret')
-        try:
-            new_datum = crypto_manager.encrypt(data['plain_text'],
-                                               new_secret,
-                                               tenant)
-            datum_repo.create_from(new_datum)
-        except CryptoMimeTypeNotSupportedException as e:
-            # TODO: return error
-            LOG.error(e.message)
+        LOG.debug('Encrypting plain_text secret...')
+        new_datum = crypto_manager.encrypt(data['plain_text'],
+                                           new_secret,
+                                           tenant)
+        datum_repo.create_from(new_datum)
     elif ok_to_generate:
-        try:
-            # TODO: Generate a good key
-            new_datum = crypto_manager.encrypt('plain_text_key',
-                                               new_secret,
-                                               tenant)
-            datum_repo.create_from(new_datum)
-        except CryptoMimeTypeNotSupportedException as e:
-            # TODO: return error
-            LOG.error(e.message)
+        LOG.debug('Generating new secret...')
+        
+        # TODO: Generate a good key
+        new_datum = crypto_manager.encrypt('generated_plain_text_key',
+                                           new_secret,
+                                           tenant)
+        datum_repo.create_from(new_datum)
+    else:
+        LOG.debug('Only creating metadata for the new secret.')
 
     return new_secret
 
@@ -114,14 +110,10 @@ def create_encrypted_datum(secret, plain_text, tenant, crypto_manager,
 
     # Encrypt plain_text
     LOG.debug('Encrypting plain_text secret')
-    try:
-        new_datum = crypto_manager.encrypt(plain_text,
-                                           secret,
-                                           tenant)
-        datum_repo.create_from(new_datum)
-    except CryptoMimeTypeNotSupportedException as e:
-        # TODO: return error
-        LOG.error(e.message)
+    new_datum = crypto_manager.encrypt(plain_text,
+                                       secret,
+                                       tenant)
+    datum_repo.create_from(new_datum)
 
     # Create Tenant/Secret entity.
     new_assoc = TenantSecret()
