@@ -220,6 +220,21 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
 
         assert not self.datum_repo.create_from.called
 
+    def test_should_fail_due_to_unsupported_mime(self):
+        self.secret_req = {'name': self.name,
+                           'mime_type': 'somethingbogushere',
+                           'algorithm': self.secret_algorithm,
+                           'bit_length': self.secret_bit_length,
+                           'cypher_type': self.secret_cypher_type,
+                           'plain_text': self.plain_text}
+        self.stream.read.return_value = json.dumps(self.secret_req)
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_post(self.req, self.resp, self.tenant_id)
+
+        exception = cm.exception
+        assert falcon.HTTP_400 == exception.status
+
 
 class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
 
@@ -412,6 +427,29 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
         resp_body = self.resp.body
         assert resp_body
 
+    def test_should_throw_exception_for_get_when_secret_not_found(self):
+        self.secret_repo.get.return_value = None
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_get(self.req, self.resp, self.tenant_id,
+                                 self.secret.id)
+
+        exception = cm.exception
+        assert falcon.HTTP_400 == exception.status
+
+
+    def test_should_throw_exception_for_get_when_accept_not_supported(self):
+
+        self.req.accept = 'bogusaccept'
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_get(self.req, self.resp, self.tenant_id,
+                                 self.secret.id)
+
+        exception = cm.exception
+        assert falcon.HTTP_406 == exception.status
+
+
     def test_should_put_secret_as_plain(self):
         self._setup_for_puts()
 
@@ -484,14 +522,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
 
         self.secret_repo.get.assert_called_once_with(entity_id=self.secret.id)
         self.secret_repo.delete_entity.assert_called_once_with(self.secret)
-
-    def test_should_throw_exception_for_get_when_secret_not_found(self):
-        self.secret_repo.get.side_effect = exception.NotFound(
-            "Test not found exception")
-
-        with self.assertRaises(exception.NotFound):
-            self.resource.on_get(self.req, self.resp, self.tenant_id,
-                                 self.secret.id)
 
     def test_should_throw_exception_for_delete_when_secret_not_found(self):
         self.secret_repo.get.side_effect = exception.NotFound(

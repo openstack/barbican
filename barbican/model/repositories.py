@@ -132,7 +132,7 @@ def get_engine():
         except Exception as err:
             msg = _("Error configuring registry database with supplied "
                     "sql_connection. Got error: %s") % err
-            LOG.error(msg)
+            LOG.exception(msg)
             raise
 
         sa_logger = logging.getLogger('sqlalchemy.engine')
@@ -292,6 +292,7 @@ class BaseRepo(object):
                 LOG.debug("Saving entity...")
                 entity.save(session=session)
             except sqlalchemy.exc.IntegrityError:
+                LOG.exception('Problem saving entity for create')
                 raise exception.Duplicate("Entity ID %s already exists!"
                                           % values['id'])
 
@@ -317,6 +318,7 @@ class BaseRepo(object):
             try:
                 entity.save(session=session)
             except sqlalchemy.exc.IntegrityError:
+                LOG.exception('Problem saving entity for update')
                 raise exception.NotFound("Entity ID %s not found"
                                          % entity_id)
 
@@ -418,6 +420,7 @@ class BaseRepo(object):
             try:
                 entity_ref.save(session=session)
             except sqlalchemy.exc.IntegrityError:
+                LOG.exception('Problem saving entity for _update')
                 if entity_id:
                     raise exception.NotFound("Entity ID %s not found"
                                              % entity_id)
