@@ -259,21 +259,23 @@ class SecretsResource(ApiResource):
 
         params = req._params
 
-        result = self.secret_repo.get_by_create_date(
-                                    offset_arg=params.get('offset', None),
-                                    limit_arg=params.get('limit', None),
-                                    suppress_exception=True)
+        result = self.secret_repo \
+                     .get_by_create_date(offset_arg=params.get('offset',
+                                                               None),
+                                         limit_arg=params.get('limit',
+                                                              None),
+                                         suppress_exception=True)
         secrets, offset, limit = result
 
         if not secrets:
             _secret_not_found()
         else:
-            secrets_resp = [convert_to_hrefs(tenant_id,
-                                augment_fields_with_content_types(s)) for s in
-                                secrets]
-            secrets_resp_overall = add_nav_hrefs('secrets',
-                                        tenant_id, offset, limit,
-                                        {'secrets': secrets_resp})
+            secret_fields = lambda s: augment_fields_with_content_types(s)
+            secrets_resp = [convert_to_hrefs(tenant_id, secret_fields(s)) for
+                            s in secrets]
+            secrets_resp_overall = add_nav_hrefs('secrets', tenant_id,
+                                                 offset, limit,
+                                                 {'secrets': secrets_resp})
             resp.body = json.dumps(secrets_resp_overall,
                                    default=json_handler)
 
@@ -303,10 +305,10 @@ class SecretResource(ApiResource):
         if not req.accept or req.accept == 'application/json':
             # Metadata-only response, no decryption necessary.
             resp.set_header('Content-Type', 'application/json')
-            resp.body = json.dumps(
-                            convert_to_hrefs(tenant_id,
-                                augment_fields_with_content_types(secret)),
-                                default=json_handler)
+            secret_fields = augment_fields_with_content_types(secret)
+            resp.body = json.dumps(convert_to_hrefs(tenant_id,
+                                                    secret_fields),
+                                   default=json_handler)
         else:
             tenant = get_or_create_tenant(tenant_id, self.tenant_repo)
             resp.set_header('Content-Type', req.accept)
@@ -434,10 +436,10 @@ class OrdersResource(ApiResource):
 
         params = req._params
 
-        result = self.order_repo.get_by_create_date(
-                                    offset_arg=params.get('offset', None),
-                                    limit_arg=params.get('limit', None),
-                                    suppress_exception=True)
+        result = self.order_repo \
+                     .get_by_create_date(offset_arg=params.get('offset', None),
+                                         limit_arg=params.get('limit', None),
+                                         suppress_exception=True)
         orders, offset, limit = result
 
         if not orders:

@@ -74,7 +74,7 @@ def create_secret(data, tenant, crypto_manager,
         datum_repo.create_from(new_datum)
     elif ok_to_generate:
         LOG.debug('Generating new secret...')
-        
+
         # TODO: Generate a good key
         new_datum = crypto_manager.encrypt('generated_plain_text_key',
                                            new_secret,

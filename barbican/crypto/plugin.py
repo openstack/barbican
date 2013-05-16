@@ -52,7 +52,7 @@ class SimpleCryptoPlugin(CryptoPluginBase):
 
     def encrypt(self, unencrypted, secret, tenant):
         encrypted_datum = EncryptedDatum(secret)
-        encrypted_datum.cypher_text = '[ENcrypt this:{0}]'.format(unencrypted) 
+        encrypted_datum.cypher_text = '[ENcrypt this:{0}]'.format(unencrypted)
         return encrypted_datum
 
     def decrypt(self, secret_type, secret, tenant):

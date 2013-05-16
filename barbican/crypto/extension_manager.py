@@ -78,6 +78,7 @@ class CryptoExtensionManager(named.NamedExtensionManager):
         for ext in self.extensions:
             if ext.obj.supports(accept):
                 plain_text = ext.obj.decrypt(accept, secret, tenant)
+                break
         else:
             raise CryptoAcceptNotSupportedException(accept)
 
