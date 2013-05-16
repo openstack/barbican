@@ -24,7 +24,7 @@ class CryptoMimeTypeNotSupportedException(BarbicanException):
     not available in any active plugin."""
     def __init__(self, mime_type):
         super(CryptoMimeTypeNotSupportedException, self).__init__(
-            _('Crypto Mime Type not supported {0}'.format(mime_type))
+            _("Crypto Mime Type of '{0}' not supported").format(mime_type)
         )
         self.mime_type = mime_type
 
@@ -34,9 +34,20 @@ class CryptoAcceptNotSupportedException(BarbicanException):
     available in any active plugin."""
     def __init__(self, accept):
         super(CryptoAcceptNotSupportedException, self).__init__(
-            _('Crypto Accept not supported {0}'.format(accept))
+            _("Crypto Accept of '{0}' not supported").format(accept)
         )
         self.accept = accept
+
+
+class CryptoNoSecretOrDataException(BarbicanException):
+    """Raised when secret information is not available for the specified
+    secret mime-type."""
+    def __init__(self, mime_type):
+        super(CryptoNoSecretOrDataException, self).__init__(
+            _('No secret information available for '
+              'Mime Type of {0}').format(mime_type)
+        )
+        self.mime_type = mime_type
 
 
 class CryptoExtensionManager(named.NamedExtensionManager):
@@ -60,8 +71,17 @@ class CryptoExtensionManager(named.NamedExtensionManager):
 
     def decrypt(self, accept, secret, tenant):
         """Delegates decryption to active plugins."""
+        if not secret or not secret.encrypted_data:
+            raise CryptoNoSecretOrDataException(accept)
+
+        plain_text = None
         for ext in self.extensions:
             if ext.obj.supports(accept):
-                return ext.obj.decrypt(accept, secret, tenant)
+                plain_text = ext.obj.decrypt(accept, secret, tenant)
         else:
             raise CryptoAcceptNotSupportedException(accept)
+
+        if not plain_text:
+            raise CryptoNoSecretOrDataException(accept)
+
+        return plain_text

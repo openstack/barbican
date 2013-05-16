@@ -52,12 +52,14 @@ class SimpleCryptoPlugin(CryptoPluginBase):
 
     def encrypt(self, unencrypted, secret, tenant):
         encrypted_datum = EncryptedDatum(secret)
-        encrypted_datum.cypher_text = 'encrypted-data'
+        encrypted_datum.cypher_text = '[ENcrypt this:{0}]'.format(unencrypted) 
         return encrypted_datum
 
     def decrypt(self, secret_type, secret, tenant):
-        encrypted_datum = secret.encrypted_data
-        return 'plain-data'
+        for encrypted_datum in secret.encrypted_data:
+            if secret_type == encrypted_datum.mime_type:
+                return '[DEcrypt this:{0}]'.format(encrypted_datum.cypher_text)
+        return None
 
     def create(self, secret_type):
         return "insecure_key"

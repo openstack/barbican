@@ -67,6 +67,12 @@ def _get_accept_not_supported(accept):
           "is not supported.").format(accept))
 
 
+def _get_secret_info_not_found(mime_type):
+    """Throw exception indicating request's accept is not supported."""
+    abort(falcon.HTTP_400, _("Secret information of type '{0}' not available "
+                             "for decryption.").format(mime_type))
+
+
 def _secret_mime_type_not_supported(mt, exception=None):
     """Throw exception indicating secret mime-type is not supported."""
     abort(falcon.HTTP_400, _("Mime-type of '{0}' "
@@ -88,6 +94,11 @@ def _failed_to_create_encrypted_datum():
     record for the secret.
     """
     abort(falcon.HTTP_400, _("Could not add secret data to Barbican."))
+
+
+def _failed_to_decrypt_data():
+    """Throw exception if failed to decrypt secret information."""
+    abort(falcon.HTTP_500, _("Problem decrypting secret information."))
 
 
 def _secret_already_has_data():
@@ -306,6 +317,10 @@ class SecretResource(ApiResource):
                 LOG.exception('Secret decryption failed - '
                               'accept not supported')
                 _get_accept_not_supported(canse.accept)
+            except em.CryptoNoSecretOrDataException as cnsode:
+                LOG.exception('Secret information of type {0} not '
+                              'found for decryption.').format(cnsode.mime_type)
+                _get_secret_info_not_found(canse.accept)
             except Exception as e:
                 LOG.exception('Secret decryption failed - unknown')
                 _failed_to_decrypt_data()
