@@ -74,10 +74,10 @@ setup(
     scripts=['bin/barbican-api'],
     py_modules=[],
     entry_points="""
-    [barbican.crypto.extension]
+    [barbican.crypto.plugin]
     simple_crypto = barbican.crypto.plugin:SimpleCryptoPlugin
 
-    [barbican.test.crypto.extension]
+    [barbican.test.crypto.plugin]
     test_crypto = barbican.tests.crypto.test_plugin:TestCryptoPlugin
     """
 )
