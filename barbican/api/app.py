@@ -34,7 +34,7 @@ def create_main_app(global_config, **local_conf):
     log.setup('barbican')
 
     # Crypto Plugin Manager
-    crypto_mgr = ext.CryptoExtensionManager(config.CONF)
+    crypto_mgr = ext.CryptoExtensionManager()
 
     # Resources
     versions = VersionResource()

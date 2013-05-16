@@ -82,7 +82,7 @@ class WhenBeginningOrder(unittest.TestCase):
         self.conf = MagicMock()
         self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
         self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
-        self.crypto_mgr = CryptoExtensionManager(self.conf)
+        self.crypto_mgr = CryptoExtensionManager(conf=self.conf)
 
         self.resource = BeginOrder(self.crypto_mgr,
                                    self.tenant_repo, self.order_repo,

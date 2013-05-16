@@ -61,7 +61,7 @@ class CryptoAcceptNotSupportedException(BarbicanException):
 
 
 class CryptoExtensionManager(named.NamedExtensionManager):
-    def __init__(self, conf, invoke_on_load=True,
+    def __init__(self, conf=CONF, invoke_on_load=True,
                  invoke_args=(), invoke_kwargs={}):
         super(CryptoExtensionManager, self).__init__(
             conf.crypto.namespace,

@@ -143,7 +143,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.conf = MagicMock()
         self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
         self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
-        self.crypto_mgr = CryptoExtensionManager(self.conf)
+        self.crypto_mgr = CryptoExtensionManager(conf=self.conf)
 
         self.resource = SecretsResource(self.crypto_mgr,
                                         self.tenant_repo,
@@ -279,7 +279,7 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
         self.conf = MagicMock()
         self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
         self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
-        self.crypto_mgr = CryptoExtensionManager(self.conf)
+        self.crypto_mgr = CryptoExtensionManager(conf=self.conf)
 
         self.req = MagicMock()
         self.req.accept = 'application/json'
@@ -391,7 +391,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
         self.conf = MagicMock()
         self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
         self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
-        self.crypto_mgr = CryptoExtensionManager(self.conf)
+        self.crypto_mgr = CryptoExtensionManager(conf=self.conf)
 
         self.policy = MagicMock()
         self.resource = SecretResource(self.crypto_mgr,
