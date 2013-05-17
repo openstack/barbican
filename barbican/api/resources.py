@@ -322,8 +322,8 @@ class SecretResource(ApiResource):
                 _get_accept_not_supported(canse.accept)
             except em.CryptoNoSecretOrDataException as cnsode:
                 LOG.exception('Secret information of type {0} not '
-                              'found for decryption.').format(cnsode.mime_type)
-                _get_secret_info_not_found(canse.accept)
+                              'found for decryption.'.format(cnsode.mime_type))
+                _get_secret_info_not_found(cnsode.mime_type)
             except Exception as e:
                 LOG.exception('Secret decryption failed - unknown')
                 _failed_to_decrypt_data()

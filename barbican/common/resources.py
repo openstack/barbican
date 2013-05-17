@@ -76,12 +76,13 @@ def create_secret(data, tenant, crypto_manager,
         LOG.debug('Generating new secret...')
 
         # TODO: Generate a good key
-        new_datum = crypto_manager.encrypt('generated_plain_text_key',
-                                           new_secret,
-                                           tenant)
+        new_datum = crypto_manager.generate_data_encryption_key(new_secret,
+                                                                tenant)
         datum_repo.create_from(new_datum)
     else:
-        LOG.debug('Only creating metadata for the new secret.')
+        LOG.debug('Creating metadata only for the new secret. '
+                  'A subsequent PUT is required')
+        crypto_manager.supports(new_secret, tenant)
 
     return new_secret
 

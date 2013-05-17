@@ -107,3 +107,31 @@ class CryptoExtensionManager(named.NamedExtensionManager):
             raise CryptoNoSecretOrDataException(accept)
 
         return plain_text
+
+    def generate_data_encryption_key(self, secret, tenant):
+        """
+        Delegates generating a data-encryption key to active plugins.
+
+        Note that this key can be used by clients for their encryption
+        processes. This generated key is then be encrypted via
+        the plug-in key encryption process, and that encrypted datum
+        is then returned from this method.
+        """
+        for ext in self.extensions:
+            if ext.obj.supports(secret.mime_type):
+                # TODO: Call plugin's key generation processes.
+                #   Note: It could be the *data* key to generate (for the
+                #   secret algo type) uses a different plug in than that
+                #   used to encrypted the key.
+                data_key = ext.obj.create(secret.mime_type)
+                return ext.obj.encrypt(data_key, secret, tenant)
+        else:
+            raise CryptoMimeTypeNotSupportedException(secret.mime_type)
+
+    def supports(self, secret, tenant):
+        """Tests if at least one plug-in supports the secret type."""
+        for ext in self.extensions:
+            if ext.obj.supports(secret.mime_type):
+                return True
+        else:
+            raise CryptoMimeTypeNotSupportedException(secret.mime_type)

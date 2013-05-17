@@ -38,6 +38,11 @@ class States(object):
     PENDING = 'PENDING'
     ACTIVE = 'ACTIVE'
 
+    @classmethod
+    def is_valid(self, state_to_test):
+        """Tests if a state is a valid one."""
+        return state_to_test in self.__dict__
+
 
 @compiles(BigInteger, 'sqlite')
 def compile_big_int_sqlite(type_, compiler, **kw):

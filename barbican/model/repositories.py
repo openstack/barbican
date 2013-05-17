@@ -49,9 +49,6 @@ BASE = models.BASE
 sa_logger = None
 
 
-STATUSES = ['active', 'saving', 'queued', 'killed', 'pending_delete',
-            'deleted']
-
 db_opts = [
     cfg.IntOpt('sql_idle_timeout', default=3600),
     cfg.IntOpt('sql_max_retries', default=60),
@@ -337,7 +334,7 @@ class BaseRepo(object):
         with session.begin():
 
             entity = self.get(entity_id=entity_id, session=session)
-            
+
             try:
                 entity.delete(session=session)
             except sqlalchemy.exc.IntegrityError:
@@ -385,7 +382,7 @@ class BaseRepo(object):
             msg = "{0} status is required.".format(self._do_entity_name())
             raise exception.Invalid(msg)
 
-        if status not in STATUSES:
+        if not models.States.is_valid(status):
             msg = "Invalid status '{0}' for {1}.".format(
                 status, self._do_entity_name())
             raise exception.Invalid(msg)

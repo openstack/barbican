@@ -48,11 +48,12 @@ class SimpleCryptoPlugin(CryptoPluginBase):
     #TODO: Use PyCrypto to aes encode secrets
 
     def __init__(self):
-        self.supported_types = ['application/aes-256-cbc', 'text/plain']
+        self.supported_types = ['text/plain', 'application/octet-stream']
 
     def encrypt(self, unencrypted, secret, tenant):
         encrypted_datum = EncryptedDatum(secret)
         encrypted_datum.cypher_text = '[ENcrypt this:{0}]'.format(unencrypted)
+        encrypted_datum.kek_metadata = "kek_metadata here"
         return encrypted_datum
 
     def decrypt(self, secret_type, secret, tenant):

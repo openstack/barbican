@@ -448,6 +448,18 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
         exception = cm.exception
         self.assertEqual(falcon.HTTP_406, exception.status)
 
+    def test_should_throw_exception_for_get_when_datum_not_available(self):
+
+        self.req.accept = 'text/plain'
+        self.secret.encrypted_data = []
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_get(self.req, self.resp, self.tenant_id,
+                                 self.secret.id)
+
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_400, exception.status)
+
     def test_should_put_secret_as_plain(self):
         self._setup_for_puts()
 
@@ -518,7 +530,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
         self.resource.on_delete(self.req, self.resp, self.tenant_id,
                                 self.secret.id)
 
-        self.secret_repo.delete_entity_by_id.assert_called_once_with(entity_id=self.secret.id)
+        self.secret_repo.delete_entity_by_id \
+            .assert_called_once_with(entity_id=self.secret.id)
 
     def test_should_throw_exception_for_delete_when_secret_not_found(self):
         self.secret_repo.delete_entity_by_id.side_effect = excep.NotFound(
