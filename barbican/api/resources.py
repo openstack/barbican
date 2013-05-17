@@ -30,6 +30,7 @@ from barbican.model.models import (Tenant, Secret, TenantSecret,
 from barbican.model.repositories import (TenantRepo, SecretRepo,
                                          OrderRepo, TenantSecretRepo,
                                          EncryptedDatumRepo)
+from barbican.common import exception
 from barbican.crypto import extension_manager as em
 from barbican.openstack.common.gettextutils import _
 from barbican.openstack.common import jsonutils as json
@@ -47,12 +48,12 @@ def _general_failure(message):
 
 def _secret_not_found():
     """Throw exception indicating secret not found."""
-    abort(falcon.HTTP_400, _('Unable to locate secret.'))
+    abort(falcon.HTTP_404, _('Unable to locate secret.'))
 
 
 def _order_not_found():
     """Throw exception indicating order not found."""
-    abort(falcon.HTTP_400, _('Unable to locate order.'))
+    abort(falcon.HTTP_404, _('Unable to locate order.'))
 
 
 def _put_accept_incorrect(ct):
@@ -363,9 +364,12 @@ class SecretResource(ApiResource):
             _failed_to_create_encrypted_datum()
 
     def on_delete(self, req, resp, tenant_id, secret_id):
-        secret = self.repo.get(entity_id=secret_id)
 
-        self.repo.delete_entity(secret)
+        try:
+            self.repo.delete_entity_by_id(entity_id=secret_id)
+        except exception.NotFound:
+            LOG.exception('Problem deleting secret')
+            _secret_not_found()
 
         resp.status = falcon.HTTP_200
 
@@ -472,8 +476,11 @@ class OrderResource(ApiResource):
                                default=json_handler)
 
     def on_delete(self, req, resp, tenant_id, order_id):
-        order = self.repo.get(entity_id=order_id)
 
-        self.repo.delete_entity(order)
+        try:
+            self.repo.delete_entity_by_id(entity_id=order_id)
+        except exception.NotFound:
+            LOG.exception('Problem deleting order')
+            _order_not_found()
 
         resp.status = falcon.HTTP_200

@@ -330,13 +330,20 @@ class BaseRepo(object):
         """
         return self._update(entity_id, values, purge_props)
 
-    def delete_entity(self, entity):
-        """Remove the entity"""
+    def delete_entity_by_id(self, entity_id):
+        """Remove the entity by its ID"""
 
         session = get_session()
         with session.begin():
-            entity.deleted_at = timeutils.utcnow()
-            entity.delete(session=session)
+
+            entity = self.get(entity_id=entity_id, session=session)
+            
+            try:
+                entity.delete(session=session)
+            except sqlalchemy.exc.IntegrityError:
+                LOG.exception('Problem finding entity to delete')
+                raise exception.NotFound("Entity ID %s not found"
+                                         % entity_id)
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
@@ -454,10 +461,6 @@ class TenantRepo(BaseRepo):
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.Tenant).filter_by(id=entity_id)
-
-    def _do_validate(self, values):
-        """Sub-class hook: validate values."""
-        pass
 
     def find_by_keystone_id(self, keystone_id, suppress_exception=False,
                             session=None):

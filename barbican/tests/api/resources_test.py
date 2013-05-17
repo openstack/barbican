@@ -26,7 +26,7 @@ from barbican.crypto.extension_manager import CryptoExtensionManager
 from barbican.model.models import (Secret, Tenant, TenantSecret,
                                    Order, EncryptedDatum)
 from barbican.common import config
-from barbican.common import exception
+from barbican.common import exception as excep
 from barbican.openstack.common import jsonutils
 
 
@@ -325,7 +325,7 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
             self.resource.on_get(self.req, self.resp, self.tenant_id)
 
         exception = cm.exception
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.assertEqual(falcon.HTTP_404, exception.status)
 
     def _create_url(self, tenant_id, offset_arg=None, limit_arg=None):
         if limit_arg:
@@ -374,7 +374,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
 
         self.secret_repo = MagicMock()
         self.secret_repo.get.return_value = self.secret
-        self.secret_repo.delete_entity.return_value = None
+        self.secret_repo.delete_entity_by_id.return_value = None
 
         self.tenant_secret_repo = MagicMock()
         self.tenant_secret_repo.create_from.return_value = None
@@ -434,7 +434,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
                                  self.secret.id)
 
         exception = cm.exception
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.assertEqual(falcon.HTTP_404, exception.status)
 
     def test_should_throw_exception_for_get_when_accept_not_supported(self):
 
@@ -485,7 +485,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
                                  self.secret.id)
 
         exception = cm.exception
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.assertEqual(falcon.HTTP_404, exception.status)
 
     def test_should_fail_put_secret_no_plain_text(self):
         self._setup_for_puts()
@@ -517,16 +517,18 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
         self.resource.on_delete(self.req, self.resp, self.tenant_id,
                                 self.secret.id)
 
-        self.secret_repo.get.assert_called_once_with(entity_id=self.secret.id)
-        self.secret_repo.delete_entity.assert_called_once_with(self.secret)
+        self.secret_repo.delete_entity_by_id.assert_called_once_with(entity_id=self.secret.id)
 
     def test_should_throw_exception_for_delete_when_secret_not_found(self):
-        self.secret_repo.get.side_effect = exception.NotFound(
+        self.secret_repo.delete_entity_by_id.side_effect = excep.NotFound(
             "Test not found exception")
 
-        with self.assertRaises(exception.NotFound):
+        with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_delete(self.req, self.resp, self.tenant_id,
                                     self.secret.id)
+
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_404, exception.status)
 
     def _setup_for_puts(self):
         self.plain_text = "plain_text"
@@ -676,7 +678,7 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
             self.resource.on_get(self.req, self.resp, self.tenant_id)
 
         exception = cm.exception
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.assertEqual(falcon.HTTP_404, exception.status)
 
     def _create_url(self, tenant_id, offset_arg=None, limit_arg=None):
         if limit_arg:
@@ -700,7 +702,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
 
         self.order_repo = MagicMock()
         self.order_repo.get.return_value = self.order
-        self.order_repo.delete_entity.return_value = None
+        self.order_repo.delete_entity_by_id.return_value = None
 
         self.policy = MagicMock()
 
@@ -722,25 +724,30 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
         self.resource.on_delete(self.req, self.resp, self.tenant_keystone_id,
                                 self.order.id)
 
-        self.order_repo.get.assert_called_once_with(entity_id=self.order.id)
-        self.order_repo.delete_entity.assert_called_once_with(self.order)
+        self.order_repo.delete_entity_by_id \
+            .assert_called_once_with(entity_id=self.order.id)
 
     def test_should_throw_exception_for_get_when_order_not_found(self):
-        self.order_repo.get.side_effect = exception.NotFound(
-            "Test not found exception")
+        self.order_repo.get.return_value = None
 
-        with self.assertRaises(exception.NotFound):
+        with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
                                  self.order.id)
 
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_404, exception.status)
+
     def test_should_throw_exception_for_delete_when_order_not_found(self):
-        self.order_repo.get.side_effect = exception.NotFound(
+        self.order_repo.delete_entity_by_id.side_effect = excep.NotFound(
             "Test not found exception")
 
-        with self.assertRaises(exception.NotFound):
+        with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_delete(self.req, self.resp,
                                     self.tenant_keystone_id,
                                     self.order.id)
+
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_404, exception.status)
 
 
 if __name__ == '__main__':
