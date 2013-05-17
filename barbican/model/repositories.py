@@ -49,9 +49,6 @@ BASE = models.BASE
 sa_logger = None
 
 
-STATUSES = ['active', 'saving', 'queued', 'killed', 'pending_delete',
-            'deleted']
-
 db_opts = [
     cfg.IntOpt('sql_idle_timeout', default=3600),
     cfg.IntOpt('sql_max_retries', default=60),
@@ -205,6 +202,17 @@ def wrap_db_error(f):
     return _wrap
 
 
+def clean_paging_values(offset_arg=None, limit_arg=None):
+    """Cleans and safely limits raw paging offset/limit values."""
+    offset = int(offset_arg) if offset_arg else 0
+    offset = offset if offset >= 0 else 0
+
+    limit = int(limit_arg) if limit_arg else CONF.max_limit_paging
+    limit = limit if limit >= 2 else 2
+
+    return (offset, limit)
+
+
 class BaseRepo(object):
     """
     Base repository for the barbican entities.
@@ -330,13 +338,20 @@ class BaseRepo(object):
         """
         return self._update(entity_id, values, purge_props)
 
-    def delete_entity(self, entity):
-        """Remove the entity"""
+    def delete_entity_by_id(self, entity_id):
+        """Remove the entity by its ID"""
 
         session = get_session()
         with session.begin():
-            entity.deleted_at = timeutils.utcnow()
-            entity.delete(session=session)
+
+            entity = self.get(entity_id=entity_id, session=session)
+
+            try:
+                entity.delete(session=session)
+            except sqlalchemy.exc.IntegrityError:
+                LOG.exception('Problem finding entity to delete')
+                raise exception.NotFound("Entity ID %s not found"
+                                         % entity_id)
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
@@ -378,7 +393,7 @@ class BaseRepo(object):
             msg = "{0} status is required.".format(self._do_entity_name())
             raise exception.Invalid(msg)
 
-        if status not in STATUSES:
+        if not models.States.is_valid(status):
             msg = "Invalid status '{0}' for {1}.".format(
                 status, self._do_entity_name())
             raise exception.Invalid(msg)
@@ -455,10 +470,6 @@ class TenantRepo(BaseRepo):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.Tenant).filter_by(id=entity_id)
 
-    def _do_validate(self, values):
-        """Sub-class hook: validate values."""
-        pass
-
     def find_by_keystone_id(self, keystone_id, suppress_exception=False,
                             session=None):
         session = self.get_session(session)
@@ -491,19 +502,16 @@ class SecretRepo(BaseRepo):
         and paged based on the offset and limit fields.
         """
 
-        offset = int(offset_arg) if offset_arg else 0
-        offset = offset if offset >= 0 else 0
-
-        limit = int(limit_arg) if limit_arg else CONF.max_limit_paging
-        limit = limit if limit >= 2 else 2
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
 
         session = self.get_session(session)
         utcnow = timeutils.utcnow()
 
         try:
-            query = session.query(models.Secret).order_by(
-                        models.Secret.created_at).filter_by(deleted=False)
-            
+            query = session.query(models.Secret) \
+                           .order_by(models.Secret.created_at) \
+                           .filter_by(deleted=False)
+
             # Note: Must use '== None' below, not 'is None'.
             query = query.filter(or_(models.Secret.expiration == None,
                                      models.Secret.expiration > utcnow))
@@ -528,20 +536,20 @@ class SecretRepo(BaseRepo):
     def _do_build_query_by_name(self, name, session):
         """Sub-class hook: find entity by name."""
         utcnow = timeutils.utcnow()
-        
+
         # Note: Must use '== None' below, not 'is None'.
-        return session.query(models.Secret).filter_by(name=name).filter(
-                        or_(models.Secret.expiration == None,
-                            models.Secret.expiration > utcnow))
+        return session.query(models.Secret).filter_by(name=name) \
+                      .filter(or_(models.Secret.expiration == None,
+                                  models.Secret.expiration > utcnow))
 
     def _do_build_get_query(self, entity_id, session):
         """Sub-class hook: build a retrieve query."""
         utcnow = timeutils.utcnow()
-        
+
         # Note: Must use '== None' below, not 'is None'.
-        return session.query(models.Secret).filter_by(id=entity_id).filter(
-                        or_(models.Secret.expiration == None,
-                            models.Secret.expiration > utcnow))
+        return session.query(models.Secret).filter_by(id=entity_id) \
+                      .filter(or_(models.Secret.expiration == None,
+                                  models.Secret.expiration > utcnow))
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
@@ -609,17 +617,13 @@ class OrderRepo(BaseRepo):
         and paged based on the offset and limit fields.
         """
 
-        offset = int(offset_arg) if offset_arg else 0
-        offset = offset if offset >= 0 else 0
-
-        limit = int(limit_arg) if limit_arg else CONF.max_limit_paging
-        limit = limit if limit >= 2 else 2
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
 
         session = self.get_session(session)
 
         try:
-            query = session.query(models.Order).order_by(
-                                    models.Order.created_at)
+            query = session.query(models.Order) \
+                           .order_by(models.Order.created_at)
             query = query.filter_by(deleted=False)
 
             entities = query[offset:(offset + limit)]

@@ -20,8 +20,10 @@ Barbican defined mime-types
 # Maps mime-types used to specify secret data formats to the types that can
 #   be requested for secrets via GET calls.
 CTYPES_PLAIN = {'default': 'text/plain'}
+CTYPES_BINARY = {'default': 'application/octet-stream'}
 CTYPES_AES = {'default': 'application/aes'}
 CTYPES_MAPPINGS = {'text/plain': CTYPES_PLAIN,
+                   'application/octet-stream': CTYPES_BINARY,
                    'application/aes': CTYPES_AES}
 
 
@@ -38,5 +40,6 @@ def augment_fields_with_content_types(secret):
     for datum in secret.encrypted_data:
         if datum.mime_type in CTYPES_MAPPINGS:
             fields.update({'content_types': CTYPES_MAPPINGS[datum.mime_type]})
+            break
 
     return fields

@@ -30,6 +30,7 @@ from barbican.model.models import (Tenant, Secret, TenantSecret,
 from barbican.model.repositories import (TenantRepo, SecretRepo,
                                          OrderRepo, TenantSecretRepo,
                                          EncryptedDatumRepo)
+from barbican.common import exception
 from barbican.crypto import extension_manager as em
 from barbican.openstack.common.gettextutils import _
 from barbican.openstack.common import jsonutils as json
@@ -47,12 +48,12 @@ def _general_failure(message):
 
 def _secret_not_found():
     """Throw exception indicating secret not found."""
-    abort(falcon.HTTP_400, _('Unable to locate secret.'))
+    abort(falcon.HTTP_404, _('Unable to locate secret.'))
 
 
 def _order_not_found():
     """Throw exception indicating order not found."""
-    abort(falcon.HTTP_400, _('Unable to locate order.'))
+    abort(falcon.HTTP_404, _('Unable to locate order.'))
 
 
 def _put_accept_incorrect(ct):
@@ -65,6 +66,12 @@ def _get_accept_not_supported(accept):
     """Throw exception indicating request's accept is not supported."""
     abort(falcon.HTTP_406, _("Accept of '{0}' "
           "is not supported.").format(accept))
+
+
+def _get_secret_info_not_found(mime_type):
+    """Throw exception indicating request's accept is not supported."""
+    abort(falcon.HTTP_404, _("Secret information of type '{0}' not available "
+                             "for decryption.").format(mime_type))
 
 
 def _secret_mime_type_not_supported(mt, exception=None):
@@ -82,12 +89,27 @@ def _client_content_mismatch_to_secret(expected, actual):
                              "secret's of '{1}'.").format(actual, expected))
 
 
+def _secret_data_too_large():
+    """Throw exception indicating plain-text was too big."""
+    abort(falcon.HTTP_413, _("Could not add secret data as it was too large"))
+
+
+def _secret_plain_text_empty():
+    """Throw exception indicating empty plain-text was supplied."""
+    abort(falcon.HTTP_400, _("Could not add secret with empty 'plain_text'"))
+
+
 def _failed_to_create_encrypted_datum():
     """
     Throw exception we could not create an EncryptedDatum
     record for the secret.
     """
     abort(falcon.HTTP_400, _("Could not add secret data to Barbican."))
+
+
+def _failed_to_decrypt_data():
+    """Throw exception if failed to decrypt secret information."""
+    abort(falcon.HTTP_500, _("Problem decrypting secret information."))
 
 
 def _secret_already_has_data():
@@ -177,16 +199,17 @@ def next_href(resources_name, tenant_id, offset, limit):
     return convert_list_to_href(resources_name, tenant_id, offset, limit)
 
 
-def add_nav_hrefs(resources_name, tenant_id, offset, limit, data):
+def add_nav_hrefs(resources_name, tenant_id, offset, limit, num_elements, data):
     if offset > 0:
         data.update({'previous': previous_href(resources_name,
                                                tenant_id,
                                                offset,
                                                limit)})
-    data.update({'next': next_href(resources_name,
-                                   tenant_id,
-                                   offset,
-                                   limit)})
+    if num_elements >= limit:
+        data.update({'next': next_href(resources_name,
+                                       tenant_id,
+                                       offset,
+                                       limit)})
     return data
 
 
@@ -232,6 +255,12 @@ class SecretsResource(ApiResource):
         except em.CryptoMimeTypeNotSupportedException as cmtnse:
             LOG.exception('Secret creation failed - mime-type not supported')
             _secret_mime_type_not_supported(cmtnse.mime_type)
+        except exception.NoDataToProcess:
+            LOG.exception('No secret data to process')
+            _secret_plain_text_empty()
+        except exception.LimitExceeded:
+            LOG.exception('Secret data too big to process')
+            _secret_data_too_large()
         except Exception as e:
             LOG.exception('Secret creation failed - unknown')
             _general_failure('Secret creation failed - unknown')
@@ -248,21 +277,23 @@ class SecretsResource(ApiResource):
 
         params = req._params
 
-        result = self.secret_repo.get_by_create_date(
-                                    offset_arg=params.get('offset', None),
-                                    limit_arg=params.get('limit', None),
-                                    suppress_exception=True)
+        result = self.secret_repo \
+                     .get_by_create_date(offset_arg=params.get('offset',
+                                                               None),
+                                         limit_arg=params.get('limit',
+                                                              None),
+                                         suppress_exception=True)
         secrets, offset, limit = result
 
         if not secrets:
             _secret_not_found()
         else:
-            secrets_resp = [convert_to_hrefs(tenant_id,
-                                augment_fields_with_content_types(s)) for s in
-                                secrets]
-            secrets_resp_overall = add_nav_hrefs('secrets',
-                                        tenant_id, offset, limit,
-                                        {'secrets': secrets_resp})
+            secret_fields = lambda s: augment_fields_with_content_types(s)
+            secrets_resp = [convert_to_hrefs(tenant_id, secret_fields(s)) for
+                            s in secrets]
+            secrets_resp_overall = add_nav_hrefs('secrets', tenant_id,
+                                                 offset, limit, len(secrets),
+                                                 {'secrets': secrets_resp})
             resp.body = json.dumps(secrets_resp_overall,
                                    default=json_handler)
 
@@ -292,10 +323,10 @@ class SecretResource(ApiResource):
         if not req.accept or req.accept == 'application/json':
             # Metadata-only response, no decryption necessary.
             resp.set_header('Content-Type', 'application/json')
-            resp.body = json.dumps(
-                            convert_to_hrefs(tenant_id,
-                                augment_fields_with_content_types(secret)),
-                                default=json_handler)
+            secret_fields = augment_fields_with_content_types(secret)
+            resp.body = json.dumps(convert_to_hrefs(tenant_id,
+                                                    secret_fields),
+                                   default=json_handler)
         else:
             tenant = get_or_create_tenant(tenant_id, self.tenant_repo)
             resp.set_header('Content-Type', req.accept)
@@ -306,6 +337,10 @@ class SecretResource(ApiResource):
                 LOG.exception('Secret decryption failed - '
                               'accept not supported')
                 _get_accept_not_supported(canse.accept)
+            except em.CryptoNoSecretOrDataException as cnsode:
+                LOG.exception('Secret information of type {0} not '
+                              'found for decryption.'.format(cnsode.mime_type))
+                _get_secret_info_not_found(cnsode.mime_type)
             except Exception as e:
                 LOG.exception('Secret decryption failed - unknown')
                 _failed_to_decrypt_data()
@@ -341,14 +376,23 @@ class SecretResource(ApiResource):
         except em.CryptoMimeTypeNotSupportedException as cmtnse:
             LOG.exception('Secret creation failed - mime-type not supported')
             _secret_mime_type_not_supported(cmtnse.mime_type)
+        except exception.NoDataToProcess:
+            LOG.exception('No secret data to process')
+            _secret_plain_text_empty()
+        except exception.LimitExceeded:
+            LOG.exception('Secret data too big to process')
+            _secret_data_too_large()
         except Exception as e:
             LOG.exception('Secret creation failed - unknown')
             _failed_to_create_encrypted_datum()
 
     def on_delete(self, req, resp, tenant_id, secret_id):
-        secret = self.repo.get(entity_id=secret_id)
 
-        self.repo.delete_entity(secret)
+        try:
+            self.repo.delete_entity_by_id(entity_id=secret_id)
+        except exception.NotFound:
+            LOG.exception('Problem deleting secret')
+            _secret_not_found()
 
         resp.status = falcon.HTTP_200
 
@@ -419,10 +463,10 @@ class OrdersResource(ApiResource):
 
         params = req._params
 
-        result = self.order_repo.get_by_create_date(
-                                    offset_arg=params.get('offset', None),
-                                    limit_arg=params.get('limit', None),
-                                    suppress_exception=True)
+        result = self.order_repo \
+                     .get_by_create_date(offset_arg=params.get('offset', None),
+                                         limit_arg=params.get('limit', None),
+                                         suppress_exception=True)
         orders, offset, limit = result
 
         if not orders:
@@ -430,8 +474,8 @@ class OrdersResource(ApiResource):
         else:
             orders_resp = [convert_to_hrefs(tenant_id, o.to_dict_fields())
                            for o in orders]
-            orders_resp_overall = add_nav_hrefs('orders', tenant_id, offset,
-                                                limit,
+            orders_resp_overall = add_nav_hrefs('orders', tenant_id,
+                                                offset, limit, len(orders),
                                                 {'orders': orders_resp})
             resp.body = json.dumps(orders_resp_overall,
                                    default=json_handler)
@@ -455,8 +499,11 @@ class OrderResource(ApiResource):
                                default=json_handler)
 
     def on_delete(self, req, resp, tenant_id, order_id):
-        order = self.repo.get(entity_id=order_id)
 
-        self.repo.delete_entity(order)
+        try:
+            self.repo.delete_entity_by_id(entity_id=order_id)
+        except exception.NotFound:
+            LOG.exception('Problem deleting order')
+            _order_not_found()
 
         resp.status = falcon.HTTP_200

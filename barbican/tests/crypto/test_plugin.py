@@ -24,7 +24,6 @@ class TestCryptoPlugin(CryptoPluginBase):
     def encrypt(self, unencrypted, secret, tenant):
         datum = EncryptedDatum(secret)
         datum.cypher_text = 'cypher_text'
-        datum.mime_type = 'text/plain'
         datum.kek_metadata = json.dumps({'plugin': 'TestCryptoPlugin'})
         return datum
 

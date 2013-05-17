@@ -128,6 +128,10 @@ class Invalid(BarbicanException):
     message = _("Data supplied was not valid.")
 
 
+class NoDataToProcess(BarbicanException):
+    message = _("No data supplied to process.")
+
+
 class InvalidSortKey(Invalid):
     message = _("Sort key supplied was not valid.")
 

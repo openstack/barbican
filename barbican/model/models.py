@@ -38,6 +38,11 @@ class States(object):
     PENDING = 'PENDING'
     ACTIVE = 'ACTIVE'
 
+    @classmethod
+    def is_valid(self, state_to_test):
+        """Tests if a state is a valid one."""
+        return state_to_test in self.__dict__
+
 
 @compiles(BigInteger, 'sqlite')
 def compile_big_int_sqlite(type_, compiler, **kw):
@@ -74,12 +79,17 @@ class ModelBase(object):
         """Delete this object"""
         import barbican.model.repositories
         session = session or barbican.model.repositories.get_session()
-        session.delete(self)
+        self.deleted = True
+        self.deleted_at = timeutils.utcnow()
+        self.save(session=session)
 
-        #TODO: Soft delete instead?
-        # self.deleted = True
-        # self.deleted_at = timeutils.utcnow()
-        # self.save(session=session)
+        self._do_delete_children(session)
+
+    def _do_delete_children(self, session):
+        """
+        Sub-class hook: delete children relationships.
+        """
+        pass
 
     def update(self, values):
         """dict.update() behaviour."""
@@ -205,6 +215,13 @@ class Secret(BASE, ModelBase):
         self.cypher_type = parsed_request.get('cypher_type', None)
 
         self.status = States.ACTIVE
+
+    def _do_delete_children(self, session):
+        """
+        Sub-class hook: delete children relationships.
+        """
+        for datum in self.encrypted_data:
+            datam.delete(session)
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
