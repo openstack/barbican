@@ -50,8 +50,7 @@ class SimpleCryptoPlugin(CryptoPluginBase):
     """Insecure implementation of the crypto plugin."""
 
     def __init__(self):
-        self.supported_types = ['text/plain', 'application/octet-stream',
-                                'application/aes-128-cbc']
+        self.supported_types = ['text/plain', 'application/octet-stream']
         self.kek = u'sixteen_byte_key'
         self.block_size = 16
 
@@ -86,11 +85,11 @@ class SimpleCryptoPlugin(CryptoPluginBase):
         encryptor = AES.new(self.kek, AES.MODE_CBC, iv)
         cyphertext = iv + encryptor.encrypt(padded_data)
 
-        datum = EncryptedDatum()
+        datum = EncryptedDatum(secret)
         datum.cypher_text = cyphertext
-        datum.mime_type = 'application/aes-128-cbc'
         datum.kek_metadata = json.dumps({
             'plugin': 'SimpleCryptoPlugin',
+            'encryption': 'aes-128-cbc',
             'kek': 'kek_id'
         })
         return datum
