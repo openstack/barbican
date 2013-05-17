@@ -15,7 +15,11 @@
 
 import abc
 
+from Crypto.Cipher import AES
+from Crypto import Random
+
 from barbican.model.models import EncryptedDatum
+from barbican.openstack.common import jsonutils as json
 
 
 class CryptoPluginBase(object):
@@ -45,24 +49,62 @@ class CryptoPluginBase(object):
 class SimpleCryptoPlugin(CryptoPluginBase):
     """Insecure implementation of the crypto plugin."""
 
-    #TODO: Use PyCrypto to aes encode secrets
-
     def __init__(self):
-        self.supported_types = ['text/plain', 'application/octet-stream']
+        self.supported_types = ['text/plain', 'application/octet-stream',
+                                'application/aes-128-cbc']
+        self.kek = u'sixteen_byte_key'
+        self.block_size = 16
+
+    def _pad(self, unencrypted):
+        try:
+            unencrypted_bytes = unencrypted.encode('utf-8')
+        except UnicodeDecodeError:
+            unencrypted_bytes = unencrypted
+        pad_length = self.block_size - (
+            len(unencrypted_bytes) % self.block_size
+        )
+        return unencrypted_bytes + (chr(pad_length) * pad_length)
+
+    def _strip_pad(self, unencrypted):
+        try:
+            unencrypted_bytes = unencrypted.encode('utf-8')
+        except UnicodeDecodeError:
+            unencrypted_bytes = unencrypted
+        pad_length = ord(unencrypted_bytes[-1:])
+        unpadded = unencrypted_bytes[:-pad_length]
+        try:
+            #TODO: maybe kek_metadata needs to be used to determine
+            # whether the unpadded byte stream is a utf-8 string or not?
+            unpadded = unpadded.decode('utf-8')
+        except UnicodeDecodeError:
+            pass
+        return unpadded
 
     def encrypt(self, unencrypted, secret, tenant):
-        encrypted_datum = EncryptedDatum(secret)
-        encrypted_datum.cypher_text = '[ENcrypt this:{0}]'.format(unencrypted)
-        encrypted_datum.kek_metadata = "kek_metadata here"
-        return encrypted_datum
+        padded_data = self._pad(unencrypted)
+        iv = Random.get_random_bytes(16)
+        encryptor = AES.new(self.kek, AES.MODE_CBC, iv)
+        cyphertext = iv + encryptor.encrypt(padded_data)
+
+        datum = EncryptedDatum()
+        datum.cypher_text = cyphertext
+        datum.mime_type = 'application/aes-128-cbc'
+        datum.kek_metadata = json.dumps({
+            'plugin': 'SimpleCryptoPlugin',
+            'kek': 'kek_id'
+        })
+        return datum
 
     def decrypt(self, secret_type, secret, tenant):
-        for encrypted_datum in secret.encrypted_data:
-            if secret_type == encrypted_datum.mime_type:
-                return '[DEcrypt this:{0}]'.format(encrypted_datum.cypher_text)
-        return None
+        payload = secret.encrypted_data.cypher_text
+        iv = payload[:16]
+        cypher_text = payload[16:]
+        decryptor = AES.new(self.kek, AES.MODE_CBC, iv)
+        padded_secret = decryptor.decrypt(cypher_text)
+        return self._strip_pad(padded_secret)
 
     def create(self, secret_type):
+        # TODO:
         return "insecure_key"
 
     def supports(self, secret_type):
