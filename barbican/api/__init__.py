@@ -21,6 +21,9 @@ import falcon
 from barbican.openstack.common import jsonutils as json
 
 
+MAX_SIZE_REQUEST_INPUT_ACCEPTED_IN_BYTES = 1000000
+
+
 class ApiResource(object):
     """
     Base class for API resources
@@ -42,7 +45,7 @@ def load_body(req):
     Python dictionary
     """
     try:
-        raw_json = req.stream.read()
+        raw_json = req.stream.read(MAX_SIZE_REQUEST_INPUT_ACCEPTED_IN_BYTES)
     except IOError:
         abort(falcon.HTTP_500, 'Read Error')
 

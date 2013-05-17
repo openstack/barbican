@@ -70,7 +70,7 @@ def _get_accept_not_supported(accept):
 
 def _get_secret_info_not_found(mime_type):
     """Throw exception indicating request's accept is not supported."""
-    abort(falcon.HTTP_400, _("Secret information of type '{0}' not available "
+    abort(falcon.HTTP_404, _("Secret information of type '{0}' not available "
                              "for decryption.").format(mime_type))
 
 
@@ -87,6 +87,16 @@ def _client_content_mismatch_to_secret(expected, actual):
     """
     abort(falcon.HTTP_400, _("Request content-type of '{0}' doesn't match "
                              "secret's of '{1}'.").format(actual, expected))
+
+
+def _secret_data_too_large():
+    """Throw exception indicating plain-text was too big."""
+    abort(falcon.HTTP_413, _("Could not add secret data as it was too large"))
+
+
+def _secret_plain_text_empty():
+    """Throw exception indicating empty plain-text was supplied."""
+    abort(falcon.HTTP_400, _("Could not add secret with empty 'plain_text'"))
 
 
 def _failed_to_create_encrypted_datum():
@@ -189,16 +199,17 @@ def next_href(resources_name, tenant_id, offset, limit):
     return convert_list_to_href(resources_name, tenant_id, offset, limit)
 
 
-def add_nav_hrefs(resources_name, tenant_id, offset, limit, data):
+def add_nav_hrefs(resources_name, tenant_id, offset, limit, num_elements, data):
     if offset > 0:
         data.update({'previous': previous_href(resources_name,
                                                tenant_id,
                                                offset,
                                                limit)})
-    data.update({'next': next_href(resources_name,
-                                   tenant_id,
-                                   offset,
-                                   limit)})
+    if num_elements >= limit:
+        data.update({'next': next_href(resources_name,
+                                       tenant_id,
+                                       offset,
+                                       limit)})
     return data
 
 
@@ -244,6 +255,12 @@ class SecretsResource(ApiResource):
         except em.CryptoMimeTypeNotSupportedException as cmtnse:
             LOG.exception('Secret creation failed - mime-type not supported')
             _secret_mime_type_not_supported(cmtnse.mime_type)
+        except exception.NoDataToProcess:
+            LOG.exception('No secret data to process')
+            _secret_plain_text_empty()
+        except exception.LimitExceeded:
+            LOG.exception('Secret data too big to process')
+            _secret_data_too_large()
         except Exception as e:
             LOG.exception('Secret creation failed - unknown')
             _general_failure('Secret creation failed - unknown')
@@ -275,7 +292,7 @@ class SecretsResource(ApiResource):
             secrets_resp = [convert_to_hrefs(tenant_id, secret_fields(s)) for
                             s in secrets]
             secrets_resp_overall = add_nav_hrefs('secrets', tenant_id,
-                                                 offset, limit,
+                                                 offset, limit, len(secrets),
                                                  {'secrets': secrets_resp})
             resp.body = json.dumps(secrets_resp_overall,
                                    default=json_handler)
@@ -359,6 +376,12 @@ class SecretResource(ApiResource):
         except em.CryptoMimeTypeNotSupportedException as cmtnse:
             LOG.exception('Secret creation failed - mime-type not supported')
             _secret_mime_type_not_supported(cmtnse.mime_type)
+        except exception.NoDataToProcess:
+            LOG.exception('No secret data to process')
+            _secret_plain_text_empty()
+        except exception.LimitExceeded:
+            LOG.exception('Secret data too big to process')
+            _secret_data_too_large()
         except Exception as e:
             LOG.exception('Secret creation failed - unknown')
             _failed_to_create_encrypted_datum()
@@ -451,8 +474,8 @@ class OrdersResource(ApiResource):
         else:
             orders_resp = [convert_to_hrefs(tenant_id, o.to_dict_fields())
                            for o in orders]
-            orders_resp_overall = add_nav_hrefs('orders', tenant_id, offset,
-                                                limit,
+            orders_resp_overall = add_nav_hrefs('orders', tenant_id,
+                                                offset, limit, len(orders),
                                                 {'orders': orders_resp})
             resp.body = json.dumps(orders_resp_overall,
                                    default=json_handler)

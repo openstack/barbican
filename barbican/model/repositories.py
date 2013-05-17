@@ -202,6 +202,17 @@ def wrap_db_error(f):
     return _wrap
 
 
+def clean_paging_values(offset_arg=None, limit_arg=None):
+    """Cleans and safely limits raw paging offset/limit values."""
+    offset = int(offset_arg) if offset_arg else 0
+    offset = offset if offset >= 0 else 0
+
+    limit = int(limit_arg) if limit_arg else CONF.max_limit_paging
+    limit = limit if limit >= 2 else 2
+
+    return (offset, limit)
+
+
 class BaseRepo(object):
     """
     Base repository for the barbican entities.
@@ -491,11 +502,7 @@ class SecretRepo(BaseRepo):
         and paged based on the offset and limit fields.
         """
 
-        offset = int(offset_arg) if offset_arg else 0
-        offset = offset if offset >= 0 else 0
-
-        limit = int(limit_arg) if limit_arg else CONF.max_limit_paging
-        limit = limit if limit >= 2 else 2
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
 
         session = self.get_session(session)
         utcnow = timeutils.utcnow()
@@ -610,11 +617,7 @@ class OrderRepo(BaseRepo):
         and paged based on the offset and limit fields.
         """
 
-        offset = int(offset_arg) if offset_arg else 0
-        offset = offset if offset >= 0 else 0
-
-        limit = int(limit_arg) if limit_arg else CONF.max_limit_paging
-        limit = limit if limit >= 2 else 2
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
 
         session = self.get_session(session)
 

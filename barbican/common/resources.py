@@ -16,6 +16,9 @@
 """
 Shared business logic.
 """
+from sys import getsizeof
+from oslo.config import cfg
+from barbican.common import exception
 from barbican.crypto.extension_manager import (
     CryptoMimeTypeNotSupportedException
 )
@@ -23,6 +26,15 @@ from barbican.model.models import (Tenant, Secret, TenantSecret, States)
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
+
+
+DEFAULT_MAX_SECRET_BYTES = 10000
+common_opts = [
+    cfg.IntOpt('max_allowed_secret_in_bytes', default=DEFAULT_MAX_SECRET_BYTES),
+]
+
+CONF = cfg.CONF
+CONF.register_opts(common_opts)
 
 
 def get_or_create_tenant(tenant_id, tenant_repo):
@@ -67,6 +79,15 @@ def create_secret(data, tenant, crypto_manager,
     tenant_secret_repo.create_from(new_assoc)
 
     if 'plain_text' in data:
+
+        plain_text = data['plain_text']
+
+        if not plain_text:
+            raise exception.NoDataToProcess()
+
+        if getsizeof(plain_text) > CONF.max_allowed_secret_in_bytes:
+            raise exception.LimitExceeded()
+
         LOG.debug('Encrypting plain_text secret...')
         new_datum = crypto_manager.encrypt(data['plain_text'],
                                            new_secret,
@@ -101,7 +122,10 @@ def create_encrypted_datum(secret, plain_text, tenant, crypto_manager,
     :retval The response body, None if N/A
     """
     if not plain_text:
-        raise ValueError('Must provide plain-text to encrypt.')
+        raise exception.NoDataToProcess()
+
+    if getsizeof(plain_text) > CONF.max_allowed_secret_in_bytes:
+        raise exception.LimitExceeded()
 
     if secret.encrypted_data:
         raise ValueError('Secret already has encrypted data stored for it.')

@@ -30,6 +30,7 @@ from barbican.openstack.common import log
 def create_main_app(global_config, **local_conf):
     """uWSGI factory method for the Barbican-API application"""
 
+    # Configure oslo logging and configuration services.
     config.parse_args()
     log.setup('barbican')
 
