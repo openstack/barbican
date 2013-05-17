@@ -13,10 +13,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from oslo.config import cfg
 from stevedore import named
 
 from barbican.common.exception import BarbicanException
 from barbican.openstack.common.gettextutils import _
+
+
+CONF = cfg.CONF
+DEFAULT_PLUGIN_NAMESPACE = 'barbican.crypto.plugin'
+DEFAULT_PLUGINS = ['simple_crypto']
+
+crypto_opt_group = cfg.OptGroup(name='crypto',
+                                title='Crypto Plugin Options')
+crypto_opts = [
+    cfg.StrOpt('namespace',
+               default=DEFAULT_PLUGIN_NAMESPACE,
+               help=_('Extension namespace to search for plugins.')
+               ),
+    cfg.MultiStrOpt('enabled_crypto_plugins',
+                    default=DEFAULT_PLUGINS,
+                    help=_('List of crypto plugins to load.')
+                    )
+]
+CONF.register_group(crypto_opt_group)
+CONF.register_opts(crypto_opts, group=crypto_opt_group)
 
 
 class CryptoMimeTypeNotSupportedException(BarbicanException):
@@ -51,11 +72,11 @@ class CryptoNoSecretOrDataException(BarbicanException):
 
 
 class CryptoExtensionManager(named.NamedExtensionManager):
-    def __init__(self, namespace, names,
-                 invoke_on_load=True, invoke_args=(), invoke_kwargs={}):
+    def __init__(self, conf=CONF, invoke_on_load=True,
+                 invoke_args=(), invoke_kwargs={}):
         super(CryptoExtensionManager, self).__init__(
-            namespace,
-            names,
+            conf.crypto.namespace,
+            conf.crypto.enabled_crypto_plugins,
             invoke_on_load=invoke_on_load,
             invoke_args=invoke_args,
             invoke_kwds=invoke_kwargs
