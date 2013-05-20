@@ -86,25 +86,28 @@ class WhenTestingSimpleCryptoPlugin(unittest.TestCase):
         self.assertEqual(self.plugin._strip_pad(padded_bytes), random_bytes)
 
     def test_byte_string_encryption(self):
-        unencrypted = 'some_secret'
+        unencrypted = b'some_secret'
         secret = MagicMock()
-        encrypted = self.plugin.encrypt(unencrypted, MagicMock(), MagicMock())
-        secret.encrypted_data = encrypted
-        decrypted = self.plugin.decrypt('some_type', secret, MagicMock())
+        secret.mime_type = 'text/plain'
+        encrypted = self.plugin.encrypt(unencrypted, secret, MagicMock())
+        secret.encrypted_data = [encrypted]
+        decrypted = self.plugin.decrypt('text/plain', secret, MagicMock())
         self.assertEqual(unencrypted, decrypted)
 
     def test_unicode_string_encryption(self):
         unencrypted = u'beer\U0001F37A'
         secret = MagicMock()
-        encrypted = self.plugin.encrypt(unencrypted, MagicMock(), MagicMock())
-        secret.encrypted_data = encrypted
-        decrypted = self.plugin.decrypt('some_type', secret, MagicMock())
+        secret.mime_type = 'text/plain'
+        encrypted = self.plugin.encrypt(unencrypted, secret, MagicMock())
+        secret.encrypted_data = [encrypted]
+        decrypted = self.plugin.decrypt('text/plain', secret, MagicMock())
         self.assertEqual(unencrypted, decrypted)
 
     def test_random_bytes_encryption(self):
         unencrypted = Random.get_random_bytes(10)
         secret = MagicMock()
-        encrypted = self.plugin.encrypt(unencrypted, MagicMock(), MagicMock())
-        secret.encrypted_data = encrypted
-        decrypted = self.plugin.decrypt('some_type', secret, MagicMock())
+        secret.mime_type = 'text/plain'
+        encrypted = self.plugin.encrypt(unencrypted, secret, MagicMock())
+        secret.encrypted_data = [encrypted]
+        decrypted = self.plugin.decrypt('text/plain', secret, MagicMock())
         self.assertEqual(unencrypted, decrypted)

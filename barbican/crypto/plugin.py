@@ -95,7 +95,12 @@ class SimpleCryptoPlugin(CryptoPluginBase):
         return datum
 
     def decrypt(self, secret_type, secret, tenant):
-        payload = secret.encrypted_data.cypher_text
+        for encrypted_datum in secret.encrypted_data:
+            if secret_type == encrypted_datum.mime_type:
+                return self._decrypt_datum(encrypted_datum.cypher_text)
+        return None
+
+    def _decrypt_datum(self, payload):
         iv = payload[:16]
         cypher_text = payload[16:]
         decryptor = AES.new(self.kek, AES.MODE_CBC, iv)
