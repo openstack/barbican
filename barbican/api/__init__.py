@@ -31,11 +31,15 @@ class ApiResource(object):
     pass
 
 
-def abort(status=falcon.HTTP_500, message=None):
+def abort(status=falcon.HTTP_500, message=None, req=None, resp=None):
     """
     Helper function for aborting an API request process. Useful for error
     reporting and expcetion handling.
     """
+    if resp and message:
+        if req and req.accept != 'application/json':
+            resp.set_header('Content-Type', 'text/plain')
+            resp.body = message
     raise falcon.HTTPError(status, message)
 
 

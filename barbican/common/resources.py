@@ -37,17 +37,17 @@ CONF = cfg.CONF
 CONF.register_opts(common_opts)
 
 
-def get_or_create_tenant(tenant_id, tenant_repo):
+def get_or_create_tenant(keystone_id, tenant_repo):
     """
-    Returns tenant with matching tenant_id.  Creates it if it does
+    Returns tenant with matching keystone_id.  Creates it if it does
     not exist.
     """
-    tenant = tenant_repo.find_by_keystone_id(tenant_id,
+    tenant = tenant_repo.find_by_keystone_id(keystone_id,
                                              suppress_exception=True)
     if not tenant:
-        LOG.debug('Creating tenant for {0}'.format(tenant_id))
+        LOG.debug('Creating tenant for {0}'.format(keystone_id))
         tenant = Tenant()
-        tenant.keystone_id = tenant_id
+        tenant.keystone_id = keystone_id
         tenant.status = States.ACTIVE
         tenant_repo.create_from(tenant)
     return tenant
@@ -109,7 +109,7 @@ def create_encrypted_datum(secret, plain_text, tenant, crypto_manager,
 
     :param secret: the secret entity to associate the secret data to
     :param plain_text: plain-text of the secret data to store
-    :param tenant: the tenant who owns the secret
+    :param tenant: the tenant (entity) who owns the secret
     :param crypto_manager: the crypto plugin manager
     :param tenant_secret_repo: the tenant/secret association repository
     :param datum_repo: the encrypted datum repository
@@ -136,7 +136,7 @@ def create_encrypted_datum(secret, plain_text, tenant, crypto_manager,
 
     # Create Tenant/Secret entity.
     new_assoc = TenantSecret()
-    new_assoc.tenant_id = tenant
+    new_assoc.tenant_id = tenant.id
     new_assoc.secret_id = secret.id
     new_assoc.role = "admin"
     new_assoc.status = States.ACTIVE

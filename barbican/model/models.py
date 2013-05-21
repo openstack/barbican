@@ -164,7 +164,7 @@ class Tenant(BASE, ModelBase):
 
     keystone_id = Column(String(255))
 
-    orders = relationship("Order")
+    orders = relationship("Order", backref="tenant")
     secrets = relationship("TenantSecret", backref="tenants")
 
     def _do_extra_dict_fields(self):
@@ -221,7 +221,7 @@ class Secret(BASE, ModelBase):
         Sub-class hook: delete children relationships.
         """
         for datum in self.encrypted_data:
-            datam.delete(session)
+            datum.delete(session)
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""

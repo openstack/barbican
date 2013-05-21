@@ -70,8 +70,10 @@ class BeginOrder(object):
         order_info = order.to_dict_fields()
         secret_info = order_info['secret']
 
+        # Retrieve the tenant.
+        tenant = self.tenant_repo.get(order.tenant_id)
+
         # Create Secret
-        tenant = get_or_create_tenant(order.tenant_id, self.tenant_repo)
         new_secret = create_secret(secret_info, tenant,
                                    self.crypto_manager, self.secret_repo,
                                    self.tenant_secret_repo, self.datum_repo,

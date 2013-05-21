@@ -46,9 +46,9 @@ def create_main_app(global_config, **local_conf):
 
     wsgi_app = api = falcon.API()
     api.add_route('/', versions)
-    api.add_route('/v1/{tenant_id}/secrets', secrets)
-    api.add_route('/v1/{tenant_id}/secrets/{secret_id}', secret)
-    api.add_route('/v1/{tenant_id}/orders', orders)
-    api.add_route('/v1/{tenant_id}/orders/{order_id}', order)
+    api.add_route('/v1/{keystone_id}/secrets', secrets)
+    api.add_route('/v1/{keystone_id}/secrets/{secret_id}', secret)
+    api.add_route('/v1/{keystone_id}/orders', orders)
+    api.add_route('/v1/{keystone_id}/orders/{order_id}', order)
 
     return wsgi_app
