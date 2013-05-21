@@ -441,7 +441,7 @@ class OrdersResource(ApiResource):
         LOG.debug('Start on_post...{0}'.format(body))
 
         if 'secret' not in body:
-            _secret_not_in_order()
+            _secret_not_in_order(req, resp)
         secret_info = body['secret']
         name = secret_info['name']
         LOG.debug('Secret to create is {0}'.format(name))

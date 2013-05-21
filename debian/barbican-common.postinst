@@ -26,6 +26,7 @@ then
     pip install webob
     pip install PasteDeploy
     pip install stevedore
+    pip install pycrypto
 fi
 
 #DEBHELPER#

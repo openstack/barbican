@@ -51,7 +51,7 @@ class CryptoMimeTypeNotSupportedException(BarbicanException):
 
 
 class CryptoAcceptNotSupportedException(BarbicanException):
-    """Raised when requested decripted format is not
+    """Raised when requested decrypted format is not
     available in any active plugin."""
     def __init__(self, accept):
         super(CryptoAcceptNotSupportedException, self).__init__(
@@ -92,21 +92,17 @@ class CryptoExtensionManager(named.NamedExtensionManager):
 
     def decrypt(self, accept, secret, tenant):
         """Delegates decryption to active plugins."""
+
         if not secret or not secret.encrypted_data:
             raise CryptoNoSecretOrDataException(accept)
 
-        plain_text = None
         for ext in self.extensions:
             if ext.obj.supports(accept):
-                plain_text = ext.obj.decrypt(accept, secret, tenant)
-                break
+                for datum in secret.encrypted_data:
+                    if accept == datum.mime_type:
+                        return ext.obj.decrypt(datum, tenant)
         else:
             raise CryptoAcceptNotSupportedException(accept)
-
-        if not plain_text:
-            raise CryptoNoSecretOrDataException(accept)
-
-        return plain_text
 
     def generate_data_encryption_key(self, secret, tenant):
         """

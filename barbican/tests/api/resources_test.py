@@ -100,11 +100,11 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
 
     def setUp(self):
         self.name = 'name'
-        self.plain_text = 'not-encrypted'
+        self.plain_text = 'not-encrypted'.decode('utf-8')
         self.mime_type = 'text/plain'
-        self.secret_algorithm = "algo"
+        self.secret_algorithm = 'algo'
         self.secret_bit_length = 512
-        self.secret_cypher_type = "cytype"
+        self.secret_cypher_type = 'cytype'
 
         self.secret_req = {'name': self.name,
                            'mime_type': self.mime_type,
@@ -688,15 +688,23 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
         self.assertTrue(isinstance(args[0], Order))
 
     def test_should_fail_add_new_order_no_secret(self):
+        self.stream.read.return_value = '{}'
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
+
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_400, exception.status)
+
+    def test_should_fail_add_new_order_bad_json(self):
         self.stream.read.return_value = ''
 
-        self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_post(self.req, self.resp,
+                                  self.tenant_keystone_id)
 
-        self.queue_resource.process_order.assert_called_once_with(order_id=
-                                                                  None)
-
-        args, kwargs = self.order_repo.create_from.call_args
-        self.assertTrue(isinstance(args[0], Order))
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_400, exception.status)
 
 
 class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
