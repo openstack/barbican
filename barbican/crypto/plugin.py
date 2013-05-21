@@ -30,12 +30,25 @@ class CryptoPluginBase(object):
     @abc.abstractmethod
     def encrypt(self, unencrypted, secret, tenant):
         """Encrypt unencrypted data in the context of the provided
-        secret and tenant"""
+        secret and tenant.
+
+        :param unencrypted: byte data to be encrypted.
+        :param secret: Secret associated with the unencrypted data.
+        :param tenant: Tenant associated with the unencrypted data.
+        :returns: EncryptedDatum containing the encrypted data.
+        :raises: ValueError if unencrypted is not byte data
+
+        """
 
     @abc.abstractmethod
-    def decrypt(self, secret_type, secret, tenant):
-        """Decrypt secret into secret_type in the context of the
-        provided tenant"""
+    def decrypt(self, encrypted_datum, tenant):
+        """Decrypt encrypted_datum in the context of the provided tenant.
+
+        :param encrypted_datum: EncryptedDatum object to be decrypted.
+        :param tenant: Tenant associated with the encrypted datum.
+        :returns str -- unencrypted byte data
+
+        """
 
     @abc.abstractmethod
     def create(self, secret_type):
@@ -51,37 +64,26 @@ class SimpleCryptoPlugin(CryptoPluginBase):
 
     def __init__(self):
         self.supported_types = ['text/plain', 'application/octet-stream']
-        self.kek = u'sixteen_byte_key'
-        self.block_size = 16
+        self.kek = b'sixteen_byte_key'
+        self.block_size = AES.block_size
 
     def _pad(self, unencrypted):
-        try:
-            unencrypted_bytes = unencrypted.encode('utf-8')
-        except UnicodeDecodeError:
-            unencrypted_bytes = unencrypted
+        """Adds padding to unencrypted byte string."""
         pad_length = self.block_size - (
-            len(unencrypted_bytes) % self.block_size
+            len(unencrypted) % self.block_size
         )
-        return unencrypted_bytes + (chr(pad_length) * pad_length)
+        return unencrypted + (chr(pad_length) * pad_length)
 
     def _strip_pad(self, unencrypted):
-        try:
-            unencrypted_bytes = unencrypted.encode('utf-8')
-        except UnicodeDecodeError:
-            unencrypted_bytes = unencrypted
-        pad_length = ord(unencrypted_bytes[-1:])
-        unpadded = unencrypted_bytes[:-pad_length]
-        try:
-            #TODO: maybe kek_metadata needs to be used to determine
-            # whether the unpadded byte stream is a utf-8 string or not?
-            unpadded = unpadded.decode('utf-8')
-        except UnicodeDecodeError:
-            pass
+        pad_length = ord(unencrypted[-1:])
+        unpadded = unencrypted[:-pad_length]
         return unpadded
 
     def encrypt(self, unencrypted, secret, tenant):
+        if not isinstance(unencrypted, str):
+            raise ValueError('unencrypted data must be a byte type.')
         padded_data = self._pad(unencrypted)
-        iv = Random.get_random_bytes(16)
+        iv = Random.get_random_bytes(self.block_size)
         encryptor = AES.new(self.kek, AES.MODE_CBC, iv)
         cyphertext = iv + encryptor.encrypt(padded_data)
 
@@ -94,15 +96,10 @@ class SimpleCryptoPlugin(CryptoPluginBase):
         })
         return datum
 
-    def decrypt(self, secret_type, secret, tenant):
-        for encrypted_datum in secret.encrypted_data:
-            if secret_type == encrypted_datum.mime_type:
-                return self._decrypt_datum(encrypted_datum.cypher_text)
-        return None
-
-    def _decrypt_datum(self, payload):
-        iv = payload[:16]
-        cypher_text = payload[16:]
+    def decrypt(self, encrypted_datum, tenant):
+        payload = encrypted_datum.cypher_text
+        iv = payload[:self.block_size]
+        cypher_text = payload[self.block_size:]
         decryptor = AES.new(self.kek, AES.MODE_CBC, iv)
         padded_secret = decryptor.decrypt(cypher_text)
         return self._strip_pad(padded_secret)

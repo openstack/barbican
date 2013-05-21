@@ -30,7 +30,8 @@ LOG = utils.getLogger(__name__)
 
 DEFAULT_MAX_SECRET_BYTES = 10000
 common_opts = [
-    cfg.IntOpt('max_allowed_secret_in_bytes', default=DEFAULT_MAX_SECRET_BYTES),
+    cfg.IntOpt('max_allowed_secret_in_bytes',
+               default=DEFAULT_MAX_SECRET_BYTES),
 ]
 
 CONF = cfg.CONF

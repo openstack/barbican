@@ -199,7 +199,8 @@ def next_href(resources_name, tenant_id, offset, limit):
     return convert_list_to_href(resources_name, tenant_id, offset, limit)
 
 
-def add_nav_hrefs(resources_name, tenant_id, offset, limit, num_elements, data):
+def add_nav_hrefs(resources_name, tenant_id, offset,
+                  limit, num_elements, data):
     if offset > 0:
         data.update({'previous': previous_href(resources_name,
                                                tenant_id,
