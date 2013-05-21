@@ -18,7 +18,6 @@ import abc
 from Crypto.Cipher import AES
 from Crypto import Random
 
-from barbican.model.models import EncryptedDatum
 from barbican.openstack.common import jsonutils as json
 
 
@@ -28,25 +27,26 @@ class CryptoPluginBase(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def encrypt(self, unencrypted, secret, tenant):
-        """Encrypt unencrypted data in the context of the provided
-        secret and tenant.
+    def encrypt(self, unencrypted, tenant):
+        """Encrypt unencrypted data in the context of the provided tenant.
 
         :param unencrypted: byte data to be encrypted.
-        :param secret: Secret associated with the unencrypted data.
         :param tenant: Tenant associated with the unencrypted data.
-        :returns: EncryptedDatum containing the encrypted data.
-        :raises: ValueError if unencrypted is not byte data
+
+        :returns: tuple -- contains the encrypted data and kek metadata.
+        :raises: ValueError if unencrypted is not byte data.
 
         """
 
     @abc.abstractmethod
-    def decrypt(self, encrypted_datum, tenant):
+    def decrypt(self, encrypted, kek_metadata, tenant):
         """Decrypt encrypted_datum in the context of the provided tenant.
 
-        :param encrypted_datum: EncryptedDatum object to be decrypted.
+        :param encrypted: cyphertext to be decrypted.
+        :param kek_metadata: metadata that was created by encryption.
         :param tenant: Tenant associated with the encrypted datum.
-        :returns str -- unencrypted byte data
+
+        :returns: str -- unencrypted byte data
 
         """
 
@@ -79,27 +79,25 @@ class SimpleCryptoPlugin(CryptoPluginBase):
         unpadded = unencrypted[:-pad_length]
         return unpadded
 
-    def encrypt(self, unencrypted, secret, tenant):
+    def encrypt(self, unencrypted, tenant):
         if not isinstance(unencrypted, str):
             raise ValueError('unencrypted data must be a byte type.')
         padded_data = self._pad(unencrypted)
         iv = Random.get_random_bytes(self.block_size)
         encryptor = AES.new(self.kek, AES.MODE_CBC, iv)
-        cyphertext = iv + encryptor.encrypt(padded_data)
 
-        datum = EncryptedDatum(secret)
-        datum.cypher_text = cyphertext
-        datum.kek_metadata = json.dumps({
+        cyphertext = iv + encryptor.encrypt(padded_data)
+        kek_metadata = json.dumps({
             'plugin': 'SimpleCryptoPlugin',
             'encryption': 'aes-128-cbc',
             'kek': 'kek_id'
         })
-        return datum
 
-    def decrypt(self, encrypted_datum, tenant):
-        payload = encrypted_datum.cypher_text
-        iv = payload[:self.block_size]
-        cypher_text = payload[self.block_size:]
+        return cyphertext, kek_metadata
+
+    def decrypt(self, encrypted, kek_metadata, tenant):
+        iv = encrypted[:self.block_size]
+        cypher_text = encrypted[self.block_size:]
         decryptor = AES.new(self.kek, AES.MODE_CBC, iv)
         padded_secret = decryptor.decrypt(cypher_text)
         return self._strip_pad(padded_secret)

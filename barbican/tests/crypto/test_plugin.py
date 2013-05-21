@@ -18,20 +18,18 @@ from mock import MagicMock
 import unittest
 
 from barbican.crypto.plugin import CryptoPluginBase, SimpleCryptoPlugin
-from barbican.model.models import EncryptedDatum
 from barbican.openstack.common import jsonutils as json
 
 
 class TestCryptoPlugin(CryptoPluginBase):
     """Crypto plugin implementation for testing the plugin manager."""
 
-    def encrypt(self, unencrypted, secret, tenant):
-        datum = EncryptedDatum(secret)
-        datum.cypher_text = 'cypher_text'
-        datum.kek_metadata = json.dumps({'plugin': 'TestCryptoPlugin'})
-        return datum
+    def encrypt(self, unencrypted, tenant):
+        cypher_text = 'cypher_text'
+        kek_metadata = json.dumps({'plugin': 'TestCryptoPlugin'})
+        return cypher_text, kek_metadata
 
-    def decrypt(self, encrypted_datum, tenant):
+    def decrypt(self, encrypted, kek_metadata, tenant):
         return 'plain-data'
 
     def create(self, secret_type):
@@ -77,20 +75,16 @@ class WhenTestingSimpleCryptoPlugin(unittest.TestCase):
         secret = MagicMock()
         secret.mime_type = 'text/plain'
         with self.assertRaises(ValueError):
-            self.plugin.encrypt(unencrypted, secret, MagicMock())
+            self.plugin.encrypt(unencrypted, MagicMock())
 
     def test_byte_string_encryption(self):
         unencrypted = b'some_secret'
-        secret = MagicMock()
-        secret.mime_type = 'text/plain'
-        encrypted_datum = self.plugin.encrypt(unencrypted, secret, MagicMock())
-        decrypted = self.plugin.decrypt(encrypted_datum, MagicMock())
+        encrypted, kek_metadata = self.plugin.encrypt(unencrypted, MagicMock())
+        decrypted = self.plugin.decrypt(encrypted, kek_metadata, MagicMock())
         self.assertEqual(unencrypted, decrypted)
 
     def test_random_bytes_encryption(self):
         unencrypted = Random.get_random_bytes(10)
-        secret = MagicMock()
-        secret.mime_type = 'text/plain'
-        encrypted_datum = self.plugin.encrypt(unencrypted, secret, MagicMock())
-        decrypted = self.plugin.decrypt(encrypted_datum, MagicMock())
+        encrypted, kek_metadata = self.plugin.encrypt(unencrypted, MagicMock())
+        decrypted = self.plugin.decrypt(encrypted, kek_metadata, MagicMock())
         self.assertEqual(unencrypted, decrypted)
