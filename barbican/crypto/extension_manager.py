@@ -17,6 +17,7 @@ from oslo.config import cfg
 from stevedore import named
 
 from barbican.common.exception import BarbicanException
+from barbican.model.models import EncryptedDatum
 from barbican.openstack.common.gettextutils import _
 
 
@@ -84,9 +85,16 @@ class CryptoExtensionManager(named.NamedExtensionManager):
 
     def encrypt(self, unencrypted, secret, tenant):
         """Delegates encryption to active plugins."""
+        if secret.mime_type == 'text/plain':
+            unencrypted = unencrypted.encode('utf-8')
+
         for ext in self.extensions:
             if ext.obj.supports(secret.mime_type):
-                return ext.obj.encrypt(unencrypted, secret, tenant)
+                datum = EncryptedDatum(secret)
+                datum.cypher_text, datum.kek_metadata = ext.obj.encrypt(
+                    unencrypted, tenant
+                )
+                return datum
         else:
             raise CryptoMimeTypeNotSupportedException(secret.mime_type)
 
@@ -100,7 +108,12 @@ class CryptoExtensionManager(named.NamedExtensionManager):
             if ext.obj.supports(accept):
                 for datum in secret.encrypted_data:
                     if accept == datum.mime_type:
-                        return ext.obj.decrypt(datum, tenant)
+                        unencrypted = ext.obj.decrypt(datum.cypher_text,
+                                                      datum.kek_metadata,
+                                                      tenant)
+                        if accept == 'text/plain':
+                            unencrypted = unencrypted.decode('utf-8')
+                        return unencrypted
         else:
             raise CryptoAcceptNotSupportedException(accept)
 
@@ -120,7 +133,11 @@ class CryptoExtensionManager(named.NamedExtensionManager):
                 #   secret algo type) uses a different plug in than that
                 #   used to encrypted the key.
                 data_key = ext.obj.create(secret.mime_type)
-                return ext.obj.encrypt(data_key, secret, tenant)
+                datum = EncryptedDatum(secret)
+                datum.cypher_text, datum.kek_metadata = ext.obj.encrypt(
+                    data_key, tenant
+                )
+                return datum
         else:
             raise CryptoMimeTypeNotSupportedException(secret.mime_type)
 
