@@ -115,16 +115,15 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.json = json.dumps(self.secret_req)
 
         self.keystone_id = 'keystone1234'
-        self.tenant_id = 'tenantid1234'
+        self.tenant_entity_id = 'tid1234'
         self.tenant = Tenant()
-        self.tenant.id = self.tenant_id
+        self.tenant.id = self.tenant_entity_id
         self.tenant.keystone_id = self.keystone_id
         self.tenant_repo = MagicMock()
         self.tenant_repo.get.return_value = self.tenant
 
         self.secret_repo = MagicMock()
         self.secret_repo.create_from.return_value = None
-        self.secret_repo.find_by_name.return_value = None
 
         self.tenant_secret_repo = MagicMock()
         self.tenant_secret_repo.create_from.return_value = None
@@ -153,7 +152,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
                                         self.datum_repo, self.policy)
 
     def test_should_add_new_secret(self):
-        self.resource.on_post(self.req, self.resp, self.tenant_id)
+        self.resource.on_post(self.req, self.resp, self.keystone_id)
 
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
@@ -167,7 +166,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         args, kwargs = self.tenant_secret_repo.create_from.call_args
         tenant_secret = args[0]
         self.assertTrue(isinstance(tenant_secret, TenantSecret))
-        self.assertEqual(tenant_secret.tenant_id, self.tenant_id)
+        self.assertEqual(tenant_secret.tenant_id, self.tenant_entity_id)
         self.assertEqual(tenant_secret.secret_id, secret.id)
 
         args, kwargs = self.datum_repo.create_from.call_args
@@ -180,7 +179,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
     def test_should_add_new_secret_tenant_not_exist(self):
         self.tenant_repo.get.return_value = None
 
-        self.resource.on_post(self.req, self.resp, self.tenant_id)
+        self.resource.on_post(self.req, self.resp, self.keystone_id)
 
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
@@ -205,7 +204,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         json = json_template.format(self.name, self.mime_type)
         self.stream.read.return_value = json
 
-        self.resource.on_post(self.req, self.resp, self.tenant_id)
+        self.resource.on_post(self.req, self.resp, self.keystone_id)
 
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
@@ -215,7 +214,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         args, kwargs = self.tenant_secret_repo.create_from.call_args
         tenant_secret = args[0]
         self.assertTrue(isinstance(tenant_secret, TenantSecret))
-        self.assertEqual(tenant_secret.tenant_id, self.tenant_id)
+        self.assertEqual(tenant_secret.tenant_id, self.tenant_entity_id)
         self.assertEqual(tenant_secret.secret_id, secret.id)
 
         self.assertFalse(self.datum_repo.create_from.called)
@@ -230,7 +229,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.stream.read.return_value = json.dumps(self.secret_req)
 
         with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp, self.tenant_id)
+            self.resource.on_post(self.req, self.resp, self.keystone_id)
 
         exception = cm.exception
         self.assertEqual(falcon.HTTP_400, exception.status)
@@ -247,7 +246,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.stream.read.return_value = json.dumps(self.secret_req)
 
         with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp, self.tenant_id)
+            self.resource.on_post(self.req, self.resp, self.keystone_id)
 
         exception = cm.exception
         self.assertEqual(falcon.HTTP_413, exception.status)
@@ -262,7 +261,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.stream.read.return_value = json.dumps(self.secret_req)
 
         with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp, self.tenant_id)
+            self.resource.on_post(self.req, self.resp, self.keystone_id)
 
         exception = cm.exception
         self.assertEqual(falcon.HTTP_400, exception.status)

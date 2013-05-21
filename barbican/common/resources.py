@@ -38,9 +38,12 @@ CONF.register_opts(common_opts)
 
 
 def get_or_create_tenant(tenant_id, tenant_repo):
-    """Returns tenant with matching tenant_id.  Creates it if it does
-    not exist."""
-    tenant = tenant_repo.get(tenant_id, suppress_exception=True)
+    """
+    Returns tenant with matching tenant_id.  Creates it if it does
+    not exist.
+    """
+    tenant = tenant_repo.find_by_keystone_id(tenant_id,
+                                             suppress_exception=True)
     if not tenant:
         LOG.debug('Creating tenant for {0}'.format(tenant_id))
         tenant = Tenant()
@@ -53,30 +56,11 @@ def get_or_create_tenant(tenant_id, tenant_repo):
 def create_secret(data, tenant, crypto_manager,
                   secret_repo, tenant_secret_repo, datum_repo,
                   ok_to_generate=False):
-
-    # TODO: revisit ok_to_generate
-
-    # TODO: What if any criteria to restrict new secrets vs existing ones?
-    # Verify secret doesn't already exist.
-    #
-    #name = data['name']
-    #LOG.debug('Secret name is {0}'.format(name))
-    #secret = secret_repo.find_by_name(name=name,
-    #                                       suppress_exception=True)
-    #if secret:
-    #    abort(falcon.HTTP_400, 'Secret with name {0} '
-    #                           'already exists'.format(name))
-
+    """
+    Common business logic to create a secret.
+    """
     new_secret = Secret(data)
-    secret_repo.create_from(new_secret)
-
-    # Create Tenant/Secret entity.
-    new_assoc = TenantSecret()
-    new_assoc.tenant_id = tenant.id
-    new_assoc.secret_id = new_secret.id
-    new_assoc.role = "admin"
-    new_assoc.status = States.ACTIVE
-    tenant_secret_repo.create_from(new_assoc)
+    new_datum = None
 
     if 'plain_text' in data:
 
@@ -92,18 +76,28 @@ def create_secret(data, tenant, crypto_manager,
         new_datum = crypto_manager.encrypt(data['plain_text'],
                                            new_secret,
                                            tenant)
-        datum_repo.create_from(new_datum)
     elif ok_to_generate:
         LOG.debug('Generating new secret...')
 
         # TODO: Generate a good key
         new_datum = crypto_manager.generate_data_encryption_key(new_secret,
                                                                 tenant)
-        datum_repo.create_from(new_datum)
     else:
         LOG.debug('Creating metadata only for the new secret. '
                   'A subsequent PUT is required')
         crypto_manager.supports(new_secret, tenant)
+
+    # Create Secret entities in datastore.
+    secret_repo.create_from(new_secret)
+    new_assoc = TenantSecret()
+    new_assoc.tenant_id = tenant.id
+    new_assoc.secret_id = new_secret.id
+    new_assoc.role = "admin"
+    new_assoc.status = States.ACTIVE
+    tenant_secret_repo.create_from(new_assoc)
+    if new_datum:
+        new_datum.secret_id = new_secret.id
+        datum_repo.create_from(new_datum)
 
     return new_secret
 

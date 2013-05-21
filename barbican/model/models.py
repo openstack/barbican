@@ -149,7 +149,7 @@ class TenantSecret(BASE, ModelBase):
     tenant_id = Column(Integer, ForeignKey('tenants.id'), primary_key=True)
     secret_id = Column(Integer, ForeignKey('secrets.id'), primary_key=True)
     role = Column(String(255))
-    secret = relationship("Secret")
+    secret = relationship("Secret", backref="tenant_assocs")
 
 
 class Tenant(BASE, ModelBase):
@@ -165,7 +165,7 @@ class Tenant(BASE, ModelBase):
     keystone_id = Column(String(255))
 
     orders = relationship("Order")
-    secrets = relationship("TenantSecret")
+    secrets = relationship("TenantSecret", backref="tenants")
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""

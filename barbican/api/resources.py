@@ -19,7 +19,8 @@ API-facing resource controllers.
 
 import falcon
 
-from barbican.api import abort, ApiResource, load_body, policy
+from barbican.api import (abort, ApiResource, load_body, policy,
+                          MAX_SIZE_REQUEST_INPUT_ACCEPTED_IN_BYTES)
 from barbican.common.resources import (create_secret,
                                        create_encrypted_datum,
                                        get_or_create_tenant)
@@ -265,7 +266,7 @@ class SecretsResource(ApiResource):
             LOG.exception('Secret creation failed - unknown')
             _general_failure('Secret creation failed - unknown')
 
-        resp.status = falcon.HTTP_202
+        resp.status = falcon.HTTP_200
         resp.set_header('Location', '/{0}/secrets/{1}'.format(tenant_id,
                                                               new_secret.id))
         url = convert_secret_to_href(tenant_id, new_secret.id)
@@ -278,7 +279,8 @@ class SecretsResource(ApiResource):
         params = req._params
 
         result = self.secret_repo \
-                     .get_by_create_date(offset_arg=params.get('offset',
+                     .get_by_create_date(tenant_id,
+                                         offset_arg=params.get('offset',
                                                                None),
                                          limit_arg=params.get('limit',
                                                               None),
@@ -286,7 +288,7 @@ class SecretsResource(ApiResource):
         secrets, offset, limit = result
 
         if not secrets:
-            _secret_not_found()
+            secrets_resp_overall = {'secrets': []}
         else:
             secret_fields = lambda s: augment_fields_with_content_types(s)
             secrets_resp = [convert_to_hrefs(tenant_id, secret_fields(s)) for
@@ -294,8 +296,10 @@ class SecretsResource(ApiResource):
             secrets_resp_overall = add_nav_hrefs('secrets', tenant_id,
                                                  offset, limit, len(secrets),
                                                  {'secrets': secrets_resp})
-            resp.body = json.dumps(secrets_resp_overall,
-                                   default=json_handler)
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(secrets_resp_overall,
+                               default=json_handler)
 
 
 class SecretResource(ApiResource):
@@ -314,7 +318,8 @@ class SecretResource(ApiResource):
 
     def on_get(self, req, resp, tenant_id, secret_id):
 
-        secret = self.repo.get(entity_id=secret_id, suppress_exception=True)
+        secret = self.repo.get(entity_id=secret_id, tenant_id=tenant_id,
+                               suppress_exception=True)
         if not secret:
             _secret_not_found()
 
@@ -360,7 +365,7 @@ class SecretResource(ApiResource):
             _secret_already_has_data()
 
         try:
-            plain_text = req.stream.read()
+            plain_text = req.stream.read(MAX_SIZE_REQUEST_INPUT_ACCEPTED_IN_BYTES)
         except IOError:
             abort(falcon.HTTP_500, 'Read Error')
 
@@ -428,16 +433,6 @@ class OrdersResource(ApiResource):
         secret_info = body['secret']
         name = secret_info['name']
         LOG.debug('Secret to create is {0}'.format(name))
-
-        # TODO: What criteria to restrict multiple concurrent Order
-        #      requests per tenant?
-        # order = self.order_repo.find_by_name(name=secret_name,
-        #                                  suppress_exception=True)
-        # if order:
-        #    abort(falcon.HTTP_400, 'Order with username {0} '
-        #                           'already exists'.format(username))
-
-        # TODO: Encrypt fields as needed
 
         new_order = Order()
         new_order.secret_name = secret_info['name']

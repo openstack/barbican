@@ -229,31 +229,15 @@ class BaseRepo(object):
         LOG.debug("Getting session...")
         return session or get_session()
 
-    def find_by_name(self, name, suppress_exception=False, session=None):
-        session = self.get_session(session)
-
-        try:
-            LOG.debug("Starting find by name steps...")
-            query = self._do_build_query_by_name(name, session)
-            LOG.debug("...query = {0}".format(repr(query)))
-            entity = query.one()
-            LOG.debug("...post query.one()")
-
-        except sa_orm.exc.NoResultFound:
-            entity = None
-            if not suppress_exception:
-                raise exception.NotFound("No %s found with name %s"
-                                         % (self._do_entity_name(), name))
-
-        return entity
-
-    def get(self, entity_id, force_show_deleted=False,
+    def get(self, entity_id, tenant_id=None,
+            force_show_deleted=False,
             suppress_exception=False, session=None):
         """Get an entity or raise if it does not exist."""
         session = self.get_session(session)
 
         try:
-            query = self._do_build_get_query(entity_id, session)
+            query = self._do_build_get_query(entity_id,
+                                             tenant_id, session)
 
             # filter out deleted entities if requested
             if not force_show_deleted:
@@ -269,12 +253,8 @@ class BaseRepo(object):
 
         return entity
 
-    def create(self, values):
-        """Create an entity from the values dictionary."""
-        return self._update(None, values, False)
-
     def create_from(self, entity):
-        """Sub-class hook: create from Tenant entity."""
+        """Sub-class hook: create from entity."""
 
         if not entity:
             msg = "Must supply non-None {0}.".format(self._do_entity_name)
@@ -304,7 +284,7 @@ class BaseRepo(object):
                 raise exception.Duplicate("Entity ID %s already exists!"
                                           % values['id'])
 
-        return self.get(entity.id)
+        return entity
 
     def save(self, entity):
         """
@@ -363,11 +343,7 @@ class BaseRepo(object):
         """
         return None
 
-    def _do_build_query_by_name(self, name, session):
-        """Sub-class hook: find entity by name."""
-        return None
-
-    def _do_build_get_query(self, entity_id, session):
+    def _do_build_get_query(self, entity_id, tenant_id, session):
         """Sub-class hook: build a retrieve query."""
         return None
 
@@ -402,7 +378,7 @@ class BaseRepo(object):
 
     def _update(self, entity_id, values, purge_props=False):
         """
-        Used internally by create() and update()
+        Used internally by update()
 
         :param values: A dict of attributes to set
         :param entity_id: If None, create the entity, otherwise,
@@ -461,12 +437,7 @@ class TenantRepo(BaseRepo):
     def _do_create_instance(self):
         return models.Tenant()
 
-    def _do_build_query_by_name(self, name, session):
-        """Sub-class hook: find entity by name."""
-        raise TypeError(_("No support for retrieving by 'name' "
-                          "an Tenant record."))
-
-    def _do_build_get_query(self, entity_id, session):
+    def _do_build_get_query(self, entity_id, tenant_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.Tenant).filter_by(id=entity_id)
 
@@ -495,7 +466,7 @@ class TenantRepo(BaseRepo):
 class SecretRepo(BaseRepo):
     """Repository for the Secret entity."""
 
-    def get_by_create_date(self, offset_arg=None, limit_arg=None,
+    def get_by_create_date(self, tenant_id, offset_arg=None, limit_arg=None,
                            suppress_exception=False, session=None):
         """
         Returns a list of secrets, ordered by the date they were created at
@@ -516,6 +487,11 @@ class SecretRepo(BaseRepo):
             query = query.filter(or_(models.Secret.expiration == None,
                                      models.Secret.expiration > utcnow))
 
+            query = query.join(models.TenantSecret,
+                               models.Secret.tenant_assocs) \
+                         .join(models.Tenant, models.TenantSecret.tenants) \
+                         .filter(models.Tenant.keystone_id == tenant_id)
+
             entities = query[offset:(offset + limit)]
 
         except sa_orm.exc.NoResultFound:
@@ -533,23 +509,17 @@ class SecretRepo(BaseRepo):
     def _do_create_instance(self):
         return models.Secret()
 
-    def _do_build_query_by_name(self, name, session):
-        """Sub-class hook: find entity by name."""
-        utcnow = timeutils.utcnow()
-
-        # Note: Must use '== None' below, not 'is None'.
-        return session.query(models.Secret).filter_by(name=name) \
-                      .filter(or_(models.Secret.expiration == None,
-                                  models.Secret.expiration > utcnow))
-
-    def _do_build_get_query(self, entity_id, session):
+    def _do_build_get_query(self, entity_id, tenant_id, session):
         """Sub-class hook: build a retrieve query."""
         utcnow = timeutils.utcnow()
 
         # Note: Must use '== None' below, not 'is None'.
         return session.query(models.Secret).filter_by(id=entity_id) \
                       .filter(or_(models.Secret.expiration == None,
-                                  models.Secret.expiration > utcnow))
+                                  models.Secret.expiration > utcnow)) \
+                      .join(models.TenantSecret, models.Secret.tenant_assocs)\
+                      .join(models.Tenant, models.TenantSecret.tenants) \
+                      .filter(models.Tenant.keystone_id == tenant_id)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
@@ -569,12 +539,7 @@ class EncryptedDatumRepo(BaseRepo):
     def _do_create_instance(self):
         return models.EncryptedDatum()
 
-    def _do_build_query_by_name(self, name, session):
-        """Sub-class hook: find entity by name."""
-        raise TypeError(_("No support for retrieving by 'name' "
-                          "an EncryptedDatum record."))
-
-    def _do_build_get_query(self, entity_id, session):
+    def _do_build_get_query(self, entity_id, tenant_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.EncryptedDatum).filter_by(id=entity_id)
 
@@ -593,12 +558,7 @@ class TenantSecretRepo(BaseRepo):
     def _do_create_instance(self):
         return models.TenantSecret()
 
-    def _do_build_query_by_name(self, name, session):
-        """Sub-class hook: find entity by name."""
-        raise TypeError(_("No support for retrieving by "
-                          "'name' an Tenant record."))
-
-    def _do_build_get_query(self, entity_id, session):
+    def _do_build_get_query(self, entity_id, tenant_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.TenantSecret).filter_by(id=entity_id)
 
@@ -643,12 +603,7 @@ class OrderRepo(BaseRepo):
     def _do_create_instance(self):
         return models.Order()
 
-    def _do_build_query_by_name(self, name, session):
-        """Sub-class hook: find entity by name."""
-        raise TypeError(_("No support for retrieving by "
-                          "'name' an Order record."))
-
-    def _do_build_get_query(self, entity_id, session):
+    def _do_build_get_query(self, entity_id, tenant_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.Order).filter_by(id=entity_id)
 
