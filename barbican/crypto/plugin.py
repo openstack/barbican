@@ -30,6 +30,7 @@ class CryptoPluginBase(object):
     def encrypt(self, unencrypted, tenant):
         """Encrypt unencrypted data in the context of the provided tenant.
 
+        :param unencrypted: byte data to be encrypted.
         :param tenant: Tenant associated with the unencrypted data.
         :returns: tuple -- contains the encrypted data and kek metadata.
         :raises: ValueError if unencrypted is not byte data.
