@@ -14,7 +14,7 @@ CONF_FILE=$PKG_DIR/barbican-api.ini
 PASTE_FILE=$PKG_DIR/barbican-api-paste.ini
 POLICY_FILE=$PKG_DIR/policy.json
 SIGNING_DIR=$PKG_DIR/cache/
-OPTS=''
+OPTS='--daemonize /var/log/barbican/uwsgi.log'
 
 # Configure for a local deployment environment:
 if [ ! -f $CONF_FILE ];
