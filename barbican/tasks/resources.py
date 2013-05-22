@@ -38,18 +38,15 @@ class BeginOrder(object):
         self.secret_repo = secret_repo or SecretRepo()
         self.tenant_secret_repo = tenant_secret_repo or TenantSecretRepo()
         self.datum_repo = datum_repo or EncryptedDatumRepo()
-        self.crypto_manager = crypto_manager or CryptoExtensionManager(
-            'barbican.crypto.extension',
-            ['simple_crypto']  # TODO: grab this list from cfg or reuse some
-                               # other crypto_mgr instance.
-        )
+        self.crypto_manager = crypto_manager or CryptoExtensionManager()
 
-    def process(self, order_id):
+    def process(self, order_id, keystone_id):
         """Process the beginning of an Order."""
         LOG.debug("Processing Order with ID = {0}".format(order_id))
 
         # Retrieve the order.
-        order = self.order_repo.get(entity_id=order_id)
+        order = self.order_repo.get(entity_id=order_id,
+                                    keystone_id=keystone_id)
         self._handle_order(order)
 
         # Indicate we are done with Order processing

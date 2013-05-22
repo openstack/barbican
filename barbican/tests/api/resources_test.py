@@ -681,17 +681,20 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
     def test_should_add_new_order(self):
         self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
 
-        self.queue_resource.process_order.assert_called_once_with(order_id=
-                                                                  None)
+        self.queue_resource.process_order \
+            .assert_called_once_with(order_id=None,
+                                     keystone_id=self.tenant_keystone_id)
 
         args, kwargs = self.order_repo.create_from.call_args
-        self.assertTrue(isinstance(args[0], Order))
+        order = args[0]
+        self.assertTrue(isinstance(order, Order))
 
     def test_should_fail_add_new_order_no_secret(self):
         self.stream.read.return_value = '{}'
 
         with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
+            self.resource.on_post(self.req, self.resp,
+                                  self.tenant_keystone_id)
 
         exception = cm.exception
         self.assertEqual(falcon.HTTP_400, exception.status)

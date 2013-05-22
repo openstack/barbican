@@ -428,14 +428,7 @@ class OrdersResource(ApiResource):
 
     def on_post(self, req, resp, keystone_id):
 
-        # Retrieve Tenant, or else create new Tenant
-        #   if this is a request from a new tenant.
-        tenant = self.tenant_repo.get(keystone_id, suppress_exception=True)
-        if not tenant:
-            tenant = Tenant()
-            tenant.keystone_id = keystone_id
-            tenant.status = States.ACTIVE
-            self.tenant_repo.create_from(tenant)
+        tenant = get_or_create_tenant(keystone_id, self.tenant_repo)
 
         body = load_body(req)
         LOG.debug('Start on_post...{0}'.format(body))
@@ -453,11 +446,12 @@ class OrdersResource(ApiResource):
         new_order.secret_cypher_type = secret_info.get('cypher_type', None)
         new_order.secret_mime_type = secret_info['mime_type']
         new_order.secret_expiration = secret_info.get('expiration', None)
-        new_order.keystone_id = tenant.id
+        new_order.tenant_id = tenant.id
         self.order_repo.create_from(new_order)
 
         # Send to workers to process.
-        self.queue.process_order(order_id=new_order.id)
+        self.queue.process_order(order_id=new_order.id,
+                                 keystone_id=keystone_id)
 
         resp.status = falcon.HTTP_202
         resp.set_header('Location', '/{0}/orders/{1}'.format(keystone_id,
@@ -466,14 +460,17 @@ class OrdersResource(ApiResource):
         resp.body = json.dumps({'order_ref': url})
 
     def on_get(self, req, resp, keystone_id):
-        LOG.debug('Start orders on_get for tenant-ID {0}:'.format(keystone_id))
+        LOG.debug('Start orders on_get '
+                  'for tenant-ID {0}:'.format(keystone_id))
 
         params = req._params
 
         result = self.order_repo \
                      .get_by_create_date(keystone_id,
-                                         offset_arg=params.get('offset', None),
-                                         limit_arg=params.get('limit', None),
+                                         offset_arg=params.get('offset',
+                                                               None),
+                                         limit_arg=params.get('limit',
+                                                              None),
                                          suppress_exception=True)
         orders, offset, limit = result
 

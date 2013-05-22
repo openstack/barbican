@@ -246,6 +246,7 @@ class BaseRepo(object):
             entity = query.one()
 
         except sa_orm.exc.NoResultFound:
+            LOG.exception("Not found for {0}".format(entity_id))
             entity = None
             if not suppress_exception:
                 raise exception.NotFound("No %s found with ID %s"
@@ -451,10 +452,16 @@ class TenantRepo(BaseRepo):
             query = session.query(models.Tenant).filter_by(keystone_id=
                                                            keystone_id)
             LOG.debug("...query = {0}".format(repr(query)))
+
+            for tenant in query[:]:
+                print '--------'
+                print 'tenant:',tenant.to_dict_fields()
+
             entity = query.one()
             LOG.debug("...post query.one()")
 
         except sa_orm.exc.NoResultFound:
+            LOG.exception("Problem getting Tenant {0}".format(keystone_id))
             entity = None
             if not suppress_exception:
                 raise exception.NotFound("No %s found with keystone-ID %s"

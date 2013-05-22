@@ -162,7 +162,7 @@ class Tenant(BASE, ModelBase):
 
     __tablename__ = 'tenants'
 
-    keystone_id = Column(String(255))
+    keystone_id = Column(String(255), unique=True)
 
     orders = relationship("Order", backref="tenant")
     secrets = relationship("TenantSecret", backref="tenants")

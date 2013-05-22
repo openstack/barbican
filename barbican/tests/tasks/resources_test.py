@@ -90,9 +90,11 @@ class WhenBeginningOrder(unittest.TestCase):
                                    self.datum_repo)
 
     def test_should_process_order(self):
-        self.resource.process(self.order.id)
+        self.resource.process(self.order.id, self.keystone_id)
 
-        self.order_repo.get.assert_called_once_with(entity_id=self.order.id)
+        self.order_repo.get \
+            .assert_called_once_with(entity_id=self.order.id,
+                                     keystone_id=self.keystone_id)
         assert self.order.status == States.ACTIVE
 
         args, kwargs = self.secret_repo.create_from.call_args
