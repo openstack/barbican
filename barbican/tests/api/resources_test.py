@@ -19,12 +19,9 @@ import json
 import unittest
 
 from datetime import datetime
-from barbican.api.resources import (VersionResource,
-                                    SecretsResource, SecretResource,
-                                    OrdersResource, OrderResource)
+from barbican.api import resources as res
 from barbican.crypto.extension_manager import CryptoExtensionManager
-from barbican.model.models import (Secret, Tenant, TenantSecret,
-                                   Order, EncryptedDatum)
+from barbican.model import models
 from barbican.common import config
 from barbican.common import exception as excep
 from barbican.common.resources import DEFAULT_MAX_SECRET_BYTES
@@ -53,7 +50,7 @@ def create_secret(mime_type, id="id", name="name",
             'algorithm': algorithm,
             'bit_length': bit_length,
             'cypher_type': cypher_type}
-    secret = Secret(info)
+    secret = models.Secret(info)
     if encrypted_datum:
         secret.encrypted_data = [encrypted_datum]
     return secret
@@ -63,7 +60,7 @@ def create_order(mime_type, id="id", name="name",
                  algorithm=None, bit_length=None,
                  cypher_type=None):
     """Generate an Order entity instance."""
-    order = Order()
+    order = models.Order()
     order.id = id
     order.secret_name = name
     order.secret_mime_type = mime_type
@@ -81,7 +78,7 @@ class WhenTestingVersionResource(unittest.TestCase):
         self.req = MagicMock()
         self.resp = MagicMock()
         self.policy = MagicMock()
-        self.resource = VersionResource(self.policy)
+        self.resource = res.VersionResource(self.policy)
 
     def test_should_return_200_on_get(self):
         self.resource.on_get(self.req, self.resp)
@@ -116,7 +113,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
 
         self.keystone_id = 'keystone1234'
         self.tenant_entity_id = 'tid1234'
-        self.tenant = Tenant()
+        self.tenant = models.Tenant()
         self.tenant.id = self.tenant_entity_id
         self.tenant.keystone_id = self.keystone_id
         self.tenant_repo = MagicMock()
@@ -145,18 +142,18 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
         self.crypto_mgr = CryptoExtensionManager(conf=self.conf)
 
-        self.resource = SecretsResource(self.crypto_mgr,
-                                        self.tenant_repo,
-                                        self.secret_repo,
-                                        self.tenant_secret_repo,
-                                        self.datum_repo, self.policy)
+        self.resource = res.SecretsResource(self.crypto_mgr,
+                                            self.tenant_repo,
+                                            self.secret_repo,
+                                            self.tenant_secret_repo,
+                                            self.datum_repo, self.policy)
 
     def test_should_add_new_secret(self):
         self.resource.on_post(self.req, self.resp, self.keystone_id)
 
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
-        self.assertTrue(isinstance(secret, Secret))
+        self.assertTrue(isinstance(secret, models.Secret))
         self.assertEqual(secret.name, self.name)
         self.assertEqual(secret.algorithm, self.secret_algorithm)
         self.assertEqual(secret.bit_length, self.secret_bit_length)
@@ -165,13 +162,13 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
 
         args, kwargs = self.tenant_secret_repo.create_from.call_args
         tenant_secret = args[0]
-        self.assertTrue(isinstance(tenant_secret, TenantSecret))
+        self.assertTrue(isinstance(tenant_secret, models.TenantSecret))
         self.assertEqual(tenant_secret.tenant_id, self.tenant_entity_id)
         self.assertEqual(tenant_secret.secret_id, secret.id)
 
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
-        self.assertIsInstance(datum, EncryptedDatum)
+        self.assertIsInstance(datum, models.EncryptedDatum)
         self.assertEqual('cypher_text', datum.cypher_text)
         self.assertEqual(self.mime_type, datum.mime_type)
         self.assertIsNotNone(datum.kek_metadata)
@@ -183,18 +180,18 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
 
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
-        self.assertTrue(isinstance(secret, Secret))
+        self.assertTrue(isinstance(secret, models.Secret))
         self.assertEqual(secret.name, self.name)
 
         args, kwargs = self.tenant_secret_repo.create_from.call_args
         tenant_secret = args[0]
-        self.assertTrue(isinstance(tenant_secret, TenantSecret))
+        self.assertTrue(isinstance(tenant_secret, models.TenantSecret))
         self.assertEqual(self.tenant_entity_id, tenant_secret.tenant_id)
         self.assertEqual(secret.id, tenant_secret.secret_id)
 
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
-        self.assertTrue(isinstance(datum, EncryptedDatum))
+        self.assertTrue(isinstance(datum, models.EncryptedDatum))
         self.assertEqual('cypher_text', datum.cypher_text)
         self.assertEqual(self.mime_type, datum.mime_type)
         self.assertIsNotNone(datum.kek_metadata)
@@ -208,12 +205,12 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
 
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
-        self.assertTrue(isinstance(secret, Secret))
+        self.assertTrue(isinstance(secret, models.Secret))
         self.assertEqual(secret.name, self.name)
 
         args, kwargs = self.tenant_secret_repo.create_from.call_args
         tenant_secret = args[0]
-        self.assertTrue(isinstance(tenant_secret, TenantSecret))
+        self.assertTrue(isinstance(tenant_secret, models.TenantSecret))
         self.assertEqual(tenant_secret.tenant_id, self.tenant_entity_id)
         self.assertEqual(tenant_secret.secret_id, secret.id)
 
@@ -318,10 +315,10 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
         self.req.accept = 'application/json'
         self.req._params = self.params
         self.resp = MagicMock()
-        self.resource = SecretsResource(self.crypto_mgr, self.tenant_repo,
-                                        self.secret_repo,
-                                        self.tenant_secret_repo,
-                                        self.datum_repo, self.policy)
+        self.resource = res.SecretsResource(self.crypto_mgr, self.tenant_repo,
+                                            self.secret_repo,
+                                            self.tenant_secret_repo,
+                                            self.datum_repo, self.policy)
 
     def test_should_get_list_secrets(self):
         self.resource.on_get(self.req, self.resp, self.keystone_id)
@@ -368,7 +365,6 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
         self.assertFalse('previous' in resp_body)
         self.assertFalse('next' in resp_body)
 
-
     def _create_url(self, keystone_id, offset_arg=None, limit_arg=None):
         if limit_arg:
             offset = int(offset_arg)
@@ -394,7 +390,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
         self.secret_bit_length = 512
         self.secret_cypher_type = "cytype"
 
-        self.datum = EncryptedDatum()
+        self.datum = models.EncryptedDatum()
         self.datum.id = datum_id
         self.datum.secret_id = secret_id
         self.datum.mime_type = self.mime_type
@@ -409,7 +405,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
                                     cypher_type=self.secret_cypher_type,
                                     encrypted_datum=self.datum)
 
-        self.tenant = Tenant()
+        self.tenant = models.Tenant()
         self.tenant.id = self.tenant_id
         self.keystone_id = self.keystone_id
         self.tenant_repo = MagicMock()
@@ -437,11 +433,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
         self.crypto_mgr = CryptoExtensionManager(conf=self.conf)
 
         self.policy = MagicMock()
-        self.resource = SecretResource(self.crypto_mgr,
-                                       self.tenant_repo,
-                                       self.secret_repo,
-                                       self.tenant_secret_repo,
-                                       self.datum_repo, self.policy)
+        self.resource = res.SecretResource(self.crypto_mgr,
+                                           self.tenant_repo,
+                                           self.secret_repo,
+                                           self.tenant_secret_repo,
+                                           self.datum_repo, self.policy)
 
     def test_should_get_secret_as_json(self):
         self.resource.on_get(self.req, self.resp, self.keystone_id,
@@ -516,7 +512,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
 
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
-        self.assertTrue(isinstance(datum, EncryptedDatum))
+        self.assertTrue(isinstance(datum, models.EncryptedDatum))
         self.assertEqual('cypher_text', datum.cypher_text)
         self.assertEqual(self.mime_type, datum.mime_type)
         self.assertIsNotNone(datum.kek_metadata)
@@ -645,7 +641,7 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
         self.tenant_internal_id = 'tenantid1234'
         self.tenant_keystone_id = 'keystoneid1234'
 
-        self.tenant = Tenant()
+        self.tenant = models.Tenant()
         self.tenant.id = self.tenant_internal_id
         self.tenant.keystone_id = self.tenant_keystone_id
 
@@ -675,8 +671,8 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
 
         self.resp = MagicMock()
         self.policy = MagicMock()
-        self.resource = OrdersResource(self.tenant_repo, self.order_repo,
-                                       self.queue_resource, self.policy)
+        self.resource = res.OrdersResource(self.tenant_repo, self.order_repo,
+                                           self.queue_resource, self.policy)
 
     def test_should_add_new_order(self):
         self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
@@ -687,7 +683,7 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
 
         args, kwargs = self.order_repo.create_from.call_args
         order = args[0]
-        self.assertTrue(isinstance(order, Order))
+        self.assertTrue(isinstance(order, models.Order))
 
     def test_should_fail_add_new_order_no_secret(self):
         self.stream.read.return_value = '{}'
@@ -752,8 +748,8 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
         self.req.accept = 'application/json'
         self.req._params = self.params
         self.resp = MagicMock()
-        self.resource = OrdersResource(self.tenant_repo, self.order_repo,
-                                       self.queue_resource, self.policy)
+        self.resource = res.OrdersResource(self.tenant_repo, self.order_repo,
+                                           self.queue_resource, self.policy)
 
     def test_should_get_list_orders(self):
         self.resource.on_get(self.req, self.resp, self.keystone_id)
@@ -800,7 +796,6 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
         self.assertFalse('previous' in resp_body)
         self.assertFalse('next' in resp_body)
 
-
     def _create_url(self, keystone_id, offset_arg=None, limit_arg=None):
         if limit_arg:
             offset = int(offset_arg)
@@ -832,7 +827,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
 
         self.policy = MagicMock()
 
-        self.resource = OrderResource(self.order_repo, self.policy)
+        self.resource = res.OrderResource(self.order_repo, self.policy)
 
     def test_should_get_order(self):
         self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,

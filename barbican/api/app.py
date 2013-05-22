@@ -19,9 +19,7 @@ API application handler for Cloudkeep's Barbican
 
 import falcon
 
-from barbican.api.resources import (VersionResource,
-                                    SecretsResource, SecretResource,
-                                    OrdersResource, OrderResource)
+from barbican.api import resources as res
 from barbican.common import config
 from barbican.crypto import extension_manager as ext
 from barbican.openstack.common import log
@@ -38,11 +36,11 @@ def create_main_app(global_config, **local_conf):
     crypto_mgr = ext.CryptoExtensionManager()
 
     # Resources
-    versions = VersionResource()
-    secrets = SecretsResource(crypto_mgr)
-    secret = SecretResource(crypto_mgr)
-    orders = OrdersResource()
-    order = OrderResource()
+    versions = res.VersionResource()
+    secrets = res.SecretsResource(crypto_mgr)
+    secret = res.SecretResource(crypto_mgr)
+    orders = res.OrdersResource()
+    order = res.OrderResource()
 
     wsgi_app = api = falcon.API()
     api.add_route('/', versions)

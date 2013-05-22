@@ -453,10 +453,6 @@ class TenantRepo(BaseRepo):
                                                            keystone_id)
             LOG.debug("...query = {0}".format(repr(query)))
 
-            for tenant in query[:]:
-                print '--------'
-                print 'tenant:',tenant.to_dict_fields()
-
             entity = query.one()
             LOG.debug("...post query.one()")
 

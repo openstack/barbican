@@ -19,18 +19,13 @@ API-facing resource controllers.
 
 import falcon
 
-from barbican.api import (abort, ApiResource, load_body, policy,
-                          MAX_SIZE_REQUEST_INPUT_ACCEPTED_IN_BYTES)
-from barbican.common.resources import (create_secret,
-                                       create_encrypted_datum,
-                                       get_or_create_tenant)
+from barbican import api
+from barbican.api.policy import Enforcer
+from barbican.common import resources as res
 from barbican.common import utils
 from barbican.crypto.mime_types import augment_fields_with_content_types
-from barbican.model.models import (Tenant, Secret, TenantSecret,
-                                   EncryptedDatum, Order, States)
-from barbican.model.repositories import (TenantRepo, SecretRepo,
-                                         OrderRepo, TenantSecretRepo,
-                                         EncryptedDatumRepo)
+from barbican.model import models
+from barbican.model import repositories as repo
 from barbican.common import exception
 from barbican.crypto import extension_manager as em
 from barbican.openstack.common.gettextutils import _
@@ -44,41 +39,45 @@ LOG = utils.getLogger(__name__)
 
 def _general_failure(message, req, resp):
     """Throw exception a general processing failure."""
-    abort(falcon.HTTP_500, _(message), req, resp)
+    api.abort(falcon.HTTP_500, _(message), req, resp)
 
 
 def _secret_not_found(req, resp):
     """Throw exception indicating secret not found."""
-    abort(falcon.HTTP_404, _('Unable to locate secret.'), req, resp)
+    api.abort(falcon.HTTP_404, _('Unable to locate secret.'), req, resp)
 
 
 def _order_not_found(req, resp):
     """Throw exception indicating order not found."""
-    abort(falcon.HTTP_404, _('Unable to locate order.'))
+    api.abort(falcon.HTTP_404, _('Unable to locate order.'))
 
 
 def _put_accept_incorrect(ct, req, resp):
     """Throw exception indicating request content-type is not supported."""
-    abort(falcon.HTTP_415, _("Content-Type of '{0}' "
-          "is not supported.").format(ct), req, resp)
+    api.abort(falcon.HTTP_415,
+              _("Content-Type of '{0}' is not supported.").format(ct),
+              req, resp)
 
 
 def _get_accept_not_supported(accept, req, resp):
     """Throw exception indicating request's accept is not supported."""
-    abort(falcon.HTTP_406, _("Accept of '{0}' "
-          "is not supported.").format(accept), req, resp)
+    api.abort(falcon.HTTP_406,
+              _("Accept of '{0}' is not supported.").format(accept),
+              req, resp)
 
 
 def _get_secret_info_not_found(mime_type, req, resp):
     """Throw exception indicating request's accept is not supported."""
-    abort(falcon.HTTP_404, _("Secret information of type '{0}' not available "
-                             "for decryption.").format(mime_type), req, resp)
+    api.abort(falcon.HTTP_404,
+              _("Secret information of type '{0}' not available for "
+                "decryption.").format(mime_type),
+              req, resp)
 
 
 def _secret_mime_type_not_supported(mt, req, resp):
     """Throw exception indicating secret mime-type is not supported."""
-    abort(falcon.HTTP_400, _("Mime-type of '{0}' "
-          "is not supported.").format(mt), req, resp)
+    api.abort(falcon.HTTP_400,
+              _("Mime-type of '{0}' is not supported.").format(mt), req, resp)
 
 
 def _client_content_mismatch_to_secret(expected, actual, req, res):
@@ -86,21 +85,21 @@ def _client_content_mismatch_to_secret(expected, actual, req, res):
     Throw exception indicating client content-type doesn't match
     secret's mime-type.
     """
-    abort(falcon.HTTP_400, _("Request content-type of '{0}' doesn't match "
-                             "secret's of '{1}'.").format(actual,
-                                                          expected), req, res)
+    api.abort(falcon.HTTP_400,
+              _("Request content-type of '{0}' doesn't match "
+                "secret's of '{1}'.").format(actual, expected), req, res)
 
 
 def _secret_data_too_large(req, resp):
     """Throw exception indicating plain-text was too big."""
-    abort(falcon.HTTP_413, _("Could not add secret data as it was too large"),
-          req, resp)
+    api.abort(falcon.HTTP_413,
+              _("Could not add secret data as it was too large"), req, resp)
 
 
 def _secret_plain_text_empty(req, resp):
     """Throw exception indicating empty plain-text was supplied."""
-    abort(falcon.HTTP_400, _("Could not add secret with empty 'plain_text'"),
-          req, resp)
+    api.abort(falcon.HTTP_400,
+              _("Could not add secret with empty 'plain_text'"), req, resp)
 
 
 def _failed_to_create_encrypted_datum(req, resp):
@@ -108,37 +107,37 @@ def _failed_to_create_encrypted_datum(req, resp):
     Throw exception we could not create an EncryptedDatum
     record for the secret.
     """
-    abort(falcon.HTTP_400, _("Could not add secret data to Barbican."),
-          req, resp)
+    api.abort(falcon.HTTP_400,
+              _("Could not add secret data to Barbican."), req, resp)
 
 
 def _failed_to_decrypt_data(req, resp):
     """Throw exception if failed to decrypt secret information."""
-    abort(falcon.HTTP_500, _("Problem decrypting secret information."),
-          req, resp)
+    api.abort(falcon.HTTP_500,
+              _("Problem decrypting secret information."), req, resp)
 
 
 def _secret_already_has_data(req, resp):
     """
     Throw exception that the secret already has data.
     """
-    abort(falcon.HTTP_409, _("Secret already has data, cannot modify it."),
-          req, resp)
+    api.abort(falcon.HTTP_409,
+              _("Secret already has data, cannot modify it."), req, resp)
 
 
 def _secret_not_in_order(req, resp):
     """
     Throw exception that secret information is not available in the order.
     """
-    abort(falcon.HTTP_400, _("Secret metadata expected but not received."),
-          req, resp)
+    api.abort(falcon.HTTP_400,
+              _("Secret metadata expected but not received."), req, resp)
 
 
 def _secret_create_failed(req, resp):
     """
     Throw exception that secret creation attempt failed.
     """
-    abort(falcon.HTTP_500, _("Unabled to create secret."), req, resp)
+    api.abort(falcon.HTTP_500, _("Unabled to create secret."), req, resp)
 
 
 def json_handler(obj):
@@ -207,7 +206,8 @@ def next_href(resources_name, keystone_id, offset, limit):
     return convert_list_to_href(resources_name, keystone_id, offset, limit)
 
 
-def add_nav_hrefs(resources_name, keystone_id, offset, limit, num_elements, data):
+def add_nav_hrefs(resources_name, keystone_id, offset, limit,
+                  num_elements, data):
     if offset > 0:
         data.update({'previous': previous_href(resources_name,
                                                keystone_id,
@@ -221,12 +221,12 @@ def add_nav_hrefs(resources_name, keystone_id, offset, limit, num_elements, data
     return data
 
 
-class VersionResource(ApiResource):
+class VersionResource(api.ApiResource):
     """Returns service and build version information"""
 
     def __init__(self, policy_enforcer=None):
         LOG.debug('=== Creating VersionResource ===')
-        self.policy = policy_enforcer or policy.Enforcer()
+        self.policy = policy_enforcer or Enforcer()
 
     def on_get(self, req, resp):
         resp.status = falcon.HTTP_200
@@ -234,7 +234,7 @@ class VersionResource(ApiResource):
                                 'build': __version__})
 
 
-class SecretsResource(ApiResource):
+class SecretsResource(api.ApiResource):
     """Handles Secret creation requests."""
 
     def __init__(self, crypto_manager,
@@ -242,24 +242,24 @@ class SecretsResource(ApiResource):
                  tenant_secret_repo=None, datum_repo=None,
                  policy_enforcer=None):
         LOG.debug('Creating SecretsResource')
-        self.tenant_repo = tenant_repo or TenantRepo()
-        self.secret_repo = secret_repo or SecretRepo()
-        self.tenant_secret_repo = tenant_secret_repo or TenantSecretRepo()
-        self.datum_repo = datum_repo or EncryptedDatumRepo()
+        self.tenant_repo = tenant_repo or repo.TenantRepo()
+        self.secret_repo = secret_repo or repo.SecretRepo()
+        self.tenant_secret_repo = tenant_secret_repo or repo.TenantSecretRepo()
+        self.datum_repo = datum_repo or repo.EncryptedDatumRepo()
         self.crypto_manager = crypto_manager
-        self.policy = policy_enforcer or policy.Enforcer()
+        self.policy = policy_enforcer or Enforcer()
 
     def on_post(self, req, resp, keystone_id):
         LOG.debug('Start on_post for tenant-ID {0}:'.format(keystone_id))
 
-        data = load_body(req)
-        tenant = get_or_create_tenant(keystone_id, self.tenant_repo)
+        data = api.load_body(req)
+        tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
 
         try:
-            new_secret = create_secret(data, tenant, self.crypto_manager,
-                                       self.secret_repo,
-                                       self.tenant_secret_repo,
-                                       self.datum_repo)
+            new_secret = res.create_secret(data, tenant, self.crypto_manager,
+                                           self.secret_repo,
+                                           self.tenant_secret_repo,
+                                           self.datum_repo)
         except em.CryptoMimeTypeNotSupportedException as cmtnse:
             LOG.exception('Secret creation failed - mime-type not supported')
             _secret_mime_type_not_supported(cmtnse.mime_type, req, resp)
@@ -281,7 +281,8 @@ class SecretsResource(ApiResource):
         resp.body = json.dumps({'secret_ref': url})
 
     def on_get(self, req, resp, keystone_id):
-        LOG.debug('Start secrets on_get for tenant-ID {0}:'.format(keystone_id))
+        LOG.debug('Start secrets on_get '
+                  'for tenant-ID {0}:'.format(keystone_id))
 
         params = req._params
 
@@ -309,7 +310,7 @@ class SecretsResource(ApiResource):
                                default=json_handler)
 
 
-class SecretResource(ApiResource):
+class SecretResource(api.ApiResource):
     """Handles Secret retrieval and deletion requests"""
 
     def __init__(self, crypto_manager,
@@ -317,11 +318,11 @@ class SecretResource(ApiResource):
                  tenant_secret_repo=None, datum_repo=None,
                  policy_enforcer=None):
         self.crypto_manager = crypto_manager
-        self.tenant_repo = tenant_repo or TenantRepo()
-        self.repo = secret_repo or SecretRepo()
-        self.tenant_secret_repo = tenant_secret_repo or TenantSecretRepo()
-        self.datum_repo = datum_repo or EncryptedDatumRepo()
-        self.policy = policy_enforcer or policy.Enforcer()
+        self.tenant_repo = tenant_repo or repo.TenantRepo()
+        self.repo = secret_repo or repo.SecretRepo()
+        self.tenant_secret_repo = tenant_secret_repo or repo.TenantSecretRepo()
+        self.datum_repo = datum_repo or repo.EncryptedDatumRepo()
+        self.policy = policy_enforcer or Enforcer()
 
     def on_get(self, req, resp, keystone_id, secret_id):
 
@@ -341,7 +342,7 @@ class SecretResource(ApiResource):
                                                     secret_fields),
                                    default=json_handler)
         else:
-            tenant = get_or_create_tenant(keystone_id, self.tenant_repo)
+            tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
             resp.set_header('Content-Type', req.accept)
             try:
                 resp.body = self.crypto_manager.decrypt(req.accept, secret,
@@ -373,22 +374,22 @@ class SecretResource(ApiResource):
         if secret.encrypted_data:
             _secret_already_has_data(req, resp)
 
-        tenant = get_or_create_tenant(keystone_id, self.tenant_repo)
+        tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
 
         try:
-            plain_text = req.stream.read(MAX_SIZE_REQUEST_INPUT_ACCEPTED_IN_BYTES)
+            plain_text = req.stream.read(api.MAX_BYTES_REQUEST_INPUT_ACCEPTED)
         except IOError:
-            abort(falcon.HTTP_500, 'Read Error')
+            api.abort(falcon.HTTP_500, 'Read Error')
 
         resp.status = falcon.HTTP_200
 
         try:
-            create_encrypted_datum(secret,
-                                   plain_text,
-                                   tenant,
-                                   self.crypto_manager,
-                                   self.tenant_secret_repo,
-                                   self.datum_repo)
+            res.create_encrypted_datum(secret,
+                                       plain_text,
+                                       tenant,
+                                       self.crypto_manager,
+                                       self.tenant_secret_repo,
+                                       self.datum_repo)
         except em.CryptoMimeTypeNotSupportedException as cmtnse:
             LOG.exception('Secret creation failed - mime-type not supported')
             _secret_mime_type_not_supported(cmtnse.mime_type, req, resp)
@@ -414,23 +415,23 @@ class SecretResource(ApiResource):
         resp.status = falcon.HTTP_200
 
 
-class OrdersResource(ApiResource):
+class OrdersResource(api.ApiResource):
     """Handles Order requests for Secret creation"""
 
     def __init__(self, tenant_repo=None, order_repo=None,
                  queue_resource=None, policy_enforcer=None):
 
         LOG.debug('Creating OrdersResource')
-        self.tenant_repo = tenant_repo or TenantRepo()
-        self.order_repo = order_repo or OrderRepo()
+        self.tenant_repo = tenant_repo or repo.TenantRepo()
+        self.order_repo = order_repo or repo.OrderRepo()
         self.queue = queue_resource or get_queue_api()
-        self.policy = policy_enforcer or policy.Enforcer()
+        self.policy = policy_enforcer or Enforcer()
 
     def on_post(self, req, resp, keystone_id):
 
-        tenant = get_or_create_tenant(keystone_id, self.tenant_repo)
+        tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
 
-        body = load_body(req)
+        body = api.load_body(req)
         LOG.debug('Start on_post...{0}'.format(body))
 
         if 'secret' not in body:
@@ -439,7 +440,7 @@ class OrdersResource(ApiResource):
         name = secret_info['name']
         LOG.debug('Secret to create is {0}'.format(name))
 
-        new_order = Order()
+        new_order = models.Order()
         new_order.secret_name = secret_info['name']
         new_order.secret_algorithm = secret_info.get('algorithm', None)
         new_order.secret_bit_length = secret_info.get('bit_length', None)
@@ -488,12 +489,12 @@ class OrdersResource(ApiResource):
                                default=json_handler)
 
 
-class OrderResource(ApiResource):
+class OrderResource(api.ApiResource):
     """Handles Order retrieval and deletion requests"""
 
     def __init__(self, order_repo=None, policy_enforcer=None):
-        self.repo = order_repo or OrderRepo()
-        self.policy = policy_enforcer or policy.Enforcer()
+        self.repo = order_repo or repo.OrderRepo()
+        self.policy = policy_enforcer or Enforcer()
 
     def on_get(self, req, resp, keystone_id, order_id):
         order = self.repo.get(entity_id=order_id, keystone_id=keystone_id,

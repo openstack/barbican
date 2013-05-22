@@ -18,8 +18,7 @@ Task resources for the Barbican API.
 """
 from time import sleep
 from barbican.crypto.extension_manager import CryptoExtensionManager
-from barbican.model.repositories import (OrderRepo, TenantRepo, SecretRepo,
-                                         TenantSecretRepo, EncryptedDatumRepo)
+from barbican.model import repositories as rep
 from barbican.model.models import States
 from barbican.common.resources import create_secret, get_or_create_tenant
 from barbican.common import utils
@@ -33,11 +32,11 @@ class BeginOrder(object):
     def __init__(self, crypto_manager=None, tenant_repo=None, order_repo=None,
                  secret_repo=None, tenant_secret_repo=None, datum_repo=None):
         LOG.debug('Creating BeginOrder task processor')
-        self.order_repo = order_repo or OrderRepo()
-        self.tenant_repo = tenant_repo or TenantRepo()
-        self.secret_repo = secret_repo or SecretRepo()
-        self.tenant_secret_repo = tenant_secret_repo or TenantSecretRepo()
-        self.datum_repo = datum_repo or EncryptedDatumRepo()
+        self.order_repo = order_repo or rep.OrderRepo()
+        self.tenant_repo = tenant_repo or rep.TenantRepo()
+        self.secret_repo = secret_repo or rep.SecretRepo()
+        self.tenant_secret_repo = tenant_secret_repo or rep.TenantSecretRepo()
+        self.datum_repo = datum_repo or rep.EncryptedDatumRepo()
         self.crypto_manager = crypto_manager or CryptoExtensionManager()
 
     def process(self, order_id, keystone_id):

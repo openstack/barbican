@@ -19,10 +19,7 @@ Shared business logic.
 from sys import getsizeof
 from oslo.config import cfg
 from barbican.common import exception
-from barbican.crypto.extension_manager import (
-    CryptoMimeTypeNotSupportedException
-)
-from barbican.model.models import (Tenant, Secret, TenantSecret, States)
+from barbican.model import models
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
@@ -47,9 +44,9 @@ def get_or_create_tenant(keystone_id, tenant_repo):
                                              suppress_exception=True)
     if not tenant:
         LOG.debug('Creating tenant for {0}'.format(keystone_id))
-        tenant = Tenant()
+        tenant = models.Tenant()
         tenant.keystone_id = keystone_id
-        tenant.status = States.ACTIVE
+        tenant.status = models.States.ACTIVE
         tenant_repo.create_from(tenant)
     return tenant
 
@@ -60,7 +57,7 @@ def create_secret(data, tenant, crypto_manager,
     """
     Common business logic to create a secret.
     """
-    new_secret = Secret(data)
+    new_secret = models.Secret(data)
     new_datum = None
 
     if 'plain_text' in data:
@@ -90,11 +87,11 @@ def create_secret(data, tenant, crypto_manager,
 
     # Create Secret entities in datastore.
     secret_repo.create_from(new_secret)
-    new_assoc = TenantSecret()
+    new_assoc = models.TenantSecret()
     new_assoc.tenant_id = tenant.id
     new_assoc.secret_id = new_secret.id
     new_assoc.role = "admin"
-    new_assoc.status = States.ACTIVE
+    new_assoc.status = models.States.ACTIVE
     tenant_secret_repo.create_from(new_assoc)
     if new_datum:
         new_datum.secret_id = new_secret.id
@@ -136,11 +133,11 @@ def create_encrypted_datum(secret, plain_text, tenant, crypto_manager,
     datum_repo.create_from(new_datum)
 
     # Create Tenant/Secret entity.
-    new_assoc = TenantSecret()
+    new_assoc = models.TenantSecret()
     new_assoc.tenant_id = tenant.id
     new_assoc.secret_id = secret.id
     new_assoc.role = "admin"
-    new_assoc.status = States.ACTIVE
+    new_assoc.status = models.States.ACTIVE
     tenant_secret_repo.create_from(new_assoc)
 
     return new_datum
