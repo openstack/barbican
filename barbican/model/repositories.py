@@ -55,7 +55,8 @@ db_opts = [
     cfg.IntOpt('sql_retry_interval', default=1),
     cfg.BoolOpt('db_auto_create', default=True),
     cfg.StrOpt('sql_connection', default=None),
-    cfg.IntOpt('max_limit_paging', default=10),
+    cfg.IntOpt('max_limit_paging', default=100),
+    cfg.IntOpt('default_limit_paging', default=10),
 ]
 
 CONF = cfg.CONF
@@ -207,8 +208,11 @@ def clean_paging_values(offset_arg=None, limit_arg=None):
     offset = int(offset_arg) if offset_arg else 0
     offset = offset if offset >= 0 else 0
 
-    limit = int(limit_arg) if limit_arg else CONF.max_limit_paging
+    limit = int(limit_arg) if limit_arg else CONF.default_limit_paging
     limit = limit if limit >= 2 else 2
+    limit = limit if limit <= CONF.max_limit_paging else CONF.max_limit_paging
+    
+    LOG.debug("Limit={0}, offset={1}".format(limit, offset))
 
     return (offset, limit)
 
@@ -448,13 +452,10 @@ class TenantRepo(BaseRepo):
         session = self.get_session(session)
 
         try:
-            LOG.debug("Starting find by keystone_id steps...")
             query = session.query(models.Tenant).filter_by(keystone_id=
                                                            keystone_id)
-            LOG.debug("...query = {0}".format(repr(query)))
 
             entity = query.one()
-            LOG.debug("...post query.one()")
 
         except sa_orm.exc.NoResultFound:
             LOG.exception("Problem getting Tenant {0}".format(keystone_id))
@@ -498,6 +499,8 @@ class SecretRepo(BaseRepo):
                          .filter(models.Tenant.keystone_id == keystone_id)
 
             entities = query[offset:(offset + limit)]
+
+            LOG.debug('Number entities retrieved: {0}'.format(len(entities)))
 
         except sa_orm.exc.NoResultFound:
             entities = None
@@ -596,6 +599,8 @@ class OrderRepo(BaseRepo):
                          .filter(models.Tenant.keystone_id == keystone_id)
 
             entities = query[offset:(offset + limit)]
+
+            LOG.debug('Number entities retrieved: {0}'.format(len(entities)))
 
         except sa_orm.exc.NoResultFound:
             entities = None
