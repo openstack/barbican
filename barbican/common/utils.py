@@ -33,12 +33,12 @@ CONF.register_opts(host_opts)
 API_VERSION = 'v1'
 
 
-def hostname_for_refs(tenant_id=None, resource=None):
+def hostname_for_refs(keystone_id=None, resource=None):
     """Return the HATEOS-style return URI reference for this service."""
     ref = ['http://{0}/{1}'.format(CONF.host_href, API_VERSION)]
-    if not tenant_id:
+    if not keystone_id:
         return ref[0]
-    ref.append('/' + tenant_id)
+    ref.append('/' + keystone_id)
     if resource:
         ref.append('/' + resource)
     return ''.join(ref)

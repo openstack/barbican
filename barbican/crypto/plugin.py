@@ -32,7 +32,6 @@ class CryptoPluginBase(object):
 
         :param unencrypted: byte data to be encrypted.
         :param tenant: Tenant associated with the unencrypted data.
-
         :returns: tuple -- contains the encrypted data and kek metadata.
         :raises: ValueError if unencrypted is not byte data.
 
@@ -81,7 +80,8 @@ class SimpleCryptoPlugin(CryptoPluginBase):
 
     def encrypt(self, unencrypted, tenant):
         if not isinstance(unencrypted, str):
-            raise ValueError('unencrypted data must be a byte type.')
+            raise ValueError('Unencrypted data must be a byte type, '
+                             'but was {0}'.format(type(unencrypted)))
         padded_data = self._pad(unencrypted)
         iv = Random.get_random_bytes(self.block_size)
         encryptor = AES.new(self.kek, AES.MODE_CBC, iv)

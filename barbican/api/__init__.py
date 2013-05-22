@@ -21,7 +21,7 @@ import falcon
 from barbican.openstack.common import jsonutils as json
 
 
-MAX_SIZE_REQUEST_INPUT_ACCEPTED_IN_BYTES = 1000000
+MAX_BYTES_REQUEST_INPUT_ACCEPTED = 1000000
 
 
 class ApiResource(object):
@@ -31,11 +31,15 @@ class ApiResource(object):
     pass
 
 
-def abort(status=falcon.HTTP_500, message=None):
+def abort(status=falcon.HTTP_500, message=None, req=None, resp=None):
     """
     Helper function for aborting an API request process. Useful for error
     reporting and expcetion handling.
     """
+    if resp and message:
+        if req and req.accept != 'application/json':
+            resp.set_header('Content-Type', 'text/plain')
+            resp.body = message
     raise falcon.HTTPError(status, message)
 
 
@@ -45,7 +49,7 @@ def load_body(req):
     Python dictionary
     """
     try:
-        raw_json = req.stream.read(MAX_SIZE_REQUEST_INPUT_ACCEPTED_IN_BYTES)
+        raw_json = req.stream.read(MAX_BYTES_REQUEST_INPUT_ACCEPTED)
     except IOError:
         abort(falcon.HTTP_500, 'Read Error')
 

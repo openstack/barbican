@@ -19,10 +19,7 @@ Shared business logic.
 from sys import getsizeof
 from oslo.config import cfg
 from barbican.common import exception
-from barbican.crypto.extension_manager import (
-    CryptoMimeTypeNotSupportedException
-)
-from barbican.model.models import (Tenant, Secret, TenantSecret, States)
+from barbican.model import models
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
@@ -38,15 +35,18 @@ CONF = cfg.CONF
 CONF.register_opts(common_opts)
 
 
-def get_or_create_tenant(tenant_id, tenant_repo):
-    """Returns tenant with matching tenant_id.  Creates it if it does
-    not exist."""
-    tenant = tenant_repo.get(tenant_id, suppress_exception=True)
+def get_or_create_tenant(keystone_id, tenant_repo):
+    """
+    Returns tenant with matching keystone_id.  Creates it if it does
+    not exist.
+    """
+    tenant = tenant_repo.find_by_keystone_id(keystone_id,
+                                             suppress_exception=True)
     if not tenant:
-        LOG.debug('Creating tenant for {0}'.format(tenant_id))
-        tenant = Tenant()
-        tenant.keystone_id = tenant_id
-        tenant.status = States.ACTIVE
+        LOG.debug('Creating tenant for {0}'.format(keystone_id))
+        tenant = models.Tenant()
+        tenant.keystone_id = keystone_id
+        tenant.status = models.States.ACTIVE
         tenant_repo.create_from(tenant)
     return tenant
 
@@ -54,30 +54,11 @@ def get_or_create_tenant(tenant_id, tenant_repo):
 def create_secret(data, tenant, crypto_manager,
                   secret_repo, tenant_secret_repo, datum_repo,
                   ok_to_generate=False):
-
-    # TODO: revisit ok_to_generate
-
-    # TODO: What if any criteria to restrict new secrets vs existing ones?
-    # Verify secret doesn't already exist.
-    #
-    #name = data['name']
-    #LOG.debug('Secret name is {0}'.format(name))
-    #secret = secret_repo.find_by_name(name=name,
-    #                                       suppress_exception=True)
-    #if secret:
-    #    abort(falcon.HTTP_400, 'Secret with name {0} '
-    #                           'already exists'.format(name))
-
-    new_secret = Secret(data)
-    secret_repo.create_from(new_secret)
-
-    # Create Tenant/Secret entity.
-    new_assoc = TenantSecret()
-    new_assoc.tenant_id = tenant.id
-    new_assoc.secret_id = new_secret.id
-    new_assoc.role = "admin"
-    new_assoc.status = States.ACTIVE
-    tenant_secret_repo.create_from(new_assoc)
+    """
+    Common business logic to create a secret.
+    """
+    new_secret = models.Secret(data)
+    new_datum = None
 
     if 'plain_text' in data:
 
@@ -93,18 +74,28 @@ def create_secret(data, tenant, crypto_manager,
         new_datum = crypto_manager.encrypt(data['plain_text'],
                                            new_secret,
                                            tenant)
-        datum_repo.create_from(new_datum)
     elif ok_to_generate:
         LOG.debug('Generating new secret...')
 
         # TODO: Generate a good key
         new_datum = crypto_manager.generate_data_encryption_key(new_secret,
                                                                 tenant)
-        datum_repo.create_from(new_datum)
     else:
         LOG.debug('Creating metadata only for the new secret. '
                   'A subsequent PUT is required')
         crypto_manager.supports(new_secret, tenant)
+
+    # Create Secret entities in datastore.
+    secret_repo.create_from(new_secret)
+    new_assoc = models.TenantSecret()
+    new_assoc.tenant_id = tenant.id
+    new_assoc.secret_id = new_secret.id
+    new_assoc.role = "admin"
+    new_assoc.status = models.States.ACTIVE
+    tenant_secret_repo.create_from(new_assoc)
+    if new_datum:
+        new_datum.secret_id = new_secret.id
+        datum_repo.create_from(new_datum)
 
     return new_secret
 
@@ -116,7 +107,7 @@ def create_encrypted_datum(secret, plain_text, tenant, crypto_manager,
 
     :param secret: the secret entity to associate the secret data to
     :param plain_text: plain-text of the secret data to store
-    :param tenant: the tenant who owns the secret
+    :param tenant: the tenant (entity) who owns the secret
     :param crypto_manager: the crypto plugin manager
     :param tenant_secret_repo: the tenant/secret association repository
     :param datum_repo: the encrypted datum repository
@@ -142,11 +133,11 @@ def create_encrypted_datum(secret, plain_text, tenant, crypto_manager,
     datum_repo.create_from(new_datum)
 
     # Create Tenant/Secret entity.
-    new_assoc = TenantSecret()
-    new_assoc.tenant_id = tenant
+    new_assoc = models.TenantSecret()
+    new_assoc.tenant_id = tenant.id
     new_assoc.secret_id = secret.id
     new_assoc.role = "admin"
-    new_assoc.status = States.ACTIVE
+    new_assoc.status = models.States.ACTIVE
     tenant_secret_repo.create_from(new_assoc)
 
     return new_datum

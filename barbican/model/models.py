@@ -149,7 +149,7 @@ class TenantSecret(BASE, ModelBase):
     tenant_id = Column(Integer, ForeignKey('tenants.id'), primary_key=True)
     secret_id = Column(Integer, ForeignKey('secrets.id'), primary_key=True)
     role = Column(String(255))
-    secret = relationship("Secret")
+    secret = relationship("Secret", backref="tenant_assocs")
 
 
 class Tenant(BASE, ModelBase):
@@ -162,10 +162,10 @@ class Tenant(BASE, ModelBase):
 
     __tablename__ = 'tenants'
 
-    keystone_id = Column(String(255))
+    keystone_id = Column(String(255), unique=True)
 
-    orders = relationship("Order")
-    secrets = relationship("TenantSecret")
+    orders = relationship("Order", backref="tenant")
+    secrets = relationship("TenantSecret", backref="tenants")
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -221,7 +221,7 @@ class Secret(BASE, ModelBase):
         Sub-class hook: delete children relationships.
         """
         for datum in self.encrypted_data:
-            datam.delete(session)
+            datum.delete(session)
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""

@@ -18,8 +18,7 @@ Task resources for the Barbican API.
 """
 from time import sleep
 from barbican.crypto.extension_manager import CryptoExtensionManager
-from barbican.model.repositories import (OrderRepo, TenantRepo, SecretRepo,
-                                         TenantSecretRepo, EncryptedDatumRepo)
+from barbican.model import repositories as rep
 from barbican.model.models import States
 from barbican.common.resources import create_secret, get_or_create_tenant
 from barbican.common import utils
@@ -33,23 +32,20 @@ class BeginOrder(object):
     def __init__(self, crypto_manager=None, tenant_repo=None, order_repo=None,
                  secret_repo=None, tenant_secret_repo=None, datum_repo=None):
         LOG.debug('Creating BeginOrder task processor')
-        self.order_repo = order_repo or OrderRepo()
-        self.tenant_repo = tenant_repo or TenantRepo()
-        self.secret_repo = secret_repo or SecretRepo()
-        self.tenant_secret_repo = tenant_secret_repo or TenantSecretRepo()
-        self.datum_repo = datum_repo or EncryptedDatumRepo()
-        self.crypto_manager = crypto_manager or CryptoExtensionManager(
-            'barbican.crypto.extension',
-            ['simple_crypto']  # TODO: grab this list from cfg or reuse some
-                               # other crypto_mgr instance.
-        )
+        self.order_repo = order_repo or rep.OrderRepo()
+        self.tenant_repo = tenant_repo or rep.TenantRepo()
+        self.secret_repo = secret_repo or rep.SecretRepo()
+        self.tenant_secret_repo = tenant_secret_repo or rep.TenantSecretRepo()
+        self.datum_repo = datum_repo or rep.EncryptedDatumRepo()
+        self.crypto_manager = crypto_manager or CryptoExtensionManager()
 
-    def process(self, order_id):
+    def process(self, order_id, keystone_id):
         """Process the beginning of an Order."""
         LOG.debug("Processing Order with ID = {0}".format(order_id))
 
         # Retrieve the order.
-        order = self.order_repo.get(entity_id=order_id)
+        order = self.order_repo.get(entity_id=order_id,
+                                    keystone_id=keystone_id)
         self._handle_order(order)
 
         # Indicate we are done with Order processing
@@ -70,8 +66,10 @@ class BeginOrder(object):
         order_info = order.to_dict_fields()
         secret_info = order_info['secret']
 
+        # Retrieve the tenant.
+        tenant = self.tenant_repo.get(order.tenant_id)
+
         # Create Secret
-        tenant = get_or_create_tenant(order.tenant_id, self.tenant_repo)
         new_secret = create_secret(secret_info, tenant,
                                    self.crypto_manager, self.secret_repo,
                                    self.tenant_secret_repo, self.datum_repo,

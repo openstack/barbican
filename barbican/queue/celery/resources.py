@@ -48,14 +48,14 @@ celery = Celery(CONF.celery.project,
                 include=[CONF.celery.include])
 
 
-def process_order(order_id):
+def process_order(order_id, keystone_id):
     """Process Order."""
-    return process_order_wrapper.delay(order_id)
+    return process_order_wrapper.delay(order_id, keystone_id)
 
 
 @celery.task
-def process_order_wrapper(order_id):
+def process_order_wrapper(order_id, keystone_id):
     """(Celery wrapped task) Process Order."""
     LOG.debug('Order id is {0}'.format(order_id))
     task = BeginOrder()
-    return task.process(order_id)
+    return task.process(order_id, keystone_id)
