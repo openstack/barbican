@@ -49,7 +49,7 @@ def _secret_not_found(req, resp):
 
 def _order_not_found(req, resp):
     """Throw exception indicating order not found."""
-    api.abort(falcon.HTTP_404, _('Unable to locate order.'))
+    api.abort(falcon.HTTP_404, _('Unable to locate order.'), req, resp)
 
 
 def _put_accept_incorrect(ct, req, resp):
@@ -273,7 +273,7 @@ class SecretsResource(api.ApiResource):
             LOG.exception('Secret creation failed - unknown')
             _general_failure('Secret creation failed - unknown', req, resp)
 
-        resp.status = falcon.HTTP_200
+        resp.status = falcon.HTTP_201
         resp.set_header('Location', '/{0}/secrets/{1}'.format(keystone_id,
                                                               new_secret.id))
         url = convert_secret_to_href(keystone_id, new_secret.id)

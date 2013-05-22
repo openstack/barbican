@@ -151,6 +151,8 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
     def test_should_add_new_secret(self):
         self.resource.on_post(self.req, self.resp, self.keystone_id)
 
+        self.assertEquals(self.resp.status, falcon.HTTP_201)
+
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
         self.assertTrue(isinstance(secret, models.Secret))
@@ -509,6 +511,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
 
         self.resource.on_put(self.req, self.resp, self.keystone_id,
                              self.secret.id)
+
+        self.assertEquals(self.resp.status, falcon.HTTP_200)
 
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
