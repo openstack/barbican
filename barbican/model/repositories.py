@@ -615,6 +615,7 @@ class OrderRepo(BaseRepo):
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.Order).filter_by(id=entity_id) \
+                      .filter_by(deleted=False) \
                       .join(models.Tenant, models.Order.tenant) \
                       .filter(models.Tenant.keystone_id == keystone_id)
 
