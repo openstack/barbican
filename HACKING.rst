@@ -32,7 +32,7 @@ Example::
   \n
   {{third-party lib imports in human alphabetical order}}
   \n
-  {{glance imports in human alphabetical order}}
+  {{barbican imports in human alphabetical order}}
   \n
   \n
   {{begin your code}}
@@ -52,12 +52,10 @@ Example::
   import eventlet
   import webob.exc
 
-  import glance.api.middleware
-  from glance.api import images
-  from glance.auth import users
-  import glance.common
-  from glance.endpoint import cloud
-  from glance import test
+  import barbican.api.middleware
+  import barbican.common
+  from barbican.crypto import plugin.py
+  from barbican.model import repositories
 
 
 Docstrings
