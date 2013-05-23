@@ -26,7 +26,7 @@ except ImportError:
 
 # Determine version of this application.
 # TBD: Revisit version flows and processing once integrating with OpenStack,
-#   see glance setup.py
+#   see barbican setup.py
 PKG = "barbican"
 VERSIONFILE = os.path.join(PKG, "version.py")
 version = "unknown"
@@ -49,7 +49,7 @@ class local_sdist(sdist):
 cmdclass = {'sdist': local_sdist}
 
 # TDB: Revisit sphinx documentation needs once move to OpenStack...
-#   see glance setup.py
+#   see barbican setup.py
 
 setup(
     name='barbican',

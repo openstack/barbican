@@ -2,7 +2,7 @@
 
 function usage {
   echo "Usage: $0 [OPTION]..."
-  echo "Run Glance's test suite(s)"
+  echo "Run Barbican's test suite(s)"
   echo ""
   echo "  -V, --virtual-env        Always use virtualenv.  Install automatically if not present"
   echo "  -N, --no-virtual-env     Don't use virtualenv.  Run tests in local environment"
@@ -24,7 +24,7 @@ function process_option {
     -N|--no-virtual-env) let always_venv=0; let never_venv=1;;
     -p|--pep8) let just_pep8=1;;
     -f|--force) let force=1;;
-    --unittests-only) noseargs="$noseargs --exclude-dir=glance/tests/functional";;
+    --unittests-only) noseargs="$noseargs --exclude-dir=barbican/tests/functional";;
     *) noseargs="$noseargs $1"
   esac
 }
@@ -51,7 +51,7 @@ function run_tests {
 function run_pep8 {
   echo "Running pep8 ..."
   PEP8_OPTIONS="--exclude=$PEP8_EXCLUDE --repeat"
-  PEP8_INCLUDE="bin/* glance tools setup.py run_tests.py"
+  PEP8_INCLUDE="bin/* barbican tools setup.py run_tests.py"
   ${wrapper} pep8 $PEP8_OPTIONS $PEP8_INCLUDE
 }
 
