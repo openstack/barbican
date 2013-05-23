@@ -498,8 +498,11 @@ class SecretRepo(BaseRepo):
                          .join(models.Tenant, models.TenantSecret.tenants) \
                          .filter(models.Tenant.keystone_id == keystone_id)
 
-            entities = query[offset:(offset + limit)]
+            start = offset
+            end = offset + limit
+            LOG.debug('Retrieving from {0} to {1}'.format(start, end))
 
+            entities = query[start:end]
             LOG.debug('Number entities retrieved: {0}'.format(len(entities)))
 
         except sa_orm.exc.NoResultFound:
@@ -598,8 +601,11 @@ class OrderRepo(BaseRepo):
                          .join(models.Tenant, models.Order.tenant) \
                          .filter(models.Tenant.keystone_id == keystone_id)
 
-            entities = query[offset:(offset + limit)]
+            start = offset
+            end = offset + limit
+            LOG.debug('Retrieving from {0} to {1}'.format(start, end))
 
+            entities = query[start:end]
             LOG.debug('Number entities retrieved: {0}'.format(len(entities)))
 
         except sa_orm.exc.NoResultFound:
