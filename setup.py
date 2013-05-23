@@ -26,7 +26,7 @@ except ImportError:
 
 # Determine version of this application.
 # TBD: Revisit version flows and processing once integrating with OpenStack,
-#   see barbican setup.py
+#   see glance setup.py
 PKG = "barbican"
 VERSIONFILE = os.path.join(PKG, "version.py")
 version = "unknown"
