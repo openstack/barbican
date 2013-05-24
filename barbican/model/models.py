@@ -17,6 +17,7 @@
 Defines database models for Barbican
 """
 
+import dateutil.parser
 from sqlalchemy import Column, Integer, String, BigInteger
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
@@ -146,8 +147,8 @@ class TenantSecret(BASE, ModelBase):
 
     __tablename__ = 'tenant_secret'
 
-    tenant_id = Column(Integer, ForeignKey('tenants.id'), primary_key=True)
-    secret_id = Column(Integer, ForeignKey('secrets.id'), primary_key=True)
+    tenant_id = Column(String(36), ForeignKey('tenants.id'), primary_key=True)
+    secret_id = Column(String(36), ForeignKey('secrets.id'), primary_key=True)
     role = Column(String(255))
     secret = relationship("Secret", backref="tenant_assocs")
 
