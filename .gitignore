@@ -21,6 +21,7 @@ lib64
 
 # Installer logs
 pip-log.txt
+*.err.log
 
 # Unit test / coverage reports
 .coverage
