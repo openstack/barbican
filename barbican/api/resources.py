@@ -252,7 +252,7 @@ class SecretsResource(api.ApiResource):
     def on_post(self, req, resp, keystone_id):
         LOG.debug('Start on_post for tenant-ID {0}:'.format(keystone_id))
 
-        data = api.load_body(req)
+        data = api.load_body(req, resp)
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
 
         try:
@@ -431,7 +431,7 @@ class OrdersResource(api.ApiResource):
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
 
-        body = api.load_body(req)
+        body = api.load_body(req, resp)
         LOG.debug('Start on_post...{0}'.format(body))
 
         if 'secret' not in body:
