@@ -19,8 +19,10 @@ API handler for Cloudkeep's Barbican
 
 import falcon
 from barbican.openstack.common import jsonutils as json
+from barbican.common import utils
 
 
+LOG = utils.getLogger(__name__)
 MAX_BYTES_REQUEST_INPUT_ACCEPTED = 1000000
 
 
@@ -43,7 +45,7 @@ def abort(status=falcon.HTTP_500, message=None, req=None, resp=None):
     raise falcon.HTTPError(status, message)
 
 
-def load_body(req):
+def load_body(req, resp=None):
     """
     Helper function for loading an HTTP request body from JSON into a
     Python dictionary
@@ -51,13 +53,15 @@ def load_body(req):
     try:
         raw_json = req.stream.read(MAX_BYTES_REQUEST_INPUT_ACCEPTED)
     except IOError:
-        abort(falcon.HTTP_500, 'Read Error')
+        LOG.exception("Problem reading request JSON stream.")
+        abort(falcon.HTTP_500, 'Read Error', req, resp)
 
     try:
         #TODO: Investigate how to get UTF8 format via openstack jsonutils:
         #     parsed_body = json.loads(raw_json, 'utf-8')
         parsed_body = json.loads(raw_json)
     except ValueError:
-        abort(falcon.HTTP_400, 'Malformed JSON')
+        LOG.exception("Problem loading request JSON.")
+        abort(falcon.HTTP_400, 'Malformed JSON', req, resp)
 
     return parsed_body
