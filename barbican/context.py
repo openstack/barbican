@@ -36,6 +36,8 @@ class RequestContext(object):
         self.roles = roles or []
         self.read_only = read_only
         self._show_deleted = show_deleted
+        # (mkbhanda) possibly domain could be owner
+        # brings us to the key scope question
         self.owner_is_tenant = owner_is_tenant
         self.request_id = uuidutils.generate_uuid()
         self.service_catalog = service_catalog
