@@ -17,8 +17,23 @@ import abc
 
 from Crypto.Cipher import AES
 from Crypto import Random
+from oslo.config import cfg
 
 from barbican.openstack.common import jsonutils as json
+from barbican.openstack.common.gettextutils import _
+
+
+CONF = cfg.CONF
+
+simple_crypto_plugin_group = cfg.OptGroup(name='simple_crypto_plugin',
+                                          title="Simple Crypto Plugin Options")
+simple_crypto_plugin_opts = [
+    cfg.StrOpt('kek',
+               default=b'sixteen_byte_key',
+               help=_('Key encryption key to be used by Simple Crypto Plugin'))
+]
+CONF.register_group(simple_crypto_plugin_group)
+CONF.register_opts(simple_crypto_plugin_opts, group=simple_crypto_plugin_group)
 
 
 class CryptoPluginBase(object):
@@ -44,7 +59,6 @@ class CryptoPluginBase(object):
         :param encrypted: cyphertext to be decrypted.
         :param kek_metadata: metadata that was created by encryption.
         :param tenant: Tenant associated with the encrypted datum.
-
         :returns: str -- unencrypted byte data
 
         """
@@ -61,9 +75,9 @@ class CryptoPluginBase(object):
 class SimpleCryptoPlugin(CryptoPluginBase):
     """Insecure implementation of the crypto plugin."""
 
-    def __init__(self):
+    def __init__(self, conf=CONF):
         self.supported_types = ['text/plain', 'application/octet-stream']
-        self.kek = b'sixteen_byte_key'
+        self.kek = conf.simple_crypto_plugin.kek
         self.block_size = AES.block_size
 
     def _pad(self, unencrypted):
