@@ -1,6 +1,6 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
-# Copyright 2013 OpenStack LLC.
+# Copyright 2011-2013 OpenStack LLC.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -21,7 +21,7 @@ from oslo.config import cfg
 import webob.exc
 
 from barbican.api import policy
-from barbican.common import wsgi
+from barbican.api.middleware import Middleware
 import barbican.context
 import barbican.openstack.common.log as logging
 
@@ -47,7 +47,7 @@ CONF.register_opts(context_opts)
 LOG = logging.getLogger(__name__)
 
 
-class BaseContextMiddleware(wsgi.Middleware):
+class BaseContextMiddleware(Middleware):
     def process_response(self, resp):
         try:
             request_id = resp.request.context.request_id
