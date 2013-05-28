@@ -153,6 +153,29 @@ class WhenTestingSecretValidator(unittest.TestCase):
         exception = e.exception
         self.assertTrue('expiration' in str(exception))
 
+    def test_should_fail_all_nulls(self):
+        self.secret_req = {'name': None,
+                           'algorithm': None,
+                           'bit_length': None,
+                           'cypher_type': None}
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.secret_req)
+
+        exception = e.exception
+        self.assertTrue('mime_type' in str(exception))
+
+    def test_should_fail_all_empties(self):
+        self.secret_req = {'name': '',
+                           'algorithm': '',
+                           'bit_length': '',
+                           'cypher_type': ''}
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.secret_req)
+
+        exception = e.exception
+        self.assertTrue('mime_type' in str(exception))
 
 if __name__ == '__main__':
     unittest.main()
