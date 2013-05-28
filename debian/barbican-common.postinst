@@ -27,6 +27,7 @@ then
     pip install PasteDeploy
     pip install stevedore
     pip install pycrypto
+    pip install python-dateutil
 fi
 
 #DEBHELPER#
