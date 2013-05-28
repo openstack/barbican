@@ -70,6 +70,6 @@ def load_body(req, resp=None, validator=None):
             parsed_body = validator.validate(parsed_body)
         except exception.InvalidObject as e:
             LOG.exception("Failed to validate JSON information")
-            abort(falcon.HTTP_400, e.message, req, resp)
+            abort(falcon.HTTP_400, str(e), req, resp)
 
     return parsed_body
