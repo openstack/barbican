@@ -24,7 +24,8 @@ class ValidatorBase(object):
         """Validate the input JSON.
 
         :param json_data: JSON to validate against this class' internal schema.
-        :returns: dict -- JSON content, post-validation and normalization/defaulting.
+        :returns: dict -- JSON content, post-validation and
+        :                 normalization/defaulting.
         :raises: ValidationError on schema violations.
 
         """
@@ -36,15 +37,15 @@ class NewSecretValidator(ValidatorBase):
     def __init__(self):
         self.name = 'Secret'
         self.schema = {
-            "type" : "object",
-            "properties" : {
-                "name" : {"type" : "string"},
-                "algorithm" : {"type" : "string"},
-                "cypher_type": {"type" : "string"},
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "algorithm": {"type": "string"},
+                "cypher_type": {"type": "string"},
                 "bit_length": {"type": "integer", "minimum": 0},
-                "expiration" : {"type" : "string"},
-                "plain_text" : {"type" : "string"},
-                "mime_type" : {"type" : "string"},
+                "expiration": {"type": "string"},
+                "plain_text": {"type": "string"},
+                "mime_type": {"type": "string"},
             },
             "required": ["mime_type"]
         }
@@ -65,7 +66,7 @@ class NewSecretValidator(ValidatorBase):
         expiration = self._extract_expiration(json_data)
         if expiration:
             try:
-                expiration = dateutil.parser.parse(expiration)                
+                expiration = dateutil.parser.parse(expiration)
             except ValueError:
                 LOG.exception("Problem parsing date")
                 raise exception.InvalidObject(schema=self.name,
@@ -76,7 +77,7 @@ class NewSecretValidator(ValidatorBase):
             if expiration <= utcnow:
                 raise exception.InvalidObject(schema=self.name,
                                               reason=_("'expiration' is "
-                                                       "before current time"))             
+                                                       "before current time"))
         json_data['expiration'] = expiration
 
         # Validate/convert 'plain_text' if provided.
