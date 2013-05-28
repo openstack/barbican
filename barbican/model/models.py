@@ -207,7 +207,7 @@ class Secret(BASE, ModelBase):
         """Creates secret from a dict."""
         super(Secret, self).__init__()
 
-        self.name = parsed_request['name']
+        self.name = parsed_request.get('name', None)
         self.mime_type = parsed_request['mime_type']
 
         self.expiration = parsed_request.get('expiration', None)
@@ -226,8 +226,9 @@ class Secret(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
+        final_name = self.name if self.name else str(self.id)
         return {'secret_id': self.id,
-                'name': self.name,
+                'name': final_name,
                 'expiration': self.expiration,
                 'mime_type': self.mime_type,
                 'algorithm': self.algorithm,

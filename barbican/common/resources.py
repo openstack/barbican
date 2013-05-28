@@ -17,22 +17,12 @@
 Shared business logic.
 """
 from sys import getsizeof
-from oslo.config import cfg
-from barbican.common import exception
+from barbican.common import exception, validators
 from barbican.model import models
 from barbican.common import utils
 
+
 LOG = utils.getLogger(__name__)
-
-
-DEFAULT_MAX_SECRET_BYTES = 10000
-common_opts = [
-    cfg.IntOpt('max_allowed_secret_in_bytes',
-               default=DEFAULT_MAX_SECRET_BYTES),
-]
-
-CONF = cfg.CONF
-CONF.register_opts(common_opts)
 
 
 def get_or_create_tenant(keystone_id, tenant_repo):
@@ -66,9 +56,6 @@ def create_secret(data, tenant, crypto_manager,
 
         if not plain_text:
             raise exception.NoDataToProcess()
-
-        if getsizeof(plain_text) > CONF.max_allowed_secret_in_bytes:
-            raise exception.LimitExceeded()
 
         LOG.debug('Encrypting plain_text secret...')
         new_datum = crypto_manager.encrypt(data['plain_text'],
@@ -116,7 +103,7 @@ def create_encrypted_datum(secret, plain_text, tenant, crypto_manager,
     if not plain_text:
         raise exception.NoDataToProcess()
 
-    if getsizeof(plain_text) > CONF.max_allowed_secret_in_bytes:
+    if validators.secret_too_big(plain_text):
         raise exception.LimitExceeded()
 
     if secret.encrypted_data:
