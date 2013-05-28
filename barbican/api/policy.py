@@ -1,6 +1,6 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
-# Copyright (c) 2011 OpenStack, LLC.
+# Copyright (c) 2013 OpenStack, LLC.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -40,7 +40,9 @@ CONF.register_opts(policy_opts)
 
 
 DEFAULT_RULES = {
-    'default': policy.TrueCheck(),
+     'context_is_admin': policy.RoleCheck('role', 'admin'),
+     'default': policy.TrueCheck(),
+     'manage_re_key': policy.RoleCheck('role', 'admin'),
 }
 
 
@@ -141,3 +143,14 @@ class Enforcer(object):
            :returns: A non-False value if access is allowed.
         """
         return self._check(context, action, target)
+
+
+    def check_is_admin(self, context):
+        """Check if the given context is associated with an admin role,
+           as defined via the 'context_is_admin' RBAC rule.
+
+           :param context: request context
+           :returns: A non-False value if context role is admin.
+        """
+        target = context.to_dict()
+        return self.check(context, 'context_is_admin', target)
