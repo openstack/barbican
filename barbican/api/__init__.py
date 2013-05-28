@@ -19,6 +19,7 @@ API handler for Cloudkeep's Barbican
 
 import falcon
 from barbican.openstack.common import jsonutils as json
+from barbican.common import exception
 from barbican.common import utils
 
 
@@ -45,7 +46,7 @@ def abort(status=falcon.HTTP_500, message=None, req=None, resp=None):
     raise falcon.HTTPError(status, message)
 
 
-def load_body(req, resp=None):
+def load_body(req, resp=None, validator=None):
     """
     Helper function for loading an HTTP request body from JSON into a
     Python dictionary
@@ -63,5 +64,12 @@ def load_body(req, resp=None):
     except ValueError:
         LOG.exception("Problem loading request JSON.")
         abort(falcon.HTTP_400, 'Malformed JSON', req, resp)
+
+    if validator:
+        try:
+            parsed_body = validator.validate(parsed_body)
+        except exception.InvalidObject as e:
+            LOG.exception("Failed to validate JSON information")
+            abort(falcon.HTTP_400, str(e), req, resp)
 
     return parsed_body

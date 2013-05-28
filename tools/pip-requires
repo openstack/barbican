@@ -12,6 +12,8 @@ Celery>=3.0.19
 python-keystoneclient>=0.2.0
 stevedore>=0.8
 pycrypto>=2.6
+python-dateutil>=2.1
+jsonschema>=2.0.0
 
 # SQLAlchemy 0.7.10 typically has issues installing via pip, since it
 # will be removed as a dependency soon we will just grab the tarball

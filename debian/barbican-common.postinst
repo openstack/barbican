@@ -19,7 +19,7 @@ then
     chown barbican:barbican -R /var/lib/barbican/ /etc/barbican/
     chmod 0700 /etc/barbican/
 
-    # TBD: Replace these pip requirements with a true Debian package equivalent (via stdeb perhaps).
+    # TODO: Replace these pip requirements with a true Debian package equivalent (via stdeb perhaps).
     pip install uwsgi
     pip install falcon
     pip install oslo.config
@@ -27,6 +27,8 @@ then
     pip install PasteDeploy
     pip install stevedore
     pip install pycrypto
+    pip install python-dateutil
+    pip install jsonschema
 fi
 
 #DEBHELPER#

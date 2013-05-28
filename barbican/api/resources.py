@@ -21,6 +21,7 @@ import falcon
 
 from barbican import api
 from barbican.api.policy import Enforcer
+from barbican.api import validators
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.crypto.mime_types import augment_fields_with_content_types
@@ -248,11 +249,12 @@ class SecretsResource(api.ApiResource):
         self.datum_repo = datum_repo or repo.EncryptedDatumRepo()
         self.crypto_manager = crypto_manager
         self.policy = policy_enforcer or Enforcer()
+        self.validator = validators.NewSecretValidator()
 
     def on_post(self, req, resp, keystone_id):
         LOG.debug('Start on_post for tenant-ID {0}:'.format(keystone_id))
 
-        data = api.load_body(req, resp)
+        data = api.load_body(req, resp, self.validator)
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
 
         try:

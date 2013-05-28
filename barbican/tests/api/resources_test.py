@@ -234,7 +234,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_should_fail_due_to_plain_text_too_large(self):
-        big_text = ['A' for x in xrange(2 * DEFAULT_MAX_SECRET_BYTES)]
+        big_text = ''.join(['A' for x in xrange(2 * DEFAULT_MAX_SECRET_BYTES)])
 
         self.secret_req = {'name': self.name,
                            'mime_type': self.mime_type,

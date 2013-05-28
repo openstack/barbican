@@ -211,7 +211,7 @@ def clean_paging_values(offset_arg=None, limit_arg=None):
     limit = int(limit_arg) if limit_arg else CONF.default_limit_paging
     limit = limit if limit >= 2 else 2
     limit = limit if limit <= CONF.max_limit_paging else CONF.max_limit_paging
-    
+
     LOG.debug("Limit={0}, offset={1}".format(limit, offset))
 
     return (offset, limit)

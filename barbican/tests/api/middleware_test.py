@@ -33,7 +33,7 @@ class WhenTestingSimpleMiddleware(unittest.TestCase):
         self.middle = SimpleFilter(self.app)
         self.req = MagicMock()
 
-    def test_process_request(self):
+    def test_should_process_request(self):
         self.middle.process_request(self.req)
 
 
