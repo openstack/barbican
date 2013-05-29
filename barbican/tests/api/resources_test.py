@@ -652,7 +652,7 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
 
     def setUp(self):
         self.secret_name = 'name'
-        self.secret_mime_type = 'type'
+        self.secret_mime_type = 'text/plain'
         self.secret_algorithm = "algo"
         self.secret_bit_length = 512
         self.secret_cypher_type = "cytype"

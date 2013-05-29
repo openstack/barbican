@@ -129,6 +129,15 @@ class WhenTestingSecretValidator(unittest.TestCase):
         exception = e.exception
         self.assertTrue('plain_text' in str(exception))
 
+    def test_should_fail_bad_mime(self):
+        self.secret_req['mime_type'] = 'badmime'
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.secret_req)
+
+        exception = e.exception
+        self.assertTrue('mime_type' in str(exception))
+
     def test_should_fail_already_expired(self):
         self.secret_req['expiration'] = '2004-02-28T19:14:44.180394'
 
@@ -234,6 +243,33 @@ class WhenTestingOrderValidator(unittest.TestCase):
 
     def test_should_fail_no_mime(self):
         del self.secret_req['mime_type']
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('mime_type' in str(exception))
+
+    def test_should_fail_bad_mime(self):
+        self.secret_req['mime_type'] = 'badmimehere'
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('mime_type' in str(exception))
+
+    def test_should_fail_bad_mime_empty(self):
+        self.secret_req['mime_type'] = ''
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('mime_type' in str(exception))
+
+    def test_should_fail_bad_mime_whitespace(self):
+        self.secret_req['mime_type'] = '   '
 
         with self.assertRaises(excep.InvalidObject) as e:
             self.validator.validate(self.order_req)

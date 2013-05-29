@@ -60,6 +60,8 @@ class NewSecretValidator(ValidatorBase):
 
     def __init__(self):
         self.name = 'Secret'
+        
+        # TODO: Get the list of mime_types from the crypto plugins?
         self.schema = {
             "type": "object",
             "properties": {
@@ -69,7 +71,13 @@ class NewSecretValidator(ValidatorBase):
                 "bit_length": {"type": "integer", "minimum": 0},
                 "expiration": {"type": "string"},
                 "plain_text": {"type": "string"},
-                "mime_type": {"type": "string"},
+                "mime_type": {
+                    "type": "string",
+                    'enum': [
+                        'application/octet-stream',
+                        'text/plain'
+                    ]
+                },
             },
             "required": ["mime_type"]
         }
