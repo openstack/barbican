@@ -427,12 +427,13 @@ class OrdersResource(api.ApiResource):
         self.order_repo = order_repo or repo.OrderRepo()
         self.queue = queue_resource or get_queue_api()
         self.policy = policy_enforcer or Enforcer()
+        self.validator = validators.NewOrderValidator()
 
     def on_post(self, req, resp, keystone_id):
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
 
-        body = api.load_body(req, resp)
+        body = api.load_body(req, resp, self.validator)
         LOG.debug('Start on_post...{0}'.format(body))
 
         if 'secret' not in body:

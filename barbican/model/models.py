@@ -289,7 +289,7 @@ class Order(BASE, ModelBase):
     secret_algorithm = Column(String(255))
     secret_bit_length = Column(Integer)
     secret_cypher_type = Column(String(255))
-    secret_mime_type = Column(String(255))
+    secret_mime_type = Column(String(255), nullable=False)
     secret_expiration = Column(DateTime, default=None)
 
     secret_id = Column(String(36), ForeignKey('secrets.id'),
@@ -297,7 +297,8 @@ class Order(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        return {'secret': {'name': self.secret_name,
+        final_name = self.secret_name if self.secret_name else self.secret_id
+        return {'secret': {'name': final_name,
                            'mime_type': self.secret_mime_type,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,

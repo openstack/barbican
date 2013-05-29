@@ -51,7 +51,7 @@ class ValidatorBase(object):
         """
         schema_name = self.name
         if parent_schema:
-            schema_name = _('{0} within {1}').format(self.name, parent_schema)
+            schema_name = _("{0}' within '{1}").format(self.name, parent_schema)
         return schema_name
 
 
