@@ -226,9 +226,8 @@ class Secret(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        final_name = self.name if self.name else str(self.id)
         return {'secret_id': self.id,
-                'name': final_name,
+                'name': self.name or self.id,
                 'expiration': self.expiration,
                 'mime_type': self.mime_type,
                 'algorithm': self.algorithm,
@@ -297,8 +296,7 @@ class Order(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        final_name = self.secret_name if self.secret_name else self.secret_id
-        return {'secret': {'name': final_name,
+        return {'secret': {'name': self.secret_name or self.secret_id,
                            'mime_type': self.secret_mime_type,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
