@@ -74,8 +74,8 @@ class NewSecretValidator(ValidatorBase):
                 "mime_type": {
                     "type": "string",
                     'enum': [
-                        'application/octet-stream',
-                        'text/plain'
+                        'text/plain',
+                        'application/octet-stream'
                     ]
                 },
             },
