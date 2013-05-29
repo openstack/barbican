@@ -24,7 +24,7 @@ from barbican.crypto.extension_manager import CryptoExtensionManager
 from barbican.model import models
 from barbican.common import config
 from barbican.common import exception as excep
-from barbican.common.resources import DEFAULT_MAX_SECRET_BYTES
+from barbican.common.validators import DEFAULT_MAX_SECRET_BYTES
 from barbican.openstack.common import jsonutils
 
 
@@ -218,23 +218,23 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
 
         self.assertFalse(self.datum_repo.create_from.called)
 
-    def test_should_fail_due_to_empty_plain_text(self):
+    def test_should_add_new_secret_plain_text_almost_too_large(self):
+        big_text = ''.join(['A' for x
+                            in xrange(DEFAULT_MAX_SECRET_BYTES - 10)])
+
         self.secret_req = {'name': self.name,
                            'mime_type': self.mime_type,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
                            'cypher_type': self.secret_cypher_type,
-                           'plain_text': ''}
+                           'plain_text': big_text}
         self.stream.read.return_value = json.dumps(self.secret_req)
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp, self.keystone_id)
-
-        exception = cm.exception
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.resource.on_post(self.req, self.resp, self.keystone_id)
 
     def test_should_fail_due_to_plain_text_too_large(self):
-        big_text = ''.join(['A' for x in xrange(2 * DEFAULT_MAX_SECRET_BYTES)])
+        big_text = ''.join(['A' for x
+                            in xrange(DEFAULT_MAX_SECRET_BYTES + 10)])
 
         self.secret_req = {'name': self.name,
                            'mime_type': self.mime_type,
@@ -249,6 +249,21 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
 
         exception = cm.exception
         self.assertEqual(falcon.HTTP_413, exception.status)
+
+    def test_should_fail_due_to_empty_plain_text(self):
+        self.secret_req = {'name': self.name,
+                           'mime_type': self.mime_type,
+                           'algorithm': self.secret_algorithm,
+                           'bit_length': self.secret_bit_length,
+                           'cypher_type': self.secret_cypher_type,
+                           'plain_text': ''}
+        self.stream.read.return_value = json.dumps(self.secret_req)
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_post(self.req, self.resp, self.keystone_id)
+
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_should_fail_due_to_unsupported_mime(self):
         self.secret_req = {'name': self.name,
@@ -589,7 +604,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
     def test_should_fail_due_to_plain_text_too_large(self):
         self._setup_for_puts()
 
-        big_text = ['A' for x in xrange(2 * DEFAULT_MAX_SECRET_BYTES)]
+        big_text = ''.join(['A' for x in xrange(2 * DEFAULT_MAX_SECRET_BYTES)])
         self.stream.read.return_value = big_text
 
         with self.assertRaises(falcon.HTTPError) as cm:
@@ -637,7 +652,7 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
 
     def setUp(self):
         self.secret_name = 'name'
-        self.secret_mime_type = 'type'
+        self.secret_mime_type = 'text/plain'
         self.secret_algorithm = "algo"
         self.secret_bit_length = 512
         self.secret_cypher_type = "cytype"

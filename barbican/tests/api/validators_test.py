@@ -16,8 +16,8 @@
 import unittest
 import datetime
 from mock import MagicMock
-from barbican.api import validators
 from barbican.common import exception as excep
+from barbican.common import validators
 
 
 def suite():
@@ -54,15 +54,9 @@ class WhenTestingSecretValidator(unittest.TestCase):
         del self.secret_req['name']
         result = self.validator.validate(self.secret_req)
 
-        self.assertTrue('name' in result)
-        self.assertEqual(validators.DEFAULT_SECRET_NAME, result['name'])
-
     def test_should_validate_empty_name(self):
         self.secret_req['name'] = '    '
         result = self.validator.validate(self.secret_req)
-
-        self.assertTrue('name' in result)
-        self.assertEqual(validators.DEFAULT_SECRET_NAME, result['name'])
 
     def test_should_validate_no_plain_text(self):
         del self.secret_req['plain_text']
@@ -135,6 +129,15 @@ class WhenTestingSecretValidator(unittest.TestCase):
         exception = e.exception
         self.assertTrue('plain_text' in str(exception))
 
+    def test_should_fail_bad_mime(self):
+        self.secret_req['mime_type'] = 'badmime'
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.secret_req)
+
+        exception = e.exception
+        self.assertTrue('mime_type' in str(exception))
+
     def test_should_fail_already_expired(self):
         self.secret_req['expiration'] = '2004-02-28T19:14:44.180394'
 
@@ -176,6 +179,182 @@ class WhenTestingSecretValidator(unittest.TestCase):
 
         exception = e.exception
         self.assertTrue('mime_type' in str(exception))
+
+
+class WhenTestingOrderValidator(unittest.TestCase):
+
+    def setUp(self):
+        self.name = 'name'
+        self.mime_type = 'text/plain'
+        self.secret_algorithm = 'algo'
+        self.secret_bit_length = 512
+        self.secret_cypher_type = 'cytype'
+
+        self.secret_req = {'name': self.name,
+                           'mime_type': self.mime_type,
+                           'algorithm': self.secret_algorithm,
+                           'bit_length': self.secret_bit_length,
+                           'cypher_type': self.secret_cypher_type}
+        self.order_req = {'secret': self.secret_req}
+
+        self.validator = validators.NewOrderValidator()
+
+    def test_should_validate_all_fields(self):
+        self.validator.validate(self.order_req)
+
+    def test_should_validate_no_name(self):
+        del self.secret_req['name']
+        result = self.validator.validate(self.order_req)
+
+        self.assertTrue('secret' in result)
+
+    def test_should_validate_empty_name(self):
+        self.secret_req['name'] = '    '
+        result = self.validator.validate(self.order_req)
+
+        self.assertTrue('secret' in result)
+
+    def test_should_validate_future_expiration(self):
+        self.secret_req['expiration'] = '2114-02-28T19:14:44.180394'
+        result = self.validator.validate(self.order_req)
+
+        self.assertTrue('secret' in result)
+        result = result['secret']
+        self.assertTrue('expiration' in result)
+        self.assertTrue(isinstance(result['expiration'], datetime.datetime))
+
+    def test_should_validate_empty_expiration(self):
+        self.secret_req['expiration'] = '  '
+        result = self.validator.validate(self.order_req)
+
+        self.assertTrue('secret' in result)
+        result = result['secret']
+        self.assertTrue('expiration' in result)
+        self.assertTrue(not result['expiration'])
+
+    def test_should_fail_numeric_name(self):
+        self.secret_req['name'] = 123
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('name' in str(exception))
+
+    def test_should_fail_no_mime(self):
+        del self.secret_req['mime_type']
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('mime_type' in str(exception))
+
+    def test_should_fail_bad_mime(self):
+        self.secret_req['mime_type'] = 'badmimehere'
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('mime_type' in str(exception))
+
+    def test_should_fail_bad_mime_empty(self):
+        self.secret_req['mime_type'] = ''
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('mime_type' in str(exception))
+
+    def test_should_fail_bad_mime_whitespace(self):
+        self.secret_req['mime_type'] = '   '
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('mime_type' in str(exception))
+
+    def test_should_fail_negative_bit_length(self):
+        self.secret_req['bit_length'] = -23
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('bit_length' in str(exception))
+
+    def test_should_fail_non_integer_bit_length(self):
+        self.secret_req['bit_length'] = "23"
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('bit_length' in str(exception))
+
+    def test_should_fail_secret_not_order_schema_provided(self):
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.secret_req)
+
+        exception = e.exception
+        self.assertTrue('secret' in str(exception))
+
+    def test_should_fail_plain_text_provided(self):
+        self.secret_req['plain_text'] = '  '
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('plain_text' in str(exception))
+
+    def test_should_fail_already_expired(self):
+        self.secret_req['expiration'] = '2004-02-28T19:14:44.180394'
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('expiration' in str(exception))
+
+    def test_should_fail_expiration_nonsense(self):
+        self.secret_req['expiration'] = 'nonsense'
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('expiration' in str(exception))
+
+    def test_should_fail_all_nulls(self):
+        self.secret_req = {'name': None,
+                           'algorithm': None,
+                           'bit_length': None,
+                           'cypher_type': None}
+        self.order_req = {'secret': self.secret_req}
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('mime_type' in str(exception))
+
+    def test_should_fail_all_empties(self):
+        self.secret_req = {'name': '',
+                           'algorithm': '',
+                           'bit_length': '',
+                           'cypher_type': ''}
+        self.order_req = {'secret': self.secret_req}
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('mime_type' in str(exception))
+
 
 if __name__ == '__main__':
     unittest.main()

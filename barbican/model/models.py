@@ -207,7 +207,7 @@ class Secret(BASE, ModelBase):
         """Creates secret from a dict."""
         super(Secret, self).__init__()
 
-        self.name = parsed_request['name']
+        self.name = parsed_request.get('name', None)
         self.mime_type = parsed_request['mime_type']
 
         self.expiration = parsed_request.get('expiration', None)
@@ -227,7 +227,7 @@ class Secret(BASE, ModelBase):
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
         return {'secret_id': self.id,
-                'name': self.name,
+                'name': self.name or self.id,
                 'expiration': self.expiration,
                 'mime_type': self.mime_type,
                 'algorithm': self.algorithm,
@@ -288,7 +288,7 @@ class Order(BASE, ModelBase):
     secret_algorithm = Column(String(255))
     secret_bit_length = Column(Integer)
     secret_cypher_type = Column(String(255))
-    secret_mime_type = Column(String(255))
+    secret_mime_type = Column(String(255), nullable=False)
     secret_expiration = Column(DateTime, default=None)
 
     secret_id = Column(String(36), ForeignKey('secrets.id'),
@@ -296,7 +296,7 @@ class Order(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        return {'secret': {'name': self.secret_name,
+        return {'secret': {'name': self.secret_name or self.secret_id,
                            'mime_type': self.secret_mime_type,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
