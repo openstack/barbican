@@ -13,8 +13,8 @@ Additional documentation can be found on the [Github Wiki](https://github.com/cl
 
 * [Installation](https://github.com/cloudkeep/barbican/wiki/Developer-Guide)
 * Contributing
-* [API Documentation](https://github.com/cloudkeep/barbican/wiki/High-Level-API-Proposal)
-* [Technology](https://github.com/cloudkeep/barbican/wiki/Architecture)
+* [API Documentation](https://github.com/cloudkeep/barbican/wiki/Blueprint:-Technical-Approach)
+* [Technology](https://github.com/cloudkeep/barbican/wiki/Blueprint:-Technical-Approach)
 * FAQ
 
 ## Why Should You Use Barbican?
