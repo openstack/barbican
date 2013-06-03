@@ -17,5 +17,5 @@
 Cloudkeep's Barbican version
 """
 
-__version__ = '0.1.58'
+__version__ = '0.1.59dev'
 __version_info__ = tuple(__version__.split('.'))
