@@ -97,15 +97,8 @@ class NewSecretValidator(ValidatorBase):
         json_data['name'] = name
 
         # Validate/convert 'expiration' if provided.
-        expiration = self._extract_expiration(json_data)
+        expiration = self._extract_expiration(json_data, schema_name)
         if expiration:
-            try:
-                expiration = dateutil.parser.parse(expiration)
-            except ValueError:
-                LOG.exception("Problem parsing date")
-                raise exception.InvalidObject(schema=schema_name,
-                                              reason=_("Invalid date "
-                                                       "for 'expiration'"))
             # Verify not already expired.
             utcnow = timeutils.utcnow()
             if expiration <= utcnow:
@@ -133,12 +126,20 @@ class NewSecretValidator(ValidatorBase):
 
         return json_data
 
-    def _extract_expiration(self, json_data):
+    def _extract_expiration(self, json_data, schema_name):
         """Extracts and returns the expiration date from the JSON data."""
-        expiration = json_data.get('expiration', None)
-        if expiration:
-            if not expiration.strip():
-                expiration = None
+        expiration = None
+        expiration_raw = json_data.get('expiration', None)
+        if expiration_raw and expiration_raw.strip():
+            try:
+                expiration_tz = timeutils.parse_isotime(expiration_raw)
+                expiration = timeutils.normalize_time(expiration_tz)
+            except ValueError:
+                LOG.exception("Problem parsing expiration date")
+                raise exception.InvalidObject(schema=schema_name,
+                                              reason=_("Invalid date "
+                                                       "for 'expiration'"))
+
         return expiration
 
 
