@@ -64,7 +64,7 @@ class CryptoPluginBase(object):
         """
 
     @abc.abstractmethod
-    def create(self, secret_type):
+    def create(self, algorithm, bit_length):
         """Create a new key."""
 
     @abc.abstractmethod
@@ -116,9 +116,20 @@ class SimpleCryptoPlugin(CryptoPluginBase):
         padded_secret = decryptor.decrypt(cypher_text)
         return self._strip_pad(padded_secret)
 
-    def create(self, secret_type):
-        # TODO:
-        return "insecure_key"
+    def create(self, algorithm, bit_length):
+        # TODO: do this right
+        # return Random.get_random_bytes(bit_length/8)
+        if bit_length == 256:
+            return (b"r\x07\xb7\xfc\xe8\xae\x99\x94\xce_I\xaftM\xb3T'\x1c\xa2"
+                    b"\xd5\xeb\x03p\x17\xb8\r\xddA\xf9\xa3\x08W")
+        elif bit_length == 192:
+            return (b"\xb7^\xc5\xc9Ey\xc3\x88-\xad\x8d\xd2\xad{\x96\xba#\x973"
+                    b"\xe0ZY\xe5\x1e")
+        elif bit_length == 128:
+            return b",q\x90M\xbc)6AbjUx2t(C"
+        else:
+            raise ValueError('At this time you must supply 128/192/256 as'
+                             'bit length')
 
     def supports(self, secret_type):
         return secret_type in self.supported_types

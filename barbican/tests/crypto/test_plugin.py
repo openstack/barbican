@@ -32,7 +32,7 @@ class TestCryptoPlugin(CryptoPluginBase):
     def decrypt(self, encrypted, kek_metadata, tenant):
         return 'plain-data'
 
-    def create(self, secret_type):
+    def create(self, algorithm, bit_length):
         return "insecure_key"
 
     def supports(self, secret_type):
@@ -88,3 +88,19 @@ class WhenTestingSimpleCryptoPlugin(unittest.TestCase):
         encrypted, kek_metadata = self.plugin.encrypt(unencrypted, MagicMock())
         decrypted = self.plugin.decrypt(encrypted, kek_metadata, MagicMock())
         self.assertEqual(unencrypted, decrypted)
+
+    def test_create_256_bit_key(self):
+        key = self.plugin.create("aes", 256)
+        self.assertEqual(len(key), 32)
+
+    def test_create_192_bit_key(self):
+        key = self.plugin.create("aes", 192)
+        self.assertEqual(len(key), 24)
+
+    def test_create_128_bit_key(self):
+        key = self.plugin.create("aes", 128)
+        self.assertEqual(len(key), 16)
+
+    def test_create_unsupported_bit_key(self):
+        with self.assertRaises(ValueError):
+            self.plugin.create("aes", 129)
