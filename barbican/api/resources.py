@@ -221,6 +221,26 @@ def add_nav_hrefs(resources_name, keystone_id, offset, limit,
     return data
 
 
+def handle_exceptions(operation_name=_('System')):
+    """
+    Handle general exceptions to avoid a response code of 0
+    back to clients.
+    """
+    def exceptions_decorator(fn):
+        def handler(inst, req, resp, *args, **kwargs):
+            try:
+                fn(inst, req, resp, *args, **kwargs)
+            except falcon.HTTPError as f:
+                raise f  # Already converted to Falcon exception, just reraise
+            except Exception as e:
+                message = _('{0} failure seen - please contact site '
+                            'administrator').format(operation_name)
+                LOG.exception(message)
+                _general_failure(message, req, resp)
+        return handler
+    return exceptions_decorator
+
+
 class VersionResource(api.ApiResource):
     """Returns service and build version information"""
 
@@ -250,8 +270,9 @@ class SecretsResource(api.ApiResource):
         self.policy = policy_enforcer or Enforcer()
         self.validator = validators.NewSecretValidator()
 
+    @handle_exceptions(_('Secret creation'))
     def on_post(self, req, resp, keystone_id):
-        LOG.debug('Start on_post for tenant-ID {0}:'.format(keystone_id))
+        LOG.debug('Start on_post for tenant-ID {0}:...'.format(keystone_id))
 
         data = api.load_body(req, resp, self.validator)
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
@@ -281,6 +302,7 @@ class SecretsResource(api.ApiResource):
         LOG.debug('URI to secret is {0}'.format(url))
         resp.body = json.dumps({'secret_ref': url})
 
+    @handle_exceptions(_('Secret(s) retrieval'))
     def on_get(self, req, resp, keystone_id):
         LOG.debug('Start secrets on_get '
                   'for tenant-ID {0}:'.format(keystone_id))
@@ -325,6 +347,7 @@ class SecretResource(api.ApiResource):
         self.datum_repo = datum_repo or repo.EncryptedDatumRepo()
         self.policy = policy_enforcer or Enforcer()
 
+    @handle_exceptions(_('Secret retrieval'))
     def on_get(self, req, resp, keystone_id, secret_id):
 
         secret = self.repo.get(entity_id=secret_id, keystone_id=keystone_id,
@@ -360,6 +383,7 @@ class SecretResource(api.ApiResource):
                 LOG.exception('Secret decryption failed - unknown')
                 _failed_to_decrypt_data(req, resp)
 
+    @handle_exceptions(_('Secret update'))
     def on_put(self, req, resp, keystone_id, secret_id):
 
         if not req.content_type or req.content_type == 'application/json':
@@ -404,6 +428,7 @@ class SecretResource(api.ApiResource):
             LOG.exception('Secret creation failed - unknown')
             _failed_to_create_encrypted_datum(req, resp)
 
+    @handle_exceptions(_('Secret deletion'))
     def on_delete(self, req, resp, keystone_id, secret_id):
 
         try:
@@ -429,6 +454,7 @@ class OrdersResource(api.ApiResource):
         self.policy = policy_enforcer or Enforcer()
         self.validator = validators.NewOrderValidator()
 
+    @handle_exceptions(_('Order creation'))
     def on_post(self, req, resp, keystone_id):
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
@@ -462,6 +488,7 @@ class OrdersResource(api.ApiResource):
         url = convert_order_to_href(keystone_id, new_order.id)
         resp.body = json.dumps({'order_ref': url})
 
+    @handle_exceptions(_('Order(s) retrieval'))
     def on_get(self, req, resp, keystone_id):
         LOG.debug('Start orders on_get '
                   'for tenant-ID {0}:'.format(keystone_id))
@@ -498,6 +525,7 @@ class OrderResource(api.ApiResource):
         self.repo = order_repo or repo.OrderRepo()
         self.policy = policy_enforcer or Enforcer()
 
+    @handle_exceptions(_('Order retrieval'))
     def on_get(self, req, resp, keystone_id, order_id):
         order = self.repo.get(entity_id=order_id, keystone_id=keystone_id,
                               suppress_exception=True)
@@ -509,6 +537,7 @@ class OrderResource(api.ApiResource):
                                                 order.to_dict_fields()),
                                default=json_handler)
 
+    @handle_exceptions(_('Order deletion'))
     def on_delete(self, req, resp, keystone_id, order_id):
 
         try:
