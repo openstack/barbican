@@ -132,7 +132,7 @@ class CryptoExtensionManager(named.NamedExtensionManager):
                 #   Note: It could be the *data* key to generate (for the
                 #   secret algo type) uses a different plug in than that
                 #   used to encrypted the key.
-                data_key = ext.obj.create(secret.mime_type)
+                data_key = ext.obj.create(secret.algorithm, secret.bit_length)
                 datum = EncryptedDatum(secret)
                 datum.cypher_text, datum.kek_metadata = ext.obj.encrypt(
                     data_key, tenant
