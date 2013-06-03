@@ -51,7 +51,8 @@ class ValidatorBase(object):
         """
         schema_name = self.name
         if parent_schema:
-            schema_name = _("{0}' within '{1}").format(self.name, parent_schema)
+            schema_name = _("{0}' within '{1}").format(self.name,
+                                                       parent_schema)
         return schema_name
 
 
@@ -60,7 +61,7 @@ class NewSecretValidator(ValidatorBase):
 
     def __init__(self):
         self.name = 'Secret'
-        
+
         # TODO: Get the list of mime_types from the crypto plugins?
         self.schema = {
             "type": "object",

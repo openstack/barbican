@@ -97,4 +97,3 @@ class Debug(Middleware):
             sys.stdout.flush()
             yield part
         print
-
