@@ -226,6 +226,7 @@ def handle_exceptions(operation_name=_('System')):
     Handle general exceptions to avoid a response code of 0
     back to clients.
     """
+
     def exceptions_decorator(fn):
         def handler(inst, req, resp, *args, **kwargs):
             try:
@@ -237,7 +238,9 @@ def handle_exceptions(operation_name=_('System')):
                             'administrator').format(operation_name)
                 LOG.exception(message)
                 _general_failure(message, req, resp)
+
         return handler
+
     return exceptions_decorator
 
 
@@ -321,12 +324,12 @@ class SecretsResource(api.ApiResource):
         params = req._params
 
         result = self.secret_repo \
-                     .get_by_create_date(keystone_id,
-                                         offset_arg=params.get('offset',
-                                                               None),
-                                         limit_arg=params.get('limit',
-                                                              None),
-                                         suppress_exception=True)
+            .get_by_create_date(keystone_id,
+                                offset_arg=params.get('offset',
+                                                      None),
+                                limit_arg=params.get('limit',
+                                                     None),
+                                suppress_exception=True)
         secrets, offset, limit = result
 
         if not secrets:
@@ -369,7 +372,7 @@ class SecretResource(api.ApiResource):
         resp.status = falcon.HTTP_200
 
         if not req.accept or req.accept == 'application/json' \
-           or req.accept == '*/*':
+                or req.accept == '*/*':
             # Metadata-only response, no decryption necessary.
             resp.set_header('Content-Type', 'application/json')
             secret_fields = augment_fields_with_content_types(secret)
@@ -507,12 +510,12 @@ class OrdersResource(api.ApiResource):
         params = req._params
 
         result = self.order_repo \
-                     .get_by_create_date(keystone_id,
-                                         offset_arg=params.get('offset',
-                                                               None),
-                                         limit_arg=params.get('limit',
-                                                              None),
-                                         suppress_exception=True)
+            .get_by_create_date(keystone_id,
+                                offset_arg=params.get('offset',
+                                                      None),
+                                limit_arg=params.get('limit',
+                                                     None),
+                                suppress_exception=True)
         orders, offset, limit = result
 
         if not orders:
