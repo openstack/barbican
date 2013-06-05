@@ -42,11 +42,18 @@ def create_main_app(global_config, **local_conf):
     orders = res.OrdersResource()
     order = res.OrderResource()
 
+    # For performance testing only
+    performance = res.PerformanceResource()
+    performance_uri = 'da-1115-sorb-672960-regio'  # Put testing required URI here.
+
     wsgi_app = api = falcon.API()
     api.add_route('/', versions)
     api.add_route('/v1/{keystone_id}/secrets', secrets)
     api.add_route('/v1/{keystone_id}/secrets/{secret_id}', secret)
     api.add_route('/v1/{keystone_id}/orders', orders)
     api.add_route('/v1/{keystone_id}/orders/{order_id}', order)
+
+    # For performance testing only
+    api.add_route('/{0}'.format(performance_uri), performance)
 
     return wsgi_app

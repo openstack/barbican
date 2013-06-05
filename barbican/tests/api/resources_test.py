@@ -33,8 +33,10 @@ def suite():
 
     suite.addTest(WhenTestingVersionResource())
     suite.addTest(WhenCreatingSecretsUsingSecretsResource())
-    suite.addTest(WhenGettingOrDeletingSecretUsingSecretResource())
+    suite.addTest(WhenGettingSecretsListUsingSecretsResource())
+    suite.addTest(WhenGettingPuttingOrDeletingSecretUsingSecretResource())
     suite.addTest(WhenCreatingOrdersUsingOrdersResource())
+    suite.addText(WhenGettingOrdersListUsingOrdersResource())
     suite.addTest(WhenGettingOrDeletingOrderUsingOrderResource())
 
     return suite
@@ -174,6 +176,20 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.assertEqual('cypher_text', datum.cypher_text)
         self.assertEqual(self.mime_type, datum.mime_type)
         self.assertIsNotNone(datum.kek_metadata)
+
+    def test_should_add_new_secret_with_expiration(self):
+        expiration = '2114-02-28 12:14:44.180394-05:00'
+        self.secret_req.update({'expiration': expiration})
+        self.stream.read.return_value = json.dumps(self.secret_req)        
+        
+        self.resource.on_post(self.req, self.resp, self.keystone_id)
+
+        self.assertEquals(self.resp.status, falcon.HTTP_201)
+
+        args, kwargs = self.secret_repo.create_from.call_args
+        secret = args[0]
+        expected = expiration[:-6].replace('12', '17', 1)
+        self.assertEqual(expected, str(secret.expiration))
 
     def test_should_add_new_secret_tenant_not_exist(self):
         self.tenant_repo.get.return_value = None

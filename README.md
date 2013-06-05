@@ -5,17 +5,16 @@ Barbican is part of a set of applications that make up the CloudKeep ecosystem. 
 
 * [Postern](https://github.com/cloudkeep/postern) - Go based agent that provides access to secrets from the Barbican API.
 * [Palisade](https://github.com/cloudkeep/palisade) - AngularJS based web ui for the Barbican API.
+* [Python-barbicanclient](https://github.com/cloudkeep/python-barbicanclient) - A convenient Python-based library to interact with the Barbican API.
 * [Keep](https://github.com/cloudkeep/keep) - A python-based command line client for the Barbican API.
 
 Additional documentation can be found on the [Github Wiki](https://github.com/cloudkeep/barbican/wiki). For questions, comments or concerns, hop on the OpenStack dev mailing list at `openstack-dev@lists.openstack.org` and let us know what you think, just add `[openstack-dev][barbican]` to the subject. You can also join our Freenode IRC at `#openstack-cloudkeep`.
 
+
 ## Getting Started
 
-* [Installation](https://github.com/cloudkeep/barbican/wiki/Developer-Guide)
-* Contributing
-* [API Documentation](https://github.com/cloudkeep/barbican/wiki/Blueprint:-Technical-Approach)
-* [Technology](https://github.com/cloudkeep/barbican/wiki/Blueprint:-Technical-Approach)
-* FAQ
+* [Please visit our wiki home page for details](https://github.com/cloudkeep/barbican/wiki)
+
 
 ## Why Should You Use Barbican?
 The current state of key management is atrocious. While Windows does have some decent options through the use of the Data Protection API (DPAPI) and Active Directory, Linux lacks a cohesive story around how to manage keys for applicaiton use. 
