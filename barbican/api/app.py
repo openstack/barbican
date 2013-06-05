@@ -44,7 +44,7 @@ def create_main_app(global_config, **local_conf):
 
     # For performance testing only
     performance = res.PerformanceResource()
-    performance_uri = 'mu-1234-cafe-5678-babe'
+    performance_uri = 'mu-1a90dfd0-7e7abba4-4e459908-fc097d60'
 
     wsgi_app = api = falcon.API()
     api.add_route('/', versions)
