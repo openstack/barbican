@@ -73,7 +73,6 @@ def create_order(mime_type, id="id", name="name",
 
 
 class WhenTestingVersionResource(unittest.TestCase):
-
     def setUp(self):
         self.policy = MagicMock()
 
@@ -96,7 +95,6 @@ class WhenTestingVersionResource(unittest.TestCase):
 
 
 class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
-
     def setUp(self):
         self.name = 'name'
         self.plain_text = 'not-encrypted'.decode('utf-8')
@@ -180,8 +178,8 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
     def test_should_add_new_secret_with_expiration(self):
         expiration = '2114-02-28 12:14:44.180394-05:00'
         self.secret_req.update({'expiration': expiration})
-        self.stream.read.return_value = json.dumps(self.secret_req)        
-        
+        self.stream.read.return_value = json.dumps(self.secret_req)
+
         self.resource.on_post(self.req, self.resp, self.keystone_id)
 
         self.assertEquals(self.resp.status, falcon.HTTP_201)
@@ -298,7 +296,6 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
 
 
 class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
-
     def setUp(self):
         self.tenant_id = 'tenant1234'
         self.keystone_id = 'keystone1234'
@@ -409,9 +406,7 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
             return '/v1/{0}/secrets'.format(keystone_id)
 
 
-class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
-        unittest.TestCase):
-
+class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
     def setUp(self):
         self.tenant_id = 'tenantid1234'
         self.keystone_id = 'keystone1234'
@@ -476,7 +471,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
         self.resource.on_get(self.req, self.resp, self.keystone_id,
                              self.secret.id)
 
-        self.secret_repo\
+        self.secret_repo \
             .get.assert_called_once_with(entity_id=self.secret.id,
                                          keystone_id=self.keystone_id,
                                          suppress_exception=True)
@@ -515,7 +510,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
         self.assertEqual(falcon.HTTP_404, exception.status)
 
     def test_should_throw_exception_for_get_when_accept_not_supported(self):
-
         self.req.accept = 'bogusaccept'
 
         with self.assertRaises(falcon.HTTPError) as cm:
@@ -526,7 +520,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
         self.assertEqual(falcon.HTTP_406, exception.status)
 
     def test_should_throw_exception_for_get_when_datum_not_available(self):
-
         self.req.accept = 'text/plain'
         self.secret.encrypted_data = []
 
@@ -665,7 +658,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
 
 
 class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
-
     def setUp(self):
         self.secret_name = 'name'
         self.secret_mime_type = 'text/plain'
@@ -742,7 +734,6 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
 
 
 class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
-
     def setUp(self):
         self.tenant_id = 'tenant1234'
         self.keystone_id = 'keystoneid1234'
@@ -843,7 +834,6 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
 
 
 class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
-
     def setUp(self):
         self.tenant_keystone_id = 'keystoneid1234'
         self.requestor = 'requestor1234'

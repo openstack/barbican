@@ -3,8 +3,7 @@ API JSON validators.
 """
 
 import abc
-import dateutil.parser
-from jsonschema import validate, ValidationError
+import jsonschema as schema
 from oslo.config import cfg
 from barbican.common import exception
 from barbican.openstack.common import timeutils
@@ -40,7 +39,7 @@ class ValidatorBase(object):
         :param parent_schema: Name of the parent schema to this schema.
         :returns: dict -- JSON content, post-validation and
         :                 normalization/defaulting.
-        :raises: ValidationError on schema violations.
+        :raises: schema.ValidationError on schema violations.
 
         """
 
@@ -87,8 +86,8 @@ class NewSecretValidator(ValidatorBase):
         schema_name = self._full_name(parent_schema)
 
         try:
-            validate(json_data, self.schema)
-        except ValidationError as e:
+            schema.validate(json_data, self.schema)
+        except schema.ValidationError as e:
             raise exception.InvalidObject(schema=schema_name, reason=str(e))
 
         # Validate/normalize 'name'.
@@ -160,8 +159,8 @@ class NewOrderValidator(ValidatorBase):
         schema_name = self._full_name(parent_schema)
 
         try:
-            validate(json_data, self.schema)
-        except ValidationError as e:
+            schema.validate(json_data, self.schema)
+        except schema.ValidationError as e:
             raise exception.InvalidObject(schema=schema_name, reason=str(e))
 
         # If secret group is provided, validate it now.
