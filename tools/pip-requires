@@ -14,7 +14,4 @@ stevedore>=0.8
 pycrypto>=2.6
 python-dateutil>=2.1
 jsonschema>=2.0.0
-
-# SQLAlchemy 0.7.10 typically has issues installing via pip, since it
-# will be removed as a dependency soon we will just grab the tarball
-https://pypi.python.org/packages/source/S/SQLAlchemy/SQLAlchemy-0.7.10.tar.gz#md5=ecc0cd1cd906d17818a5f08fe13ae19e
+SQLAlchemy>=0.8.1
