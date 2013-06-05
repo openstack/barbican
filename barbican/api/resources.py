@@ -241,6 +241,17 @@ def handle_exceptions(operation_name=_('System')):
     return exceptions_decorator
 
 
+class PerformanceResource(api.ApiResource):
+    """Supports a static response to support performance testing"""
+
+    def __init__(self):
+        LOG.debug('=== Creating PerformanceResource ===')
+
+    def on_get(self, req, resp):
+        resp.status = falcon.HTTP_200
+        resp.body = '42'
+
+
 class VersionResource(api.ApiResource):
     """Returns service and build version information"""
 
