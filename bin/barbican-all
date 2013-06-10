@@ -31,5 +31,19 @@ then
   fi
 fi
 
+# TODO: This is breaking deployment...need to analyze.
+#if [ ! -f $POLICY_FILE ];
+#then
+#  LOCAL_POLICY_FILE=./etc/$PKG/policy.json
+#  mkdir -p $PKG_DIR
+#  sudo cp $LOCAL_POLICY_FILE POLICY_FILE
+#fi
+#
+#if [ ! -f $SIGNING_DIR ];
+#then
+#  echo "making "$SIGNING_DIR
+#  sudo mkdir -p $SIGNING_DIR
+#fi
+
 echo 'Running Barbican uWSGI Emperor '$PKG_DIR/vassals
 uwsgi --master --emperor $PKG_DIR/vassals $OPTS
