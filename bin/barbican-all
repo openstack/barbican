@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# barbican-api - Script run Cloudkeep's Barbican API app.
+
+PKG=barbican
+
+# For local development, set VENV_PYTHON equal to the path to your virtual environment's site-packages location
+VENV=${VENV:-.venv}
+VENV_HOME=${VENV_HOME:-$PWD}
+VENV_PYTHON=$VENV_HOME/$VENV/lib/python2.7/site-packages
+
+PKG_DIR=/etc/$PKG
+CONF_FILE=$PKG_DIR/barbican-api.conf
+POLICY_FILE=$PKG_DIR/policy.json
+SIGNING_DIR=$PKG_DIR/cache/
+OPTS='--daemonize /var/log/barbican/uwsgi.log'
+
+# Configure for a local deployment environment:
+if [ ! -f $CONF_FILE ];
+then
+  PKG_DIR=$PWD/etc/$PKG
+  CONF_FILE=./etc/$PKG/barbican-api.conf
+  PYTHONPATH=$VENV_PYTHON:$PYTHONPATH
+  OPTS='-H '$VENV_HOME/$VENV
+
+  # Copy conf file to home directory so oslo.config can find it
+  LOCAL_CONF_FILE=~/barbican-api.conf
+  if [ ! -f $LOCAL_CONF_FILE ];
+  then
+    cp ./etc/$PKG/barbican-api.conf ~
+  fi
+fi
+
+echo 'Running Barbican uWSGI Emperor '$PKG_DIR/vassals
+uwsgi --master --emperor $PKG_DIR/vassals $OPTS
