@@ -57,3 +57,13 @@ def create_main_app(global_config, **local_conf):
     api.add_route('/{0}'.format(performance_uri), performance)
 
     return wsgi_app
+
+
+def create_admin_app(global_config, **local_conf):
+    config.parse_args()
+
+    versions = res.VersionResource()
+    wsgi_app = api = falcon.API()
+    api.add_route('/', versions)
+
+    return wsgi_app
