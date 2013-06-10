@@ -1,4 +1,5 @@
 etc/barbican/barbican-api-paste.ini etc/barbican
+etc/barbican/barbican-admin-paste.ini etc/barbican
 etc/barbican/barbican-api.conf etc/barbican
-etc/barbican/barbican-api.ini etc/barbican
-usr/bin/barbican-api
+etc/barbican/vassals/barbican-api.ini etc/barbican/vassals
+etc/barbican/vassals/barbican-admin.ini etc/barbican/vassals
