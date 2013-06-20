@@ -11,8 +11,12 @@
 #	bash run_tests.sh -N || true
 #endif
 
+override_dh_auto_install:
+	python setup.py install --root=debian/barbican-common --install-layout=deb
+
 # TBD: Use this when we are ready for sphinx docs
-#override_dh_auto_build:
+override_dh_auto_build:
+
 #	dh_auto_build
 #ifeq (,$(findstring nodocs, $(DEB_BUILD_OPTIONS)))
 #	mkdir -p doc/build
@@ -20,6 +24,9 @@
 #else
 #	mkdir -p doc/build/html
 #endif
+
+override_dh_python2:
+	dh_python2 --no-guessing-deps
 
 override_dh_auto_clean:
 	dh_auto_clean

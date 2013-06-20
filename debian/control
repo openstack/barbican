@@ -1,72 +1,39 @@
 Source: barbican
-Section: net
+Section: python
 Priority: extra
-Maintainer: PKG OpenStack <openstack-devel@lists.alioth.debian.org>
-Uploaders: John Wood <john.wood@rackspace.com>
-Build-Depends: debhelper (>= 7.0.50),
- po-debconf,
- python-all (>= 2.6.6-3~),
- sqlite3,
- curl,
- pep8,
- python-boto,
- python-crypto,
- python-eventlet,
- python-httplib2 (>= 0.6.0),
- python-iso8601,
- python-kombu,
- python-novaclient,
- python-migrate,
- python-mox,
- python-nose,
- python-paste,
- python-pastedeploy,
- python-routes,
- python-setuptools,
- python-sphinx,
- python-sqlalchemy (>= 0.7.4),
- python-pysqlite2,
- python-swift,
- python-webob,
- python-xattr,
- procps
+Maintainer: CloudKeep Project <cloudkeep@googlegroups.com>
+Uploaders: John Wood <john.wood@rackspace.com>,
+ Douglas Mendizabal <douglas.mendizabal@rackspace.com>
+Build-Depends: debhelper (>= 9), python
 Standards-Version: 3.9.3
 X-Python-Version: >= 2.6
 Homepage: http://launchpad.net/barbican
 Vcs-Browser: https://github.com/jfwood/barbican
 Vcs-Git: git://github.com/jfwood/barbican.git
 
-Package: python-barbican
-Architecture: amd64
-Section: python
-Depends: ${python:Depends}, ${misc:Depends},
- python-boto,
- python-crypto,
- python-eventlet,
- python-httplib2 (>= 0.6.0),
- python-iso8601,
- python-kombu,
- python-migrate,
- python-pastedeploy,
- python-routes,
- python-sqlalchemy (>= 0.7.4),
- python-pysqlite2,
- python-swift,
- python-webob,
- python-xattr
-Description: OpenStack Key Management Service - Python client library
- The Barbican project provides services for storing and retrieving sensitive 
- client information such as encryption keys.
- .
- This package contains the Python client libraries.
-
 Package: barbican-common
 Architecture: amd64
 Section: python
 Depends: ${python:Depends}, ${misc:Depends},
- python-barbican (= ${binary:Version}),
+ python-celery,
+ python-crypto,
+ python-dateutil,
+ python-eventlet,
+ python-falcon,
+ python-iso8601,
+ python-jsonschema,
+ python-keystoneclient,
+ python-kombu,
+ python-pastedeploy,
+ python-pysqlite2,
+ python-sqlalchemy (>= 0.7.4),
+ python-stevedore,
+ python-webob,
+ uwsgi,
+ uwsgi-plugin-python,
  adduser,
  debconf,
+ python-pip,
 Description: OpenStack Key Management Service - common files
  The Barbican project provides services for storing and retrieving sensitive 
  client information such as encryption keys.
@@ -84,13 +51,13 @@ Description: OpenStack Key Management Service - API Server
  .
  This package contains the Barbican API Server.
 
-Package: barbican
+Package: barbican-worker
 Architecture: amd64
 Section: python
-Depends: barbican-api (= ${binary:Version}),
- ${misc:Depends}
-Description: OpenStack Key Management Service - metapackage
+Depends: ${python:Depends}, ${misc:Depends},
+ barbican-common (= ${binary:Version}),
+Description: OpenStack Key Management Service - Worker Node
  The Barbican project provides services for storing and retrieving sensitive 
  client information such as encryption keys.
  .
- This is a dependency package to install all of the Cloudkeep suite.
+ This package contains the Barbican Worker Node.
