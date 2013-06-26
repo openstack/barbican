@@ -16,6 +16,7 @@
 """
 Barbican middleware modules.
 """
+import sys
 import webob.dec
 from barbican.common import utils
 

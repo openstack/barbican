@@ -1,8 +1,4 @@
 import httplib
-import os
-import StringIO
-import subprocess
-import sys
 
 
 host = "localhost"

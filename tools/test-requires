@@ -3,3 +3,4 @@ nose
 nosexcover
 testtools
 tox
+pep8

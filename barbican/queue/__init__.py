@@ -18,7 +18,6 @@ Queue objects for Cloudkeep's Barbican
 """
 
 from oslo.config import cfg
-from barbican.common import config
 from barbican.openstack.common.gettextutils import _
 from barbican.openstack.common import importutils
 from barbican.common import utils

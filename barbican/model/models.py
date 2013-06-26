@@ -17,17 +17,14 @@
 Defines database models for Barbican
 """
 
-import dateutil.parser
 from sqlalchemy import Column, Integer, String, BigInteger
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import ForeignKey, DateTime, Boolean, Text, LargeBinary
-from sqlalchemy.orm import relationship, backref, object_mapper
-from sqlalchemy import Index, UniqueConstraint
+from sqlalchemy.orm import relationship, object_mapper
 
 from barbican.openstack.common import timeutils
 from barbican.openstack.common import uuidutils
-from barbican.openstack.common import jsonutils as json
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)

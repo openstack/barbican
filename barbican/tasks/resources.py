@@ -16,11 +16,10 @@
 """
 Task resources for the Barbican API.
 """
-from time import sleep
 from barbican.crypto.extension_manager import CryptoExtensionManager
 from barbican.model import repositories as rep
 from barbican.model.models import States
-from barbican.common.resources import create_secret, get_or_create_tenant
+from barbican.common.resources import create_secret
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)

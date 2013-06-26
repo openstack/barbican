@@ -28,7 +28,6 @@ from oslo.config import cfg
 
 import sqlalchemy
 import sqlalchemy.orm as sa_orm
-import sqlalchemy.sql as sa_sql
 from sqlalchemy import or_
 
 from barbican.common import exception
@@ -62,6 +61,9 @@ db_opts = [
 CONF = cfg.CONF
 CONF.register_opts(db_opts)
 CONF.import_opt('debug', 'barbican.openstack.common.log')
+
+_CONNECTION = None
+_IDLE_TIMEOUT = None
 
 
 def setup_db_env():
@@ -107,10 +109,10 @@ def get_engine():
         _RETRY_INTERVAL
 
     if not _ENGINE:
-        tries = _MAX_RETRIES
-        retry_interval = _RETRY_INTERVAL
+        if not _CONNECTION:
+            raise exception.BarbicanException('No _CONNECTION configured')
 
-        connection_dict = sqlalchemy.engine.url.make_url(_CONNECTION)
+#TODO:        connection_dict = sqlalchemy.engine.url.make_url(_CONNECTION)
 
         engine_args = {
             'pool_recycle': _IDLE_TIMEOUT,
@@ -313,7 +315,7 @@ class BaseRepo(object):
             except sqlalchemy.exc.IntegrityError:
                 LOG.exception('Problem saving entity for update')
                 raise exception.NotFound("Entity ID %s not found"
-                                         % entity_id)
+                                         % entity.id)
 
     def update(self, entity_id, values, purge_props=False):
         """

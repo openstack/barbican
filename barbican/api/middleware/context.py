@@ -24,6 +24,7 @@ from barbican.api import policy
 from barbican.api.middleware import Middleware
 import barbican.context
 import barbican.openstack.common.log as logging
+from barbican.openstack.common.gettextutils import _
 
 
 context_opts = [

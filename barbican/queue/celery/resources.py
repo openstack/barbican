@@ -20,7 +20,7 @@ from celery import Celery
 
 from oslo.config import cfg
 from barbican.tasks.resources import BeginOrder
-from barbican.common import config, utils
+from barbican.common import utils
 
 
 LOG = utils.getLogger(__name__)

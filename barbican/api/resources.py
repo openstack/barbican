@@ -233,7 +233,7 @@ def handle_exceptions(operation_name=_('System')):
                 fn(inst, req, resp, *args, **kwargs)
             except falcon.HTTPError as f:
                 raise f  # Already converted to Falcon exception, just reraise
-            except Exception as e:
+            except Exception:
                 message = _('{0} failure seen - please contact site '
                             'administrator').format(operation_name)
                 LOG.exception(message)
@@ -305,7 +305,7 @@ class SecretsResource(api.ApiResource):
         except exception.LimitExceeded:
             LOG.exception('Secret data too big to process')
             _secret_data_too_large(req, resp)
-        except Exception as e:
+        except Exception:
             LOG.exception('Secret creation failed - unknown')
             _general_failure('Secret creation failed - unknown', req, resp)
 
@@ -393,7 +393,7 @@ class SecretResource(api.ApiResource):
                 LOG.exception('Secret information of type {0} not '
                               'found for decryption.'.format(cnsode.mime_type))
                 _get_secret_info_not_found(cnsode.mime_type, req, resp)
-            except Exception as e:
+            except Exception:
                 LOG.exception('Secret decryption failed - unknown')
                 _failed_to_decrypt_data(req, resp)
 
@@ -438,7 +438,7 @@ class SecretResource(api.ApiResource):
         except exception.LimitExceeded:
             LOG.exception('Secret data too big to process')
             _secret_data_too_large(req, resp)
-        except Exception as e:
+        except Exception:
             LOG.exception('Secret creation failed - unknown')
             _failed_to_create_encrypted_datum(req, resp)
 

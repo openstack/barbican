@@ -16,7 +16,6 @@
 """
 Shared business logic.
 """
-from sys import getsizeof
 from barbican.common import exception, validators
 from barbican.model import models
 from barbican.common import utils

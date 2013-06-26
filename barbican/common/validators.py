@@ -8,6 +8,7 @@ from oslo.config import cfg
 from barbican.common import exception
 from barbican.openstack.common import timeutils
 from barbican.common import utils
+from barbican.openstack.common.gettextutils import _
 
 
 LOG = utils.getLogger(__name__)

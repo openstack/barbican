@@ -18,11 +18,9 @@ import falcon
 import json
 import unittest
 
-from datetime import datetime
 from barbican.api import resources as res
 from barbican.crypto.extension_manager import CryptoExtensionManager
 from barbican.model import models
-from barbican.common import config
 from barbican.common import exception as excep
 from barbican.common.validators import DEFAULT_MAX_SECRET_BYTES
 from barbican.openstack.common import jsonutils
@@ -301,7 +299,6 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
         self.keystone_id = 'keystone1234'
         self.name = 'name1234'
         self.mime_type = 'text/plain'
-        secret_id_base = "idsecret"
         self.secret_algorithm = "algo"
         self.secret_bit_length = 512
         self.secret_cypher_type = "cytype"
@@ -739,7 +736,6 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
         self.keystone_id = 'keystoneid1234'
         self.name = 'name1234'
         self.mime_type = 'text/plain'
-        secret_id_base = "idsecret"
         self.secret_algorithm = "algo"
         self.secret_bit_length = 512
         self.secret_cypher_type = "cytype"

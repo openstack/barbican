@@ -14,23 +14,18 @@
 # limitations under the License.
 
 from mock import MagicMock
-import json
 import unittest
 
-from datetime import datetime
 from barbican.crypto.extension_manager import CryptoExtensionManager
 from barbican.tasks.resources import BeginOrder
 from barbican.model.models import (Tenant, Secret, TenantSecret,
                                    EncryptedDatum, Order, States)
-from barbican.model.repositories import OrderRepo
-from barbican.common import config
-from barbican.common import exception
 from barbican.openstack.common import timeutils
 
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(WhenTestingVersionResource())
+    suite.addTest(WhenBeginningOrder())
 
     return suite
 

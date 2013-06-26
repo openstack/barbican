@@ -24,6 +24,7 @@ import os
 import sys
 
 from barbican.version import __version__
+from barbican.openstack.common.gettextutils import _
 from oslo.config import cfg
 
 CONF = cfg.CONF

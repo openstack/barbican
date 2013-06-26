@@ -25,6 +25,7 @@ from oslo.config import cfg
 from barbican.common import exception
 import barbican.openstack.common.log as logging
 from barbican.openstack.common import policy
+from barbican.openstack.common.gettextutils import _
 
 LOG = logging.getLogger(__name__)
 

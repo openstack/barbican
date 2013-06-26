@@ -15,7 +15,6 @@
 
 import unittest
 import datetime
-from mock import MagicMock
 from barbican.common import exception as excep
 from barbican.common import validators
 
@@ -52,11 +51,11 @@ class WhenTestingSecretValidator(unittest.TestCase):
 
     def test_should_validate_no_name(self):
         del self.secret_req['name']
-        result = self.validator.validate(self.secret_req)
+        self.validator.validate(self.secret_req)
 
     def test_should_validate_empty_name(self):
         self.secret_req['name'] = '    '
-        result = self.validator.validate(self.secret_req)
+        self.validator.validate(self.secret_req)
 
     def test_should_validate_no_plain_text(self):
         del self.secret_req['plain_text']
