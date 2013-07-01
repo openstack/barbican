@@ -14,8 +14,13 @@
 #    under the License.
 
 """
-Cloudkeep's Barbican version
+Cloudkeep's Barbican version.
+
+The code repository should only control major and minor version information in
+this file. Per-build information will be supplied at build time via the
+'build_id' and 'commit_id' parameters.
 """
 
-__version__ = '0.1.66dev'
+__version__ = '0.1.{build_id}'
 __version_info__ = tuple(__version__.split('.'))
+__version_commit__ = '{commit_id}'

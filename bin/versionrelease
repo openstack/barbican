@@ -24,7 +24,9 @@ Product a release version of this build (by removing the 'dev' suffix)
 
 import os
 import sys
-from time import strftime
+import subprocess
+from time import strftime, gmtime
+
 
 # Determine version of this application.
 PKG = "barbican"
@@ -36,7 +38,9 @@ if current_dir.endswith('bin'):
     VERSIONFILE = os.path.join("..", PKG, "version.py")
     CHANGEFILE = os.path.joih("..", "debian", "changelog")
 
+
 def get_version():
+    """Retrieves the current version string from the version.py file"""
     version = "unknown"
     try: 
         version_file = open(VERSIONFILE, "r")
@@ -45,21 +49,39 @@ def get_version():
                 version = line.split("'")[1]
                 break
     except EnvironmentError:
-        pass # Okay, there is no version file.
+        pass  # Okay, there is no version file.
     return version
 
-def release_version(version):
-    subs = version.split(".")
-    last_index = len(subs) - 1
-    last_no_dev = subs[last_index]
-    if 'dev' in last_no_dev:
-        last_no_dev = last_no_dev[:-3]
-    else:
-        raise ValueError("Version is already in release format (i.e. with no 'dev' suffix)")
-    subs[last_index] = last_no_dev
-    return '.'.join(subs)
-         
-def update_versionfile(version):
+
+def get_commit_id():
+    """Retrieves the commit ID from git."""
+    p_short = subprocess.Popen(['git describe --always'],
+                               stdout=subprocess.PIPE, shell=True)
+    output_short, err = p_short.communicate()
+    if err:
+        print 'Error seen: {0}'.format(err)
+        raise ValueError("Problem invoking 'git describe' command.")
+
+    p_long = subprocess.Popen(['git rev-parse HEAD'],
+                              stdout=subprocess.PIPE, shell=True)
+    output_long, err = p_long.communicate()
+    if err:
+        print 'Error seen: {0}'.format(err)
+        raise ValueError("Problem invoking 'git rev-parse HEAD' command.")
+
+    return output_short.rstrip(), output_long.rstrip()
+
+
+def format_release_version(version, build_id_to_inject):
+    """Injects the specified build id into the version string."""
+    return version.format(build_id=build_id_to_inject)
+
+
+def format_build_id_as_datetime():
+    return strftime("%Y%m%d%H%M%S", gmtime())
+
+
+def update_versionfile(version, commit_id):
     temp_name = VERSIONFILE + "~"
     file_new = open(temp_name, 'w')
     try:
@@ -69,11 +91,16 @@ def update_versionfile(version):
                     subs = line.split("'")
                     subs[1] = version
                     file_new.write("'".join(subs))
+                elif line.startswith('__version_commit__'):
+                    subs = line.split("'")
+                    subs[1] = commit_id
+                    file_new.write("'".join(subs))
                 else:
                     file_new.write(line)
     finally:
         file_new.close()
         os.rename(temp_name, VERSIONFILE)
+
 
 def update_changefile(version):
     temp_name = CHANGEFILE + "~"
@@ -81,12 +108,12 @@ def update_changefile(version):
     try:
         with open(CHANGEFILE, 'r') as file_old:
             for line in file_old:
-                if line.startswith(PKG):
-                    new_version_line = PKG + " (" + version + "-1) stable; urgency=high\n"
+                if '{version}' in line:
+                    new_version_line = line.format(version=version)
                     file_new.write(new_version_line)
-                elif 'john.wood' in line:
+                elif '{datetime}' in line:
                     now_text = strftime("%a, %d %b %Y %H:%M:%S %z")
-                    new_commiter_line = " -- John Wood <john.wood@rackspace.com>  " + now_text + "\n"
+                    new_commiter_line = line.format(datetime=now_text)
                     file_new.write(new_commiter_line)
                 else:
                     file_new.write(line)
@@ -96,17 +123,24 @@ def update_changefile(version):
 
 if __name__ == '__main__':
     version = get_version()
-    if version:
-        # Create a release version and update the version.py file accordingly.
-        release = release_version(version)
-        print 'version: ', version
-        print 'release: ', release
-        update_versionfile(release)
-        update_changefile(release)
+    if not version:
+        raise ValueError('Could not locate version or barbican/version.py '
+                         'file.')
 
-        # Output the version number to a flat file.
-        with open(SIMPLEFILE, 'w') as outver:
-            outver.write(release)
+    # Create a release version and update the version.py file accordingly.
+    commit_short, commit_long = get_commit_id()
+    release = format_release_version(version,
+                                     format_build_id_as_datetime())
+    print 'release: ', release
+    print 'commit (long): ', commit_long
+    print 'commit (short): ', commit_short
+    print 'version template: ', version
+    update_versionfile(release, commit_long)
+    update_changefile(release)
+
+    # Output the version number to a flat file.
+    with open(SIMPLEFILE, 'w') as outver:
+        outver.write(release)
 
 
 
