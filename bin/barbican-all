@@ -18,6 +18,8 @@ OPTS='--daemonize /var/log/barbican/uwsgi.log'
 # Configure for a local deployment environment:
 if [ ! -f $CONF_FILE ];
 then
+  echo 'Running locally...'
+  
   PKG_DIR=$PWD/etc/$PKG
   CONF_FILE=./etc/$PKG/barbican-api.conf
   PYTHONPATH=$VENV_PYTHON:$PYTHONPATH
@@ -46,4 +48,5 @@ fi
 #fi
 
 echo 'Running Barbican uWSGI Emperor '$PKG_DIR/vassals
+echo 'Executing uwsgi with these options: '$PKG_DIR/vassals' '$OPTS
 uwsgi --master --emperor $PKG_DIR/vassals $OPTS

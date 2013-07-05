@@ -31,8 +31,8 @@ import sqlalchemy.orm as sa_orm
 from sqlalchemy import or_
 
 from barbican.common import exception
-#TODO: from barbican.db.sqlalchemy import migration
 from barbican.model import models
+from barbican.model.migration import commands
 from barbican.openstack.common import timeutils
 from barbican.openstack.common.gettextutils import _
 from barbican.common import utils
@@ -142,11 +142,9 @@ def get_engine():
         if CONF.db_auto_create:
             LOG.info(_('auto-creating barbican registry DB'))
             models.register_models(_ENGINE)
-#TODO:      try:
-#TODO:          migration.version_control()
-#TODO:      except exception.DatabaseMigrationError:
-#TODO:          # only arises when the DB exists and is under version control
-#TODO:          pass
+
+            # Upgrade the database to the latest version.
+            commands.upgrade()
         else:
             LOG.info(_('not auto-creating barbican registry DB'))
 
@@ -262,7 +260,7 @@ class BaseRepo(object):
 
     def create_from(self, entity):
         """Sub-class hook: create from entity."""
-
+        start = time.time()  # DEBUG
         if not entity:
             msg = "Must supply non-None {0}.".format(self._do_entity_name)
             raise exception.Invalid(msg)
@@ -290,6 +288,8 @@ class BaseRepo(object):
                 LOG.exception('Problem saving entity for create')
                 raise exception.Duplicate("Entity ID %s already exists!"
                                           % values['id'])
+        LOG.debug('Elapsed repo '
+                  'create secret:{0}'.format(time.time() - start))  # DEBUG
 
         return entity
 

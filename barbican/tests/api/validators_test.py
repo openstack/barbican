@@ -221,9 +221,9 @@ class WhenTestingOrderValidator(unittest.TestCase):
     def setUp(self):
         self.name = 'name'
         self.mime_type = 'text/plain'
-        self.secret_algorithm = 'algo'
-        self.secret_bit_length = 512
-        self.secret_cypher_type = 'cytype'
+        self.secret_algorithm = 'aes'
+        self.secret_bit_length = 128
+        self.secret_cypher_type = 'cbc'
 
         self.secret_req = {'name': self.name,
                            'mime_type': self.mime_type,

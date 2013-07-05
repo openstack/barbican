@@ -71,6 +71,9 @@ def load_body(req, resp=None, validator=None):
         except exception.InvalidObject as e:
             LOG.exception("Failed to validate JSON information")
             abort(falcon.HTTP_400, str(e), req, resp)
+        except exception.UnsupportedField as e:
+            LOG.exception("Provided field value is not supported")
+            abort(falcon.HTTP_400, str(e), req, resp)
         except exception.LimitExceeded as e:
             LOG.exception("Data limit exceeded")
             abort(falcon.HTTP_413, str(e), req, resp)

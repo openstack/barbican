@@ -111,6 +111,10 @@ class Forbidden(BarbicanException):
     message = _("You are not authorized to complete this action.")
 
 
+class NotSupported(BarbicanException):
+    message = _("Operation is not supported.")
+
+
 class ForbiddenPublicImage(Forbidden):
     message = _("You are not authorized to complete this action.")
 
@@ -262,6 +266,11 @@ class SchemaLoadError(BarbicanException):
 class InvalidObject(BarbicanException):
     message = _("Provided object does not match schema "
                 "'%(schema)s': %(reason)s")
+
+
+class UnsupportedField(BarbicanException):
+    message = _("No support for value set on field '%(field)s' on "
+                "schema '%(schema)s': %(reason)s")
 
 
 class UnsupportedHeaderFeature(BarbicanException):

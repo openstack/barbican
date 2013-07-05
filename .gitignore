@@ -47,3 +47,6 @@ coverage.xml
 
 # Misc. generated files
 versiononly.txt
+*.orig
+myapp.profile
+*.out.myapp

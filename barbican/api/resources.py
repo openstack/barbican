@@ -232,6 +232,7 @@ def handle_exceptions(operation_name=_('System')):
             try:
                 fn(inst, req, resp, *args, **kwargs)
             except falcon.HTTPError as f:
+                LOG.exception('Falcon error seen')
                 raise f  # Already converted to Falcon exception, just reraise
             except Exception:
                 message = _('{0} failure seen - please contact site '
