@@ -1,5 +1,5 @@
 # logrotate.d configuration
-# Used in deb build.  Keep in sync with etc/logrotate.d/barbican-api
+# Used in rpm build.  Keep in sync with debian/barbican-api.logrotate
 
 /var/log/barbican/barbican-api.log {
     daily
