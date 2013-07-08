@@ -19,7 +19,7 @@
 #    under the License.
 
 """
-Product a release version of this build (by removing the 'dev' suffix)
+Product a release version of this build
 """
 
 import os
@@ -32,7 +32,7 @@ from time import strftime, gmtime
 PKG = "barbican"
 VERSIONFILE = os.path.join(PKG, "version.py")
 CHANGEFILE = os.path.join("debian", "changelog")
-SIMPLEFILE = 'versiononly.txt' 
+SIMPLEFILE = 'versiononly.txt'
 current_dir = os.getcwd()
 if current_dir.endswith('bin'):
     VERSIONFILE = os.path.join("..", PKG, "version.py")
@@ -42,7 +42,7 @@ if current_dir.endswith('bin'):
 def get_version():
     """Retrieves the current version string from the version.py file"""
     version = "unknown"
-    try: 
+    try:
         version_file = open(VERSIONFILE, "r")
         for line in version_file:
             if line.startswith('__version__'):
@@ -73,11 +73,16 @@ def get_commit_id():
 
 
 def format_release_version(version, build_id_to_inject):
-    """Injects the specified build id into the version string."""
-    return version.format(build_id=build_id_to_inject)
+    """
+    Injects the specified build id into the build section of the version string.
+    The build section is the third group after the second '.'.
+    """
+    subs = version.split(".")
+    subs[2] = build_id_to_inject
+    return '.'.join(subs)
 
 
-def format_build_id_as_datetime():
+def generate_build_id_as_datetime():
     return strftime("%Y%m%d%H%M%S", gmtime())
 
 
@@ -108,15 +113,18 @@ def update_changefile(version):
     try:
         with open(CHANGEFILE, 'r') as file_old:
             for line in file_old:
-                if '{version}' in line:
-                    new_version_line = line.format(version=version)
-                    file_new.write(new_version_line)
-                elif '{datetime}' in line:
+                line_new = ''
+                if line.startswith(PKG):
+                    left = line[:line.index('(') + 1]
+                    right = line[line.index('-1)'):]
+                    line_new = ''.join([left, version, right])
+                elif '--' in line:
+                    left = line[:line.index('>') + 1]
                     now_text = strftime("%a, %d %b %Y %H:%M:%S %z")
-                    new_commiter_line = line.format(datetime=now_text)
-                    file_new.write(new_commiter_line)
+                    line_new = ''.join([left, '  ', now_text])
                 else:
-                    file_new.write(line)
+                    line_new = line
+                file_new.write(line_new)
     finally:
         file_new.close()
         os.rename(temp_name, CHANGEFILE)
@@ -130,7 +138,7 @@ if __name__ == '__main__':
     # Create a release version and update the version.py file accordingly.
     commit_short, commit_long = get_commit_id()
     release = format_release_version(version,
-                                     format_build_id_as_datetime())
+                                     generate_build_id_as_datetime())
     print 'release: ', release
     print 'commit (long): ', commit_long
     print 'commit (short): ', commit_short
@@ -141,12 +149,3 @@ if __name__ == '__main__':
     # Output the version number to a flat file.
     with open(SIMPLEFILE, 'w') as outver:
         outver.write(release)
-
-
-
-
-
-
-
-
-
