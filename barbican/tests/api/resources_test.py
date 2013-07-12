@@ -657,7 +657,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
 class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
     def setUp(self):
         self.secret_name = 'name'
-        self.secret_mime_type = 'text/plain'
+        self.secret_mime_type = 'application/octet-stream'
         self.secret_algorithm = "aes"
         self.secret_bit_length = 128
         self.secret_cypher_type = "cbc"

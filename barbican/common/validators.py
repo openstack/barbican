@@ -180,6 +180,18 @@ class NewOrderValidator(ValidatorBase):
 
         # Validation secret generation related fields.
         # TODO: Invoke the crypto plugin for this purpose
+        if secret.get('mime_type') != 'application/octet-stream':
+            raise exception.UnsupportedField(field="mime_type",
+                                             schema=schema_name,
+                                             reason=_("Only 'application/octe"
+                                                      "t-stream' supported"))
+
+        if secret.get('cypher_type') != 'cbc':
+            raise exception.UnsupportedField(field="cypher_type",
+                                             schema=schema_name,
+                                             reason=_("Only 'cbc' "
+                                                      "supported"))
+
         if secret.get('algorithm') != 'aes':
             raise exception.UnsupportedField(field="algorithm",
                                              schema=schema_name,

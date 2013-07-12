@@ -220,7 +220,7 @@ class WhenTestingOrderValidator(unittest.TestCase):
 
     def setUp(self):
         self.name = 'name'
-        self.mime_type = 'text/plain'
+        self.mime_type = 'application/octet-stream'
         self.secret_algorithm = 'aes'
         self.secret_bit_length = 128
         self.secret_cypher_type = 'cbc'
@@ -276,6 +276,15 @@ class WhenTestingOrderValidator(unittest.TestCase):
         exception = e.exception
         self.assertTrue('name' in str(exception))
 
+    def test_should_fail_bad_cypher_type(self):
+        self.secret_req['cypher_type'] = 'badcypher'
+
+        with self.assertRaises(excep.UnsupportedField) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('cypher_type' in str(exception))
+
     def test_should_fail_no_mime(self):
         del self.secret_req['mime_type']
 
@@ -289,6 +298,15 @@ class WhenTestingOrderValidator(unittest.TestCase):
         self.secret_req['mime_type'] = 'badmimehere'
 
         with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('mime_type' in str(exception))
+
+    def test_should_fail_wrong_mime(self):
+        self.secret_req['mime_type'] = 'text/plain'
+
+        with self.assertRaises(excep.UnsupportedField) as e:
             self.validator.validate(self.order_req)
 
         exception = e.exception
