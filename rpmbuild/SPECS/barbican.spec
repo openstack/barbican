@@ -1,4 +1,4 @@
-%define version 0.1.66dev
+%define version 0.1.20130713041652
 %define release 1
 
 Summary: Common files for Barbican Key Manager
@@ -13,7 +13,13 @@ License: Apache License (2.0)
 Group: Python WSGI Application
 BuildRoot: %{_tmppath}/barbican-%{version}-%{release}-buildroot
 BuildArch: noarch
+BuildRequires: python2-devel
 Requires(pre): shadow-utils
+Requires: python-alembic, python-celery, python-crypto, python-dateutil
+Requires: python-eventlet, python-falcon, python-iso8601, python-jsonschema
+Requires: python-keystoneclient, python-kombu, python-oslo.config, python-paste-deploy
+Requires: python-psycopg2, python-pysqlite, python-sqlalchemy, python-stevedore
+Requires: python-uwsgi, python-webob
 
 %description
 Common files for Barbican Key Management API (barbican-api) and 
