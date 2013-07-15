@@ -205,12 +205,19 @@ def wrap_db_error(f):
 
 def clean_paging_values(offset_arg=None, limit_arg=None):
     """Cleans and safely limits raw paging offset/limit values."""
-    offset = int(offset_arg) if offset_arg else 0
-    offset = offset if offset >= 0 else 0
+    try:
+        offset = int(offset_arg)
+        offset = offset if offset >= 0 else 0
+    except ValueError:
+        offset = 0
 
-    limit = int(limit_arg) if limit_arg else CONF.default_limit_paging
-    limit = limit if limit >= 2 else 2
-    limit = limit if limit <= CONF.max_limit_paging else CONF.max_limit_paging
+    try:
+        limit = int(limit_arg)
+        limit = limit if limit >= 2 else 2
+        limit = limit if limit <= CONF.max_limit_paging else \
+            CONF.max_limit_paging
+    except ValueError:
+        limit = CONF.default_limit_paging
 
     LOG.debug("Limit={0}, offset={1}".format(limit, offset))
 
