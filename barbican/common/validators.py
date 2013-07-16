@@ -110,6 +110,11 @@ class NewSecretValidator(ValidatorBase):
 
         # Validate/convert 'plain_text' if provided.
         if 'plain_text' in json_data:
+            if json_data['mime_type'] != 'text/plain':
+                raise exception.InvalidObject(schema=schema_name,
+                                              reason=_("If 'plain_text' is "
+                                                       "supplied, 'mime_type' "
+                                                       "must be 'text/plain'"))
 
             plain_text = json_data['plain_text']
             if secret_too_big(plain_text):

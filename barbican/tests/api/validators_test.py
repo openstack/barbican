@@ -137,6 +137,15 @@ class WhenTestingSecretValidator(unittest.TestCase):
         exception = e.exception
         self.assertTrue('mime_type' in str(exception))
 
+    def test_should_fail_invalid_mime(self):
+        self.secret_req['mime_type'] = 'application/octet-stream'
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.secret_req)
+
+        exception = e.exception
+        self.assertTrue('plain_text' in str(exception))
+
     def test_should_fail_negative_bit_length(self):
         self.secret_req['bit_length'] = -23
 
