@@ -1,4 +1,4 @@
-%define version 0.1.20130713041652
+%define version BUILD_VERSION
 %define release 1
 
 Summary: Common files for Barbican Key Manager
