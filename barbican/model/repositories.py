@@ -203,8 +203,11 @@ def wrap_db_error(f):
     return _wrap
 
 
-def clean_paging_values(offset_arg=None, limit_arg=None):
+def clean_paging_values(offset_arg=0, limit_arg=CONF.default_limit_paging):
     """Cleans and safely limits raw paging offset/limit values."""
+    offset_arg = offset_arg or 0
+    limit_arg = limit_arg or CONF.default_limit_paging
+
     try:
         offset = int(offset_arg)
         offset = offset if offset >= 0 else 0
