@@ -77,3 +77,10 @@ Barbican Key Manager API daemon
 %attr(0755,root,root) /usr/bin/barbican-all
 %config(noreplace) /etc/init/barbican-api.conf
 %config(noreplace) /etc/barbican/*
+
+%preun -n barbican-api
+if [ $1 -eq 0 ] ; then
+    # Package removal, not upgrade
+    /sbin/stop barbican-api >/dev/null 2>&1 || :
+fi
+
