@@ -20,8 +20,8 @@ fpm -s python -t rpm webob
 fpm -s python -t rpm Celery
 fpm -s python -t rpm python-keystoneclient
 fpm -s python -t rpm stevedore
-# fpm -s python -t rpm pycrypto
-# --> python-crypto 2.0.1-22.el6
+fpm -s python -t rpm pycrypto
+# --> python-crypto 2.0.1-22.el6 exists, but is too old
 fpm -s python -t rpm python-dateutil
 # --> python-dateutil 1.4.1-6.el6 exists, but is incompatible
 fpm -s python -t rpm jsonschema
