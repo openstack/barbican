@@ -16,9 +16,12 @@
 """
 Shared business logic.
 """
+import base64
+
 from barbican.common import exception, validators
 from barbican.model import models
 from barbican.common import utils
+from barbican.crypto import mime_types
 
 
 LOG = utils.getLogger(__name__)
@@ -51,15 +54,32 @@ def create_secret(data, tenant, crypto_manager,
     time_keeper.mark('after Secret model create')
     new_datum = None
 
-    if 'plain_text' in data:
-
-        plain_text = data['plain_text']
-
-        if not plain_text:
+    if 'payload' in data:
+        payload = data.get('payload')
+        content_type = data.get('payload_content_type')
+        content_encoding = data.get('payload_content_encoding')
+        if not payload:
             raise exception.NoDataToProcess()
 
-        LOG.debug('Encrypting plain_text secret...')
-        new_datum = crypto_manager.encrypt(data['plain_text'],
+        LOG.debug('Pre-processing payload...')
+        if content_type in mime_types.PLAIN_TEXT:
+            LOG.debug('Plain text payload.  No pre-processing needed.')
+        elif content_type in mime_types.BINARY:
+            # payload has to be decoded
+            if content_encoding not in ['base64']:
+                raise exception.InvalidContentEncoding(content_encoding)
+            try:
+                payload = base64.b64decode(payload)
+            except TypeError:
+                raise exception.PayloadDecodingError()
+        else:
+            raise exception.InvalidContentType()
+
+        time_keeper.mark('after pre-processing')
+
+        LOG.debug('Encrypting payload...')
+        new_datum = crypto_manager.encrypt(payload,
+                                           content_type,
                                            new_secret,
                                            tenant)
         time_keeper.mark('after encrypt')
@@ -73,8 +93,6 @@ def create_secret(data, tenant, crypto_manager,
     else:
         LOG.debug('Creating metadata only for the new secret. '
                   'A subsequent PUT is required')
-        crypto_manager.supports(new_secret, tenant)
-        time_keeper.mark('after supports check')
 
     # Create Secret entities in datastore.
     secret_repo.create_from(new_secret)
@@ -97,34 +115,39 @@ def create_secret(data, tenant, crypto_manager,
     return new_secret
 
 
-def create_encrypted_datum(secret, plain_text, tenant, crypto_manager,
+def create_encrypted_datum(secret, payload,
+                           content_type, content_encoding,
+                           tenant, crypto_manager,
                            tenant_secret_repo, datum_repo):
     """
     Modifies the secret to add the plain_text secret information.
 
     :param secret: the secret entity to associate the secret data to
-    :param plain_text: plain-text of the secret data to store
+    :param payload: secret data to store
+    :param content_type: payload content mime type
+    :param content_encoding: payload content encoding
     :param tenant: the tenant (entity) who owns the secret
     :param crypto_manager: the crypto plugin manager
     :param tenant_secret_repo: the tenant/secret association repository
     :param datum_repo: the encrypted datum repository
     :retval The response body, None if N/A
     """
-    if not plain_text:
+    if not payload:
         raise exception.NoDataToProcess()
 
-    if validators.secret_too_big(plain_text):
+    if validators.secret_too_big(payload):
         raise exception.LimitExceeded()
 
     if secret.encrypted_data:
         raise ValueError('Secret already has encrypted data stored for it.')
 
     fields = secret.to_dict_fields()
-    fields['plain_text'] = plain_text
+    fields['payload'] = payload
 
-    # Encrypt plain_text
-    LOG.debug('Encrypting plain_text secret')
-    new_datum = crypto_manager.encrypt(plain_text,
+    # Encrypt payload
+    LOG.debug('Encrypting secret payload...')
+    new_datum = crypto_manager.encrypt(payload,
+                                       content_type,
                                        secret,
                                        tenant)
     datum_repo.create_from(new_datum)

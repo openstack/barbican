@@ -209,6 +209,14 @@ class InvalidContentType(BarbicanException):
     message = _("Invalid content type %(content_type)s")
 
 
+class InvalidContentEncoding(BarbicanException):
+    message = _("Invalid content encoding %(content_encoding)s")
+
+
+class PayloadDecodingError(BarbicanException):
+    message = _("Error while attempting to decode payload.")
+
+
 class BadRegistryConnectionConfiguration(BarbicanException):
     message = _("Registry was not configured correctly on API server. "
                 "Reason: %(reason)s")

@@ -18,7 +18,9 @@ Common utilities for Barbican.
 """
 
 import time
+
 from oslo.config import cfg
+
 import barbican.openstack.common.log as logging
 
 
@@ -52,6 +54,40 @@ def hostname_for_refs(keystone_id=None, resource=None):
 #   error.
 def getLogger(name):
     return logging.getLogger(name)
+
+
+def get_accepted_encodings(req):
+    """Returns a list of client acceptable encodings sorted by q value.
+
+    For details see: http://tools.ietf.org/html/rfc2616#section-14.3
+
+    :param req: request object
+    :returns: list of client acceptable encodings sorted by q value.
+    """
+    header = req.get_header('Accept-Encoding')
+    if header is None:
+        return None
+
+    encodings = list()
+    for enc in header.split(','):
+        if ';' in enc:
+            encoding, q = enc.split(';')
+            try:
+                q = q.split('=')[1]
+                quality = float(q.strip())
+            except ValueError:
+                # can't convert quality to float
+                return None
+            if quality > 1.0 or quality < 0.0:
+                # quality is outside valid range
+                return None
+            if quality > 0.0:
+                encodings.append((encoding.strip(), quality))
+        else:
+            encodings.append((enc.strip(), 1))
+
+    return [enc[0] for enc in sorted(encodings,
+                                     cmp=lambda a, b: cmp(b[1], a[1]))]
 
 
 class TimeKeeper(object):

@@ -13,8 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from mock import MagicMock
 import unittest
+
+from mock import MagicMock
 
 from barbican.crypto.extension_manager import CryptoExtensionManager
 from barbican.tasks.resources import BeginOrder
@@ -39,10 +40,9 @@ class WhenBeginningOrder(unittest.TestCase):
         self.order.requestor = self.requestor
 
         self.secret_name = "name"
-        self.secret_algorithm = "algo"
-        self.secret_bit_length = 512
-        self.secret_cypher_type = "cytype"
-        self.secret_mime_type = "text/plain"
+        self.secret_algorithm = "AES"
+        self.secret_bit_length = 256
+        self.secret_cypher_type = "CBC"
         self.secret_expiration = timeutils.utcnow()
 
         self.keystone_id = 'keystone1234'
@@ -60,7 +60,6 @@ class WhenBeginningOrder(unittest.TestCase):
         self.order.secret_bit_length = self.secret_bit_length
         self.order.secret_cypher_type = self.secret_cypher_type
         self.order.secret_expiration = self.secret_expiration
-        self.order.secret_mime_type = self.secret_mime_type
 
         self.order_repo = MagicMock()
         self.order_repo.get.return_value = self.order
@@ -90,26 +89,25 @@ class WhenBeginningOrder(unittest.TestCase):
         self.order_repo.get \
             .assert_called_once_with(entity_id=self.order.id,
                                      keystone_id=self.keystone_id)
-        assert self.order.status == States.ACTIVE
+        self.assertEqual(self.order.status, States.ACTIVE)
 
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
-        assert isinstance(secret, Secret)
-        assert secret.name == self.secret_name
-        assert secret.expiration == self.secret_expiration
+        self.assertIsInstance(secret, Secret)
+        self.assertEqual(secret.name, self.secret_name)
+        self.assertEqual(secret.expiration, self.secret_expiration)
 
         args, kwargs = self.tenant_secret_repo.create_from.call_args
         tenant_secret = args[0]
-        assert isinstance(tenant_secret, TenantSecret)
-        assert tenant_secret.tenant_id == self.tenant_id
-        assert tenant_secret.secret_id == secret.id
+        self.assertIsInstance(tenant_secret, TenantSecret)
+        self.assertEqual(tenant_secret.tenant_id, self.tenant_id)
+        self.assertEqual(tenant_secret.secret_id, secret.id)
 
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
         self.assertIsInstance(datum, EncryptedDatum)
-        self.assertEqual(self.secret_mime_type, datum.mime_type)
-        assert datum.cypher_text is not None
-        assert datum.kek_metadata is not None
+        self.assertIsNotNone(datum.cypher_text)
+        self.assertIsNotNone(datum.kek_metadata)
 
 
 if __name__ == '__main__':

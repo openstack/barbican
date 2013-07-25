@@ -68,15 +68,14 @@ class CryptoPluginBase(object):
         """Create a new key."""
 
     @abc.abstractmethod
-    def supports(self, secret_type):
-        """Whether the plugin supports the specified secret type."""
+    def supports(self, kek_metadata):
+        """Used to decide whether the plugin supports decoding the secret."""
 
 
 class SimpleCryptoPlugin(CryptoPluginBase):
     """Insecure implementation of the crypto plugin."""
 
     def __init__(self, conf=CONF):
-        self.supported_types = ['text/plain', 'application/octet-stream']
         self.kek = conf.simple_crypto_plugin.kek
         self.block_size = AES.block_size
 
@@ -131,5 +130,6 @@ class SimpleCryptoPlugin(CryptoPluginBase):
             raise ValueError('At this time you must supply 128/192/256 as'
                              'bit length')
 
-    def supports(self, secret_type):
-        return secret_type in self.supported_types
+    def supports(self, kek_metadata):
+        metadata = json.loads(kek_metadata)
+        return metadata['plugin'] == 'SimpleCryptoPlugin'

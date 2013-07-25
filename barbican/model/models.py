@@ -191,7 +191,7 @@ class Secret(BASE, ModelBase):
 
     name = Column(String(255))
     expiration = Column(DateTime, default=None)
-    mime_type = Column(String(255), nullable=False)
+    mime_type = Column(String(255), nullable=True)
     algorithm = Column(String(255))
     bit_length = Column(Integer)
     cypher_type = Column(String(255))
@@ -204,15 +204,13 @@ class Secret(BASE, ModelBase):
         """Creates secret from a dict."""
         super(Secret, self).__init__()
 
-        self.name = parsed_request.get('name', None)
-        self.mime_type = parsed_request['mime_type']
-
-        self.expiration = parsed_request.get('expiration', None)
-        self.algorithm = parsed_request.get('algorithm', None)
-        self.bit_length = parsed_request.get('bit_length', None)
-        self.cypher_type = parsed_request.get('cypher_type', None)
-
+        self.name = parsed_request.get('name')
+        self.expiration = parsed_request.get('expiration')
+        self.algorithm = parsed_request.get('algorithm')
+        self.bit_length = parsed_request.get('bit_length')
+        self.cypher_type = parsed_request.get('cypher_type')
         self.status = States.ACTIVE
+        self.mime_type = None
 
     def _do_delete_children(self, session):
         """
@@ -226,7 +224,6 @@ class Secret(BASE, ModelBase):
         return {'secret_id': self.id,
                 'name': self.name or self.id,
                 'expiration': self.expiration,
-                'mime_type': self.mime_type,
                 'algorithm': self.algorithm,
                 'bit_length': self.bit_length,
                 'cypher_type': self.cypher_type}
@@ -244,7 +241,7 @@ class EncryptedDatum(BASE, ModelBase):
 
     secret_id = Column(String(36), ForeignKey('secrets.id'),
                        nullable=False)
-
+    content_type = Column(String(255))
     mime_type = Column(String(255))
     cypher_text = Column(LargeBinary)
     kek_metadata = Column(Text)
@@ -255,15 +252,14 @@ class EncryptedDatum(BASE, ModelBase):
 
         if secret:
             self.secret_id = secret.id
-            self.mime_type = secret.mime_type
 
         self.status = States.ACTIVE
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
         return {'name': self.name,
-                'mime_type': self.mime_type,
                 'cypher_text': self.secret,
+                'content_type': self.content_type,
                 'kek_metadata': self.kek_metadata}
 
 
@@ -285,7 +281,7 @@ class Order(BASE, ModelBase):
     secret_algorithm = Column(String(255))
     secret_bit_length = Column(Integer)
     secret_cypher_type = Column(String(255))
-    secret_mime_type = Column(String(255), nullable=False)
+    secret_mime_type = Column(String(255), nullable=True)
     secret_expiration = Column(DateTime, default=None)
 
     secret_id = Column(String(36), ForeignKey('secrets.id'),
@@ -294,7 +290,6 @@ class Order(BASE, ModelBase):
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
         return {'secret': {'name': self.secret_name or self.secret_id,
-                           'mime_type': self.secret_mime_type,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
                            'cypher_type': self.secret_cypher_type,

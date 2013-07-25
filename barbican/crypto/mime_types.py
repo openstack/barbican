@@ -17,6 +17,14 @@
 Barbican defined mime-types
 """
 
+# Supported mime types
+PLAIN_TEXT = ['text/plain',
+              'text/plain;charset=utf-8',
+              'text/plain; charset=utf-8']
+BINARY = ['application/octet-stream']
+ENCODINGS = ['base64']
+SUPPORTED = PLAIN_TEXT + BINARY
+
 # Maps mime-types used to specify secret data formats to the types that can
 #   be requested for secrets via GET calls.
 CTYPES_PLAIN = {'default': 'text/plain'}
@@ -25,6 +33,10 @@ CTYPES_AES = {'default': 'application/aes'}
 CTYPES_MAPPINGS = {'text/plain': CTYPES_PLAIN,
                    'application/octet-stream': CTYPES_BINARY,
                    'application/aes': CTYPES_AES}
+
+
+def is_supported(mime_type):
+    return mime_type in SUPPORTED
 
 
 def augment_fields_with_content_types(secret):
@@ -38,8 +50,10 @@ def augment_fields_with_content_types(secret):
 
     # TODO: How deal with merging more than one datum instance?
     for datum in secret.encrypted_data:
-        if datum.mime_type in CTYPES_MAPPINGS:
-            fields.update({'content_types': CTYPES_MAPPINGS[datum.mime_type]})
+        if datum.content_type in CTYPES_MAPPINGS:
+            fields.update(
+                {'content_types': CTYPES_MAPPINGS[datum.content_type]}
+            )
             break
 
     return fields

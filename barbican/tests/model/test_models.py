@@ -15,22 +15,22 @@
 
 import unittest
 
-from barbican.model.models import Secret
+from barbican.model import models
 
 
 class WhenCreatingNewSecret(unittest.TestCase):
     def setUp(self):
-        self.parsed_body = {'name': 'name',
-                            'mime_type': 'text/plain',
-                            'algorithm': 'algorithm',
-                            'bit_length': 512,
-                            'cypher_type': 'cypher_type',
-                            'plain_text': 'not-encrypted'}
+        self.parsed_secret = {'name': 'name',
+                              'algorithm': 'algorithm',
+                              'bit_length': 512,
+                              'cypher_type': 'cypher_type',
+                              'plain_text': 'not-encrypted'}
+
+        self.parsed_order = {'secret': self.parsed_secret}
 
     def test_new_secret_is_created_from_dict(self):
-        secret = Secret(self.parsed_body)
-        self.assertEqual(secret.name, self.parsed_body['name'])
-        self.assertEqual(secret.mime_type, self.parsed_body['mime_type'])
-        self.assertEqual(secret.algorithm, self.parsed_body['algorithm'])
-        self.assertEqual(secret.bit_length, self.parsed_body['bit_length'])
-        self.assertEqual(secret.cypher_type, self.parsed_body['cypher_type'])
+        secret = models.Secret(self.parsed_secret)
+        self.assertEqual(secret.name, self.parsed_secret['name'])
+        self.assertEqual(secret.algorithm, self.parsed_secret['algorithm'])
+        self.assertEqual(secret.bit_length, self.parsed_secret['bit_length'])
+        self.assertEqual(secret.cypher_type, self.parsed_secret['cypher_type'])

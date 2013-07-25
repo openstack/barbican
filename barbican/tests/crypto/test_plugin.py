@@ -30,13 +30,14 @@ class TestCryptoPlugin(CryptoPluginBase):
         return cypher_text, kek_metadata
 
     def decrypt(self, encrypted, kek_metadata, tenant):
-        return 'plain-data'
+        return b'unencrypted_data'
 
     def create(self, algorithm, bit_length):
         return "insecure_key"
 
-    def supports(self, secret_type):
-        return secret_type == 'text/plain'
+    def supports(self, kek_metadata):
+        metadata = json.loads(kek_metadata)
+        return metadata['plugin'] == 'TestCryptoPlugin'
 
 
 class WhenTestingSimpleCryptoPlugin(unittest.TestCase):
@@ -104,3 +105,19 @@ class WhenTestingSimpleCryptoPlugin(unittest.TestCase):
     def test_create_unsupported_bit_key(self):
         with self.assertRaises(ValueError):
             self.plugin.create("aes", 129)
+
+    def test_supports_decoding_metadata(self):
+        kek_metadata = json.dumps({
+            'plugin': 'SimpleCryptoPlugin',
+            'encryption': 'aes-128-cbc',
+            'kek': 'kek_id'
+        })
+        self.assertTrue(self.plugin.supports(kek_metadata))
+
+    def test_does_not_support_decoding_metadata(self):
+        kek_metadata = json.dumps({
+            'plugin': 'MuchFancierPlugin',
+            'encryption': 'aes-128-cbc',
+            'kek': 'kek_id'
+        })
+        self.assertFalse(self.plugin.supports(kek_metadata))

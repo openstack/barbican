@@ -31,18 +31,18 @@ class WhenTestingSecretValidator(unittest.TestCase):
 
     def setUp(self):
         self.name = 'name'
-        self.plain_text = 'not-encrypted'.decode('utf-8')
-        self.mime_type = 'text/plain'
+        self.payload = b'not-encrypted'
+        self.payload_content_type = 'text/plain'
         self.secret_algorithm = 'algo'
         self.secret_bit_length = 512
         self.secret_cypher_type = 'cytype'
 
         self.secret_req = {'name': self.name,
-                           'mime_type': self.mime_type,
+                           'payload_content_type': self.payload_content_type,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
                            'cypher_type': self.secret_cypher_type,
-                           'plain_text': self.plain_text}
+                           'payload': self.payload}
 
         self.validator = validators.NewSecretValidator()
 
@@ -57,17 +57,17 @@ class WhenTestingSecretValidator(unittest.TestCase):
         self.secret_req['name'] = '    '
         self.validator.validate(self.secret_req)
 
-    def test_should_validate_no_plain_text(self):
-        del self.secret_req['plain_text']
+    def test_should_validate_no_payload(self):
+        del self.secret_req['payload']
         result = self.validator.validate(self.secret_req)
 
-        self.assertFalse('plain_text' in result)
+        self.assertFalse('payload' in result)
 
-    def test_should_validate_plain_text_with_whitespace(self):
-        self.secret_req['plain_text'] = '  ' + self.plain_text + '    '
+    def test_should_validate_payload_with_whitespace(self):
+        self.secret_req['payload'] = '  ' + self.payload + '    '
         result = self.validator.validate(self.secret_req)
 
-        self.assertEqual(self.plain_text, result['plain_text'])
+        self.assertEqual(self.payload, result['payload'])
 
     def test_should_validate_future_expiration(self):
         self.secret_req['expiration'] = '2114-02-28T19:14:44.180394'
@@ -128,24 +128,6 @@ class WhenTestingSecretValidator(unittest.TestCase):
         exception = e.exception
         self.assertTrue('name' in str(exception))
 
-    def test_should_fail_no_mime(self):
-        del self.secret_req['mime_type']
-
-        with self.assertRaises(excep.InvalidObject) as e:
-            self.validator.validate(self.secret_req)
-
-        exception = e.exception
-        self.assertTrue('mime_type' in str(exception))
-
-    def test_should_fail_invalid_mime(self):
-        self.secret_req['mime_type'] = 'application/octet-stream'
-
-        with self.assertRaises(excep.InvalidObject) as e:
-            self.validator.validate(self.secret_req)
-
-        exception = e.exception
-        self.assertTrue('plain_text' in str(exception))
-
     def test_should_fail_negative_bit_length(self):
         self.secret_req['bit_length'] = -23
 
@@ -164,23 +146,14 @@ class WhenTestingSecretValidator(unittest.TestCase):
         exception = e.exception
         self.assertTrue('bit_length' in str(exception))
 
-    def test_should_fail_empty_plain_text(self):
-        self.secret_req['plain_text'] = '   '
+    def test_validation_should_fail_with_empty_payload(self):
+        self.secret_req['payload'] = '   '
 
         with self.assertRaises(excep.InvalidObject) as e:
             self.validator.validate(self.secret_req)
 
         exception = e.exception
-        self.assertTrue('plain_text' in str(exception))
-
-    def test_should_fail_bad_mime(self):
-        self.secret_req['mime_type'] = 'badmime'
-
-        with self.assertRaises(excep.InvalidObject) as e:
-            self.validator.validate(self.secret_req)
-
-        exception = e.exception
-        self.assertTrue('mime_type' in str(exception))
+        self.assertTrue('payload' in str(exception))
 
     def test_should_fail_already_expired(self):
         self.secret_req['expiration'] = '2004-02-28T19:14:44.180394'
@@ -206,11 +179,8 @@ class WhenTestingSecretValidator(unittest.TestCase):
                            'bit_length': None,
                            'cypher_type': None}
 
-        with self.assertRaises(excep.InvalidObject) as e:
+        with self.assertRaises(excep.InvalidObject):
             self.validator.validate(self.secret_req)
-
-        exception = e.exception
-        self.assertTrue('mime_type' in str(exception))
 
     def test_should_fail_all_empties(self):
         self.secret_req = {'name': '',
@@ -218,24 +188,44 @@ class WhenTestingSecretValidator(unittest.TestCase):
                            'bit_length': '',
                            'cypher_type': ''}
 
-        with self.assertRaises(excep.InvalidObject) as e:
+        with self.assertRaises(excep.InvalidObject):
             self.validator.validate(self.secret_req)
 
-        exception = e.exception
-        self.assertTrue('mime_type' in str(exception))
+    def test_should_fail_no_payload_content_type(self):
+        del self.secret_req['payload_content_type']
+
+        with self.assertRaises(excep.InvalidObject):
+            self.validator.validate(self.secret_req)
+
+    def test_should_fail_with_plain_text_and_encoding(self):
+        self.secret_req['payload_content_encoding'] = 'base64'
+
+        with self.assertRaises(excep.InvalidObject):
+            self.validator.validate(self.secret_req)
+
+    def test_should_fail_with_wrong_encoding(self):
+        self.secret_req['payload_content_type'] = 'application/octet-stream'
+        self.secret_req['payload_content_encoding'] = 'unsupported'
+
+        with self.assertRaises(excep.InvalidObject):
+            self.validator.validate(self.secret_req)
+
+    def test_should_validate_with_wrong_encoding(self):
+        self.secret_req['payload_content_type'] = 'application/octet-stream'
+        self.secret_req['payload_content_encoding'] = 'base64'
+
+        self.validator.validate(self.secret_req)
 
 
 class WhenTestingOrderValidator(unittest.TestCase):
 
     def setUp(self):
         self.name = 'name'
-        self.mime_type = 'application/octet-stream'
         self.secret_algorithm = 'aes'
         self.secret_bit_length = 128
         self.secret_cypher_type = 'cbc'
 
         self.secret_req = {'name': self.name,
-                           'mime_type': self.mime_type,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
                            'cypher_type': self.secret_cypher_type}
@@ -294,51 +284,6 @@ class WhenTestingOrderValidator(unittest.TestCase):
         exception = e.exception
         self.assertTrue('cypher_type' in str(exception))
 
-    def test_should_fail_no_mime(self):
-        del self.secret_req['mime_type']
-
-        with self.assertRaises(excep.InvalidObject) as e:
-            self.validator.validate(self.order_req)
-
-        exception = e.exception
-        self.assertTrue('mime_type' in str(exception))
-
-    def test_should_fail_bad_mime(self):
-        self.secret_req['mime_type'] = 'badmimehere'
-
-        with self.assertRaises(excep.InvalidObject) as e:
-            self.validator.validate(self.order_req)
-
-        exception = e.exception
-        self.assertTrue('mime_type' in str(exception))
-
-    def test_should_fail_wrong_mime(self):
-        self.secret_req['mime_type'] = 'text/plain'
-
-        with self.assertRaises(excep.UnsupportedField) as e:
-            self.validator.validate(self.order_req)
-
-        exception = e.exception
-        self.assertTrue('mime_type' in str(exception))
-
-    def test_should_fail_bad_mime_empty(self):
-        self.secret_req['mime_type'] = ''
-
-        with self.assertRaises(excep.InvalidObject) as e:
-            self.validator.validate(self.order_req)
-
-        exception = e.exception
-        self.assertTrue('mime_type' in str(exception))
-
-    def test_should_fail_bad_mime_whitespace(self):
-        self.secret_req['mime_type'] = '   '
-
-        with self.assertRaises(excep.InvalidObject) as e:
-            self.validator.validate(self.order_req)
-
-        exception = e.exception
-        self.assertTrue('mime_type' in str(exception))
-
     def test_should_fail_negative_bit_length(self):
         self.secret_req['bit_length'] = -23
 
@@ -364,14 +309,14 @@ class WhenTestingOrderValidator(unittest.TestCase):
         exception = e.exception
         self.assertTrue('secret' in str(exception))
 
-    def test_should_fail_plain_text_provided(self):
-        self.secret_req['plain_text'] = '  '
+    def test_should_fail_payload_provided(self):
+        self.secret_req['payload'] = '  '
 
         with self.assertRaises(excep.InvalidObject) as e:
             self.validator.validate(self.order_req)
 
         exception = e.exception
-        self.assertTrue('plain_text' in str(exception))
+        self.assertTrue('payload' in str(exception))
 
     def test_should_fail_already_expired(self):
         self.secret_req['expiration'] = '2004-02-28T19:14:44.180394'
@@ -398,11 +343,8 @@ class WhenTestingOrderValidator(unittest.TestCase):
                            'cypher_type': None}
         self.order_req = {'secret': self.secret_req}
 
-        with self.assertRaises(excep.InvalidObject) as e:
+        with self.assertRaises(excep.InvalidObject):
             self.validator.validate(self.order_req)
-
-        exception = e.exception
-        self.assertTrue('mime_type' in str(exception))
 
     def test_should_fail_all_empties(self):
         self.secret_req = {'name': '',
@@ -411,11 +353,8 @@ class WhenTestingOrderValidator(unittest.TestCase):
                            'cypher_type': ''}
         self.order_req = {'secret': self.secret_req}
 
-        with self.assertRaises(excep.InvalidObject) as e:
+        with self.assertRaises(excep.InvalidObject):
             self.validator.validate(self.order_req)
-
-        exception = e.exception
-        self.assertTrue('mime_type' in str(exception))
 
 
 if __name__ == '__main__':

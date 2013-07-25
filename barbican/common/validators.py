@@ -3,11 +3,14 @@ API JSON validators.
 """
 
 import abc
+
 import jsonschema as schema
 from oslo.config import cfg
+
 from barbican.common import exception
-from barbican.openstack.common import timeutils
 from barbican.common import utils
+from barbican.crypto import mime_types
+from barbican.openstack.common import timeutils
 from barbican.openstack.common.gettextutils import _
 
 
@@ -71,16 +74,18 @@ class NewSecretValidator(ValidatorBase):
                 "cypher_type": {"type": "string"},
                 "bit_length": {"type": "integer", "minimum": 0},
                 "expiration": {"type": "string"},
-                "plain_text": {"type": "string"},
-                "mime_type": {
+                "payload": {"type": "string"},
+                "payload_content_type": {
                     "type": "string",
-                    'enum': [
-                        'text/plain',
-                        'application/octet-stream'
+                    "enum": mime_types.SUPPORTED
+                },
+                "payload_content_encoding": {
+                    "type": "string",
+                    "enum": [
+                        "base64"
                     ]
                 },
             },
-            "required": ["mime_type"]
         }
 
     def validate(self, json_data, parent_schema=None):
@@ -108,27 +113,46 @@ class NewSecretValidator(ValidatorBase):
                                                        "before current time"))
         json_data['expiration'] = expiration
 
-        # Validate/convert 'plain_text' if provided.
-        if 'plain_text' in json_data:
-            if json_data['mime_type'] != 'text/plain':
-                raise exception.InvalidObject(schema=schema_name,
-                                              reason=_("If 'plain_text' is "
-                                                       "supplied, 'mime_type' "
-                                                       "must be 'text/plain'"))
+        # Validate/convert 'payload' if provided.
+        if 'payload' in json_data:
+            content_type = json_data.get('payload_content_type')
+            if content_type is None:
+                raise exception.InvalidObject(
+                    schema=schema_name,
+                    reason=_("If 'payload' is supplied, 'payload_content_type'"
+                             " must also be supplied.")
+                )
 
-            plain_text = json_data['plain_text']
-            if secret_too_big(plain_text):
+            content_encoding = json_data.get('payload_content_encoding')
+            if content_type == 'application/octet-stream' and \
+                    content_encoding is None:
+                raise exception.InvalidObject(
+                    schema=schema_name,
+                    reason=_("payload_content_encoding must be specified "
+                             "when payload_content_type is application/"
+                             "octet-stream.")
+                )
+
+            if content_type.startswith('text/plain') and \
+                    content_encoding is not None:
+                raise exception.InvalidObject(
+                    schema=schema_name,
+                    reason=_("payload_content_encoding must not be specified "
+                             "when payload_content_type is text/plain")
+                )
+
+            payload = json_data['payload']
+            if secret_too_big(payload):
                 raise exception.LimitExceeded()
 
-            plain_text = plain_text.strip()
-            if not plain_text:
+            payload = payload.strip()
+            if not payload:
                 raise exception.InvalidObject(schema=schema_name,
-                                              reason=_("If 'plain_text' "
+                                              reason=_("If 'payload' "
                                                        "specified, must be "
                                                        "non empty"))
-            json_data['plain_text'] = plain_text
 
-        # TODO: Add validation of 'mime_type' based on loaded plugins.
+            json_data['payload'] = payload
 
         return json_data
 
@@ -169,35 +193,29 @@ class NewOrderValidator(ValidatorBase):
         except schema.ValidationError as e:
             raise exception.InvalidObject(schema=schema_name, reason=str(e))
 
-        # If secret group is provided, validate it now.
-        if 'secret' in json_data:
-            secret = json_data['secret']
-            self.secret_validator.validate(secret, parent_schema=self.name)
-            if 'plain_text' in secret:
-                raise exception.InvalidObject(schema=schema_name,
-                                              reason=_("'plain_text' not "
-                                                       "allowed for secret "
-                                                       "generation"))
-        else:
+        secret = json_data.get('secret')
+        if secret is None:
             raise exception.InvalidObject(schema=schema_name,
                                           reason=_("'secret' attributes "
                                                    "are required"))
+        # If secret group is provided, validate it now.
+        self.secret_validator.validate(secret, parent_schema=self.name)
+        if 'payload' in secret:
+            raise exception.InvalidObject(schema=schema_name,
+                                          reason=_("'payload' not "
+                                                   "allowed for secret "
+                                                   "generation"))
 
         # Validation secret generation related fields.
         # TODO: Invoke the crypto plugin for this purpose
-        if secret.get('mime_type') != 'application/octet-stream':
-            raise exception.UnsupportedField(field="mime_type",
-                                             schema=schema_name,
-                                             reason=_("Only 'application/octe"
-                                                      "t-stream' supported"))
 
-        if secret.get('cypher_type') != 'cbc':
+        if secret.get('cypher_type').lower() != 'cbc':
             raise exception.UnsupportedField(field="cypher_type",
                                              schema=schema_name,
                                              reason=_("Only 'cbc' "
                                                       "supported"))
 
-        if secret.get('algorithm') != 'aes':
+        if secret.get('algorithm').lower() != 'aes':
             raise exception.UnsupportedField(field="algorithm",
                                              schema=schema_name,
                                              reason=_("Only 'aes' "

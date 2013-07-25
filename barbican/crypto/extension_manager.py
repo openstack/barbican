@@ -17,6 +17,7 @@ from oslo.config import cfg
 from stevedore import named
 
 from barbican.common.exception import BarbicanException
+from barbican.crypto import mime_types
 from barbican.model.models import EncryptedDatum
 from barbican.openstack.common.gettextutils import _
 
@@ -64,12 +65,17 @@ class CryptoAcceptNotSupportedException(BarbicanException):
 class CryptoNoSecretOrDataException(BarbicanException):
     """Raised when secret information is not available for the specified
     secret mime-type."""
-    def __init__(self, mime_type):
+    def __init__(self, secret_id):
         super(CryptoNoSecretOrDataException, self).__init__(
             _('No secret information available for '
-              'Mime Type of {0}').format(mime_type)
+              'secret {0}').format(secret_id)
         )
-        self.mime_type = mime_type
+        self.secret_id = secret_id
+
+
+class CryptoPluginNotFound(BarbicanException):
+    """Raised when no plugins are installed."""
+    message = "Crypto plugin not found."
 
 
 class CryptoExtensionManager(named.NamedExtensionManager):
@@ -83,68 +89,67 @@ class CryptoExtensionManager(named.NamedExtensionManager):
             invoke_kwds=invoke_kwargs
         )
 
-    def encrypt(self, unencrypted, secret, tenant):
-        """Delegates encryption to active plugins."""
-        if secret.mime_type == 'text/plain':
+    def encrypt(self, unencrypted, content_type, secret, tenant):
+        """Delegates encryption to first active plugin."""
+        if len(self.extensions) < 1:
+            raise CryptoPluginNotFound()
+        encrypting_plugin = self.extensions[0].obj
+
+        if content_type in mime_types.PLAIN_TEXT:
+            # normalize text to binary string
             unencrypted = unencrypted.encode('utf-8')
 
-        for ext in self.extensions:
-            if ext.obj.supports(secret.mime_type):
-                datum = EncryptedDatum(secret)
-                datum.cypher_text, datum.kek_metadata = ext.obj.encrypt(
-                    unencrypted, tenant
-                )
-                return datum
-        else:
-            raise CryptoMimeTypeNotSupportedException(secret.mime_type)
+        datum = EncryptedDatum(secret)
+        datum.content_type = content_type
+        datum.cypher_text, datum.kek_metadata = encrypting_plugin.encrypt(
+            unencrypted, tenant
+        )
+        return datum
 
     def decrypt(self, accept, secret, tenant):
         """Delegates decryption to active plugins."""
 
         if not secret or not secret.encrypted_data:
-            raise CryptoNoSecretOrDataException(accept)
+            raise CryptoNoSecretOrDataException(secret.id)
+
+        if not mime_types.is_supported(accept):
+            raise CryptoAcceptNotSupportedException(accept)
 
         for ext in self.extensions:
-            if ext.obj.supports(accept):
-                for datum in secret.encrypted_data:
-                    if accept == datum.mime_type:
-                        unencrypted = ext.obj.decrypt(datum.cypher_text,
-                                                      datum.kek_metadata,
-                                                      tenant)
-                        if accept == 'text/plain':
-                            unencrypted = unencrypted.decode('utf-8')
-                        return unencrypted
+            plugin = ext.obj
+            for datum in secret.encrypted_data:
+                if plugin.supports(datum.kek_metadata):
+                    unencrypted = plugin.decrypt(datum.cypher_text,
+                                                 datum.kek_metadata,
+                                                 tenant)
+                    if datum.content_type in mime_types.PLAIN_TEXT:
+                        unencrypted = unencrypted.decode('utf-8')
+                    return unencrypted
         else:
-            raise CryptoAcceptNotSupportedException(accept)
+            raise CryptoPluginNotFound()
 
     def generate_data_encryption_key(self, secret, tenant):
         """
-        Delegates generating a data-encryption key to active plugins.
+        Delegates generating a data-encryption key to first active plugin.
 
         Note that this key can be used by clients for their encryption
         processes. This generated key is then be encrypted via
         the plug-in key encryption process, and that encrypted datum
         is then returned from this method.
         """
-        for ext in self.extensions:
-            if ext.obj.supports(secret.mime_type):
-                # TODO: Call plugin's key generation processes.
-                #   Note: It could be the *data* key to generate (for the
-                #   secret algo type) uses a different plug in than that
-                #   used to encrypted the key.
-                data_key = ext.obj.create(secret.algorithm, secret.bit_length)
-                datum = EncryptedDatum(secret)
-                datum.cypher_text, datum.kek_metadata = ext.obj.encrypt(
-                    data_key, tenant
-                )
-                return datum
-        else:
-            raise CryptoMimeTypeNotSupportedException(secret.mime_type)
+        if len(self.extensions) < 1:
+            raise CryptoPluginNotFound()
+        encrypting_plugin = self.extensions[0].obj
 
-    def supports(self, secret, tenant):
-        """Tests if at least one plug-in supports the secret type."""
-        for ext in self.extensions:
-            if ext.obj.supports(secret.mime_type):
-                return True
-        else:
-            raise CryptoMimeTypeNotSupportedException(secret.mime_type)
+        # TODO: Call plugin's key generation processes.
+        #   Note: It could be the *data* key to generate (for the
+        #   secret algo type) uses a different plug in than that
+        #   used to encrypted the key.
+
+        data_key = encrypting_plugin.create(secret.algorithm,
+                                            secret.bit_length)
+        datum = EncryptedDatum(secret)
+        datum.cypher_text, datum.kek_metadata = encrypting_plugin.encrypt(
+            data_key, tenant
+        )
+        return datum

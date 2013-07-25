@@ -16,6 +16,7 @@
 """
 API-facing resource controllers.
 """
+import base64
 
 import falcon
 
@@ -28,6 +29,7 @@ from barbican.model import models
 from barbican.model import repositories as repo
 from barbican.common import exception
 from barbican.crypto import extension_manager as em
+from barbican.crypto import mime_types
 from barbican.openstack.common.gettextutils import _
 from barbican.openstack.common import jsonutils as json
 from barbican.queue import get_queue_api
@@ -78,16 +80,6 @@ def _secret_mime_type_not_supported(mt, req, resp):
     """Throw exception indicating secret mime-type is not supported."""
     api.abort(falcon.HTTP_400,
               _("Mime-type of '{0}' is not supported.").format(mt), req, resp)
-
-
-def _client_content_mismatch_to_secret(expected, actual, req, res):
-    """
-    Throw exception indicating client content-type doesn't match
-    secret's mime-type.
-    """
-    api.abort(falcon.HTTP_400,
-              _("Request content-type of '{0}' doesn't match "
-                "secret's of '{1}'.").format(actual, expected), req, res)
 
 
 def _secret_data_too_large(req, resp):
@@ -322,15 +314,13 @@ class SecretsResource(api.ApiResource):
         LOG.debug('Start secrets on_get '
                   'for tenant-ID {0}:'.format(keystone_id))
 
-        params = req._params
+        result = self.secret_repo.get_by_create_date(
+            keystone_id,
+            offset_arg=req.get_param('offset'),
+            limit_arg=req.get_param('limit'),
+            suppress_exception=True
+        )
 
-        result = self.secret_repo \
-            .get_by_create_date(keystone_id,
-                                offset_arg=params.get('offset',
-                                                      None),
-                                limit_arg=params.get('limit',
-                                                     None),
-                                suppress_exception=True)
         secrets, offset, limit = result
 
         if not secrets:
@@ -383,6 +373,7 @@ class SecretResource(api.ApiResource):
         else:
             tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
             resp.set_header('Content-Type', req.accept)
+
             try:
                 resp.body = self.crypto_manager.decrypt(req.accept, secret,
                                                         tenant)
@@ -390,13 +381,33 @@ class SecretResource(api.ApiResource):
                 LOG.exception('Secret decryption failed - '
                               'accept not supported')
                 _get_accept_not_supported(canse.accept, req, resp)
-            except em.CryptoNoSecretOrDataException as cnsode:
-                LOG.exception('Secret information of type {0} not '
-                              'found for decryption.'.format(cnsode.mime_type))
-                _get_secret_info_not_found(cnsode.mime_type, req, resp)
+            except em.CryptoNoSecretOrDataException:
+                LOG.exception('Secret information of type not '
+                              'found for decryption.')
+                _get_secret_info_not_found(req.accept, req, resp)
             except Exception:
                 LOG.exception('Secret decryption failed - unknown')
                 _failed_to_decrypt_data(req, resp)
+
+            acceptable = utils.get_accepted_encodings(req)
+            LOG.debug('Acceptable: {0}'.format(acceptable))
+            if acceptable:
+                encodings = [enc for enc in acceptable if
+                             enc in mime_types.ENCODINGS]
+                if encodings:
+                    if 'base64' in encodings:
+
+                        resp.body = base64.b64encode(resp.body)
+                    else:
+                        # encoding not supported
+                        LOG.exception('Accept-Encoding not supported:'
+                                      ' {0}'.format(str(encodings)))
+                        _get_accept_not_supported(str(encodings), req, resp)
+                else:
+                    # encoding not supported
+                    LOG.exception('Accept-Encoding not supported:'
+                                  ' {0}'.format(str(encodings)))
+                    _get_accept_not_supported(str(encodings), req, resp)
 
     @handle_exceptions(_('Secret update'))
     def on_put(self, req, resp, keystone_id, secret_id):
@@ -408,24 +419,35 @@ class SecretResource(api.ApiResource):
                                suppress_exception=True)
         if not secret:
             _secret_not_found(req, resp)
-        if secret.mime_type != req.content_type:
-            _client_content_mismatch_to_secret(secret.mime_type,
-                                               req.content_type, req, resp)
+
         if secret.encrypted_data:
             _secret_already_has_data(req, resp)
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
+        payload = None
+        content_type = req.content_type
+        content_encoding = req.get_header('Content-Encoding')
 
         try:
-            plain_text = req.stream.read(api.MAX_BYTES_REQUEST_INPUT_ACCEPTED)
+            payload = req.stream.read(api.MAX_BYTES_REQUEST_INPUT_ACCEPTED)
         except IOError:
             api.abort(falcon.HTTP_500, 'Read Error')
 
-        resp.status = falcon.HTTP_200
+        if content_type in mime_types.BINARY and \
+                content_encoding in mime_types.ENCODINGS:
+            if content_encoding == 'base64':
+                payload = base64.b64decode(payload)
+        elif content_encoding is not None:
+            LOG.exception(
+                'Content-Encoding not supported {0}'.format(content_encoding)
+            )
+            _put_accept_incorrect(content_encoding, req, resp)
 
         try:
             res.create_encrypted_datum(secret,
-                                       plain_text,
+                                       payload,
+                                       content_type,
+                                       content_encoding,
                                        tenant,
                                        self.crypto_manager,
                                        self.tenant_secret_repo,
@@ -442,6 +464,8 @@ class SecretResource(api.ApiResource):
         except Exception:
             LOG.exception('Secret creation failed - unknown')
             _failed_to_create_encrypted_datum(req, resp)
+
+        resp.status = falcon.HTTP_200
 
     @handle_exceptions(_('Secret deletion'))
     def on_delete(self, req, resp, keystone_id, secret_id):
