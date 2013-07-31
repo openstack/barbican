@@ -19,10 +19,20 @@ API application handler for Cloudkeep's Barbican
 
 import falcon
 
+try:
+    import newrelic.agent
+    newrelic_loaded = True
+except ImportError:
+    newrelic_loaded = False
+
 from barbican.api import resources as res
 from barbican.common import config
 from barbican.crypto import extension_manager as ext
 from barbican.openstack.common import log
+
+
+if newrelic_loaded:
+    newrelic.agent.initialize('/etc/barbican/newrelic.ini')
 
 
 def create_main_app(global_config, **local_conf):
@@ -47,6 +57,9 @@ def create_main_app(global_config, **local_conf):
     performance_uri = 'mu-1a90dfd0-7e7abba4-4e459908-fc097d60'
 
     wsgi_app = api = falcon.API()
+    if newrelic_loaded:
+        wsgi_app = newrelic.agent.WSGIApplicationWrapper(wsgi_app)
+
     api.add_route('/', versions)
     api.add_route('/v1/{keystone_id}/secrets', secrets)
     api.add_route('/v1/{keystone_id}/secrets/{secret_id}', secret)
