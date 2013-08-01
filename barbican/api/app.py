@@ -32,7 +32,7 @@ from barbican.openstack.common import log
 
 
 if newrelic_loaded:
-    newrelic.agent.initialize('/etc/barbican/newrelic.ini')
+    newrelic.agent.initialize('/etc/newrelic/newrelic.ini')
 
 
 def create_main_app(global_config, **local_conf):
