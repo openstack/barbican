@@ -1,6 +1,7 @@
+hacking
 mock>=1.0.0
 nose
 nosexcover
 testtools
 tox
-pep8
+
