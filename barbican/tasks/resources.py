@@ -29,13 +29,15 @@ class BeginOrder(object):
     """Handles beginning processing an Order"""
 
     def __init__(self, crypto_manager=None, tenant_repo=None, order_repo=None,
-                 secret_repo=None, tenant_secret_repo=None, datum_repo=None):
+                 secret_repo=None, tenant_secret_repo=None,
+                 datum_repo=None, kek_repo=None):
         LOG.debug('Creating BeginOrder task processor')
         self.order_repo = order_repo or rep.OrderRepo()
         self.tenant_repo = tenant_repo or rep.TenantRepo()
         self.secret_repo = secret_repo or rep.SecretRepo()
         self.tenant_secret_repo = tenant_secret_repo or rep.TenantSecretRepo()
         self.datum_repo = datum_repo or rep.EncryptedDatumRepo()
+        self.kek_repo = kek_repo or rep.KEKDatumRepo()
         self.crypto_manager = crypto_manager or CryptoExtensionManager()
 
     def process(self, order_id, keystone_id):
@@ -71,7 +73,8 @@ class BeginOrder(object):
         # Create Secret
         new_secret = create_secret(secret_info, tenant,
                                    self.crypto_manager, self.secret_repo,
-                                   self.tenant_secret_repo, self.datum_repo,
+                                   self.tenant_secret_repo,
+                                   self.datum_repo, self.kek_repo,
                                    ok_to_generate=True)
         order.secret_id = new_secret.id
 

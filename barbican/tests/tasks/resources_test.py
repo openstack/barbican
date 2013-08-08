@@ -73,6 +73,8 @@ class WhenBeginningOrder(unittest.TestCase):
         self.datum_repo = MagicMock()
         self.datum_repo.create_from.return_value = None
 
+        self.kek_repo = MagicMock()
+
         self.conf = MagicMock()
         self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
         self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
@@ -81,7 +83,7 @@ class WhenBeginningOrder(unittest.TestCase):
         self.resource = BeginOrder(self.crypto_mgr,
                                    self.tenant_repo, self.order_repo,
                                    self.secret_repo, self.tenant_secret_repo,
-                                   self.datum_repo)
+                                   self.datum_repo, self.kek_repo)
 
     def test_should_process_order(self):
         self.resource.process(self.order.id, self.keystone_id)
@@ -107,7 +109,12 @@ class WhenBeginningOrder(unittest.TestCase):
         datum = args[0]
         self.assertIsInstance(datum, EncryptedDatum)
         self.assertIsNotNone(datum.cypher_text)
-        self.assertIsNotNone(datum.kek_metadata)
+
+        self.assertIsNone(datum.kek_meta_extended)
+        self.assertIsNotNone(datum.kek_meta_tenant)
+        self.assertTrue(datum.kek_meta_tenant.bind_completed)
+        self.assertIsNotNone(datum.kek_meta_tenant.plugin_name)
+        self.assertIsNotNone(datum.kek_meta_tenant.kek_label)
 
 
 if __name__ == '__main__':

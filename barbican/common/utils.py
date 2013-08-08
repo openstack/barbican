@@ -90,6 +90,23 @@ def get_accepted_encodings(req):
                                      cmp=lambda a, b: cmp(b[1], a[1]))]
 
 
+def generate_fullname_for(o):
+    """
+    Produce a fully qualified class name for the specified instance.
+
+    :param o: The instance to generate information from.
+    :return: A string providing the package.module information for the
+    instance.
+    """
+    if not o:
+        return 'None'
+
+    module = o.__class__.__module__
+    if module is None or module == str.__class__.__module__:
+        return o.__class__.__name__
+    return module + '.' + o.__class__.__name__
+
+
 class TimeKeeper(object):
     """
     Keeps track of elapsed times and then allows for dumping a smmary to

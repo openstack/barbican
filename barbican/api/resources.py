@@ -266,15 +266,16 @@ class SecretsResource(api.ApiResource):
 
     def __init__(self, crypto_manager,
                  tenant_repo=None, secret_repo=None,
-                 tenant_secret_repo=None, datum_repo=None,
+                 tenant_secret_repo=None, datum_repo=None, kek_repo=None,
                  policy_enforcer=None):
         LOG.debug('Creating SecretsResource')
         self.tenant_repo = tenant_repo or repo.TenantRepo()
         self.secret_repo = secret_repo or repo.SecretRepo()
         self.tenant_secret_repo = tenant_secret_repo or repo.TenantSecretRepo()
         self.datum_repo = datum_repo or repo.EncryptedDatumRepo()
-        self.crypto_manager = crypto_manager
+        self.kek_repo = kek_repo or repo.KEKDatumRepo()
         self.policy = policy_enforcer or Enforcer()
+        self.crypto_manager = crypto_manager
         self.validator = validators.NewSecretValidator()
 
     @handle_exceptions(_('Secret creation'))
@@ -288,7 +289,8 @@ class SecretsResource(api.ApiResource):
             new_secret = res.create_secret(data, tenant, self.crypto_manager,
                                            self.secret_repo,
                                            self.tenant_secret_repo,
-                                           self.datum_repo)
+                                           self.datum_repo,
+                                           self.kek_repo)
         except em.CryptoMimeTypeNotSupportedException as cmtnse:
             LOG.exception('Secret creation failed - mime-type not supported')
             _secret_mime_type_not_supported(cmtnse.mime_type, req, resp)
@@ -343,13 +345,14 @@ class SecretResource(api.ApiResource):
 
     def __init__(self, crypto_manager,
                  tenant_repo=None, secret_repo=None,
-                 tenant_secret_repo=None, datum_repo=None,
+                 tenant_secret_repo=None, datum_repo=None, kek_repo=None,
                  policy_enforcer=None):
         self.crypto_manager = crypto_manager
         self.tenant_repo = tenant_repo or repo.TenantRepo()
         self.repo = secret_repo or repo.SecretRepo()
         self.tenant_secret_repo = tenant_secret_repo or repo.TenantSecretRepo()
         self.datum_repo = datum_repo or repo.EncryptedDatumRepo()
+        self.kek_repo = kek_repo or repo.KEKDatumRepo()
         self.policy = policy_enforcer or Enforcer()
 
     @handle_exceptions(_('Secret retrieval'))
@@ -451,7 +454,8 @@ class SecretResource(api.ApiResource):
                                        tenant,
                                        self.crypto_manager,
                                        self.tenant_secret_repo,
-                                       self.datum_repo)
+                                       self.datum_repo,
+                                       self.kek_repo)
         except em.CryptoMimeTypeNotSupportedException as cmtnse:
             LOG.exception('Secret creation failed - mime-type not supported')
             _secret_mime_type_not_supported(cmtnse.mime_type, req, resp)

@@ -22,9 +22,11 @@ import mock
 from mock import MagicMock
 
 from barbican.api import resources as res
+from barbican.common import utils
 from barbican.common import exception as excep
 from barbican.common.validators import DEFAULT_MAX_SECRET_BYTES
 from barbican.crypto.extension_manager import CryptoExtensionManager
+from barbican.tests.crypto.test_plugin import TestCryptoPlugin
 from barbican.model import models
 from barbican.openstack.common import jsonutils
 
@@ -71,6 +73,14 @@ def create_order(id="id",
     order.secret_bit_length = bit_length
     order.secret_cypher_type = cypher_type
     return order
+
+
+def validate_datum(test, datum):
+    test.assertIsNone(datum.kek_meta_extended)
+    test.assertIsNotNone(datum.kek_meta_tenant)
+    test.assertTrue(datum.kek_meta_tenant.bind_completed)
+    test.assertIsNotNone(datum.kek_meta_tenant.plugin_name)
+    test.assertIsNotNone(datum.kek_meta_tenant.kek_label)
 
 
 class WhenTestingVersionResource(unittest.TestCase):
@@ -128,6 +138,14 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.datum_repo = MagicMock()
         self.datum_repo.create_from.return_value = None
 
+        self.kek_datum = models.KEKDatum()
+        self.kek_datum.plugin_name = utils.generate_fullname_for(
+            TestCryptoPlugin())
+        self.kek_datum.kek_label = "kek_label"
+        self.kek_datum.bind_completed = False
+        self.kek_repo = MagicMock()
+        self.kek_repo.find_or_create_kek_metadata.return_value = self.kek_datum
+
         self.policy = MagicMock()
 
         self.stream = MagicMock()
@@ -146,7 +164,9 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
                                             self.tenant_repo,
                                             self.secret_repo,
                                             self.tenant_secret_repo,
-                                            self.datum_repo, self.policy)
+                                            self.datum_repo,
+                                            self.kek_repo,
+                                            self.policy)
 
     def test_should_add_new_secret(self):
         self.resource.on_post(self.req, self.resp, self.keystone_id)
@@ -172,7 +192,8 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.assertIsInstance(datum, models.EncryptedDatum)
         self.assertEqual('cypher_text', datum.cypher_text)
         self.assertEqual(self.payload_content_type, datum.content_type)
-        self.assertIsNotNone(datum.kek_metadata)
+
+        validate_datum(self, datum)
 
     def test_should_add_new_secret_with_expiration(self):
         expiration = '2114-02-28 12:14:44.180394-05:00'
@@ -209,7 +230,8 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.assertTrue(isinstance(datum, models.EncryptedDatum))
         self.assertEqual('cypher_text', datum.cypher_text)
         self.assertEqual(self.payload_content_type, datum.content_type)
-        self.assertIsNotNone(datum.kek_metadata)
+
+        validate_datum(self, datum)
 
     def test_should_add_new_secret_metadata_without_payload(self):
         self.stream.read.return_value = json.dumps({'name': self.name})
@@ -311,7 +333,8 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.assertIsInstance(datum, models.EncryptedDatum)
         self.assertEqual('cypher_text', datum.cypher_text)
         self.assertEqual('application/octet-stream', datum.content_type)
-        self.assertIsNotNone(datum.kek_metadata)
+
+        validate_datum(self, datum)
 
     def test_create_secret_fails_with_binary_payload_no_encoding(self):
         self.stream.read.return_value = json.dumps(
@@ -389,7 +412,10 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
         self.datum_repo = MagicMock()
         self.datum_repo.create_from.return_value = None
 
+        self.kek_repo = MagicMock()
+
         self.policy = MagicMock()
+        self.policy.read.return_value = None
 
         self.conf = MagicMock()
         self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
@@ -404,7 +430,9 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
         self.resource = res.SecretsResource(self.crypto_mgr, self.tenant_repo,
                                             self.secret_repo,
                                             self.tenant_secret_repo,
-                                            self.datum_repo, self.policy)
+                                            self.datum_repo,
+                                            self.kek_repo,
+                                            self.policy)
 
     def test_should_get_list_secrets(self):
         self.resource.on_get(self.req, self.resp, self.keystone_id)
@@ -466,17 +494,27 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
 
         secret_id = "idsecret1"
         datum_id = "iddatum1"
+        kek_id = "idkek1"
 
         self.secret_algorithm = "AES"
         self.secret_bit_length = 256
         self.secret_cypher_type = "CBC"
 
+        self.kek_tenant = models.KEKDatum()
+        self.kek_tenant.id = kek_id
+        self.kek_tenant.active = True
+        self.kek_tenant.bind_completed = False
+        self.kek_tenant.kek_label = "kek_label"
+        self.kek_tenant.plugin_name = utils.generate_fullname_for(
+            TestCryptoPlugin())
+
         self.datum = models.EncryptedDatum()
         self.datum.id = datum_id
         self.datum.secret_id = secret_id
+        self.datum.kek_id = kek_id
+        self.datum.kek_meta_tenant = self.kek_tenant
         self.datum.content_type = "text/plain"
         self.datum.cypher_text = "cypher_text"
-        self.datum.kek_metadata = json.dumps({'plugin': 'TestCryptoPlugin'})
 
         self.secret = create_secret(id=secret_id,
                                     name=self.name,
@@ -501,6 +539,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.datum_repo = MagicMock()
         self.datum_repo.create_from.return_value = None
 
+        self.kek_repo = MagicMock()
+
         self.policy = MagicMock()
 
         self.req = MagicMock()
@@ -517,7 +557,9 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
                                            self.tenant_repo,
                                            self.secret_repo,
                                            self.tenant_secret_repo,
-                                           self.datum_repo, self.policy)
+                                           self.datum_repo,
+                                           self.kek_repo,
+                                           self.policy)
 
     def test_should_get_secret_as_json(self):
         self.resource.on_get(self.req, self.resp, self.keystone_id,
@@ -629,7 +671,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         datum = args[0]
         self.assertIsInstance(datum, models.EncryptedDatum)
         self.assertEqual('cypher_text', datum.cypher_text)
-        self.assertIsNotNone(datum.kek_metadata)
+
+        validate_datum(self, datum)
 
     def test_should_put_secret_as_binary(self):
         self._setup_for_puts()

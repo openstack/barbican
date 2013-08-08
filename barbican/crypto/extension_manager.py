@@ -17,7 +17,9 @@ from oslo.config import cfg
 from stevedore import named
 
 from barbican.common.exception import BarbicanException
+from barbican.common import utils
 from barbican.crypto import mime_types
+from barbican.crypto import plugin as plugin_mod
 from barbican.model.models import EncryptedDatum
 from barbican.openstack.common.gettextutils import _
 
@@ -89,20 +91,26 @@ class CryptoExtensionManager(named.NamedExtensionManager):
             invoke_kwds=invoke_kwargs
         )
 
-    def encrypt(self, unencrypted, content_type, secret, tenant):
+    def encrypt(self, unencrypted, content_type, secret, tenant, kek_repo):
         """Delegates encryption to first active plugin."""
         if len(self.extensions) < 1:
             raise CryptoPluginNotFound()
         encrypting_plugin = self.extensions[0].obj
+        # TODO: Need to test if the plugin supports 'secret's requirements.
 
         if content_type in mime_types.PLAIN_TEXT:
             # normalize text to binary string
             unencrypted = unencrypted.encode('utf-8')
 
-        datum = EncryptedDatum(secret)
+        # Find or create a key encryption key metadata.
+        kek_datum, kek_metadata = self._find_or_create_kek_metadata(
+            encrypting_plugin, tenant, kek_repo)
+
+        # Create an encrypted datum instance and add the encrypted cypher text.
+        datum = EncryptedDatum(secret, kek_datum)
         datum.content_type = content_type
-        datum.cypher_text, datum.kek_metadata = encrypting_plugin.encrypt(
-            unencrypted, tenant
+        datum.cypher_text, datum.kek_meta_extended = encrypting_plugin.encrypt(
+            unencrypted, kek_metadata, tenant
         )
         return datum
 
@@ -116,19 +124,23 @@ class CryptoExtensionManager(named.NamedExtensionManager):
             raise CryptoAcceptNotSupportedException(accept)
 
         for ext in self.extensions:
-            plugin = ext.obj
+            decrypting_plugin = ext.obj
             for datum in secret.encrypted_data:
-                if plugin.supports(datum.kek_metadata):
-                    unencrypted = plugin.decrypt(datum.cypher_text,
-                                                 datum.kek_metadata,
-                                                 tenant)
+                if self._plugin_supports(decrypting_plugin,
+                                         datum.kek_meta_tenant):
+                    unencrypted = decrypting_plugin \
+                        .decrypt(datum.cypher_text,
+                                 datum.kek_meta_tenant,
+                                 datum.kek_meta_extended,
+                                 tenant)
                     if datum.content_type in mime_types.PLAIN_TEXT:
                         unencrypted = unencrypted.decode('utf-8')
                     return unencrypted
         else:
             raise CryptoPluginNotFound()
 
-    def generate_data_encryption_key(self, secret, tenant):
+    def generate_data_encryption_key(self, secret, content_type, tenant,
+                                     kek_repo):
         """
         Delegates generating a data-encryption key to first active plugin.
 
@@ -141,15 +153,39 @@ class CryptoExtensionManager(named.NamedExtensionManager):
             raise CryptoPluginNotFound()
         encrypting_plugin = self.extensions[0].obj
 
-        # TODO: Call plugin's key generation processes.
-        #   Note: It could be the *data* key to generate (for the
-        #   secret algo type) uses a different plug in than that
-        #   used to encrypted the key.
-
+        # Create the secret.
         data_key = encrypting_plugin.create(secret.algorithm,
                                             secret.bit_length)
-        datum = EncryptedDatum(secret)
-        datum.cypher_text, datum.kek_metadata = encrypting_plugin.encrypt(
-            data_key, tenant
-        )
-        return datum
+
+        # Encrypt the secret.
+        return self.encrypt(data_key, content_type, secret, tenant, kek_repo)
+
+    def _plugin_supports(self, plugin_inst, kek_metadata_tenant):
+        """
+        Tests if the supplied plugin supports operations on the supplied
+        key encryption key (KEK) metadata.
+
+        :param plugin_inst: The plugin instance to test.
+        :param kek_metadata: The KEK metadata to test.
+        :return: True if the plugin can support operations on the KEK metadata.
+
+        """
+        plugin_name = utils.generate_fullname_for(plugin_inst)
+        return plugin_name == kek_metadata_tenant.plugin_name
+
+    def _find_or_create_kek_metadata(self, plugin_inst, tenant, kek_repo):
+        # Find or create a key encryption key.
+        full_plugin_name = utils.generate_fullname_for(plugin_inst)
+        kek_datum = kek_repo.find_or_create_kek_metadata(tenant,
+                                                         full_plugin_name)
+
+        # Bind to the plugin's key management.
+        # TODO: Does this need to be in a critical section? Should the bind
+        #   operation just be declared idempotent in the plugin contract?
+        kek_metadata = plugin_mod.KEKMetadata(kek_datum)
+        if not kek_datum.bind_completed:
+            plugin_inst.bind_kek_metadata(kek_metadata)
+            plugin_mod.indicate_bind_completed(kek_metadata, kek_datum)
+            kek_repo.save(kek_datum)
+
+        return (kek_datum, kek_metadata)

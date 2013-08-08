@@ -24,13 +24,18 @@ from barbican.openstack.common import jsonutils as json
 class TestCryptoPlugin(CryptoPluginBase):
     """Crypto plugin implementation for testing the plugin manager."""
 
-    def encrypt(self, unencrypted, tenant):
+    def encrypt(self, unencrypted, kek_metadata, tenant):
         cypher_text = 'cypher_text'
-        kek_metadata = json.dumps({'plugin': 'TestCryptoPlugin'})
-        return cypher_text, kek_metadata
+        return cypher_text, None
 
-    def decrypt(self, encrypted, kek_metadata, tenant):
+    def decrypt(self, encrypted, kek_meta_tenant, kek_meta_extended, tenant):
         return b'unencrypted_data'
+
+    def bind_kek_metadata(self, kek_metadata):
+        kek_metadata.algorithm = 'aes'
+        kek_metadata.bit_length = 128
+        kek_metadata.mode = 'cbc'
+        kek_metadata.plugin_meta = None
 
     def create(self, algorithm, bit_length):
         return "insecure_key"
@@ -76,18 +81,23 @@ class WhenTestingSimpleCryptoPlugin(unittest.TestCase):
         secret = MagicMock()
         secret.mime_type = 'text/plain'
         with self.assertRaises(ValueError):
-            self.plugin.encrypt(unencrypted, MagicMock())
+            self.plugin.encrypt(unencrypted, MagicMock(), MagicMock())
 
     def test_byte_string_encryption(self):
         unencrypted = b'some_secret'
-        encrypted, kek_metadata = self.plugin.encrypt(unencrypted, MagicMock())
-        decrypted = self.plugin.decrypt(encrypted, kek_metadata, MagicMock())
+        encrypted, kek_ext = self.plugin.encrypt(unencrypted,
+                                                 MagicMock(),
+                                                 MagicMock())
+        decrypted = self.plugin.decrypt(encrypted, MagicMock(),
+                                        kek_ext, MagicMock())
         self.assertEqual(unencrypted, decrypted)
 
     def test_random_bytes_encryption(self):
         unencrypted = Random.get_random_bytes(10)
-        encrypted, kek_metadata = self.plugin.encrypt(unencrypted, MagicMock())
-        decrypted = self.plugin.decrypt(encrypted, kek_metadata, MagicMock())
+        encrypted, kek_meta_ext = self.plugin.encrypt(unencrypted,
+                                                      MagicMock(), MagicMock())
+        decrypted = self.plugin.decrypt(encrypted, MagicMock(),
+                                        kek_meta_ext, MagicMock())
         self.assertEqual(unencrypted, decrypted)
 
     def test_create_256_bit_key(self):
@@ -113,11 +123,3 @@ class WhenTestingSimpleCryptoPlugin(unittest.TestCase):
             'kek': 'kek_id'
         })
         self.assertTrue(self.plugin.supports(kek_metadata))
-
-    def test_does_not_support_decoding_metadata(self):
-        kek_metadata = json.dumps({
-            'plugin': 'MuchFancierPlugin',
-            'encryption': 'aes-128-cbc',
-            'kek': 'kek_id'
-        })
-        self.assertFalse(self.plugin.supports(kek_metadata))

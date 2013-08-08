@@ -23,6 +23,7 @@ quite intense for sqlalchemy, and maybe could be simplified.
 
 import time
 import logging
+import uuid
 
 from oslo.config import cfg
 
@@ -554,7 +555,7 @@ class SecretRepo(BaseRepo):
 class EncryptedDatumRepo(BaseRepo):
     """
     Repository for the EncryptedDatum entity (that stores encrypted
-    information on behalf of a Secret.
+    information on behalf of a Secret).
     """
 
     def _do_entity_name(self):
@@ -567,6 +568,61 @@ class EncryptedDatumRepo(BaseRepo):
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.EncryptedDatum).filter_by(id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
+class KEKDatumRepo(BaseRepo):
+    """
+    Repository for the KEKDatum entity (that stores key encryption key (KEK)
+    metadata used by crypto plugins to encrypt/decrypt secrets).
+    """
+
+    def find_or_create_kek_metadata(self, tenant,
+                                    plugin_name,
+                                    suppress_exception=False,
+                                    session=None):
+        """ Find or create a KEK metadata instance. """
+
+        kek_datum = None
+
+        session = self.get_session(session)
+
+        # TODO: Reverse this...attempt insert first, then get on fail.
+        try:
+            query = session.query(models.KEKDatum) \
+                           .filter_by(tenant_id=tenant.id) \
+                           .filter_by(plugin_name=plugin_name) \
+                           .filter_by(active=True) \
+                           .filter_by(deleted=False)
+
+            kek_datum = query.one()
+
+        except sa_orm.exc.NoResultFound:
+            kek_datum = models.KEKDatum()
+
+            kek_datum.kek_label = "tenant-{0}-key-{1}".format(
+                tenant.keystone_id, uuid.uuid4())
+            kek_datum.tenant_id = tenant.id
+            kek_datum.plugin_name = plugin_name
+            kek_datum.status = models.States.ACTIVE
+
+            self.save(kek_datum)
+
+        return kek_datum
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "KEKDatum"
+
+    def _do_create_instance(self):
+        return models.KEKDatum()
+
+    def _do_build_get_query(self, entity_id, keystone_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.KEKDatum).filter_by(id=entity_id)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""

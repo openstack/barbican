@@ -164,6 +164,7 @@ class Tenant(BASE, ModelBase):
 
     orders = relationship("Order", backref="tenant")
     secrets = relationship("TenantSecret", backref="tenants")
+    keks = relationship("KEKDatum", backref="tenant")
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -197,7 +198,10 @@ class Secret(BASE, ModelBase):
     cypher_type = Column(String(255))
 
     # TODO: Performance - Consider avoiding full load of all
-    #   datum attributes here.
+    #   datum attributes here. This is only being done to support the
+    #   building of the list of supported content types when secret
+    #   metadata is retrieved.
+    #   See barbican.api.resources.py::SecretsResource.on_get()
     encrypted_data = relationship("EncryptedDatum", lazy='joined')
 
     def __init__(self, parsed_request):
@@ -241,26 +245,74 @@ class EncryptedDatum(BASE, ModelBase):
 
     secret_id = Column(String(36), ForeignKey('secrets.id'),
                        nullable=False)
+    kek_id = Column(String(36), ForeignKey('kek_data.id'),
+                    nullable=False)
     content_type = Column(String(255))
     mime_type = Column(String(255))
     cypher_text = Column(LargeBinary)
-    kek_metadata = Column(Text)
+    kek_meta_extended = Column(Text)
+    kek_meta_tenant = relationship("KEKDatum")
 
-    def __init__(self, secret=None):
-        """Creates encrypted datum from a secret."""
+    def __init__(self, secret=None, kek_datum=None):
+        """Creates encrypted datum from a secret and KEK metadata."""
         super(EncryptedDatum, self).__init__()
 
         if secret:
             self.secret_id = secret.id
 
+        if kek_datum:
+            self.kek_id = kek_datum.id
+            self.kek_meta_tenant = kek_datum
+
         self.status = States.ACTIVE
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        return {'name': self.name,
-                'cypher_text': self.secret,
-                'content_type': self.content_type,
-                'kek_metadata': self.kek_metadata}
+        return {'cypher_text': self.secret,
+                'content_type': self.content_type}
+
+
+class KEKDatum(BASE, ModelBase):
+    """
+    Represents the key encryption key (KEK) metadata associated with a process
+    used to encrypt/decrypt secret information.
+
+    When a secret is encrypted, in addition to the cypher text, the Barbican
+    encryption process produces a KEK metadata object. The cypher text is
+    stored via the EncryptedDatum model above, whereas the metadata is stored
+    within this model. Decryption processes utilize this KEK metadata
+    to decrypt the associated cypher text.
+
+    Note that this model is intended to be agnostic to the specific means used
+    to encrypt/decrypt the secret information, so please do not place vendor-
+    specific attributes here.
+
+    Note as well that each Tenant will have at most one 'active=True' KEKDatum
+    instance at a time, representing the most recent KEK metadata instance
+    to use for encryption processes performed on behalf of the Tenant.
+    KEKDatum instances that are 'active=False' are associated to previously
+    used encryption processes for the Tenant, that eventually should be
+    rotated and deleted with the Tenant's active KEKDatum.
+    """
+
+    __tablename__ = 'kek_data'
+
+    plugin_name = Column(String(255))
+    kek_label = Column(String(255))
+
+    tenant_id = Column(String(36), ForeignKey('tenants.id'),
+                       nullable=False)
+
+    active = Column(Boolean, nullable=False, default=True)
+    bind_completed = Column(Boolean, nullable=False, default=False)
+    algorithm = Column(String(255))
+    bit_length = Column(Integer)
+    mode = Column(String(255))
+    plugin_meta = Column(Text)
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {'algorithm': self.algorithm}
 
 
 class Order(BASE, ModelBase):

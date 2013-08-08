@@ -44,7 +44,7 @@ def get_or_create_tenant(keystone_id, tenant_repo):
 
 
 def create_secret(data, tenant, crypto_manager,
-                  secret_repo, tenant_secret_repo, datum_repo,
+                  secret_repo, tenant_secret_repo, datum_repo, kek_repo,
                   ok_to_generate=False):
     """
     Common business logic to create a secret.
@@ -53,10 +53,11 @@ def create_secret(data, tenant, crypto_manager,
     new_secret = models.Secret(data)
     time_keeper.mark('after Secret model create')
     new_datum = None
+    content_type = data.get('payload_content_type',
+                            'application/octet-stream')  # TODO: Add to Order!
 
     if 'payload' in data:
         payload = data.get('payload')
-        content_type = data.get('payload_content_type')
         content_encoding = data.get('payload_content_encoding')
         if not payload:
             raise exception.NoDataToProcess()
@@ -81,13 +82,16 @@ def create_secret(data, tenant, crypto_manager,
         new_datum = crypto_manager.encrypt(payload,
                                            content_type,
                                            new_secret,
-                                           tenant)
+                                           tenant,
+                                           kek_repo)
         time_keeper.mark('after encrypt')
 
     elif ok_to_generate:
         LOG.debug('Generating new secret...')
         new_datum = crypto_manager.generate_data_encryption_key(new_secret,
-                                                                tenant)
+                                                                content_type,
+                                                                tenant,
+                                                                kek_repo)
         time_keeper.mark('after secret generate')
 
     else:
@@ -118,7 +122,7 @@ def create_secret(data, tenant, crypto_manager,
 def create_encrypted_datum(secret, payload,
                            content_type, content_encoding,
                            tenant, crypto_manager,
-                           tenant_secret_repo, datum_repo):
+                           tenant_secret_repo, datum_repo, kek_repo):
     """
     Modifies the secret to add the plain_text secret information.
 
@@ -130,6 +134,7 @@ def create_encrypted_datum(secret, payload,
     :param crypto_manager: the crypto plugin manager
     :param tenant_secret_repo: the tenant/secret association repository
     :param datum_repo: the encrypted datum repository
+    :param kek_repo: the KEK metadata repository
     :retval The response body, None if N/A
     """
     if not payload:
@@ -149,7 +154,8 @@ def create_encrypted_datum(secret, payload,
     new_datum = crypto_manager.encrypt(payload,
                                        content_type,
                                        secret,
-                                       tenant)
+                                       tenant,
+                                       kek_repo)
     datum_repo.create_from(new_datum)
 
     # Create Tenant/Secret entity.

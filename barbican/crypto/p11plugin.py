@@ -1,5 +1,6 @@
-import PyKCS11
-import uuid
+# TODO: Restore this: import PyKCS11
+#       This code is disabled just enough to pass tox tests, but once full
+#       integration into Barbican is achieved, this code should re-enabled.
 
 from oslo.config import cfg
 
@@ -8,6 +9,10 @@ from barbican.crypto.plugin import CryptoPluginBase
 
 from barbican.openstack.common import jsonutils as json
 from barbican.openstack.common.gettextutils import _
+
+
+# TODO: Remove this:
+PyKCS11 = {}
 
 
 class P11CryptoPluginException(exception.BarbicanException):
@@ -60,7 +65,7 @@ class P11CryptoPlugin(CryptoPluginBase):
         if len(keys) == 1:
             return keys[0]
         elif len(keys) == 0:
-            return None
+            return None, None
         elif len(keys) > 1:
             raise P11CryptoPluginException()  # TODO:make this a mega exception
 
@@ -68,32 +73,35 @@ class P11CryptoPlugin(CryptoPluginBase):
         key_label = self.repo.get_key(tenant)  # TODO
         return key_label
 
-    def _generate_key_for_tenant(self, tenant):
-        # TODO: uuid generation from sufficient entropy?
-        key_label = "tenant-{0}-key-{1}".format(tenant.tenant_id, uuid.uuid4())
-        template = (
-            (PyKCS11.CKA_CLASS, PyKCS11.CKO_SECRET_KEY),
-            (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_AES),
-            (PyKCS11.CKA_VALUE_LEN, self.kek_key_length),
-            (PyKCS11.CKA_LABEL, key_label),
-            (PyKCS11.CKA_PRIVATE, True),
-            (PyKCS11.CKA_SENSITIVE, True),
-            (PyKCS11.CKA_ENCRYPT, True),
-            (PyKCS11.CKA_DECRYPT, True),
-            #(PyKCS11.CKA_TOKEN, True), # TODO: enable this (saves to HSM)
-            (PyKCS11.CKA_WRAP, True),
-            (PyKCS11.CKA_UNWRAP, True),
-            # TODO: make these unextractable if feasible
-            (PyKCS11.CKA_EXTRACTABLE, True))
-        ckattr = self.session._template2ckattrlist(template)
-
-        m = PyKCS11.Mechanism(PyKCS11.CKM_AES_KEY_GEN, None)
-        key = PyKCS11.CK_OBJECT_HANDLE()
-        self._check_error(
-            self.pkcs11.lib.C_GenerateKey(self.session.session, m, ckattr, key)
-        )
-        self.repo.write_key(key_label, tenant)  # TODO: write key
-        return (key, key_label)
+    # TODO: jwood: No longer needed...see bind_kek_metadata() below...
+    # def _generate_key_for_tenant(self, tenant):
+    #     # TODO: uuid generation from sufficient entropy?
+    #     key_label = "tenant-{0}-key-{1}".format(tenant.tenant_id,
+    #                                             uuid.uuid4())
+    #     template = (
+    #         (PyKCS11.CKA_CLASS, PyKCS11.CKO_SECRET_KEY),
+    #         (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_AES),
+    #         (PyKCS11.CKA_VALUE_LEN, self.kek_key_length),
+    #         (PyKCS11.CKA_LABEL, key_label),
+    #         (PyKCS11.CKA_PRIVATE, True),
+    #         (PyKCS11.CKA_SENSITIVE, True),
+    #         (PyKCS11.CKA_ENCRYPT, True),
+    #         (PyKCS11.CKA_DECRYPT, True),
+    #         #(PyKCS11.CKA_TOKEN, True), # TODO: enable this (saves to HSM)
+    #         (PyKCS11.CKA_WRAP, True),
+    #         (PyKCS11.CKA_UNWRAP, True),
+    #         # TODO: make these unextractable if feasible
+    #         (PyKCS11.CKA_EXTRACTABLE, True))
+    #     ckattr = self.session._template2ckattrlist(template)
+    #
+    #     m = PyKCS11.Mechanism(PyKCS11.CKM_AES_KEY_GEN, None)
+    #     key = PyKCS11.CK_OBJECT_HANDLE()
+    #     self._check_error(
+    #         self.pkcs11.lib.C_GenerateKey(self.session.session, m, ckattr,
+    #                                       key)
+    #     )
+    #     self.repo.write_key(key_label, tenant)  # TODO: write key
+    #     return (key, key_label)
 
     def _build_kek_metadata(self, mechanism, key_label, iv):
         # TODO: CBC, default (exception?)
@@ -112,31 +120,76 @@ class P11CryptoPlugin(CryptoPluginBase):
         })
         return kek_metadata
 
-    def encrypt(self, unencrypted, tenant):
+    def encrypt(self, unencrypted, kek_metadata, tenant):
         padded_data = self._pad(unencrypted)
 
-        key_label = self._get_current_key_label_for_tenant(tenant)
-        if key_label:
-            key = self._get_key_by_label(key_label)
-        else:
-            key, key_label = self._generate_key_for_tenant(tenant)
+        key = self._get_key_by_label(kek_metadata.kek_label)
+
+        # TODO: jwood: No longer needed:
+        # key_label = self._get_current_key_label_for_tenant(tenant)
+        # if key_label:
+        #     key = self._get_key_by_label(key_label)
+        # else:
+        #     key, key_label = self._generate_key_for_tenant(tenant)
 
         iv = self.session.generateRandom(self.block_size)
         mech = PyKCS11.Mechanism(PyKCS11.CKM_AES_CBC_PAD, iv)
         encrypted = self.session.encrypt(key, padded_data, mech)
         cyphertext = b''.join(chr(i) for i in encrypted)
 
-        kek_metadata = self._build_kek_metadata(mech, key_label, iv)
+        # TODO: jwood No longer needed???: kek_metadata = self
+        #        ._build_kek_metadata(mech, key_label, iv)
 
-        return cyphertext, kek_metadata
+        return cyphertext, None  # TODO: jwood kek_metadata return not needed?
 
-    def decrypt(self, encrypted, kek_metadata, tenant):
-        kek_info = json.loads(kek_metadata)
-        key, iv = self._get_key_by_label(kek_info['kek'])  # TODO: get IV
+    def decrypt(self, encrypted, kek_meta_tenant, kek_meta_extended, tenant):
+        # TODO: jwood Metadata coming in now...kek_info = json.loads(
+        #                                                         kek_metadata)
+        key, iv = self._get_key_by_label(
+            kek_meta_tenant.kek_label)  # TODO: jwood
+        #                    kek_info['kek'])  # TODO: get IV
         mech = PyKCS11.Mechanism(PyKCS11.CKM_AES_CBC_PAD, iv)
         decrypted = self.session.decrypt(key, encrypted, mech)
         padded_secret = b''.join(chr(i) for i in decrypted)
         return self._strip_pad(padded_secret)
+
+    # TODO: jwood: This is a new method, to generate a key in the HSM for the
+    #   metadata kek_label.
+    def bind_kek_metadata(self, kek_metadata):
+        # Enforce idempotency: If we've already generated a key for the
+        # kek_label, leave now.
+        key, iv = self._get_key_by_label(kek_metadata.kek_label)
+        if key:
+            return
+
+        # To be persisted by Barbican:
+        kek_metadata.algorithm = 'AES CBC PAD'
+        kek_metadata.bit_length = self.kek_key_length
+        kek_metadata.mode = None
+        kek_metadata.plugin_meta = None
+
+        # Generate the key.
+        template = (
+            (PyKCS11.CKA_CLASS, PyKCS11.CKO_SECRET_KEY),
+            (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_AES),
+            (PyKCS11.CKA_VALUE_LEN, self.kek_key_length),
+            (PyKCS11.CKA_LABEL, kek_metadata.kek_label),
+            (PyKCS11.CKA_PRIVATE, True),
+            (PyKCS11.CKA_SENSITIVE, True),
+            (PyKCS11.CKA_ENCRYPT, True),
+            (PyKCS11.CKA_DECRYPT, True),
+            #(PyKCS11.CKA_TOKEN, True), # TODO: enable this (saves to HSM)
+            (PyKCS11.CKA_WRAP, True),
+            (PyKCS11.CKA_UNWRAP, True),
+            # TODO: make these unextractable if feasible
+            (PyKCS11.CKA_EXTRACTABLE, True))
+        ckattr = self.session._template2ckattrlist(template)
+
+        m = PyKCS11.Mechanism(PyKCS11.CKM_AES_KEY_GEN, None)
+        key = PyKCS11.CK_OBJECT_HANDLE()
+        self._check_error(
+            self.pkcs11.lib.C_GenerateKey(self.session.session, m, ckattr, key)
+        )
 
     def create(self, algorithm, bit_length):
         if bit_length % 8 != 0:
