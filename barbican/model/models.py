@@ -179,20 +179,12 @@ class Secret(BASE, ModelBase):
     Cloudkeep's Barbican, though the actual encrypted data
     is stored in one or more EncryptedData entities on behalf
     of a Secret.
-
-    Note that the mime_type here is the 'master' MIME type for
-    the secret, which is used for PUTS and POSTS only. Barbican
-    may then produce other MIME representations for the secret
-    which are then stored as the EncryptedDatum for this secret,
-    hence the need for EncryptedDatum records to have their own
-    mime_type attributes.
     """
 
     __tablename__ = 'secrets'
 
     name = Column(String(255))
     expiration = Column(DateTime, default=None)
-    mime_type = Column(String(255), nullable=True)
     algorithm = Column(String(255))
     bit_length = Column(Integer)
     cypher_type = Column(String(255))
@@ -214,7 +206,6 @@ class Secret(BASE, ModelBase):
         self.bit_length = parsed_request.get('bit_length')
         self.cypher_type = parsed_request.get('cypher_type')
         self.status = States.ACTIVE
-        self.mime_type = None
 
     def _do_delete_children(self, session):
         """
@@ -236,9 +227,6 @@ class Secret(BASE, ModelBase):
 class EncryptedDatum(BASE, ModelBase):
     """
     Represents a the encrypted data for a Secret.
-
-    Note that the mime_type below may or may not match that in the Secret
-    record (see the Secret docstring for more details)
     """
 
     __tablename__ = 'encrypted_data'
@@ -248,7 +236,6 @@ class EncryptedDatum(BASE, ModelBase):
     kek_id = Column(String(36), ForeignKey('kek_data.id'),
                     nullable=False)
     content_type = Column(String(255))
-    mime_type = Column(String(255))
     cypher_text = Column(LargeBinary)
     kek_meta_extended = Column(Text)
     kek_meta_tenant = relationship("KEKDatum")
@@ -333,7 +320,7 @@ class Order(BASE, ModelBase):
     secret_algorithm = Column(String(255))
     secret_bit_length = Column(Integer)
     secret_cypher_type = Column(String(255))
-    secret_mime_type = Column(String(255), nullable=True)
+    secret_payload_content_type = Column(String(255), nullable=False)
     secret_expiration = Column(DateTime, default=None)
 
     secret_id = Column(String(36), ForeignKey('secrets.id'),
@@ -345,7 +332,9 @@ class Order(BASE, ModelBase):
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
                            'cypher_type': self.secret_cypher_type,
-                           'expiration': self.secret_expiration},
+                           'expiration': self.secret_expiration,
+                           'payload_content_type':
+                           self.secret_payload_content_type},
                 'secret_id': self.secret_id,
                 'order_id': self.id}
 

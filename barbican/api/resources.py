@@ -508,16 +508,18 @@ class OrdersResource(api.ApiResource):
         if 'secret' not in body:
             _secret_not_in_order(req, resp)
         secret_info = body['secret']
-        name = secret_info['name']
+        name = secret_info.get('name')
         LOG.debug('Secret to create is {0}'.format(name))
 
         new_order = models.Order()
-        new_order.secret_name = secret_info['name']
-        new_order.secret_algorithm = secret_info.get('algorithm', None)
-        new_order.secret_bit_length = secret_info.get('bit_length', None)
-        new_order.secret_cypher_type = secret_info.get('cypher_type', None)
-        new_order.secret_mime_type = secret_info['mime_type']
-        new_order.secret_expiration = secret_info.get('expiration', None)
+        new_order.secret_name = secret_info.get('name')
+        new_order.secret_algorithm = secret_info['algorithm']
+        new_order.secret_bit_length = secret_info['bit_length']
+        new_order.secret_cypher_type = secret_info['cypher_type']
+        new_order.secret_payload_content_type = secret_info[
+            'payload_content_type']
+
+        new_order.secret_expiration = secret_info.get('expiration')
         new_order.tenant_id = tenant.id
         self.order_repo.create_from(new_order)
 
@@ -540,10 +542,8 @@ class OrdersResource(api.ApiResource):
 
         result = self.order_repo \
             .get_by_create_date(keystone_id,
-                                offset_arg=params.get('offset',
-                                                      None),
-                                limit_arg=params.get('limit',
-                                                     None),
+                                offset_arg=params.get('offset'),
+                                limit_arg=params.get('limit'),
                                 suppress_exception=True)
         orders, offset, limit = result
 

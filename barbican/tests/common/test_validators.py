@@ -59,6 +59,7 @@ class WhenTestingSecretValidator(unittest.TestCase):
 
     def test_should_validate_no_payload(self):
         del self.secret_req['payload']
+        del self.secret_req['payload_content_type']
         result = self.validator.validate(self.secret_req)
 
         self.assertFalse('payload' in result)
@@ -224,11 +225,14 @@ class WhenTestingOrderValidator(unittest.TestCase):
         self.secret_algorithm = 'aes'
         self.secret_bit_length = 128
         self.secret_cypher_type = 'cbc'
+        self.secret_payload_content_type = 'application/octet-stream'
 
         self.secret_req = {'name': self.name,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
-                           'cypher_type': self.secret_cypher_type}
+                           'cypher_type': self.secret_cypher_type,
+                           'payload_content_type':
+                           self.secret_payload_content_type}
         self.order_req = {'secret': self.secret_req}
 
         self.validator = validators.NewOrderValidator()
@@ -354,6 +358,18 @@ class WhenTestingOrderValidator(unittest.TestCase):
         self.order_req = {'secret': self.secret_req}
 
         with self.assertRaises(excep.InvalidObject):
+            self.validator.validate(self.order_req)
+
+    def test_should_fail_no_payload_content_type(self):
+        del self.secret_req['payload_content_type']
+
+        with self.assertRaises(excep.UnsupportedField):
+            self.validator.validate(self.order_req)
+
+    def test_should_fail_unsupported_payload_content_type(self):
+        self.secret_req['payload_content_type'] = 'text/plain'
+
+        with self.assertRaises(excep.UnsupportedField):
             self.validator.validate(self.order_req)
 
 

@@ -61,9 +61,6 @@ class BeginOrder(object):
         process of creating a secret (such as for SSL certificate
         generation.
         """
-        LOG.debug("Handling order for secret type of {0}..."
-                  .format(order.secret_mime_type))
-
         order_info = order.to_dict_fields()
         secret_info = order_info['secret']
 

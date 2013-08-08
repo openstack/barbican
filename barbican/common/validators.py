@@ -198,6 +198,7 @@ class NewOrderValidator(ValidatorBase):
             raise exception.InvalidObject(schema=schema_name,
                                           reason=_("'secret' attributes "
                                                    "are required"))
+
         # If secret group is provided, validate it now.
         self.secret_validator.validate(secret, parent_schema=self.name)
         if 'payload' in secret:
@@ -208,6 +209,12 @@ class NewOrderValidator(ValidatorBase):
 
         # Validation secret generation related fields.
         # TODO: Invoke the crypto plugin for this purpose
+
+        if secret.get('payload_content_type') != 'application/octet-stream':
+            raise exception.UnsupportedField(field='payload_content_type',
+                                             schema=schema_name,
+                                             reason=_("Only 'application/oc"
+                                                      "tet-stream' supported"))
 
         if secret.get('cypher_type').lower() != 'cbc':
             raise exception.UnsupportedField(field="cypher_type",
@@ -220,6 +227,7 @@ class NewOrderValidator(ValidatorBase):
                                              schema=schema_name,
                                              reason=_("Only 'aes' "
                                                       "supported"))
+
         bit_length = int(secret.get('bit_length', 0))
         if not bit_length in (128, 192, 256):
             raise exception.UnsupportedField(field="bit_length",

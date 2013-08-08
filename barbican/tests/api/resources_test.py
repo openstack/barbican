@@ -824,7 +824,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
 class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
     def setUp(self):
         self.secret_name = 'name'
-        self.secret_mime_type = 'application/octet-stream'
+        self.secret_payload_content_type = 'application/octet-stream'
         self.secret_algorithm = "aes"
         self.secret_bit_length = 128
         self.secret_cypher_type = "cbc"
@@ -850,7 +850,8 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
         self.stream = MagicMock()
 
         order_req = {'secret': {'name': self.secret_name,
-                                'mime_type': self.secret_mime_type,
+                                'payload_content_type':
+                                self.secret_payload_content_type,
                                 'algorithm': self.secret_algorithm,
                                 'bit_length': self.secret_bit_length,
                                 'cypher_type': self.secret_cypher_type}}
