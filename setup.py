@@ -75,6 +75,7 @@ setup(
     py_modules=[],
     entry_points="""
     [barbican.crypto.plugin]
+    p11_crypto = barbican.crypto.p11plugin:P11CryptoPlugin
     simple_crypto = barbican.crypto.plugin:SimpleCryptoPlugin
 
     [barbican.test.crypto.plugin]
