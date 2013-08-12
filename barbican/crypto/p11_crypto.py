@@ -1,6 +1,8 @@
-# TODO: Restore this: import PyKCS11
-#       This code is disabled just enough to pass tox tests, but once full
-#       integration into Barbican is achieved, this code should re-enabled.
+try:
+    import PyKCS11
+except ImportError:
+    PyKCS11 = {}  # TODO: remove testing workaround
+
 
 import base64
 
@@ -12,9 +14,6 @@ from barbican.crypto.plugin import CryptoPluginBase
 from barbican.openstack.common import jsonutils as json
 from barbican.openstack.common.gettextutils import _
 
-
-# TODO: Remove this:
-PyKCS11 = {}
 
 CONF = cfg.CONF
 
@@ -114,7 +113,7 @@ class P11CryptoPlugin(CryptoPluginBase):
         # TODO: GCM should not require padding.
         padded_data = self._pad(unencrypted)
         key = self._get_key_by_label(kek_meta_tenant.kek_label)
-        iv = self.generate_iv()
+        iv = self._generate_iv()
         gcm = self._build_gcm_params(iv)
         mech = PyKCS11.Mechanism(self.algorithm, gcm)
         encrypted = self.session.encrypt(key, padded_data, mech)
@@ -165,8 +164,10 @@ class P11CryptoPlugin(CryptoPluginBase):
             (PyKCS11.CKA_EXTRACTABLE, False))
         ckattr = self.session._template2ckattrlist(template)
 
-        m = PyKCS11.Mechanism(PyKCS11.CKM_AES_KEY_GEN, None)
-        key = PyKCS11.CK_OBJECT_HANDLE()
+        m = PyKCS11.LowLevel.CK_MECHANISM()
+        m.mechanism = PyKCS11.LowLevel.CKM_AES_KEY_GEN
+
+        key = PyKCS11.LowLevel.CK_OBJECT_HANDLE()
         self._check_error(
             self.pkcs11.lib.C_GenerateKey(
                 self.rw_session.session,
