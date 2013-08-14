@@ -42,18 +42,15 @@ class P11CryptoPluginException(exception.BarbicanException):
 class P11CryptoPlugin(CryptoPluginBase):
     """
     PKCS11 supporting implementation of the crypto plugin.
-    Generates a key per tenant and encrypts using AES-256-CBC.
+    Generates a key per tenant and encrypts using AES-256-GCM.
     This implementation currently relies on an unreleased fork of PyKCS11.
     """
 
-    def __init__(self, conf=cfg.CONF, library=None):
+    def __init__(self, conf=cfg.CONF):
         self.block_size = 16  # in bytes
         self.kek_key_length = 32  # in bytes (256-bit)
         self.algorithm = 0x8000011c  # CKM_AES_GCM vendor prefixed.
-        if library is not None:
-            self.pkcs11 = library
-        else:
-            self.pkcs11 = PyKCS11.PyKCS11Lib()
+        self.pkcs11 = PyKCS11.PyKCS11Lib()
         if conf.p11_crypto_plugin.library_path is None:
             raise ValueError(_("library_path is required"))
         else:
@@ -178,8 +175,9 @@ class P11CryptoPlugin(CryptoPluginBase):
         )
 
     def create(self, algorithm, bit_length):
-        if bit_length % 8 != 0:
-            raise ValueError('Bit lengths must be divisible by 8')
+        if bit_length % 8 != 0 or bit_length <= 0:
+            raise ValueError("Bit lengths must be positive integers "
+                             "divisible by 8")
         byte_length = bit_length / 8
         rand = self.session.generateRandom(byte_length)
         if len(rand) != byte_length:
