@@ -17,7 +17,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from barbican.openstack.common.gettextutils import _
+from barbican.openstack.common.gettextutils import _  # noqa
 from barbican.openstack.common import log as logging
 from barbican.openstack.common import rpc
 from barbican.openstack.common.rpc import dispatcher as rpc_dispatcher
@@ -30,11 +30,13 @@ LOG = logging.getLogger(__name__)
 class Service(service.Service):
     """Service object for binaries running on hosts.
 
-    A service enables rpc by listening to queues based on topic and host."""
-    def __init__(self, host, topic, manager=None):
+    A service enables rpc by listening to queues based on topic and host.
+    """
+    def __init__(self, host, topic, manager=None, serializer=None):
         super(Service, self).__init__()
         self.host = host
         self.topic = topic
+        self.serializer = serializer
         if manager is None:
             self.manager = self
         else:
@@ -47,7 +49,8 @@ class Service(service.Service):
         LOG.debug(_("Creating Consumer connection for Service %s") %
                   self.topic)
 
-        dispatcher = rpc_dispatcher.RpcDispatcher([self.manager])
+        dispatcher = rpc_dispatcher.RpcDispatcher([self.manager],
+                                                  self.serializer)
 
         # Share this same connection for these Consumers
         self.conn.create_consumer(self.topic, dispatcher, fanout=False)

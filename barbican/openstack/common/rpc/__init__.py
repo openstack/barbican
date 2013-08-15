@@ -26,13 +26,13 @@ For some wrappers that add message versioning to rpc, see:
 """
 
 import inspect
-import logging
 
 from oslo.config import cfg
 
-from barbican.openstack.common.gettextutils import _
+from barbican.openstack.common.gettextutils import _  # noqa
 from barbican.openstack.common import importutils
 from barbican.openstack.common import local
+from barbican.openstack.common import log as logging
 
 
 LOG = logging.getLogger(__name__)

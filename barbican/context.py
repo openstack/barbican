@@ -15,7 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from barbican.api import policy
+from barbican.openstack.common import policy
 from barbican.openstack.common import local
 from barbican.openstack.common import uuidutils
 
@@ -35,7 +35,7 @@ class RequestContext(object):
         self.tenant = tenant
         self.roles = roles or []
         self.read_only = read_only
-        self._show_deleted = show_deleted
+        # TODO(jwood): self._show_deleted = show_deleted
         # (mkbhanda) possibly domain could be owner
         # brings us to the key scope question
         self.owner_is_tenant = owner_is_tenant
@@ -43,9 +43,10 @@ class RequestContext(object):
         self.service_catalog = service_catalog
         self.policy_enforcer = policy_enforcer or policy.Enforcer()
         self.is_admin = is_admin
-        if not self.is_admin:
-            self.is_admin = \
-                self.policy_enforcer.check_is_admin(self)
+        # TODO(jwood): Is this needed?
+        #        if not self.is_admin:
+        #            self.is_admin = \
+        #                self.policy_enforcer.check_is_admin(self)
 
         if not hasattr(local.store, 'context'):
             self.update_store()
@@ -64,9 +65,8 @@ class RequestContext(object):
             'tenant': self.tenant,
             'tenant_id': self.tenant,
             'project_id': self.tenant,
-
-            'is_admin': self.is_admin,
-            'read_deleted': self.show_deleted,
+            # TODO(jwood):            'is_admin': self.is_admin,
+            # TODO(jwood):            'read_deleted': self.show_deleted,
             'roles': self.roles,
             'auth_token': self.auth_tok,
             'service_catalog': self.service_catalog,
@@ -84,9 +84,10 @@ class RequestContext(object):
         """Return the owner to correlate with key."""
         return self.tenant if self.owner_is_tenant else self.user
 
-    @property
-    def show_deleted(self):
-        """Admins can see deleted by default"""
-        if self._show_deleted or self.is_admin:
-            return True
-        return False
+# TODO(jwood):
+#    @property
+#    def show_deleted(self):
+#        """Admins can see deleted by default"""
+#        if self._show_deleted or self.is_admin:
+#            return True
+#        return False

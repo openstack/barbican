@@ -13,6 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+This test module focuses on typical-flow business logic tests with the API
+resource classes. For RBAC tests of these classes, see the
+'resources_policy_test.py' module.
+"""
+
 import base64
 import json
 import unittest
@@ -85,12 +91,9 @@ def validate_datum(test, datum):
 
 class WhenTestingVersionResource(unittest.TestCase):
     def setUp(self):
-        self.policy = MagicMock()
-
         self.req = MagicMock()
         self.resp = MagicMock()
-        self.policy = MagicMock()
-        self.resource = res.VersionResource(self.policy)
+        self.resource = res.VersionResource()
 
     def test_should_return_200_on_get(self):
         self.resource.on_get(self.req, self.resp)
@@ -146,8 +149,6 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.kek_repo = MagicMock()
         self.kek_repo.find_or_create_kek_metadata.return_value = self.kek_datum
 
-        self.policy = MagicMock()
-
         self.stream = MagicMock()
         self.stream.read.return_value = self.json
 
@@ -165,8 +166,7 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
                                             self.secret_repo,
                                             self.tenant_secret_repo,
                                             self.datum_repo,
-                                            self.kek_repo,
-                                            self.policy)
+                                            self.kek_repo)
 
     def test_should_add_new_secret(self):
         self.resource.on_post(self.req, self.resp, self.keystone_id)
@@ -414,9 +414,6 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
 
         self.kek_repo = MagicMock()
 
-        self.policy = MagicMock()
-        self.policy.read.return_value = None
-
         self.conf = MagicMock()
         self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
         self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
@@ -431,8 +428,7 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
                                             self.secret_repo,
                                             self.tenant_secret_repo,
                                             self.datum_repo,
-                                            self.kek_repo,
-                                            self.policy)
+                                            self.kek_repo)
 
     def test_should_get_list_secrets(self):
         self.resource.on_get(self.req, self.resp, self.keystone_id)
@@ -541,8 +537,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
 
         self.kek_repo = MagicMock()
 
-        self.policy = MagicMock()
-
         self.req = MagicMock()
         self.req.accept = 'application/json'
         self.resp = MagicMock()
@@ -552,14 +546,12 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
         self.crypto_mgr = CryptoExtensionManager(conf=self.conf)
 
-        self.policy = MagicMock()
         self.resource = res.SecretResource(self.crypto_mgr,
                                            self.tenant_repo,
                                            self.secret_repo,
                                            self.tenant_secret_repo,
                                            self.datum_repo,
-                                           self.kek_repo,
-                                           self.policy)
+                                           self.kek_repo)
 
     def test_should_get_secret_as_json(self):
         self.resource.on_get(self.req, self.resp, self.keystone_id,
@@ -845,8 +837,6 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
         self.queue_resource = MagicMock()
         self.queue_resource.process_order.return_value = None
 
-        self.policy = MagicMock()
-
         self.stream = MagicMock()
 
         order_req = {'secret': {'name': self.secret_name,
@@ -862,9 +852,8 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
         self.req.stream = self.stream
 
         self.resp = MagicMock()
-        self.policy = MagicMock()
         self.resource = res.OrdersResource(self.tenant_repo, self.order_repo,
-                                           self.queue_resource, self.policy)
+                                           self.queue_resource)
 
     def test_should_add_new_order(self):
         self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
@@ -931,14 +920,12 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
         self.queue_resource = MagicMock()
         self.queue_resource.process_order.return_value = None
 
-        self.policy = MagicMock()
-
         self.req = MagicMock()
         self.req.accept = 'application/json'
         self.req._params = self.params
         self.resp = MagicMock()
         self.resource = res.OrdersResource(self.tenant_repo, self.order_repo,
-                                           self.queue_resource, self.policy)
+                                           self.queue_resource)
 
     def test_should_get_list_orders(self):
         self.resource.on_get(self.req, self.resp, self.keystone_id)
@@ -1007,14 +994,10 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
         self.order_repo.get.return_value = self.order
         self.order_repo.delete_entity_by_id.return_value = None
 
-        self.policy = MagicMock()
-
         self.req = MagicMock()
         self.resp = MagicMock()
 
-        self.policy = MagicMock()
-
-        self.resource = res.OrderResource(self.order_repo, self.policy)
+        self.resource = res.OrderResource(self.order_repo)
 
     def test_should_get_order(self):
         self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,

@@ -9,7 +9,7 @@ kombu>=2.5.9
 webob>=1.2.3
 PasteDeploy>=1.5.0
 Celery>=3.0.19
-python-keystoneclient>=0.2.0
+python-keystoneclient>=0.3.1
 stevedore>=0.8
 pycrypto>=2.6
 python-dateutil>=2.1
@@ -17,4 +17,6 @@ jsonschema>=2.0.0
 SQLAlchemy>=0.8.1
 alembic>=0.5.0
 psycopg2>=2.5.1
+netaddr
+Babel>=0.9.6
 # TODO: Get this working again...PyKCS11>=1.2.4

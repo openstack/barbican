@@ -16,44 +16,49 @@
 #    under the License.
 
 import json
-
-from oslo.config import cfg
 import webob.exc
 
-from barbican.api import policy
-from barbican.api.middleware import Middleware
+from oslo.config import cfg
+
+from barbican.api import middleware as mw
+from barbican.common import utils
 import barbican.context
-import barbican.openstack.common.log as logging
-from barbican.openstack.common.gettextutils import _
+from barbican.openstack.common import gettextutils as u
+from barbican.openstack.common import policy
 
+LOG = utils.getLogger(__name__)
 
+# TODO(jwood) Need to figure out why config is ignored in this module.
 context_opts = [
     cfg.BoolOpt('owner_is_tenant', default=True,
-                help=_('When true, this option sets the owner of an image '
-                       'to be the tenant. Otherwise, the owner of the '
-                       ' image will be the authenticated user issuing the '
-                       'request.')),
+                help=u._('When true, this option sets the owner of an image '
+                         'to be the tenant. Otherwise, the owner of the '
+                         ' image will be the authenticated user issuing the '
+                         'request.')),
     cfg.StrOpt('admin_role', default='admin',
-               help=_('Role used to identify an authenticated user as '
-                      'administrator.')),
+               help=u._('Role used to identify an authenticated user as '
+                        'administrator.')),
     cfg.BoolOpt('allow_anonymous_access', default=False,
-                help=_('Allow unauthenticated users to access the API with '
-                       'read-only privileges. This only applies when using '
-                       'ContextMiddleware.')),
+                help=u._('Allow unauthenticated users to access the API with '
+                         'read-only privileges. This only applies when using '
+                         'ContextMiddleware.')),
 ]
+
 
 CONF = cfg.CONF
 CONF.register_opts(context_opts)
 
-LOG = logging.getLogger(__name__)
+
+# TODO(jwood): I'd like to get the utils.getLogger(...) working instead:
+#  LOG = logging.getLogger(__name__)
 
 
-class BaseContextMiddleware(Middleware):
+class BaseContextMiddleware(mw.Middleware):
     def process_response(self, resp):
         try:
             request_id = resp.request.context.request_id
         except AttributeError:
-            LOG.warn(_('Unable to retrieve request id from context'))
+            LOG.warn(u._('Unable to retrieve request id from context'))
         else:
             resp.headers['x-openstack-request-id'] = 'req-%s' % request_id
         return resp
@@ -87,6 +92,9 @@ class ContextMiddleware(BaseContextMiddleware):
         else:
             raise webob.exc.HTTPUnauthorized()
 
+        # Ensure that down wind mw.Middleware/app can see this context.
+        req.environ['barbican.context'] = req.context
+
     def _get_anonymous_context(self):
         kwargs = {
             'user': None,
@@ -115,7 +123,7 @@ class ContextMiddleware(BaseContextMiddleware):
                 service_catalog = json.loads(catalog_header)
             except ValueError:
                 raise webob.exc.HTTPInternalServerError(
-                    _('Invalid service catalog json.'))
+                    u._('Invalid service catalog json.'))
 
         kwargs = {
             'user': req.headers.get('X-User-Id'),

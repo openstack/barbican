@@ -1,4 +1,22 @@
 {
-    "default": "",
-    "manage_key_recycle": "role:admin"
+    "version:get": "rule:all_users",
+    "secret:decrypt": "rule:all_but_audit",
+    "secret:get": "rule:all_users",
+    "secret:put": "rule:admin_or_creator",
+    "secret:delete": "rule:admin",
+    "secrets:post": "rule:admin_or_creator",
+    "secrets:get": "rule:all_but_audit",
+    "orders:post": "rule:admin_or_creator",
+    "orders:get": "rule:all_but_audit",
+    "order:get": "rule:all_users",
+    "order:delete": "rule:admin",
+    "admin": ["role:admin"],
+    "observer": ["role:observer"],
+    "creator": ["role:creator"],
+    "audit": ["rule:audit"],
+    "admin_or_user_does_not_work": ["project_id:%(project_id)s"],
+    "admin_or_user": ["role:admin", "project_id:%(project_id)s"],
+    "admin_or_creator": ["role:admin", "role:creator"],
+    "all_but_audit": ["role:admin", "role:observer", "role:creator"],
+    "all_users": ["role:admin", "role:observer", "role:creator", "role:audit"]
 }
