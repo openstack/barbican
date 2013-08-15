@@ -216,13 +216,13 @@ class NewOrderValidator(ValidatorBase):
                                              reason=_("Only 'application/oc"
                                                       "tet-stream' supported"))
 
-        if secret.get('cypher_type').lower() != 'cbc':
+        if secret.get('cypher_type', '').lower() != 'cbc':
             raise exception.UnsupportedField(field="cypher_type",
                                              schema=schema_name,
                                              reason=_("Only 'cbc' "
                                                       "supported"))
 
-        if secret.get('algorithm').lower() != 'aes':
+        if secret.get('algorithm', '').lower() != 'aes':
             raise exception.UnsupportedField(field="algorithm",
                                              schema=schema_name,
                                              reason=_("Only 'aes' "

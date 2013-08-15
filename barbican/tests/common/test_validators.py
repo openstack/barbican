@@ -372,6 +372,23 @@ class WhenTestingOrderValidator(unittest.TestCase):
         with self.assertRaises(excep.UnsupportedField):
             self.validator.validate(self.order_req)
 
+    def test_should_fail_empty_cypher_type(self):
+            del self.secret_req['cypher_type']
+
+            with self.assertRaises(excep.UnsupportedField) as e:
+                self.validator.validate(self.order_req)
+
+            exception = e.exception
+            self.assertTrue('cypher_type' in str(exception))
+
+    def test_should_fail_empty_algorithm(self):
+        del self.secret_req['algorithm']
+
+        with self.assertRaises(excep.UnsupportedField) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('algorithm' in str(exception))
 
 if __name__ == '__main__':
     unittest.main()
