@@ -63,16 +63,6 @@ class P11CryptoPlugin(CryptoPluginBase):
         self.rw_session = self.pkcs11.openSession(1, PyKCS11.CKF_RW_SESSION)
         self.rw_session.login(conf.p11_crypto_plugin.login)
 
-    def _pad(self, unencrypted):
-        """Adds padding to unencrypted byte string."""
-        pad_length = self.block_size - (len(unencrypted) % self.block_size)
-        return unencrypted + (chr(pad_length) * pad_length)
-
-    def _strip_pad(self, unencrypted):
-        pad_length = ord(unencrypted[-1:])
-        unpadded = unencrypted[:-pad_length]
-        return unpadded
-
     def _check_error(self, value):
         if value != PyKCS11.CKR_OK:
             # TODO: probably shouldn't raise PyKCS11 error here
@@ -107,13 +97,11 @@ class P11CryptoPlugin(CryptoPluginBase):
         return gcm
 
     def encrypt(self, unencrypted, kek_meta_tenant, tenant):
-        # TODO: GCM should not require padding.
-        padded_data = self._pad(unencrypted)
         key = self._get_key_by_label(kek_meta_tenant.kek_label)
         iv = self._generate_iv()
         gcm = self._build_gcm_params(iv)
         mech = PyKCS11.Mechanism(self.algorithm, gcm)
-        encrypted = self.session.encrypt(key, padded_data, mech)
+        encrypted = self.session.encrypt(key, unencrypted, mech)
         cyphertext = b''.join(chr(i) for i in encrypted)
         kek_meta_extended = json.dumps({
             'iv': base64.b64encode(iv)
@@ -128,8 +116,8 @@ class P11CryptoPlugin(CryptoPluginBase):
         gcm = self._build_gcm_params(iv)
         mech = PyKCS11.Mechanism(self.algorithm, gcm)
         decrypted = self.session.decrypt(key, encrypted, mech)
-        padded_secret = b''.join(chr(i) for i in decrypted)
-        return self._strip_pad(padded_secret)
+        secret = b''.join(chr(i) for i in decrypted)
+        return secret
 
     def bind_kek_metadata(self, kek_metadata):
         # Enforce idempotency: If we've already generated a key for the

@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from Crypto import Random
 from mock import MagicMock
 from mock import patch
 import unittest
@@ -40,32 +39,6 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
 
     def tearDown(self):
         self.patcher.stop()
-
-    def test_pad_binary_string(self):
-        binary_string = b'some_binary_string'
-        padded_string = (
-            b'some_binary_string' +
-            b'\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e'
-        )
-        self.assertEqual(self.plugin._pad(binary_string), padded_string)
-
-    def test_pad_random_bytes(self):
-        random_bytes = Random.get_random_bytes(10)
-        padded_bytes = random_bytes + b'\x06\x06\x06\x06\x06\x06'
-        self.assertEqual(self.plugin._pad(random_bytes), padded_bytes)
-
-    def test_strip_padding_from_binary_string(self):
-        binary_string = b'some_binary_string'
-        padded_string = (
-            b'some_binary_string' +
-            b'\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e'
-        )
-        self.assertEqual(self.plugin._strip_pad(padded_string), binary_string)
-
-    def test_strip_padding_from_random_bytes(self):
-        random_bytes = Random.get_random_bytes(10)
-        padded_bytes = random_bytes + b'\x06\x06\x06\x06\x06\x06'
-        self.assertEqual(self.plugin._strip_pad(padded_bytes), random_bytes)
 
     def test_create_calls_generate_random(self):
         self.session.generateRandom.return_value = [1, 2, 3, 4, 5, 6, 7,
@@ -171,7 +144,7 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
 
         self.p11_mock.Mechanism.assert_called_once()
         self.session.encrypt.assert_called_once_with(key,
-                                                     self.plugin._pad(payload),
+                                                     payload,
                                                      mech)
         self.assertEqual(b'\x01\x02\x03\x04\x05', cyphertext)
         self.assertEqual('{"iv": "AQIDBAUGBwgJCgsMDQ4PEA=="}',
@@ -181,7 +154,7 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
         key = 'key1'
         ct = MagicMock()
         self.session.findObjects.return_value = [key]
-        self.session.decrypt.return_value = [100, 101, 102, 103] + [12] * 12
+        self.session.decrypt.return_value = [100, 101, 102, 103]
         mech = MagicMock()
         self.p11_mock.Mechanism.return_value = mech
         kek_meta_extended = '{"iv": "AQIDBAUGBwgJCgsMDQ4PEA=="}'
