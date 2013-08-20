@@ -25,16 +25,15 @@ import unittest
 
 import falcon
 import mock
-from mock import MagicMock
 
 from barbican.api import resources as res
-from barbican.common import utils
 from barbican.common import exception as excep
-from barbican.common.validators import DEFAULT_MAX_SECRET_BYTES
-from barbican.crypto.extension_manager import CryptoExtensionManager
-from barbican.tests.crypto.test_plugin import TestCryptoPlugin
+from barbican.common import utils
+from barbican.common import validators
+from barbican.crypto import extension_manager as em
 from barbican.model import models
 from barbican.openstack.common import jsonutils
+from barbican.tests.crypto import test_plugin as ctp
 
 
 def create_secret(id="id", name="name",
@@ -77,8 +76,8 @@ def validate_datum(test, datum):
 
 class WhenTestingVersionResource(unittest.TestCase):
     def setUp(self):
-        self.req = MagicMock()
-        self.resp = MagicMock()
+        self.req = mock.MagicMock()
+        self.resp = mock.MagicMock()
         self.resource = res.VersionResource()
 
     def test_should_return_200_on_get(self):
@@ -94,20 +93,32 @@ class WhenTestingVersionResource(unittest.TestCase):
         self.assertEqual('current', parsed_body['v1'])
 
 
-class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
+class BaseSecretsResource(unittest.TestCase):
+    """Base test class for the Secrets resource."""
     def setUp(self):
+        pass
+
+    def _init(self, payload=b'not-encrypted',
+              payload_content_type='text/plain',
+              payload_content_encoding=None):
         self.name = 'name'
-        self.payload = b'not-encrypted'
-        self.payload_content_type = 'text/plain'
+        self.payload = payload
+        self.payload_content_type = payload_content_type
+        self.payload_content_encoding = payload_content_encoding
         self.secret_algorithm = 'AES'
         self.secret_bit_length = 256
         self.secret_cypher_type = 'CBC'
         self.secret_req = {'name': self.name,
-                           'payload': self.payload,
-                           'payload_content_type': self.payload_content_type,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
                            'cypher_type': self.secret_cypher_type}
+        if payload:
+            self.secret_req['payload'] = payload
+        if payload_content_type:
+            self.secret_req['payload_content_type'] = payload_content_type
+        if payload_content_encoding:
+            self.secret_req['payload_content_encoding'] = \
+                payload_content_encoding
         self.json = json.dumps(self.secret_req)
 
         self.keystone_id = 'keystone1234'
@@ -115,37 +126,37 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         self.tenant = models.Tenant()
         self.tenant.id = self.tenant_entity_id
         self.tenant.keystone_id = self.keystone_id
-        self.tenant_repo = MagicMock()
+        self.tenant_repo = mock.MagicMock()
         self.tenant_repo.find_by_keystone_id.return_value = self.tenant
 
-        self.secret_repo = MagicMock()
+        self.secret_repo = mock.MagicMock()
         self.secret_repo.create_from.return_value = None
 
-        self.tenant_secret_repo = MagicMock()
+        self.tenant_secret_repo = mock.MagicMock()
         self.tenant_secret_repo.create_from.return_value = None
 
-        self.datum_repo = MagicMock()
+        self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
 
         self.kek_datum = models.KEKDatum()
         self.kek_datum.plugin_name = utils.generate_fullname_for(
-            TestCryptoPlugin())
+            ctp.TestCryptoPlugin())
         self.kek_datum.kek_label = "kek_label"
         self.kek_datum.bind_completed = False
-        self.kek_repo = MagicMock()
+        self.kek_repo = mock.MagicMock()
         self.kek_repo.find_or_create_kek_metadata.return_value = self.kek_datum
 
-        self.stream = MagicMock()
+        self.stream = mock.MagicMock()
         self.stream.read.return_value = self.json
 
-        self.req = MagicMock()
+        self.req = mock.MagicMock()
         self.req.stream = self.stream
 
-        self.resp = MagicMock()
-        self.conf = MagicMock()
+        self.resp = mock.MagicMock()
+        self.conf = mock.MagicMock()
         self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
         self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
-        self.crypto_mgr = CryptoExtensionManager(conf=self.conf)
+        self.crypto_mgr = em.CryptoExtensionManager(conf=self.conf)
 
         self.resource = res.SecretsResource(self.crypto_mgr,
                                             self.tenant_repo,
@@ -154,7 +165,26 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
                                             self.datum_repo,
                                             self.kek_repo)
 
-    def test_should_add_new_secret(self):
+    def _test_should_add_new_secret_with_expiration(self):
+        expiration = '2114-02-28 12:14:44.180394-05:00'
+        self.secret_req.update({'expiration': expiration})
+        self.stream.read.return_value = json.dumps(self.secret_req)
+
+        self.resource.on_post(self.req, self.resp, self.keystone_id)
+
+        self.assertEquals(self.resp.status, falcon.HTTP_201)
+
+        args, kwargs = self.secret_repo.create_from.call_args
+        secret = args[0]
+        expected = expiration[:-6].replace('12', '17', 1)
+        self.assertEqual(expected, str(secret.expiration))
+
+    def _test_should_add_new_secret_one_step(self, check_tenant_id=True):
+        """Test the one-step secret creation.
+
+        :param check_tenant_id: True if the retrieved Tenant id needs to be
+        verified, False to skip this check (necessary for new-Tenant flows).
+        """
         self.resource.on_post(self.req, self.resp, self.keystone_id)
 
         self.assertEquals(self.resp.status, falcon.HTTP_201)
@@ -170,7 +200,8 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
         args, kwargs = self.tenant_secret_repo.create_from.call_args
         tenant_secret = args[0]
         self.assertIsInstance(tenant_secret, models.TenantSecret)
-        self.assertEqual(tenant_secret.tenant_id, self.tenant_entity_id)
+        if check_tenant_id:
+            self.assertEqual(tenant_secret.tenant_id, self.tenant_entity_id)
         self.assertEqual(tenant_secret.secret_id, secret.id)
 
         args, kwargs = self.datum_repo.create_from.call_args
@@ -181,45 +212,18 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
 
         validate_datum(self, datum)
 
-    def test_should_add_new_secret_with_expiration(self):
-        expiration = '2114-02-28 12:14:44.180394-05:00'
-        self.secret_req.update({'expiration': expiration})
-        self.stream.read.return_value = json.dumps(self.secret_req)
-
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
-
-        self.assertEquals(self.resp.status, falcon.HTTP_201)
-
-        args, kwargs = self.secret_repo.create_from.call_args
-        secret = args[0]
-        expected = expiration[:-6].replace('12', '17', 1)
-        self.assertEqual(expected, str(secret.expiration))
-
-    def test_should_add_new_secret_if_tenant_does_not_exist(self):
+    def _test_should_add_new_secret_if_tenant_does_not_exist(self):
         self.tenant_repo.get.return_value = None
+        self.tenant_repo.find_by_keystone_id.return_value = None
 
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
+        self._test_should_add_new_secret_one_step(check_tenant_id=False)
 
-        args, kwargs = self.secret_repo.create_from.call_args
-        secret = args[0]
-        self.assertIsInstance(secret, models.Secret)
-        self.assertEqual(secret.name, self.name)
+        args, kwargs = self.tenant_repo.create_from.call_args
+        tenant = args[0]
+        self.assertIsInstance(tenant, models.Tenant)
+        self.assertEqual(self.keystone_id, tenant.keystone_id)
 
-        args, kwargs = self.tenant_secret_repo.create_from.call_args
-        tenant_secret = args[0]
-        self.assertIsInstance(tenant_secret, models.TenantSecret)
-        self.assertEqual(self.tenant_entity_id, tenant_secret.tenant_id)
-        self.assertEqual(secret.id, tenant_secret.secret_id)
-
-        args, kwargs = self.datum_repo.create_from.call_args
-        datum = args[0]
-        self.assertTrue(isinstance(datum, models.EncryptedDatum))
-        self.assertEqual('cypher_text', datum.cypher_text)
-        self.assertEqual(self.payload_content_type, datum.content_type)
-
-        validate_datum(self, datum)
-
-    def test_should_add_new_secret_metadata_without_payload(self):
+    def _test_should_add_new_secret_metadata_without_payload(self):
         self.stream.read.return_value = json.dumps({'name': self.name})
 
         self.resource.on_post(self.req, self.resp, self.keystone_id)
@@ -237,52 +241,93 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
 
         self.assertFalse(self.datum_repo.create_from.called)
 
-    def test_should_add_new_secret_payload_almost_too_large(self):
-        big_text = ''.join(['A' for x
-                            in xrange(DEFAULT_MAX_SECRET_BYTES - 10)])
+    def _test_should_add_new_secret_payload_almost_too_large(self):
+        if validators.DEFAULT_MAX_SECRET_BYTES % 4:
+            raise ValueError('Tests currently require max secrets divides by '
+                             '4 evenly, due to base64 encoding.')
 
-        secret_req = {'name': self.name,
-                      'algorithm': self.secret_algorithm,
-                      'bit_length': self.secret_bit_length,
-                      'cypher_type': self.secret_cypher_type,
-                      'payload': big_text,
-                      'payload_content_type': 'text/plain'}
-        self.stream.read.return_value = json.dumps(secret_req)
+        big_text = ''.join(['A' for x
+                            in xrange(validators.DEFAULT_MAX_SECRET_BYTES -
+                                      8)])
+
+        self.secret_req = {'name': self.name,
+                           'algorithm': self.secret_algorithm,
+                           'bit_length': self.secret_bit_length,
+                           'cypher_type': self.secret_cypher_type,
+                           'payload': big_text,
+                           'payload_content_type': self.payload_content_type}
+        if self.payload_content_encoding:
+            self.secret_req['payload_content_encoding'] = \
+                self.payload_content_encoding
+        self.stream.read.return_value = json.dumps(self.secret_req)
 
         self.resource.on_post(self.req, self.resp, self.keystone_id)
 
-    def test_should_fail_due_to_payload_too_large(self):
+    def _test_should_fail_due_to_payload_too_large(self):
         big_text = ''.join(['A' for x
-                            in xrange(DEFAULT_MAX_SECRET_BYTES + 10)])
+                            in xrange(validators.DEFAULT_MAX_SECRET_BYTES +
+                                      10)])
 
-        secret_req = {'name': self.name,
-                      'algorithm': self.secret_algorithm,
-                      'bit_length': self.secret_bit_length,
-                      'cypher_type': self.secret_cypher_type,
-                      'payload': big_text,
-                      'payload_content_type': 'text/plain'}
-        self.stream.read.return_value = json.dumps(secret_req)
+        self.secret_req = {'name': self.name,
+                           'algorithm': self.secret_algorithm,
+                           'bit_length': self.secret_bit_length,
+                           'cypher_type': self.secret_cypher_type,
+                           'payload': big_text,
+                           'payload_content_type': self.payload_content_type}
+        if self.payload_content_encoding:
+            self.secret_req['payload_content_encoding'] = \
+                self.payload_content_encoding
+        self.stream.read.return_value = json.dumps(self.secret_req)
 
         with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_post(self.req, self.resp, self.keystone_id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_413, exception.status)
 
-    def test_should_fail_due_to_empty_payload(self):
-        secret_req = {'name': self.name,
-                      'algorithm': self.secret_algorithm,
-                      'bit_length': self.secret_bit_length,
-                      'cypher_type': self.secret_cypher_type,
-                      'payload': '',
-                      'payload_content_type': 'text/plain'}
-        self.stream.read.return_value = json.dumps(secret_req)
+    def _test_should_fail_due_to_empty_payload(self):
+        self.secret_req = {'name': self.name,
+                           'algorithm': self.secret_algorithm,
+                           'bit_length': self.secret_bit_length,
+                           'cypher_type': self.secret_cypher_type,
+                           'payload': ''}
+        if self.payload_content_type:
+            self.secret_req['payload_content_type'] = self.payload_content_type
+        if self.payload_content_encoding:
+            self.secret_req['payload_content_encoding'] = \
+                self.payload_content_encoding
+        self.stream.read.return_value = json.dumps(self.secret_req)
 
         with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_post(self.req, self.resp, self.keystone_id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_400, exception.status)
+
+
+class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
+    def setUp(self):
+        super(WhenCreatingPlainTextSecretsUsingSecretsResource, self).setUp()
+        self._init()  # Default settings setup a plain-text secret.
+
+    def test_should_add_new_secret_one_step(self):
+        self._test_should_add_new_secret_one_step()
+
+    def test_should_add_new_secret_with_expiration(self):
+        self._test_should_add_new_secret_with_expiration()
+
+    def test_should_add_new_secret_if_tenant_does_not_exist(self):
+        self._test_should_add_new_secret_if_tenant_does_not_exist()
+
+    def test_should_add_new_secret_metadata_without_payload(self):
+        self._test_should_add_new_secret_metadata_without_payload()
+
+    def test_should_add_new_secret_payload_almost_too_large(self):
+        self._test_should_add_new_secret_payload_almost_too_large()
+
+    def test_should_fail_due_to_payload_too_large(self):
+        self._test_should_fail_due_to_payload_too_large()
+
+    def test_should_fail_due_to_empty_payload(self):
+        self._test_should_fail_due_to_empty_payload()
 
     def test_should_fail_due_to_unsupported_payload_content_type(self):
         self.secret_req = {'name': self.name,
@@ -295,32 +340,37 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
 
         with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_post(self.req, self.resp, self.keystone_id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_400, exception.status)
 
-    def test_create_secret_with_encoded_binary_payload(self):
-        self.stream.read.return_value = json.dumps(
-            {'name': self.name,
-             'algorithm': self.secret_algorithm,
-             'bit_length': self.secret_bit_length,
-             'cypher_type': self.secret_cypher_type,
-             'payload': 'lOtfqHaUUpe6NqLABgquYQ==',
-             'payload_content_type': 'application/octet-stream',
-             'payload_content_encoding': 'base64'}
-        )
 
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
+class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
+    def setUp(self):
+        super(WhenCreatingBinarySecretsUsingSecretsResource, self).setUp()
+        self._init(payload="...lOtfqHaUUpe6NqLABgquYQ==",
+                   payload_content_type='application/octet-stream',
+                   payload_content_encoding='base64')
 
-        self.assertEqual(falcon.HTTP_201, self.resp.status)
+    def test_should_add_new_secret_one_step(self):
+        self._test_should_add_new_secret_one_step()
 
-        args, kwargs = self.datum_repo.create_from.call_args
-        datum = args[0]
-        self.assertIsInstance(datum, models.EncryptedDatum)
-        self.assertEqual('cypher_text', datum.cypher_text)
-        self.assertEqual('application/octet-stream', datum.content_type)
+    def test_should_add_new_secret_with_expiration(self):
+        self._test_should_add_new_secret_with_expiration()
 
-        validate_datum(self, datum)
+    def test_should_add_new_secret_if_tenant_does_not_exist(self):
+        self._test_should_add_new_secret_if_tenant_does_not_exist()
+
+    def test_should_add_new_secret_metadata_without_payload(self):
+        self._test_should_add_new_secret_metadata_without_payload()
+
+    def test_should_add_new_secret_payload_almost_too_large(self):
+        self._test_should_add_new_secret_payload_almost_too_large()
+
+    def test_should_fail_due_to_payload_too_large(self):
+        self._test_should_fail_due_to_payload_too_large()
+
+    def test_should_fail_due_to_empty_payload(self):
+        self._test_should_fail_due_to_empty_payload()
 
     def test_create_secret_fails_with_binary_payload_no_encoding(self):
         self.stream.read.return_value = json.dumps(
@@ -332,8 +382,10 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
              'payload_content_type': 'application/octet-stream'}
         )
 
-        with self.assertRaises(falcon.HTTPError):
+        with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_post(self.req, self.resp, self.keystone_id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_create_secret_fails_with_binary_payload_bad_encoding(self):
         self.stream.read.return_value = json.dumps(
@@ -346,8 +398,10 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
              'payload_content_encoding': 'bogus64'}
         )
 
-        with self.assertRaises(falcon.HTTPError):
+        with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_post(self.req, self.resp, self.keystone_id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_create_secret_fails_with_binary_payload_no_content_type(self):
         self.stream.read.return_value = json.dumps(
@@ -359,8 +413,26 @@ class WhenCreatingSecretsUsingSecretsResource(unittest.TestCase):
              'payload_content_encoding': 'base64'}
         )
 
-        with self.assertRaises(falcon.HTTPError):
+        with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_post(self.req, self.resp, self.keystone_id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_400, exception.status)
+
+    def test_create_secret_fails_with_bad_payload(self):
+        self.stream.read.return_value = json.dumps(
+            {'name': self.name,
+             'algorithm': self.secret_algorithm,
+             'bit_length': self.secret_bit_length,
+             'cypher_type': self.secret_cypher_type,
+             'payload': 'AAAAAAAAA',
+             'payload_content_type': 'application/octet-stream',
+             'payload_content_encoding': 'base64'}
+        )
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_post(self.req, self.resp, self.keystone_id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_400, exception.status)
 
 
 class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
@@ -386,32 +458,32 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
                         id in xrange(self.num_secrets)]
         self.total = len(self.secrets)
 
-        self.secret_repo = MagicMock()
+        self.secret_repo = mock.MagicMock()
         self.secret_repo.get_by_create_date.return_value = (self.secrets,
                                                             self.offset,
                                                             self.limit,
                                                             self.total)
 
-        self.tenant_repo = MagicMock()
+        self.tenant_repo = mock.MagicMock()
 
-        self.tenant_secret_repo = MagicMock()
+        self.tenant_secret_repo = mock.MagicMock()
         self.tenant_secret_repo.create_from.return_value = None
 
-        self.datum_repo = MagicMock()
+        self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
 
-        self.kek_repo = MagicMock()
+        self.kek_repo = mock.MagicMock()
 
-        self.conf = MagicMock()
+        self.conf = mock.MagicMock()
         self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
         self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
-        self.crypto_mgr = CryptoExtensionManager(conf=self.conf)
+        self.crypto_mgr = em.CryptoExtensionManager(conf=self.conf)
 
-        self.req = MagicMock()
+        self.req = mock.MagicMock()
         self.req.accept = 'application/json'
         self.req.get_param = mock.Mock()
         self.req.get_param.side_effect = [self.offset, self.limit]
-        self.resp = MagicMock()
+        self.resp = mock.MagicMock()
         self.resource = res.SecretsResource(self.crypto_mgr, self.tenant_repo,
                                             self.secret_repo,
                                             self.tenant_secret_repo,
@@ -496,7 +568,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.kek_tenant.bind_completed = False
         self.kek_tenant.kek_label = "kek_label"
         self.kek_tenant.plugin_name = utils.generate_fullname_for(
-            TestCryptoPlugin())
+            ctp.TestCryptoPlugin())
 
         self.datum = models.EncryptedDatum()
         self.datum.id = datum_id
@@ -516,29 +588,30 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.tenant = models.Tenant()
         self.tenant.id = self.tenant_id
         self.keystone_id = self.keystone_id
-        self.tenant_repo = MagicMock()
+        self.tenant_repo = mock.MagicMock()
         self.tenant_repo.get.return_value = self.tenant
 
-        self.secret_repo = MagicMock()
+        self.secret_repo = mock.MagicMock()
         self.secret_repo.get.return_value = self.secret
         self.secret_repo.delete_entity_by_id.return_value = None
 
-        self.tenant_secret_repo = MagicMock()
+        self.tenant_secret_repo = mock.MagicMock()
         self.tenant_secret_repo.create_from.return_value = None
 
-        self.datum_repo = MagicMock()
+        self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
 
-        self.kek_repo = MagicMock()
+        self.kek_repo = mock.MagicMock()
 
-        self.req = MagicMock()
+        self.req = mock.MagicMock()
         self.req.accept = 'application/json'
-        self.resp = MagicMock()
+        self.req.accept_encoding = 'gzip'
+        self.resp = mock.MagicMock()
 
-        self.conf = MagicMock()
+        self.conf = mock.MagicMock()
         self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
         self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
-        self.crypto_mgr = CryptoExtensionManager(conf=self.conf)
+        self.crypto_mgr = em.CryptoExtensionManager(conf=self.conf)
 
         self.resource = res.SecretResource(self.crypto_mgr,
                                            self.tenant_repo,
@@ -609,7 +682,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_get(self.req, self.resp, self.keystone_id,
                                  self.secret.id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_404, exception.status)
 
@@ -631,7 +703,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         with self.assertRaises(falcon.HTTPError) as e:
             self.resource.on_get(self.req, self.resp, self.keystone_id,
                                  self.secret.id)
-
         self.assertEqual(falcon.HTTP_406, e.exception.status)
 
     def test_should_throw_exception_for_get_when_datum_not_available(self):
@@ -641,7 +712,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_get(self.req, self.resp, self.keystone_id,
                                  self.secret.id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_404, exception.status)
 
@@ -691,9 +761,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         # mock Content-Encoding header
         self.req.get_header.return_value = 'bogusencoding'
 
-        with self.assertRaises(falcon.HTTPError):
+        with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_put(self.req, self.resp, self.keystone_id,
                                  self.secret.id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_should_fail_put_secret_as_json(self):
         self._setup_for_puts()
@@ -703,7 +775,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_put(self.req, self.resp, self.keystone_id,
                                  self.secret.id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_415, exception.status)
 
@@ -716,7 +787,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_put(self.req, self.resp, self.keystone_id,
                                  self.secret.id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_404, exception.status)
 
@@ -729,7 +799,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_put(self.req, self.resp, self.keystone_id,
                                  self.secret.id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_400, exception.status)
 
@@ -754,20 +823,19 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_put(self.req, self.resp, self.keystone_id,
                                  self.secret.id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_should_fail_due_to_plain_text_too_large(self):
         self._setup_for_puts()
 
-        big_text = ''.join(['A' for x in xrange(2 * DEFAULT_MAX_SECRET_BYTES)])
+        big_text = ''.join(['A' for x in xrange(
+            2 * validators.DEFAULT_MAX_SECRET_BYTES)])
         self.stream.read.return_value = big_text
 
         with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_put(self.req, self.resp, self.keystone_id,
                                  self.secret.id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_413, exception.status)
 
@@ -786,7 +854,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_delete(self.req, self.resp, self.keystone_id,
                                     self.secret.id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_404, exception.status)
 
@@ -799,10 +866,10 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
 
         self.secret.encrypted_data = []
 
-        self.tenant_secret_repo = MagicMock()
+        self.tenant_secret_repo = mock.MagicMock()
         self.tenant_secret_repo.create_from.return_value = None
 
-        self.stream = MagicMock()
+        self.stream = mock.MagicMock()
         self.stream.read.return_value = self.payload
         self.req.stream = self.stream
 
@@ -822,16 +889,16 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
         self.tenant.id = self.tenant_internal_id
         self.tenant.keystone_id = self.tenant_keystone_id
 
-        self.tenant_repo = MagicMock()
+        self.tenant_repo = mock.MagicMock()
         self.tenant_repo.get.return_value = self.tenant
 
-        self.order_repo = MagicMock()
+        self.order_repo = mock.MagicMock()
         self.order_repo.create_from.return_value = None
 
-        self.queue_resource = MagicMock()
+        self.queue_resource = mock.MagicMock()
         self.queue_resource.process_order.return_value = None
 
-        self.stream = MagicMock()
+        self.stream = mock.MagicMock()
 
         order_req = {'secret': {'name': self.secret_name,
                                 'payload_content_type':
@@ -842,10 +909,10 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
         self.json = json.dumps(order_req)
         self.stream.read.return_value = self.json
 
-        self.req = MagicMock()
+        self.req = mock.MagicMock()
         self.req.stream = self.stream
 
-        self.resp = MagicMock()
+        self.resp = mock.MagicMock()
         self.resource = res.OrdersResource(self.tenant_repo, self.order_repo,
                                            self.queue_resource)
 
@@ -866,7 +933,6 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
         with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_post(self.req, self.resp,
                                   self.tenant_keystone_id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_400, exception.status)
 
@@ -876,7 +942,6 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
         with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_post(self.req, self.resp,
                                   self.tenant_keystone_id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_400, exception.status)
 
@@ -904,20 +969,20 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
         self.orders = [create_order(id='id' + str(id), **order_params) for
                        id in xrange(self.num_orders)]
         self.total = len(self.orders)
-        self.order_repo = MagicMock()
+        self.order_repo = mock.MagicMock()
         self.order_repo.get_by_create_date.return_value = (self.orders,
                                                            self.offset,
                                                            self.limit,
                                                            self.total)
-        self.tenant_repo = MagicMock()
+        self.tenant_repo = mock.MagicMock()
 
-        self.queue_resource = MagicMock()
+        self.queue_resource = mock.MagicMock()
         self.queue_resource.process_order.return_value = None
 
-        self.req = MagicMock()
+        self.req = mock.MagicMock()
         self.req.accept = 'application/json'
         self.req._params = self.params
-        self.resp = MagicMock()
+        self.resp = mock.MagicMock()
         self.resource = res.OrdersResource(self.tenant_repo, self.order_repo,
                                            self.queue_resource)
 
@@ -990,12 +1055,12 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
 
         self.order = create_order(id="id1", name="name")
 
-        self.order_repo = MagicMock()
+        self.order_repo = mock.MagicMock()
         self.order_repo.get.return_value = self.order
         self.order_repo.delete_entity_by_id.return_value = None
 
-        self.req = MagicMock()
-        self.resp = MagicMock()
+        self.req = mock.MagicMock()
+        self.resp = mock.MagicMock()
 
         self.resource = res.OrderResource(self.order_repo)
 
@@ -1022,7 +1087,6 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
         with self.assertRaises(falcon.HTTPError) as cm:
             self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
                                  self.order.id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_404, exception.status)
 
@@ -1034,7 +1098,6 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
             self.resource.on_delete(self.req, self.resp,
                                     self.tenant_keystone_id,
                                     self.order.id)
-
         exception = cm.exception
         self.assertEqual(falcon.HTTP_404, exception.status)
 

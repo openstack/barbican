@@ -16,21 +16,22 @@
 """
 Shared business logic.
 """
-import base64
-
-from barbican.common import exception, validators
-from barbican.model import models
+from barbican.common import exception
 from barbican.common import utils
-from barbican.crypto import mime_types
+from barbican.common import validators
+from barbican.model import models
 
 
 LOG = utils.getLogger(__name__)
 
 
 def get_or_create_tenant(keystone_id, tenant_repo):
-    """
-    Returns tenant with matching keystone_id.  Creates it if it does
-    not exist.
+    """Returns tenant with matching keystone_id.
+
+    Creates it if it does not exist.
+    :param keystone_id: The external-to-Barbican ID for this tenant.
+    :param tenant_repo: Tenant repository.
+    :return: Tenant model instance
     """
     tenant = tenant_repo.find_by_keystone_id(keystone_id,
                                              suppress_exception=True)
@@ -46,9 +47,7 @@ def get_or_create_tenant(keystone_id, tenant_repo):
 def create_secret(data, tenant, crypto_manager,
                   secret_repo, tenant_secret_repo, datum_repo, kek_repo,
                   ok_to_generate=False):
-    """
-    Common business logic to create a secret.
-    """
+    """Common business logic to create a secret."""
     time_keeper = utils.TimeKeeper('Create Secret Resource')
     new_secret = models.Secret(data)
     time_keeper.mark('after Secret model create')
@@ -59,31 +58,15 @@ def create_secret(data, tenant, crypto_manager,
     if 'payload' in data:
         payload = data.get('payload')
         content_encoding = data.get('payload_content_encoding')
-        if not payload:
-            raise exception.NoDataToProcess()
-
-        LOG.debug('Pre-processing payload...')
-        if content_type in mime_types.PLAIN_TEXT:
-            LOG.debug('Plain text payload.  No pre-processing needed.')
-        elif content_type in mime_types.BINARY:
-            # payload has to be decoded
-            if content_encoding not in ['base64']:
-                raise exception.InvalidContentEncoding(content_encoding)
-            try:
-                payload = base64.b64decode(payload)
-            except TypeError:
-                raise exception.PayloadDecodingError()
-        else:
-            raise exception.InvalidContentType()
-
-        time_keeper.mark('after pre-processing')
 
         LOG.debug('Encrypting payload...')
         new_datum = crypto_manager.encrypt(payload,
                                            content_type,
+                                           content_encoding,
                                            new_secret,
                                            tenant,
-                                           kek_repo)
+                                           kek_repo,
+                                           enforce_text_only=True)
         time_keeper.mark('after encrypt')
 
     elif ok_to_generate:
@@ -123,8 +106,7 @@ def create_encrypted_datum(secret, payload,
                            content_type, content_encoding,
                            tenant, crypto_manager,
                            tenant_secret_repo, datum_repo, kek_repo):
-    """
-    Modifies the secret to add the plain_text secret information.
+    """Modifies the secret to add the plain_text secret information.
 
     :param secret: the secret entity to associate the secret data to
     :param payload: secret data to store
@@ -153,6 +135,7 @@ def create_encrypted_datum(secret, payload,
     LOG.debug('Encrypting secret payload...')
     new_datum = crypto_manager.encrypt(payload,
                                        content_type,
+                                       content_encoding,
                                        secret,
                                        tenant,
                                        kek_repo)

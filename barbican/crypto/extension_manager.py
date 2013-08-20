@@ -13,15 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
+
 from oslo.config import cfg
 from stevedore import named
 
-from barbican.common.exception import BarbicanException
+from barbican.common import exception
 from barbican.common import utils
 from barbican.crypto import mime_types
 from barbican.crypto import plugin as plugin_mod
-from barbican.model.models import EncryptedDatum
-from barbican.openstack.common.gettextutils import _
+from barbican.model import models
+from barbican.openstack.common import gettextutils as u
 
 
 CONF = cfg.CONF
@@ -33,51 +35,184 @@ crypto_opt_group = cfg.OptGroup(name='crypto',
 crypto_opts = [
     cfg.StrOpt('namespace',
                default=DEFAULT_PLUGIN_NAMESPACE,
-               help=_('Extension namespace to search for plugins.')
+               help=u._('Extension namespace to search for plugins.')
                ),
     cfg.MultiStrOpt('enabled_crypto_plugins',
                     default=DEFAULT_PLUGINS,
-                    help=_('List of crypto plugins to load.')
+                    help=u._('List of crypto plugins to load.')
                     )
 ]
 CONF.register_group(crypto_opt_group)
 CONF.register_opts(crypto_opts, group=crypto_opt_group)
 
 
-class CryptoMimeTypeNotSupportedException(BarbicanException):
-    """Raised when support for requested mime type is
-    not available in any active plugin."""
-    def __init__(self, mime_type):
-        super(CryptoMimeTypeNotSupportedException, self).__init__(
-            _("Crypto Mime Type of '{0}' not supported").format(mime_type)
+class CryptoContentTypeNotSupportedException(exception.BarbicanException):
+    """Raised when support for payload content type is not available."""
+    def __init__(self, content_type):
+        super(CryptoContentTypeNotSupportedException, self).__init__(
+            u._("Crypto Content Type "
+                "of '{0}' not supported").format(content_type)
         )
-        self.mime_type = mime_type
+        self.content_type = content_type
 
 
-class CryptoAcceptNotSupportedException(BarbicanException):
-    """Raised when requested decrypted format is not
-    available in any active plugin."""
+class CryptoContentEncodingNotSupportedException(exception.BarbicanException):
+    """Raised when support for payload content encoding is not available."""
+    def __init__(self, content_encoding):
+        super(CryptoContentEncodingNotSupportedException, self).__init__(
+            u._("Crypto Content-Encoding of '{0}' not supported").format(
+                content_encoding)
+        )
+        self.content_encoding = content_encoding
+
+
+class CryptoAcceptNotSupportedException(exception.BarbicanException):
+    """Raised when requested decrypted content-type is not available."""
     def __init__(self, accept):
         super(CryptoAcceptNotSupportedException, self).__init__(
-            _("Crypto Accept of '{0}' not supported").format(accept)
+            u._("Crypto Accept of '{0}' not supported").format(accept)
         )
         self.accept = accept
 
 
-class CryptoNoSecretOrDataException(BarbicanException):
-    """Raised when secret information is not available for the specified
-    secret mime-type."""
+class CryptoAcceptEncodingNotSupportedException(exception.BarbicanException):
+    """Raised when payload could not be decoded."""
+    def __init__(self, accept_encoding):
+        super(CryptoAcceptEncodingNotSupportedException, self).__init__(
+            u._("Crypto Accept-Encoding of '{0}' not supported").format(
+                accept_encoding)
+        )
+        self.accept_encoding = accept_encoding
+
+
+class CryptoPayloadDecodingError(exception.BarbicanException):
+    """Raised when payload could not be decoded."""
+    def __init__(self):
+        super(CryptoPayloadDecodingError, self).__init__(
+            u._("Problem decoding payload")
+        )
+
+
+class CryptoPluginNotFound(exception.BarbicanException):
+    """Raised when no plugins are installed."""
+    message = u._("Crypto plugin not found.")
+
+
+class CryptoNoPayloadProvidedException(exception.BarbicanException):
+    """Raised when secret information is not provided."""
+    def __init__(self):
+        super(CryptoNoPayloadProvidedException, self).__init__(
+            u._('No secret information provided to encrypt.')
+        )
+
+
+class CryptoNoSecretOrDataFoundException(exception.BarbicanException):
+    """Raised when secret information could not be located."""
     def __init__(self, secret_id):
-        super(CryptoNoSecretOrDataException, self).__init__(
-            _('No secret information available for '
-              'secret {0}').format(secret_id)
+        super(CryptoNoSecretOrDataFoundException, self).__init__(
+            u._('No secret information located for '
+                'secret {0}').format(secret_id)
         )
         self.secret_id = secret_id
 
 
-class CryptoPluginNotFound(BarbicanException):
-    """Raised when no plugins are installed."""
-    message = "Crypto plugin not found."
+class CryptoContentEncodingMustBeBase64(exception.BarbicanException):
+    """Raised when encoding must be base64."""
+    def __init__(self):
+        super(CryptoContentEncodingMustBeBase64, self).__init__(
+            u._("Encoding type must be 'base64' for text-based payloads.")
+        )
+
+
+class CryptoGeneralException(exception.BarbicanException):
+    """Raised when a system fault has occurred."""
+    def __init__(self, reason=u._('Unknown')):
+        super(CryptoGeneralException, self).__init__(
+            u._('Problem seen during crypto processing - '
+                'Reason: {0}').format(reason)
+        )
+        self.reason = reason
+
+
+def normalize_before_encryption(unencrypted, content_type, content_encoding,
+                                enforce_text_only=False):
+    """Normalize unencrypted prior to plugin encryption processing."""
+    if not unencrypted:
+        raise CryptoNoPayloadProvidedException()
+
+    # Validate and normalize content-type.
+    if not mime_types.is_supported(content_type):
+        raise CryptoContentTypeNotSupportedException(content_type)
+    content_type = mime_types.normalize_content_type(content_type)
+
+    # Process plain-text type.
+    if content_type in mime_types.PLAIN_TEXT:
+        # normalize text to binary string
+        unencrypted = unencrypted.encode('utf-8')
+
+    # Process binary type.
+    elif content_type in mime_types.BINARY:
+        # payload has to be decoded
+        if mime_types.is_base64_processing_needed(content_type,
+                                                  content_encoding):
+            try:
+                unencrypted = base64.b64decode(unencrypted)
+            except TypeError:
+                raise CryptoPayloadDecodingError()
+        elif enforce_text_only:
+            # For text-based protocols (such as the one-step secret POST),
+            #   only 'base64' encoding is possible/supported.
+            raise CryptoContentEncodingMustBeBase64()
+        elif content_encoding:
+            # Unsupported content-encoding request.
+            raise CryptoContentEncodingNotSupportedException(content_encoding)
+
+    else:
+        raise CryptoContentTypeNotSupportedException(content_type)
+
+    return unencrypted, content_type
+
+
+def analyze_before_decryption(content_type, content_encoding):
+    """Determine support for desired content type/encoding."""
+    is_base64_needed = False
+
+    if not mime_types.is_supported(content_type):
+        raise CryptoAcceptNotSupportedException(content_type)
+
+    if content_type in mime_types.BINARY:
+        # Note if payload has to be decoded
+        is_base64_needed = mime_types \
+            .is_base64_processing_needed(content_type,
+                                         content_encoding)
+        if not is_base64_needed and content_encoding:
+            # Unsupported content-encoding request.
+            raise CryptoAcceptEncodingNotSupportedException(content_encoding)
+
+    return is_base64_needed
+
+
+def denormalize_after_decryption(unencrypted, content_type, is_base64_needed):
+    """Translate the decrypted data into the desired content type/encoding."""
+    # Process plain-text type.
+    if content_type in mime_types.PLAIN_TEXT:
+        # normalize text to binary string
+        unencrypted = unencrypted.decode('utf-8')
+
+    # Process binary type.
+    elif content_type in mime_types.BINARY:
+        # If payload has to be decoded
+        if is_base64_needed:
+            try:
+                unencrypted = base64.b64encode(unencrypted)
+            except TypeError:
+                raise CryptoGeneralException(u._('Problem decoding'))
+
+    else:
+        raise CryptoGeneralException(
+            u._("Unexpected content-type: '{0}'").format(content_type))
+
+    return unencrypted
 
 
 class CryptoExtensionManager(named.NamedExtensionManager):
@@ -91,58 +226,63 @@ class CryptoExtensionManager(named.NamedExtensionManager):
             invoke_kwds=invoke_kwargs
         )
 
-    def encrypt(self, unencrypted, content_type, secret, tenant, kek_repo):
+    def encrypt(self, unencrypted, content_type, content_encoding,
+                secret, tenant, kek_repo, enforce_text_only=False):
         """Delegates encryption to first active plugin."""
+        # TODO(jwood): Need to test if the plugin supports 'secret's
+        # requirements.
+
         if len(self.extensions) < 1:
             raise CryptoPluginNotFound()
         encrypting_plugin = self.extensions[0].obj
-        # TODO: Need to test if the plugin supports 'secret's requirements.
 
-        if content_type in mime_types.PLAIN_TEXT:
-            # normalize text to binary string
-            unencrypted = unencrypted.encode('utf-8')
+        unencrypted, content_type = normalize_before_encryption(
+            unencrypted, content_type, content_encoding,
+            enforce_text_only=enforce_text_only)
 
         # Find or create a key encryption key metadata.
         kek_datum, kek_metadata = self._find_or_create_kek_metadata(
             encrypting_plugin, tenant, kek_repo)
 
         # Create an encrypted datum instance and add the encrypted cypher text.
-        datum = EncryptedDatum(secret, kek_datum)
+        datum = models.EncryptedDatum(secret, kek_datum)
         datum.content_type = content_type
         datum.cypher_text, datum.kek_meta_extended = encrypting_plugin.encrypt(
             unencrypted, kek_metadata, tenant
         )
         return datum
 
-    def decrypt(self, accept, secret, tenant):
+    def decrypt(self, content_type, content_encoding, secret, tenant):
         """Delegates decryption to active plugins."""
 
         if not secret or not secret.encrypted_data:
-            raise CryptoNoSecretOrDataException(secret.id)
+            raise CryptoNoSecretOrDataFoundException(secret.id)
 
-        if not mime_types.is_supported(accept):
-            raise CryptoAcceptNotSupportedException(accept)
+        is_base64_needed = analyze_before_decryption(content_type,
+                                                     content_encoding)
 
         for ext in self.extensions:
             decrypting_plugin = ext.obj
             for datum in secret.encrypted_data:
                 if self._plugin_supports(decrypting_plugin,
                                          datum.kek_meta_tenant):
+                    # Decrypt the secret.
                     unencrypted = decrypting_plugin \
                         .decrypt(datum.cypher_text,
                                  datum.kek_meta_tenant,
                                  datum.kek_meta_extended,
                                  tenant)
-                    if datum.content_type in mime_types.PLAIN_TEXT:
-                        unencrypted = unencrypted.decode('utf-8')
-                    return unencrypted
+
+                    # Denormalize the decrypted info per request.
+                    return denormalize_after_decryption(unencrypted,
+                                                        content_type,
+                                                        is_base64_needed)
         else:
             raise CryptoPluginNotFound()
 
     def generate_data_encryption_key(self, secret, content_type, tenant,
                                      kek_repo):
-        """
-        Delegates generating a data-encryption key to first active plugin.
+        """Delegates generating a data-encryption key to first active plugin.
 
         Note that this key can be used by clients for their encryption
         processes. This generated key is then be encrypted via
@@ -158,10 +298,12 @@ class CryptoExtensionManager(named.NamedExtensionManager):
                                             secret.bit_length)
 
         # Encrypt the secret.
-        return self.encrypt(data_key, content_type, secret, tenant, kek_repo)
+        return self.encrypt(data_key, content_type, None, secret, tenant,
+                            kek_repo)
 
     def _plugin_supports(self, plugin_inst, kek_metadata_tenant):
-        """
+        """Tests for plugin support.
+
         Tests if the supplied plugin supports operations on the supplied
         key encryption key (KEK) metadata.
 
@@ -180,7 +322,8 @@ class CryptoExtensionManager(named.NamedExtensionManager):
                                                          full_plugin_name)
 
         # Bind to the plugin's key management.
-        # TODO: Does this need to be in a critical section? Should the bind
+        # TODO(jwood): Does this need to be in a critical section? Should the
+        # bind
         #   operation just be declared idempotent in the plugin contract?
         kek_metadata = plugin_mod.KEKMetadata(kek_datum)
         if not kek_datum.bind_completed:

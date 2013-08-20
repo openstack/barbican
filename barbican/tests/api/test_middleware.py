@@ -14,28 +14,18 @@
 # limitations under the License.
 
 import unittest
-from mock import MagicMock
+
+import mock
+
 from barbican.api.middleware.simple import SimpleFilter
-
-
-def suite():
-    suite = unittest.TestSuite()
-
-    suite.addTest(WhenTestingSimpleMiddleware())
-
-    return suite
 
 
 class WhenTestingSimpleMiddleware(unittest.TestCase):
 
     def setUp(self):
-        self.app = MagicMock()
+        self.app = mock.MagicMock()
         self.middle = SimpleFilter(self.app)
-        self.req = MagicMock()
+        self.req = mock.MagicMock()
 
     def test_should_process_request(self):
         self.middle.process_request(self.req)
-
-
-if __name__ == '__main__':
-    unittest.main()

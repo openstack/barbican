@@ -205,6 +205,7 @@ class Secret(BASE, ModelBase):
         self.algorithm = parsed_request.get('algorithm')
         self.bit_length = parsed_request.get('bit_length')
         self.cypher_type = parsed_request.get('cypher_type')
+
         self.status = States.ACTIVE
 
     def _do_delete_children(self, session):
@@ -255,8 +256,7 @@ class EncryptedDatum(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        return {'cypher_text': self.secret,
-                'content_type': self.content_type}
+        return {'content_type': self.content_type}
 
 
 class KEKDatum(BASE, ModelBase):

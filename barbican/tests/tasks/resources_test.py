@@ -44,6 +44,7 @@ class WhenBeginningOrder(unittest.TestCase):
         self.secret_bit_length = 256
         self.secret_cypher_type = "CBC"
         self.secret_expiration = timeutils.utcnow()
+        self.secret_payload_content_type = 'application/octet-stream'
 
         self.keystone_id = 'keystone1234'
         self.tenant_id = 'tenantid1234'
@@ -60,6 +61,8 @@ class WhenBeginningOrder(unittest.TestCase):
         self.order.secret_bit_length = self.secret_bit_length
         self.order.secret_cypher_type = self.secret_cypher_type
         self.order.secret_expiration = self.secret_expiration
+        self.order.secret_payload_content_type = self\
+            .secret_payload_content_type
 
         self.order_repo = MagicMock()
         self.order_repo.get.return_value = self.order
