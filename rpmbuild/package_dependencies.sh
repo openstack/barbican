@@ -35,6 +35,10 @@ fpm -s python -t rpm alembic
 # Indirect dependencies
 # ---------------------
 
+# oslo copy-pasta depends on
+# fpm -s python -t rpm netaddr
+fpm -s python -t rpm Babel
+
 # python-alembic
 fpm -s python -t rpm mako
 # --> mako needs markupsafe

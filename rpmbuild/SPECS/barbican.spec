@@ -19,7 +19,7 @@ Requires: python-alembic, python-celery, python-crypto, python-dateutil
 Requires: python-eventlet, python-falcon, python-iso8601, python-jsonschema
 Requires: python-keystoneclient, python-kombu, python-oslo.config, python-paste-deploy
 Requires: python-psycopg2, python-pysqlite, python-sqlalchemy, python-stevedore
-Requires: python-uwsgi, python-webob
+Requires: python-uwsgi, python-webob, python-netaddr, python-babel
 
 %description
 Common files for Barbican Key Management API (barbican-api) and 
