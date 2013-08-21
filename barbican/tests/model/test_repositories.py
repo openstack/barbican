@@ -64,3 +64,18 @@ class WhenCleaningRepositoryPagingParameters(unittest.TestCase):
                                                         limit_arg=limit)
         self.assertEqual(clean_offset, 0)
         self.assertEqual(clean_limit, limit)
+
+    def test_limit_is_less_than_one(self):
+        """Offset should default to 1"""
+        limit = -1
+        clean_offset, clean_limit = clean_paging_values(offset_arg=1,
+                                                        limit_arg=limit)
+        self.assertEqual(clean_offset, 1)
+        self.assertEqual(clean_limit, 1)
+
+    def test_limit_ist_too_big(self):
+        """Limit should max out at configured value"""
+        limit = self.CONF.max_limit_paging + 10
+        clean_offset, clean_limit = clean_paging_values(offset_arg=1,
+                                                        limit_arg=limit)
+        self.assertEqual(clean_limit, self.CONF.max_limit_paging)

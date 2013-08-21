@@ -217,13 +217,16 @@ def clean_paging_values(offset_arg=0, limit_arg=CONF.default_limit_paging):
 
     try:
         limit = int(limit_arg)
-        limit = limit if limit >= 2 else 2
-        limit = limit if limit <= CONF.max_limit_paging else \
-            CONF.max_limit_paging
+        if limit < 1:
+            limit = 1
+        if limit > CONF.max_limit_paging:
+            limit = CONF.max_limit_paging
     except ValueError:
         limit = CONF.default_limit_paging
 
-    LOG.debug("Limit={0}, offset={1}".format(limit, offset))
+    LOG.debug("Clean paging values limit={0}, offset={1}".format(
+        limit, offset
+    ))
 
     return (offset, limit)
 
@@ -514,17 +517,20 @@ class SecretRepo(BaseRepo):
             start = offset
             end = offset + limit
             LOG.debug('Retrieving from {0} to {1}'.format(start, end))
-
+            total = query.count()
             entities = query[start:end]
-            LOG.debug('Number entities retrieved: {0}'.format(len(entities)))
+            LOG.debug('Number entities retrieved: {0} out of {1}'.format(
+                len(entities), total
+            ))
 
         except sa_orm.exc.NoResultFound:
             entities = None
+            total = 0
             if not suppress_exception:
                 raise exception.NotFound("No %s's found"
                                          % (self._do_entity_name()))
 
-        return (entities, offset, limit)
+        return entities, offset, limit, total
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
@@ -656,6 +662,16 @@ class OrderRepo(BaseRepo):
         """
         Returns a list of orders, ordered by the date they were created at
         and paged based on the offset and limit fields.
+
+        :param keystone_id: The keystone id for the tenant.
+        :param offset_arg: The entity number where the query result should
+                           start.
+        :param limit_arg: The maximum amount of entities in the result set.
+        :param suppress_exception: Whether NoResultFound exceptions should be
+                                   suppressed.
+        :param session: SQLAlchemy session object.
+
+        :returns: Tuple consisting of (list_of_entities, offset, limit, total).
         """
 
         offset, limit = clean_paging_values(offset_arg, limit_arg)
@@ -672,17 +688,20 @@ class OrderRepo(BaseRepo):
             start = offset
             end = offset + limit
             LOG.debug('Retrieving from {0} to {1}'.format(start, end))
-
+            total = query.count()
             entities = query[start:end]
-            LOG.debug('Number entities retrieved: {0}'.format(len(entities)))
+            LOG.debug('Number entities retrieved: {0} out of {1}'.format(
+                len(entities), total
+            ))
 
         except sa_orm.exc.NoResultFound:
             entities = None
+            total = 0
             if not suppress_exception:
                 raise exception.NotFound("No %s's found"
                                          % (self._do_entity_name()))
 
-        return (entities, offset, limit)
+        return entities, offset, limit, total
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""

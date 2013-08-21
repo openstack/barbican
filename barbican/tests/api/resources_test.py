@@ -37,20 +37,6 @@ from barbican.model import models
 from barbican.openstack.common import jsonutils
 
 
-def suite():
-    suite = unittest.TestSuite()
-
-    suite.addTest(WhenTestingVersionResource())
-    suite.addTest(WhenCreatingSecretsUsingSecretsResource())
-    suite.addTest(WhenGettingSecretsListUsingSecretsResource())
-    suite.addTest(WhenGettingPuttingOrDeletingSecretUsingSecretResource())
-    suite.addTest(WhenCreatingOrdersUsingOrdersResource())
-    suite.addTest(WhenGettingOrdersListUsingOrdersResource())
-    suite.addTest(WhenGettingOrDeletingOrderUsingOrderResource())
-
-    return suite
-
-
 def create_secret(id="id", name="name",
                   algorithm=None, bit_length=None,
                   cypher_type=None, encrypted_datum=None):
@@ -398,11 +384,13 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
 
         self.secrets = [create_secret(id='id' + str(id), **secret_params) for
                         id in xrange(self.num_secrets)]
+        self.total = len(self.secrets)
 
         self.secret_repo = MagicMock()
         self.secret_repo.get_by_create_date.return_value = (self.secrets,
                                                             self.offset,
-                                                            self.limit)
+                                                            self.limit,
+                                                            self.total)
 
         self.tenant_repo = MagicMock()
 
@@ -454,6 +442,12 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
         url_hrefs = self._create_url(self.keystone_id)
         self.assertTrue(self.resp.body.count(url_hrefs) ==
                         (self.num_secrets + 2))
+
+    def test_response_should_include_total(self):
+        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        resp_body = jsonutils.loads(self.resp.body)
+        self.assertIn('total', resp_body)
+        self.assertEqual(resp_body['total'], self.total)
 
     def test_should_handle_no_secrets(self):
 
@@ -909,12 +903,12 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
 
         self.orders = [create_order(id='id' + str(id), **order_params) for
                        id in xrange(self.num_orders)]
-
+        self.total = len(self.orders)
         self.order_repo = MagicMock()
         self.order_repo.get_by_create_date.return_value = (self.orders,
                                                            self.offset,
-                                                           self.limit)
-
+                                                           self.limit,
+                                                           self.total)
         self.tenant_repo = MagicMock()
 
         self.queue_resource = MagicMock()
@@ -953,6 +947,12 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
         url_hrefs = self._create_url(self.keystone_id)
         self.assertTrue(self.resp.body.count(url_hrefs) ==
                         (self.num_orders + 2))
+
+    def test_response_should_include_total(self):
+        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        resp_body = jsonutils.loads(self.resp.body)
+        self.assertIn('total', resp_body)
+        self.assertEqual(resp_body['total'], self.total)
 
     def test_should_handle_no_orders(self):
 
@@ -1039,5 +1039,49 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
         self.assertEqual(falcon.HTTP_404, exception.status)
 
 
-if __name__ == '__main__':
-    unittest.main()
+class WhenAddingNavigationHrefs(unittest.TestCase):
+
+    def setUp(self):
+        self.resource_name = 'orders'
+        self.keystone_id = '12345'
+        self.num_elements = 100
+        self.data = dict()
+
+    def test_add_nav_hrefs_adds_next_only(self):
+        offset = 0
+        limit = 10
+
+        data_with_hrefs = res.add_nav_hrefs(self.resource_name,
+                                            self.keystone_id,
+                                            offset, limit,
+                                            self.num_elements,
+                                            self.data)
+
+        self.assertNotIn('previous', data_with_hrefs)
+        self.assertIn('next', data_with_hrefs)
+
+    def test_add_nav_hrefs_adds_both_next_and_previous(self):
+        offset = 10
+        limit = 10
+
+        data_with_hrefs = res.add_nav_hrefs(self.resource_name,
+                                            self.keystone_id,
+                                            offset, limit,
+                                            self.num_elements,
+                                            self.data)
+
+        self.assertIn('previous', data_with_hrefs)
+        self.assertIn('next', data_with_hrefs)
+
+    def test_add_nav_hrefs_adds_previous_only(self):
+        offset = 90
+        limit = 10
+
+        data_with_hrefs = res.add_nav_hrefs(self.resource_name,
+                                            self.keystone_id,
+                                            offset, limit,
+                                            self.num_elements,
+                                            self.data)
+
+        self.assertIn('previous', data_with_hrefs)
+        self.assertNotIn('next', data_with_hrefs)

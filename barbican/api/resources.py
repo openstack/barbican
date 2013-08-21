@@ -199,13 +199,22 @@ def next_href(resources_name, keystone_id, offset, limit):
 
 
 def add_nav_hrefs(resources_name, keystone_id, offset, limit,
-                  num_elements, data):
+                  total_elements, data):
+    """Adds next and/or previous hrefs to paged list responses.
+
+    :param resources_name: Name of api resource
+    :param keystone_id: Keystone id of the tenant
+    :param offset: Element number (ie. index) where current page starts
+    :param limit: Max amount of elements listed on current page
+    :param num_elements: Total number of elements
+    :returns: augmented dictionary with next and/or previous hrefs
+    """
     if offset > 0:
         data.update({'previous': previous_href(resources_name,
                                                keystone_id,
                                                offset,
                                                limit)})
-    if num_elements >= limit:
+    if total_elements > (offset + limit):
         data.update({'next': next_href(resources_name,
                                        keystone_id,
                                        offset,
@@ -388,18 +397,20 @@ class SecretsResource(api.ApiResource):
             suppress_exception=True
         )
 
-        secrets, offset, limit = result
+        secrets, offset, limit, total = result
 
         if not secrets:
-            secrets_resp_overall = {'secrets': []}
+            secrets_resp_overall = {'secrets': [],
+                                    'total': total}
         else:
             secret_fields = lambda s: mime_types\
                 .augment_fields_with_content_types(s)
             secrets_resp = [convert_to_hrefs(keystone_id, secret_fields(s)) for
                             s in secrets]
             secrets_resp_overall = add_nav_hrefs('secrets', keystone_id,
-                                                 offset, limit, len(secrets),
+                                                 offset, limit, total,
                                                  {'secrets': secrets_resp})
+            secrets_resp_overall.update({'total': total})
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(secrets_resp_overall,
@@ -613,16 +624,18 @@ class OrdersResource(api.ApiResource):
                                 offset_arg=params.get('offset'),
                                 limit_arg=params.get('limit'),
                                 suppress_exception=True)
-        orders, offset, limit = result
+        orders, offset, limit, total = result
 
         if not orders:
-            orders_resp_overall = {'orders': []}
+            orders_resp_overall = {'orders': [],
+                                   'total': total}
         else:
             orders_resp = [convert_to_hrefs(keystone_id, o.to_dict_fields())
                            for o in orders]
             orders_resp_overall = add_nav_hrefs('orders', keystone_id,
-                                                offset, limit, len(orders),
+                                                offset, limit, total,
                                                 {'orders': orders_resp})
+            orders_resp_overall.update({'total': total})
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(orders_resp_overall,
