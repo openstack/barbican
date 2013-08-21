@@ -38,6 +38,7 @@ fpm -s python -t rpm alembic
 # oslo copy-pasta depends on
 # fpm -s python -t rpm netaddr
 fpm -s python -t rpm Babel
+fpm -s python -t rpm pytz
 
 # python-alembic
 fpm -s python -t rpm mako
