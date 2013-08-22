@@ -35,7 +35,15 @@ CONF.register_group(simple_crypto_plugin_group)
 CONF.register_opts(simple_crypto_plugin_opts, group=simple_crypto_plugin_group)
 
 
-class KEKMetadata(object):
+class PluginSupportTypes(object):
+    """Class to hold the type enumeration that plugins may support."""
+    ENCRYPT_DECRYPT = "ENCRYPT_DECRYPT"
+    SYMMETRIC_KEY_GENERATION = "SYMMETRIC_KEY_GENERATION"
+    # A list of symmetric algorithms that are used to determine type of key gen
+    SYMMETRIC_ALGORITHMS = ['aes', 'des']
+
+
+class KEKMetaDTO(object):
     """
     Data transfer object to support key encryption key (KEK) definition.
 
@@ -60,7 +68,7 @@ def indicate_bind_completed(kek_meta_dto, kek_datum):
     """
     Updates the supplied kek_datum instance per the contents of the supplied
     kek_meta_dto instance. This function is typically used once plugins have
-    had a chance to bind kek_metadata to their crypto systems.
+    had a chance to bind kek_meta_dto to their crypto systems.
 
     :param kek_meta_dto:
     :param kek_datum:
@@ -80,12 +88,12 @@ class CryptoPluginBase(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def encrypt(self, unencrypted, kek_metadata, tenant):
+    def encrypt(self, unencrypted, kek_meta_dto, keystone_id):
         """Encrypt unencrypted data in the context of the provided tenant.
 
         :param unencrypted: byte data to be encrypted.
-        :param kek_metadata: Key encryption key metadata to use for encryption.
-        :param tenant: Tenant associated with the unencrypted data.
+        :param kek_meta_dto: Key encryption key metadata to use for encryption.
+        :param keystone_id: keystone_id associated with the unencrypted data.
         :returns: encrypted data and kek_meta_extended, the former the
         resultant cypher text, the latter being optional per-secret metadata
         needed to decrypt (over and above the per-tenant metadata managed
@@ -94,21 +102,20 @@ class CryptoPluginBase(object):
         """
 
     @abc.abstractmethod
-    def decrypt(self, encrypted, kek_meta_tenant, kek_meta_extended, tenant):
+    def decrypt(self, encrypted, kek_meta_dto, kek_meta_extended, keystone_id):
         """Decrypt encrypted_datum in the context of the provided tenant.
 
         :param encrypted: cyphertext to be decrypted.
-        :param kek_meta_tenant: Per-tenant key encryption key (KEK) metadata
-        to use for decryption.
+        :param kek_meta_dto: Key encryption key metadata to use for decryption
         :param kek_meta_extended: Optional per-secret KEK metadata to use for
         decryption.
-        :param tenant: Tenant associated with the encrypted datum.
+        :param keystone_id: keystone_id associated with the encrypted datum.
         :returns: str -- unencrypted byte data
 
         """
 
     @abc.abstractmethod
-    def bind_kek_metadata(self, kek_metadata):
+    def bind_kek_metadata(self, kek_meta_dto):
         """
         Bind a key encryption key (KEK) metadata to the sub-system
         handling encryption/decryption, updating information about the
@@ -116,25 +123,29 @@ class CryptoPluginBase(object):
         instance.
 
         This method is invoked prior to the encrypt() method above.
-        Implementors should fill out the supplied 'kek_metadata' instance
+        Implementors should fill out the supplied 'kek_meta_dto' instance
         (an instance of KEKMetadata above) as needed to completely describe
         the kek metadata and to complete the binding process. Barbican will
         persist the contents of this instance once this method returns.
 
-        :param kek_metadata: Key encryption key metadata to bind, with the
+        :param kek_meta_dto: Key encryption key metadata to bind, with the
         'kek_label' attribute guaranteed to be unique, and the
         and 'plugin_name' attribute already configured.
-        :returns: None
+        :returns: kek_meta_dato: Returns the modified object
 
         """
 
     @abc.abstractmethod
-    def create(self, algorithm, bit_length):
+    def create(self, bit_length, type_enum, algorithm=None, cypher_type=None):
         """Create a new key."""
 
     @abc.abstractmethod
-    def supports(self, kek_metadata):
-        """Used to decide whether the plugin supports decoding the secret."""
+    def supports(self, type_enum, algorithm=None, cypher_type=None):
+        """Used to determine if the plugin supports the requested operation.
+
+        :param type_enum: Enumeration from PluginSupportsType class
+        :param algorithm: String algorithm name if needed
+        """
 
 
 class SimpleCryptoPlugin(CryptoPluginBase):
@@ -156,7 +167,7 @@ class SimpleCryptoPlugin(CryptoPluginBase):
         unpadded = unencrypted[:-pad_length]
         return unpadded
 
-    def encrypt(self, unencrypted, kek_metadata, tenant):
+    def encrypt(self, unencrypted, kek_meta_dto, keystone_id):
         if not isinstance(unencrypted, str):
             raise ValueError('Unencrypted data must be a byte type, '
                              'but was {0}'.format(type(unencrypted)))
@@ -168,36 +179,28 @@ class SimpleCryptoPlugin(CryptoPluginBase):
 
         return cyphertext, None
 
-    def decrypt(self, encrypted, kek_meta_tenant, kek_meta_extended, tenant):
+    def decrypt(self, encrypted, kek_meta_dto, kek_meta_extended, keystone_id):
         iv = encrypted[:self.block_size]
         cypher_text = encrypted[self.block_size:]
         decryptor = AES.new(self.kek, AES.MODE_CBC, iv)
         padded_secret = decryptor.decrypt(cypher_text)
         return self._strip_pad(padded_secret)
 
-    def bind_kek_metadata(self, kek_metadata):
-        kek_metadata.algorithm = 'aes'
-        kek_metadata.bit_length = 128
-        kek_metadata.mode = 'cbc'
-        kek_metadata.plugin_meta = None
+    def bind_kek_metadata(self, kek_meta_dto):
+        kek_meta_dto.algorithm = 'aes'
+        kek_meta_dto.bit_length = 128
+        kek_meta_dto.mode = 'cbc'
+        kek_meta_dto.plugin_meta = None
+        return kek_meta_dto
 
-    def create(self, algorithm, bit_length):
-        # TODO: do this right
-        # return Random.get_random_bytes(bit_length/8)
-        if bit_length == 256:
-            return (b"r\x07\xb7\xfc\xe8\xae\x99\x94\xce_I\xaftM\xb3T'\x1c\xa2"
-                    b"\xd5\xeb\x03p\x17\xb8\r\xddA\xf9\xa3\x08W")
-        elif bit_length == 192:
-            return (b"\xb7^\xc5\xc9Ey\xc3\x88-\xad\x8d\xd2\xad{\x96\xba#\x973"
-                    b"\xe0ZY\xe5\x1e")
-        elif bit_length == 128:
-            return b",q\x90M\xbc)6AbjUx2t(C"
+    def create(self, bit_length, type_enum, algorithm=None, cypher_type=None):
+        byte_length = bit_length / 8
+        return Random.get_random_bytes(byte_length)
+
+    def supports(self, type_enum, algorithm=None, cypher_type=None):
+        if type_enum == PluginSupportTypes.ENCRYPT_DECRYPT:
+            return True
+        elif type_enum == PluginSupportTypes.SYMMETRIC_KEY_GENERATION:
+            return True
         else:
-            raise ValueError('At this time you must supply 128/192/256 as'
-                             'bit length')
-
-    def supports(self, kek_metadata):
-        return True  # TODO: Revisit what 'supports' means...it really should
-        #                be if the plugin can perform the required task or not
-        # metadata = json.loads(kek_metadata)
-        # return metadata['plugin'] == 'SimpleCryptoPlugin'
+            return False

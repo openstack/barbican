@@ -13,28 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from mock import MagicMock
-from mock import patch
+import mock
 import unittest
 
-from barbican.crypto.p11_crypto import P11CryptoPlugin
-from barbican.crypto.p11_crypto import P11CryptoPluginKeyException
-from barbican.crypto.p11_crypto import P11CryptoPluginException
+from barbican.crypto import p11_crypto
+from barbican.crypto import plugin as plugin_import
 
 
 class WhenTestingP11CryptoPlugin(unittest.TestCase):
 
     def setUp(self):
-        self.p11_mock = MagicMock(CKR_OK=0, CKF_RW_SESSION='RW',
-                                  name='PyKCS11 mock')
-        self.patcher = patch('barbican.crypto.p11_crypto.PyKCS11',
-                             new=self.p11_mock)
+        self.p11_mock = mock.MagicMock(CKR_OK=0, CKF_RW_SESSION='RW',
+                                       name='PyKCS11 mock')
+        self.patcher = mock.patch('barbican.crypto.p11_crypto.PyKCS11',
+                                  new=self.p11_mock)
         self.patcher.start()
         self.pkcs11 = self.p11_mock.PyKCS11Lib()
         self.p11_mock.PyKCS11Error.return_value = Exception()
         self.pkcs11.lib.C_Initialize.return_value = self.p11_mock.CKR_OK
-        self.cfg_mock = MagicMock(name='config mock')
-        self.plugin = P11CryptoPlugin(self.cfg_mock)
+        self.cfg_mock = mock.MagicMock(name='config mock')
+        self.plugin = p11_crypto.P11CryptoPlugin(self.cfg_mock)
         self.session = self.pkcs11.openSession()
 
     def tearDown(self):
@@ -46,32 +44,28 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
                                                     14, 15, 16, 17, 18, 19,
                                                     20, 21, 22, 23, 24, 25,
                                                     26, 27, 28, 29, 30, 31, 32]
-        key = self.plugin.create("aes", 256)
+        key = self.plugin.create(
+            256,
+            plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+            "AES"
+        )
         self.assertEqual(len(key), 32)
         self.session.generateRandom.assert_called_once_with(32)
 
-    def test_create_errors_when_not_modulo_8(self):
-        with self.assertRaises(ValueError):
-            self.plugin.create("aes", 255)
-
-    def test_create_errors_when_negative(self):
-        with self.assertRaises(ValueError):
-            self.plugin.create("aes", -128)
-
-    def test_create_errors_when_zero(self):
-        with self.assertRaises(ValueError):
-            self.plugin.create("aes", 0)
-
     def test_create_errors_when_rand_length_is_not_as_requested(self):
         self.session.generateRandom.return_value = [1, 2, 3, 4, 5, 6, 7]
-        with self.assertRaises(P11CryptoPluginException):
-            self.plugin.create("aes", 192)
+        with self.assertRaises(p11_crypto.P11CryptoPluginException):
+            self.plugin.create(
+                192,
+                plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+                "AES"
+            )
 
     def test_raises_error_with_no_library_path(self):
-        mock = MagicMock()
-        mock.p11_crypto_plugin = MagicMock(library_path=None)
+        m = mock.MagicMock()
+        m.p11_crypto_plugin = mock.MagicMock(library_path=None)
         with self.assertRaises(ValueError):
-            P11CryptoPlugin(mock)
+            p11_crypto.P11CryptoPlugin(m)
 
     def test_init_builds_sessions_and_login(self):
         self.pkcs11.openSession.assert_any_call(1)
@@ -82,7 +76,7 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
     def test_get_key_by_label_with_two_keys(self):
         self.session.findObjects.return_value = ['key1', 'key2']
         self.session.findObjects.assert_called_once()
-        with self.assertRaises(P11CryptoPluginKeyException):
+        with self.assertRaises(p11_crypto.P11CryptoPluginKeyException):
             self.plugin._get_key_by_label('mylabel')
 
     def test_get_key_by_label_with_one_key(self):
@@ -109,7 +103,7 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
 
     def test_generate_iv_with_invalid_response_size(self):
         self.session.generateRandom.return_value = [1, 2, 3, 4, 5, 6, 7]
-        with self.assertRaises(P11CryptoPluginException):
+        with self.assertRaises(p11_crypto.P11CryptoPluginException):
             self.plugin._generate_iv()
 
     def test_build_gcm_params(self):
@@ -135,12 +129,12 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
         self.session.generateRandom.return_value = [1, 2, 3, 4, 5, 6, 7,
                                                     8, 9, 10, 11, 12, 13,
                                                     14, 15, 16]
-        mech = MagicMock()
+        mech = mock.MagicMock()
         self.p11_mock.Mechanism.return_value = mech
         self.session.encrypt.return_value = [1, 2, 3, 4, 5]
         cyphertext, kek_meta_extended = self.plugin.encrypt(payload,
-                                                            MagicMock(),
-                                                            MagicMock())
+                                                            mock.MagicMock(),
+                                                            mock.MagicMock())
 
         self.p11_mock.Mechanism.assert_called_once()
         self.session.encrypt.assert_called_once_with(key,
@@ -152,16 +146,16 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
 
     def test_decrypt(self):
         key = 'key1'
-        ct = MagicMock()
+        ct = mock.MagicMock()
         self.session.findObjects.return_value = [key]
         self.session.decrypt.return_value = [100, 101, 102, 103]
-        mech = MagicMock()
+        mech = mock.MagicMock()
         self.p11_mock.Mechanism.return_value = mech
         kek_meta_extended = '{"iv": "AQIDBAUGBwgJCgsMDQ4PEA=="}'
         payload = self.plugin.decrypt(ct,
-                                      MagicMock(),
+                                      mock.MagicMock(),
                                       kek_meta_extended,
-                                      MagicMock())
+                                      mock.MagicMock())
         self.p11_mock.Mechanism.assert_called_once()
         self.session.decrypt.assert_called_once_with(key,
                                                      ct,
@@ -172,7 +166,7 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
         self.session.findObjects.return_value = []  # no existing key
         self.pkcs11.lib.C_GenerateKey.return_value = self.p11_mock.CKR_OK
 
-        self.plugin.bind_kek_metadata(MagicMock())
+        self.plugin.bind_kek_metadata(mock.MagicMock())
 
         self.p11_mock.lib.C_Generate_Key.assert_called_once()
         self.session._template2ckattrlist.assert_called_once()
@@ -181,7 +175,7 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
     def test_bind_kek_metadata_with_existing_key(self):
         self.session.findObjects.return_value = ['key1']  # one key
 
-        self.plugin.bind_kek_metadata(MagicMock())
+        self.plugin.bind_kek_metadata(mock.MagicMock())
 
         gk = self.p11_mock.lib.C_Generate_Key
         # this is a way to test to make sure methods are NOT called
@@ -190,3 +184,22 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
         self.assertItemsEqual([], t.call_args_list)
         m = self.p11_mock.LowLevel.CK_MECHANISM
         self.assertItemsEqual([], m.call_args_list)
+
+    def test_supports_encrypt_decrypt(self):
+        self.assertTrue(
+            self.plugin.supports(
+                plugin_import.PluginSupportTypes.ENCRYPT_DECRYPT
+            )
+        )
+
+    def test_supports_symmetric_key_generation(self):
+        self.assertTrue(
+            self.plugin.supports(
+                plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION
+            )
+        )
+
+    def test_does_not_support_unknown_type(self):
+        self.assertFalse(
+            self.plugin.supports("SOMETHING_RANDOM")
+        )

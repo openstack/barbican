@@ -306,6 +306,15 @@ class WhenTestingOrderValidator(unittest.TestCase):
         exception = e.exception
         self.assertTrue('bit_length' in str(exception))
 
+    def test_should_fail_non_multiple_eight_bit_length(self):
+        self.secret_req['bit_length'] = 129
+
+        with self.assertRaises(excep.UnsupportedField) as e:
+            self.validator.validate(self.order_req)
+
+        exception = e.exception
+        self.assertTrue('bit_length' in str(exception))
+
     def test_should_fail_secret_not_order_schema_provided(self):
         with self.assertRaises(excep.InvalidObject) as e:
             self.validator.validate(self.secret_req)

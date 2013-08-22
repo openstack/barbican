@@ -9,7 +9,7 @@ import base64
 from oslo.config import cfg
 
 from barbican.common import exception
-from barbican.crypto.plugin import CryptoPluginBase
+from barbican.crypto import plugin
 
 from barbican.openstack.common import jsonutils as json
 from barbican.openstack.common.gettextutils import _
@@ -39,7 +39,7 @@ class P11CryptoPluginException(exception.BarbicanException):
     message = _("General exception")
 
 
-class P11CryptoPlugin(CryptoPluginBase):
+class P11CryptoPlugin(plugin.CryptoPluginBase):
     """
     PKCS11 supporting implementation of the crypto plugin.
     Generates a key per tenant and encrypts using AES-256-GCM.
@@ -57,7 +57,6 @@ class P11CryptoPlugin(CryptoPluginBase):
             self.pkcs11.load(conf.p11_crypto_plugin.library_path)
         # initialize the library. PyKCS11 does not supply this for free
         self._check_error(self.pkcs11.lib.C_Initialize())
-         # TODO: check if session stays open/reopen when closed
         self.session = self.pkcs11.openSession(1)
         self.session.login(conf.p11_crypto_plugin.login)
         self.rw_session = self.pkcs11.openSession(1, PyKCS11.CKF_RW_SESSION)
@@ -65,7 +64,6 @@ class P11CryptoPlugin(CryptoPluginBase):
 
     def _check_error(self, value):
         if value != PyKCS11.CKR_OK:
-            # TODO: probably shouldn't raise PyKCS11 error here
             raise PyKCS11.PyKCS11Error(value)
 
     def _get_key_by_label(self, key_label):
@@ -96,8 +94,8 @@ class P11CryptoPlugin(CryptoPluginBase):
         gcm.ulTagBits = 128
         return gcm
 
-    def encrypt(self, unencrypted, kek_meta_tenant, tenant):
-        key = self._get_key_by_label(kek_meta_tenant.kek_label)
+    def encrypt(self, unencrypted, kek_meta_dto, keystone_id):
+        key = self._get_key_by_label(kek_meta_dto.kek_label)
         iv = self._generate_iv()
         gcm = self._build_gcm_params(iv)
         mech = PyKCS11.Mechanism(self.algorithm, gcm)
@@ -109,8 +107,8 @@ class P11CryptoPlugin(CryptoPluginBase):
 
         return cyphertext, kek_meta_extended
 
-    def decrypt(self, encrypted, kek_meta_tenant, kek_meta_extended, tenant):
-        key = self._get_key_by_label(kek_meta_tenant.kek_label)
+    def decrypt(self, encrypted, kek_meta_dto, kek_meta_extended, keystone_id):
+        key = self._get_key_by_label(kek_meta_dto.kek_label)
         meta_extended = json.loads(kek_meta_extended)
         iv = base64.b64decode(meta_extended['iv'])
         gcm = self._build_gcm_params(iv)
@@ -119,18 +117,19 @@ class P11CryptoPlugin(CryptoPluginBase):
         secret = b''.join(chr(i) for i in decrypted)
         return secret
 
-    def bind_kek_metadata(self, kek_metadata):
+    def bind_kek_metadata(self, kek_meta_dto):
         # Enforce idempotency: If we've already generated a key for the
         # kek_label, leave now.
-        key = self._get_key_by_label(kek_metadata.kek_label)
+        key = self._get_key_by_label(kek_meta_dto.kek_label)
         if key:
-            return
+            return kek_meta_dto
 
         # To be persisted by Barbican:
-        kek_metadata.algorithm = 'AES'
-        kek_metadata.bit_length = self.kek_key_length * 8
-        kek_metadata.mode = 'GCM'
-        kek_metadata.plugin_meta = None
+        kek_meta_dto.algorithm = 'AES'
+        kek_meta_dto.bit_length = self.kek_key_length * 8
+        kek_meta_dto.mode = 'GCM'
+        kek_meta_dto.plugin_meta = None
+        return kek_meta_dto
 
         # Generate the key.
         # TODO: review template to ensure it's what we want
@@ -138,7 +137,7 @@ class P11CryptoPlugin(CryptoPluginBase):
             (PyKCS11.CKA_CLASS, PyKCS11.CKO_SECRET_KEY),
             (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_AES),
             (PyKCS11.CKA_VALUE_LEN, self.kek_key_length),
-            (PyKCS11.CKA_LABEL, kek_metadata.kek_label),
+            (PyKCS11.CKA_LABEL, kek_meta_dto.kek_label),
             (PyKCS11.CKA_PRIVATE, True),
             (PyKCS11.CKA_SENSITIVE, True),
             (PyKCS11.CKA_ENCRYPT, True),
@@ -162,15 +161,17 @@ class P11CryptoPlugin(CryptoPluginBase):
             )
         )
 
-    def create(self, algorithm, bit_length):
-        if bit_length % 8 != 0 or bit_length <= 0:
-            raise ValueError("Bit lengths must be positive integers "
-                             "divisible by 8")
+    def create(self, bit_length, type_enum, algorithm=None, cypher_type=None):
         byte_length = bit_length / 8
         rand = self.session.generateRandom(byte_length)
         if len(rand) != byte_length:
             raise P11CryptoPluginException()
         return rand
 
-    def supports(self, secret_type):
-        return True
+    def supports(self, type_enum, algorithm=None, cypher_type=None):
+        if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:
+            return True
+        elif type_enum == plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION:
+            return True
+        else:
+            return False

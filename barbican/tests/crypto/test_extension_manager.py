@@ -14,10 +14,31 @@
 # limitations under the License.
 
 import base64
+import mock
 import unittest
 
 from barbican.crypto import extension_manager as em
 from barbican.crypto import mime_types as mt
+from barbican.crypto.plugin import CryptoPluginBase, PluginSupportTypes
+
+
+class TestSupportsCryptoPlugin(CryptoPluginBase):
+    """Crypto plugin for testing supports."""
+
+    def encrypt(self, unencrypted, kek_meta_dto, tenant):
+        raise NotImplementedError()
+
+    def decrypt(self, encrypted, kek_meta_dto, kek_meta_extended, tenant):
+        raise NotImplementedError()
+
+    def bind_kek_metadata(self, kek_meta_dto):
+        return None
+
+    def create(self, bit_length, type_enum, algorithm=None, cypher_type=None):
+        raise NotImplementedError()
+
+    def supports(self, type_enum, algorithm=None, cypher_type=None):
+        return False
 
 
 class WhenTestingNormalizeBeforeEncryptionForBinary(unittest.TestCase):
@@ -188,3 +209,103 @@ class WhenTestingDenormalizeAfterDecryption(unittest.TestCase):
             em.denormalize_after_decryption(self.unencrypted,
                                             self.content_type,
                                             self.is_base64_needed)
+
+
+class WhenTestingCryptoExtensionManager(unittest.TestCase):
+
+    def setUp(self):
+        self.manager = em.CryptoExtensionManager()
+
+    def test_create_supported_algorithm(self):
+        skg = PluginSupportTypes.SYMMETRIC_KEY_GENERATION
+        self.assertEqual(skg, self.manager._determine_type('AES'))
+        self.assertEqual(skg, self.manager._determine_type('aes'))
+        self.assertEqual(skg, self.manager._determine_type('DES'))
+        self.assertEqual(skg, self.manager._determine_type('des'))
+
+    def test_create_unsupported_algorithm(self):
+        with self.assertRaises(em.CryptoAlgorithmNotSupportedException):
+            self.manager._determine_type('faux_alg')
+
+    def test_encrypt_no_plugin_found(self):
+        self.manager.extensions = []
+        with self.assertRaises(em.CryptoPluginNotFound):
+            self.manager.encrypt(
+                'payload',
+                'content_type',
+                'content_encoding',
+                mock.MagicMock(),
+                mock.MagicMock(),
+                mock.MagicMock()
+            )
+
+    def test_encrypt_no_supported_plugin(self):
+        plugin = TestSupportsCryptoPlugin()
+        plugin_mock = mock.MagicMock(obj=plugin)
+        self.manager.extensions = [plugin_mock]
+        with self.assertRaises(em.CryptoSupportedPluginNotFound):
+            self.manager.encrypt(
+                'payload',
+                'content_type',
+                'content_encoding',
+                mock.MagicMock(),
+                mock.MagicMock(),
+                mock.MagicMock()
+            )
+
+    def test_decrypt_no_plugin_found(self):
+        """ Passing mocks here causes CryptoPluginNotFound because the mock
+        won't match any of the available plugins
+        """
+        with self.assertRaises(em.CryptoPluginNotFound):
+            self.manager.decrypt(
+                'text/plain',
+                'text/plain',
+                mock.MagicMock(),
+                mock.MagicMock()
+            )
+
+    def test_generate_data_encryption_key_no_plugin_found(self):
+        self.manager.extensions = []
+        with self.assertRaises(em.CryptoPluginNotFound):
+            self.manager.generate_data_encryption_key(
+                mock.MagicMock(),
+                mock.MagicMock(),
+                mock.MagicMock(),
+                mock.MagicMock()
+            )
+
+    def test_generate_data_encryption_key_no_supported_plugin(self):
+        plugin = TestSupportsCryptoPlugin()
+        plugin_mock = mock.MagicMock(obj=plugin)
+        self.manager.extensions = [plugin_mock]
+        with self.assertRaises(em.CryptoSupportedPluginNotFound):
+            self.manager.generate_data_encryption_key(
+                mock.MagicMock(algorithm='AES'),
+                mock.MagicMock(),
+                mock.MagicMock(),
+                mock.MagicMock()
+            )
+
+    def test_find_or_create_kek_objects_bind_returns_none(self):
+        plugin = TestSupportsCryptoPlugin()
+        kek_repo = mock.MagicMock(name='kek_repo')
+        bind_completed = mock.MagicMock(bind_completed=False)
+        kek_repo.find_or_create_kek_datum.return_value = bind_completed
+        with self.assertRaises(em.CryptoKEKBindingException):
+            self.manager._find_or_create_kek_objects(
+                plugin,
+                mock.MagicMock(),
+                kek_repo
+            )
+
+    def test_find_or_create_kek_objects_saves_to_repo(self):
+        kek_repo = mock.MagicMock(name='kek_repo')
+        bind_completed = mock.MagicMock(bind_completed=False)
+        kek_repo.find_or_create_kek_datum.return_value = bind_completed
+        self.manager._find_or_create_kek_objects(
+            mock.MagicMock(),
+            mock.MagicMock(),
+            kek_repo
+        )
+        kek_repo.save.assert_called_once()

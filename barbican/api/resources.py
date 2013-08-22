@@ -291,6 +291,16 @@ def handle_exceptions(operation_name=u._('System')):
                                u._("Text-based binary secret payloads must "
                                    "specify a content-encoding of 'base64'"),
                                falcon.HTTP_400, req, resp)
+            except em.CryptoAlgorithmNotSupportedException:
+                _issue_failure(operation_name,
+                               u._("No plugin was found that supports the "
+                                   "requested algorithm."),
+                               falcon.HTTP_400, req, resp)
+            except em.CryptoSupportedPluginNotFound:
+                _issue_failure(operation_name,
+                               u._("No plugin was found that could support "
+                                   "your request."),
+                               falcon.HTTP_400, req, resp)
             except exception.NoDataToProcess:
                 _issue_failure(operation_name,
                                u._("No information provided to process"),

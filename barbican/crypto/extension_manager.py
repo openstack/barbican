@@ -85,12 +85,30 @@ class CryptoAcceptEncodingNotSupportedException(exception.BarbicanException):
         self.accept_encoding = accept_encoding
 
 
+class CryptoAlgorithmNotSupportedException(exception.BarbicanException):
+    """Raised when support for an algorithm is not available."""
+    def __init__(self, algorithm):
+        super(CryptoAlgorithmNotSupportedException, self).__init__(
+            u._("Crypto algorithm of '{0}' not supported").format(
+                algorithm)
+        )
+        self.algorithm = algorithm
+
+
 class CryptoPayloadDecodingError(exception.BarbicanException):
     """Raised when payload could not be decoded."""
     def __init__(self):
         super(CryptoPayloadDecodingError, self).__init__(
             u._("Problem decoding payload")
         )
+
+
+class CryptoSupportedPluginNotFound(exception.BarbicanException):
+    """
+    Raised when no plugins are found that support the requested
+    operation.
+    """
+    message = "Crypto plugin not found for requested operation."
 
 
 class CryptoPluginNotFound(exception.BarbicanException):
@@ -122,6 +140,11 @@ class CryptoContentEncodingMustBeBase64(exception.BarbicanException):
         super(CryptoContentEncodingMustBeBase64, self).__init__(
             u._("Encoding type must be 'base64' for text-based payloads.")
         )
+
+
+class CryptoKEKBindingException(exception.BarbicanException):
+    """Raised when the bind_kek_metadata method from a plugin returns None."""
+    message = u._("Failed to bind kek metadata")
 
 
 class CryptoGeneralException(exception.BarbicanException):
@@ -228,27 +251,31 @@ class CryptoExtensionManager(named.NamedExtensionManager):
 
     def encrypt(self, unencrypted, content_type, content_encoding,
                 secret, tenant, kek_repo, enforce_text_only=False):
-        """Delegates encryption to first active plugin."""
-        # TODO(jwood): Need to test if the plugin supports 'secret's
-        # requirements.
+        """Delegates encryption to first plugin that supports it."""
 
         if len(self.extensions) < 1:
             raise CryptoPluginNotFound()
-        encrypting_plugin = self.extensions[0].obj
+
+        for ext in self.extensions:
+            if ext.obj.supports(plugin_mod.PluginSupportTypes.ENCRYPT_DECRYPT):
+                encrypting_plugin = ext.obj
+                break
+        else:
+            raise CryptoSupportedPluginNotFound()
 
         unencrypted, content_type = normalize_before_encryption(
             unencrypted, content_type, content_encoding,
             enforce_text_only=enforce_text_only)
 
         # Find or create a key encryption key metadata.
-        kek_datum, kek_metadata = self._find_or_create_kek_metadata(
+        kek_datum, kek_meta_dto = self._find_or_create_kek_objects(
             encrypting_plugin, tenant, kek_repo)
 
         # Create an encrypted datum instance and add the encrypted cypher text.
         datum = models.EncryptedDatum(secret, kek_datum)
         datum.content_type = content_type
         datum.cypher_text, datum.kek_meta_extended = encrypting_plugin.encrypt(
-            unencrypted, kek_metadata, tenant
+            unencrypted, kek_meta_dto, tenant.keystone_id
         )
         return datum
 
@@ -266,12 +293,14 @@ class CryptoExtensionManager(named.NamedExtensionManager):
             for datum in secret.encrypted_data:
                 if self._plugin_supports(decrypting_plugin,
                                          datum.kek_meta_tenant):
+                    # wrap the KEKDatum instance in our DTO
+                    kek_meta_dto = plugin_mod.KEKMetaDTO(datum.kek_meta_tenant)
                     # Decrypt the secret.
                     unencrypted = decrypting_plugin \
                         .decrypt(datum.cypher_text,
-                                 datum.kek_meta_tenant,
+                                 kek_meta_dto,
                                  datum.kek_meta_extended,
-                                 tenant)
+                                 tenant.keystone_id)
 
                     # Denormalize the decrypted info per request.
                     return denormalize_after_decryption(unencrypted,
@@ -282,7 +311,7 @@ class CryptoExtensionManager(named.NamedExtensionManager):
 
     def generate_data_encryption_key(self, secret, content_type, tenant,
                                      kek_repo):
-        """Delegates generating a data-encryption key to first active plugin.
+        """Delegates generating a key to the first supported plugin.
 
         Note that this key can be used by clients for their encryption
         processes. This generated key is then be encrypted via
@@ -291,15 +320,33 @@ class CryptoExtensionManager(named.NamedExtensionManager):
         """
         if len(self.extensions) < 1:
             raise CryptoPluginNotFound()
-        encrypting_plugin = self.extensions[0].obj
+
+        generation_type = self._determine_type(secret.algorithm)
+        for ext in self.extensions:
+            if ext.obj.supports(generation_type, secret.algorithm):
+                encrypting_plugin = ext.obj
+                break
+        else:
+            raise CryptoSupportedPluginNotFound()
 
         # Create the secret.
-        data_key = encrypting_plugin.create(secret.algorithm,
-                                            secret.bit_length)
+
+        data_key = encrypting_plugin.create(secret.bit_length,
+                                            generation_type,
+                                            secret.algorithm,
+                                            secret.cypher_type)
 
         # Encrypt the secret.
         return self.encrypt(data_key, content_type, None, secret, tenant,
                             kek_repo)
+
+    def _determine_type(self, algorithm):
+        """Determines the type (symmetric only for now) based on algorithm"""
+        symmetric_algs = plugin_mod.PluginSupportTypes.SYMMETRIC_ALGORITHMS
+        if algorithm.lower() in symmetric_algs:
+            return plugin_mod.PluginSupportTypes.SYMMETRIC_KEY_GENERATION
+        else:
+            raise CryptoAlgorithmNotSupportedException(algorithm)
 
     def _plugin_supports(self, plugin_inst, kek_metadata_tenant):
         """Tests for plugin support.
@@ -315,20 +362,22 @@ class CryptoExtensionManager(named.NamedExtensionManager):
         plugin_name = utils.generate_fullname_for(plugin_inst)
         return plugin_name == kek_metadata_tenant.plugin_name
 
-    def _find_or_create_kek_metadata(self, plugin_inst, tenant, kek_repo):
+    def _find_or_create_kek_objects(self, plugin_inst, tenant, kek_repo):
         # Find or create a key encryption key.
         full_plugin_name = utils.generate_fullname_for(plugin_inst)
-        kek_datum = kek_repo.find_or_create_kek_metadata(tenant,
-                                                         full_plugin_name)
+        kek_datum = kek_repo.find_or_create_kek_datum(tenant,
+                                                      full_plugin_name)
 
         # Bind to the plugin's key management.
         # TODO(jwood): Does this need to be in a critical section? Should the
         # bind
         #   operation just be declared idempotent in the plugin contract?
-        kek_metadata = plugin_mod.KEKMetadata(kek_datum)
+        kek_meta_dto = plugin_mod.KEKMetaDTO(kek_datum)
         if not kek_datum.bind_completed:
-            plugin_inst.bind_kek_metadata(kek_metadata)
-            plugin_mod.indicate_bind_completed(kek_metadata, kek_datum)
+            kek_meta_dto = plugin_inst.bind_kek_metadata(kek_meta_dto)
+            if kek_meta_dto is None:
+                raise CryptoKEKBindingException()
+            plugin_mod.indicate_bind_completed(kek_meta_dto, kek_datum)
             kek_repo.save(kek_datum)
 
-        return (kek_datum, kek_metadata)
+        return (kek_datum, kek_meta_dto)

@@ -586,11 +586,11 @@ class KEKDatumRepo(BaseRepo):
     metadata used by crypto plugins to encrypt/decrypt secrets).
     """
 
-    def find_or_create_kek_metadata(self, tenant,
-                                    plugin_name,
-                                    suppress_exception=False,
-                                    session=None):
-        """ Find or create a KEK metadata instance. """
+    def find_or_create_kek_datum(self, tenant,
+                                 plugin_name,
+                                 suppress_exception=False,
+                                 session=None):
+        """ Find or create a KEK datum instance. """
 
         kek_datum = None
 

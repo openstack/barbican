@@ -229,10 +229,12 @@ class NewOrderValidator(ValidatorBase):
                                                       "supported"))
 
         bit_length = int(secret.get('bit_length', 0))
-        if not bit_length in (128, 192, 256):
+        # TODO(reaperhulk): Future API change will move from bit to byte_length
+        if bit_length % 8 != 0:
             raise exception.UnsupportedField(field="bit_length",
                                              schema=schema_name,
-                                             reason=_("Must be one of 128, "
-                                                      "192, or 256"))
+                                             reason=_("Must be a positive "
+                                                      "integer that is a "
+                                                      "multiple of 8"))
 
         return json_data

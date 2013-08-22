@@ -17,38 +17,42 @@ from Crypto import Random
 from mock import MagicMock
 import unittest
 
-from barbican.crypto.plugin import CryptoPluginBase, SimpleCryptoPlugin
-from barbican.openstack.common import jsonutils as json
+from barbican.crypto import plugin
 
 
-class TestCryptoPlugin(CryptoPluginBase):
+class TestCryptoPlugin(plugin.CryptoPluginBase):
     """Crypto plugin implementation for testing the plugin manager."""
 
-    def encrypt(self, unencrypted, kek_metadata, tenant):
+    def encrypt(self, unencrypted, kek_meta_dto, keystone_id):
         cypher_text = 'cypher_text'
         return cypher_text, None
 
-    def decrypt(self, encrypted, kek_meta_tenant, kek_meta_extended, tenant):
+    def decrypt(self, encrypted, kek_meta_dto, kek_meta_extended, keystone_id):
         return b'unencrypted_data'
 
-    def bind_kek_metadata(self, kek_metadata):
-        kek_metadata.algorithm = 'aes'
-        kek_metadata.bit_length = 128
-        kek_metadata.mode = 'cbc'
-        kek_metadata.plugin_meta = None
+    def bind_kek_metadata(self, kek_meta_dto):
+        kek_meta_dto.algorithm = 'aes'
+        kek_meta_dto.bit_length = 128
+        kek_meta_dto.mode = 'cbc'
+        kek_meta_dto.plugin_meta = None
+        return kek_meta_dto
 
-    def create(self, algorithm, bit_length):
+    def create(self, bit_length, type_enum, algorithm=None, cypher_type=None):
         return "insecure_key"
 
-    def supports(self, kek_metadata):
-        metadata = json.loads(kek_metadata)
-        return metadata['plugin'] == 'TestCryptoPlugin'
+    def supports(self, type_enum, algorithm=None, cypher_type=None):
+        if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:
+            return True
+        elif type_enum == plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION:
+            return True
+        else:
+            return False
 
 
 class WhenTestingSimpleCryptoPlugin(unittest.TestCase):
 
     def setUp(self):
-        self.plugin = SimpleCryptoPlugin()
+        self.plugin = plugin.SimpleCryptoPlugin()
 
     def test_pad_binary_string(self):
         binary_string = b'some_binary_string'
@@ -101,25 +105,41 @@ class WhenTestingSimpleCryptoPlugin(unittest.TestCase):
         self.assertEqual(unencrypted, decrypted)
 
     def test_create_256_bit_key(self):
-        key = self.plugin.create("aes", 256)
+        key = self.plugin.create(
+            256,
+            plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+            "AES"
+        )
         self.assertEqual(len(key), 32)
 
     def test_create_192_bit_key(self):
-        key = self.plugin.create("aes", 192)
+        key = self.plugin.create(
+            192,
+            plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+            "AES"
+        )
         self.assertEqual(len(key), 24)
 
     def test_create_128_bit_key(self):
-        key = self.plugin.create("aes", 128)
+        key = self.plugin.create(
+            128,
+            plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+            "AES"
+        )
         self.assertEqual(len(key), 16)
 
-    def test_create_unsupported_bit_key(self):
-        with self.assertRaises(ValueError):
-            self.plugin.create("aes", 129)
+    def test_supports_encrypt_decrypt(self):
+        self.assertTrue(
+            self.plugin.supports(plugin.PluginSupportTypes.ENCRYPT_DECRYPT)
+        )
 
-    def test_supports_decoding_metadata(self):
-        kek_metadata = json.dumps({
-            'plugin': 'SimpleCryptoPlugin',
-            'encryption': 'aes-128-cbc',
-            'kek': 'kek_id'
-        })
-        self.assertTrue(self.plugin.supports(kek_metadata))
+    def test_supports_symmetric_key_generation(self):
+        self.assertTrue(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION)
+        )
+
+    def test_does_not_support_unknown_type(self):
+        self.assertFalse(
+            self.plugin.supports("SOMETHING_RANDOM")
+        )
