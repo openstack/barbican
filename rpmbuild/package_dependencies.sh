@@ -4,7 +4,8 @@
 # Barbican Dependencies
 # ---------------------
 
-pushd $PWD/rpmbuild
+pushd $WORKSPACE/rpmbuild
+export PYENV_VERSION=system
 
 fpm -s python -t rpm falcon
 fpm -s python -t rpm uWSGI
@@ -70,8 +71,7 @@ fpm -s python -t rpm simplejson
 
 # python-kombu
 fpm -s python -t rpm anyjson
-fpm -s python -t rpm -v 1.0.12 amqp
-# --> latest amqp is incompatible
+fpm -s python -t rpm amqp
 fpm -s python -t rpm importlib
 # fpm -s python -t rpm ordereddict
 
