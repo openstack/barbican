@@ -65,11 +65,23 @@ def get_accepted_encodings(req):
     :returns: list of client acceptable encodings sorted by q value.
     """
     header = req.get_header('Accept-Encoding')
-    if header is None:
+
+    return get_accepted_encodings_direct(header)
+
+
+def get_accepted_encodings_direct(content_encoding_header):
+    """Returns a list of client acceptable encodings sorted by q value.
+
+    For details see: http://tools.ietf.org/html/rfc2616#section-14.3
+
+    :param req: request object
+    :returns: list of client acceptable encodings sorted by q value.
+    """
+    if content_encoding_header is None:
         return None
 
     encodings = list()
-    for enc in header.split(','):
+    for enc in content_encoding_header.split(','):
         if ';' in enc:
             encoding, q = enc.split(';')
             try:

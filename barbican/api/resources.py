@@ -16,8 +16,6 @@
 """
 API-facing resource controllers.
 """
-import base64
-
 import falcon
 
 from barbican import api
@@ -41,12 +39,27 @@ LOG = utils.getLogger(__name__)
 
 def _general_failure(message, req, resp):
     """Throw exception a general processing failure."""
+    LOG.exception(message)
     api.abort(falcon.HTTP_500, message, req, resp)
+
+
+def _issue_failure(operation_name, reason, http_code, req, resp):
+    """Generic issue handler for client-related problem responses."""
+    message = u._('{0} issue seen - {1}').format(operation_name,
+                                                 reason)
+    LOG.exception(message)
+    api.abort(http_code, message, req, resp)
+
+
+def _authorization_failed(message, req, resp):
+    """Throw exception that authorization failed."""
+    api.abort(falcon.HTTP_401, message, req, resp)
 
 
 def _secret_not_found(req, resp):
     """Throw exception indicating secret not found."""
-    api.abort(falcon.HTTP_404, u._('Unable to locate secret.'), req, resp)
+    api.abort(falcon.HTTP_404, u._('Unable to locate secret or encrypted '
+                                   'information for it.'), req, resp)
 
 
 def _order_not_found(req, resp):
@@ -57,54 +70,9 @@ def _order_not_found(req, resp):
 def _put_accept_incorrect(ct, req, resp):
     """Throw exception indicating request content-type is not supported."""
     api.abort(falcon.HTTP_415,
-              u._("Content-Type of '{0}' is not supported.").format(ct),
+              u._("Content-Type of '{0}' is not "
+                  "supported for PUT.").format(ct),
               req, resp)
-
-
-def _get_accept_not_supported(accept, req, resp):
-    """Throw exception indicating request's accept is not supported."""
-    api.abort(falcon.HTTP_406,
-              u._("Accept of '{0}' is not supported.").format(accept),
-              req, resp)
-
-
-def _get_secret_info_not_found(mime_type, req, resp):
-    """Throw exception indicating request's accept is not supported."""
-    api.abort(falcon.HTTP_404,
-              u._("Secret information of type '{0}' not available for "
-                  "decryption.").format(mime_type),
-              req, resp)
-
-
-def _secret_mime_type_not_supported(mt, req, resp):
-    """Throw exception indicating secret mime-type is not supported."""
-    api.abort(falcon.HTTP_400,
-              u._("Mime-type of '{0}' "
-                  "is not supported.").format(mt), req, resp)
-
-
-def _secret_data_too_large(req, resp):
-    """Throw exception indicating plain-text was too big."""
-    api.abort(falcon.HTTP_413,
-              u._("Could not add secret data as it was too large"), req, resp)
-
-
-def _secret_plain_text_empty(req, resp):
-    """Throw exception indicating empty plain-text was supplied."""
-    api.abort(falcon.HTTP_400,
-              u._("Could not add secret with empty 'plain_text'"), req, resp)
-
-
-def _failed_to_create_encrypted_datum(req, resp):
-    """Throw exception could not create EncryptedDatum record for secret."""
-    api.abort(falcon.HTTP_400,
-              u._("Could not add secret data to Barbican."), req, resp)
-
-
-def _failed_to_decrypt_data(req, resp):
-    """Throw exception if failed to decrypt secret information."""
-    api.abort(falcon.HTTP_500,
-              u._("Problem decrypting secret information."), req, resp)
 
 
 def _secret_already_has_data(req, resp):
@@ -117,16 +85,6 @@ def _secret_not_in_order(req, resp):
     """Throw exception that secret info is not available in the order."""
     api.abort(falcon.HTTP_400,
               u._("Secret metadata expected but not received."), req, resp)
-
-
-def _secret_create_failed(req, resp):
-    """Throw exception that secret creation attempt failed."""
-    api.abort(falcon.HTTP_500, u._("Unabled to create secret."), req, resp)
-
-
-def _authorization_failed(message, req, resp):
-    """Throw exception that authorization failed."""
-    api.abort(falcon.HTTP_401, message, req, resp)
 
 
 def json_handler(obj):
@@ -260,9 +218,7 @@ def enforce_rbac(req, resp, action_name, keystone_id=None):
 
 
 def handle_rbac(action_name='default'):
-    """
-    Decorator that handles RBAC enforcement on behalf of REST verb methods.
-    """
+    """Decorator handling RBAC enforcement on behalf of REST verb methods."""
 
     def rbac_decorator(fn):
         def enforcer(inst, req, resp, *args, **kwargs):
@@ -280,12 +236,10 @@ def handle_rbac(action_name='default'):
 
 
 def handle_exceptions(operation_name=u._('System')):
-    """
-    Handle general exceptions to avoid a response code of 0
-    back to clients.
-    """
+    """Decorator handling generic exceptions from REST methods."""
 
     def exceptions_decorator(fn):
+
         def handler(inst, req, resp, *args, **kwargs):
             try:
                 fn(inst, req, resp, *args, **kwargs)
@@ -298,10 +252,55 @@ def handle_exceptions(operation_name=u._('System')):
                               'user/tenant privileges').format(operation_name)
                 LOG.exception(message)
                 _authorization_failed(message, req, resp)
+            except em.CryptoContentTypeNotSupportedException as cctnse:
+                _issue_failure(operation_name,
+                               u._("content-type of '{0}' not "
+                                   "supported").format(cctnse.content_type),
+                               falcon.HTTP_400, req, resp)
+            except em.CryptoContentEncodingNotSupportedException as cc:
+                _issue_failure(operation_name,
+                               u._("content-encoding of '{0}' not "
+                                   "supported").format(cc.content_encoding),
+                               falcon.HTTP_400, req, resp)
+            except em.CryptoAcceptNotSupportedException as canse:
+                _issue_failure(operation_name,
+                               u._("accept of '{0}' not "
+                                   "supported").format(canse.accept),
+                               falcon.HTTP_406, req, resp)
+            except em.CryptoAcceptEncodingNotSupportedException as caense:
+                _issue_failure(operation_name,
+                               u._("accept-encoding of '{0}' not "
+                                   "supported").format(caense.accept_encoding),
+                               falcon.HTTP_406, req, resp)
+            except em.CryptoNoPayloadProvidedException:
+                _issue_failure(operation_name,
+                               u._("No payload provided"),
+                               falcon.HTTP_400, req, resp)
+            except em.CryptoNoSecretOrDataFoundException:
+                _issue_failure(operation_name,
+                               u._("No secret or encrypted data found"),
+                               falcon.HTTP_404, req, resp)
+            except em.CryptoPayloadDecodingError:
+                _issue_failure(operation_name,
+                               u._("Problem decoding payload"),
+                               falcon.HTTP_400, req, resp)
+            except em.CryptoContentEncodingMustBeBase64:
+                _issue_failure(operation_name,
+                               u._("Text-based binary secret payloads must "
+                                   "specify a content-encoding of 'base64'"),
+                               falcon.HTTP_400, req, resp)
+            except exception.NoDataToProcess:
+                _issue_failure(operation_name,
+                               u._("No information provided to process"),
+                               falcon.HTTP_400, req, resp)
+            except exception.LimitExceeded:
+                _issue_failure(operation_name,
+                               u._("Provided information too large "
+                                   "to process"),
+                               falcon.HTTP_413, req, resp)
             except Exception:
                 message = u._('{0} failure seen - please contact site '
                               'administrator').format(operation_name)
-                LOG.exception(message)
                 _general_failure(message, req, resp)
 
         return handler
@@ -310,7 +309,7 @@ def handle_exceptions(operation_name=u._('System')):
 
 
 class PerformanceResource(api.ApiResource):
-    """Supports a static response to support performance testing"""
+    """Supports a static response to support performance testing."""
 
     def __init__(self):
         LOG.debug('=== Creating PerformanceResource ===')
@@ -321,7 +320,7 @@ class PerformanceResource(api.ApiResource):
 
 
 class VersionResource(api.ApiResource):
-    """Returns service and build version information"""
+    """Returns service and build version information."""
 
     def __init__(self):
         LOG.debug('=== Creating VersionResource ===')
@@ -357,25 +356,11 @@ class SecretsResource(api.ApiResource):
         data = api.load_body(req, resp, self.validator)
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
 
-        try:
-            new_secret = res.create_secret(data, tenant, self.crypto_manager,
-                                           self.secret_repo,
-                                           self.tenant_secret_repo,
-                                           self.datum_repo,
-                                           self.kek_repo)
-        except em.CryptoMimeTypeNotSupportedException as cmtnse:
-            LOG.exception('Secret creation failed - mime-type not supported')
-            _secret_mime_type_not_supported(cmtnse.mime_type, req, resp)
-        except exception.NoDataToProcess:
-            LOG.exception('No secret data to process')
-            _secret_plain_text_empty(req, resp)
-        except exception.LimitExceeded:
-            LOG.exception('Secret data too big to process')
-            _secret_data_too_large(req, resp)
-        except Exception:
-            LOG.exception('Secret creation failed - unknown')
-            _general_failure(u._('Secret creation failed - unknown'), req,
-                             resp)
+        new_secret = res.create_secret(data, tenant, self.crypto_manager,
+                                       self.secret_repo,
+                                       self.tenant_secret_repo,
+                                       self.datum_repo,
+                                       self.kek_repo)
 
         resp.status = falcon.HTTP_201
         resp.set_header('Location', '/{0}/secrets/{1}'.format(keystone_id,
@@ -418,7 +403,7 @@ class SecretsResource(api.ApiResource):
 
 
 class SecretResource(api.ApiResource):
-    """Handles Secret retrieval and deletion requests"""
+    """Handles Secret retrieval and deletion requests."""
 
     def __init__(self, crypto_manager,
                  tenant_repo=None, secret_repo=None,
@@ -453,40 +438,11 @@ class SecretResource(api.ApiResource):
             tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
             resp.set_header('Content-Type', req.accept)
 
-            try:
-                resp.body = self.crypto_manager.decrypt(req.accept, secret,
-                                                        tenant)
-            except em.CryptoAcceptNotSupportedException as canse:
-                LOG.exception('Secret decryption failed - '
-                              'accept not supported')
-                _get_accept_not_supported(canse.accept, req, resp)
-            except em.CryptoNoSecretOrDataException:
-                LOG.exception('Secret information of type not '
-                              'found for decryption.')
-                _get_secret_info_not_found(req.accept, req, resp)
-            except Exception:
-                LOG.exception('Secret decryption failed - unknown')
-                _failed_to_decrypt_data(req, resp)
-
-            acceptable = utils.get_accepted_encodings(req)
-            LOG.debug('Acceptable: {0}'.format(acceptable))
-            if acceptable:
-                encodings = [enc for enc in acceptable if
-                             enc in mime_types.ENCODINGS]
-                if encodings:
-                    if 'base64' in encodings:
-
-                        resp.body = base64.b64encode(resp.body)
-                    else:
-                        # encoding not supported
-                        LOG.exception('Accept-Encoding not supported:'
-                                      ' {0}'.format(str(encodings)))
-                        _get_accept_not_supported(str(encodings), req, resp)
-                else:
-                    # encoding not supported
-                    LOG.exception('Accept-Encoding not supported:'
-                                  ' {0}'.format(str(encodings)))
-                    _get_accept_not_supported(str(encodings), req, resp)
+            resp.body = self.crypto_manager \
+                            .decrypt(req.accept,
+                                     req.get_header('Accept-Encoding'),
+                                     secret,
+                                     tenant)
 
     @handle_exceptions(u._('Secret update'))
     @handle_rbac('secret:put')
@@ -513,38 +469,15 @@ class SecretResource(api.ApiResource):
         except IOError:
             api.abort(falcon.HTTP_500, 'Read Error')
 
-        if content_type in mime_types.BINARY and \
-                content_encoding in mime_types.ENCODINGS:
-            if content_encoding == 'base64':
-                payload = base64.b64decode(payload)
-        elif content_encoding is not None:
-            LOG.exception(
-                'Content-Encoding not supported {0}'.format(content_encoding)
-            )
-            _put_accept_incorrect(content_encoding, req, resp)
-
-        try:
-            res.create_encrypted_datum(secret,
-                                       payload,
-                                       content_type,
-                                       content_encoding,
-                                       tenant,
-                                       self.crypto_manager,
-                                       self.tenant_secret_repo,
-                                       self.datum_repo,
-                                       self.kek_repo)
-        except em.CryptoMimeTypeNotSupportedException as cmtnse:
-            LOG.exception('Secret creation failed - mime-type not supported')
-            _secret_mime_type_not_supported(cmtnse.mime_type, req, resp)
-        except exception.NoDataToProcess:
-            LOG.exception('No secret data to process')
-            _secret_plain_text_empty(req, resp)
-        except exception.LimitExceeded:
-            LOG.exception('Secret data too big to process')
-            _secret_data_too_large(req, resp)
-        except Exception:
-            LOG.exception('Secret creation failed - unknown')
-            _failed_to_create_encrypted_datum(req, resp)
+        res.create_encrypted_datum(secret,
+                                   payload,
+                                   content_type,
+                                   content_encoding,
+                                   tenant,
+                                   self.crypto_manager,
+                                   self.tenant_secret_repo,
+                                   self.datum_repo,
+                                   self.kek_repo)
 
         resp.status = falcon.HTTP_200
 
@@ -563,7 +496,7 @@ class SecretResource(api.ApiResource):
 
 
 class OrdersResource(api.ApiResource):
-    """Handles Order requests for Secret creation"""
+    """Handles Order requests for Secret creation."""
 
     def __init__(self, tenant_repo=None, order_repo=None,
                  queue_resource=None):
@@ -643,7 +576,7 @@ class OrdersResource(api.ApiResource):
 
 
 class OrderResource(api.ApiResource):
-    """Handles Order retrieval and deletion requests"""
+    """Handles Order retrieval and deletion requests."""
 
     def __init__(self, order_repo=None):
         self.repo = order_repo or repo.OrderRepo()

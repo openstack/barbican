@@ -17,16 +17,28 @@
 Barbican defined mime-types
 """
 
-# Supported mime types
+from barbican.common import utils
+
+
+# Supported content types
+#   Note: These types may be provided by clients.
 PLAIN_TEXT = ['text/plain',
               'text/plain;charset=utf-8',
               'text/plain; charset=utf-8']
 BINARY = ['application/octet-stream']
-ENCODINGS = ['base64']
 SUPPORTED = PLAIN_TEXT + BINARY
+
+# Normalizes client types to internal types.
+INTERNAL_CTYPES = {'text/plain': 'text/plain',
+                   'text/plain;charset=utf-8': 'text/plain',
+                   'text/plain; charset=utf-8': 'text/plain',
+                   'application/octet-stream': 'application/octet-stream',
+                   'application/aes': 'application/aes'}
 
 # Maps mime-types used to specify secret data formats to the types that can
 #   be requested for secrets via GET calls.
+#   Note: Raw client types are converted into the 'INTERNAL_CTYPES' types
+#   which are then used as the keys to the 'CTYPES_MAPPINGS' below.
 CTYPES_PLAIN = {'default': 'text/plain'}
 CTYPES_BINARY = {'default': 'application/octet-stream'}
 CTYPES_AES = {'default': 'application/aes'}
@@ -34,26 +46,67 @@ CTYPES_MAPPINGS = {'text/plain': CTYPES_PLAIN,
                    'application/octet-stream': CTYPES_BINARY,
                    'application/aes': CTYPES_AES}
 
+# Supported encodings
+ENCODINGS = ['base64']
+
+# Maps normalized content-types to supported encoding(s)
+CTYPES_TO_ENCODINGS = {'text/plain': None,
+                       'application/octet-stream': ['base64'],
+                       'application/aes': None}
+
+
+def normalize_content_type(mime_type):
+    """Normalize the supplied content-type to an internal form."""
+    return INTERNAL_CTYPES.get(mime_type)
+
 
 def is_supported(mime_type):
     return mime_type in SUPPORTED
 
 
+def is_base64_encoding_supported(mime_type):
+    if is_supported(mime_type):
+        encodings = CTYPES_TO_ENCODINGS[INTERNAL_CTYPES[mime_type]]
+        return encodings and ('base64' in encodings)
+    return False
+
+
+def is_base64_processing_needed(content_type, content_encoding):
+    content_encodings = utils.get_accepted_encodings_direct(content_encoding)
+    if content_encodings:
+        if 'base64' not in content_encodings:
+            return False
+        if is_supported(content_type):
+            encodings = CTYPES_TO_ENCODINGS[INTERNAL_CTYPES[content_type]]
+            return encodings and 'base64' in encodings
+    return False
+
+
 def augment_fields_with_content_types(secret):
-    """Generate a dict of content types based on the data associated
-    with the specified secret."""
+    """Add content-types and encodings information to a Secret's fields.
+
+    Generate a dict of content types based on the data associated
+    with the specified secret.
+
+    :param secret: The models.Secret instance to add 'content_types' to.
+    """
 
     fields = secret.to_dict_fields()
 
     if not secret.encrypted_data:
         return fields
 
-    # TODO: How deal with merging more than one datum instance?
+    # TODO(jwood): How deal with merging more than one datum instance?
     for datum in secret.encrypted_data:
         if datum.content_type in CTYPES_MAPPINGS:
             fields.update(
                 {'content_types': CTYPES_MAPPINGS[datum.content_type]}
             )
+            if datum.content_type in CTYPES_TO_ENCODINGS:
+                encodings = CTYPES_TO_ENCODINGS[datum.content_type]
+                fields.update(
+                    {'encodings': encodings}
+                )
             break
 
     return fields
