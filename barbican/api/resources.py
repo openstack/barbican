@@ -58,13 +58,14 @@ def _authorization_failed(message, req, resp):
 
 def _secret_not_found(req, resp):
     """Throw exception indicating secret not found."""
-    api.abort(falcon.HTTP_404, u._('Unable to locate secret or encrypted '
-                                   'information for it.'), req, resp)
+    api.abort(falcon.HTTP_404, u._('Not Found. Sorry but your secret is in '
+                                   'another castle.'), req, resp)
 
 
 def _order_not_found(req, resp):
     """Throw exception indicating order not found."""
-    api.abort(falcon.HTTP_404, u._('Unable to locate order.'), req, resp)
+    api.abort(falcon.HTTP_404, u._('Not Found. Sorry but your order is in '
+                                   'another castle.'), req, resp)
 
 
 def _put_accept_incorrect(ct, req, resp):
@@ -278,7 +279,8 @@ def handle_exceptions(operation_name=u._('System')):
                                falcon.HTTP_400, req, resp)
             except em.CryptoNoSecretOrDataFoundException:
                 _issue_failure(operation_name,
-                               u._("No secret or encrypted data found"),
+                               u._("Not Found.  Sorry but your secret is in "
+                                   "another castle."),
                                falcon.HTTP_404, req, resp)
             except em.CryptoPayloadDecodingError:
                 _issue_failure(operation_name,
