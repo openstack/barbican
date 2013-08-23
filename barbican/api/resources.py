@@ -23,32 +23,16 @@ from barbican.common import exception
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
-from barbican.crypto import extension_manager as em
 from barbican.crypto import mime_types
 from barbican.model import models
 from barbican.model import repositories as repo
 from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import jsonutils as json
-from barbican.openstack.common import policy
 from barbican import queue
 from barbican import version
 
 
 LOG = utils.getLogger(__name__)
-
-
-def _general_failure(message, req, resp):
-    """Throw exception a general processing failure."""
-    LOG.exception(message)
-    api.abort(falcon.HTTP_500, message, req, resp)
-
-
-def _issue_failure(operation_name, reason, http_code, req, resp):
-    """Generic issue handler for client-related problem responses."""
-    message = u._('{0} issue seen - {1}').format(operation_name,
-                                                 reason)
-    LOG.exception(message)
-    api.abort(http_code, message, req, resp)
 
 
 def _authorization_failed(message, req, resp):
@@ -247,73 +231,11 @@ def handle_exceptions(operation_name=u._('System')):
             except falcon.HTTPError as f:
                 LOG.exception('Falcon error seen')
                 raise f  # Already converted to Falcon exception, just reraise
-            except policy.PolicyNotAuthorized:
-                message = u._('{0} attempt was not authorized - '
-                              'please review your '
-                              'user/tenant privileges').format(operation_name)
+            except Exception as e:
+                status, message = api.generate_safe_exception_message(
+                    operation_name, e)
                 LOG.exception(message)
-                _authorization_failed(message, req, resp)
-            except em.CryptoContentTypeNotSupportedException as cctnse:
-                _issue_failure(operation_name,
-                               u._("content-type of '{0}' not "
-                                   "supported").format(cctnse.content_type),
-                               falcon.HTTP_400, req, resp)
-            except em.CryptoContentEncodingNotSupportedException as cc:
-                _issue_failure(operation_name,
-                               u._("content-encoding of '{0}' not "
-                                   "supported").format(cc.content_encoding),
-                               falcon.HTTP_400, req, resp)
-            except em.CryptoAcceptNotSupportedException as canse:
-                _issue_failure(operation_name,
-                               u._("accept of '{0}' not "
-                                   "supported").format(canse.accept),
-                               falcon.HTTP_406, req, resp)
-            except em.CryptoAcceptEncodingNotSupportedException as caense:
-                _issue_failure(operation_name,
-                               u._("accept-encoding of '{0}' not "
-                                   "supported").format(caense.accept_encoding),
-                               falcon.HTTP_406, req, resp)
-            except em.CryptoNoPayloadProvidedException:
-                _issue_failure(operation_name,
-                               u._("No payload provided"),
-                               falcon.HTTP_400, req, resp)
-            except em.CryptoNoSecretOrDataFoundException:
-                _issue_failure(operation_name,
-                               u._("Not Found.  Sorry but your secret is in "
-                                   "another castle."),
-                               falcon.HTTP_404, req, resp)
-            except em.CryptoPayloadDecodingError:
-                _issue_failure(operation_name,
-                               u._("Problem decoding payload"),
-                               falcon.HTTP_400, req, resp)
-            except em.CryptoContentEncodingMustBeBase64:
-                _issue_failure(operation_name,
-                               u._("Text-based binary secret payloads must "
-                                   "specify a content-encoding of 'base64'"),
-                               falcon.HTTP_400, req, resp)
-            except em.CryptoAlgorithmNotSupportedException:
-                _issue_failure(operation_name,
-                               u._("No plugin was found that supports the "
-                                   "requested algorithm."),
-                               falcon.HTTP_400, req, resp)
-            except em.CryptoSupportedPluginNotFound:
-                _issue_failure(operation_name,
-                               u._("No plugin was found that could support "
-                                   "your request."),
-                               falcon.HTTP_400, req, resp)
-            except exception.NoDataToProcess:
-                _issue_failure(operation_name,
-                               u._("No information provided to process"),
-                               falcon.HTTP_400, req, resp)
-            except exception.LimitExceeded:
-                _issue_failure(operation_name,
-                               u._("Provided information too large "
-                                   "to process"),
-                               falcon.HTTP_413, req, resp)
-            except Exception:
-                message = u._('{0} failure seen - please contact site '
-                              'administrator').format(operation_name)
-                _general_failure(message, req, resp)
+                api.abort(status, message, req, resp)
 
         return handler
 
@@ -536,11 +458,11 @@ class OrdersResource(api.ApiResource):
 
         new_order = models.Order()
         new_order.secret_name = secret_info.get('name')
-        new_order.secret_algorithm = secret_info['algorithm']
-        new_order.secret_bit_length = secret_info['bit_length']
-        new_order.secret_cypher_type = secret_info['cypher_type']
-        new_order.secret_payload_content_type = secret_info[
-            'payload_content_type']
+        new_order.secret_algorithm = secret_info.get('algorithm')
+        new_order.secret_bit_length = secret_info.get('bit_length', 0)
+        new_order.secret_cypher_type = secret_info.get('cypher_type')
+        new_order.secret_payload_content_type = secret_info.get(
+            'payload_content_type')
 
         new_order.secret_expiration = secret_info.get('expiration')
         new_order.tenant_id = tenant.id

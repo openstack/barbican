@@ -30,4 +30,8 @@ def process_order(order_id, keystone_id):
     """Process Order."""
     LOG.debug('Order id is {0}'.format(order_id))
     task = BeginOrder()
-    return task.process(order_id, keystone_id)
+    try:
+        task.process(order_id, keystone_id)
+    except Exception:
+        LOG.exception(">>>>> Task exception seen, but simulating async "
+                      "reporting via the Orders entity on the worker side.")

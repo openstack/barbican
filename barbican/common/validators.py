@@ -228,8 +228,14 @@ class NewOrderValidator(ValidatorBase):
                                              reason=_("Only 'aes' "
                                                       "supported"))
 
-        bit_length = int(secret.get('bit_length', 0))
         # TODO(reaperhulk): Future API change will move from bit to byte_length
+        bit_length = int(secret.get('bit_length', 0))
+        if bit_length <= 0:
+            raise exception.UnsupportedField(field="bit_length",
+                                             schema=schema_name,
+                                             reason=_("Must have non-zero "
+                                                      "positive bit_length "
+                                                      "to generate secret"))
         if bit_length % 8 != 0:
             raise exception.UnsupportedField(field="bit_length",
                                              schema=schema_name,

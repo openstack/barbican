@@ -35,6 +35,7 @@ BASE = declarative_base()
 class States(object):
     PENDING = 'PENDING'
     ACTIVE = 'ACTIVE'
+    ERROR = 'ERROR'
 
     @classmethod
     def is_valid(self, state_to_test):
@@ -316,6 +317,9 @@ class Order(BASE, ModelBase):
     tenant_id = Column(String(36), ForeignKey('tenants.id'),
                        nullable=False)
 
+    error_status_code = Column(String(16))
+    error_reason = Column(String(255))
+
     secret_name = Column(String(255))
     secret_algorithm = Column(String(255))
     secret_bit_length = Column(Integer)
@@ -328,15 +332,20 @@ class Order(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        return {'secret': {'name': self.secret_name or self.secret_id,
-                           'algorithm': self.secret_algorithm,
-                           'bit_length': self.secret_bit_length,
-                           'cypher_type': self.secret_cypher_type,
-                           'expiration': self.secret_expiration,
-                           'payload_content_type':
-                           self.secret_payload_content_type},
-                'secret_id': self.secret_id,
-                'order_id': self.id}
+        ret = {'secret': {'name': self.secret_name or self.secret_id,
+                          'algorithm': self.secret_algorithm,
+                          'bit_length': self.secret_bit_length,
+                          'cypher_type': self.secret_cypher_type,
+                          'expiration': self.secret_expiration,
+                          'payload_content_type':
+                          self.secret_payload_content_type},
+               'secret_id': self.secret_id,
+               'order_id': self.id}
+        if self.error_status_code:
+            ret['error_status_code'] = self.error_status_code
+        if self.error_reason:
+            ret['error_reason'] = self.error_reason
+        return ret
 
 
 # Keep this tuple synchronized with the models in the file
