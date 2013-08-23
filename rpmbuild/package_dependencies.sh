@@ -71,7 +71,8 @@ fpm -s python -t rpm simplejson
 
 # python-kombu
 fpm -s python -t rpm anyjson
-fpm -s python -t rpm amqp
+fpm -s python -t rpm -v 1.0.13 amqp
+# --> latest amqp is incompatible
 fpm -s python -t rpm importlib
 # fpm -s python -t rpm ordereddict
 
