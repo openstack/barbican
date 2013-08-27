@@ -67,6 +67,9 @@ class WhenTestingAugmentFieldsWithContentTypes(unittest.TestCase):
         self.assertIn('text/plain', mime_types.CTYPES_TO_ENCODINGS)
         self.assertIsNone(mime_types.CTYPES_TO_ENCODINGS['text/plain'])
 
+        self.assertIn('application/aes', mime_types.CTYPES_TO_ENCODINGS)
+        self.assertIsNone(mime_types.CTYPES_TO_ENCODINGS['application/aes'])
+
         self.assertIn('application/octet-stream',
                       mime_types.CTYPES_TO_ENCODINGS)
         self.assertEqual(['base64'], mime_types.CTYPES_TO_ENCODINGS[
@@ -85,9 +88,3 @@ class WhenTestingAugmentFieldsWithContentTypes(unittest.TestCase):
         content_types = fields['content_types']
         self.assertIn('default', content_types)
         self.assertEqual(self.datum.content_type, content_types['default'])
-
-        encodings_expected = mime_types.CTYPES_TO_ENCODINGS[
-            self.datum.content_type]
-        if encodings_expected:
-            self.assertIn('encodings', fields)
-            self.assertEqual(encodings_expected, fields['encodings'])

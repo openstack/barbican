@@ -102,11 +102,6 @@ def augment_fields_with_content_types(secret):
             fields.update(
                 {'content_types': CTYPES_MAPPINGS[datum.content_type]}
             )
-            if datum.content_type in CTYPES_TO_ENCODINGS:
-                encodings = CTYPES_TO_ENCODINGS[datum.content_type]
-                fields.update(
-                    {'encodings': encodings}
-                )
             break
 
     return fields

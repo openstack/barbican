@@ -632,6 +632,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.assertEquals(self.resp.status, falcon.HTTP_200)
 
         resp_body = jsonutils.loads(self.resp.body)
+        self.assertNotIn('content_encodings', resp_body)
         self.assertIn('content_types', resp_body)
         self.assertIn(self.datum.content_type,
                       resp_body['content_types'].itervalues())
@@ -652,6 +653,26 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
 
         resp_body = self.resp.body
         self.assertIsNotNone(resp_body)
+
+    def test_should_get_secret_meta_for_binary(self):
+        self.req.accept = 'application/json'
+        self.datum.content_type = "application/octet-stream"
+
+        self.resource.on_get(self.req, self.resp, self.keystone_id,
+                             self.secret.id)
+
+        self.secret_repo \
+            .get.assert_called_once_with(entity_id=self.secret.id,
+                                         keystone_id=self.keystone_id,
+                                         suppress_exception=True)
+
+        self.assertEquals(self.resp.status, falcon.HTTP_200)
+
+        resp_body = jsonutils.loads(self.resp.body)
+        self.assertIsNotNone(resp_body)
+        self.assertIn('content_types', resp_body)
+        self.assertIn(self.datum.content_type,
+                      resp_body['content_types'].itervalues())
 
     def test_should_get_secret_as_binary(self):
         self.req.accept = 'application/octet-stream'
