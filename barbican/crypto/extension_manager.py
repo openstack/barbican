@@ -75,16 +75,6 @@ class CryptoAcceptNotSupportedException(exception.BarbicanException):
         self.accept = accept
 
 
-class CryptoAcceptEncodingNotSupportedException(exception.BarbicanException):
-    """Raised when payload could not be decoded."""
-    def __init__(self, accept_encoding):
-        super(CryptoAcceptEncodingNotSupportedException, self).__init__(
-            u._("Crypto Accept-Encoding of '{0}' not supported").format(
-                accept_encoding)
-        )
-        self.accept_encoding = accept_encoding
-
-
 class CryptoAlgorithmNotSupportedException(exception.BarbicanException):
     """Raised when support for an algorithm is not available."""
     def __init__(self, algorithm):
@@ -196,42 +186,21 @@ def normalize_before_encryption(unencrypted, content_type, content_encoding,
     return unencrypted, content_type
 
 
-def analyze_before_decryption(content_type, content_encoding):
-    """Determine support for desired content type/encoding."""
-    is_base64_needed = False
-
+def analyze_before_decryption(content_type):
+    """Determine support for desired content type."""
     if not mime_types.is_supported(content_type):
         raise CryptoAcceptNotSupportedException(content_type)
 
-    if content_type in mime_types.BINARY:
-        # Note if payload has to be decoded
-        is_base64_needed = mime_types \
-            .is_base64_processing_needed(content_type,
-                                         content_encoding)
-        if not is_base64_needed and content_encoding:
-            # Unsupported content-encoding request.
-            raise CryptoAcceptEncodingNotSupportedException(content_encoding)
 
-    return is_base64_needed
-
-
-def denormalize_after_decryption(unencrypted, content_type, is_base64_needed):
-    """Translate the decrypted data into the desired content type/encoding."""
+def denormalize_after_decryption(unencrypted, content_type):
+    """Translate the decrypted data into the desired content type."""
     # Process plain-text type.
     if content_type in mime_types.PLAIN_TEXT:
         # normalize text to binary string
         unencrypted = unencrypted.decode('utf-8')
 
     # Process binary type.
-    elif content_type in mime_types.BINARY:
-        # If payload has to be decoded
-        if is_base64_needed:
-            try:
-                unencrypted = base64.b64encode(unencrypted)
-            except TypeError:
-                raise CryptoGeneralException(u._('Problem decoding'))
-
-    else:
+    elif content_type not in mime_types.BINARY:
         raise CryptoGeneralException(
             u._("Unexpected content-type: '{0}'").format(content_type))
 
@@ -279,14 +248,13 @@ class CryptoExtensionManager(named.NamedExtensionManager):
         )
         return datum
 
-    def decrypt(self, content_type, content_encoding, secret, tenant):
+    def decrypt(self, content_type, secret, tenant):
         """Delegates decryption to active plugins."""
 
         if not secret or not secret.encrypted_data:
             raise CryptoNoSecretOrDataFoundException(secret.id)
 
-        is_base64_needed = analyze_before_decryption(content_type,
-                                                     content_encoding)
+        analyze_before_decryption(content_type)
 
         for ext in self.extensions:
             decrypting_plugin = ext.obj
@@ -295,6 +263,7 @@ class CryptoExtensionManager(named.NamedExtensionManager):
                                          datum.kek_meta_tenant):
                     # wrap the KEKDatum instance in our DTO
                     kek_meta_dto = plugin_mod.KEKMetaDTO(datum.kek_meta_tenant)
+
                     # Decrypt the secret.
                     unencrypted = decrypting_plugin \
                         .decrypt(datum.cypher_text,
@@ -304,8 +273,7 @@ class CryptoExtensionManager(named.NamedExtensionManager):
 
                     # Denormalize the decrypted info per request.
                     return denormalize_after_decryption(unencrypted,
-                                                        content_type,
-                                                        is_base64_needed)
+                                                        content_type)
         else:
             raise CryptoPluginNotFound()
 

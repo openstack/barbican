@@ -134,10 +134,6 @@ def generate_safe_exception_message(operation_name, excep):
         reason = u._("accept of '{0}' not "
                      "supported").format(canse.accept)
         status = falcon.HTTP_406
-    except em.CryptoAcceptEncodingNotSupportedException as caense:
-        reason = u._("accept-encoding of '{0}' not "
-                     "supported").format(caense.accept_encoding)
-        status = falcon.HTTP_406
     except em.CryptoNoPayloadProvidedException:
         reason = u._("No payload provided")
         status = falcon.HTTP_400

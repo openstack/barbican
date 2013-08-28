@@ -133,41 +133,13 @@ class WhenTestingAnalyzeBeforeDecryption(unittest.TestCase):
 
     def setUp(self):
         self.content_type = 'application/octet-stream'
-        self.content_encoding = 'base64'
-
-    def test_decrypt_binary_from_base64(self):
-        b64needed = em.analyze_before_decryption(self.content_type,
-                                                 self.content_encoding)
-        self.assertTrue(b64needed)
-
-    def test_decrypt_binary_not_base64(self):
-        self.content_encoding = None
-        b64needed = em.analyze_before_decryption(self.content_type,
-                                                 self.content_encoding)
-        self.assertFalse(b64needed)
-
-    def test_decrypt_text(self):
-        self.content_type = 'text/plain'
-        b64needed = em.analyze_before_decryption(self.content_type,
-                                                 self.content_encoding)
-        self.assertFalse(b64needed)
 
     def test_decrypt_fail_bogus_content_type(self):
         self.content_type = 'bogus'
         with self.assertRaises(em.CryptoAcceptNotSupportedException) as cm:
-            em.analyze_before_decryption(self.content_type,
-                                         self.content_encoding)
+            em.analyze_before_decryption(self.content_type)
         ex = cm.exception
         self.assertEqual(self.content_type, ex.accept)
-
-    def test_decrypt_fail_unknown_encoding_for_binary_content_type(self):
-        self.content_encoding = 'gzip'
-        with self.assertRaises(em.CryptoAcceptEncodingNotSupportedException) \
-                as cm:
-            em.analyze_before_decryption(self.content_type,
-                                         self.content_encoding)
-        ex = cm.exception
-        self.assertEqual(self.content_encoding, ex.accept_encoding)
 
 
 class WhenTestingDenormalizeAfterDecryption(unittest.TestCase):
@@ -175,40 +147,23 @@ class WhenTestingDenormalizeAfterDecryption(unittest.TestCase):
     def setUp(self):
         self.unencrypted = 'AAAAAAAA'
         self.content_type = 'application/octet-stream'
-        self.is_base64_needed = True
 
-    def test_decrypt_binary_from_base64(self):
+    def test_decrypt_fail_binary(self):
         unenc = em.denormalize_after_decryption(self.unencrypted,
-                                                self.content_type,
-                                                self.is_base64_needed)
-        self.assertEqual(base64.b64encode(self.unencrypted), unenc)
-
-    def test_decrypt_fail_binary_not_base64(self):
-        unenc = em.denormalize_after_decryption(self.unencrypted,
-                                                self.content_type,
-                                                False)
+                                                self.content_type)
         self.assertEqual(self.unencrypted, unenc)
 
     def test_decrypt_text(self):
         self.content_type = 'text/plain'
         unenc = em.denormalize_after_decryption(self.unencrypted,
-                                                self.content_type,
-                                                self.is_base64_needed)
+                                                self.content_type)
         self.assertEqual(self.unencrypted.decode('utf-8'), unenc)
 
     def test_decrypt_fail_unknown_content_type(self):
         self.content_type = 'bogus'
         with self.assertRaises(em.CryptoGeneralException):
             em.denormalize_after_decryption(self.unencrypted,
-                                            self.content_type,
-                                            False)
-
-    def test_decrypt_fail_bad_decode(self):
-        self.unencrypted = None
-        with self.assertRaises(em.CryptoGeneralException):
-            em.denormalize_after_decryption(self.unencrypted,
-                                            self.content_type,
-                                            self.is_base64_needed)
+                                            self.content_type)
 
 
 class WhenTestingCryptoExtensionManager(unittest.TestCase):
@@ -259,7 +214,6 @@ class WhenTestingCryptoExtensionManager(unittest.TestCase):
         """
         with self.assertRaises(em.CryptoPluginNotFound):
             self.manager.decrypt(
-                'text/plain',
                 'text/plain',
                 mock.MagicMock(),
                 mock.MagicMock()

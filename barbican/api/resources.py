@@ -374,7 +374,6 @@ class SecretResource(api.ApiResource):
 
             resp.body = self.crypto_manager \
                             .decrypt(req.accept,
-                                     req.get_header('Accept-Encoding'),
                                      secret,
                                      tenant)
 

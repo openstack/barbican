@@ -685,18 +685,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
 
         self.assertEqual(self.resp.body, 'unencrypted_data')
 
-    def test_should_get_secret_as_encoded_binary(self):
-        encoded_data = base64.b64encode(b'unencrypted_data')
-        self.req.accept = 'application/octet-stream'
-        # mock Content-Encoding header
-        self.req.get_header.return_value = 'base64'
-        self.datum.content_type = 'application/octet-stream'
-
-        self.resource.on_get(self.req, self.resp, self.keystone_id,
-                             self.secret.id)
-
-        self.assertEqual(self.resp.body, encoded_data)
-
     def test_should_throw_exception_for_get_when_secret_not_found(self):
         self.secret_repo.get.return_value = None
 
@@ -715,16 +703,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
 
         exception = cm.exception
         self.assertEqual(falcon.HTTP_406, exception.status)
-
-    def test_should_throw_exeption_for_get_with_wrong_accept_encoding(self):
-        self.req.accept = 'application/octet-stream'
-        # mock Content-Encoding header
-        self.req.get_header.return_value = 'bogusencoding'
-
-        with self.assertRaises(falcon.HTTPError) as e:
-            self.resource.on_get(self.req, self.resp, self.keystone_id,
-                                 self.secret.id)
-        self.assertEqual(falcon.HTTP_406, e.exception.status)
 
     def test_should_throw_exception_for_get_when_datum_not_available(self):
         self.req.accept = 'text/plain'
