@@ -340,12 +340,11 @@ class SecretResource(api.ApiResource):
     """Handles Secret retrieval and deletion requests."""
 
     def __init__(self, crypto_manager,
-                 tenant_repo=None, secret_repo=None,
-                 tenant_secret_repo=None, datum_repo=None, kek_repo=None):
+                 tenant_repo=None, secret_repo=None, datum_repo=None,
+                 kek_repo=None):
         self.crypto_manager = crypto_manager
         self.tenant_repo = tenant_repo or repo.TenantRepo()
         self.repo = secret_repo or repo.SecretRepo()
-        self.tenant_secret_repo = tenant_secret_repo or repo.TenantSecretRepo()
         self.datum_repo = datum_repo or repo.EncryptedDatumRepo()
         self.kek_repo = kek_repo or repo.KEKDatumRepo()
 
@@ -408,7 +407,6 @@ class SecretResource(api.ApiResource):
                                    content_encoding,
                                    tenant,
                                    self.crypto_manager,
-                                   self.tenant_secret_repo,
                                    self.datum_repo,
                                    self.kek_repo)
 

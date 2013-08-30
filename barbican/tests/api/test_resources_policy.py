@@ -235,7 +235,6 @@ class WhenTestingSecretResource(BaseTestCase):
         self.resource = res.SecretResource(crypto_manager=mock.MagicMock(),
                                            tenant_repo=mock.MagicMock(),
                                            secret_repo=self.secret_repo,
-                                           tenant_secret_repo=mock.MagicMock(),
                                            datum_repo=mock.MagicMock(),
                                            kek_repo=mock.MagicMock())
 

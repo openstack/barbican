@@ -595,9 +595,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.secret_repo.get.return_value = self.secret
         self.secret_repo.delete_entity_by_id.return_value = None
 
-        self.tenant_secret_repo = mock.MagicMock()
-        self.tenant_secret_repo.create_from.return_value = None
-
         self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
 
@@ -616,7 +613,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.resource = res.SecretResource(self.crypto_mgr,
                                            self.tenant_repo,
                                            self.secret_repo,
-                                           self.tenant_secret_repo,
                                            self.datum_repo,
                                            self.kek_repo)
 
@@ -864,9 +860,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.req.get_header.return_value = None
 
         self.secret.encrypted_data = []
-
-        self.tenant_secret_repo = mock.MagicMock()
-        self.tenant_secret_repo.create_from.return_value = None
 
         self.stream = mock.MagicMock()
         self.stream.read.return_value = self.payload

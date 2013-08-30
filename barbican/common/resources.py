@@ -104,8 +104,7 @@ def create_secret(data, tenant, crypto_manager,
 
 def create_encrypted_datum(secret, payload,
                            content_type, content_encoding,
-                           tenant, crypto_manager,
-                           tenant_secret_repo, datum_repo, kek_repo):
+                           tenant, crypto_manager, datum_repo, kek_repo):
     """Modifies the secret to add the plain_text secret information.
 
     :param secret: the secret entity to associate the secret data to
@@ -114,7 +113,6 @@ def create_encrypted_datum(secret, payload,
     :param content_encoding: payload content encoding
     :param tenant: the tenant (entity) who owns the secret
     :param crypto_manager: the crypto plugin manager
-    :param tenant_secret_repo: the tenant/secret association repository
     :param datum_repo: the encrypted datum repository
     :param kek_repo: the KEK metadata repository
     :retval The response body, None if N/A
@@ -140,13 +138,5 @@ def create_encrypted_datum(secret, payload,
                                        tenant,
                                        kek_repo)
     datum_repo.create_from(new_datum)
-
-    # Create Tenant/Secret entity.
-    new_assoc = models.TenantSecret()
-    new_assoc.tenant_id = tenant.id
-    new_assoc.secret_id = secret.id
-    new_assoc.role = "admin"
-    new_assoc.status = models.States.ACTIVE
-    tenant_secret_repo.create_from(new_assoc)
 
     return new_datum

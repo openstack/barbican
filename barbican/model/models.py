@@ -16,19 +16,18 @@
 """
 Defines database models for Barbican
 """
+import sqlalchemy as sa
+from sqlalchemy.ext import compiler
+from sqlalchemy.ext import declarative
+from sqlalchemy import orm
 
-from sqlalchemy import Column, Integer, String, BigInteger
-from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import ForeignKey, DateTime, Boolean, Text, LargeBinary
-from sqlalchemy.orm import relationship, object_mapper
-
+from barbican.common import utils
 from barbican.openstack.common import timeutils
 from barbican.openstack.common import uuidutils
-from barbican.common import utils
+
 
 LOG = utils.getLogger(__name__)
-BASE = declarative_base()
+BASE = declarative.declarative_base()
 
 
 # Allowed entity states
@@ -43,31 +42,32 @@ class States(object):
         return state_to_test in self.__dict__
 
 
-@compiles(BigInteger, 'sqlite')
+@compiler.compiles(sa.BigInteger, 'sqlite')
 def compile_big_int_sqlite(type_, compiler, **kw):
     return 'INTEGER'
 
 
 class ModelBase(object):
-    """Base class for Nova and Barbican Models"""
+    """Base class for Nova and Barbican Models."""
     __table_args__ = {'mysql_engine': 'InnoDB'}
     __table_initialized__ = False
     __protected_attributes__ = set([
         "created_at", "updated_at", "deleted_at", "deleted"])
 
-    id = Column(String(36), primary_key=True, default=uuidutils.generate_uuid)
+    id = sa.Column(sa.String(36), primary_key=True,
+                   default=uuidutils.generate_uuid)
 
-    created_at = Column(DateTime, default=timeutils.utcnow,
-                        nullable=False)
-    updated_at = Column(DateTime, default=timeutils.utcnow,
-                        nullable=False, onupdate=timeutils.utcnow)
-    deleted_at = Column(DateTime)
-    deleted = Column(Boolean, nullable=False, default=False)
+    created_at = sa.Column(sa.DateTime, default=timeutils.utcnow,
+                           nullable=False)
+    updated_at = sa.Column(sa.DateTime, default=timeutils.utcnow,
+                           nullable=False, onupdate=timeutils.utcnow)
+    deleted_at = sa.Column(sa.DateTime)
+    deleted = sa.Column(sa.Boolean, nullable=False, default=False)
 
-    status = Column(String(20), nullable=False, default=States.PENDING)
+    status = sa.Column(sa.String(20), nullable=False, default=States.PENDING)
 
     def save(self, session=None):
-        """Save this object"""
+        """Save this object."""
         # import api here to prevent circular dependency problem
         import barbican.model.repositories
         session = session or barbican.model.repositories.get_session()
@@ -75,7 +75,7 @@ class ModelBase(object):
         session.flush()
 
     def delete(self, session=None):
-        """Delete this object"""
+        """Delete this object."""
         import barbican.model.repositories
         session = session or barbican.model.repositories.get_session()
         self.deleted = True
@@ -85,9 +85,7 @@ class ModelBase(object):
         self._do_delete_children(session)
 
     def _do_delete_children(self, session):
-        """
-        Sub-class hook: delete children relationships.
-        """
+        """Sub-class hook: delete children relationships."""
         pass
 
     def update(self, values):
@@ -102,7 +100,7 @@ class ModelBase(object):
         return getattr(self, key)
 
     def __iter__(self):
-        self._i = iter(object_mapper(self).columns)
+        self._i = iter(orm.object_mapper(self).sa.Columns)
         return self
 
     def next(self):
@@ -139,21 +137,23 @@ class ModelBase(object):
 
 
 class TenantSecret(BASE, ModelBase):
-    """
-    Represents an association between a Tenant and a Secret.
-    """
+    """Represents an association between a Tenant and a Secret."""
 
     __tablename__ = 'tenant_secret'
 
-    tenant_id = Column(String(36), ForeignKey('tenants.id'), primary_key=True)
-    secret_id = Column(String(36), ForeignKey('secrets.id'), primary_key=True)
-    role = Column(String(255))
-    secret = relationship("Secret", backref="tenant_assocs")
+    tenant_id = sa.Column(sa.String(36), sa.ForeignKey('tenants.id'),
+                          primary_key=True)
+    secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
+                          primary_key=True)
+    role = sa.Column(sa.String(255))
+    secret = orm.relationship("Secret", backref="tenant_assocs")
+
+    __table_args__ = (sa.UniqueConstraint('tenant_id', 'secret_id',
+                                          name='_tenant_secret_uc'),)
 
 
 class Tenant(BASE, ModelBase):
-    """
-    Represents a Tenant in the datastore
+    """Represents a Tenant in the datastore.
 
     Tenants are users that wish to store secret information within
     Cloudkeep's Barbican.
@@ -161,11 +161,11 @@ class Tenant(BASE, ModelBase):
 
     __tablename__ = 'tenants'
 
-    keystone_id = Column(String(255), unique=True)
+    keystone_id = sa.Column(sa.String(255), unique=True)
 
-    orders = relationship("Order", backref="tenant")
-    secrets = relationship("TenantSecret", backref="tenants")
-    keks = relationship("KEKDatum", backref="tenant")
+    orders = orm.relationship("Order", backref="tenant")
+    secrets = orm.relationship("TenantSecret", backref="tenants")
+    keks = orm.relationship("KEKDatum", backref="tenant")
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -173,8 +173,7 @@ class Tenant(BASE, ModelBase):
 
 
 class Secret(BASE, ModelBase):
-    """
-    Represents a Secret in the datastore
+    """Represents a Secret in the datastore.
 
     Secrets are any information Tenants wish to store within
     Cloudkeep's Barbican, though the actual encrypted data
@@ -184,18 +183,18 @@ class Secret(BASE, ModelBase):
 
     __tablename__ = 'secrets'
 
-    name = Column(String(255))
-    expiration = Column(DateTime, default=None)
-    algorithm = Column(String(255))
-    bit_length = Column(Integer)
-    cypher_type = Column(String(255))
+    name = sa.Column(sa.String(255))
+    expiration = sa.Column(sa.DateTime, default=None)
+    algorithm = sa.Column(sa.String(255))
+    bit_length = sa.Column(sa.Integer)
+    cypher_type = sa.Column(sa.String(255))
 
-    # TODO: Performance - Consider avoiding full load of all
+    # TODO(jwood): Performance - Consider avoiding full load of all
     #   datum attributes here. This is only being done to support the
     #   building of the list of supported content types when secret
     #   metadata is retrieved.
     #   See barbican.api.resources.py::SecretsResource.on_get()
-    encrypted_data = relationship("EncryptedDatum", lazy='joined')
+    encrypted_data = orm.relationship("EncryptedDatum", lazy='joined')
 
     def __init__(self, parsed_request):
         """Creates secret from a dict."""
@@ -210,9 +209,7 @@ class Secret(BASE, ModelBase):
         self.status = States.ACTIVE
 
     def _do_delete_children(self, session):
-        """
-        Sub-class hook: delete children relationships.
-        """
+        """Sub-class hook: delete children relationships."""
         for datum in self.encrypted_data:
             datum.delete(session)
 
@@ -227,20 +224,18 @@ class Secret(BASE, ModelBase):
 
 
 class EncryptedDatum(BASE, ModelBase):
-    """
-    Represents a the encrypted data for a Secret.
-    """
+    """Represents a the encrypted data for a Secret."""
 
     __tablename__ = 'encrypted_data'
 
-    secret_id = Column(String(36), ForeignKey('secrets.id'),
+    secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
+                          nullable=False)
+    kek_id = sa.Column(sa.String(36), sa.ForeignKey('kek_data.id'),
                        nullable=False)
-    kek_id = Column(String(36), ForeignKey('kek_data.id'),
-                    nullable=False)
-    content_type = Column(String(255))
-    cypher_text = Column(LargeBinary)
-    kek_meta_extended = Column(Text)
-    kek_meta_tenant = relationship("KEKDatum")
+    content_type = sa.Column(sa.String(255))
+    cypher_text = sa.Column(sa.LargeBinary)
+    kek_meta_extended = sa.Column(sa.Text)
+    kek_meta_tenant = orm.relationship("KEKDatum")
 
     def __init__(self, secret=None, kek_datum=None):
         """Creates encrypted datum from a secret and KEK metadata."""
@@ -261,7 +256,8 @@ class EncryptedDatum(BASE, ModelBase):
 
 
 class KEKDatum(BASE, ModelBase):
-    """
+    """Key encryption key (KEK) metadata model.
+
     Represents the key encryption key (KEK) metadata associated with a process
     used to encrypt/decrypt secret information.
 
@@ -285,18 +281,18 @@ class KEKDatum(BASE, ModelBase):
 
     __tablename__ = 'kek_data'
 
-    plugin_name = Column(String(255))
-    kek_label = Column(String(255))
+    plugin_name = sa.Column(sa.String(255))
+    kek_label = sa.Column(sa.String(255))
 
-    tenant_id = Column(String(36), ForeignKey('tenants.id'),
-                       nullable=False)
+    tenant_id = sa.Column(sa.String(36), sa.ForeignKey('tenants.id'),
+                          nullable=False)
 
-    active = Column(Boolean, nullable=False, default=True)
-    bind_completed = Column(Boolean, nullable=False, default=False)
-    algorithm = Column(String(255))
-    bit_length = Column(Integer)
-    mode = Column(String(255))
-    plugin_meta = Column(Text)
+    active = sa.Column(sa.Boolean, nullable=False, default=True)
+    bind_completed = sa.Column(sa.Boolean, nullable=False, default=False)
+    algorithm = sa.Column(sa.String(255))
+    bit_length = sa.Column(sa.Integer)
+    mode = sa.Column(sa.String(255))
+    plugin_meta = sa.Column(sa.Text)
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -304,8 +300,7 @@ class KEKDatum(BASE, ModelBase):
 
 
 class Order(BASE, ModelBase):
-    """
-    Represents an Order in the datastore
+    """Represents an Order in the datastore.
 
     Orders are requests for Barbican to create secret information,
     ranging from simple AES key generation requests to automated
@@ -314,21 +309,21 @@ class Order(BASE, ModelBase):
 
     __tablename__ = 'orders'
 
-    tenant_id = Column(String(36), ForeignKey('tenants.id'),
-                       nullable=False)
+    tenant_id = sa.Column(sa.String(36), sa.ForeignKey('tenants.id'),
+                          nullable=False)
 
-    error_status_code = Column(String(16))
-    error_reason = Column(String(255))
+    error_status_code = sa.Column(sa.String(16))
+    error_reason = sa.Column(sa.String(255))
 
-    secret_name = Column(String(255))
-    secret_algorithm = Column(String(255))
-    secret_bit_length = Column(Integer)
-    secret_cypher_type = Column(String(255))
-    secret_payload_content_type = Column(String(255), nullable=False)
-    secret_expiration = Column(DateTime, default=None)
+    secret_name = sa.Column(sa.String(255))
+    secret_algorithm = sa.Column(sa.String(255))
+    secret_bit_length = sa.Column(sa.Integer)
+    secret_cypher_type = sa.Column(sa.String(255))
+    secret_payload_content_type = sa.Column(sa.String(255), nullable=False)
+    secret_expiration = sa.Column(sa.DateTime, default=None)
 
-    secret_id = Column(String(36), ForeignKey('secrets.id'),
-                       nullable=True)
+    secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
+                          nullable=True)
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -353,17 +348,13 @@ MODELS = [TenantSecret, Tenant, Secret, EncryptedDatum, Order]
 
 
 def register_models(engine):
-    """
-    Creates database tables for all models with the given engine
-    """
+    """Creates database tables for all models with the given engine."""
     LOG.debug("Models: {0}".format(repr(MODELS)))
     for model in MODELS:
         model.metadata.create_all(engine)
 
 
 def unregister_models(engine):
-    """
-    Drops database tables for all models with the given engine
-    """
+    """Drops database tables for all models with the given engine."""
     for model in MODELS:
         model.metadata.drop_all(engine)
