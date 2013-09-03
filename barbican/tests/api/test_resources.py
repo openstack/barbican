@@ -38,13 +38,13 @@ from barbican.tests.crypto import test_plugin as ctp
 
 def create_secret(id="id", name="name",
                   algorithm=None, bit_length=None,
-                  cypher_type=None, encrypted_datum=None):
+                  mode=None, encrypted_datum=None):
     """Generate a Secret entity instance."""
     info = {'id': id,
             'name': name,
             'algorithm': algorithm,
             'bit_length': bit_length,
-            'cypher_type': cypher_type}
+            'mode': mode}
     secret = models.Secret(info)
     if encrypted_datum:
         secret.encrypted_data = [encrypted_datum]
@@ -55,14 +55,14 @@ def create_order(id="id",
                  name="name",
                  algorithm=None,
                  bit_length=None,
-                 cypher_type=None):
+                 mode=None):
     """Generate an Order entity instance."""
     order = models.Order()
     order.id = id
     order.secret_name = name
     order.secret_algorithm = algorithm
     order.secret_bit_length = bit_length
-    order.secret_cypher_type = cypher_type
+    order.secret_mode = mode
     return order
 
 
@@ -107,11 +107,11 @@ class BaseSecretsResource(unittest.TestCase):
         self.payload_content_encoding = payload_content_encoding
         self.secret_algorithm = 'AES'
         self.secret_bit_length = 256
-        self.secret_cypher_type = 'CBC'
+        self.secret_mode = 'CBC'
         self.secret_req = {'name': self.name,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
-                           'cypher_type': self.secret_cypher_type}
+                           'mode': self.secret_mode}
         if payload:
             self.secret_req['payload'] = payload
         if payload_content_type:
@@ -195,7 +195,7 @@ class BaseSecretsResource(unittest.TestCase):
         self.assertEqual(secret.name, self.name)
         self.assertEqual(secret.algorithm, self.secret_algorithm)
         self.assertEqual(secret.bit_length, self.secret_bit_length)
-        self.assertEqual(secret.cypher_type, self.secret_cypher_type)
+        self.assertEqual(secret.mode, self.secret_mode)
 
         args, kwargs = self.tenant_secret_repo.create_from.call_args
         tenant_secret = args[0]
@@ -253,7 +253,7 @@ class BaseSecretsResource(unittest.TestCase):
         self.secret_req = {'name': self.name,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
-                           'cypher_type': self.secret_cypher_type,
+                           'mode': self.secret_mode,
                            'payload': big_text,
                            'payload_content_type': self.payload_content_type}
         if self.payload_content_encoding:
@@ -271,7 +271,7 @@ class BaseSecretsResource(unittest.TestCase):
         self.secret_req = {'name': self.name,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
-                           'cypher_type': self.secret_cypher_type,
+                           'mode': self.secret_mode,
                            'payload': big_text,
                            'payload_content_type': self.payload_content_type}
         if self.payload_content_encoding:
@@ -288,7 +288,7 @@ class BaseSecretsResource(unittest.TestCase):
         self.secret_req = {'name': self.name,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
-                           'cypher_type': self.secret_cypher_type,
+                           'mode': self.secret_mode,
                            'payload': ''}
         if self.payload_content_type:
             self.secret_req['payload_content_type'] = self.payload_content_type
@@ -334,7 +334,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
                            'payload_content_type': 'somethingbogushere',
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
-                           'cypher_type': self.secret_cypher_type,
+                           'mode': self.secret_mode,
                            'payload': self.payload}
         self.stream.read.return_value = json.dumps(self.secret_req)
 
@@ -377,7 +377,7 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
             {'name': self.name,
              'algorithm': self.secret_algorithm,
              'bit_length': self.secret_bit_length,
-             'cypher_type': self.secret_cypher_type,
+             'mode': self.secret_mode,
              'payload': 'lOtfqHaUUpe6NqLABgquYQ==',
              'payload_content_type': 'application/octet-stream'}
         )
@@ -392,7 +392,7 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
             {'name': self.name,
              'algorithm': self.secret_algorithm,
              'bit_length': self.secret_bit_length,
-             'cypher_type': self.secret_cypher_type,
+             'mode': self.secret_mode,
              'payload': 'lOtfqHaUUpe6NqLABgquYQ==',
              'payload_content_type': 'application/octet-stream',
              'payload_content_encoding': 'bogus64'}
@@ -408,7 +408,7 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
             {'name': self.name,
              'algorithm': self.secret_algorithm,
              'bit_length': self.secret_bit_length,
-             'cypher_type': self.secret_cypher_type,
+             'mode': self.secret_mode,
              'payload': 'lOtfqHaUUpe6NqLABgquYQ==',
              'payload_content_encoding': 'base64'}
         )
@@ -423,7 +423,7 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
             {'name': self.name,
              'algorithm': self.secret_algorithm,
              'bit_length': self.secret_bit_length,
-             'cypher_type': self.secret_cypher_type,
+             'mode': self.secret_mode,
              'payload': 'AAAAAAAAA',
              'payload_content_type': 'application/octet-stream',
              'payload_content_encoding': 'base64'}
@@ -442,7 +442,7 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
         self.name = 'name1234'
         self.secret_algorithm = "AES"
         self.secret_bit_length = 256
-        self.secret_cypher_type = "CBC"
+        self.secret_mode = "CBC"
 
         self.num_secrets = 10
         self.offset = 2
@@ -451,7 +451,7 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
         secret_params = {'name': self.name,
                          'algorithm': self.secret_algorithm,
                          'bit_length': self.secret_bit_length,
-                         'cypher_type': self.secret_cypher_type,
+                         'mode': self.secret_mode,
                          'encrypted_datum': None}
 
         self.secrets = [create_secret(id='id' + str(id), **secret_params) for
@@ -560,7 +560,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
 
         self.secret_algorithm = "AES"
         self.secret_bit_length = 256
-        self.secret_cypher_type = "CBC"
+        self.secret_mode = "CBC"
 
         self.kek_tenant = models.KEKDatum()
         self.kek_tenant.id = kek_id
@@ -582,7 +582,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
                                     name=self.name,
                                     algorithm=self.secret_algorithm,
                                     bit_length=self.secret_bit_length,
-                                    cypher_type=self.secret_cypher_type,
+                                    mode=self.secret_mode,
                                     encrypted_datum=self.datum)
 
         self.tenant = models.Tenant()
@@ -872,7 +872,7 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
         self.secret_payload_content_type = 'application/octet-stream'
         self.secret_algorithm = "aes"
         self.secret_bit_length = 128
-        self.secret_cypher_type = "cbc"
+        self.secret_mode = "cbc"
 
         self.tenant_internal_id = 'tenantid1234'
         self.tenant_keystone_id = 'keystoneid1234'
@@ -897,7 +897,7 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
                                 self.secret_payload_content_type,
                                 'algorithm': self.secret_algorithm,
                                 'bit_length': self.secret_bit_length,
-                                'cypher_type': self.secret_cypher_type}}
+                                'mode': self.secret_mode}}
         self.json = json.dumps(order_req)
         self.stream.read.return_value = self.json
 
@@ -946,7 +946,7 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
         self.mime_type = 'text/plain'
         self.secret_algorithm = "algo"
         self.secret_bit_length = 512
-        self.secret_cypher_type = "cytype"
+        self.secret_mode = "cytype"
         self.params = {'offset': 2, 'limit': 2}
 
         self.num_orders = 10
@@ -956,7 +956,7 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
         order_params = {'name': self.name,
                         'algorithm': self.secret_algorithm,
                         'bit_length': self.secret_bit_length,
-                        'cypher_type': self.secret_cypher_type}
+                        'mode': self.secret_mode}
 
         self.orders = [create_order(id='id' + str(id), **order_params) for
                        id in xrange(self.num_orders)]

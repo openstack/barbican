@@ -120,7 +120,7 @@ class CryptoPluginBase(object):
         Bind a key encryption key (KEK) metadata to the sub-system
         handling encryption/decryption, updating information about the
         key encryption key (KEK) metadata in the supplied 'kek_metadata'
-        instance.
+        data-transfer-object instance, and then returning this instance.
 
         This method is invoked prior to the encrypt() method above.
         Implementors should fill out the supplied 'kek_meta_dto' instance
@@ -129,18 +129,18 @@ class CryptoPluginBase(object):
         persist the contents of this instance once this method returns.
 
         :param kek_meta_dto: Key encryption key metadata to bind, with the
-        'kek_label' attribute guaranteed to be unique, and the
-        and 'plugin_name' attribute already configured.
-        :returns: kek_meta_dato: Returns the modified object
-
+               'kek_label' attribute guaranteed to be unique, and the
+               and 'plugin_name' attribute already configured.
+        :returns: kek_meta_dto: Returns the specified DTO, after
+                  modifications.
         """
 
     @abc.abstractmethod
-    def create(self, bit_length, type_enum, algorithm=None, cypher_type=None):
+    def create(self, bit_length, type_enum, algorithm=None, mode=None):
         """Create a new key."""
 
     @abc.abstractmethod
-    def supports(self, type_enum, algorithm=None, cypher_type=None):
+    def supports(self, type_enum, algorithm=None, mode=None):
         """Used to determine if the plugin supports the requested operation.
 
         :param type_enum: Enumeration from PluginSupportsType class
@@ -193,11 +193,11 @@ class SimpleCryptoPlugin(CryptoPluginBase):
         kek_meta_dto.plugin_meta = None
         return kek_meta_dto
 
-    def create(self, bit_length, type_enum, algorithm=None, cypher_type=None):
+    def create(self, bit_length, type_enum, algorithm=None, mode=None):
         byte_length = bit_length / 8
         return Random.get_random_bytes(byte_length)
 
-    def supports(self, type_enum, algorithm=None, cypher_type=None):
+    def supports(self, type_enum, algorithm=None, mode=None):
         if type_enum == PluginSupportTypes.ENCRYPT_DECRYPT:
             return True
         elif type_enum == PluginSupportTypes.SYMMETRIC_KEY_GENERATION:

@@ -457,7 +457,7 @@ class OrdersResource(api.ApiResource):
         new_order.secret_name = secret_info.get('name')
         new_order.secret_algorithm = secret_info.get('algorithm')
         new_order.secret_bit_length = secret_info.get('bit_length', 0)
-        new_order.secret_cypher_type = secret_info.get('cypher_type')
+        new_order.secret_mode = secret_info.get('mode')
         new_order.secret_payload_content_type = secret_info.get(
             'payload_content_type')
 

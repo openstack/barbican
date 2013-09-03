@@ -34,10 +34,10 @@ class TestSupportsCryptoPlugin(CryptoPluginBase):
     def bind_kek_metadata(self, kek_meta_dto):
         return None
 
-    def create(self, bit_length, type_enum, algorithm=None, cypher_type=None):
+    def create(self, bit_length, type_enum, algorithm=None, mode=None):
         raise NotImplementedError()
 
-    def supports(self, type_enum, algorithm=None, cypher_type=None):
+    def supports(self, type_enum, algorithm=None, mode=None):
         return False
 
 

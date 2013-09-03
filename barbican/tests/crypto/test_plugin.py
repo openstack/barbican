@@ -37,10 +37,10 @@ class TestCryptoPlugin(plugin.CryptoPluginBase):
         kek_meta_dto.plugin_meta = None
         return kek_meta_dto
 
-    def create(self, bit_length, type_enum, algorithm=None, cypher_type=None):
+    def create(self, bit_length, type_enum, algorithm=None, mode=None):
         return "insecure_key"
 
-    def supports(self, type_enum, algorithm=None, cypher_type=None):
+    def supports(self, type_enum, algorithm=None, mode=None):
         if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:
             return True
         elif type_enum == plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION:

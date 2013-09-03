@@ -161,14 +161,14 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             )
         )
 
-    def create(self, bit_length, type_enum, algorithm=None, cypher_type=None):
+    def create(self, bit_length, type_enum, algorithm=None, mode=None):
         byte_length = bit_length / 8
         rand = self.session.generateRandom(byte_length)
         if len(rand) != byte_length:
             raise P11CryptoPluginException()
         return rand
 
-    def supports(self, type_enum, algorithm=None, cypher_type=None):
+    def supports(self, type_enum, algorithm=None, mode=None):
         if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:
             return True
         elif type_enum == plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION:

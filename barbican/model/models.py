@@ -187,7 +187,7 @@ class Secret(BASE, ModelBase):
     expiration = sa.Column(sa.DateTime, default=None)
     algorithm = sa.Column(sa.String(255))
     bit_length = sa.Column(sa.Integer)
-    cypher_type = sa.Column(sa.String(255))
+    mode = sa.Column(sa.String(255))
 
     # TODO(jwood): Performance - Consider avoiding full load of all
     #   datum attributes here. This is only being done to support the
@@ -204,7 +204,7 @@ class Secret(BASE, ModelBase):
         self.expiration = parsed_request.get('expiration')
         self.algorithm = parsed_request.get('algorithm')
         self.bit_length = parsed_request.get('bit_length')
-        self.cypher_type = parsed_request.get('cypher_type')
+        self.mode = parsed_request.get('mode')
 
         self.status = States.ACTIVE
 
@@ -220,7 +220,7 @@ class Secret(BASE, ModelBase):
                 'expiration': self.expiration,
                 'algorithm': self.algorithm,
                 'bit_length': self.bit_length,
-                'cypher_type': self.cypher_type}
+                'mode': self.mode}
 
 
 class EncryptedDatum(BASE, ModelBase):
@@ -318,7 +318,7 @@ class Order(BASE, ModelBase):
     secret_name = sa.Column(sa.String(255))
     secret_algorithm = sa.Column(sa.String(255))
     secret_bit_length = sa.Column(sa.Integer)
-    secret_cypher_type = sa.Column(sa.String(255))
+    secret_mode = sa.Column(sa.String(255))
     secret_payload_content_type = sa.Column(sa.String(255), nullable=False)
     secret_expiration = sa.Column(sa.DateTime, default=None)
 
@@ -330,7 +330,7 @@ class Order(BASE, ModelBase):
         ret = {'secret': {'name': self.secret_name or self.secret_id,
                           'algorithm': self.secret_algorithm,
                           'bit_length': self.secret_bit_length,
-                          'cypher_type': self.secret_cypher_type,
+                          'mode': self.secret_mode,
                           'expiration': self.secret_expiration,
                           'payload_content_type':
                           self.secret_payload_content_type},

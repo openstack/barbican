@@ -35,13 +35,13 @@ class WhenTestingSecretValidator(unittest.TestCase):
         self.payload_content_type = 'text/plain'
         self.secret_algorithm = 'algo'
         self.secret_bit_length = 512
-        self.secret_cypher_type = 'cytype'
+        self.secret_mode = 'cytype'
 
         self.secret_req = {'name': self.name,
                            'payload_content_type': self.payload_content_type,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
-                           'cypher_type': self.secret_cypher_type,
+                           'mode': self.secret_mode,
                            'payload': self.payload}
 
         self.validator = validators.NewSecretValidator()
@@ -178,7 +178,7 @@ class WhenTestingSecretValidator(unittest.TestCase):
         self.secret_req = {'name': None,
                            'algorithm': None,
                            'bit_length': None,
-                           'cypher_type': None}
+                           'mode': None}
 
         with self.assertRaises(excep.InvalidObject):
             self.validator.validate(self.secret_req)
@@ -187,7 +187,7 @@ class WhenTestingSecretValidator(unittest.TestCase):
         self.secret_req = {'name': '',
                            'algorithm': '',
                            'bit_length': '',
-                           'cypher_type': ''}
+                           'mode': ''}
 
         with self.assertRaises(excep.InvalidObject):
             self.validator.validate(self.secret_req)
@@ -224,13 +224,13 @@ class WhenTestingOrderValidator(unittest.TestCase):
         self.name = 'name'
         self.secret_algorithm = 'aes'
         self.secret_bit_length = 128
-        self.secret_cypher_type = 'cbc'
+        self.secret_mode = 'cbc'
         self.secret_payload_content_type = 'application/octet-stream'
 
         self.secret_req = {'name': self.name,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
-                           'cypher_type': self.secret_cypher_type,
+                           'mode': self.secret_mode,
                            'payload_content_type':
                            self.secret_payload_content_type}
         self.order_req = {'secret': self.secret_req}
@@ -279,14 +279,14 @@ class WhenTestingOrderValidator(unittest.TestCase):
         exception = e.exception
         self.assertTrue('name' in str(exception))
 
-    def test_should_fail_bad_cypher_type(self):
-        self.secret_req['cypher_type'] = 'badcypher'
+    def test_should_fail_bad_mode(self):
+        self.secret_req['mode'] = 'badmode'
 
         with self.assertRaises(excep.UnsupportedField) as e:
             self.validator.validate(self.order_req)
 
         exception = e.exception
-        self.assertTrue('cypher_type' in str(exception))
+        self.assertTrue('mode' in str(exception))
 
     def test_should_fail_negative_bit_length(self):
         self.secret_req['bit_length'] = -23
@@ -353,7 +353,7 @@ class WhenTestingOrderValidator(unittest.TestCase):
         self.secret_req = {'name': None,
                            'algorithm': None,
                            'bit_length': None,
-                           'cypher_type': None}
+                           'mode': None}
         self.order_req = {'secret': self.secret_req}
 
         with self.assertRaises(excep.InvalidObject):
@@ -363,7 +363,7 @@ class WhenTestingOrderValidator(unittest.TestCase):
         self.secret_req = {'name': '',
                            'algorithm': '',
                            'bit_length': '',
-                           'cypher_type': ''}
+                           'mode': ''}
         self.order_req = {'secret': self.secret_req}
 
         with self.assertRaises(excep.InvalidObject):
@@ -381,14 +381,14 @@ class WhenTestingOrderValidator(unittest.TestCase):
         with self.assertRaises(excep.UnsupportedField):
             self.validator.validate(self.order_req)
 
-    def test_should_fail_empty_cypher_type(self):
-            del self.secret_req['cypher_type']
+    def test_should_fail_empty_mode(self):
+            del self.secret_req['mode']
 
             with self.assertRaises(excep.UnsupportedField) as e:
                 self.validator.validate(self.order_req)
 
             exception = e.exception
-            self.assertTrue('cypher_type' in str(exception))
+            self.assertTrue('mode' in str(exception))
 
     def test_should_fail_empty_algorithm(self):
         del self.secret_req['algorithm']

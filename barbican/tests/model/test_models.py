@@ -23,7 +23,7 @@ class WhenCreatingNewSecret(unittest.TestCase):
         self.parsed_secret = {'name': 'name',
                               'algorithm': 'algorithm',
                               'bit_length': 512,
-                              'cypher_type': 'cypher_type',
+                              'mode': 'mode',
                               'plain_text': 'not-encrypted'}
 
         self.parsed_order = {'secret': self.parsed_secret}
@@ -33,4 +33,4 @@ class WhenCreatingNewSecret(unittest.TestCase):
         self.assertEqual(secret.name, self.parsed_secret['name'])
         self.assertEqual(secret.algorithm, self.parsed_secret['algorithm'])
         self.assertEqual(secret.bit_length, self.parsed_secret['bit_length'])
-        self.assertEqual(secret.cypher_type, self.parsed_secret['cypher_type'])
+        self.assertEqual(secret.mode, self.parsed_secret['mode'])

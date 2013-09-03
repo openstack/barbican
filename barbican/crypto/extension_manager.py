@@ -134,7 +134,12 @@ class CryptoContentEncodingMustBeBase64(exception.BarbicanException):
 
 class CryptoKEKBindingException(exception.BarbicanException):
     """Raised when the bind_kek_metadata method from a plugin returns None."""
-    message = u._("Failed to bind kek metadata")
+    def __init__(self, plugin_name=u._('Unknown')):
+        super(CryptoKEKBindingException, self).__init__(
+            u._('Failed to bind kek metadata for '
+                'plugin: {0}').format(plugin_name)
+        )
+        self.plugin_name = plugin_name
 
 
 class CryptoGeneralException(exception.BarbicanException):
@@ -302,7 +307,7 @@ class CryptoExtensionManager(named.NamedExtensionManager):
         data_key = encrypting_plugin.create(secret.bit_length,
                                             generation_type,
                                             secret.algorithm,
-                                            secret.cypher_type)
+                                            secret.mode)
 
         # Encrypt the secret.
         return self.encrypt(data_key, content_type, None, secret, tenant,
@@ -338,14 +343,17 @@ class CryptoExtensionManager(named.NamedExtensionManager):
 
         # Bind to the plugin's key management.
         # TODO(jwood): Does this need to be in a critical section? Should the
-        # bind
-        #   operation just be declared idempotent in the plugin contract?
+        # bind operation just be declared idempotent in the plugin contract?
         kek_meta_dto = plugin_mod.KEKMetaDTO(kek_datum)
         if not kek_datum.bind_completed:
             kek_meta_dto = plugin_inst.bind_kek_metadata(kek_meta_dto)
+
+            # By contract, enforce that plugins return a
+            # (typically modified) DTO.
             if kek_meta_dto is None:
-                raise CryptoKEKBindingException()
+                raise CryptoKEKBindingException(full_plugin_name)
+
             plugin_mod.indicate_bind_completed(kek_meta_dto, kek_datum)
             kek_repo.save(kek_datum)
 
-        return (kek_datum, kek_meta_dto)
+        return kek_datum, kek_meta_dto

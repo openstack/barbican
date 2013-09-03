@@ -71,7 +71,7 @@ class NewSecretValidator(ValidatorBase):
             "properties": {
                 "name": {"type": "string"},
                 "algorithm": {"type": "string"},
-                "cypher_type": {"type": "string"},
+                "mode": {"type": "string"},
                 "bit_length": {"type": "integer", "minimum": 0},
                 "expiration": {"type": "string"},
                 "payload": {"type": "string"},
@@ -216,8 +216,8 @@ class NewOrderValidator(ValidatorBase):
                                              reason=_("Only 'application/oc"
                                                       "tet-stream' supported"))
 
-        if secret.get('cypher_type', '').lower() != 'cbc':
-            raise exception.UnsupportedField(field="cypher_type",
+        if secret.get('mode', '').lower() != 'cbc':
+            raise exception.UnsupportedField(field="mode",
                                              schema=schema_name,
                                              reason=_("Only 'cbc' "
                                                       "supported"))

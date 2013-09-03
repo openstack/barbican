@@ -46,6 +46,10 @@ def abort(status=falcon.HTTP_500, message=None, req=None, resp=None):
     :return: None
     :raise: falcon.HTTPError
     """
+    # Deal with odd Falcon behavior, whereby it does not encode error
+    # response messages if requests specify a non-JSON Accept header.
+    # If the Accept header does specify JSON, then Falcon properly
+    # JSON-ifies the error message.
     if resp and message:
         if req and req.accept != 'application/json':
             resp.set_header('Content-Type', 'text/plain')

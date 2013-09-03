@@ -36,7 +36,7 @@ class WhenBeginningOrder(unittest.TestCase):
         self.secret_name = "name"
         self.secret_algorithm = "AES"
         self.secret_bit_length = 256
-        self.secret_cypher_type = "CBC"
+        self.secret_mode = "CBC"
         self.secret_expiration = timeutils.utcnow()
         self.secret_payload_content_type = 'application/octet-stream'
 
@@ -53,7 +53,7 @@ class WhenBeginningOrder(unittest.TestCase):
         self.order.secret_name = self.secret_name
         self.order.secret_algorithm = self.secret_algorithm
         self.order.secret_bit_length = self.secret_bit_length
-        self.order.secret_cypher_type = self.secret_cypher_type
+        self.order.secret_mode = self.secret_mode
         self.order.secret_expiration = self.secret_expiration
         self.order.secret_payload_content_type = self\
             .secret_payload_content_type
