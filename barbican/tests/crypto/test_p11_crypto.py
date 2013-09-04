@@ -69,26 +69,22 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
 
     def test_init_builds_sessions_and_login(self):
         self.pkcs11.openSession.assert_any_call(1)
-        self.pkcs11.openSession.login.assert_called_twice()
         self.pkcs11.openSession.assert_any_call(1, 'RW')
-        self.session.login.assert_called_twice()
+        self.assertTrue(self.session.login.called)
 
     def test_get_key_by_label_with_two_keys(self):
         self.session.findObjects.return_value = ['key1', 'key2']
-        self.session.findObjects.assert_called_once()
         with self.assertRaises(p11_crypto.P11CryptoPluginKeyException):
             self.plugin._get_key_by_label('mylabel')
 
     def test_get_key_by_label_with_one_key(self):
         key = 'key1'
         self.session.findObjects.return_value = [key]
-        self.session.findObjects.assert_called_once()
         key_label = self.plugin._get_key_by_label('mylabel')
         self.assertEqual(key, key_label)
 
     def test_get_key_by_label_with_no_keys(self):
         self.session.findObjects.return_value = []
-        self.session.findObjects.assert_called_once()
         result = self.plugin._get_key_by_label('mylabel')
         self.assertIsNone(result)
 
@@ -136,7 +132,6 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
                                                             mock.MagicMock(),
                                                             mock.MagicMock())
 
-        self.p11_mock.Mechanism.assert_called_once()
         self.session.encrypt.assert_called_once_with(key,
                                                      payload,
                                                      mech)
@@ -156,7 +151,7 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
                                       mock.MagicMock(),
                                       kek_meta_extended,
                                       mock.MagicMock())
-        self.p11_mock.Mechanism.assert_called_once()
+        self.assertTrue(self.p11_mock.Mechanism.called)
         self.session.decrypt.assert_called_once_with(key,
                                                      ct,
                                                      mech)
@@ -168,16 +163,15 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
 
         self.plugin.bind_kek_metadata(mock.MagicMock())
 
-        self.p11_mock.lib.C_Generate_Key.assert_called_once()
-        self.session._template2ckattrlist.assert_called_once()
-        self.p11_mock.LowLevel.CK_MECHANISM.assert_called_once()
+        self.assertTrue(self.session._template2ckattrlist.called)
+        self.assertTrue(self.p11_mock.LowLevel.CK_MECHANISM.called)
 
     def test_bind_kek_metadata_with_existing_key(self):
         self.session.findObjects.return_value = ['key1']  # one key
 
         self.plugin.bind_kek_metadata(mock.MagicMock())
 
-        gk = self.p11_mock.lib.C_Generate_Key
+        gk = self.pkcs11.lib.C_Generate_Key
         # this is a way to test to make sure methods are NOT called
         self.assertItemsEqual([], gk.call_args_list)
         t = self.session._template2ckattrlist

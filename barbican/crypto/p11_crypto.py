@@ -94,6 +94,36 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         gcm.ulTagBits = 128
         return gcm
 
+    def _generate_kek(self, kek_label):
+        # TODO: review template to ensure it's what we want
+        template = (
+            (PyKCS11.CKA_CLASS, PyKCS11.CKO_SECRET_KEY),
+            (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_AES),
+            (PyKCS11.CKA_VALUE_LEN, self.kek_key_length),
+            (PyKCS11.CKA_LABEL, kek_label),
+            (PyKCS11.CKA_PRIVATE, True),
+            (PyKCS11.CKA_SENSITIVE, True),
+            (PyKCS11.CKA_ENCRYPT, True),
+            (PyKCS11.CKA_DECRYPT, True),
+            (PyKCS11.CKA_TOKEN, True),
+            (PyKCS11.CKA_WRAP, True),
+            (PyKCS11.CKA_UNWRAP, True),
+            (PyKCS11.CKA_EXTRACTABLE, False))
+        ckattr = self.session._template2ckattrlist(template)
+
+        m = PyKCS11.LowLevel.CK_MECHANISM()
+        m.mechanism = PyKCS11.LowLevel.CKM_AES_KEY_GEN
+
+        key = PyKCS11.LowLevel.CK_OBJECT_HANDLE()
+        self._check_error(
+            self.pkcs11.lib.C_GenerateKey(
+                self.rw_session.session,
+                m,
+                ckattr,
+                key
+            )
+        )
+
     def encrypt(self, unencrypted, kek_meta_dto, keystone_id):
         key = self._get_key_by_label(kek_meta_dto.kek_label)
         iv = self._generate_iv()
@@ -121,45 +151,15 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         # Enforce idempotency: If we've already generated a key for the
         # kek_label, leave now.
         key = self._get_key_by_label(kek_meta_dto.kek_label)
-        if key:
-            return kek_meta_dto
+        if not key:
+            self._generate_kek(kek_meta_dto.kek_label)
+            # To be persisted by Barbican:
+            kek_meta_dto.algorithm = 'AES'
+            kek_meta_dto.bit_length = self.kek_key_length * 8
+            kek_meta_dto.mode = 'GCM'
+            kek_meta_dto.plugin_meta = None
 
-        # To be persisted by Barbican:
-        kek_meta_dto.algorithm = 'AES'
-        kek_meta_dto.bit_length = self.kek_key_length * 8
-        kek_meta_dto.mode = 'GCM'
-        kek_meta_dto.plugin_meta = None
         return kek_meta_dto
-
-        # Generate the key.
-        # TODO: review template to ensure it's what we want
-        template = (
-            (PyKCS11.CKA_CLASS, PyKCS11.CKO_SECRET_KEY),
-            (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_AES),
-            (PyKCS11.CKA_VALUE_LEN, self.kek_key_length),
-            (PyKCS11.CKA_LABEL, kek_meta_dto.kek_label),
-            (PyKCS11.CKA_PRIVATE, True),
-            (PyKCS11.CKA_SENSITIVE, True),
-            (PyKCS11.CKA_ENCRYPT, True),
-            (PyKCS11.CKA_DECRYPT, True),
-            (PyKCS11.CKA_TOKEN, True),
-            (PyKCS11.CKA_WRAP, True),
-            (PyKCS11.CKA_UNWRAP, True),
-            (PyKCS11.CKA_EXTRACTABLE, False))
-        ckattr = self.session._template2ckattrlist(template)
-
-        m = PyKCS11.LowLevel.CK_MECHANISM()
-        m.mechanism = PyKCS11.LowLevel.CKM_AES_KEY_GEN
-
-        key = PyKCS11.LowLevel.CK_OBJECT_HANDLE()
-        self._check_error(
-            self.pkcs11.lib.C_GenerateKey(
-                self.rw_session.session,
-                m,
-                ckattr,
-                key
-            )
-        )
 
     def create(self, bit_length, type_enum, algorithm=None, mode=None):
         byte_length = bit_length / 8
