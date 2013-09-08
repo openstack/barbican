@@ -75,10 +75,10 @@ def get_commit_id():
 def format_release_version(version, build_id_to_inject):
     """
     Injects the specified build id into the build section of the version string.
-    The build section is the third group after the second '.'.
+    The build section is the last group after the last '.'.
     """
     subs = version.split(".")
-    subs[2] = build_id_to_inject
+    subs[-1] = build_id_to_inject
     return '.'.join(subs)
 
 
