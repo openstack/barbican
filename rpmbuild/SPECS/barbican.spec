@@ -22,7 +22,7 @@ Requires: python-psycopg2, python-pysqlite, python-sqlalchemy, python-stevedore
 Requires: python-uwsgi, python-webob, python-netaddr, python-babel
 
 %description
-Common files for Barbican Key Management API (barbican-api) and 
+Common files for Barbican Key Management API (barbican-api) and
 Barbican Worker (barbican-worker)
 
 %prep
@@ -33,11 +33,12 @@ python setup.py build
 
 %install
 python setup.py install -O1 --root $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/etc/barbican/vassals
 mkdir -p $RPM_BUILD_ROOT/etc/init
+mkdir -p $RPM_BUILD_ROOT/etc/barbican/vassals
 mkdir -p $RPM_BUILD_ROOT/var/l{ib,og}/barbican
 install etc/barbican/policy.json $RPM_BUILD_ROOT/etc/barbican
 install etc/init/barbican-api.conf $RPM_BUILD_ROOT/etc/init
+install etc/init/barbican-worker.conf $RPM_BUILD_ROOT/etc/init
 install -D etc/barbican/barbican* $RPM_BUILD_ROOT/etc/barbican
 install -D etc/barbican/vassals/*.ini $RPM_BUILD_ROOT/etc/barbican/vassals
 touch $RPM_BUILD_ROOT/var/log/barbican/barbican-api.log
@@ -62,7 +63,10 @@ rm -rf $RPM_BUILD_ROOT
 %{python_sitelib}/*
 %dir /var/lib/barbican
 
+
+# ------------------
 # API package
+# ------------------
 %package -n barbican-api
 Summary: Barbican Key Manager API daemon
 Requires: barbican-common
@@ -82,5 +86,31 @@ Barbican Key Manager API daemon
 if [ $1 -eq 0 ] ; then
     # Package removal, not upgrade
     /sbin/stop barbican-api >/dev/null 2>&1 || :
+fi
+
+
+# ------------------
+# Worker package
+# ------------------
+%package -n barbican-worker
+Summary: Barbican Key Manager worker daemon
+Requires: barbican-common
+
+%description -n barbican-worker
+Barbican Key Manager worker daemon
+
+%files -n barbican-worker
+%defattr(-,root,root)
+%dir /var/lib/barbican
+%verify(not md5 size mtime) %attr(0750, barbican,root) /var/log/barbican/barbican-api.log
+/etc/logrotate.d/barbican-api
+%attr(0755,root,root) /usr/bin/barbican-worker.py
+%config(noreplace) /etc/init/barbican-worker.conf
+%config(noreplace) /etc/barbican/*
+
+%preun -n barbican-worker
+if [ $1 -eq 0 ] ; then
+    # Package removal, not upgrade
+    /sbin/stop barbican-worker >/dev/null 2>&1 || :
 fi
 

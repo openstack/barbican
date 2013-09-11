@@ -207,7 +207,7 @@ class BaseSecretsResource(unittest.TestCase):
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
         self.assertIsInstance(datum, models.EncryptedDatum)
-        self.assertEqual('cypher_text', datum.cypher_text)
+        self.assertEqual(base64.b64encode('cypher_text'), datum.cypher_text)
         self.assertEqual(self.payload_content_type, datum.content_type)
 
         validate_datum(self, datum)
@@ -576,7 +576,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.datum.kek_id = kek_id
         self.datum.kek_meta_tenant = self.kek_tenant
         self.datum.content_type = "text/plain"
-        self.datum.cypher_text = "cypher_text"
+        self.datum.cypher_text = "aaaa"  # base64 value.
 
         self.secret = create_secret(id=secret_id,
                                     name=self.name,
@@ -653,6 +653,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
     def test_should_get_secret_meta_for_binary(self):
         self.req.accept = 'application/json'
         self.datum.content_type = "application/octet-stream"
+        self.datum.cypher_text = 'aaaa'
 
         self.resource.on_get(self.req, self.resp, self.keystone_id,
                              self.secret.id)
@@ -675,6 +676,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         # mock Content-Encoding header
         self.req.get_header.return_value = None
         self.datum.content_type = 'application/octet-stream'
+        self.datum.cypher_text = 'aaaa'
 
         self.resource.on_get(self.req, self.resp, self.keystone_id,
                              self.secret.id)
@@ -721,7 +723,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
         self.assertIsInstance(datum, models.EncryptedDatum)
-        self.assertEqual('cypher_text', datum.cypher_text)
+        self.assertEqual(base64.b64encode('cypher_text'), datum.cypher_text)
 
         validate_datum(self, datum)
 

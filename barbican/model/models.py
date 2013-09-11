@@ -233,7 +233,10 @@ class EncryptedDatum(BASE, ModelBase):
     kek_id = sa.Column(sa.String(36), sa.ForeignKey('kek_data.id'),
                        nullable=False)
     content_type = sa.Column(sa.String(255))
-    cypher_text = sa.Column(sa.LargeBinary)
+
+    # TODO(jwood) Why LargeBinary on Postgres (BYTEA) not work correctly?
+    cypher_text = sa.Column(sa.Text)
+
     kek_meta_extended = sa.Column(sa.Text)
     kek_meta_tenant = orm.relationship("KEKDatum")
 

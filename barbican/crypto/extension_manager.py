@@ -251,6 +251,12 @@ class CryptoExtensionManager(named.NamedExtensionManager):
         datum.cypher_text, datum.kek_meta_extended = encrypting_plugin.encrypt(
             unencrypted, kek_meta_dto, tenant.keystone_id
         )
+
+        # Convert binary data into a text-based format.
+        #TODO(jwood) Figure out by storing binary (BYTEA) data in Postgres
+        #  isn't working.
+        datum.cypher_text = base64.b64encode(datum.cypher_text)
+
         return datum
 
     def decrypt(self, content_type, secret, tenant):
@@ -269,9 +275,14 @@ class CryptoExtensionManager(named.NamedExtensionManager):
                     # wrap the KEKDatum instance in our DTO
                     kek_meta_dto = plugin_mod.KEKMetaDTO(datum.kek_meta_tenant)
 
+                    # Convert from text-based storage format to binary.
+                    #TODO(jwood) Figure out by storing binary (BYTEA) data in
+                    #  Postgres isn't working.
+                    encrypted = base64.b64decode(datum.cypher_text)
+
                     # Decrypt the secret.
                     unencrypted = decrypting_plugin \
-                        .decrypt(datum.cypher_text,
+                        .decrypt(encrypted,
                                  kek_meta_dto,
                                  datum.kek_meta_extended,
                                  tenant.keystone_id)

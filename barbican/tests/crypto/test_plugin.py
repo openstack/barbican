@@ -24,7 +24,7 @@ class TestCryptoPlugin(plugin.CryptoPluginBase):
     """Crypto plugin implementation for testing the plugin manager."""
 
     def encrypt(self, unencrypted, kek_meta_dto, keystone_id):
-        cypher_text = 'cypher_text'
+        cypher_text = b'cypher_text'
         return cypher_text, None
 
     def decrypt(self, encrypted, kek_meta_dto, kek_meta_extended, keystone_id):
