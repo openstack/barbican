@@ -71,8 +71,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Environment :: No Input/Output (Daemon)',
     ],
-    scripts=['bin/barbican-all', 'bin/barbican-worker',
-             'bin/barbican-worker.py'],
+    scripts=['bin/barbican-all', 'bin/barbican-worker.py'],
     py_modules=[],
     entry_points="""
     [barbican.crypto.plugin]
