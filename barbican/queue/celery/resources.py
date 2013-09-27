@@ -30,7 +30,7 @@ opt_group = cfg.OptGroup(name='celery',
 
 celery_opts = [
     cfg.StrOpt('project', default='barbican.queue.celery.resources'),
-    cfg.StrOpt('broker', default='amqp://guest@localhost//'),
+    cfg.ListOpt('broker', default=['amqp://guest@localhost//']),
     cfg.StrOpt('include', default='barbican.queue.celery.resources'),
 ]
 
