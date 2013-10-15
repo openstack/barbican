@@ -159,17 +159,17 @@ def normalize_before_encryption(unencrypted, content_type, content_encoding,
         raise CryptoNoPayloadProvidedException()
 
     # Validate and normalize content-type.
-    if not mime_types.is_supported(content_type):
+    normalized_mime = mime_types.normalize_content_type(content_type)
+    if not mime_types.is_supported(normalized_mime):
         raise CryptoContentTypeNotSupportedException(content_type)
-    content_type = mime_types.normalize_content_type(content_type)
 
     # Process plain-text type.
-    if content_type in mime_types.PLAIN_TEXT:
+    if normalized_mime in mime_types.PLAIN_TEXT:
         # normalize text to binary string
         unencrypted = unencrypted.encode('utf-8')
 
     # Process binary type.
-    elif content_type in mime_types.BINARY:
+    elif normalized_mime in mime_types.BINARY:
         # payload has to be decoded
         if mime_types.is_base64_processing_needed(content_type,
                                                   content_encoding):
@@ -188,7 +188,7 @@ def normalize_before_encryption(unencrypted, content_type, content_encoding,
     else:
         raise CryptoContentTypeNotSupportedException(content_type)
 
-    return unencrypted, content_type
+    return unencrypted, normalized_mime
 
 
 def analyze_before_decryption(content_type):

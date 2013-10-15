@@ -13,7 +13,8 @@ fpm -s python -t rpm pysqlite
 fpm -s python -t rpm eventlet
 fpm -s python -t rpm oslo.config
 fpm -s python -t rpm iso8601
-fpm -s python -t rpm kombu
+# pin kombu because v3.0 breaks celery
+fpm -s python -t rpm -v 2.5.15 kombu
 fpm -s python -t rpm webob
 # --> # python-webob.noarch 0.9.6.1-3.el6 exists, but is incompatible
 # fpm -s python -t rpm PasteDeploy

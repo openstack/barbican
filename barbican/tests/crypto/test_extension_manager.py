@@ -128,6 +128,16 @@ class WhenTestingNormalizeBeforeEncryptionForText(unittest.TestCase):
                          content)
         self.assertEqual(self.unencrypted.encode('utf-8'), unenc)
 
+    def test_raises_on_bogus_content_type(self):
+        content_type = 'text/plain; charset=ISO-8859-1'
+        with self.assertRaises(em.CryptoContentTypeNotSupportedException):
+            unenc, content = em.normalize_before_encryption(
+                self.unencrypted,
+                content_type,
+                self.content_encoding,
+                self.enforce_text_only
+            )
+
 
 class WhenTestingAnalyzeBeforeDecryption(unittest.TestCase):
 

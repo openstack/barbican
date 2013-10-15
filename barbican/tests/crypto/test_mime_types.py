@@ -88,3 +88,39 @@ class WhenTestingAugmentFieldsWithContentTypes(unittest.TestCase):
         content_types = fields['content_types']
         self.assertIn('default', content_types)
         self.assertEqual(self.datum.content_type, content_types['default'])
+
+
+class WhenTestingNormalizationOfMIMETypes(unittest.TestCase):
+
+    def test_plain_text_normalization(self):
+        mimes = ['text/plain',
+                 '   text/plain  ',
+                 'text/plain;charset=utf-8',
+                 'text/plain;charset=UTF-8',
+                 'text/plain; charset=utf-8',
+                 'text/plain; charset=UTF-8',
+                 'text/plain;  charset=utf-8',
+                 'text/plain;  charset=UTF-8',
+                 'text/plain ; charset = utf-8',
+                 'text/plain ; charset = UTF-8']
+        for mime in mimes:
+            self._test_plain_text_mime_type(mime)
+
+    def _test_plain_text_mime_type(self, mime):
+        r = mime_types.normalize_content_type(mime)
+        self.assertEqual(r, 'text/plain')
+
+    def test_unsupported_charset_in_plain_text_mime(self):
+        mime = 'text/plain; charset=ISO-8859-1'
+        r = mime_types.normalize_content_type(mime)
+        self.assertEqual(r, mime)
+
+    def test_binary_normalization(self):
+        mime = 'application/octet-stream'
+        r = mime_types.normalize_content_type(mime)
+        self.assertEqual(r, 'application/octet-stream')
+
+    def test_bogus_mime_normalization(self):
+        mime = 'something/bogus'
+        r = mime_types.normalize_content_type(mime)
+        self.assertEqual(r, 'something/bogus')

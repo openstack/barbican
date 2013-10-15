@@ -25,6 +25,7 @@ from barbican.common import utils
 PLAIN_TEXT = ['text/plain',
               'text/plain;charset=utf-8',
               'text/plain; charset=utf-8']
+PLAIN_TEXT_CHARSETS = ['utf-8']
 BINARY = ['application/octet-stream']
 SUPPORTED = PLAIN_TEXT + BINARY
 
@@ -57,7 +58,20 @@ CTYPES_TO_ENCODINGS = {'text/plain': None,
 
 def normalize_content_type(mime_type):
     """Normalize the supplied content-type to an internal form."""
-    return INTERNAL_CTYPES.get(mime_type)
+    stripped = map(lambda x: x.strip(), mime_type.split(';'))
+    mime = stripped[0].lower()
+    if len(stripped) > 1:
+        # mime type includes charset
+        charset_type = stripped[1].lower()
+        if '=' not in charset_type:
+            # charset is malformed
+            return mime_type
+        else:
+            charset = map(lambda x: x.strip(), charset_type.split('='))[1]
+            if charset not in PLAIN_TEXT_CHARSETS:
+                # unsupported charset
+                return mime_type
+    return INTERNAL_CTYPES.get(mime, mime_type)
 
 
 def is_supported(mime_type):
