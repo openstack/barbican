@@ -50,7 +50,7 @@ fpm -s python -t rpm mako
 fpm -s python -t rpm argparse
 
 # python-celery
-fpm -s python -t rpm billiard
+fpm -s python -t rpm -v 2.7.3.34 billiard
 
 # python-eventlet
 fpm -s python -t rpm greenlet
