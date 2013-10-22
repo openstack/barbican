@@ -23,7 +23,7 @@ then
   PKG_DIR=$PWD/etc/$PKG
   CONF_FILE=./etc/$PKG/barbican-api.conf
   PYTHONPATH=$VENV_PYTHON:$PYTHONPATH
-  OPTS='-H '$VENV_HOME/$VENV
+  OPTS='-H '$VENV_HOME/$VENV' --stats :9314'
 
   # Copy conf file to home directory so oslo.config can find it
   LOCAL_CONF_FILE=~/barbican-api.conf
