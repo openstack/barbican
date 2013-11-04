@@ -12,7 +12,7 @@ Additional documentation can be found on the [Github Wiki](https://github.com/cl
 
 ## Getting Started
 
-* [Please visit our wiki home page for details](https://github.com/cloudkeep/barbican/wiki)
+* [Please visit our Getting Started wiki page for details](https://github.com/cloudkeep/barbican/wiki/Barbican-Getting-Started-Guide)
 
 
 ## Why Should You Use Barbican?

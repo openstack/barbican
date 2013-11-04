@@ -79,7 +79,7 @@ Barbican Key Manager API daemon
 %defattr(-,root,root)
 %verify(not md5 size mtime) %attr(0750, barbican,root) /var/log/barbican/barbican-api.log
 /etc/logrotate.d/barbican-api
-%attr(0755,root,root) /usr/bin/barbican-all
+%attr(0755,root,root) /usr/bin/barbican.sh
 %config(noreplace) /etc/init/barbican-api.conf
 %config(noreplace) /etc/barbican/*
 
