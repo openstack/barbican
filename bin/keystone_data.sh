@@ -9,7 +9,7 @@
 # alternately export values for
 export OS_AUTH_URL="http://localhost:5000/v2.0"
 # your secret password
-export OS_PASSWORD="orange" 
+export OS_PASSWORD="password"
 export OS_TENANT_NAME="service" 
 export OS_USERNAME="nova" 
 
@@ -42,6 +42,7 @@ ENABLED_SERVICES="barbican"
 SERVICE_PASSWORD="orange"
 SERVICE_HOST="localhost"
 SERVICE_TENANT_NAME="service"
+KEYSTONE_CATALOG_BACKEND='sql'
 
 #============================
 # Lookups
@@ -64,15 +65,13 @@ if [[ "$ENABLED_SERVICES" =~ "barbican" ]]; then
     if [[ "$KEYSTONE_CATALOG_BACKEND" = 'sql' ]]; then
         BARBICAN_SERVICE=$(get_id keystone service-create \
             --name=barbican \
-            --type="key store" \
+            --type="keystore" \
             --description="Barbican Key Management Service")
         keystone endpoint-create \
             --region RegionOne \
             --service_id $BARBICAN_SERVICE \
-            --publicurl "http://$SERVICE_HOST:9311" \
-            --adminurl "http://$SERVICE_HOST:9312" \
-            --internalurl "http://$SERVICE_HOST:9313"
+            --publicurl "http://$SERVICE_HOST:9311/v1" \
+            --adminurl "http://$SERVICE_HOST:9312/v1" \
+            --internalurl "http://$SERVICE_HOST:9313/v1"
     fi
 fi
-
-
