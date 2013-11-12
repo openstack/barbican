@@ -4,10 +4,10 @@ pysqlite>=2.6.0
 eventlet>=0.12.1
 oslo.config>=1.1.0
 iso8601>=0.1.4
-kombu<3.0.0
+kombu
 webob>=1.2.3
 PasteDeploy>=1.5.0
-Celery>=3.0.19
+Celery
 python-keystoneclient>=0.3.1
 stevedore>=0.8
 pycrypto>=2.6
