@@ -202,7 +202,10 @@ def denormalize_after_decryption(unencrypted, content_type):
     # Process plain-text type.
     if content_type in mime_types.PLAIN_TEXT:
         # normalize text to binary string
-        unencrypted = unencrypted.decode('utf-8')
+        try:
+            unencrypted = unencrypted.decode('utf-8')
+        except UnicodeDecodeError:
+            raise CryptoAcceptNotSupportedException(content_type)
 
     # Process binary type.
     elif content_type not in mime_types.BINARY:

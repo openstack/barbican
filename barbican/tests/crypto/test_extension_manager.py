@@ -175,6 +175,13 @@ class WhenTestingDenormalizeAfterDecryption(unittest.TestCase):
             em.denormalize_after_decryption(self.unencrypted,
                                             self.content_type)
 
+    def test_decrypt_fail_binary_as_plain(self):
+        self.unencrypted = '\xff'
+        self.content_type = 'text/plain'
+        with self.assertRaises(em.CryptoAcceptNotSupportedException):
+            em.denormalize_after_decryption(self.unencrypted,
+                                            self.content_type)
+
 
 class WhenTestingCryptoExtensionManager(unittest.TestCase):
 
