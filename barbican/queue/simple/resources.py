@@ -18,7 +18,7 @@ Simple Queue Resources related objects and functions, making direct calls
 to the worker tasks.
 """
 from oslo.config import cfg
-from barbican.tasks.resources import BeginOrder
+from barbican.tasks import resources
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
@@ -29,9 +29,21 @@ CONF = cfg.CONF
 def process_order(order_id, keystone_id):
     """Process Order."""
     LOG.debug('Order id is {0}'.format(order_id))
-    task = BeginOrder()
+    task = resources.BeginOrder()
     try:
         task.process(order_id, keystone_id)
     except Exception:
         LOG.exception(">>>>> Task exception seen, but simulating async "
                       "reporting via the Orders entity on the worker side.")
+
+
+def process_verification(verification_id, keystone_id):
+    """Process Verification."""
+    LOG.debug('Verification id is {0}'.format(verification_id))
+    task = resources.PerformVerification()
+    try:
+        task.process(verification_id, keystone_id)
+    except Exception:
+        LOG.exception(">>>>> Task exception seen, but simulating async "
+                      "reporting via the Verification entity on the "
+                      "worker side.")

@@ -53,7 +53,7 @@ def create_secret(data, tenant, crypto_manager,
     time_keeper.mark('after Secret model create')
     new_datum = None
     content_type = data.get('payload_content_type',
-                            'application/octet-stream')  # TODO: Add to Order!
+                            'application/octet-stream')
 
     if 'payload' in data:
         payload = data.get('payload')

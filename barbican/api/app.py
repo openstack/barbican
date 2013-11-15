@@ -51,6 +51,8 @@ def create_main_app(global_config, **local_conf):
     secret = res.SecretResource(crypto_mgr)
     orders = res.OrdersResource()
     order = res.OrderResource()
+    verifications = res.VerificationsResource()
+    verification = res.VerificationResource()
 
     # For performance testing only
     performance = res.PerformanceResource()
@@ -65,6 +67,9 @@ def create_main_app(global_config, **local_conf):
     api.add_route('/v1/{keystone_id}/secrets/{secret_id}', secret)
     api.add_route('/v1/{keystone_id}/orders', orders)
     api.add_route('/v1/{keystone_id}/orders/{order_id}', order)
+    api.add_route('/v1/{keystone_id}/verifications', verifications)
+    api.add_route('/v1/{keystone_id}/verifications/{verification_id}',
+                  verification)
 
     # For performance testing only
     api.add_route('/{0}'.format(performance_uri), performance)
