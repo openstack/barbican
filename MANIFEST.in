@@ -1,5 +1,5 @@
 include ChangeLog
-include README.rst
+include README.md
 include MANIFEST.in pylintrc
 include Authors
 include HACKING.rst
