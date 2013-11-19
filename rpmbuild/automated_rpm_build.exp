@@ -1,0 +1,9 @@
+#!/usr/bin/expect
+
+spawn "./rpmbuild/build_rpm.sh"
+
+expect "Enter pass phrase: "
+send "\n"
+
+interact
+
