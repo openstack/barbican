@@ -1,9 +1,10 @@
 #!/usr/bin/expect
+set timeout -1
 
 spawn "./rpmbuild/build_rpm.sh"
 
 expect "Enter pass phrase: "
 send "\n"
 
-interact
+expect eof
 
