@@ -21,6 +21,7 @@ import abc
 from barbican import api
 from barbican.common import resources as res
 from barbican.common import utils
+from barbican.common import verifications as ver
 from barbican.crypto import extension_manager as em
 from barbican.model import models
 from barbican.model import repositories as rep
@@ -195,3 +196,44 @@ class BeginOrder(BaseTask):
         order.secret_id = new_secret.id
 
         LOG.debug("...done creating order's secret.")
+
+
+class PerformVerification(BaseTask):
+    """Handles beginning processing a Verification request."""
+
+    def get_name(self):
+        return u._('Perform Verification')
+
+    def __init__(self, verification_repo=None):
+        LOG.debug('Creating PerformVerification task processor')
+        self.verification_repo = verification_repo or rep.VerificationRepo()
+
+    def retrieve_entity(self, verification_id, keystone_id):
+        return self.verification_repo.get(entity_id=verification_id,
+                                          keystone_id=keystone_id)
+
+    def handle_processing(self, verification, *args, **kwargs):
+        self.handle_verification(verification)
+
+    def handle_error(self, verification, status, message, exception,
+                     *args, **kwargs):
+        verification.status = models.States.ERROR
+        verification.error_status_code = status
+        verification.error_reason = message
+        self.verification_repo.save(verification)
+
+    def handle_success(self, verification, *args, **kwargs):
+        verification.status = models.States.ACTIVE
+        self.verification_repo.save(verification)
+
+    def handle_verification(self, verification):
+        """Handle performing a verification.
+
+        Performs a verification process on a reference.
+
+        :param verification: Verification to process on behalf of.
+        """
+        # Perform the verification.
+        ver.verify(verification)
+
+        LOG.debug("...done verifying resource.")

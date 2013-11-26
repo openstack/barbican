@@ -19,7 +19,7 @@ Celery Queue Resources related objects and functions.
 from celery import Celery
 
 from oslo.config import cfg
-from barbican.tasks.resources import BeginOrder
+from barbican.tasks import resources
 from barbican.common import utils
 
 
@@ -44,7 +44,6 @@ CONF.import_opt('debug', 'barbican.openstack.common.log')
 #   the bin/barbican-worker to boot up a Celery worker server instance.
 celery = Celery(CONF.celery.project,
                 broker=CONF.celery.broker,
-                # backend='amqp://',
                 include=[CONF.celery.include])
 
 
@@ -53,9 +52,22 @@ def process_order(order_id, keystone_id):
     return process_order_wrapper.delay(order_id, keystone_id)
 
 
+def process_verification(verification_id, keystone_id):
+    """Process Verification."""
+    return process_verification_wrapper.delay(verification_id, keystone_id)
+
+
 @celery.task
 def process_order_wrapper(order_id, keystone_id):
     """(Celery wrapped task) Process Order."""
     LOG.debug('Order id is {0}'.format(order_id))
-    task = BeginOrder()
+    task = resources.BeginOrder()
     return task.process(order_id, keystone_id)
+
+
+@celery.task
+def process_verification_wrapper(verification_id, keystone_id):
+    """(Celery wrapped task) Process Verification."""
+    LOG.debug('Verification id is {0}'.format(verification_id))
+    task = resources.PerformVerification()
+    return task.process(verification_id, keystone_id)

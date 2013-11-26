@@ -244,3 +244,41 @@ class NewOrderValidator(ValidatorBase):
                                                       "multiple of 8"))
 
         return json_data
+
+
+class VerificationValidator(ValidatorBase):
+    """Validate a verification resource request."""
+
+    def __init__(self):
+        self.name = 'Verification'
+        self.schema = {
+            "type": "object",
+            "required": ["resource_type", "resource_ref",
+                         "resource_action", "impersonation_allowed"],
+            "properties": {
+                "resource_type": {
+                    "type": "string",
+                    "enum": [
+                        "image"
+                    ]
+                },
+                "resource_ref": {"type": "string"},
+                "resource_action": {
+                    "type": "string",
+                    "enum": [
+                        "vm_attach"
+                    ]
+                },
+                "impersonation_allowed": {"type": "boolean"},
+            },
+        }
+
+    def validate(self, json_data, parent_schema=None):
+        schema_name = self._full_name(parent_schema)
+
+        try:
+            schema.validate(json_data, self.schema)
+        except schema.ValidationError as e:
+            raise exception.InvalidObject(schema=schema_name, reason=str(e))
+
+        return json_data

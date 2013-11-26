@@ -913,13 +913,15 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
     def test_should_add_new_order(self):
         self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
 
+        self.assertEquals(falcon.HTTP_202, self.resp.status)
+
         self.queue_resource.process_order \
             .assert_called_once_with(order_id=None,
                                      keystone_id=self.tenant_keystone_id)
 
         args, kwargs = self.order_repo.create_from.call_args
         order = args[0]
-        self.assertTrue(isinstance(order, models.Order))
+        self.assertIsInstance(order, models.Order)
 
     def test_should_fail_add_new_order_no_secret(self):
         self.stream.read.return_value = '{}'
@@ -1142,3 +1144,156 @@ class WhenAddingNavigationHrefs(unittest.TestCase):
 
         self.assertIn('previous', data_with_hrefs)
         self.assertNotIn('next', data_with_hrefs)
+
+
+class WhenCreatingVerificationsUsingVerificationsResource(unittest.TestCase):
+    def setUp(self):
+        self.resource_type = 'image'
+        self.resource_ref = 'http://www.images.com/v1/images/12345'
+        self.resource_action = 'vm_attach'
+        self.impersonation = True
+
+        self.tenant_internal_id = 'tenantid1234'
+        self.tenant_keystone_id = 'keystoneid1234'
+
+        self.tenant = models.Tenant()
+        self.tenant.id = self.tenant_internal_id
+        self.tenant.keystone_id = self.tenant_keystone_id
+
+        self.tenant_repo = mock.MagicMock()
+        self.tenant_repo.get.return_value = self.tenant
+
+        self.verification_repo = mock.MagicMock()
+        self.verification_repo.create_from.return_value = None
+
+        self.queue_resource = mock.MagicMock()
+        self.queue_resource.process_verification.return_value = None
+
+        self.stream = mock.MagicMock()
+
+        self.verify_req = {'resource_type': self.resource_type,
+                           'resource_ref': self.resource_ref,
+                           'resource_action': self.resource_action,
+                           'impersonation_allowed': self.impersonation}
+        self.json = json.dumps(self.verify_req)
+        self.stream.read.return_value = self.json
+
+        self.req = mock.MagicMock()
+        self.req.stream = self.stream
+
+        self.resp = mock.MagicMock()
+        self.resource = res.VerificationsResource(self.tenant_repo,
+                                                  self.verification_repo,
+                                                  self.queue_resource)
+
+    def test_should_add_new_verification(self):
+        self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
+
+        self.assertEquals(falcon.HTTP_202, self.resp.status)
+
+        self.queue_resource.process_verification \
+            .assert_called_once_with(verification_id=None,
+                                     keystone_id=self.tenant_keystone_id)
+
+        args, kwargs = self.verification_repo.create_from.call_args
+        verification = args[0]
+        self.assertIsInstance(verification, models.Verification)
+
+    def test_should_fail_add_new_verification_no_resource_ref(self):
+        self.verify_req.pop('resource_ref')
+        self.json = json.dumps(self.verify_req)
+        self.stream.read.return_value = self.json
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_post(self.req, self.resp,
+                                  self.tenant_keystone_id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_400, exception.status)
+
+    def test_should_fail_verification_unsupported_resource_type(self):
+        self.verify_req['resource_type'] = 'not-a-valid-type'
+        self.json = json.dumps(self.verify_req)
+        self.stream.read.return_value = self.json
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_post(self.req, self.resp,
+                                  self.tenant_keystone_id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_400, exception.status)
+
+    def test_should_fail_verification_bad_json(self):
+        self.stream.read.return_value = ''
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_post(self.req, self.resp,
+                                  self.tenant_keystone_id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_400, exception.status)
+
+
+class WhenGettingOrDeletingVerificationUsingVerifyResource(unittest.TestCase):
+    def setUp(self):
+        self.tenant_keystone_id = 'keystoneid1234'
+        self.requestor = 'requestor1234'
+
+        self.verification = self._create_verification(id="id1")
+
+        self.verify_repo = mock.MagicMock()
+        self.verify_repo.get.return_value = self.verification
+        self.verify_repo.delete_entity_by_id.return_value = None
+
+        self.req = mock.MagicMock()
+        self.resp = mock.MagicMock()
+
+        self.resource = res.VerificationResource(self.verify_repo)
+
+    def test_should_get_verification(self):
+        self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
+                             self.verification.id)
+
+        self.verify_repo.get \
+            .assert_called_once_with(entity_id=self.verification.id,
+                                     keystone_id=self.tenant_keystone_id,
+                                     suppress_exception=True)
+
+    def test_should_delete_verification(self):
+        self.resource.on_delete(self.req, self.resp, self.tenant_keystone_id,
+                                self.verification.id)
+
+        self.verify_repo.delete_entity_by_id \
+            .assert_called_once_with(entity_id=self.verification.id,
+                                     keystone_id=self.tenant_keystone_id)
+
+    def test_should_throw_exception_for_get_when_verify_not_found(self):
+        self.verify_repo.get.return_value = None
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
+                                 self.verification.id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_404, exception.status)
+
+    def test_should_throw_exception_for_delete_when_verify_not_found(self):
+        self.verify_repo.delete_entity_by_id.side_effect = excep.NotFound(
+            "Test not found exception")
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_delete(self.req, self.resp,
+                                    self.tenant_keystone_id,
+                                    self.verification.id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_404, exception.status)
+
+    def _create_verification(self, id="id",
+                             resource_type='image',
+                             resource_ref='http://www.images.com/images/123',
+                             resource_action='vm_attach',
+                             impersonation_allowed=True):
+        """Generate a Verification entity instance."""
+        verification = models.Verification()
+        verification.id = id
+        verification.resource_type = resource_type
+        verification.resource_ref = resource_ref
+        verification.resource_action = resource_action
+        verification.impersonation_allowed = impersonation_allowed
+        return verification

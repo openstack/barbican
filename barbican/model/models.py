@@ -164,6 +164,7 @@ class Tenant(BASE, ModelBase):
     keystone_id = sa.Column(sa.String(255), unique=True)
 
     orders = orm.relationship("Order", backref="tenant")
+    verifications = orm.relationship("Verification", backref="tenant")
     secrets = orm.relationship("TenantSecret", backref="tenants")
     keks = orm.relationship("KEKDatum", backref="tenant")
 
@@ -196,15 +197,16 @@ class Secret(BASE, ModelBase):
     #   See barbican.api.resources.py::SecretsResource.on_get()
     encrypted_data = orm.relationship("EncryptedDatum", lazy='joined')
 
-    def __init__(self, parsed_request):
+    def __init__(self, parsed_request=None):
         """Creates secret from a dict."""
         super(Secret, self).__init__()
 
-        self.name = parsed_request.get('name')
-        self.expiration = parsed_request.get('expiration')
-        self.algorithm = parsed_request.get('algorithm')
-        self.bit_length = parsed_request.get('bit_length')
-        self.mode = parsed_request.get('mode')
+        if parsed_request:
+            self.name = parsed_request.get('name')
+            self.expiration = parsed_request.get('expiration')
+            self.algorithm = parsed_request.get('algorithm')
+            self.bit_length = parsed_request.get('bit_length')
+            self.mode = parsed_request.get('mode')
 
         self.status = States.ACTIVE
 
@@ -346,8 +348,58 @@ class Order(BASE, ModelBase):
         return ret
 
 
+class Verification(BASE, ModelBase):
+    """Represents a Verification result in the datastore.
+
+    Verification represent that status of resource verification requests
+    made by Tenants.
+    """
+
+    __tablename__ = 'verifications'
+
+    tenant_id = sa.Column(sa.String(36), sa.ForeignKey('tenants.id'),
+                          nullable=False)
+
+    error_status_code = sa.Column(sa.String(16))
+    error_reason = sa.Column(sa.String(255))
+
+    resource_type = sa.Column(sa.String(255), nullable=False)
+    resource_ref = sa.Column(sa.String(255), nullable=False)
+    resource_action = sa.Column(sa.String(255), nullable=False)
+    impersonation_allowed = sa.Column(sa.Boolean, nullable=False,
+                                      default=True)
+    is_verified = sa.Column(sa.Boolean, nullable=False,
+                            default=False)
+
+    def __init__(self, parsed_request=None):
+        """Creates a Verification entity from a dict."""
+        super(Verification, self).__init__()
+
+        if parsed_request:
+            self.resource_type = parsed_request.get('resource_type')
+            self.resource_ref = parsed_request.get('resource_ref')
+            self.resource_action = parsed_request.get('resource_action')
+            self.impersonation_allowed = parsed_request.get('impersonation_'
+                                                            'allowed')
+
+        self.status = States.PENDING
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        ret = {'verification_id': self.id,
+               'resource_type': self.resource_type,
+               'resource_ref': self.resource_ref,
+               'resource_action': self.resource_action,
+               'impersonation_allowed': self.impersonation_allowed,
+               'is_verified': self.is_verified}
+        if self.error_status_code:
+            ret['error_status_code'] = self.error_status_code
+        if self.error_reason:
+            ret['error_reason'] = self.error_reason
+        return ret
+
 # Keep this tuple synchronized with the models in the file
-MODELS = [TenantSecret, Tenant, Secret, EncryptedDatum, Order]
+MODELS = [TenantSecret, Tenant, Secret, EncryptedDatum, Order, Verification]
 
 
 def register_models(engine):
