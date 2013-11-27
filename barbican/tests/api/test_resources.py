@@ -36,11 +36,11 @@ from barbican.openstack.common import jsonutils
 from barbican.tests.crypto import test_plugin as ctp
 
 
-def create_secret(id="id", name="name",
+def create_secret(id_ref="id", name="name",
                   algorithm=None, bit_length=None,
                   mode=None, encrypted_datum=None):
     """Generate a Secret entity instance."""
-    info = {'id': id,
+    info = {'id': id_ref,
             'name': name,
             'algorithm': algorithm,
             'bit_length': bit_length,
@@ -51,14 +51,14 @@ def create_secret(id="id", name="name",
     return secret
 
 
-def create_order(id="id",
+def create_order(id_ref="id",
                  name="name",
                  algorithm=None,
                  bit_length=None,
                  mode=None):
     """Generate an Order entity instance."""
     order = models.Order()
-    order.id = id
+    order.id = id_ref
     order.secret_name = name
     order.secret_algorithm = algorithm
     order.secret_bit_length = bit_length
@@ -72,6 +72,17 @@ def validate_datum(test, datum):
     test.assertTrue(datum.kek_meta_tenant.bind_completed)
     test.assertIsNotNone(datum.kek_meta_tenant.plugin_name)
     test.assertIsNotNone(datum.kek_meta_tenant.kek_label)
+
+
+def create_verification(id_ref="id"):
+    """Generate an Verification entity instance."""
+    verify = models.Verification()
+    verify.id = id_ref
+    verify.resource_type = 'image'
+    verify.resource_action = 'vm_attach'
+    verify.resource_ref = 'http://www.myres.com'
+    verify.impersonation_allowed = True
+    return verify
 
 
 class WhenTestingVersionResource(unittest.TestCase):
@@ -454,7 +465,8 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
                          'mode': self.secret_mode,
                          'encrypted_datum': None}
 
-        self.secrets = [create_secret(id='id' + str(id), **secret_params) for
+        self.secrets = [create_secret(id_ref='id' + str(id),
+                                      **secret_params) for
                         id in xrange(self.num_secrets)]
         self.total = len(self.secrets)
 
@@ -578,7 +590,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.datum.content_type = "text/plain"
         self.datum.cypher_text = "aaaa"  # base64 value.
 
-        self.secret = create_secret(id=secret_id,
+        self.secret = create_secret(id_ref=secret_id,
                                     name=self.name,
                                     algorithm=self.secret_algorithm,
                                     bit_length=self.secret_bit_length,
@@ -962,7 +974,7 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
                         'bit_length': self.secret_bit_length,
                         'mode': self.secret_mode}
 
-        self.orders = [create_order(id='id' + str(id), **order_params) for
+        self.orders = [create_order(id_ref='id' + str(id), **order_params) for
                        id in xrange(self.num_orders)]
         self.total = len(self.orders)
         self.order_repo = mock.MagicMock()
@@ -977,7 +989,8 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
 
         self.req = mock.MagicMock()
         self.req.accept = 'application/json'
-        self.req._params = self.params
+        self.req.get_param = mock.Mock()
+        self.req.get_param.side_effect = [self.offset, self.limit]
         self.resp = mock.MagicMock()
         self.resource = res.OrdersResource(self.tenant_repo, self.order_repo,
                                            self.queue_resource)
@@ -987,10 +1000,8 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
 
         self.order_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
-                                     offset_arg=self.params.get('offset',
-                                                                self.offset),
-                                     limit_arg=self.params.get('limit',
-                                                               self.limit),
+                                     offset_arg=self.offset,
+                                     limit_arg=self.limit,
                                      suppress_exception=True)
 
         resp_body = jsonutils.loads(self.resp.body)
@@ -1049,7 +1060,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
         self.tenant_keystone_id = 'keystoneid1234'
         self.requestor = 'requestor1234'
 
-        self.order = create_order(id="id1", name="name")
+        self.order = create_order(id_ref="id1", name="name")
 
         self.order_repo = mock.MagicMock()
         self.order_repo.get.return_value = self.order
@@ -1297,3 +1308,92 @@ class WhenGettingOrDeletingVerificationUsingVerifyResource(unittest.TestCase):
         verification.resource_action = resource_action
         verification.impersonation_allowed = impersonation_allowed
         return verification
+
+
+class WhenGettingVerificationsListUsingResource(unittest.TestCase):
+    def setUp(self):
+        self.tenant_id = 'tenant1234'
+        self.keystone_id = 'keystoneid1234'
+
+        self.num_verifs = 10
+        self.offset = 2
+        self.limit = 2
+
+        self.verifs = [create_verification(id_ref='id' + str(id_ref)) for
+                       id_ref in xrange(self.num_verifs)]
+        self.total = len(self.verifs)
+        self.verif_repo = mock.MagicMock()
+        self.verif_repo.get_by_create_date.return_value = (self.verifs,
+                                                           self.offset,
+                                                           self.limit,
+                                                           self.total)
+        self.tenant_repo = mock.MagicMock()
+
+        self.queue_resource = mock.MagicMock()
+        self.queue_resource.process_order.return_value = None
+
+        self.req = mock.MagicMock()
+        self.req.accept = 'application/json'
+        self.req.get_param = mock.Mock()
+        self.req.get_param.side_effect = [self.offset, self.limit]
+        self.resp = mock.MagicMock()
+        self.resource = res.VerificationsResource(self.tenant_repo,
+                                                  self.verif_repo,
+                                                  self.queue_resource)
+
+    def test_should_get_list_verifications(self):
+        self.resource.on_get(self.req, self.resp, self.keystone_id)
+
+        self.verif_repo.get_by_create_date \
+            .assert_called_once_with(self.keystone_id,
+                                     offset_arg=self.offset,
+                                     limit_arg=self.limit,
+                                     suppress_exception=True)
+
+        resp_body = jsonutils.loads(self.resp.body)
+        self.assertTrue('previous' in resp_body)
+        self.assertTrue('next' in resp_body)
+
+        url_nav_next = self._create_url(self.keystone_id,
+                                        self.offset + self.limit, self.limit)
+        self.assertTrue(self.resp.body.count(url_nav_next) == 1)
+
+        url_nav_prev = self._create_url(self.keystone_id,
+                                        0, self.limit)
+        self.assertTrue(self.resp.body.count(url_nav_prev) == 1)
+
+        url_hrefs = self._create_url(self.keystone_id)
+        self.assertTrue(self.resp.body.count(url_hrefs) ==
+                        (self.num_verifs + 2))
+
+    def test_response_should_include_total(self):
+        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        resp_body = jsonutils.loads(self.resp.body)
+        self.assertIn('total', resp_body)
+        self.assertEqual(resp_body['total'], self.total)
+
+    def test_should_handle_no_orders(self):
+
+        del self.verifs[:]
+
+        self.resource.on_get(self.req, self.resp, self.keystone_id)
+
+        self.verif_repo.get_by_create_date \
+            .assert_called_once_with(self.keystone_id,
+                                     offset_arg=self.offset,
+                                     limit_arg=self.limit,
+                                     suppress_exception=True)
+
+        resp_body = jsonutils.loads(self.resp.body)
+        self.assertFalse('previous' in resp_body)
+        self.assertFalse('next' in resp_body)
+
+    def _create_url(self, keystone_id, offset_arg=None, limit_arg=None):
+        if limit_arg:
+            offset = int(offset_arg)
+            limit = int(limit_arg)
+            return '/v1/{0}/verifications' \
+                   '?limit={1}&offset={2}'.format(keystone_id,
+                                                  limit, offset)
+        else:
+            return '/v1/{0}/verifications'.format(self.keystone_id)

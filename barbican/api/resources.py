@@ -502,12 +502,10 @@ class OrdersResource(api.ApiResource):
         LOG.debug('Start orders on_get '
                   'for tenant-ID {0}:'.format(keystone_id))
 
-        params = req._params
-
         result = self.order_repo \
             .get_by_create_date(keystone_id,
-                                offset_arg=params.get('offset'),
-                                limit_arg=params.get('limit'),
+                                offset_arg=req.get_param('offset'),
+                                limit_arg=req.get_param('limit'),
                                 suppress_exception=True)
         orders, offset, limit, total = result
 
@@ -615,17 +613,18 @@ class VerificationsResource(api.ApiResource):
         verifications, offset, limit, total = result
 
         if not verifications:
-            resp_overall = {'verifications': [], 'total': total}
+            resp_verif_overall = {'verifications': [], 'total': total}
         else:
-            resp = [convert_to_hrefs(keystone_id, v.to_dict_fields()) for
-                    v in verifications]
-            resp_overall = add_nav_hrefs('verifications', keystone_id,
-                                         offset, limit, total,
-                                         {'verifications': resp})
-            resp_overall.update({'total': total})
+            resp_verif = [convert_to_hrefs(keystone_id,
+                                           v.to_dict_fields()) for
+                          v in verifications]
+            resp_verif_overall = add_nav_hrefs('verifications', keystone_id,
+                                               offset, limit, total,
+                                               {'verifications': resp_verif})
+            resp_verif_overall.update({'total': total})
 
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps(resp_overall,
+        resp.body = json.dumps(resp_verif_overall,
                                default=json_handler)
 
 
