@@ -1,0 +1,9 @@
+# Format is:
+# <preferred e-mail> <other e-mail 1>
+# <preferred e-mail> <other e-mail 2>
+<douglas.mendizabal@rackspace.com> <dougmendizabal@gmail.com>
+<jarret.raim@rackspace.com> <jarito@gmail.com>
+John Wood <john.wood@rackspace.com> <jfwood@ubuntu.(none)>
+Malini K. Bhandaru <malini.k.bhandaru@intel.com> <malini@ubuntu.(none)>
+Malini K. Bhandaru <malini.k.bhandaru@intel.com> Malini Bhandaru <malini.k.bhandaru@intel.com>
+
