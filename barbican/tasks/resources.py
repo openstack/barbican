@@ -45,6 +45,9 @@ class BaseTask(object):
     def process(self, *args, **kwargs):
         """A template method for all asynchronous tasks.
 
+        This method should not be overridden by sub-classes. Rather the
+        abstract methods below should be overridden.
+
         :param args: List of arguments passed in from the client.
         :param kwargs: Dict of arguments passed in from the client.
         :return: None

@@ -28,7 +28,7 @@ from barbican.model import models
 from barbican.model import repositories as repo
 from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import jsonutils as json
-from barbican import queue
+from barbican.queue import client as async_client
 from barbican import version
 
 
@@ -460,7 +460,7 @@ class OrdersResource(api.ApiResource):
         LOG.debug('Creating OrdersResource')
         self.tenant_repo = tenant_repo or repo.TenantRepo()
         self.order_repo = order_repo or repo.OrderRepo()
-        self.queue = queue_resource or queue.get_queue_api()
+        self.queue = queue_resource or async_client.TaskClient()
         self.validator = validators.NewOrderValidator()
 
     @handle_exceptions(u._('Order creation'))
@@ -575,7 +575,7 @@ class VerificationsResource(api.ApiResource):
         self.tenant_repo = tenant_repo or repo.TenantRepo()
         self.verification_repo = verification_repo or repo.VerificationRepo()
         self.validator = validators.VerificationValidator()
-        self.queue = queue_resource or queue.get_queue_api()
+        self.queue = queue_resource or async_client.TaskClient()
 
     @handle_exceptions(u._('Verification creation'))
     @handle_rbac('verifications:post')

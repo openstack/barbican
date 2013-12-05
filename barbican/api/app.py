@@ -25,11 +25,13 @@ try:
 except ImportError:
     newrelic_loaded = False
 
+from oslo.config import cfg
+
 from barbican.api import resources as res
 from barbican.common import config
 from barbican.crypto import extension_manager as ext
 from barbican.openstack.common import log
-
+from barbican import queue
 
 if newrelic_loaded:
     newrelic.agent.initialize('/etc/newrelic/newrelic.ini')
@@ -44,6 +46,10 @@ def create_main_app(global_config, **local_conf):
 
     # Crypto Plugin Manager
     crypto_mgr = ext.CryptoExtensionManager()
+
+    # Queuing initialization
+    CONF = cfg.CONF
+    queue.init(CONF)
 
     # Resources
     versions = res.VersionResource()

@@ -20,9 +20,13 @@
 Barbican worker server.
 """
 
+import eventlet
 import gettext
 import os
 import sys
+
+# Oslo messaging RPC server uses eventlet.
+eventlet.monkey_patch()
 
 # 'Borrowed' from the Glance project:
 # If ../barbican/__init__.py exists, add ../ to Python search path, so that
@@ -38,6 +42,10 @@ gettext.install('barbican', unicode=1)
 
 from barbican.common import config
 from barbican.openstack.common import log
+from barbican.openstack.common import service
+from barbican import queue
+from barbican.queue import server
+from oslo.config import cfg
 
 
 def fail(returncode, e):
@@ -54,10 +62,13 @@ if __name__ == '__main__':
         LOG = log.getLogger(__name__)
         LOG.debug("Booting up Barbican worker node...")
 
-        # Import after the 'parse_args()' call, to ensure we apply configuration
-        #   parameters to the Celery server used below.
-        from barbican.queue.celery.resources import celery
-        celery.worker_main()
+        # Queuing initialization
+        CONF = cfg.CONF
+        queue.init(CONF)
+
+        service.launch(
+            server.TaskServer()
+        ).wait()
     except RuntimeError as e:
         fail(1, e)
 

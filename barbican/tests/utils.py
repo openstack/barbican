@@ -13,6 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Simple (i.e. no actual queue) queuing resources.
-"""
+import unittest
+
+
+class BaseTestCase(unittest.TestCase):
+    def setUp(self):
+        super(BaseTestCase, self).setUp()
+        self.order_id = 'order1234'
+        self.verification_id = 'verif1234'
+        self.keystone_id = 'keystone1234'
+
+    def tearDown(self):
+        super(BaseTestCase, self).tearDown()
