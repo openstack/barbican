@@ -1,4 +1,4 @@
-hacking>=0.5.6,<0.8
-mock>=1.0.0
+hacking>=0.8.0,<0.9
+mock>=1.0
 nose
 nosexcover
