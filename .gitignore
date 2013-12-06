@@ -51,3 +51,5 @@ versiononly.txt
 *.orig
 myapp.profile
 *.out.myapp
+AUTHORS
+ChangeLog

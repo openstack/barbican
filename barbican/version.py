@@ -13,14 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Cloudkeep's Barbican version.
+import pbr.version
 
-The code repository should only control major and minor version information in
-this file. Per-build information will be supplied at build time via the
-'build_id' and 'commit_id' parameters.
-"""
-
-__version__ = '2013.2.{build_id}'
-__version_info__ = tuple(__version__.split('.'))
-__version_commit__ = '{commit_id}'
+version_info = pbr.version.VersionInfo('barbican')
+__version__ = version_info.version_string()
