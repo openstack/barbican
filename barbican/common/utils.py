@@ -25,7 +25,7 @@ import barbican.openstack.common.log as logging
 
 
 host_opts = [
-    cfg.StrOpt('host_href', default='localhost'),
+    cfg.StrOpt('host_href', default='http://localhost:9311'),
 ]
 
 CONF = cfg.CONF
@@ -38,7 +38,7 @@ API_VERSION = 'v1'
 
 def hostname_for_refs(keystone_id=None, resource=None):
     """Return the HATEOS-style return URI reference for this service."""
-    ref = ['http://{0}/{1}'.format(CONF.host_href, API_VERSION)]
+    ref = ['{0}/{1}'.format(CONF.host_href, API_VERSION)]
     if not keystone_id:
         return ref[0]
     ref.append('/' + keystone_id)
