@@ -494,7 +494,8 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
         self.req = mock.MagicMock()
         self.req.accept = 'application/json'
         self.req.get_param = mock.Mock()
-        self.req.get_param.side_effect = [self.offset, self.limit]
+        self.req.get_param.side_effect = [self.offset, self.limit, None, None,
+                                          None, 0]
         self.resp = mock.MagicMock()
         self.resource = res.SecretsResource(self.crypto_mgr, self.tenant_repo,
                                             self.secret_repo,
@@ -509,7 +510,9 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
             .assert_called_once_with(self.keystone_id,
                                      offset_arg=self.offset,
                                      limit_arg=self.limit,
-                                     suppress_exception=True)
+                                     suppress_exception=True,
+                                     name=None, alg=None, mode=None,
+                                     bits=0)
 
         resp_body = jsonutils.loads(self.resp.body)
         self.assertTrue('previous' in resp_body)
@@ -543,7 +546,9 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
             .assert_called_once_with(self.keystone_id,
                                      offset_arg=self.offset,
                                      limit_arg=self.limit,
-                                     suppress_exception=True)
+                                     suppress_exception=True,
+                                     name=None, alg=None, mode=None,
+                                     bits=0)
 
         resp_body = jsonutils.loads(self.resp.body)
         self.assertFalse('previous' in resp_body)
@@ -1335,7 +1340,8 @@ class WhenGettingVerificationsListUsingResource(unittest.TestCase):
         self.req = mock.MagicMock()
         self.req.accept = 'application/json'
         self.req.get_param = mock.Mock()
-        self.req.get_param.side_effect = [self.offset, self.limit]
+        self.req.get_param.side_effect = [self.offset, self.limit, None, None,
+                                          None, 0]
         self.resp = mock.MagicMock()
         self.resource = res.VerificationsResource(self.tenant_repo,
                                                   self.verif_repo,

@@ -488,6 +488,7 @@ class SecretRepo(BaseRepo):
     """Repository for the Secret entity."""
 
     def get_by_create_date(self, keystone_id, offset_arg=None, limit_arg=None,
+                           name=None, alg=None, mode=None, bits=0,
                            suppress_exception=False, session=None):
         """
         Returns a list of secrets, ordered by the date they were created at
@@ -508,6 +509,15 @@ class SecretRepo(BaseRepo):
             # Note: Must use '== None' below, not 'is None'.
             query = query.filter(or_(models.Secret.expiration == None,
                                      models.Secret.expiration > utcnow))
+
+            if name:
+                query = query.filter(models.Secret.name.like(name))
+            if alg:
+                query = query.filter(models.Secret.algorithm.like(alg))
+            if mode:
+                query = query.filter(models.Secret.mode.like(mode))
+            if bits > 0:
+                query = query.filter(models.Secret.bit_length == bits)
 
             query = query.join(models.TenantSecret,
                                models.Secret.tenant_assocs) \

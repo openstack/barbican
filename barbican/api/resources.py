@@ -334,6 +334,10 @@ class SecretsResource(api.ApiResource):
             keystone_id,
             offset_arg=req.get_param('offset'),
             limit_arg=req.get_param('limit'),
+            name=req.get_param('name'),
+            alg=req.get_param('alg'),
+            mode=req.get_param('mode'),
+            bits=req.get_param('bits'),
             suppress_exception=True
         )
 
