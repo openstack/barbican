@@ -16,6 +16,7 @@
 """
 API-facing resource controllers.
 """
+import urllib
 import falcon
 
 from barbican import api
@@ -330,11 +331,15 @@ class SecretsResource(api.ApiResource):
         LOG.debug('Start secrets on_get '
                   'for tenant-ID {0}:'.format(keystone_id))
 
+        name = req.get_param('name')
+        if name:
+            name = urllib.unquote_plus(name)
+
         result = self.secret_repo.get_by_create_date(
             keystone_id,
             offset_arg=req.get_param('offset'),
             limit_arg=req.get_param('limit'),
-            name=req.get_param('name'),
+            name=name,
             alg=req.get_param('alg'),
             mode=req.get_param('mode'),
             bits=req.get_param('bits'),

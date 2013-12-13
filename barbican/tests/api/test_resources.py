@@ -22,6 +22,7 @@ resource classes. For RBAC tests of these classes, see the
 import base64
 import json
 import unittest
+import urllib
 
 import falcon
 import mock
@@ -450,7 +451,7 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
     def setUp(self):
         self.tenant_id = 'tenant1234'
         self.keystone_id = 'keystone1234'
-        self.name = 'name1234'
+        self.name = 'name 1234 !@#$%^&*()_+=-{}[];:<>,./?'
         self.secret_algorithm = "AES"
         self.secret_bit_length = 256
         self.secret_mode = "CBC"
@@ -494,14 +495,44 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
         self.req = mock.MagicMock()
         self.req.accept = 'application/json'
         self.req.get_param = mock.Mock()
-        self.req.get_param.side_effect = [self.offset, self.limit, None, None,
-                                          None, 0]
+        self.params = {'offset': self.offset,
+                       'limit': self.limit,
+                       'name': None,
+                       'alg': None,
+                       'bits': 0,
+                       'mode': None}
+        self.req.get_param.side_effect = self.params.get
+
         self.resp = mock.MagicMock()
         self.resource = res.SecretsResource(self.crypto_mgr, self.tenant_repo,
                                             self.secret_repo,
                                             self.tenant_secret_repo,
                                             self.datum_repo,
                                             self.kek_repo)
+
+    def test_should_list_secrets_by_name(self):
+        # Quote the name parameter to simulate how it would be
+        # received in practice via a REST-ful GET query.
+        self.params['name'] = urllib.quote_plus(self.name)
+
+        self.resource.on_get(self.req, self.resp, self.keystone_id)
+
+        # Verify that the name is unquoted correctly in the
+        # secrets.on_get function prior to searching the repo.
+        self.secret_repo.get_by_create_date \
+            .assert_called_once_with(self.keystone_id,
+                                     offset_arg=self.offset,
+                                     limit_arg=self.limit,
+                                     suppress_exception=True,
+                                     name=self.name,
+                                     alg=None, mode=None,
+                                     bits=0)
+
+        resp_body = jsonutils.loads(self.resp.body)
+        self.assertIn('secrets', resp_body)
+        secrets = resp_body['secrets']
+        # The result should be the unquoted name
+        self.assertEqual(secrets[0]['name'], self.name)
 
     def test_should_get_list_secrets(self):
         self.resource.on_get(self.req, self.resp, self.keystone_id)
