@@ -49,8 +49,8 @@ install_barbican()
     fi
 
     # Install Python dependencies
-    pip install -r tools/pip-requires
-    pip install -r tools/test-requires
+    pip install -r requirements.txt
+    pip install -r test-requirements.txt
 
     # Install uWSGI
     pip install uwsgi
