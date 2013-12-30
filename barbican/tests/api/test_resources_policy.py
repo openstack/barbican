@@ -51,6 +51,7 @@ class BaseTestCase(unittest.TestCase):
     def _generate_req(self, roles=None, accept=None):
         """Generate a fake HTTP request with security context added to it."""
         req = mock.MagicMock()
+        req.get_param.return_value = None
 
         kwargs = {
             'user': None,
