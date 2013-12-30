@@ -123,29 +123,20 @@ class WhenTestingSecretValidator(unittest.TestCase):
     def test_should_fail_numeric_name(self):
         self.secret_req['name'] = 123
 
-        with self.assertRaises(excep.InvalidObject) as e:
+        with self.assertRaises(excep.InvalidObject):
             self.validator.validate(self.secret_req)
-
-        exception = e.exception
-        self.assertTrue('name' in str(exception))
 
     def test_should_fail_negative_bit_length(self):
         self.secret_req['bit_length'] = -23
 
-        with self.assertRaises(excep.InvalidObject) as e:
+        with self.assertRaises(excep.InvalidObject):
             self.validator.validate(self.secret_req)
-
-        exception = e.exception
-        self.assertTrue('bit_length' in str(exception))
 
     def test_should_fail_non_integer_bit_length(self):
         self.secret_req['bit_length'] = "23"
 
-        with self.assertRaises(excep.InvalidObject) as e:
+        with self.assertRaises(excep.InvalidObject):
             self.validator.validate(self.secret_req)
-
-        exception = e.exception
-        self.assertTrue('bit_length' in str(exception))
 
     def test_validation_should_fail_with_empty_payload(self):
         self.secret_req['payload'] = '   '
@@ -273,11 +264,8 @@ class WhenTestingOrderValidator(unittest.TestCase):
     def test_should_fail_numeric_name(self):
         self.secret_req['name'] = 123
 
-        with self.assertRaises(excep.InvalidObject) as e:
+        with self.assertRaises(excep.InvalidObject):
             self.validator.validate(self.order_req)
-
-        exception = e.exception
-        self.assertTrue('name' in str(exception))
 
     def test_should_fail_bad_mode(self):
         self.secret_req['mode'] = 'badmode'
@@ -291,20 +279,14 @@ class WhenTestingOrderValidator(unittest.TestCase):
     def test_should_fail_negative_bit_length(self):
         self.secret_req['bit_length'] = -23
 
-        with self.assertRaises(excep.InvalidObject) as e:
+        with self.assertRaises(excep.InvalidObject):
             self.validator.validate(self.order_req)
-
-        exception = e.exception
-        self.assertTrue('bit_length' in str(exception))
 
     def test_should_fail_non_integer_bit_length(self):
         self.secret_req['bit_length'] = "23"
 
-        with self.assertRaises(excep.InvalidObject) as e:
+        with self.assertRaises(excep.InvalidObject):
             self.validator.validate(self.order_req)
-
-        exception = e.exception
-        self.assertTrue('bit_length' in str(exception))
 
     def test_should_fail_non_multiple_eight_bit_length(self):
         self.secret_req['bit_length'] = 129

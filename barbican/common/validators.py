@@ -94,7 +94,7 @@ class NewSecretValidator(ValidatorBase):
         try:
             schema.validate(json_data, self.schema)
         except schema.ValidationError as e:
-            raise exception.InvalidObject(schema=schema_name, reason=str(e))
+            raise exception.InvalidObject(schema=schema_name, reason=e.message)
 
         # Validate/normalize 'name'.
         name = json_data.get('name', '').strip()
