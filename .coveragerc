@@ -1,2 +1,5 @@
+[run]
+omit = etc/*,setup.py,*egg*,.tox/*,barbican/tests/*,*barbican/openstack/*
+
 [report]
-omit = etc/*,setup.py,*egg*,.tox/*,barbican/tests/*,barbican/openstack/*
+ignore_errors = True
