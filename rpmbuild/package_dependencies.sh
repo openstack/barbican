@@ -13,6 +13,7 @@ fpm -s python -t rpm -n python-wsgiref-barbican -v 0.1.2 wsgiref
 fpm -s python -t rpm pysqlite
 fpm -s python -t rpm -v 0.13.0 eventlet
 fpm -s python -t rpm oslo.config
+fpm -s python -t rpm oslo.messaging
 fpm -s python -t rpm iso8601
 fpm -s python -t rpm -v 3.0.8 kombu
 fpm -s python -t rpm -n python-webob-barbican -v 1.2.3 webob
@@ -32,11 +33,6 @@ fpm -s python -t rpm -v 1.3.0 jsonschema
 fpm -s python -t rpm -v 0.7.10 SQLAlchemy
 # --> python-sqlalchemy 0.5.5-3.el6_2 exists, but is incompatible
 fpm -s python -t rpm alembic
-
-# oslo.messaging
-wget http://tarballs.openstack.org/oslo.messaging/oslo.messaging-1.3.0a1.tar.gz
-tar -zxvf oslo.messaging-1.3.0a1.tar.gz
-fpm -s python -t rpm oslo.messaging-1.3.0a1/setup.py
 
 # ---------------------
 # Indirect dependencies

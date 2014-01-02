@@ -26,16 +26,13 @@ from barbican.openstack.common import gettextutils as u
 
 LOG = utils.getLogger(__name__)
 
-
-opt_group = cfg.OptGroup(name='queue',
-                         title='Options for queue interface')
+queue_opt_group = cfg.OptGroup(name='queue',
+                               title='Queue Application Options')
 
 queue_opts = [
     cfg.BoolOpt('enable', default=False,
                 help=u._('True enables queuing, False invokes '
                          'workers synchronously')),
-    cfg.StrOpt('broker', default='kombu://guest@localhost',
-               help=u._('Queue broker URL')),
     cfg.StrOpt('namespace', default='barbican',
                help=u._('Queue namespace')),
     cfg.StrOpt('topic', default='barbican.workers',
@@ -47,9 +44,8 @@ queue_opts = [
 ]
 
 CONF = cfg.CONF
-
-CONF.register_group(opt_group)
-CONF.register_opts(queue_opts, opt_group)
+CONF.register_group(queue_opt_group)
+CONF.register_opts(queue_opts, group=queue_opt_group)
 
 
 TRANSPORT = None
@@ -67,7 +63,6 @@ def init(conf):
     global TRANSPORT
     exmods = get_allowed_exmods()
     TRANSPORT = messaging.get_transport(conf,
-                                        url=CONF.queue.broker,
                                         allowed_remote_exmods=exmods)
 
 
