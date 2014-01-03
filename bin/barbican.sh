@@ -39,7 +39,7 @@ install_barbican()
       sudo mkdir -p $CONFIG_DIR
       sudo chown $USER $CONFIG_DIR
     fi
-    cp -rf $LOCAL_CONFIG_DIR/ $CONFIG_DIR
+    cp -rf $LOCAL_CONFIG_DIR/* $CONFIG_DIR/
 
     # Create a SQLite db location.
     if [ ! -d $DB_DIR ];
