@@ -3,7 +3,7 @@
 pushd $PWD
 mkdir -p rpmbuild/{BUILD,RPMS,S{OURCE,PEC,RPM}S}
 
-BUILD_VERSION=$(ls dist | sed 's/^barbican-\([0-9]\+\.[0-9]\+\.[0-9]\+\)\.tar\.gz/\1/g')
+BUILD_VERSION=$(ls dist | sed 's/^barbican-\(.*\)\.tar\.gz/\1/g')
 export BUILD_VERSION
 echo "Building RPM version $BUILD_VERSION"
 
