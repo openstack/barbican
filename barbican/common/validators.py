@@ -29,6 +29,12 @@ def secret_too_big(data):
     return len(data.encode('utf-8')) > CONF.max_allowed_secret_in_bytes
 
 
+def get_invalid_property(validation_error):
+    # we are interested in the second item which is the failed propertyName.
+    if validation_error.schema_path and len(validation_error.schema_path) > 1:
+        return validation_error.schema_path[1]
+
+
 class ValidatorBase(object):
     """Base class for validators."""
 
@@ -94,7 +100,9 @@ class NewSecretValidator(ValidatorBase):
         try:
             schema.validate(json_data, self.schema)
         except schema.ValidationError as e:
-            raise exception.InvalidObject(schema=schema_name, reason=e.message)
+            raise exception.InvalidObject(schema=schema_name,
+                                          reason=e.message,
+                                          property=get_invalid_property(e))
 
         # Validate/normalize 'name'.
         name = json_data.get('name', '').strip()
@@ -110,7 +118,8 @@ class NewSecretValidator(ValidatorBase):
             if expiration <= utcnow:
                 raise exception.InvalidObject(schema=schema_name,
                                               reason=_("'expiration' is "
-                                                       "before current time"))
+                                                       "before current time"),
+                                              property="expiration")
         json_data['expiration'] = expiration
 
         # Validate/convert 'payload' if provided.
@@ -120,7 +129,8 @@ class NewSecretValidator(ValidatorBase):
                 raise exception.InvalidObject(
                     schema=schema_name,
                     reason=_("If 'payload' is supplied, 'payload_content_type'"
-                             " must also be supplied.")
+                             " must also be supplied."),
+                    property="payload_content_type"
                 )
 
             content_encoding = json_data.get('payload_content_encoding')
@@ -130,7 +140,8 @@ class NewSecretValidator(ValidatorBase):
                     schema=schema_name,
                     reason=_("payload_content_encoding must be specified "
                              "when payload_content_type is application/"
-                             "octet-stream.")
+                             "octet-stream."),
+                    property="payload_content_encoding"
                 )
 
             if content_type.startswith('text/plain') and \
@@ -138,7 +149,8 @@ class NewSecretValidator(ValidatorBase):
                 raise exception.InvalidObject(
                     schema=schema_name,
                     reason=_("payload_content_encoding must not be specified "
-                             "when payload_content_type is text/plain")
+                             "when payload_content_type is text/plain"),
+                    property="payload_content_encoding"
                 )
 
             payload = json_data['payload']
@@ -150,7 +162,8 @@ class NewSecretValidator(ValidatorBase):
                 raise exception.InvalidObject(schema=schema_name,
                                               reason=_("If 'payload' "
                                                        "specified, must be "
-                                                       "non empty"))
+                                                       "non empty"),
+                                              property="payload")
 
             json_data['payload'] = payload
 
@@ -168,7 +181,8 @@ class NewSecretValidator(ValidatorBase):
                 LOG.exception("Problem parsing expiration date")
                 raise exception.InvalidObject(schema=schema_name,
                                               reason=_("Invalid date "
-                                                       "for 'expiration'"))
+                                                       "for 'expiration'"),
+                                              property="expiration")
 
         return expiration
 
@@ -191,13 +205,15 @@ class NewOrderValidator(ValidatorBase):
         try:
             schema.validate(json_data, self.schema)
         except schema.ValidationError as e:
-            raise exception.InvalidObject(schema=schema_name, reason=str(e))
+            raise exception.InvalidObject(schema=schema_name, reason=e.message,
+                                          property=get_invalid_property(e))
 
         secret = json_data.get('secret')
         if secret is None:
             raise exception.InvalidObject(schema=schema_name,
                                           reason=_("'secret' attributes "
-                                                   "are required"))
+                                                   "are required"),
+                                          property="secret")
 
         # If secret group is provided, validate it now.
         self.secret_validator.validate(secret, parent_schema=self.name)
@@ -205,7 +221,8 @@ class NewOrderValidator(ValidatorBase):
             raise exception.InvalidObject(schema=schema_name,
                                           reason=_("'payload' not "
                                                    "allowed for secret "
-                                                   "generation"))
+                                                   "generation"),
+                                          property="secret")
 
         # Validation secret generation related fields.
         # TODO: Invoke the crypto plugin for this purpose
@@ -279,6 +296,7 @@ class VerificationValidator(ValidatorBase):
         try:
             schema.validate(json_data, self.schema)
         except schema.ValidationError as e:
-            raise exception.InvalidObject(schema=schema_name, reason=str(e))
+            raise exception.InvalidObject(schema=schema_name, reason=e.message,
+                                          property=get_invalid_property(e))
 
         return json_data

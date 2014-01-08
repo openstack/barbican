@@ -40,6 +40,7 @@ class BarbicanException(Exception):
     message = _("An unknown exception occurred")
 
     def __init__(self, message=None, *args, **kwargs):
+        super(BarbicanException, self).__init__(message)
         if not message:
             message = self.message
         try:
@@ -50,8 +51,6 @@ class BarbicanException(Exception):
             else:
                 # at least get the core message out if something happened
                 pass
-
-        super(BarbicanException, self).__init__(message)
 
 
 class MissingArgumentError(BarbicanException):
@@ -180,9 +179,9 @@ class LimitExceeded(BarbicanException):
                 "breached.\n\nThe response body:\n%(body)s")
 
     def __init__(self, *args, **kwargs):
+        super(LimitExceeded, self).__init__(*args, **kwargs)
         self.retry_after = (int(kwargs['retry']) if kwargs.get('retry')
                             else None)
-        super(LimitExceeded, self).__init__(*args, **kwargs)
 
 
 class ServiceUnavailable(BarbicanException):
@@ -191,9 +190,9 @@ class ServiceUnavailable(BarbicanException):
                 "outage.")
 
     def __init__(self, *args, **kwargs):
+        super(ServiceUnavailable, self).__init__(*args, **kwargs)
         self.retry_after = (int(kwargs['retry']) if kwargs.get('retry')
                             else None)
-        super(ServiceUnavailable, self).__init__(*args, **kwargs)
 
 
 class ServerError(BarbicanException):
@@ -275,10 +274,18 @@ class InvalidObject(BarbicanException):
     message = _("Provided object does not match schema "
                 "'%(schema)s': %(reason)s")
 
+    def __init__(self, *args, **kwargs):
+        super(InvalidObject, self).__init__(*args, **kwargs)
+        self.invalid_property = kwargs.get('property')
+
 
 class UnsupportedField(BarbicanException):
     message = _("No support for value set on field '%(field)s' on "
                 "schema '%(schema)s': %(reason)s")
+
+    def __init__(self, *args, **kwargs):
+        super(UnsupportedField, self).__init__(*args, **kwargs)
+        self.invalid_field = kwargs.get('field')
 
 
 class UnsupportedHeaderFeature(BarbicanException):
