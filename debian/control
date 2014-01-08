@@ -15,7 +15,6 @@ Package: barbican-common
 Architecture: amd64
 Section: python
 Depends: ${python:Depends}, ${misc:Depends},
- python-celery,
  python-crypto,
  python-dateutil,
  python-eventlet,

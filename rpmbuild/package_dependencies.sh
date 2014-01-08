@@ -18,7 +18,6 @@ fpm -s python -t rpm webob
 # --> # python-webob.noarch 0.9.6.1-3.el6 exists, but is incompatible
 # fpm -s python -t rpm PasteDeploy
 # --> python-paste-deploy 1.3.3-2.1.el6
-fpm -s python -t rpm Celery
 fpm -s python -t rpm python-keystoneclient
 fpm -s python -t rpm stevedore
 fpm -s python -t rpm -n python-crypto pycrypto
@@ -47,9 +46,6 @@ fpm -s python -t rpm mako
 #     python-markupsafe  0.9.2-4.el6
 # fpm -s python -t rpm markupsafe
 fpm -s python -t rpm argparse
-
-# python-celery
-fpm -s python -t rpm -v 2.7.3.34 billiard
 
 # python-eventlet
 fpm -s python -t rpm greenlet

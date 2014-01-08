@@ -15,7 +15,7 @@ BuildRoot: %{_tmppath}/barbican-%{version}-%{release}-buildroot
 BuildArch: noarch
 BuildRequires: python2-devel
 Requires(pre): shadow-utils
-Requires: python-alembic, python-celery, python-crypto, python-dateutil
+Requires: python-alembic, python-crypto, python-dateutil
 Requires: python-eventlet, python-falcon, python-iso8601, python-jsonschema
 Requires: python-keystoneclient, python-kombu, python-oslo.config, python-paste-deploy
 Requires: python-psycopg2, python-pysqlite, python-sqlalchemy, python-stevedore
