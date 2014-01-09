@@ -18,7 +18,7 @@ Requires(pre): shadow-utils
 Requires: python-alembic, python-crypto, python-dateutil
 Requires: python-eventlet, python-falcon, python-iso8601, python-jsonschema
 Requires: python-keystoneclient, python-kombu, python-oslo.config, python-paste-deploy
-Requires: python-psycopg2, python-pysqlite, python-sqlalchemy, python-stevedore
+Requires: python-pysqlite, python-sqlalchemy, python-stevedore
 Requires: python-uwsgi, python-webob, python-netaddr, python-babel
 
 %description
