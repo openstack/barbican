@@ -13,7 +13,7 @@ fpm -s python -t rpm pysqlite
 fpm -s python -t rpm eventlet
 fpm -s python -t rpm oslo.config
 fpm -s python -t rpm iso8601
-fpm -s python -t rpm kombu
+fpm -s python -t rpm -v 3.0.8 kombu
 fpm -s python -t rpm webob
 # --> # python-webob.noarch 0.9.6.1-3.el6 exists, but is incompatible
 # fpm -s python -t rpm PasteDeploy
@@ -67,7 +67,7 @@ fpm -s python -t rpm simplejson
 
 # python-kombu
 fpm -s python -t rpm anyjson
-fpm -s python -t rpm -v 1.0.13 amqp
+fpm -s python -t rpm -v 1.3.3 amqp
 # --> latest amqp is incompatible
 fpm -s python -t rpm importlib
 # fpm -s python -t rpm ordereddict
