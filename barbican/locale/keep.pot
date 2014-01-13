@@ -1,5 +1,5 @@
 # Translations template for barbican. 
-# Copyright (C) 2013 Rackspace, Inc.
+# Copyright (C) 2013-2014 Rackspace, Inc.
 # This file is distributed under the same license as 
 # the barbican project. FIRST AUTHOR <john.wood@rackspace.com>, 2013.
 #
