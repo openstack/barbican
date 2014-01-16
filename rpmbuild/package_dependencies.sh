@@ -29,6 +29,11 @@ fpm -s python -t rpm SQLAlchemy
 # --> python-sqlalchemy 0.5.5-3.el6_2 exists, but is incompatible
 fpm -s python -t rpm alembic
 
+# oslo.messaging
+wget http://tarballs.openstack.org/oslo.messaging/oslo.messaging-1.3.0a1.tar.gz
+tar -zxvf oslo.messaging-1.3.0a1.tar.gz
+fpm -s python -t rpm oslo.messaging-1.3.0a1/setup.py
+
 # ---------------------
 # Indirect dependencies
 # ---------------------
