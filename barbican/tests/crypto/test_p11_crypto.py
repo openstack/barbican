@@ -67,6 +67,15 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
         with self.assertRaises(ValueError):
             p11_crypto.P11CryptoPlugin(m)
 
+    def test_raises_error_with_bad_library_path(self):
+        m = mock.MagicMock()
+        self.pkcs11.lib.C_Initialize.return_value = 12345
+        m.p11_crypto_plugin = mock.MagicMock(library_path="/dev/null")
+
+        # TODO: Really raises PyKCS11.PyKCS11Error
+        with self.assertRaises(Exception):
+            p11_crypto.P11CryptoPlugin(m)
+
     def test_init_builds_sessions_and_login(self):
         self.pkcs11.openSession.assert_any_call(1)
         self.pkcs11.openSession.assert_any_call(1, 'RW')
