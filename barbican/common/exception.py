@@ -40,7 +40,6 @@ class BarbicanException(Exception):
     message = _("An unknown exception occurred")
 
     def __init__(self, message=None, *args, **kwargs):
-        super(BarbicanException, self).__init__(message)
         if not message:
             message = self.message
         try:
@@ -51,6 +50,7 @@ class BarbicanException(Exception):
             else:
                 # at least get the core message out if something happened
                 pass
+        super(BarbicanException, self).__init__(message)
 
 
 class MissingArgumentError(BarbicanException):

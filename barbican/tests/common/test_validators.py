@@ -192,6 +192,18 @@ class WhenTestingSecretValidator(unittest.TestCase):
         with self.assertRaises(excep.InvalidObject):
             self.validator.validate(self.secret_req)
 
+    def test_should_fail_with_message_w_bad_payload_content_type(self):
+        self.secret_req['payload_content_type'] = 'plain/text'
+
+        try:
+            self.validator.validate(self.secret_req)
+        except excep.InvalidObject as e:
+            self.assertNotEqual(str(e), 'None')
+            self.assertIsNotNone(e.message)
+            self.assertNotEqual(e.message, 'None')
+        else:
+            self.fail('No validation exception was raised')
+
     def test_should_fail_with_plain_text_and_encoding(self):
         self.secret_req['payload_content_encoding'] = 'base64'
 
