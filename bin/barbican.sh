@@ -2,7 +2,10 @@
 
 CONFIG_DIR=/etc/barbican
 DB_DIR=/var/lib/barbican
-VENV_DIR=${BARBICAN_VENV:-~/.pyenv/versions/$PYENV_VERSION}
+
+# VIRTUAL_ENV is set by virtualenv on activate. If VIRTUAL_ENV is not,
+# available, it attempts to fallback on pyenv for the python environment path.
+VENV_DIR=${VIRTUAL_ENV:-`pyenv prefix`}
 
 LOCAL_CONFIG_DIR=./etc/barbican
 if [ ! -d $LOCAL_CONFIG_DIR ];
