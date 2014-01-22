@@ -16,4 +16,4 @@
 import pbr.version
 
 version_info = pbr.version.VersionInfo('barbican')
-__version__ = version_info.version_string()
+__version__ = version_info.release_string()
