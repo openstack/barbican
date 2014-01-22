@@ -143,3 +143,12 @@ class WhenTestingSimpleCryptoPlugin(unittest.TestCase):
         self.assertFalse(
             self.plugin.supports("SOMETHING_RANDOM")
         )
+
+    def test_bind_kek_metadata(self):
+        kek_metadata_dto = MagicMock()
+        kek_metadata_dto = self.plugin.bind_kek_metadata(kek_metadata_dto)
+
+        self.assertEqual(kek_metadata_dto.algorithm, 'aes')
+        self.assertEqual(kek_metadata_dto.bit_length, 128)
+        self.assertEqual(kek_metadata_dto.mode, 'cbc')
+        self.assertIsNone(kek_metadata_dto.plugin_meta)

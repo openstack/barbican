@@ -46,6 +46,20 @@ class WhenTestingIsBase64ProcessingNeeded(unittest.TestCase):
         self.assertFalse(r)
 
 
+class WhenTestingIsBase64ProcessingSupported(unittest.TestCase):
+
+    def test_is_base64_supported_application_octet_stream(self):
+        r = mime_types.is_base64_encoding_supported('application/octet-stream')
+        self.assertTrue(r)
+
+    def test_is_base64_supported_with_unsupported_values(self):
+        mimes_where_base64_is_not_supported = ['text/plain',
+                                               'bogus']
+        for mime in mimes_where_base64_is_not_supported:
+            r = mime_types.is_base64_encoding_supported(mime)
+            self.assertFalse(r)
+
+
 class WhenTestingAugmentFieldsWithContentTypes(unittest.TestCase):
 
     def setUp(self):
@@ -112,6 +126,11 @@ class WhenTestingNormalizationOfMIMETypes(unittest.TestCase):
 
     def test_unsupported_charset_in_plain_text_mime(self):
         mime = 'text/plain; charset=ISO-8859-1'
+        r = mime_types.normalize_content_type(mime)
+        self.assertEqual(r, mime)
+
+    def test_malformed_charset_in_plain_text_mime(self):
+        mime = 'text/plain; charset is ISO-8859-1'
         r = mime_types.normalize_content_type(mime)
         self.assertEqual(r, mime)
 

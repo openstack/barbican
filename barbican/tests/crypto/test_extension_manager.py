@@ -138,6 +138,16 @@ class WhenTestingNormalizeBeforeEncryptionForText(unittest.TestCase):
                 self.enforce_text_only
             )
 
+    def test_raises_on_no_payload(self):
+        content_type = 'text/plain; charset=ISO-8859-1'
+        with self.assertRaises(em.CryptoNoPayloadProvidedException):
+            unenc, content = em.normalize_before_encryption(
+                None,
+                content_type,
+                self.content_encoding,
+                self.enforce_text_only
+            )
+
 
 class WhenTestingAnalyzeBeforeDecryption(unittest.TestCase):
 
