@@ -9,5 +9,5 @@ echo "Building RPM version $BUILD_VERSION"
 
 cp "dist/barbican-$BUILD_VERSION.tar.gz" rpmbuild/SOURCES
 sed -e s/BUILD_VERSION/$BUILD_VERSION/g -i rpmbuild/SPECS/barbican.spec
-rpmbuild -ba --sign rpmbuild/SPECS/barbican.spec
+rpmbuild --define "_topdir $WORKSPACE/rpmbuild" -ba --sign rpmbuild/SPECS/barbican.spec
 popd
