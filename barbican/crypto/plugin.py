@@ -100,6 +100,7 @@ class CryptoPluginBase(object):
         outside of the plugins)
 
         """
+        raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
     def decrypt(self, encrypted, kek_meta_dto, kek_meta_extended, keystone_id):
@@ -113,6 +114,7 @@ class CryptoPluginBase(object):
         :returns: str -- unencrypted byte data
 
         """
+        raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
     def bind_kek_metadata(self, kek_meta_dto):
@@ -134,10 +136,12 @@ class CryptoPluginBase(object):
         :returns: kek_meta_dto: Returns the specified DTO, after
                   modifications.
         """
+        raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
     def create(self, bit_length, type_enum, algorithm=None, mode=None):
         """Create a new key."""
+        raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
     def supports(self, type_enum, algorithm=None, mode=None):
@@ -146,6 +150,7 @@ class CryptoPluginBase(object):
         :param type_enum: Enumeration from PluginSupportsType class
         :param algorithm: String algorithm name if needed
         """
+        raise NotImplementedError  # pragma: no cover
 
 
 class SimpleCryptoPlugin(CryptoPluginBase):

@@ -76,7 +76,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             return keys[0]
         elif len(keys) == 0:
             return None
-        elif len(keys) > 1:
+        else:
             raise P11CryptoPluginKeyException()
 
     def _generate_iv(self):

@@ -40,6 +40,11 @@ class WhenTestingIsBase64ProcessingNeeded(unittest.TestCase):
                                                    None)
         self.assertFalse(r)
 
+    def test_not_base64_needed_invalid_content_type(self):
+        r = mime_types.is_base64_processing_needed('bababooey',
+                                                   'base64')
+        self.assertFalse(r)
+
     def test_not_base64_needed_text(self):
         r = mime_types.is_base64_processing_needed('text/plain',
                                                    'base64')
@@ -92,6 +97,11 @@ class WhenTestingAugmentFieldsWithContentTypes(unittest.TestCase):
     def test_secret_with_matching_datum(self):
         for ct in mime_types.SUPPORTED:
             self._test_secret_and_datum_for_content_type(ct)
+
+    def test_secret_with_non_matching_datum(self):
+        self.datum.content_type = "bababooey"
+        fields = mime_types.augment_fields_with_content_types(self.secret)
+        self.assertNotIn("bababooey", fields)
 
     def _test_secret_and_datum_for_content_type(self, content_type):
         self.assertIn(content_type, mime_types.INTERNAL_CTYPES)

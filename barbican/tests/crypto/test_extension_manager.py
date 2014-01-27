@@ -246,6 +246,22 @@ class WhenTestingCryptoExtensionManager(unittest.TestCase):
                 mock.MagicMock()
             )
 
+    def test_decrypt_no_supported_plugin_found(self):
+        """ Similar to test_decrypt_no_plugin_found, but in this case
+        no plugin can be found that supports the specified secret's
+        encrypted data.
+        """
+        fake_secret = mock.MagicMock()
+        fake_datum = mock.MagicMock()
+        fake_datum.kek_meta_tenant = mock.MagicMock()
+        fake_secret.encrypted_data = [fake_datum]
+        with self.assertRaises(em.CryptoPluginNotFound):
+            self.manager.decrypt(
+                'text/plain',
+                fake_secret,
+                mock.MagicMock()
+            )
+
     def test_generate_data_encryption_key_no_plugin_found(self):
         self.manager.extensions = []
         with self.assertRaises(em.CryptoPluginNotFound):
