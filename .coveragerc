@@ -1,4 +1,5 @@
 [run]
+branch = True
 omit = etc/*,setup.py,*egg*,.tox/*,barbican/tests/*,*barbican/openstack/*
 
 [report]
