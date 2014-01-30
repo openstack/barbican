@@ -308,3 +308,79 @@ class VerificationValidator(ValidatorBase):
                                           property=get_invalid_property(e))
 
         return json_data
+
+
+class ContainerValidator(ValidatorBase):
+    """ Validator for all types of Container"""
+
+    def __init__(self):
+        self.name = 'Container'
+        self.schema = {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "type": {
+                    "type": "string",
+                    #TODO: (hgedikli) move this to a common location
+                    "enum": ["generic", "rsa"]
+                },
+                "secret_refs": {"type": "array", "items": {
+                    "type": "object",
+                    "required": ["secret_ref"],
+                    "properties": {
+                        "secret_ref": {"type": "string", "minLength": 1}
+                    }
+                }
+                }
+            },
+            "required": ["type"]
+        }
+
+    def validate(self, json_data, parent_schema=None):
+        schema_name = self._full_name(parent_schema)
+
+        try:
+            schema.validate(json_data, self.schema)
+        except schema.ValidationError as e:
+            raise exception.InvalidObject(schema=schema_name,
+                                          reason=e.message,
+                                          property=get_invalid_property(e))
+
+        container_type = json_data.get('type')
+        secret_refs = json_data.get('secret_refs')
+
+        if secret_refs:
+            secret_refs_names = [secret_ref['name']
+                                 if 'name' in secret_ref else ''
+                                 for secret_ref in secret_refs]
+
+            if len(set(secret_refs_names)) != len(secret_refs):
+                raise exception.\
+                    InvalidObject(schema=schema_name,
+                                  reason=_("Duplicate reference names"
+                                           " are not allowed"),
+                                  property="secret_refs")
+
+            if container_type == 'rsa':
+                supported_names = ('public_key',
+                                   'private_key',
+                                   'private_key_passphrase')
+
+                if self.contains_unsupported_names(secret_refs,
+                                                   supported_names) or len(
+                        secret_refs) > 3:
+                    raise exception.\
+                        InvalidObject(schema=schema_name,
+                                      reason=_("only 'private_key',"
+                                               " 'public_key'"
+                                               " and 'private_key_passphrase'"
+                                               " reference names are allowed"
+                                               " for RSA type"),
+                                      property="secret_refs")
+
+        return json_data
+
+    def contains_unsupported_names(self, secret_refs, supported_names):
+        for secret_ref in secret_refs:
+                if secret_ref.get('name') not in supported_names:
+                    return True

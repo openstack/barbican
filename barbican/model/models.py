@@ -152,6 +152,27 @@ class TenantSecret(BASE, ModelBase):
                                           name='_tenant_secret_uc'),)
 
 
+class ContainerSecret(BASE):
+    """Represents an association between a Container and a Secret."""
+
+    __tablename__ = 'container_secret'
+
+    container_id = sa.Column(sa.String(36), sa.ForeignKey('containers.id'),
+                             primary_key=True)
+    secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
+                          primary_key=True)
+    name = sa.Column(sa.String(255), nullable=True)
+
+    container = orm.relationship('Container',
+                                 backref=orm.backref('container_secrets',
+                                                     lazy='joined'))
+    secrets = orm.relationship('Secret',
+                               backref=orm.backref('container_secrets'))
+
+    __table_args__ = (sa.UniqueConstraint('container_id', 'secret_id', 'name',
+                                          name='_container_secret_name_uc'),)
+
+
 class Tenant(BASE, ModelBase):
     """Represents a Tenant in the datastore.
 
@@ -167,6 +188,7 @@ class Tenant(BASE, ModelBase):
     verifications = orm.relationship("Verification", backref="tenant")
     secrets = orm.relationship("TenantSecret", backref="tenants")
     keks = orm.relationship("KEKDatum", backref="tenant")
+    containers = orm.relationship("Container", backref="tenant")
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -214,6 +236,9 @@ class Secret(BASE, ModelBase):
         """Sub-class hook: delete children relationships."""
         for datum in self.encrypted_data:
             datum.delete(session)
+
+        for secret_ref in self.container_secrets:
+                session.delete(secret_ref)
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -398,8 +423,70 @@ class Verification(BASE, ModelBase):
             ret['error_reason'] = self.error_reason
         return ret
 
+
+class Container(BASE, ModelBase):
+    """Represents a Container for Secrets in the datastore.
+
+    Containers store secret references. Containers are owned by Tenants.
+    Containers can be generic or have a predefined type. Predefined typed
+    containers allow users to store structured key relationship
+    inside Barbican.
+    """
+
+    __tablename__ = 'containers'
+
+    name = sa.Column(sa.String(255))
+    type = sa.Column(sa.Enum('generic', 'rsa', name='container_types'))
+    tenant_id = sa.Column(sa.String(36), sa.ForeignKey('tenants.id'),
+                          nullable=False)
+
+    def __init__(self, parsed_request=None):
+        """Creates a Container entity from a dict."""
+        super(Container, self).__init__()
+
+        if parsed_request:
+            self.name = parsed_request.get('name')
+            self.type = parsed_request.get('type')
+            self.status = States.ACTIVE
+
+            secret_refs = parsed_request.get('secret_refs')
+            if secret_refs:
+                for secret_ref in parsed_request.get('secret_refs'):
+                    container_secret = ContainerSecret()
+                    container_secret.name = secret_ref.get('name')
+                    #TODO: (hgedikli) move this into a common location
+                    #TODO: (hgedikli) validate provided url
+                    #TODO: (hgedikli) parse out secret_id with regex
+                    secret_id = secret_ref.get('secret_ref')
+                    if secret_id.endswith('/'):
+                        secret_id = secret_id.rsplit('/', 2)[1]
+                    elif '/' in secret_id:
+                        secret_id = secret_id.rsplit('/', 1)[1]
+                    else:
+                        secret_id = secret_id
+                    container_secret.secret_id = secret_id
+                    self.container_secrets.append(container_secret)
+
+    def _do_delete_children(self, session):
+        """Sub-class hook: delete children relationships."""
+        for container_secret in self.container_secrets:
+            session.delete(container_secret)
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {'container_id': self.id,
+                'name': self.name or self.id,
+                'type': self.type,
+                'secret_refs': [
+                    {
+                        'secret_id': container_secret.secret_id,
+                        'name': container_secret.name
+                        if hasattr(container_secret, 'name') else None
+                    } for container_secret in self.container_secrets]}
+
 # Keep this tuple synchronized with the models in the file
-MODELS = [TenantSecret, Tenant, Secret, EncryptedDatum, Order, Verification]
+MODELS = [TenantSecret, Tenant, Secret, EncryptedDatum, Order, Verification,
+          Container, ContainerSecret]
 
 
 def register_models(engine):

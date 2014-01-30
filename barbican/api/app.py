@@ -59,6 +59,8 @@ def create_main_app(global_config, **local_conf):
     order = res.OrderResource()
     verifications = res.VerificationsResource()
     verification = res.VerificationResource()
+    containers = res.ContainersResource()
+    container = res.ContainerResource()
 
     # For performance testing only
     performance = res.PerformanceResource()
@@ -76,6 +78,8 @@ def create_main_app(global_config, **local_conf):
     api.add_route('/v1/{keystone_id}/verifications', verifications)
     api.add_route('/v1/{keystone_id}/verifications/{verification_id}',
                   verification)
+    api.add_route('/v1/{keystone_id}/containers/', containers)
+    api.add_route('/v1/{keystone_id}/containers/{container_id}', container)
 
     # For performance testing only
     api.add_route('/{0}'.format(performance_uri), performance)

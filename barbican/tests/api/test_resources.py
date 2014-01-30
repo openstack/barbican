@@ -87,6 +87,19 @@ def create_verification(id_ref="id"):
     return verify
 
 
+def create_container(id_ref):
+    """Generate a Container entity instance."""
+    container = models.Container()
+    container.id = id_ref
+    container.name = 'test name'
+    container.type = 'rsa'
+    container_secret = models.ContainerSecret()
+    container_secret.container_id = id
+    container_secret.secret_id = '123'
+    container.container_secrets.append(container_secret)
+    return container
+
+
 class WhenTestingVersionResource(unittest.TestCase):
     def setUp(self):
         self.req = mock.MagicMock()
@@ -1540,3 +1553,232 @@ class TestingJsonSanitization(unittest.TestCase):
                          .startswith(' '), "whitespace should be gone")
         self.assertFalse(json_with_array['an-array'][1]['name']
                          .endswith(' '), "whitespace should be gone")
+
+
+class WhenCreatingContainersUsingContainersResource(unittest.TestCase):
+    def setUp(self):
+        self.name = 'test container name'
+        self.type = 'generic'
+        self.secret_refs = [
+            {
+                'name': 'test secret 1',
+                'secret_ref': '123'
+            },
+            {
+                'name': 'test secret 2',
+                'secret_ref': '123'
+            },
+            {
+                'name': 'test secret 3',
+                'secret_ref': '123'
+            }
+        ]
+
+        self.tenant_internal_id = 'tenantid1234'
+        self.tenant_keystone_id = 'keystoneid1234'
+
+        self.tenant = models.Tenant()
+        self.tenant.id = self.tenant_internal_id
+        self.tenant.keystone_id = self.tenant_keystone_id
+
+        self.tenant_repo = mock.MagicMock()
+        self.tenant_repo.get.return_value = self.tenant
+
+        self.container_repo = mock.MagicMock()
+        self.container_repo.create_from.return_value = None
+
+        self.secret_repo = mock.MagicMock()
+        self.secret_repo.create_from.return_value = None
+
+        self.stream = mock.MagicMock()
+
+        self.container_req = {'name': self.name,
+                              'type': self.type,
+                              'secret_refs': self.secret_refs}
+
+        self.json = json.dumps(self.container_req)
+        self.stream.read.return_value = self.json
+
+        self.req = mock.MagicMock()
+        self.req.stream = self.stream
+
+        self.resp = mock.MagicMock()
+        self.resource = res.ContainersResource(self.tenant_repo,
+                                               self.container_repo,
+                                               self.secret_repo)
+
+    def test_should_add_new_container(self):
+        self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
+
+        self.assertEquals(falcon.HTTP_202, self.resp.status)
+
+        args, kwargs = self.container_repo.create_from.call_args
+        container = args[0]
+        self.assertIsInstance(container, models.Container)
+
+    def test_should_fail_container_bad_json(self):
+        self.stream.read.return_value = ''
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_post(self.req, self.resp,
+                                  self.tenant_keystone_id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_400, exception.status)
+
+    def test_should_throw_exception_when_secret_ref_doesnt_exist(self):
+        self.secret_repo.get.return_value = None
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_404, exception.status)
+
+
+class WhenGettingOrDeletingContainerUsingContainerResource(unittest.TestCase):
+    def setUp(self):
+        self.tenant_keystone_id = 'keystoneid1234'
+        self.tenant_internal_id = 'tenantid1234'
+
+        self.tenant = models.Tenant()
+        self.tenant.id = self.tenant_internal_id
+        self.tenant.keystone_id = self.tenant_keystone_id
+
+        self.tenant_repo = mock.MagicMock()
+        self.tenant_repo.get.return_value = self.tenant
+
+        self.container = create_container(id_ref='id1')
+
+        self.container_repo = mock.MagicMock()
+        self.container_repo.get.return_value = self.container
+        self.container_repo.delete_entity_by_id.return_value = None
+
+        self.req = mock.MagicMock()
+        self.resp = mock.MagicMock()
+
+        self.resource = res.ContainerResource(self.tenant_repo,
+                                              self.container_repo)
+
+    def test_should_get_container(self):
+        self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
+                             self.container.id)
+
+        self.container_repo.get \
+            .assert_called_once_with(entity_id=self.container.id,
+                                     keystone_id=self.tenant_keystone_id,
+                                     suppress_exception=True)
+
+    def test_should_delete_container(self):
+        self.resource.on_delete(self.req, self.resp, self.tenant_keystone_id,
+                                self.container.id)
+
+        self.container_repo.delete_entity_by_id \
+            .assert_called_once_with(entity_id=self.container.id,
+                                     keystone_id=self.tenant_keystone_id)
+
+    def test_should_throw_exception_for_get_when_container_not_found(self):
+        self.container_repo.get.return_value = None
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
+                                 self.container.id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_404, exception.status)
+
+    def test_should_throw_exception_for_delete_when_container_not_found(self):
+        self.container_repo.delete_entity_by_id.side_effect = excep.NotFound(
+            "Test not found exception")
+
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_delete(self.req, self.resp,
+                                    self.tenant_keystone_id,
+                                    self.container.id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_404, exception.status)
+
+
+class WhenGettingContainersListUsingResource(unittest.TestCase):
+    def setUp(self):
+        self.tenant_id = 'tenant1234'
+        self.keystone_id = 'keystoneid1234'
+
+        self.num_containers = 10
+        self.offset = 2
+        self.limit = 2
+
+        self.containers = [create_container(id_ref='id' + str(id_ref)) for
+                           id_ref in xrange(self.num_containers)]
+        self.total = len(self.containers)
+        self.container_repo = mock.MagicMock()
+        self.container_repo.get_by_create_date.return_value = (self.containers,
+                                                               self.offset,
+                                                               self.limit,
+                                                               self.total)
+        self.tenant_repo = mock.MagicMock()
+        self.secret_repo = mock.MagicMock()
+
+        self.req = mock.MagicMock()
+        self.req.accept = 'application/json'
+        self.req.get_param = mock.Mock()
+        self.req.get_param.side_effect = [self.offset, self.limit, None, None,
+                                          None, 0]
+        self.resp = mock.MagicMock()
+        self.resource = res.ContainersResource(self.tenant_repo,
+                                               self.container_repo,
+                                               self.secret_repo)
+
+    def test_should_get_list_containers(self):
+        self.resource.on_get(self.req, self.resp, self.keystone_id)
+
+        self.container_repo.get_by_create_date \
+            .assert_called_once_with(self.keystone_id,
+                                     offset_arg=self.offset,
+                                     limit_arg=self.limit,
+                                     suppress_exception=True)
+
+        resp_body = jsonutils.loads(self.resp.body)
+        self.assertTrue('previous' in resp_body)
+        self.assertTrue('next' in resp_body)
+
+        url_nav_next = self._create_url(self.keystone_id,
+                                        self.offset + self.limit, self.limit)
+        self.assertTrue(self.resp.body.count(url_nav_next) == 1)
+
+        url_nav_prev = self._create_url(self.keystone_id,
+                                        0, self.limit)
+        self.assertTrue(self.resp.body.count(url_nav_prev) == 1)
+
+        url_hrefs = self._create_url(self.keystone_id)
+        self.assertTrue(self.resp.body.count(url_hrefs) ==
+                        (self.num_containers + 2))
+
+    def test_response_should_include_total(self):
+        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        resp_body = jsonutils.loads(self.resp.body)
+        self.assertIn('total', resp_body)
+        self.assertEqual(resp_body['total'], self.total)
+
+    def test_should_handle_no_containers(self):
+
+        del self.containers[:]
+
+        self.resource.on_get(self.req, self.resp, self.keystone_id)
+
+        self.container_repo.get_by_create_date \
+            .assert_called_once_with(self.keystone_id,
+                                     offset_arg=self.offset,
+                                     limit_arg=self.limit,
+                                     suppress_exception=True)
+
+        resp_body = jsonutils.loads(self.resp.body)
+        self.assertFalse('previous' in resp_body)
+        self.assertFalse('next' in resp_body)
+
+    def _create_url(self, keystone_id, offset_arg=None, limit_arg=None):
+        if limit_arg:
+            offset = int(offset_arg)
+            limit = int(limit_arg)
+            return '/v1/{0}/containers' \
+                   '?limit={1}&offset={2}'.format(keystone_id,
+                                                  limit, offset)
+        else:
+            return '/v1/{0}/containers'.format(self.keystone_id)
