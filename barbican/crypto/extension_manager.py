@@ -169,7 +169,7 @@ def normalize_before_encryption(unencrypted, content_type, content_encoding,
         unencrypted = unencrypted.encode('utf-8')
 
     # Process binary type.
-    elif normalized_mime in mime_types.BINARY:
+    else:
         # payload has to be decoded
         if mime_types.is_base64_processing_needed(content_type,
                                                   content_encoding):
@@ -184,9 +184,6 @@ def normalize_before_encryption(unencrypted, content_type, content_encoding,
         elif content_encoding:
             # Unsupported content-encoding request.
             raise CryptoContentEncodingNotSupportedException(content_encoding)
-
-    else:
-        raise CryptoContentTypeNotSupportedException(content_type)
 
     return unencrypted, normalized_mime
 
