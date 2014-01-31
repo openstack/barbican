@@ -27,6 +27,7 @@ import urllib
 import falcon
 import mock
 
+from barbican.api import strip_whitespace
 from barbican.api import resources as res
 from barbican.common import exception as excep
 from barbican.common import utils
@@ -354,6 +355,56 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
             self.resource.on_post(self.req, self.resp, self.keystone_id)
         exception = cm.exception
         self.assertEqual(falcon.HTTP_400, exception.status)
+
+    def test_create_secret_content_type_text_plain(self):
+        # payload_content_type has trailing space
+        self.secret_req = {'name': self.name,
+                           'payload_content_type': 'text/plain ',
+                           'algorithm': self.secret_algorithm,
+                           'bit_length': self.secret_bit_length,
+                           'mode': self.secret_mode,
+                           'payload': self.payload}
+        self.stream.read.return_value = json.dumps(self.secret_req)
+
+        self.resource.on_post(self.req, self.resp, self.keystone_id)
+        self.assertEquals(self.resp.status, falcon.HTTP_201)
+
+        self.secret_req = {'name': self.name,
+                           'payload_content_type': '  text/plain',
+                           'algorithm': self.secret_algorithm,
+                           'bit_length': self.secret_bit_length,
+                           'mode': self.secret_mode,
+                           'payload': self.payload}
+        self.stream.read.return_value = json.dumps(self.secret_req)
+
+        self.resource.on_post(self.req, self.resp, self.keystone_id)
+        self.assertEquals(self.resp.status, falcon.HTTP_201)
+
+    def test_create_secret_content_type_text_plain_space_charset_utf8(self):
+        # payload_content_type has trailing space
+        self.secret_req = {'name': self.name,
+                           'payload_content_type':
+                           'text/plain; charset=utf-8 ',
+                           'algorithm': self.secret_algorithm,
+                           'bit_length': self.secret_bit_length,
+                           'mode': self.secret_mode,
+                           'payload': self.payload}
+        self.stream.read.return_value = json.dumps(self.secret_req)
+
+        self.resource.on_post(self.req, self.resp, self.keystone_id)
+        self.assertEquals(self.resp.status, falcon.HTTP_201)
+
+        self.secret_req = {'name': self.name,
+                           'payload_content_type':
+                           '  text/plain; charset=utf-8',
+                           'algorithm': self.secret_algorithm,
+                           'bit_length': self.secret_bit_length,
+                           'mode': self.secret_mode,
+                           'payload': self.payload}
+        self.stream.read.return_value = json.dumps(self.secret_req)
+
+        self.resource.on_post(self.req, self.resp, self.keystone_id)
+        self.assertEquals(self.resp.status, falcon.HTTP_201)
 
 
 class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
@@ -1434,3 +1485,41 @@ class WhenGettingVerificationsListUsingResource(unittest.TestCase):
                                                   limit, offset)
         else:
             return '/v1/{0}/verifications'.format(self.keystone_id)
+
+
+class TestingJsonSanitization(unittest.TestCase):
+
+    def test_json_sanitization_without_array(self):
+        json_without_array = {"name": "name", "algorithm": "AES",
+                              "payload_content_type": "  text/plain   ",
+                              "mode": "CBC", "bit_length": 256,
+                              "payload": "not-encrypted"}
+
+        self.assertTrue(json_without_array['payload_content_type']
+                        .startswith(' '), "whitespace should be there")
+        self.assertTrue(json_without_array['payload_content_type']
+                        .endswith(' '), "whitespace should be there")
+        strip_whitespace(json_without_array)
+        self.assertFalse(json_without_array['payload_content_type']
+                         .startswith(' '), "whitespace should be gone")
+        self.assertFalse(json_without_array['payload_content_type']
+                         .endswith(' '), "whitespace should be gone")
+
+    def test_json_sanitization_with_array(self):
+        json_with_array = {"name": "name", "algorithm": "AES",
+                           "payload_content_type": "text/plain",
+                           "mode": "CBC", "bit_length": 256,
+                           "payload": "not-encrypted",
+                           "an-array":
+                           [{"name": " item 1"},
+                            {"name": "item2 "}]}
+
+        self.assertTrue(json_with_array['an-array'][0]['name']
+                        .startswith(' '), "whitespace should be there")
+        self.assertTrue(json_with_array['an-array'][1]['name']
+                        .endswith(' '), "whitespace should be there")
+        strip_whitespace(json_with_array)
+        self.assertFalse(json_with_array['an-array'][0]['name']
+                         .startswith(' '), "whitespace should be gone")
+        self.assertFalse(json_with_array['an-array'][1]['name']
+                         .endswith(' '), "whitespace should be gone")
