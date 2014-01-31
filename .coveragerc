@@ -4,3 +4,6 @@ omit = etc/*,setup.py,*egg*,.tox/*,barbican/tests/*,*barbican/openstack/*
 
 [report]
 ignore_errors = True
+exclude_lines =
+    pragma: no cover
+    @abc.abstractmethod
