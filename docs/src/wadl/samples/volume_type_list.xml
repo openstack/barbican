@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<volume_types xmlns="http://docs.rackspace.com/volume/api/v1">>
+    <volume_type id="1" name="SATA">
+         <extra_specs/>
+     </volume_type>
+     <volume_type id="2" name="SSD">
+         <extra_specs/>
+    </volume_type>
+</volume_types>

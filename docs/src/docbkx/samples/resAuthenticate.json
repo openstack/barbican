@@ -1,0 +1,147 @@
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=UTF-8
+Content-Length: 477
+Date: Thu, 8 Aug 2013 18:45:13 GMT
+
+{
+    "access": {
+
+        "token": {
+            "expires": "2013-08-09T22:51:02.000-06:00",
+            "id": "vvvvvvvv-wwww-xxxx-yyyy-zzzzzzzzzzzz"
+        },
+        "user": {
+            "id": "123456",
+            "name": "jsmith",
+            "RAX-AUTH:defaultRegion": "DFW",
+            "roles": [
+                {
+                    "description": "Admin Role.",
+                    "id": "identity:admin",
+                    "name": "identity:admin"
+                },
+                {
+                    "description": "Default Role.",
+                    "id": "identity:default",
+                    "name": "identity:default"
+                }
+            ]
+        },
+        "serviceCatalog": [
+            {
+                "endpoints": [
+                    {
+                        "publicURL": "https://dfw.databases.api.rackspacecloud.com/v1.0/1100111",
+                        "region": "DFW",
+                        "tenantId": "1100111"
+                    },
+                    {
+                        "publicURL": "https://ord.databases.api.rackspacecloud.com/v1.0/1100111",
+                        "region": "ORD",
+                        "tenantId": "1100111"
+                    }
+                ],
+                "name": "cloudDatabases",
+                "type": "rax:database"
+            },
+            {
+                "endpoints": [
+                    {
+                        "publicURL": "https://dfw.loadbalancers.api.rackspacecloud.com/v1.0/1100111",
+                        "region": "DFW",
+                        "tenantId": "1100111"
+                    },
+                    {
+                        "publicURL": "https://ord.loadbalancers.api.rackspacecloud.com/v1.0/1100111",
+                        "region": "ORD",
+                        "tenantId": "1100111"
+                    }
+                ],
+                "name": "cloudLoadBalancers",
+                "type": "rax:load-balancer"
+            },
+            {
+                "endpoints": [
+                    {
+                        "tenantId": "1100111",
+                        "region": "DFW",
+                        "publicURL": "https://dfw.servers.api.rackspacecloud.com/v2/1100111",
+                        "versionId": "2",
+                        "versionInfo": "https://dfw.servers.api.rackspacecloud.com/v2/",
+                        "versionList": "https://dfw.servers.api.rackspacecloud.com/"
+                    },
+                    {
+                        "tenantId": "1100111",
+                        "region": "ORD",
+                        "publicURL": "https://ord.servers.api.rackspacecloud.com/v2/1100111",
+                        "versionId": "2",
+                        "versionInfo": "https://ord.servers.api.rackspacecloud.com/v2/",
+                        "versionList": "https://ord.servers.api.rackspacecloud.com/"
+                    }
+                ],
+                "name": "cloudServersOpenStack",
+                "type": "compute"
+            },
+            {
+                "endpoints": [
+                    {
+                        "publicURL": "https://monitoring.api.rackspacecloud.com/v1.0/1100111",
+                        "tenantId": "1100111"
+                    }
+                ],
+                "name": "cloudMonitoring",
+                "type": "rax:monitor"
+            },
+            {
+                "endpoints": [
+                    {
+                        "publicURL": "https://dfw.autoscale.api.rackspacecloud.com/v1.0/1100111",
+                        "region": "DFW",
+                        "tenantId": "1100111",
+                        "versionId": "1.0",
+                        "versionInfo": null,
+                        "versionList": null
+                    },
+                    {
+                        "publicURL": "https://ord.autoscale.api.rackspacecloud.com/v1.0/1100111",
+                        "region": "ORD",
+                        "tenantId": "1100111",
+                        "versionId": "1.0",
+                        "versionInfo": null,
+                        "versionList": null
+                    }
+                ],
+                "name": "autoscale",
+                "type": "rax:autoscale"
+            },
+            {
+                "endpoints": [
+                    {
+                        "tenantId": "MossoCloudFS_aaaaaaaa-bbbb-cccc-dddd-eeeeeeee",
+                        "publicURL": "https://storage101.dfw1.clouddrive.com/v1/MossoCloudFS_aaaaaaaa-bbbb-cccc-dddd-eeeeeeee",
+                        "internalURL": "https://snet-storage101.dfw1.clouddrive.com/v1/MossoCloudFS_aaaaaaaa-bbbb-cccc-dddd-eeeeeeee",
+                        "region": "DFW"
+                    },
+                    {
+                        "tenantId": "MossoCloudFS_aaaaaaaa-bbbb-cccc-dddd-eeeeeeee",
+                        "publicURL": "https://storage101.ord1.clouddrive.com/v1/MossoCloudFS_aaaaaaaa-bbbb-cccc-dddd-eeeeeeee",
+                        "internalURL": "https://snet-storage101.ord1.clouddrive.com/v1/MossoCloudFS_aaaaaaaa-bbbb-cccc-dddd-eeeeeeee",
+                        "region": "ORD"
+                    }
+                ],
+                "name": "cloudFiles",
+                "type": "object-store"
+            },
+            {
+                "endpoints": [
+                    {
+                        "tenantId": "1100111",
+                        "publicURL": "https://dns.api.rackspacecloud.com/v1.0/1100111"
+                    }
+                ],
+                "name": "cloudDNS",
+                "type": "rax:dns"
+            }
+        ]
+    }
+}

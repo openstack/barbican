@@ -1,0 +1,15 @@
+{
+    "volume_types": [
+        {
+            "id": 1,
+            "name": "SATA",
+            "extra_specs": {},
+        },
+        {
+            "id": 2,
+            "name": "SSD",
+            "extra_specs": {},
+        }
+    ]
+}
+

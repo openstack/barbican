@@ -1,0 +1,759 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<book xmlns="http://docbook.org/ns/docbook"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:xi="http://www.w3.org/2001/XInclude" version="5.0"
+    xml:id="ck-gettingstarted">
+    <?rax canonical.url.base="http://docs.rackspace.com/keep/api/v1.0/ck-gettingstarted/content"?>
+    <title>Rackspace Barbican API Getting Started Guide</title>
+    <info>
+        <author>
+            <personname>
+                <firstname/>
+                <surname/>
+            </personname>
+            <affiliation>
+                <orgname>Rackspace Cloud</orgname>
+            </affiliation>
+        </author>
+        <copyright>
+            <year>2013</year>
+            <holder>Rackspace US, Inc.</holder>
+        </copyright>
+        <releaseinfo>API v1.0</releaseinfo>
+        <productname>Rackspace Barbican</productname>
+        <pubdate/>
+        <legalnotice role="rs-api">
+            <annotation>
+                <remark>Copyright details are filled in by the
+                    template.</remark>
+            </annotation>
+        </legalnotice>
+        <abstract>
+            <para>This document is intended for software developers
+                who want to programmatically manage orders and secrets
+                using the Barbican API.</para>
+        </abstract>
+        <revhistory>
+            <revision>
+                <date>2013-12-12</date>
+                <revdescription>
+                    <itemizedlist>
+                        <listitem>
+                            <para>Created initial outline</para>
+                        </listitem>
+                    </itemizedlist>
+                </revdescription>
+            </revision>
+        </revhistory>
+        <raxm:metadata
+            xmlns:raxm="http://docs.rackspace.com/api/metadata">
+            <raxm:displayname>Getting Started Guide</raxm:displayname>
+            <raxm:product version="v1.0">keep</raxm:product>
+            <raxm:priority>10</raxm:priority>
+        </raxm:metadata>
+    </info>
+    <chapter xml:id="Feeds_Doc_Change_History">
+        <title>Document Change History</title>
+        <para>This version of the Getting Started replaces and
+            obsoletes all previous versions. The most recent changes
+            are described in the table below:</para>
+        <?rax revhistory?>
+    </chapter>
+    <chapter xml:id="Barbican_Overview">
+        <title>Rackspace Barbican API Overview</title>
+        <para>Barbican is a REST API designed for the secure storage,
+            provisioning and management of secrets. </para>
+        <section xml:id="What_is_Barbican">
+            <title>What is Barbican?</title>
+            <para>Barbican is a REST API designed for the secure
+                storage, provisioning and management of secrets.
+                Barbican supports the following types of
+                secrets:</para>
+            <para>
+                <table frame="void">
+                    <caption>Secret Types Supported by
+                        Barbican</caption>
+                    <col width="30%"/>
+                    <col width="70%"/>
+                    <thead>
+                        <tr>
+                            <th>Secret Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Symmetric Keys</td>
+                            <td>Perform reversible encryption of data
+                                at rest, typically using the AES
+                                algorithm set. Symmetric keys are
+                                required to enable features, such as
+                                encrypted Swift containers and Cinder
+                                volumes, encrypted Cloud Backups,
+                                etc.</td>
+                        </tr>
+                        <tr>
+                            <td>Asymmetric Keys</td>
+                            <td>Asymmetric key pairs (sometimes
+                                referred to as public / private keys)
+                                are used in many scenarios where
+                                communication between untrusted
+                                parties is desired. The most common
+                                case is with SSL/TLS certificates.
+                                Asymmetric keys but are also used in
+                                solutions like SSH keys, S/MIME (mail)
+                                encryption and digital
+                                signatures.</td>
+                        </tr>
+                        <tr>
+                            <td>Raw Secrets</td>
+                            <td>Barbican stores secrets as binary
+                                blocks of data (encrypted, naturally).
+                                Clients can use the API to store any
+                                secrets in any format they desire.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </para>
+        </section>
+        <section xml:id="Prerequisites_Examples">
+            <title>Prerequisites for Running Examples</title>
+            <para>In order to run the examples in this guide, you must
+                have the following: <itemizedlist spacing="compact">
+                    <listitem>
+                        <para>A Rackspace Cloud account</para>
+                    </listitem>
+                    <listitem>
+                        <para>A Rackspace Cloud username and password,
+                            as specified during registration</para>
+                    </listitem>
+                </itemizedlist></para>
+        </section>
+        <section xml:id="Service_Access_and_Endpoints">
+            <title>Service Access and Endpoints</title>
+            <para></para>
+        </section>
+    </chapter>
+    <chapter xml:id="Feeds_Sending_API_Requests">
+        <title>Send Requests to the API</title>
+        <para>You have several options for sending requests through an
+            API: </para>
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>Developers and testers may prefer to use cURL,
+                    the command-line tool from <link
+                        xlink:href="http://curl.haxx.se/"
+                        >http://curl.haxx.se/</link>. </para>
+                <para>With cURL you can send HTTP requests and receive
+                    responses back from the command line. </para>
+            </listitem>
+            <listitem>
+                <para>If you like to use a more graphical interface,
+                    the ReST client for Firefox also works well for
+                    testing and trying out commands, see <link
+                        xlink:href="https://addons.mozilla.org/en-US/firefox/addon/restclient/"
+                        >https://addons.mozilla.org/en-US/firefox/addon/restclient/</link>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>You can also download and install rest-client, a
+                    Java application to test ReSTful web services,
+                    from <link
+                        xlink:href="http://code.google.com/p/rest-client/"
+                        >http://code.google.com/p/rest-client/</link>.
+                </para>
+            </listitem>
+        </itemizedlist>
+        <section xml:id="Feeds_using-curl-cli">
+            <title>Send API Requests Using cURL</title>
+            <para>cURL is a command-line tool that is available on
+                most UNIX®-like environments and Mac OS X® and can be
+                downloaded for Windows® in order to interact with the
+                ReST interfaces. For more information on cURL, visit
+                    <link xlink:href="http://curl.haxx.se/"
+                    >http://curl.haxx.se/</link>. </para>
+            <para>cURL allows you to transmit and receive HTTP
+                requests and responses from the command-line or from
+                within a shell script. This makes it possible to work
+                with the ReST API directly without using one of the
+                client APIs. </para>
+            <para>The following cURL command-line options will be used
+                in this guide to run the examples:</para>
+            <variablelist>
+                <title>cURL Command-Line Options</title>
+                <varlistentry>
+                    <term><option>-d</option></term>
+                    <listitem>
+                        <para>Sends the specified data in a post
+                            request to the HTTP server.</para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-i</option></term>
+                    <listitem>
+                        <para>Includes the HTTP header in the
+                            output.</para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-H HEADER</option></term>
+                    <listitem>
+                        <para>Specify an HTTP header in the
+                            request.</para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-X</option></term>
+                    <listitem>
+                        <para>Specifies the request method to use when
+                            communicating with the HTTP server. The
+                            specified request is used instead of the
+                            default method, which is GET. For example,
+                                <option>-X PUT</option> specifies to
+                            use the PUT request method.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+            <note>
+                <para>If you have the tools, you can run the cURL JSON
+                    request examples with the following options to
+                    format the output from cURL: <command>&lt;curl
+                        JSON request example> | python
+                        -mjson.tool</command>.</para>
+            </note>
+        </section>
+    </chapter>
+    <chapter xml:id="Generating_Auth_Token">
+        <title>Generate an Authentication Token</title>
+        <para>You need to generate a token whether you use cURL or a
+            ReST client.</para>
+        <para>In order to use the ReST API, you will first need to
+            obtain an authentication token, which will need to be
+            passed in for each request using the
+                <code>X-Auth-Token</code> header. </para>
+        <para>The following example demonstrates how to use cURL to
+            obtain the authentication token and the account number.
+            You will need to supply the authentication token and
+            account number when making subsequent Cloud Databases API
+            calls.</para>
+        <para>Remember to replace the names in the Authenticate
+            Request examples below with their respective
+                values:<itemizedlist spacing="compact">
+                <listitem>
+                    <para><emphasis role="bold"
+                            >your_username</emphasis> The username is
+                        your common Rackspace Cloud username, as
+                        supplied during registration.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis role="bold"
+                            >your_api_key</emphasis> The key is your
+                        API access key.</para>
+                    <para><emphasis role="bold">To find your API
+                            Key:</emphasis></para>
+                    <orderedlist>
+                        <listitem>
+                            <para>Log in to the Cloud Control Panel
+                                   (<link
+                                   xlink:href="https://mycloud.rackspace.com"
+                                   >https://mycloud.rackspace.com</link>).</para>
+                        </listitem>
+                        <listitem>
+                            <para>On the upper-right side of the top
+                                navigation pane, click your
+                                username.</para>
+                        </listitem>
+                        <listitem>
+                            <para>From the menu, select
+                                   <guimenuitem>Account
+                                   Settings</guimenuitem>.</para>
+                        </listitem>
+                        <listitem>
+                            <para>In the Login Details section of the
+                                Account Settings page, locate the
+                                   <guilabel>API Key</guilabel> field
+                                and click
+                                <guibutton>Show</guibutton>.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Copy the value of the API Key and
+                                paste it into a text editor of your
+                                choice.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Click <guibutton>Hide</guibutton> to
+                                hide the value of the API Key. </para>
+                        </listitem>
+                    </orderedlist>
+                    <para>You also need your cloud account number. In
+                        the documentation, the account number is often
+                        referred to as your tenant name or tenant ID
+                        (technically, the ID is different from the
+                        name, but at Rackspace, they are the same
+                        thing). Together, three components—your
+                        username, your API Key, and your tenant ID or
+                        cloud account number—form the authentication
+                        credentials that are required to connect to
+                        the Rackspace cloud. To find your tenant ID or
+                        cloud account number, locate your username on
+                        the upper-right side of the top navigation
+                        pane in the Cloud Control Panel. The tenant ID
+                        or account number is in parentheses just to
+                        the right of your username.</para>
+                </listitem>
+            </itemizedlist></para>
+        <para>Notice that you authenticate using a special URL for
+            Cloud authentication services. For example, you may use
+                <code>https://identity.api.rackspacecloud.com/v2.0/tokens</code>,
+            as shown in the following Authenticate Request examples.
+            Note that the <code>v2.0</code> component in the URL
+            indicates that you are using version 2.0 of the Cloud Auth
+            API.</para>
+        <example>
+            <title>cURL Authenticate Request: XML</title>
+            <?dbfo keep-together="always"?>
+            <screen language="bash"><command>curl</command> <option>-i</option> <option>-d</option> \
+'&lt;?xml version="1.0" encoding="UTF-8"?>
+&lt;auth>
+   &lt;apiKeyCredentials
+      xmlns="http://docs.rackspace.com/identity/api/ext/RAX-KSKEY/v1.0"
+         username="<emphasis role="bold">your_username</emphasis>"
+         apiKey="<emphasis role="bold">your_api_key</emphasis>"/>
+&lt;/auth>' \
+<option>-H 'Content-Type: application/xml'</option> \
+<option>-H 'Accept: application/xml'</option> \
+<uri>'https://identity.api.rackspacecloud.com/v2.0/tokens'</uri></screen>
+        </example>
+        <example>
+            <title>cURL Authenticate Request: JSON</title>
+            <?dbfo keep-together="always"?>
+            <screen language="bash"><command>curl</command> <option>-i</option> <option>-d</option> \
+'{
+    "auth":
+    {
+       "RAX-KSKEY:apiKeyCredentials":
+       {
+          "username": "<emphasis role="bold">your_username</emphasis>",
+          "apiKey": "<emphasis role="bold">your_api_key</emphasis>"}
+    }
+}' \
+<option>-H 'Content-Type: application/json'</option> \
+<uri>'https://identity.api.rackspacecloud.com/v2.0/tokens'</uri></screen>
+        </example>
+        <note>
+            <para>For UK-based accounts, you may decide to use
+                    <code>'https://lon.identity.api.rackspacecloud.com/v2.0/tokens'</code>
+                instead.</para>
+        </note>
+        <para>The authentication token <code>id</code> is returned
+            along with an <code>expires</code> attribute that
+            specifies when the token expires. </para>
+        <note>
+            <itemizedlist spacing="compact">
+                <listitem>
+                    <para>For all response examples in this guide, the
+                        field values you receive in your responses
+                        will vary from those shown here since they
+                        will be specific to your account.</para>
+                </listitem>
+                <listitem>
+                    <para>The information shown in the Authenticate
+                        Response examples above is for US-based
+                        accounts. If you authenticate against the
+                        UK-endpoint for auth, you will see the service
+                        catalog information for UK-based
+                        accounts.</para>
+                </listitem>
+                <listitem>
+                    <para>The <code>id</code> attribute in the
+                        Authenticate Response specifies the
+                        authentication token. Tokens are valid for a
+                        finite duration.</para>
+                    <para>Remember to supply your authentication token
+                        wherever you see the field <emphasis
+                            role="bold">your_auth_token</emphasis> in
+                        the examples in this guide.</para>
+                </listitem>
+                <listitem>
+                    <para> The <code>expires</code> attribute denotes
+                        the time after which the token will
+                        automatically become invalid. A token may be
+                        manually revoked before the time identified by
+                        the expires attribute; <code>expires</code>
+                        predicts a token's maximum possible lifespan
+                        but does not guarantee that it will reach that
+                        lifespan. Clients are encouraged to cache a
+                        token until it expires.</para>
+                </listitem>
+                <listitem>
+                    <para>Applications should be designed to
+                        re-authenticate after receiving a 401
+                        (Unauthorized) response from a service
+                        endpoint.</para>
+                </listitem>
+            </itemizedlist>
+        </note>
+        <para>The <code>publicURL</code> endpoints for
+                <code>cloudDatabases</code> (for example
+                <code>https://ord.databases.api.rackspacecloud.com/v1.0/1100111</code>)
+            are also returned in the response. </para>
+        <para>You will find the actual account number after the final
+            '/' in the <code>publicURL</code> field. In this example,
+            you can see that the account number is 1100111. </para>
+    </chapter>
+    <chapter xml:id="Prepare_Workstation_for_Barbican">
+        <title>Prepare your Workstation to Use Barbican</title>
+        <para>To prepare your workstation to use Barbican, you need to
+            have several tools and applications install on your
+            workstation.</para>
+        <para>The following table lists the tools that must be
+            installed prior to installing Barbican:<table frame="void"
+                rules="all">
+                <caption>Prerequisites for installing
+                    Barbican</caption>
+                <col width="18%"/>
+                <col width="82%"/>
+                <thead>
+                    <tr>
+                        <th align="center">Tool</th>
+                        <th align="center">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr align="left">
+                        <td>pyenv </td>
+                        <td>Python Version Management tool. Available
+                            for download from GitHub. </td>
+                    </tr>
+                    <tr align="left">
+                        <td>pyenv-virtualenv</td>
+                        <td>pyenv plugin that provides a pyenv
+                            virtualenv command to create virtualenv
+                            for Python on UNIX-like systems. Available
+                            for download from GitHub.</td>
+                    </tr>
+                    <tr align="left">
+                        <td>Git</td>
+                        <td>Git client. Available for download from
+                                <link
+                                xlink:href="http://git-scm.com/downloads"
+                                >http://git-scm.com/downloads</link>.</td>
+                    </tr>
+                    <tr align="left">
+                        <td>cURL</td>
+                        <td>Command line tool for transferring data
+                            with URL syntax. Available for download
+                            from: <link
+                                xlink:href="http://curl.haxx.se"
+                                >http://curl.haxx.se/</link>.</td>
+                    </tr>
+                    <tr align="left">
+                        <td>pip</td>
+                        <td>Python installer tool. Available for
+                            download from: <link
+                                xlink:href="http://www.pip-installer.org/en/latest/installing.html"
+                                >http://www.pip-installer.org/en/latest/installing.html</link>.</td>
+                    </tr>
+                </tbody>
+            </table></para>
+        <para>For Unix distributions, you may also need to install the
+            python and sqlite3 development packages. The following
+            example shows how to install Python and Sqlite3 from Red
+            Hat distributions, such as CentOS:</para><para>
+                    <programlisting>sudo yum install python-devel
+sudo yum install sqlite-devel                </programlisting></para><para>The following example shows how to install Python and Sqlite3
+            from Debian distributions, such as Ubuntu:</para>
+        <programlisting>sudo apt-get install python-dev
+sudo apt-get install libsqlite3-dev</programlisting>
+        <para>To use Barbican for development and evaluation purposes,
+            it is recommended that you run Barbican from a virtual
+            environment. We recommend that you use <emphasis
+                role="italic">pyenv </emphasis>virtual environment
+            framework because this framework works best with our
+            install script.</para>
+        <para>To install the <emphasis role="italic">pyenv</emphasis>
+            virtual environment framework, complete the following
+            steps:</para>
+        <para>
+            <orderedlist>
+                <listitem>
+                    <para>Install the <emphasis role="italic"
+                            >pyenv</emphasis> tool by following the
+                        installation instructions on GitHub that are
+                        available from this link: <link
+                            xlink:href="https://github.com/yyuu/pyenv"
+                            >https://github.com/yyuu/pyenv</link>.</para>
+                </listitem>
+                <listitem>
+                    <para>Install the pyenv-virtualenv plugin by
+                        following the installation instructions on
+                        Github that are available from this link:
+                            <link xlink:href="https://github.com/yyuu/pyenv-virtualenv">https://github.com/yyuu/pyenv-virtualenv</link>.</para>
+                </listitem>
+                <listitem>
+                    <para>At a command-line interface run the
+                        following command to install the latest
+                        version of Python:</para>                        <para>
+
+                                <programlisting>
+ pyenv install 2.7.5
+                </programlisting></para>
+                </listitem>
+                <listitem>
+                    <para>Type the following command to create the
+                        Barbican virtual environment:</para>                      <para>
+
+                                <programlisting>
+ pyenv virtualenv 2.7.5 barbican27
+                </programlisting></para>
+                </listitem>
+                <listitem>
+                    <para>To start the Barbican virtual environment,
+                        type the following command:</para>    <para>
+
+                                <programlisting>
+ pyenv shell barbican27
+                </programlisting></para>
+                </listitem>
+            </orderedlist>
+        </para>
+    </chapter>
+    <chapter xml:id="Install_Barbican">
+        <title>Install Barbican</title>
+        <para>The Barbican source code is stored on Github. In order
+            to download the latest Barbican source code, you need to
+            make sure that you have Git installed on you
+            workstation.</para>
+        <para>To install Barbican, you need to complete the following
+            steps:</para>
+        <para>
+            <itemizedlist>
+                <listitem>
+                    <para>Download the Barbican GitHub
+                        repository</para>
+                </listitem>
+                <listitem>
+                    <para>Install the Barbican application
+                        server</para>
+                </listitem>
+                <listitem>
+                    <para>Verify Barbican installation</para>
+                </listitem>
+            </itemizedlist>
+        </para>
+        <section xml:id="Download_Barbican_Github_repository"><title>Download Barbican GitHub Repository</title><para>To download the Barbican GitHub repository, complete the
+                following steps:</para>
+            <para>
+                <orderedlist>
+                    <listitem>
+                        <para>On your workstation, change to the
+                            directory to which you want to download
+                            Barbican.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Run the following command to create the
+                            Barbican repository:</para>
+                        <para>
+                            <programlisting>git clone https://github.com/stackforge/barbican.git                </programlisting></para>
+                    </listitem>
+                    <listitem>
+                        <para>Run the following command to change the
+                            root of your local Barbican
+                            repository:</para>
+       <para>
+                            <programlisting>cd barbican </programlisting></para>
+                    </listitem>
+                </orderedlist>
+            </para></section>
+        <section xml:id="Install_Barbican_Application_server"><title>Install Barbican Application Server</title><para>To install the Barbican application server, type the following
+                at a command-line interface:</para>                    <para>
+                    <programlisting>bin/barbican.sh install</programlisting></para></section>
+        <section xml:id="Verify_Barbican_Install">
+        <title>Verify Barbican
+                Installation</title>
+        <para>You can verify that you have successfully installed
+                Barbican by doing the following:</para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>At a command-line interface, type the
+                            following:</para>
+                        <para>
+
+                                <programlisting>curl localhost:9311                </programlisting></para>
+                    </listitem>
+                    <listitem>
+                        <para>If Barbican has installed successfully,
+                            you should see a response that looks like
+                            the following example:</para>
+                    <para>
+
+                            <programlisting>{"v1": "current", "build": "2013.2.{build_id}"}                 </programlisting></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+    </section>
+    </chapter>
+    <chapter xml:id="Integration_Environment">
+        <title>Integration Environment</title>
+        <para>We have set up an <emphasis role="bold"
+                >insecure</emphasis> integration environment at <link
+                xlink:href="http://iad-int-api.cloudkeep.io:9311"
+                >http://iad-int-api.cloudkeep.io:9311</link> so that
+            you can try the Barbican API without having to install and
+            configure it first. </para>
+        <para>
+            <warning>
+                <para>This endpoint is provided for evaluation
+                    purposes only, with no attempt made to secure or
+                    persist data stored therein. Therefore, please do
+                    not store any data that is sensitive, critical or
+                    that you otherwise care about.</para>
+            </warning>
+        </para>
+        <para>
+            <note>
+                <para> Authentication is currently turnd off or the
+                    integration environment. </para>
+            </note>
+        </para>
+        <section xml:id="Obtaining_Barbican_Version_Resource"><title>Obtaining a Barbican Version Resource</title>
+            <para>First, you need to generate a valid token on
+                keystone. The integration environment provides a
+                Keystone server at http://keystone-int.cloudkeep.io as
+                shown in the following example:</para>
+            <para>  <programlisting language="json"><xi:include href="../wadl/samples/reqGenerateToken.json" parse="text"/></programlisting></para>
+ <para>If successful, this request will return the following response,
+                which contains the token information:</para>
+            <programlisting language="json"><xi:include href="./samples/resgenerateToken.json" parse="text"/></programlisting>
+            <para>From the response you need to record the following
+                two values:</para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para><emphasis role="italic">Token
+                                id</emphasis>, which is
+                            39a8b7f62dcb4095a74a4e65a68c85d8 in the
+                            example above.</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis role="italic">Tenant
+                                id</emphasis>, which is
+                            0239200f037f4520aadd9791fad19af8 in the
+                            example above.</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <note>
+                    <para>For PKI-authenticated Keystone
+                        configurations, the token id value will be
+                        much larger.</para>
+                </note>
+            </para>
+            <para>After you have obtained the token, you can use it to
+                make a requests to the Barbican API using the
+                integration environment. The following example shows
+                how to make a request for version information from
+                Barbican:</para>
+            <para>  <programlisting language="json"><xi:include href="./samples/reqgetversioninfo.json" parse="text"/></programlisting></para>
+            <para>If successful, the above command will return version
+                information for Barbican as shown in the following
+                example:</para>
+            <para>  <programlisting language="json"><xi:include href="./samples/resgetversioninfo.json" parse="text"/></programlisting></para>
+        </section>
+    </chapter>
+    <chapter xml:id="Use_Barbican_API">
+        <title>Using the Barbican API</title>
+        <para>In this chapter you will learn how to use the Barbican
+            API to create and retrieve secrets.</para>
+        <para>The first step in using the Barbican API is to create a
+            secret. In this section you will learn how to create your
+            first secret using the Barbican API. </para>
+        <section xml:id="Create_a_Secret">
+            <title>Create a Secret</title>
+            <para>To generate a secret, you need to use the orders
+                resource, which is described in more detail in the
+                Barbican Developer Guide. You use the orders resource
+                to generate an order, which will then generate a
+                secret.</para>
+            <para>To generate an order, complete the following
+                steps:</para>
+            <para>
+                <orderedlist>
+                    <listitem>
+                        <para>Upload a plain-text order by submitting
+                            a POST request as shown in the following
+                            example:</para>
+                        <para>
+                            <programlisting language="json"><xi:include href="./samples/reqCreateOrder.json" parse="text"/></programlisting>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>You will receive a response like the
+                            following. Make sure to note the order-ref
+                            id that is returned in the URL. You will
+                            use this id for the next request.</para>
+                        <para>
+                            <programlisting> {"order_ref":
+      "http://localhost:9311/v1/12345/orders/62d57f53-ecfe-4ae4-87bd-fab2f24e29bc"} </programlisting>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>Retrieve the order by typing the
+                            following at a command-line
+                            interface:</para>
+                        <para>
+                            <programlisting>curl -H 'Accept: text/plain' &lt;'order_ref' obtained from the previous call></programlisting>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>The call will return a response like the
+                            following, Make sure to note the
+                            secret-ref id that is returned in the
+                            URL.</para>
+                        <para>
+                            <programlisting language="json"><xi:include href="./samples/resCreateSecret.json" parse="text"/></programlisting>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>Retrieve the metadata for the generated
+                            secret by typing the following at a
+                            command-line interface:</para>
+                        <para>
+                            <programlisting>curl -H 'Accept: text/plain' &lt;secret_ref id from the previous call></programlisting>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>This call will return a response like
+                            the following:</para>
+                        <para>
+                            <programlisting language="json"><xi:include href="./samples/resRetrieveSecret.json" parse="text"/></programlisting>
+                        </para>
+                    </listitem>
+                </orderedlist>
+            </para>
+        </section>
+        <section xml:id="Retrieve_a_Secret">
+            <title>Retrieve a Secret</title>
+            <para>After you have generated a secret, you need to
+                verify that you can retrieve and view the
+                secret.</para>
+            <para>To view the secret in the format of random bytes,
+                type the following at a command line-interface:</para>
+            <para>
+                <programlisting>curl -H 'Accept: application/octet-stream' &lt;secret_ref id from the previous call></programlisting>
+            </para>
+            <para>You will receive an intelligible response like the
+                following:
+                <programlisting>�l6[F���#��r�|gd�fe~���</programlisting>
+            </para>
+        </section>
+    </chapter>
+    <chapter xml:id="Barbican_Next_Steps">
+        <title>Next Steps</title>
+            <para>To learn more details about the Barbican API, please
+            read the Barbican API Developer Guide.</para>
+    </chapter>
+</book>

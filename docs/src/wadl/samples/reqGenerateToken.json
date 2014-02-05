@@ -1,0 +1,16 @@
+# get a token
+$ curl -H "Accept: applicaton/json" -H "Content-Type: application/json"\
+ --data 
+'{
+   "auth":
+	  {
+	   "tenantName":"demo",
+	   "passwordCredentials":
+				{
+				 "username":"admin",
+				 "password":"password"
+				 }
+	   }
+}'\
+http://keystone-int.cloudkeep.io:5000/v2.0/tokens
+
