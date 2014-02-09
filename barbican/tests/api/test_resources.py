@@ -406,6 +406,23 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
         self.resource.on_post(self.req, self.resp, self.keystone_id)
         self.assertEquals(self.resp.status, falcon.HTTP_201)
 
+    def test_create_secret_with_only_content_type(self):
+        # No payload just content_type
+        self.secret_req = {'payload_content_type':
+                           'text/plain'}
+        self.stream.read.return_value = json.dumps(self.secret_req)
+        with self.assertRaises(falcon.HTTPError) as cm:
+            self.resource.on_post(self.req, self.resp, self.keystone_id)
+        exception = cm.exception
+        self.assertEqual(falcon.HTTP_400, exception.status)
+
+        self.secret_req = {'payload_content_type':
+                           'text/plain',
+                           'payload': 'somejunk'}
+        self.stream.read.return_value = json.dumps(self.secret_req)
+        self.resource.on_post(self.req, self.resp, self.keystone_id)
+        self.assertEquals(self.resp.status, falcon.HTTP_201)
+
 
 class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
     def setUp(self):

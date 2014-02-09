@@ -166,6 +166,14 @@ class NewSecretValidator(ValidatorBase):
                                               property="payload")
 
             json_data['payload'] = payload
+        elif 'payload_content_type' in json_data and \
+                parent_schema is None:
+                raise exception.InvalidObject(
+                    schema=schema_name,
+                    reason=_("payload must be provided "
+                             "when payload_content_type is specified"),
+                    property="payload"
+                )
 
         return json_data
 
