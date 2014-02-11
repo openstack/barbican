@@ -43,6 +43,9 @@ fpm -s python -t rpm netaddr
 fpm -s python -t rpm Babel
 fpm -s python -t rpm pytz
 
+#oslo messaging depends on
+fpm -s python -t rpm pyyaml
+
 # python-alembic
 fpm -s python -t rpm mako
 # --> mako needs markupsafe
