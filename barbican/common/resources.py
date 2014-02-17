@@ -126,9 +126,6 @@ def create_encrypted_datum(secret, payload,
     if secret.encrypted_data:
         raise ValueError('Secret already has encrypted data stored for it.')
 
-    fields = secret.to_dict_fields()
-    fields['payload'] = payload
-
     # Encrypt payload
     LOG.debug('Encrypting secret payload...')
     new_datum = crypto_manager.encrypt(payload,
