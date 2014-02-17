@@ -39,12 +39,12 @@ python setup.py install -O1 --root $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/etc/init
 mkdir -p $RPM_BUILD_ROOT/etc/barbican/vassals
 mkdir -p $RPM_BUILD_ROOT/var/l{ib,og}/barbican
-install etc/barbican/policy.json $RPM_BUILD_ROOT/etc/barbican
-install etc/init/barbican-api.conf $RPM_BUILD_ROOT/etc/init
-install etc/init/barbican-worker.conf $RPM_BUILD_ROOT/etc/init
+install -m 644 etc/barbican/policy.json $RPM_BUILD_ROOT/etc/barbican
+install -m 644 etc/init/barbican-api.conf $RPM_BUILD_ROOT/etc/init
+install -m 644 etc/init/barbican-worker.conf $RPM_BUILD_ROOT/etc/init
 install bin/barbican-worker.py $RPM_BUILD_ROOT/usr/bin
-install -D etc/barbican/barbican* $RPM_BUILD_ROOT/etc/barbican
-install -D etc/barbican/vassals/*.ini $RPM_BUILD_ROOT/etc/barbican/vassals
+install -m 644 -D etc/barbican/barbican* $RPM_BUILD_ROOT/etc/barbican
+install -m 644 -D etc/barbican/vassals/*.ini $RPM_BUILD_ROOT/etc/barbican/vassals
 touch $RPM_BUILD_ROOT/var/log/barbican/barbican-api.log
 
 # install log rotation
