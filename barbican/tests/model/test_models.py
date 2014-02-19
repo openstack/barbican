@@ -34,3 +34,50 @@ class WhenCreatingNewSecret(unittest.TestCase):
         self.assertEqual(secret.algorithm, self.parsed_secret['algorithm'])
         self.assertEqual(secret.bit_length, self.parsed_secret['bit_length'])
         self.assertEqual(secret.mode, self.parsed_secret['mode'])
+
+
+class WhenCreatingNewContainer(unittest.TestCase):
+    def setUp(self):
+        self.parsed_container = {'name': 'name',
+                                 'type': 'generic',
+                                 'secret_refs': [
+                                     {'name': 'test secret 1',
+                                      'secret_ref': '123'},
+                                     {'name': 'test secret 2',
+                                      'secret_ref': '123'},
+                                     {'name': 'test secret 3',
+                                      'secret_ref': '123'}
+                                 ]}
+
+    def test_new_container_is_created_from_dict(self):
+        container = models.Container(self.parsed_container)
+        self.assertEqual(container.name, self.parsed_container['name'])
+        self.assertEqual(container.type, self.parsed_container['type'])
+        self.assertEqual(len(container.container_secrets),
+                         len(self.parsed_container['secret_refs']))
+
+        self.assertEqual(container.container_secrets[0].name,
+                         self.parsed_container['secret_refs'][0]['name'])
+        self.assertEqual(container.container_secrets[0].secret_id,
+                         self.parsed_container['secret_refs'][0]['secret_ref'])
+
+        self.assertEqual(container.container_secrets[1].name,
+                         self.parsed_container['secret_refs'][1]['name'])
+        self.assertEqual(container.container_secrets[1].secret_id,
+                         self.parsed_container['secret_refs'][1]['secret_ref'])
+
+        self.assertEqual(container.container_secrets[2].name,
+                         self.parsed_container['secret_refs'][2]['name'])
+        self.assertEqual(container.container_secrets[2].secret_id,
+                         self.parsed_container['secret_refs'][2]['secret_ref'])
+
+    def test_parse_secret_ref_uri(self):
+        self.parsed_container['secret_refs'][0]['secret_ref'] =\
+            'http://localhost:9110/123/secrets/123456'
+        container = models.Container(self.parsed_container)
+        self.assertEqual(container.container_secrets[0].secret_id, '123456')
+
+        self.parsed_container['secret_refs'][0]['secret_ref'] =\
+            'http://localhost:9110/123/secrets/123456/'
+        container = models.Container(self.parsed_container)
+        self.assertEqual(container.container_secrets[0].secret_id, '123456')

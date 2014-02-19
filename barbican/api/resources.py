@@ -60,6 +60,13 @@ def _verification_not_found(req, resp):
                                    'another castle.'), req, resp)
 
 
+def _container_not_found(req, resp):
+    """Throw exception indicating container not found."""
+    api.abort(falcon.HTTP_404, u._('Not Found. Sorry but your container '
+                                   'is in '
+                                   'another castle.'), req, resp)
+
+
 def _put_accept_incorrect(ct, req, resp):
     """Throw exception indicating request content-type is not supported."""
     api.abort(falcon.HTTP_415,
@@ -112,12 +119,23 @@ def convert_order_to_href(keystone_id, order_id):
     return utils.hostname_for_refs(keystone_id=keystone_id, resource=resource)
 
 
+def convert_container_to_href(keystone_id, container_id):
+    """Convert the tenant/container IDs to a HATEOS-style href."""
+    if container_id:
+        resource = 'containers/' + container_id
+    else:
+        resource = 'containers/????'
+    return utils.hostname_for_refs(keystone_id=keystone_id, resource=resource)
+
+
+#TODO: (hgedikli) handle list of fields in here
 def convert_to_hrefs(keystone_id, fields):
     """Convert id's within a fields dict to HATEOS-style hrefs."""
     if 'secret_id' in fields:
         fields['secret_ref'] = convert_secret_to_href(keystone_id,
                                                       fields['secret_id'])
         del fields['secret_id']
+
     if 'order_id' in fields:
         fields['order_ref'] = convert_order_to_href(keystone_id,
                                                     fields['order_id'])
@@ -127,6 +145,12 @@ def convert_to_hrefs(keystone_id, fields):
             convert_verification_to_href(keystone_id,
                                          fields['verification_id'])
         del fields['verification_id']
+
+    if 'container_id' in fields:
+        fields['container_ref'] = \
+            convert_container_to_href(keystone_id, fields['container_id'])
+        del fields['container_id']
+
     return fields
 
 
@@ -666,5 +690,124 @@ class VerificationResource(api.ApiResource):
                                           keystone_id=keystone_id)
         except exception.NotFound:
             _verification_not_found(req, resp)
+
+        resp.status = falcon.HTTP_200
+
+
+class ContainersResource(api.ApiResource):
+    """ Handles Container creation requests. """
+
+    def __init__(self, tenant_repo=None, container_repo=None,
+                 secret_repo=None):
+
+        self.tenant_repo = tenant_repo or repo.TenantRepo()
+        self.container_repo = container_repo or repo.ContainerRepo()
+        self.secret_repo = secret_repo or repo.SecretRepo()
+        self.validator = validators.ContainerValidator()
+
+    @handle_exceptions(u._('Container creation'))
+    @handle_rbac('containers:post')
+    def on_post(self, req, resp, keystone_id):
+
+        tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
+
+        data = api.load_body(req, resp, self.validator)
+        LOG.debug('Start on_post...{0}'.format(data))
+
+        new_container = models.Container(data)
+        new_container.tenant_id = tenant.id
+
+        #TODO: (hgedikli) performance optimizations
+        for secret_ref in new_container.container_secrets:
+            secret = self.secret_repo.get(entity_id=secret_ref.secret_id,
+                                          keystone_id=keystone_id,
+                                          suppress_exception=True)
+            if not secret:
+                api.abort(falcon.HTTP_404,
+                          u._("Secret provided for '%s'"
+                              " doesn't exist." % secret_ref.name),
+                          req, resp)
+
+        self.container_repo.create_from(new_container)
+
+        resp.status = falcon.HTTP_202
+        resp.set_header('Location',
+                        '/{0}/containers/{1}'.format(keystone_id,
+                                                     new_container.id))
+        url = convert_container_to_href(keystone_id, new_container.id)
+        resp.body = json.dumps({'container_ref': url})
+
+    @handle_exceptions(u._('Containers(s) retrieval'))
+    @handle_rbac('containers:get')
+    def on_get(self, req, resp, keystone_id):
+        LOG.debug('Start containers on_get '
+                  'for tenant-ID {0}:'.format(keystone_id))
+
+        result = self.container_repo.get_by_create_date(
+            keystone_id,
+            offset_arg=req.get_param('offset'),
+            limit_arg=req.get_param('limit'),
+            suppress_exception=True
+        )
+
+        containers, offset, limit, total = result
+
+        if not containers:
+            resp_ctrs_overall = {'containers': [], 'total': total}
+        else:
+            resp_ctrs = [convert_to_hrefs(keystone_id,
+                                          c.to_dict_fields())
+                         for c in containers]
+            resp_ctrs_overall = add_nav_hrefs('containers',
+                                              keystone_id, offset,
+                                              limit, total,
+                                              {'containers': resp_ctrs})
+            resp_ctrs_overall.update({'total': total})
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(resp_ctrs_overall,
+                               default=json_handler)
+
+
+class ContainerResource(api.ApiResource):
+    """Handles Container entity retrieval and deletion requests."""
+
+    def __init__(self, tenant_repo=None, container_repo=None):
+        self.tenant_repo = tenant_repo or repo.TenantRepo()
+        self.container_repo = container_repo or repo.ContainerRepo()
+        self.validator = validators.ContainerValidator()
+
+    @handle_exceptions(u._('Container retrieval'))
+    @handle_rbac('container:get')
+    def on_get(self, req, resp, keystone_id, container_id):
+        container = self.container_repo.get(entity_id=container_id,
+                                            keystone_id=keystone_id,
+                                            suppress_exception=True)
+        if not container:
+            _container_not_found(req, resp)
+
+        resp.status = falcon.HTTP_200
+
+        dict_fields = container.to_dict_fields()
+
+        for secret_ref in dict_fields['secret_refs']:
+                convert_to_hrefs(keystone_id, secret_ref)
+
+        resp.body = json.dumps(
+            convert_to_hrefs(keystone_id,
+                             convert_to_hrefs(keystone_id, dict_fields)),
+            default=json_handler)
+
+    @handle_exceptions(u._('Container deletion'))
+    @handle_rbac('container:delete')
+    def on_delete(self, req, resp, keystone_id, container_id):
+
+        try:
+
+            self.container_repo.delete_entity_by_id(entity_id=container_id,
+                                                    keystone_id=keystone_id)
+        except exception.NotFound:
+            LOG.exception('Problem deleting container')
+            _container_not_found(req, resp)
 
         resp.status = falcon.HTTP_200

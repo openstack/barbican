@@ -790,3 +790,63 @@ class VerificationRepo(BaseRepo):
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
+
+
+class ContainerRepo(BaseRepo):
+    """Repository for the Container entity."""
+
+    def get_by_create_date(self, keystone_id, offset_arg=None, limit_arg=None,
+                           suppress_exception=False, session=None):
+        """
+        Returns a list of containers, ordered by the date they were
+        created at and paged based on the offset and limit fields. The
+        keystone_id is external-to-Barbican value assigned to the tenant
+        by Keystone.
+        """
+
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
+
+        session = self.get_session(session)
+
+        try:
+            query = session.query(models.Container) \
+                           .order_by(models.Container.created_at)
+            query = query.filter_by(deleted=False) \
+                         .join(models.Tenant, models.Container.tenant) \
+                         .filter(models.Tenant.keystone_id == keystone_id)
+
+            start = offset
+            end = offset + limit
+            LOG.debug('Retrieving from {0} to {1}'.format(start, end))
+            total = query.count()
+            entities = query[start:end]
+            LOG.debug('Number entities retrieved: {0} out of {1}'.format(
+                len(entities), total
+            ))
+
+        except sa_orm.exc.NoResultFound:
+            entities = None
+            total = 0
+            if not suppress_exception:
+                raise exception.NotFound("No %s's found"
+                                         % (self._do_entity_name()))
+
+        return entities, offset, limit, total
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "Container"
+
+    def _do_create_instance(self):
+        return models.Container()
+
+    def _do_build_get_query(self, entity_id, keystone_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.Container).filter_by(id=entity_id)\
+            .filter_by(deleted=False)\
+            .join(models.Tenant, models.Container.tenant)\
+            .filter(models.Tenant.keystone_id == keystone_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass

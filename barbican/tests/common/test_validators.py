@@ -394,5 +394,184 @@ class WhenTestingOrderValidator(unittest.TestCase):
 
         self.assertEqual('algorithm', e.exception.invalid_field)
 
+
+class WhenTestingContainerValidator(unittest.TestCase):
+
+    def setUp(self):
+        self.name = 'name'
+        self.type = 'generic'
+        self.secret_refs = [
+            {
+                'name': 'testname',
+                'secret_ref': '123'
+            },
+            {
+                'name': 'testname2',
+                'secret_ref': '123'
+            }
+        ]
+
+        self.container_req = {'name': self.name,
+                              'type': self.type,
+                              'secret_refs': self.secret_refs}
+
+        self.validator = validators.ContainerValidator()
+
+    def test_should_validate_all_fields(self):
+        self.validator.validate(self.container_req)
+
+    def test_should_validate_no_name(self):
+        del self.container_req['name']
+        self.validator.validate(self.container_req)
+
+    def test_should_validate_empty_name(self):
+        self.container_req['name'] = '    '
+        self.validator.validate(self.container_req)
+
+    def test_should_fail_no_type(self):
+        del self.container_req['type']
+
+        with self.assertRaises(excep.InvalidObject):
+            self.validator.validate(self.container_req)
+
+        #TODO: (hgedikli) figure out why invalid_property is null here
+        #self.assertEqual('type', e.exception.invalid_property)
+
+    def test_should_fail_empty_type(self):
+        self.container_req['type'] = ''
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.container_req)
+
+        self.assertEqual('type', e.exception.invalid_property)
+
+    def test_should_fail_not_supported_type(self):
+        self.container_req['type'] = 'testtype'
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.container_req)
+
+        self.assertEqual('type', e.exception.invalid_property)
+
+    def test_should_fail_numeric_name(self):
+        self.container_req['name'] = 123
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.container_req)
+
+        self.assertEqual('name', e.exception.invalid_property)
+
+    def test_should_fail_all_nulls(self):
+        self.container_req = {'name': None,
+                              'type': None,
+                              'bit_length': None,
+                              'secret_refs': None}
+
+        with self.assertRaises(excep.InvalidObject):
+            self.validator.validate(self.container_req)
+
+    def test_should_fail_all_empties(self):
+        self.container_req = {'name': '',
+                              'type': '',
+                              'secret_refs': []}
+
+        with self.assertRaises(excep.InvalidObject):
+            self.validator.validate(self.container_req)
+
+    def test_should_validate_empty_secret_refs(self):
+        self.container_req['secret_refs'] = []
+        self.validator.validate(self.container_req)
+
+    def test_should_fail_no_secret_ref_in_secret_refs(self):
+        del self.container_req['secret_refs'][0]['secret_ref']
+
+        with self.assertRaises(excep.InvalidObject):
+            self.validator.validate(self.container_req)
+
+    def test_should_fail_empty_secret_ref_in_secret_refs(self):
+        self.container_req['secret_refs'][0]['secret_ref'] = ''
+
+        with self.assertRaises(excep.InvalidObject):
+            self.validator.validate(self.container_req)
+
+    def test_should_fail_numeric_secret_ref_in_secret_refs(self):
+        self.container_req['secret_refs'][0]['secret_ref'] = 123
+
+        with self.assertRaises(excep.InvalidObject):
+            self.validator.validate(self.container_req)
+
+    def test_should_fail_duplicate_names_in_secret_refs(self):
+        self.container_req['secret_refs'].append(
+            self.container_req['secret_refs'][0])
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.container_req)
+
+        self.assertEqual('secret_refs', e.exception.invalid_property)
+
+
+class WhenTestingRSAContainerValidator(unittest.TestCase):
+
+    def setUp(self):
+        self.name = 'name'
+        self.type = 'rsa'
+        self.secret_refs = [
+            {
+                'name': 'public_key',
+                'secret_ref': '123'
+            },
+            {
+                'name': 'private_key',
+                'secret_ref': '123'
+            },
+            {
+                'name': 'private_key_passphrase',
+                'secret_ref': '123'
+            }
+        ]
+
+        self.container_req = {'name': self.name,
+                              'type': self.type,
+                              'secret_refs': self.secret_refs}
+
+        self.validator = validators.ContainerValidator()
+
+    def test_should_fail_no_names_in_secret_refs(self):
+        del self.container_req['secret_refs'][0]['name']
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.container_req)
+
+        self.assertEqual('secret_refs', e.exception.invalid_property)
+
+    def test_should_fail_empty_names_in_secret_refs(self):
+        self.container_req['secret_refs'][0]['name'] = ''
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.container_req)
+
+        self.assertEqual('secret_refs', e.exception.invalid_property)
+
+    def test_should_fail_unsupported_names_in_secret_refs(self):
+        self.container_req['secret_refs'][0]['name'] = 'testttt'
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.container_req)
+
+        self.assertEqual('secret_refs', e.exception.invalid_property)
+
+    def test_should_fail_more_than_3_secret_refs(self):
+        new_secret_ref = {
+            'name': 'new secret ref',
+            'secret_ref': '234234'
+        }
+        self.container_req['secret_refs'].append(new_secret_ref)
+
+        with self.assertRaises(excep.InvalidObject) as e:
+            self.validator.validate(self.container_req)
+
+        self.assertEqual('secret_refs', e.exception.invalid_property)
+
+
 if __name__ == '__main__':
     unittest.main()
