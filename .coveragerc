@@ -1,6 +1,6 @@
 [run]
 branch = True
-omit = etc/*,setup.py,*egg*,.tox/*,barbican/tests/*,*barbican/openstack/*
+omit = etc/*,setup.py,*egg*,.tox/*,barbican/tests/*,*barbican/openstack/*,*barbican/functionaltests/*,*barbican/contrib/*
 
 [report]
 ignore_errors = True
