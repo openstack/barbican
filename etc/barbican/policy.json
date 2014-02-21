@@ -18,13 +18,13 @@
     "verifications:get": "rule:all_but_audit",
     "verification:get": "rule:all_users",
     "verification:delete": "rule:admin",
-    "admin": ["role:admin"],
-    "observer": ["role:observer"],
-    "creator": ["role:creator"],
-    "audit": ["rule:audit"],
-    "admin_or_user_does_not_work": ["project_id:%(project_id)s"],
-    "admin_or_user": ["role:admin", "project_id:%(project_id)s"],
-    "admin_or_creator": ["role:admin", "role:creator"],
-    "all_but_audit": ["role:admin", "role:observer", "role:creator"],
-    "all_users": ["role:admin", "role:observer", "role:creator", "role:audit"]
+    "admin": "role:admin",
+    "observer": "role:observer",
+    "creator": "role:creator",
+    "audit": "rule:audit",
+    "admin_or_user_does_not_work": "project_id:%(project_id)s",
+    "admin_or_user": "role:admin or project_id:%(project_id)s",
+    "admin_or_creator": "role:admin or role:creator",
+    "all_but_audit": "role:admin or role:observer or role:creator",
+    "all_users": "role:admin or role:observer or role:creator or role:audit"
 }
