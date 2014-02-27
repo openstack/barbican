@@ -7,8 +7,8 @@ if is_service_enabled barbican; then
         source $TOP_DIR/lib/barbican
     elif [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing Barbican"
-        install_barbicanclient
         install_barbican
+        install_barbicanclient
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring Barbican"
         configure_barbican

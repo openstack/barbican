@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# This script is executed inside pre_test_hook function in desvstack gate.
+# This script is executed inside pre_test_hook function in devstack gate.
 
 # Install barbican devstack integration
 BARBICAN_BASE=/opt/stack/new/barbican/contrib/devstack
