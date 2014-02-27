@@ -23,7 +23,6 @@ from sqlalchemy import orm
 
 from barbican.common import utils
 from barbican.openstack.common import timeutils
-from barbican.openstack.common import uuidutils
 
 
 LOG = utils.getLogger(__name__)
@@ -55,7 +54,7 @@ class ModelBase(object):
         "created_at", "updated_at", "deleted_at", "deleted"])
 
     id = sa.Column(sa.String(36), primary_key=True,
-                   default=uuidutils.generate_uuid)
+                   default=utils.generate_uuid)
 
     created_at = sa.Column(sa.DateTime, default=timeutils.utcnow,
                            nullable=False)

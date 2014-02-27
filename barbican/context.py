@@ -15,9 +15,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from barbican.common import utils
 from barbican.openstack.common import policy
 from barbican.openstack.common import local
-from barbican.openstack.common import uuidutils
 
 
 class RequestContext(object):
@@ -39,7 +39,7 @@ class RequestContext(object):
         # (mkbhanda) possibly domain could be owner
         # brings us to the key scope question
         self.owner_is_tenant = owner_is_tenant
-        self.request_id = uuidutils.generate_uuid()
+        self.request_id = utils.generate_uuid()
         self.service_catalog = service_catalog
         self.policy_enforcer = policy_enforcer or policy.Enforcer()
         self.is_admin = is_admin

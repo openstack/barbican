@@ -18,6 +18,7 @@ Common utilities for Barbican.
 """
 
 import time
+import uuid
 
 from oslo.config import cfg
 
@@ -157,3 +158,7 @@ class TimeKeeper(object):
         self.logger.debug("    Final time/elapsed:"
                           "{0:.3f}/{1:.0f}".format(time_current,
                                                    total_elapsed * 1000.))
+
+
+def generate_uuid():
+    return str(uuid.uuid4())
