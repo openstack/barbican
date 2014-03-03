@@ -17,5 +17,5 @@
 # Install barbican devstack integration
 BARBICAN_BASE=/opt/stack/new/barbican/contrib/devstack
 DEVSTACK_BASE=/opt/stack/new/devstack
-cp BARBICAN_BASE/lib/* $DEVSTACK_BASE/lib
-cp BARBICAN_BASE/extras.d/* $DEVSTACK_BASE/extras.d
+cp $BARBICAN_BASE/lib/* $DEVSTACK_BASE/lib
+cp $BARBICAN_BASE/extras.d/* $DEVSTACK_BASE/extras.d
