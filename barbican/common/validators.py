@@ -21,6 +21,7 @@ import six
 
 from barbican.common import exception
 from barbican.common import utils
+from barbican.model import models
 from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import timeutils
 from barbican.plugin.util import mime_types
@@ -246,6 +247,149 @@ class NewSecretValidator(ValidatorBase):
         return payload.strip()
 
 
+#TODO(atiwari) - Split this validator module and unit tests
+# into smaller modules
+class TypeOrderValidator(ValidatorBase):
+    """Validate a new typed order."""
+
+    def __init__(self):
+        self.name = 'Order'
+        self.schema = {
+            "type": "object",
+            "$schema": "http://json-schema.org/draft-03/schema",
+            "properties": {"meta": {"type": "object"},
+                           "type": {"type": "string",
+                                    "required": True,
+                                    "enum": ['key', 'asymmetric',
+                                             'certificate']}
+                           }}
+
+    def validate(self, json_data, parent_schema=None):
+        schema_name = self._full_name(parent_schema)
+
+        try:
+            schema.validate(json_data, self.schema)
+        except schema.ValidationError as e:
+            raise exception.InvalidObject(schema=schema_name, reason=e.message,
+                                          property=get_invalid_property(e))
+
+        order_type = json_data.get('type').lower()
+        #Note(atiwari): No support for certificate so far
+        if order_type == models.OrderType.CERTIFICATE:
+            certificate_meta = json_data.get('meta')
+            self._validate_certificate_meta(certificate_meta, schema_name)
+
+        elif order_type == models.OrderType.ASYMMETRIC:
+            asymmetric_meta = json_data.get('meta')
+            self._validate_asymmetric_meta(asymmetric_meta, schema_name)
+
+        elif order_type == models.OrderType.KEY:
+            key_meta = json_data.get('meta')
+            self._validate_key_meta(key_meta, schema_name)
+        else:
+            self._raise_feature_not_implemented(order_type, schema_name)
+
+        return json_data
+
+    def _validate_key_meta(self, key_meta, schema_name):
+        """validation specific to meta for key type order"""
+
+        self._assert_validity(key_meta is not None,
+                              schema_name,
+                              u._("'meta' attributes is required"), "meta")
+        secret_validator = NewSecretValidator()
+        secret_validator.validate(key_meta, parent_schema=self.name)
+
+        self._assert_validity(key_meta.get('payload') is None,
+                              schema_name,
+                              u._("'payload' not allowed "
+                                  "for key type order"), "meta")
+
+        # Validation secret generation related fields.
+        # TODO(jfwood): Invoke the crypto plugin for this purpose
+
+        if key_meta.get('payload_content_type', '').lower() !=\
+                'application/octet-stream':
+            raise exception.UnsupportedField(field='payload_content_type',
+                                             schema=schema_name,
+                                             reason=u._("Only 'application/oc"
+                                                        "tet-stream' "
+                                                        "supported"))
+
+        if key_meta.get('mode', '').lower() != 'cbc':
+                raise exception.UnsupportedField(field="mode",
+                                                 schema=schema_name,
+                                                 reason=u._("Only 'cbc' "
+                                                            "supported"))
+
+        if key_meta.get('algorithm', '').lower() != 'aes':
+                    raise exception.UnsupportedField(field="algorithm",
+                                                     schema=schema_name,
+                                                     reason=u._("Only 'aes' "
+                                                                "supported"))
+
+        self._validate_bit_length(key_meta, schema_name)
+
+    def _validate_asymmetric_meta(self, asymmetric_meta, schema_name):
+        """validation specific to meta for asymmetric type order"""
+        self._assert_validity(asymmetric_meta is not None,
+                              schema_name,
+                              u._("'meta' attributes is required"), "meta")
+        self._raise_feature_not_implemented('asymmetric', schema_name)
+
+    def _validate_certificate_meta(self, certificate_meta, schema_name):
+        """validation specific to meta for certificate type order"""
+        self._assert_validity(certificate_meta is not None,
+                              schema_name,
+                              u._("'meta' attributes is required"), "meta")
+        self._raise_feature_not_implemented('certificate', schema_name)
+
+    def _extract_expiration(self, json_data, schema_name):
+        """Extracts and returns the expiration date from the JSON data."""
+        expiration = None
+        expiration_raw = json_data.get('expiration', None)
+        if expiration_raw and expiration_raw.strip():
+            try:
+                expiration_tz = timeutils.parse_isotime(expiration_raw)
+                expiration = timeutils.normalize_time(expiration_tz)
+            except ValueError:
+                LOG.exception("Problem parsing expiration date")
+                raise exception.InvalidObject(schema=schema_name,
+                                              reason=u._("Invalid date "
+                                                         "for 'expiration'"),
+                                              property="expiration")
+
+        return expiration
+
+    def _validate_bit_length(self, key_meta, schema_name):
+
+        bit_length = int(key_meta.get('bit_length', 0))
+        if bit_length <= 0:
+            raise exception.UnsupportedField(field="bit_length",
+                                             schema=schema_name,
+                                             reason=u._("Must have "
+                                                        "non-zero positive"
+                                                        " bit_length to"
+                                                        " generate secret"
+                                                        ))
+        if bit_length % 8 != 0:
+            raise exception.UnsupportedField(field="bit_length",
+                                             schema=schema_name,
+                                             reason=u._("Must be a"
+                                                        " positive integer"
+                                                        " that is a"
+                                                        " multiple of 8"))
+
+    def _raise_feature_not_implemented(self, order_type, schema_name):
+        raise exception.FeatureNotImplemented(field='type',
+                                              schema=schema_name,
+                                              reason=u._("Feature not "
+                                                         "implemented for "
+                                                         "'{0}' order type")
+                                                    .format(order_type))
+
+
+#TODO(atiwari) - Remove this Validator for bug 1335171
 class NewOrderValidator(ValidatorBase):
     """Validate a new order."""
 

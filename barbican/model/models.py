@@ -47,6 +47,17 @@ class States(object):
         return state_to_test in cls.__dict__
 
 
+class OrderType(object):
+    KEY = 'key'
+    ASYMMETRIC = 'asymmetric'
+    CERTIFICATE = 'certificate'
+
+    @classmethod
+    def is_valid(cls, order_type):
+        """Tests if a order type is a valid one."""
+        return order_type in cls.__dict__
+
+
 @compiler.compiles(sa.BigInteger, 'sqlite')
 def compile_big_int_sqlite(type_, compiler, **kw):
     return 'INTEGER'

@@ -205,6 +205,11 @@ def generate_secret(spec, content_type,
     return secret_model
 
 
+def generate_asymmetric_secret(spec, content_type,
+                               tenant_model, repos):
+    raise NotImplementedError("Feature not yet implemented")
+
+
 def delete_secret(secret_model, project_id, repos):
     """Remove a secret from secure backend."""
 

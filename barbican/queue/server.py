@@ -50,6 +50,16 @@ class Tasks(object):
             LOG.exception(">>>>> Task exception seen, details reported "
                           "on the Orders entity.")
 
+    def process_type_order(self, context, order_id, keystone_id):
+        """Process TypeOrder."""
+        LOG.debug('TypeOrder id is {0}'.format(order_id))
+        task = resources.BeginTypeOrder()
+        try:
+            task.process(order_id, keystone_id)
+        except Exception:
+            LOG.exception(">>>>> Task exception seen, details reported "
+                          "on the Orders entity.")
+
 
 class TaskServer(Tasks, service.Service):
     """Server to process asynchronous tasking from Barbican API nodes.

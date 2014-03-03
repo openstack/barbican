@@ -159,10 +159,7 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
         return None
 
     def generate_asymmetric_key(self, key_spec, context):
-        """Generate an asymmetric key."""
-        #TODO(john-wood-w) Pull over https://github.com/openstack/barbican/
-        #   blob/master/barbican/crypto/extension_manager.py#L336
-        raise NotImplementedError('No support for generate_asymmetric_key')
+        raise NotImplementedError("Feature not yet implemented")
 
     def generate_supports(self, key_spec):
         """Key generation supported?
@@ -170,7 +167,7 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
         Specifies whether the plugin supports key generation with the
         given key_spec.
         """
-        return key_spec and sstore.KeyAlgorithm.AES == key_spec.alg.lower()
+        return key_spec and sstore.KeyAlgorithm.supports(key_spec.alg.lower())
 
     def store_secret_supports(self, key_spec):
         """Key storage supported?

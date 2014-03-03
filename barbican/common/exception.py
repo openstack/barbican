@@ -289,6 +289,15 @@ class UnsupportedField(BarbicanException):
         self.invalid_field = kwargs.get('field')
 
 
+class FeatureNotImplemented(BarbicanException):
+    message = u._("Feature not implemented for value set on field "
+                  "'%(field)s' on " "schema '%(schema)s': %(reason)s")
+
+    def __init__(self, *args, **kwargs):
+        super(FeatureNotImplemented, self).__init__(*args, **kwargs)
+        self.invalid_field = kwargs.get('field')
+
+
 class UnsupportedHeaderFeature(BarbicanException):
     message = u._("Provided header feature is unsupported: %(feature)s")
 

@@ -22,6 +22,7 @@ from barbican.common import validators
 from barbican.model import models
 from barbican.model import repositories as repo
 from barbican.openstack.common import gettextutils as u
+from barbican.openstack.common import jsonutils as json
 from barbican.queue import client as async_client
 
 LOG = utils.getLogger(__name__)
@@ -91,6 +92,7 @@ class OrdersController(object):
         self.order_repo = order_repo or repo.OrderRepo()
         self.queue = queue_resource or async_client.TaskClient()
         self.validator = validators.NewOrderValidator()
+        self.type_order_validator = validators.TypeOrderValidator()
 
     @pecan.expose()
     def _lookup(self, order_id, *remainder):
@@ -139,30 +141,56 @@ class OrdersController(object):
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
 
-        body = api.load_body(pecan.request, validator=self.validator)
-        LOG.debug('Start on_post...{0}'.format(body))
+        #Note(atiwari): trying to preserve backward compatibility
+        #This will be removed as part of bug1335171
+        raw_body = pecan.request.body
+        order_type = None
+        if raw_body:
+            order_type = json.loads(raw_body).get('type')
 
-        if 'secret' not in body:
-            _secret_not_in_order()
-        secret_info = body['secret']
-        name = secret_info.get('name')
-        LOG.debug('Secret to create is {0}'.format(name))
+        if order_type:
+            body = api.load_body(pecan.request,
+                                 validator=self.type_order_validator)
+            LOG.debug('Start on_post...{0}'.format(body))
+            name = body.get('meta').get('name')
+            LOG.debug('Order to create is {0}'.format(name))
+            new_order = models.Order(body)
+            #TODO(atiwari): we need to make another round of model
+            # change to address.  payload_content_type can not be None
+            # Setting up this value to satisfy this DB rule (bug1335171)
+            new_order.secret_payload_content_type = new_order.meta.get(
+                'payload_content_type')
+        else:
+            body = api.load_body(pecan.request, validator=self.validator)
+            LOG.debug('Start on_post...{0}'.format(body))
 
-        new_order = models.Order()
-        new_order.secret_name = secret_info.get('name')
-        new_order.secret_algorithm = secret_info.get('algorithm')
-        new_order.secret_bit_length = secret_info.get('bit_length', 0)
-        new_order.secret_mode = secret_info.get('mode')
-        new_order.secret_payload_content_type = secret_info.get(
-            'payload_content_type')
+            if 'secret' not in body:
+                _secret_not_in_order()
+            secret_info = body['secret']
+            name = secret_info.get('name')
+            LOG.debug('Secret to create is {0}'.format(name))
 
-        new_order.secret_expiration = secret_info.get('expiration')
+            new_order = models.Order()
+            new_order.secret_name = secret_info.get('name')
+            new_order.secret_algorithm = secret_info.get('algorithm')
+            new_order.secret_bit_length = secret_info.get('bit_length', 0)
+            new_order.secret_mode = secret_info.get('mode')
+            new_order.secret_payload_content_type = secret_info.get(
+                'payload_content_type')
+
+            new_order.secret_expiration = secret_info.get('expiration')
+
         new_order.tenant_id = tenant.id
         self.order_repo.create_from(new_order)
 
         # Send to workers to process.
-        self.queue.process_order(order_id=new_order.id,
-                                 keystone_id=keystone_id)
+        #TODO(atiwari) - bug 1335171
+        if order_type:
+            self.queue.process_type_order(order_id=new_order.id,
+                                          keystone_id=keystone_id)
+        else:
+            self.queue.process_order(order_id=new_order.id,
+                                     keystone_id=keystone_id)
 
         pecan.response.status = 202
         pecan.response.headers['Location'] = '/{0}/orders/{1}'.format(

@@ -200,3 +200,82 @@ class BeginOrder(BaseTask):
         order.secret_id = new_secret.id
 
         LOG.debug("...done creating order's secret.")
+
+
+class BeginTypeOrder(BaseTask):
+    """Handles beginning processing of a TypeOrder"""
+
+    def get_name(self):
+        return u._('Process TypeOrder')
+
+    def __init__(self, tenant_repo=None, order_repo=None,
+                 secret_repo=None, tenant_secret_repo=None, datum_repo=None,
+                 kek_repo=None, container_repo=None,
+                 container_secret_repo=None, secret_meta_repo=None):
+            LOG.debug('Creating BeginTypeOrder task processor')
+            self.repos = rep.Repositories(tenant_repo=tenant_repo,
+                                          tenant_secret_repo=
+                                          tenant_secret_repo,
+                                          secret_repo=secret_repo,
+                                          datum_repo=datum_repo,
+                                          kek_repo=kek_repo,
+                                          secret_meta_repo=secret_meta_repo,
+                                          order_repo=order_repo,
+                                          container_repo=container_repo,
+                                          container_secret_repo=
+                                          container_secret_repo)
+
+    def retrieve_entity(self, order_id, keystone_id):
+        return self.repos.order_repo.get(entity_id=order_id,
+                                         keystone_id=keystone_id)
+
+    def handle_processing(self, order, *args, **kwargs):
+        self.handle_order(order)
+
+    def handle_error(self, order, status, message, exception,
+                     *args, **kwargs):
+        order.status = models.States.ERROR
+        order.error_status_code = status
+        order.error_reason = message
+        self.repos.order_repo.save(order)
+
+    def handle_success(self, order, *args, **kwargs):
+        order.status = models.States.ACTIVE
+        self.repos.order_repo.save(order)
+
+    def handle_order(self, order):
+        """Handle secret creation using meta info.
+        If type is key
+            create secret
+        if type is asymmetric
+            create secrets
+            create containers
+        if type is certificate
+            TBD
+        :param order: Order to process.
+        """
+        order_info = order.to_dict_fields()
+        order_type = order_info['type']
+        secret_info = order_info['meta']
+
+        # Retrieve the tenant.
+        tenant = self.repos.tenant_repo.get(order.tenant_id)
+
+        if order_type == models.OrderType.KEY:
+            # Create Secret
+            new_secret = plugin.\
+                generate_secret(secret_info,
+                                secret_info.get('payload_content_type',
+                                                'application/octet-stream'),
+                                tenant, self.repos)
+            order.secret_id = new_secret.id
+            LOG.debug("...done creating keys order's secret.")
+        elif order_type == models.OrderType.ASYMMETRIC:
+            # Create asymmetric Secret
+            new_container = plugin.generate_asymmetric_secret(
+                secret_info,
+                secret_info.get('payload_content_type',
+                                'application/octet-stream'),
+                tenant, self.repos)
+            order.container_id = new_container.id
+            LOG.debug("...done creating asymmetric order's secret.")

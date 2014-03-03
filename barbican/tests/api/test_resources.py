@@ -1634,6 +1634,82 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         self.assertEqual(resp.content_type, "application/json")
 
 
+class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
+    def setUp(self):
+        super(
+            WhenCreatingTypeOrdersUsingOrdersResource, self
+        ).setUp()
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
+
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            orders = controllers.orders.OrdersController(self.tenant_repo,
+                                                         self.order_repo,
+                                                         self.queue_resource)
+
+        return RootController()
+
+    def _init(self):
+        self.type = 'key'
+        self.meta = {'name': 'secretname',
+                     'algorithm': 'AES',
+                     'bit_length': 256,
+                     'mode': 'cbc',
+                     'payload_content_type':
+                     'application/octet-stream'}
+
+        self.order_req = {'type': self.type,
+                          'meta': self.meta}
+
+        self.tenant_internal_id = 'tenantid1234'
+        self.tenant_keystone_id = 'keystoneid1234'
+
+        self.tenant = models.Tenant()
+        self.tenant.id = self.tenant_internal_id
+        self.tenant.keystone_id = self.tenant_keystone_id
+
+        self.tenant_repo = mock.MagicMock()
+        self.tenant_repo.get.return_value = self.tenant
+
+        self.order_repo = mock.MagicMock()
+        self.order_repo.create_from.return_value = None
+
+        self.queue_resource = mock.MagicMock()
+        self.queue_resource.process_type_order.return_value = None
+
+    @testtools.skip("atiwari: remove skip once CR 111412 merged")
+    def test_should_add_new_order(self):
+        resp = self.app.post_json(
+            '/orders/', self.order_req
+        )
+        self.assertEqual(resp.status_int, 202)
+
+        self.queue_resource.process_type_order \
+            .assert_called_once_with(order_id=None,
+                                     keystone_id=self.tenant_keystone_id)
+
+        args, kwargs = self.order_repo.create_from.call_args
+        order = args[0]
+        self.assertIsInstance(order, models.Order)
+
+    def test_should_fail_add_new_order_no_secret_json(self):
+        resp = self.app.post_json(
+            '/orders/', {},
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 400)
+
+    def test_should_fail_add_new_order_bad_json(self):
+        resp = self.app.post(
+            '/orders/', '',
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 415)
+
+
 class WhenAddingNavigationHrefs(testtools.TestCase):
 
     def setUp(self):
