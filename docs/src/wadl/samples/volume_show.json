@@ -1,0 +1,12 @@
+{
+    "volume": {
+        "id": "521752a6-acf6-4b2d-bc7a-119f9148cd8c",
+        "display_name": "vol-001",
+        "display_description": "Another volume.",
+        "size": 100,
+        "volume_type": "1",
+        "snapshot_id": null,
+        "attachments": [],
+        "createdAt": "2012-02-14T20:53:07Z"
+     }
+}

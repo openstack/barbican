@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- (C) 2012 OpenStack LLC., All Rights Reserved  -->
+
+<!DOCTYPE application [
+    <!ENTITY % common  SYSTEM "../common/common.ent">
+    %common;
+    
+    
+]>
+
+
+<application xmlns="http://wadl.dev.java.net/2009/02"
+             xmlns:wadl="http://wadl.dev.java.net/2009/02"
+	         xmlns:xlink="http://www.w3.org/1999/xlink"
+             xmlns:xsdxt="http://docs.rackspacecloud.com/xsd-ext/v1.0"
+	         xmlns:raxapi="http://docs.rackspace.com/volume/api/v1" 
+	         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	         xmlns:dbaas="http://docs.openstack.org/database/api/v1.0"  
+	         xmlns:db="http://docbook.org/ns/docbook">
+	
+	
+	
+<!--*******************************************************-->
+<!--             All Resources                             -->
+<!--*******************************************************-->
+	
+	<resources base="https://ord.secrets.api.rackspacecloud.com/">
+		
+
+		<resource id="version" path="{version}">
+
+			<resource id="tenantid" path="/{tenantId}">
+
+				<param name="tenantId" type="xsd:string" required="true" style="template">
+					<doc>A subscriber to the Barbican service</doc>
+				</param>
+	
+			
+			<!-- SECRETS resource -->
+
+		    <?rax start-sections?>
+			<resource id="secrets" path="/secrets">
+
+				<doc title="Secrets"/>
+				
+			<method href="#getSecrets"/>
+			<method href="#createSecret" />	
+				
+				<resource id="secret" path="{secret_id}">
+					<param name="secret_id" style="template" type="xsd:string">
+						<doc>A secret</doc></param>
+					<method href="#getSecretinfo"/>
+					<method href="#deleteSecret"/>
+					<method href="#updateSecret" />
+				</resource>
+			</resource>
+			<!-- ORDERS resource -->
+
+						
+			<resource id="orders" path="/orders">
+
+				<doc title="Orders"/>
+				
+			<method href="#getOrders"/>
+			<method href="#createOrder" />	
+							
+				<resource id="order" path="{order_id}">
+					<param name="orderid" style="template" type="xsd:string">
+						<doc>An order</doc></param>
+					<method href="#getOrderInfo"/>
+					<method href="#deleteOrder"/>
+					<method href="#updateOrder" db:security="writeronly"/>
+				</resource>
+			</resource>
+				</resource>
+		</resource>
+	</resources> 
+	
+<!--*******************************************************-->
+<!--               Secrets Methods                             -->
+<!--*******************************************************-->
+
+<!--*******************************************************-->
+<!--               Get Secrets: getSecrets                              -->
+<!--*******************************************************-->
+	<method name="GET" id="getSecrets">
+		<wadl:doc xml:lang="EN" title="Get Secrets" xmlns="http://docbook.org/ns/docbook">
+			<para role="shortdesc">This method retrieves all secrets.</para>  
+			<para>This method lists all the secrets for a tenant. Calling this method does not provide information for an indiviual secret.</para>
+		</wadl:doc>
+		<request>
+			<representation mediaType="application/json">
+				<doc>
+					<xsdxt:code href="../wadl/samples/reqGetSecrets.json"/>
+				</doc>
+			</representation>
+		</request>
+		<response status="200">		
+			<doc title="Error">This status code is returned when the secrets have been successfully retrieved for the tenant. </doc>
+			<representation mediaType="application/json" >
+				<doc>
+					<xsdxt:code href="../wadl/samples/resgetSecrets.json"/>
+				</doc>
+			</representation>
+		</response>
+	</method>
+
+	
+<!--*******************************************************-->	
+<!--              Create Secret: createSecret                -->	  
+<!--*******************************************************-->		
+		<method name="PUT" id="createSecret">
+			<wadl:doc xml:lang="EN" title="Create Secret" xmlns="http://docbook.org/ns/docbook">
+				<para role="shortdesc">This method creates a secret.</para>  
+				<para>This method creates a new secret.</para>
+				<para>Note: Making a POST request creates metadata for a secret. If the payload is provided with the POST request, it is encrypted and stored, and then linked with this metadata. If no payload is provided in the POST request, you need to make a subsequent PUT request and provide the payload. Clients must provide the secret information either via the PUT or POST request. Please note that this process differs from creating a secret by using the orders resource, whereby Barbican generates the actual secret information.</para>
+			</wadl:doc>
+				<request>
+					<param name="name" style="query" type="xsd:string" required="false">
+						<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+					Specifies the human readable name for the secret.
+					This parameter is optional. If no name is
+					supplied, the UUID will be displayed for this
+					parameter on subsequent GET calls. </wadl:doc>
+					</param>
+					<param name="expiration" style="query" type="xsd:integer" required="false">
+						<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+					Specifies the expiration date for the secret in
+					ISO-8601 format. ISO-8601 formats dates by using
+					the following representation:
+					yyyy-mm-ddThh:mm:ss[.mmm]. For example, September
+					27, 2012 is represented as 2012-09-27. Once the
+					secret has expired, it will no longer be returned
+					by the API or agent. This parameter is optinal. If
+					this parameter is not supplied, the secret has no
+					expiration date. </wadl:doc>
+					</param>
+					<param name="algorithm" style="query" type="xsd:string" required="false">
+						<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+							Specifies the algorithm type used to generate the secret. This parameter is optional.
+						</wadl:doc>
+					</param>	
+					<param name="bit_length" style="query" type="xsd:integer" required="false">
+						<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+							Specifies the bit length of the secret. Must be a positive integer. This parameter is optional.
+						</wadl:doc>
+					</param>	
+					<param name="mode" style="query" type="xsd:string" required="false">
+						<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+					Specifies the type/mode of the algorithm associated with the secret information. This parameter is optional.
+						</wadl:doc>
+					</param>	
+					<param name="payload" style="query" type="xsd:string" required="false">
+						<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+					Specifies the secret's unencrypted plain text. If
+					provided, this parameter's value must be
+					non-empty, and you must also provide the
+					payload_content_type. This field can be omitted
+					allowing for the secret information to be provided
+					via a subsequent PUT request. If the payload is
+					not provided, only the secret metadata will be
+					retrievable from Barbican and any attempt to
+					retrieve decrypted data for that secret will fail.
+					Defering the secret information to a PUT request
+					is useful for secrets that are in binary format
+					and are not suitable for base64 encoding. </wadl:doc>
+					</param>	
+					<param name="payload_content_type" style="query" type="xsd:string" required="false">
+						<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+					<para>Specifies the type/format the secret data is provided in. This parameter is required if the payload parameter is specified.
+The following values are supported:</para>
+					<para>- "text/plain" - This value is used to store plain text secrets.</para>
+					<para>Other options are "text/plain; charset=utf-8". 
+					If the charset value is omitted, utf-8 will be assumed. Note
+					that Barbican normalizes some formats before storing them
+					as secret metadata, for example
+					"text/plain; charset=utf-8" is converted to "text/plain." Retrieved metadata may not exactly match what was originally
+					specified in the POST or PUT request.
+					When the payload_content_type parameter is set to "text/plain" you cannot specify a value for the payload_content_encoding parameter..</para> 
+					<para>- "application/octet-stream" - This value is used to store binary
+					secrets from a base64 encoded payload. If this
+					value is used, you must also include the payload_content_encoding parameter.</para> </wadl:doc>
+					</param>	
+					<param name="payload_content_encoding" style="query" type="xsd:string" required="false">
+						<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+					Specifies the encoding format used to provide the
+					payload data. Barbican might translate and store
+					the secret data into another format. This
+					parameter is required if the payload_content_type
+					parameter is set to "application/octet-stream."
+					The only possible value for this parameter is
+					"base64," which specifies base64 encoded payloads. </wadl:doc>
+					</param>	
+
+				<representation mediaType="application/json" >
+					<doc>
+						<xsdxt:code href="../wadl/samples/reqCreateSecret.json"/>
+					</doc>
+				</representation>
+				</request>
+			<response status="201">	
+				<doc title="Success">This status code is returned when the secret has been successfully created.</doc>
+				<representation mediaType="application/json" >
+					<doc>
+						<xsdxt:code href="../wadl/samples/resCreateSecret.json"/>
+					</doc>
+				</representation>
+			</response>
+		<response status="400">
+			<doc title="Error">This error code is returned if the secret has invalid data. This response may include schema violations
+				such as mime-type not specified. </doc>
+		</response>
+		<response status="400">
+			<doc title="Error">This error code is returned if the "payload" parameter is empty. This response indicates that the 'payload' JSON attribute was provided, but no value was assigned to it.</doc>
+		</response>
+		<response status="400">
+			<doc title="Error">This error code is returned if the value specified in the "payload_content_type" parameter is not supported. It is caused when no crypto plugin supports the payload_content_type requested </doc>
+		</response>
+		<response status="413">
+			<doc title="Error">This error code is returned when the secret specified in the "payload" parameter is too large.  </doc>
+		</response>
+	</method>
+<!--*******************************************************-->
+<!--               Get Secret Information: getSecretinfo                 -->	
+<!--*******************************************************-->	
+			
+	<method name="GET" id="getSecretinfo">
+		<wadl:doc xml:lang="EN" title="Get Secret Information" xmlns="http://docbook.org/ns/docbook">
+			<para role="shortdesc">This method retrieves secret information.</para>
+			<para>This method retrieves the information for the specified secret. For the application/json accept type, only metadata about the secret is returned. If one of the 'content_types' accept types is specified instead, that portion of the secret will be decrypted and returned. </para>			
+		</wadl:doc>
+		<request>
+			<representation mediaType="application/json"  >
+				<doc>
+					<xsdxt:code href="../wadl/samples/reqGetSecretinfo.json"/>
+				</doc>
+			</representation>
+		</request>
+		<response status="200">	
+			<doc title="Success">This status code is returned when the secret has been successfully retrieved.</doc>
+			<representation mediaType="application/json" >
+				<doc>
+					<xsdxt:code href="../wadl/samples/resgetSecretinfo.json"/>
+				</doc>
+			</representation>
+		</response>
+		<response status="404">
+			<doc title="Error">This error code is returned when the supplied UUID doesn't match the secret in the datastore.</doc>
+		</response>
+		<response status="404">
+			<doc title="Error">This error code is returned when the secret metadata has been created, but the encrypted data for it has not yet been supplied, hence cannot be retrieved via a non 'application/json' mime type</doc>
+		</response>
+		<response status="406">
+			<doc title="Error">This error code is returned when the secret data cannot be retrieved in the requested Accept header mime-type</doc>
+		</response>
+	</method>
+	
+<!--*******************************************************-->
+<!--               Update Secret: updateSecret                 -->	
+<!--*******************************************************-->	
+
+	<method name="PUT" id="updateSecret">
+		<wadl:doc xml:lang="EN" title="Update Secret" xmlns="http://docbook.org/ns/docbook">
+			<para role="shortdesc">This method updates a specified secret.</para>
+			<para>This method updates a secret. To provide secret information after the secret is created, submit a PUT request to the secret URI. Note that a PUT request can only be performed once after a POST call that does not include a payload. Also note that no other attributes of a secret can be modified via PUT after it is POST-ed.
+				The PUT request should include the payload, as well as the appropriate Content-Type and Content-Encoding definitions.</para>			
+			<para> GET - Decrypted Secret Data
+				
+				To retrieve the decrypted secret information, perform a GET with the Accept header set to one of the content_types specified in the GET metadata call. Note that even if a binary secret is provided in the base64 format, it is converted to binary by Barbican prior to encryption and storage. Thereafter the secret will only be decrypted and returned as raw binary. </para>
+		</wadl:doc>
+		<request>
+			<param name="payload" style="query" type="xsd:string" required="false">
+				<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+				Specifies the name of the last queue received in a previous request, or none to get the first page of results. 
+				</wadl:doc>
+			</param>
+			<param name="payload_content_type" style="query" type="xsd:integer" required="false">
+				<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+					Specifies the number of queues to return. The default value for the number of queues returned is 10. If you do not specify this parameter, the default number of queues is returned.  
+				</wadl:doc>
+			</param>
+			<param name="payload_content_encoding" style="query" type="xsd:boolean" required="false">
+				<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+					Determines whether queue metadata is included in the response. The default value for this parameter is <code>false</code>, which excludes the metadata.
+				</wadl:doc>
+			</param>		
+			<representation mediaType="application/json" >
+				<doc>
+					<xsdxt:code href="../wadl/samples/reqUpdateSecret.json"/>
+				</doc>
+			</representation>
+		</request>
+		<response status="200">	
+			<doc title="Success">This status code is returned when the secret has been successfully updated.</doc>
+			<representation mediaType="application/json" >
+				<doc>
+					<xsdxt:code href="../wadl/samples/resUpdateSecret.json"/>
+				</doc>
+			</representation>
+		</response>
+		<response status="404">
+			<doc title="Error">This error code is returned when the supplied UUID doesn't match the secret in the datastore for the specified tenant..</doc>
+		</response>
+		<response status="400">
+			<doc title="Error">This error code is returned when no crypto plugin supports the payload_content_type requested in the Content-Type</doc>
+		</response>
+		<response status="409">
+			<doc title="Error">This error code is returned when the secret already has encrypted data associated with it</doc>
+		</response>
+		<response status="400">
+			<doc title="Error">This error code is returned when no value was provided for the "payload" parameter.</doc>
+		</response>
+		<response status="413">
+			<doc title="Error">This error code is returned when the secret specified in the "payload" parameter is too large.  </doc>
+			</response>
+	</method>
+
+<!--*******************************************************-->						
+<!--              Delete Secret: deleteSecret               -->
+<!--*******************************************************-->		
+	<method name="DELETE" id="deleteSecret">
+		<wadl:doc xml:lang="EN" title="Delete Secret" xmlns="http://docbook.org/ns/docbook">
+			<para role="shortdesc">Deletes the specified secret. </para>  
+			<para>This operation immediately deletes a queue and all of its existing messages. </para>		
+		</wadl:doc>
+		<request>
+			<representation mediaType="application/json">
+				<doc>
+					<xsdxt:code href="../wadl/samples/reqDeleteSecret.json"/>
+				</doc>
+			</representation>
+		</request>
+		<response status="204">	
+			<doc title="Success">This status code is returned when the secret has been successfully deleted.</doc>
+			<representation mediaType="application/json" >
+				<doc>
+					<xsdxt:code href="../wadl/samples/resDeleteSecret.json"/>
+				</doc>
+			</representation>
+		</response>
+		<response status="404">
+			<doc title="Error">This error code is returned when the supplied UUID doesn't match the secret in the datastore.</doc>
+		</response>
+	</method>	
+			
+<!--*******************************************************-->
+<!--               Orders Methods                             -->
+<!--*******************************************************-->
+			
+<!--*******************************************************-->
+<!--               Get Orders: getOrders                              -->
+<!--*******************************************************-->
+
+	<method name="GET" id="getOrders">
+		<wadl:doc xml:lang="EN" title="Get Orders" xmlns="http://docbook.org/ns/docbook">
+			<para role="shortdesc">This method retrieves all orders.</para>  
+			<para>This method lists all orders for a specified tenant. Performing a GET on the secrets resource with no UUID retrieves a batch of the most recent orders per the requesting tenant. 
+				The retrieved list of orders is ordered by oldest to newest created date. </para>
+		</wadl:doc>
+		<request>
+			<representation mediaType="application/json">
+				<doc>
+					<xsdxt:code href="../wadl/samples/reqGetOrders.json"/>
+				</doc>
+			</representation>
+		</request>
+		<response status="200">		
+			<doc title="Success">This status code is returned when the orders have been successfully retrieved.</doc>
+			<representation mediaType="application/json" >
+				<doc>
+					<xsdxt:code href="../wadl/samples/resGetOrders.json"/>
+				</doc>
+			</representation>
+		</response>
+	</method>
+			
+			
+<!--*******************************************************-->	
+<!--              Create Order: createOrder                -->	  
+<!--*******************************************************-->		
+	<method name="PUT" id="createOrder">
+		<wadl:doc xml:lang="EN" title="Create Order" xmlns="http://docbook.org/ns/docbook">
+			<para role="shortdesc">This method creates an order.</para>  
+			<para>This method creates a new order.</para>	
+		</wadl:doc>
+			<request>
+				<param name="name" style="query" type="xsd:string" required="false">
+					<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+						This parameter specifies the name of the secret.
+					</wadl:doc>
+				</param>
+				<param name="algorithm" style="query" type="xsd:string" required="false">
+					<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+						Specifies the algorithm type used to generate the secret. This parameter is optional.
+					</wadl:doc>
+				</param>	
+				<param name="bit_length" style="query" type="xsd:integer" required="false">
+					<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+						Specifies the bit length of the secret. Must be a positive integer. This parameter is optional.
+					</wadl:doc>
+				</param>	
+				<param name="mode" style="query" type="xsd:string" required="false">
+					<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+						Specifies the type/mode of the algorithm associated with the secret information. This parameter is optional.
+						</wadl:doc>
+				</param>
+				<param name="payload_content_type" style="query" type="xsd:string" required="false">
+					<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+						<para>Specifies the type/format the secret data is provided in. This parameter is required if the payload parameter is specified.
+							The following values are supported:</para>
+						<para>- "text/plain" - This value is used to store plain text secrets.</para>
+						<para>Other options are "text/plain; charset=utf-8". 
+							If the charset value is omitted, utf-8 will be assumed. Note
+							that Barbican normalizes some formats before storing them
+							as secret metadata, for example
+							"text/plain; charset=utf-8" is converted to "text/plain." Retrieved metadata may not exactly match what was originally
+							specified in the POST or PUT request.
+							When the payload_content_type parameter is set to "text/plain" you cannot specify a value for the payload_content_encoding parameter..</para> 
+						<para>- "application/octet-stream" - This value is used to store binary
+							secrets from a base64 encoded payload. If this
+							value is used, you must also include the payload_content_encoding parameter.</para> </wadl:doc>
+				</param>
+					<representation mediaType="application/json">
+						<doc>
+							<xsdxt:code href="../wadl/samples/reqCreateOrder.json"/>
+						</doc>
+					</representation>
+				</request>
+				<response status="201">		
+					<doc title="Success">This status code is returned when the order was successfully created.</doc>
+					<representation mediaType="application/json" >
+						<doc>
+							<xsdxt:code href="../wadl/samples/resCreateOrder.json"/>
+						</doc>
+					</representation>
+				</response>
+		<response status="400">
+			<doc title="Error">This error code is returned when the data provided in the POST request is invalid. This can include schema violations such as the secret's mime-type not specified</doc>
+		</response>
+		<response status="400">
+			<doc title="Error">This error code is returned when the value provided in the "payload_content_type" parameter is invalid. This is caused when thre is no crypto plugin available that supports the payload_content_type requested</doc>
+		</response>
+
+	</method>
+				
+<!--*******************************************************-->
+<!--               Get Order Information: getOrderinfo                 -->	
+<!--*******************************************************-->	
+				
+				<method name="GET" id="getOrderInfo">
+					<wadl:doc xml:lang="EN" title="Get Order Information" xmlns="http://docbook.org/ns/docbook">
+						<para role="shortdesc">This method retrieves information about a specified order.</para>
+						<para>This method retrieves information for the specified order including g a link to the secret that was generated as a result of the order (if available).</para>			
+					</wadl:doc>
+					<request>
+						<representation mediaType="application/json" >
+							<doc>
+								<xsdxt:code href="../wadl/samples/reqGetOrderinfo.json"/>
+							</doc>
+						</representation>
+					</request>
+					<response status="200">		
+						<doc title="Success">This status code is returned when the order info was successfully retrieved.</doc>
+						<representation mediaType="application/json" >
+							<doc>
+								<xsdxt:code href="../wadl/samples/resGetOrderinfo.json"/>
+							</doc>
+						</representation>
+					</response>
+					<response status="404">
+						<doc title="Error">This error code is returned when the supplied UUID doesn't match a order in the data store, which means the order doesn't exist. 	</doc>
+					</response>
+				</method>
+				
+	<!--*******************************************************-->
+	<!--               Update Order: updateOrder                 -->	
+	<!--*******************************************************-->	
+				
+	<method name="PUT" id="updateOrder" db:security="writeronly">
+					<wadl:doc xml:lang="EN" title="Update Order" xmlns="http://docbook.org/ns/docbook">
+						<para role="shortdesc">This method updates an order.</para>		
+					</wadl:doc>
+					<request>
+						<param name="marker" style="query" type="xsd:string" required="false">
+							<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+								Specifies the name of the last queue received in a previous request, or none to get the first page of results. 
+							</wadl:doc>
+						</param>
+						<param name="limit" style="query" type="xsd:integer" required="false">
+							<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+								Specifies the number of queues to return. The default value for the number of queues returned is 10. If you do not specify this parameter, the default number of queues is returned.  
+							</wadl:doc>
+						</param>
+						<param name="detailed" style="query" type="xsd:boolean" required="false">
+							<wadl:doc xmlns="http://docbook.org/ns/docbook" xml:lang="EN">
+								Determines whether queue metadata is included in the response. The default value for this parameter is <code>false</code>, which excludes the metadata.
+							</wadl:doc>
+						</param>		
+						<representation mediaType="application/json">
+							<doc>
+								<xsdxt:code href="../wadl/samples/reqUpdateOrder.json"/>
+							</doc>
+						</representation>
+					</request>
+					<response status="200">		
+						<representation mediaType="application/json" >
+							<doc>
+								<xsdxt:code href="../wadl/samples/resUpdateOrder.json"/>
+							</doc>
+						</representation>
+					</response>
+				</method>
+				
+				<!--*******************************************************-->						
+				<!--              Delete Order: deleteOrder               -->
+				<!--*******************************************************-->		
+				<method name="DELETE" id="deleteOrder">
+					<wadl:doc xml:lang="EN" title="Delete Order" xmlns="http://docbook.org/ns/docbook">
+						<para role="shortdesc">This method deletes the specified order. </para>  
+						<para>This method cancels an exisitng order. </para>		
+					</wadl:doc>
+					<request>
+						<representation mediaType="application/json" >
+							<doc>
+								<xsdxt:code href="../wadl/samples/reqDeleteOrder.json"/>
+							</doc>
+						</representation>
+					</request>
+					<response status="204">	
+						<doc title="Success">This status code is returned when the order was successfully cancelled.</doc>
+						<representation mediaType="application/json" >
+							<doc>
+								<xsdxt:code href="../wadl/samples/resDeleteOrder.json"/>
+							</doc>
+						</representation>
+					</response>
+					<response status="404">
+						<doc title="Error">This error code is returned when the supplied UUID doesn't match a order in the data store, which means the order doesn't exist. 	</doc>
+					</response>
+				</method>				
+
+
+</application>

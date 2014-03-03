@@ -1,0 +1,15 @@
+<assembly>
+  <id>includewars</id>
+  <formats>
+    <format>jar</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>${project.basedir}/target/docbkx/webhelp</directory>
+      <includes>
+	<include>**.war</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+</assembly>

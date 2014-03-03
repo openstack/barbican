@@ -1,0 +1,45 @@
+{
+  "access": {
+    "token": {
+      "expires": "2013-06-01T18:41:56Z",
+      "id": "39a8b7f62dcb4095a74a4e65a68c85d8",
+      "tenant": {
+        "description": null,
+        "enabled": true,
+        "id": "f378ae2a0b9142e6a482f437ef444dd7",
+        "name": "demo"
+      }
+    },
+    "serviceCatalog": [{
+      "endpoints": [{
+        "adminURL": "http://localhost:9312",
+        "region": "RegionOne",
+        "internalURL": "http://localhost:9313",
+        "publicURL": "http://localhost:9311"
+      }],
+      "endpoints_links": [],
+      "type": "key-store",
+      "name": "barbican"
+     }, {
+      "endpoints": [{
+        "adminURL": "http://localhost:35357/v2.0",
+        "region": "RegionOne",
+        "internalURL": "http://localhost:5000/v2.0",
+        "publicURL": "http://localhost:5000/v2.0"
+      }],
+      "endpoints_links": [],
+      "type": "identity",
+      "name": "keystone"
+    }],
+    "user": {
+      "username": "demo",
+      "roles_links": [],
+      "id": "0239200f037f4520aadd9791fad19af8",
+      "roles": [{
+        "id": "1dc8065a23f54c0abab098c94fe2f3c8",
+        "name": "Member"
+      }],
+      "name": "demo"
+    }
+  }
+}

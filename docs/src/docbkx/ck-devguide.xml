@@ -1,0 +1,768 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<book
+    xmlns="http://docbook.org/ns/docbook"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    version="5.0"
+    xml:id="ck-devguide"
+    status="DRAFT">
+  <?rax canonical.url.base="http://docs.rackspace.com/keep/api/v1.0/ck-devguide/content"?>
+  <title>Rackspace Barbican API Developer Guide</title>
+  <info>
+    <copyright>
+      <year>2012</year>
+      <holder>Rackspace US, Inc.</holder>
+    </copyright>
+    <releaseinfo>API v1.0</releaseinfo>
+    <productname>Rackspace Barbican API</productname><!--Note that the <productname> text matches the first few words of the title. The build system splits the title into productname + rest of title on the pdf cover.-->
+    <pubdate><!--If you leave the <pubdate> element empty, the build system inserts today's date automatically. --></pubdate>
+    <revhistory>
+      <revision>
+        <date>2014-01-25</date>
+        <revdescription>
+          <itemizedlist spacing="compact">
+            <listitem>
+              <para>Ipsum lorem.</para>
+            </listitem>
+          </itemizedlist>
+        </revdescription>
+      </revision>
+    </revhistory>
+    <legalnotice role="rs-api">
+      <annotation>
+        <remark>Copyright details are filled in by the build system.</remark>
+      </annotation>
+    </legalnotice>
+    <!--
+       The values in raxm:metadata are used to control where the content appears on the landing page in docs.rackspace.com.
+       Work with the Cloud Doc Tools team to find out what to put here. Once established, you should not change these
+       values without first consulting with the CDT team.
+    -->
+      <raxm:metadata xmlns:raxm="http://docs.rackspace.com/api/metadata">
+        <raxm:displayname>API Developer Guide</raxm:displayname>
+        <raxm:product version="v1.0">keep</raxm:product>
+        <raxm:priority>20</raxm:priority>
+      </raxm:metadata>
+  </info>
+  <preface xml:id="preface">
+    <title>Preface</title>
+    <section xml:id="section_eow_tmw_ad">
+      <title>Intended Audience</title>
+      <para>This document is intended for software developers
+        interested in developing applications using the Rackspace
+        Barbican Application Programming Interface
+          (<abbrev>API</abbrev>). </para>
+    </section>
+    <section xml:id="change_history">
+      <title>Document Change History</title>
+      <para>This version of the Developer Guide replaces and obsoletes
+        all previous versions. The most recent changes are described
+        in the table above.</para>
+      <para>
+        <?rax revhistory?>
+      </para>
+    </section>
+  </preface>
+  <chapter xml:id="Overview">
+    <title>Overview</title>
+    <para> </para>
+  </chapter>
+  <chapter xml:id="Barbican_Core_Concepts">
+    <title>Barbican Core Concepts</title>
+    <para> </para>
+    <section xml:id="the-xml-id-attribute">
+      <title>Barbican Architecture</title>
+      <para>The following diagram provides a visual overview of the
+        Barbican API Architecture:</para>
+      <para>
+        <figure>
+          <title>Barbican API Architecture</title>
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="images/Barbican_architecture.png" contentwidth="6in" align="left"/>
+            </imageobject>
+          </mediaobject>
+        </figure>
+      </para>
+      <para>The Barbican API architecture consists of several API
+        node(s) which handle incoming REST requests to Barbican. These
+        nodes can interact with the database directly if the request
+        can be completed synchronously (such as for GET requests),
+        otherwise the queue supports asynchronous processing by worker
+        nodes. </para>
+      <para>The latter could include interactions with third parties
+        such as certificate authorities. As implied in the diagram,
+        the architecture supports multiple API and worker nodes being
+        added/removed to/from the network, to support advanced
+        features such as auto scaling. Eventually, the database could
+        be replicated across data centers supporting region-agnostic
+        storage and retrieval of secured information, albeit with lags
+        possible during data synchronization. Also note that detailed
+        audit information will be written to the database as well,
+        capturing a history of actions that change the state of the
+        system. </para>
+    </section>
+  </chapter>
+  <chapter xml:id="other-features">
+    <title>General API Information</title>
+    <section xml:id="Authentication-d1e647"
+      xmlns:m="http://www.w3.org/1998/Math/MathML"
+      xmlns:html="http://www.w3.org/1999/xhtml">
+      <title>Authentication</title>
+      <para><link linkend="Retrieving_Auth_Token">Retrieving the
+          Authentication Token</link></para>
+      <para>Every REST request for Barbican requires the inclusion of
+        a specific authentication token, supplied by the
+          <code>X-Auth-Token</code> HTTP header. Customers obtain this
+        token by first using the Rackspace Cloud Identity service and
+        supplying a valid user name and API access key. </para>
+      <section xml:id="Retrieving_Auth_Token">
+        <title>Retrieving the Authentication Token</title>
+        <para> The authenticate operation provides users with an
+          authentication token and a list of regional cloud endpoints.
+          The sample requests and responses in this section illustrate
+          a general case. In your authentication request, use your own
+          credentials rather than the sample values shown for
+            <code>username</code> and <code>apiKey</code>. When you
+          authenticate successfully, the response to your
+          authentication request includes a catalog of the services to
+          which you have subscribed rather than the sample values
+          shown. </para>
+        <para>The following table describes a request for an
+          authentication token and the examples that follow show the
+          request and response in JSON format.</para>
+        <table rules="all">
+          <caption>Request for Authentication Token</caption>
+          <tbody>
+            <tr>
+              <td colspan="1">POST </td>
+              <td colspan="1"> v2.0/tokens </td>
+              <td colspan="4"> Authenticate to receive a token and a
+                service catalog. </td>
+            </tr>
+          </tbody>
+        </table>
+        <simpara> Normal Response Code(s):
+            <returnvalue>200</returnvalue>,
+            <returnvalue>203</returnvalue>
+        </simpara>
+        <simpara> Error Response Code(s): unauthorized
+            (<errorcode>401</errorcode>), userDisabled
+            (<errorcode>403</errorcode>), badRequest
+            (<errorcode>400</errorcode>), authFault
+            (<errorcode>500</errorcode>), serviceUnavailable
+            (<errorcode>503</errorcode>) </simpara>
+        <example>
+          <title>Authentication Request for US Endpoint: JSON</title>
+          <programlistingco>
+            <areaspec>
+              <area xml:id="credentials.json.user" units="linecolumn"
+                coords="14 22"/>
+              <area xml:id="credentials.json.key" units="linecolumn"
+                coords="15 20"/>
+            </areaspec>
+            <programlisting language="json">
+              <xi:include href="samples/reqAuthenticate.json" parse="text"/>
+            </programlisting>
+          </programlistingco>
+        </example>
+        <calloutlist>
+          <callout arearefs="credentials.json.user">
+            <para> The <code>username</code> supplied here is your
+              common Rackspace Cloud user name. </para>
+          </callout>
+          <callout arearefs="credentials.json.key">
+            <para> The key is your API access key. You can obtain the
+              key from the <link
+                xlink:href="http://mycloud.rackspace.com/">Rackspace
+                Cloud Control Panel</link> in the <guimenu>&lt;Your
+                Account></guimenu>/<guimenuitem>API
+                Access</guimenuitem> section. </para>
+          </callout>
+        </calloutlist>
+        <example xml:id="auth-response-example-json">
+          <title>Authentication Response for US Endpoint: JSON</title>
+          <programlistingco>
+            <areaspec>
+              <area xml:id="response.json.token" units="linecolumn"
+                coords="10 8"/>
+              <area xml:id="response.json.dfltregion"
+                units="linecolumn" coords="17 12"/>
+              <area xml:id="response.json.role" units="linecolumn"
+                coords="18 12"/>
+              <area xml:id="response.json.catalog" units="linecolumn"
+                coords="31 8"/>
+              <area xml:id="response.json.service-lb"
+                units="linecolumn" coords="49 16"/>
+              <area xml:id="response.json.service-compute"
+                units="linecolumn" coords="65 16"/>
+              <area xml:id="response.json.service-monitor"
+                units="linecolumn" coords="87 16"/>
+              <area xml:id="response.json.service-autoscale"
+                units="linecolumn" coords="97 16"/>
+              <area xml:id="response.json.tenant" units="linecolumn"
+                coords="121 24"/>
+              <area xml:id="response.json.url" units="linecolumn"
+                coords="122 24"/>
+              <area xml:id="response.json.region" units="linecolumn"
+                coords="124 24"/>
+              <area xml:id="response.json.servicename"
+                units="linecolumn" coords="133 16"/>
+              <area xml:id="response.json.servicetype"
+                units="linecolumn" coords="134 16"/>
+            </areaspec>
+            <programlisting language="json">
+              <xi:include href="samples/resAuthenticate.json" parse="text"/>
+            </programlisting>
+          </programlistingco>
+        </example>
+        <note>
+          <para>The information shown in the authentication response
+            example is for US-based accounts. If you authenticate
+            against the UK endpoint, the response you receive shows
+            the service catalog information for UK-based
+            accounts.</para>
+        </note>
+        <calloutlist>
+          <callout arearefs="response.json.token">
+            <para>This token can be presented to a service as evidence
+              of authentication. Tokens are valid for a finite
+              duration; a token's default lifespan is 24 hours. </para>
+            <para>The token's <code>expires</code> attribute denotes
+              the time after which the token automatically becomes
+              invalid. A token can be manually revoked before the time
+              identified by the <code>expires</code> attribute.
+                The<code>expires</code> attribute predicts a token's
+              maximum possible lifespan but does not guarantee that it
+              will reach that lifespan. Users are encouraged to cache
+              a token until it expires. </para>
+            <para>Authentication tokens are typically valid for 24
+              hours. Applications should be designed to
+              re-authenticate after receiving a
+                <errorcode>401</errorcode> (Unauthorized) response
+              from a service endpoint. </para>
+            <note>
+              <para>The token's expiration time is formatted
+                differently in the US and UK. These response examples
+                show the US format. For examples of the UK format, see
+                  <link
+                  xlink:href="http://docs.rackspace.com/auth/api/v2.0/auth-client-devguide/content/POST_authenticate_v2.0_tokens_.html"
+                  >http://docs.rackspace.com/auth/api/v2.0/auth-client-devguide/content/POST_authenticate_v2.0_tokens_.html</link>.</para>
+            </note>
+            <para> </para>
+          </callout>
+          <callout arearefs="response.json.dfltregion">
+            <para>Users can be assigned a default region. If multiple
+              endpoints are associated with a service in the user's
+              catalog, the endpoint for the user's default region is
+              selected if it is available. In this example, the user's
+              default region is DFW, and several of the services in
+              the user's catalog offer endpoints in that region and
+              the ORD region; whenever possible, the user's work is
+              directed to the DFW region. </para>
+            <para> </para>
+          </callout>
+          <callout arearefs="response.json.role">
+            <para>Users can be assigned multiple roles, with each role
+              providing specific privileges. In this example,
+                <code>jsmith</code> is the administrative user for the
+              account and holds the fully-privileged
+                <code>identity:admin</code> role. Other users might
+              hold other roles with different privileges. Roles are
+              not necessarily associated with actual job functions
+              such as Administrator, Operator, Developer, Tester, or
+              Trainer. </para>
+            <para> </para>
+          </callout>
+          <callout arearefs="response.json.catalog">
+            <para>The service catalog lists the services this user can
+              access. </para>
+          </callout>
+          <callout arearefs="response.json.tenant">
+            <para>Some services recognize the specification of a
+              tenant. If a service does recognize tenants, the format
+              of the tenant specification is defined only by the
+              service. For details about whether and how to specify a
+              tenant, check the documentation for the service that you
+              are using.</para>
+            <para> </para>
+          </callout>
+          <callout arearefs="response.json.url">
+            <para>An endpoint can be assigned public and internal
+              URLs. A public URL is accessible from anywhere. Access
+              to a public URL usually incurs traffic charges. Internal
+              URLs are accessible only to services within the same
+              region. Access to an internal URL is free of charge. </para>
+            <para> </para>
+          </callout>
+          <callout arearefs="response.json.region">
+            <para>A service can expose endpoints in different regions.
+              Regional endpoints allow users to provision resources in
+              a manner that provides high availability. </para>
+            <para>Some services are not region specific. These
+              services supply a single, non-regional endpoint and do
+              not provide access to internal URLs. </para>
+            <para> </para>
+          </callout>
+          <callout arearefs="response.json.servicename">
+            <para>The service name attribute identifies each unique
+              service in the catalog. After a service is created, its
+              name does not change. However, new services of the same
+              service type can be added to the catalog with new names. </para>
+            <important>
+              <para>If you are programmatically parsing an
+                authentication response, use service type rather than
+                service name to determine whether a user has access to
+                a particular kind of service. Service type is stable
+                across all releases. New service types might be
+                developed, but existing service types are not renamed.
+                It is possible to subscribe to multiple services of
+                the same type. Whatever those services are named, you
+                can always recognize them by parsing for service type
+                in the authentication response's service catalog.
+              </para>
+            </important>
+            <para> </para>
+          </callout>
+          <callout arearefs="response.json.servicetype">
+            <para>The service type attribute identifies services that
+              perform similar functions, regardless of service names.
+              In this example, the service named cloudFiles is
+              identified as <code>type="store"</code>, indicating that
+              it is a storage service even though the word "storage"
+              does not appear in its name. </para>
+            <important>
+              <para>Use service type as the primary value for locating
+                a service. If multiple endpoints of the same service
+                type exist in the same region, use service name to
+                locate the appropriate service.</para>
+            </important>
+            <para> </para>
+          </callout>
+        </calloutlist>
+      </section>
+    </section>
+    <section xml:id="serviceEndpoints"
+      xmlns:m="http://www.w3.org/1998/Math/MathML"
+      xmlns:html="http://www.w3.org/1999/xhtml">
+      <title>Service Access Endpoints</title>
+      <para>Barbican s a regionalized service. The user of the service
+        is therefore responsible for appropriate replication, caching,
+        and overall maintenance of Barbican data across regional
+        boundaries to other Barbian servers.</para>
+      <para>The following table lists the service access endpoints for
+        Barbican.</para>
+      <?rax-fo keep-with-next?>
+      <para>
+        <table rules="all">
+          <caption>Regionalized Service Endpoints</caption>
+          <col width="11%"/>
+          <col width="11%"/>
+          <col width="16%"/>
+          <col width="16%"/>
+          <col width="16%"/>
+          <col width="16%"/>
+          <col width="16%"/>
+          <thead>
+            <tr align="center">
+              <td colspan="2">Region</td>
+              <td colspan="5">Endpoint</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr align="left">
+              <td colspan="2">Chicago (ORD)</td>
+              <td colspan="5"
+                  ><code>https://ord.secrets.api.rackspacecloud.com/v1.0/</code><parameter>1234</parameter>/
+              </td>
+            </tr>
+            <tr align="left">
+              <td colspan="2">Dallas/Ft. Worth (DFW)</td>
+              <td colspan="5"
+                  ><code>https://dfw.secrets.api.rackspacecloud.com/v1.0/</code><parameter>1234</parameter>/
+              </td>
+            </tr>
+            <tr align="left">
+              <td colspan="2">London (LON)</td>
+              <td colspan="5">
+                <code>https://lon.secrets.api.rackspacecloud.com/v1.0/</code><parameter>1234</parameter>/
+              </td>
+            </tr>
+            <tr align="left">
+              <td colspan="2">Sydney (SYD)</td>
+              <td colspan="5">
+                <code>https://syd.secrets.api.rackspacecloud.com/v1.0/</code><parameter>1234</parameter>/
+              </td>
+            </tr>
+            <tr align="left">
+              <td colspan="2">Hong Kong (HKG)</td>
+              <td colspan="5"
+                  ><code>https://hkg.secrets.api.rackspacecloud.com/v1.0/</code><parameter>1234</parameter>/
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </para>
+      <para>Replace the Tenant ID, <parameter>1234</parameter>, with
+        your actual Tenant ID.</para>
+      <para>You will find your tenant Id after the final '/' in the
+          <code>publicURL</code> field returned by the authentication
+        response. For example, in <olink
+          targetdoc="autoscale-devguide"
+          targetptr="auth-response-example-json">Example 2,
+          “Authentication Response for US Endpoint: JSON”</olink> the
+          <code>publicURL</code> field for <code>secrets</code>
+          ("https://ord.secrets.api.rackspacecloud.com/v1.0/<emphasis
+          role="bold">1100111</emphasis>") shows that the tenant Id is
+        1100111. </para>
+    </section>
+    <section xml:id="contractVersion"
+      xmlns:m="http://www.w3.org/1998/Math/MathML"
+      xmlns:html="http://www.w3.org/1999/xhtml">
+      <title>Contract Versions</title>
+      <para> The version defines the contract and build information
+        for the API. </para>
+      <para>The contract version denotes the data model and behavior
+        that the API supports. The requested contract version is
+        included in all request URLs. Different contract versions of
+        the API might be available at any given time and are not
+        guaranteed to be compatible with one another. </para>
+      <example>
+        <title>Sample Request URL for Contract Version 1.0</title>
+        <programlisting>https://ord.secrets.api.rackspacecloud.com/<emphasis role="strong">v1.0</emphasis>/1234</programlisting>
+      </example>
+      <note>
+        <para>This document pertains to contract version 1.0.</para>
+      </note>
+    </section>
+    <section xml:id="Request_Response_Types-d1e903"
+      xmlns:m="http://www.w3.org/1998/Math/MathML"
+      xmlns:html="http://www.w3.org/1999/xhtml">
+      <title>Request and Response Types</title>
+      <para>The Rackspace Barbican API supports JSON data
+        serialization formats. You specify the request format by using
+        the <code>Content-Type</code> header. The request format is
+          <emphasis role="italic">required</emphasis> for calls that
+        have a request body. You can specify the response format in
+        requests either by using the <code>Accept</code> header or by
+        adding a <code>.json</code> extension to the request URI. JSON
+        is also used for the response format.</para>
+      <table rules="all">
+        <caption>Response Format</caption>
+        <?dbfo keep-together="always"?>
+        <thead>
+          <tr align="center">
+            <td>Format</td>
+            <td>Accept Header</td>
+            <td>Query Extension</td>
+            <td>Default</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>JSON</td>
+            <td>application/json</td>
+            <td>.json</td>
+            <td>Yes</td>
+          </tr>
+          <tr security="writeronly">
+            <td>XML</td>
+            <td>application/xml</td>
+            <td>.xml</td>
+            <td>No</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+    <?hard-pagebreak?>
+    <section xml:id="Limits-d1e1208"
+      xmlns:m="http://www.w3.org/1998/Math/MathML"
+      xmlns:html="http://www.w3.org/1999/xhtml">
+      <title>Limits</title>
+      <para> All accounts, by default, have a preconfigured set of
+        thresholds (or limits) to manage capacity and prevent abuse of
+        the system. The system recognizes <firstterm>rate
+          limits</firstterm> and <firstterm>absolute
+          limits</firstterm>. Rate limits are thresholds that are
+        reset after a certain amount of time passes. Absolute limits
+        are fixed. </para>
+      <section xml:id="Rate_Limits-d1e1222">
+        <!--
+rate limits are managed by Repose rate limiting filter,
+config at https://github.com/rackerlabs/autoscaling-chef/blob/master/site-cookbooks/repose/attributes/default.rb
+-->
+        <title>Rate Limits</title>
+        <para>Rate limits are specified in terms of both a
+          human-readable wildcard URI and a machine-processable
+          regular expression. The regular expression boundary matcher
+          '^' takes effect after the root URI path. </para>
+        <para>For example, the regular expression
+            <code>^/v1.0/execute</code> would match the bolded portion
+          of the following URI:
+            https://ord.secrets.api.rackspacecloud.com<emphasis
+            role="bold">/v1.0/execute</emphasis>. </para>
+        <para>For any user, all operations are limited to 1,000 calls
+          per minute. </para>
+        <para>If you exceed the thresholds established for your
+          account, a <errorcode>413</errorcode> (Rate Control) HTTP
+          response is returned with a <code>Retry-After</code> header
+          to notify the client when it can attempt to try again.
+        </para>
+      </section>
+    </section>
+  </chapter>
+<!--  <xi:include href="./chapters/rbac.xml"/>-->
+  <chapter xml:id="Barbican_API_Overview">
+    <title>General API Information</title>
+    <section xml:id="Secrets_Resource">
+      <title>Secrets Resource</title>
+      <para>The secrets resource is the heart of the Barbican service.
+        It provides access to the secret / keying material stored in
+        the system. </para>
+      <para>The secret scheme represents the actual secret or key that
+        will be presented to the application. Secrets can be of any
+        format, but additional functionality may be available for
+        known types of symmetric or asymmetric keys. The schema for
+        creating a secret differs from the retrieval schema is shown
+        next. </para>
+      <para>Secrets can be created in two ways: Via POST including a
+        payload, or with a POST without a payload followed by a PUT. </para>
+      <para>
+        <note>
+          <para>Note that the POST calls create secret <emphasis
+              role="italic">metadata</emphasis>. If the payload is
+            provided with the POST call, then it is encrypted and
+            stored, and then linked with this metadata. Otherwise, the
+            PUT call provides this payload. Hence clients must provide
+            the secret information to store via these 'create'
+            operations. This should not be confused with the secret
+            'generation' process via the orders resource below,
+            whereby Barbican generates the secret information.</para>
+        </note>
+      </para>
+      <section xml:id="Examples_of_Secrets"><title>Examples of Secret Combinations</title>
+      <para>The tables in this section are focused on the
+          content-types and content-encodings of the various REST verb
+          flows, even though each flow might have a different way to
+          specify these values (either via http header settings or
+          JSON request field). The reason for this approach is that
+          while each flow has a different means to specify the
+          mime-type and encoding, the values set for them must still
+          be consistent with valid mime-type or encoding
+          selections.</para>
+        <para/>
+        <para>
+            <table rules="all">
+            <caption>One-Step UTF-8/ACII Secret
+              Create/Retrieve</caption>
+            <col width="25%"/>
+            <col width="25%"/>
+            <col width="25%"/>
+            <col width="25%"/>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>content-type</th>
+                <th>content-encoding</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>POST secrets</td>
+                <td>payload_content_type = text/plain</td>
+                <td>payload_content_encoding not needed</td>
+                <td>Supplied payload is encrypted</td>
+              </tr>
+              <tr>
+                <td>GET secrets (meta)</td>
+                <td>Accept: application/json</td>
+                <td>Not required/ignored</td>
+                <td>JSON metadata, with content-type set to
+                  'default':'text/plain'</td>
+              </tr>
+              <tr>
+                <td>GET Secrets</td>
+                <td>Accept: text/plain </td>
+                <td>Not required/ignored</td>
+                <td>Previous payload is decrypted</td>
+              </tr>
+            </tbody>
+          </table>
+        </para>
+        <table rules="all">
+          <caption>One-Step Binary Secret Create/Retrieve</caption>
+          <col width="25%"/>
+          <col width="25%"/>
+          <col width="25%"/>
+          <col width="25%"/>
+          <thead>
+            <tr>
+              <th>Action</th>
+              <th>content-type</th>
+              <th>content-encoding</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>POST secrets</td>
+              <td>payload_content_type = application/octet-stream</td>
+              <td>payload_content_encoding = base64</td>
+              <td>Supplied payload is converted from base64 to binary,
+                then encrypted</td>
+            </tr>
+            <tr>
+              <td>GET secrets (meta)</td>
+              <td>Accept: application/json</td>
+              <td>Not required/ignored</td>
+              <td>JSON metadata, with content-type set to
+                'default':'application/octet-stream'</td>
+            </tr>
+            <tr>
+              <td>GET Secrets</td>
+              <td>Accept: text/plain </td>
+              <td>Not specified</td>
+              <td>Previous payload is decrypted and returned as raw
+                binary, even if the PUT request provided data in
+                base64.</td>
+            </tr>
+          </tbody>
+        </table>
+        <para>
+
+        </para>
+        <para>
+          <table rules="all">
+            <caption>Two-Step Binary Secret Create/Retrieve</caption>
+            <col width="25%"/>
+            <col width="25%"/>
+            <col width="25%"/>
+            <col width="25%"/>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>content-type</th>
+                <th>content-encoding</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>POST secrets</td>
+                <td>payload_content_type optionally specified</td>
+                <td>payload_content_encoding optionally specified</td>
+                <td>Only metadata is created. If the
+                  payload_content_type or payload_content_encoding
+                  fields were provided, they are not used or saved
+                  with the metadata. The PUT request (next) will
+                  determine the secret's content type</td>
+              </tr>
+              <tr>
+                <td>GET secrets (meta)</td>
+                <td>Content-type: application/octet-stream</td>
+                <td>Content-Encoding: base64</td>
+                <td>Supplied request body is <emphasis role="italic"
+                    >converted from base64 to binary</emphasis>, then
+                  encrypted</td>
+              </tr>
+              <tr>
+                <td>GET Secrets</td>
+                <td>Content-type: application/octet-stream</td>
+                <td>Not specified</td>
+                <td>Supplied request body is encrypted as is</td>
+              </tr>
+              <tr>
+                <td>POST secrets</td>
+                <td>Accept: application/json</td>
+                <td>Not required/ignored</td>
+                <td>JSON metadata, with Content-Types set to
+                  'default':'application/octet-stream'</td>
+              </tr>
+              <tr>
+                <td>POST secrets</td>
+                <td>Accept: application/octet-stream</td>
+                <td>Not specified</td>
+                <td>Previous request is decrypted and returned as raw
+                  binary, <emphasis role="italic">even if the PUT
+                    provided the data in base64</emphasis>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </para>
+        <para>
+          <table rules="all">
+            <caption>Two-Step Plain-Text Secret
+              Create/Retrieve</caption>
+            <col width="25%"/>
+            <col width="25%"/>
+            <col width="25%"/>
+            <col width="25%"/>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>content-type</th>
+                <th>content-encoding</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>POST secrets</td>
+                <td>payload_content_type = optionally specified</td>
+                <td>payload_content_encoding optionally specified</td>
+                <td>Only metadata is created. If the
+                  payload_content_type or payload_content_encoding
+                  fields were provided, they are not used or saved
+                  with the metadata. The PUT request (next) will
+                  determine the secret's content format</td>
+              </tr>
+              <tr>
+                <td>PUT secrets</td>
+                <td>Content-type: text/plain </td>
+                <td>Not required/ignored</td>
+                <td>JSON metadata, with content-type set to
+                  'default':'text/plain'</td>
+              </tr>
+              <tr>
+                <td>GET secrets (meta)</td>
+                <td>Accept: application/json</td>
+                <td>Not required/ignored</td>
+                <td>JSON metadata, with Content-Types set to
+                  'default':'text/plain'</td>
+              </tr>
+              <tr>
+                <td>GET secrets (decrypted)</td>
+                <td>Accept: text/plain</td>
+                <td>Not specified</td>
+                <td>Previous request is decrypted and returned as
+                  utf-8 text</td>
+              </tr>
+            </tbody>
+          </table>
+        </para>
+      </section>
+    </section>
+    <section xml:id="Orders_Resource">
+      <title>Orders Resource</title>
+      <para>The orders resource allows for the generation of secret
+        material by Barbican. The ordering object encapsulates the
+        workflow and history for the creation of a secret. This
+        interface is implemented as an asynchronous process since the
+        time to generate a secret can vary depending on the type of
+        secret. </para></section></chapter>
+
+  <chapter xml:id="volume"
+    xmlns="http://docbook.org/ns/docbook"
+    role="api-reference" >
+    <title>API Operations</title>
+    <para>This chapter describes each of the operations. The following
+      table summarizes all of the operations that are
+      available:</para>
+    <wadl:resources
+        href="../wadl/Barbican.wadl"
+        xmlns:wadl="http://wadl.dev.java.net/2009/02"/>
+  </chapter>
+
+</book>

@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section [
+<!-- in PDF: for line 1 on the cover page -->
+<!ENTITY PRODNAME "Rackspace Barbican">
+<!-- in PDF: for page headers -->
+<!ENTITY PRODABBV "Rackspace Barbican">
+<!-- in body -->
+<!ENTITY PROD "Barbican">
+]>
+<section
+    security="writeronly"
+    xml:id="RBAC"
+    xmlns="http://docbook.org/ns/docbook"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0">
+<title>Role Based Access Control (RBAC)</title>
+<para>Role Based Access Control (RBAC) restricts access to the
+        capabilities of Rackspace Cloud services, including the Cloud
+        &PRODNAME; API, to authorized users only. RBAC enables
+        Rackspace Cloud customers to specify which account users of
+        their Cloud account have access to which &PRODNAME; API
+        service capabilities, based on roles defined by Rackspace (see
+            <xref linkend="RBAC_product_roles_table"/>). The
+        permissions to perform certain operations in the &PRODNAME;
+        API – create, read, update, delete – are assigned to specific
+        roles. The account owner assigns these roles, either
+        multiproduct (global) or product-specific (for example, &PROD; only)
+        to account users. </para>
+<section xml:id="assigningRoles">
+<title>Assigning Roles to Account Users</title>
+<para>The account owner (<code>identity:user-admin</code>) can
+            create account users on the account and then assign roles
+            to those users. The roles grant the account users
+            specific permissions for accessing the capabilities of the
+            &PROD; service. Each account has only one account owner,
+            and that role is assigned by default to any
+            Rackspace Cloud account when the account is created. </para>
+<para>See the <citetitle>Cloud Identity Client Developer
+Guide</citetitle> for information about how to perform the
+following tasks:</para>
+<itemizedlist>
+<listitem>
+        <para>
+          <link xlink:href="http://docs.rackspace.com/auth/api/v2.0/auth-client-devguide/content/POST_addUser_v2.0_users_.html">
+           Create account users</link>
+        </para>
+    </listitem>
+    <listitem>
+        <para>
+          <link xlink:href="http://docs.rackspace.com/auth/api/v2.0/auth-client-devguide/content/POST_addRole_v2.0_OS-KSADM_roles_.html">
+           Assign roles to account users</link>
+        </para>
+    </listitem>
+    <listitem>
+        <para>
+            <link xlink:href="http://docs-internal.rackspace.com/auth/api/v2.0/auth-client-devguide/content/DELETE_deleteUserRole_v2.0_users__userId__roles_OS-KSADM__roleId__.html">
+                Delete roles from account users</link>
+        </para>
+    </listitem>
+</itemizedlist>
+<note>
+<para>The account owner (<code>identity:user-admin</code>) role cannot
+                hold any additional roles because it already has full
+                access to all capabilities.</para>
+</note>
+</section>
+<section xml:id="rolesAvailable">
+<title>Roles Available for &PROD; </title>
+    <para> Two roles (observer and admin) can be used to access the
+            &PROD; API specifically. The following table describes
+            these roles and their permissions. </para>
+<table rules="all" xml:id="RBAC_product_roles_table">
+    <caption>&PROD; Product Roles and Capabilities</caption>
+<col width="50%"/>
+<col width="50%"/>
+<thead>
+<tr>
+<th>Role Name</th>
+<th>Role Permissions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>autoscale:admin</code>
+</td>
+<td>This role provides Create, Read, Update, and Delete permissions
+in &PROD;, where access is
+granted</td>
+</tr>
+<tr>
+<td>
+<code>autoscale:observer</code></td>
+<td>This role provides Read permission in &PROD;, where
+access is granted</td>
+</tr>
+</tbody>
+</table>
+<para> Additionally, two multiproduct roles apply to all products.
+            Users with multiproduct roles inherit access to future
+            products when those products become RBAC-enabled. The
+            following table describes these roles and their
+            permissions.</para>
+<table rules="all" xml:id="RBAC_global_roles_table">
+<caption>Multiproduct (Global ) Roles and Capabilities</caption>
+<col width="50%"/>
+<col width="50%"/>
+<thead>
+<tr>
+<th>Role Name</th>
+<th>Role Permissions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>admin</code></td>
+<td>Create, Read, Update, and Delete permissions across
+multiple products, where access is granted</td>
+</tr>
+<tr>
+<td><code>observer</code></td>
+<td>Read permission across multiple products, where
+access is granted </td>
+</tr>
+</tbody>
+</table>
+</section>
+    <section xml:id="roleConflicts">
+        <title>Resolving Conflicts Between RBAC Multiproduct vs.
+            Custom (Product-specific) Roles</title>
+        <para>
+            The account owner can set roles for both multiproduct and &PROD; scope, and it is
+            important to understand how any potential conflicts among these roles are resolved. When
+            two roles appear to conflict, the role that provides the more extensive permissions takes
+            precedence. Therefore, admin roles take precedence over observer roles, because admin
+            roles provide more permissions.
+        </para>
+        <para>
+            The following table shows two examples of how
+            potential conflicts between user roles in the Control Panel are resolved:
+        </para>
+        <informaltable rules="all" xml:id="RBAC_role_conflicts_table"
+            width="1017">
+            <thead>
+                <tr>
+                    <th>Permission Configuration</th>
+                    <th>View of Permission in the Control Panel</th>
+                    <th>Can the User Perform Product Admin Functions in the Control Panel?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>User is assigned the following roles:
+                        multiproduct <emphasis role="bold"
+                            >observer</emphasis> and &PROD; <emphasis
+                            role="bold">admin</emphasis>
+                    </td>
+                    <td> Appears that the user has only the
+                        multiproduct <emphasis role="bold"
+                            >observer</emphasis> role. </td>
+                    <td> Yes, for &PROD; only. The user has the
+                            <emphasis role="bold">observer</emphasis>
+                        role for the rest of the products. </td>
+                </tr>
+                <tr>
+                    <td>User is assigned the following roles:
+                        multiproduct <emphasis role="bold"
+                            >admin</emphasis> and &PROD; <emphasis
+                            role="bold">observer</emphasis></td>
+                    <td> Appears that the user has only the
+                        multiproduct <emphasis role="bold"
+                            >admin</emphasis> role. </td>
+                    <td> Yes, for all the products. The &PROD;
+                        observer role is ignored.</td>
+                </tr>
+            </tbody>
+        </informaltable>
+    </section>
+    <section xml:id="operationsRoles">
+    <title>RBAC Permissions Cross-reference to &PROD; Operations</title>
+       <para> API operations for &PROD; may or may not be available to all roles.
+           To see which operations are permitted to invoke which calls, review
+            <!-- This KC page does not exist yet; check with Renee Rendon and be sure to match the name she gives it.
+                 Later, we expect to be able to mark each operations' capabilitites in the WADL and then report it along with the other
+                 details about that operation. Check with David Cramer about when that can replace or augment this.
+            -->
+            <link
+                xlink:href="http://www.rackspace.com/knowledge_center/article/permissions-matrix-for-auto-scale"
+                >
+                the Knowledge Center article</link>. </para>
+    </section>
+</section>
