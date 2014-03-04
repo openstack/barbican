@@ -92,7 +92,7 @@ function configure_barbican() {
     iniset $BARBICAN_CONF DEFAULT debug False
 
     # Set the log file location
-    initset $BARBICAN_CONF DEFAULT log_file "$BARBICAN_API_LOG_DIR/api.log"
+    iniset $BARBICAN_CONF DEFAULT log_file "$BARBICAN_API_LOG_DIR/api.log"
 
     # Install the policy file for the API server
     cp $BARBICAN_DIR/etc/barbican/policy.json $BARBICAN_CONF_DIR
