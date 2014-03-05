@@ -55,19 +55,19 @@ TEMPEST_SERVICES+=,barbican
 # Functions
 # ---------
 
-# cleanup_barbican() - Remove residual data files, anything left over from previous
+# cleanup_barbican - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
-function cleanup_barbican() {
+function cleanup_barbican {
     :
 }
 
-# configure_barbicanclient() - Set config files, create data dirs, etc
-function configure_barbicanclient() {
+# configure_barbicanclient - Set config files, create data dirs, etc
+function configure_barbicanclient {
     setup_develop $BARBICANCLIENT_DIR
 }
 
-# configure_barbican() - Set config files, create data dirs, etc
-function configure_barbican() {
+# configure_barbican - Set config files, create data dirs, etc
+function configure_barbican {
     setup_develop $BARBICAN_DIR
 
     [ ! -d $BARBICAN_CONF_DIR ] && sudo mkdir -m 755 -p $BARBICAN_CONF_DIR
@@ -123,8 +123,8 @@ function configure_barbican() {
     iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' signing_dir $BARBICAN_AUTH_CACHE_DIR
 }
 
-# init_barbican() - Initialize etc.
-function init_barbican() {
+# init_barbican - Initialize etc.
+function init_barbican {
     # Create cache dir
     sudo mkdir -p $BARBICAN_AUTH_CACHE_DIR
     sudo chown $STACK_USER $BARBICAN_AUTH_CACHE_DIR
@@ -133,30 +133,30 @@ function init_barbican() {
     recreate_database barbican utf8
 }
 
-# install_barbican() - Collect source and prepare
-function install_barbican() {
+# install_barbican - Collect source and prepare
+function install_barbican {
     git_clone $BARBICAN_REPO $BARBICAN_DIR $BARBICAN_BRANCH
     setup_develop $BARBICAN_DIR
     pip_install 'uwsgi'
 }
 
-# install_barbicanclient() - Collect source and prepare
-function install_barbicanclient() {
+# install_barbicanclient - Collect source and prepare
+function install_barbicanclient {
     git_clone $BARBICANCLIENT_REPO $BARBICANCLIENT_DIR $BARBICANCLIENT_BRANCH
     setup_develop $BARBICANCLIENT_DIR
 }
 
-# start_barbican() - Start running processes, including screen
-function start_barbican() {
+# start_barbican - Start running processes, including screen
+function start_barbican {
     screen_it barbican "uwsgi --master --emperor $BARBICAN_CONF_DIR/vassals --logto $BARBICAN_API_LOG_DIR/api.log"
 }
 
-# stop_barbican() - Stop running processes
-function stop_barbican() {
+# stop_barbican - Stop running processes
+function stop_barbican {
     screen_stop barbican
 }
 
-function create_barbican_accounts() {
+function create_barbican_accounts {
     SERVICE_TENANT=$(keystone tenant-list | awk "/ $SERVICE_TENANT_NAME / { print \$2 }")
     ADMIN_ROLE=$(keystone role-list | awk "/ admin / { print \$2 }")
 
