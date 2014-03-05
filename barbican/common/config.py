@@ -32,7 +32,7 @@ CONF.import_opt('verbose', 'barbican.openstack.common.log')
 CONF.import_opt('debug', 'barbican.openstack.common.log')
 CONF.import_opt('log_dir', 'barbican.openstack.common.log')
 CONF.import_opt('log_file', 'barbican.openstack.common.log')
-CONF.import_opt('log_config', 'barbican.openstack.common.log')
+CONF.import_opt('log_config_append', 'barbican.openstack.common.log')
 CONF.import_opt('log_format', 'barbican.openstack.common.log')
 CONF.import_opt('log_date_format', 'barbican.openstack.common.log')
 CONF.import_opt('use_syslog', 'barbican.openstack.common.log')
@@ -53,14 +53,14 @@ def setup_logging():
     Sets up the logging options
     """
 
-    if CONF.log_config:
+    if CONF.log_config_append:
         # Use a logging configuration file for all settings...
-        if os.path.exists(CONF.log_config):
-            logging.config.fileConfig(CONF.log_config)
+        if os.path.exists(CONF.log_config_append):
+            logging.config.fileConfig(CONF.log_config_append)
             return
         else:
             raise RuntimeError("Unable to locate specified logging "
-                               "config file: %s" % CONF.log_config)
+                               "config file: %s" % CONF.log_config_append)
 
     root_logger = logging.root
     if CONF.debug:
