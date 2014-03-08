@@ -204,6 +204,26 @@ class WhenTestingSecretValidator(unittest.TestCase):
         else:
             self.fail('No validation exception was raised')
 
+    def test_should_validate_mixed_case_payload_content_type(self):
+        self.secret_req['payload_content_type'] = 'TeXT/PlaiN'
+        self.validator.validate(self.secret_req)
+
+    def test_should_validate_upper_case_payload_content_type(self):
+        self.secret_req['payload_content_type'] = 'TEXT/PLAIN'
+        self.validator.validate(self.secret_req)
+
+    def test_should_fail_with_mixed_case_wrong_payload_content_type(self):
+        self.secret_req['payload_content_type'] = 'TeXT/PlaneS'
+
+        with self.assertRaises(excep.InvalidObject):
+            self.validator.validate(self.secret_req)
+
+    def test_should_fail_with_upper_case_wrong_payload_content_type(self):
+        self.secret_req['payload_content_type'] = 'TEXT/PLANE'
+
+        with self.assertRaises(excep.InvalidObject):
+            self.validator.validate(self.secret_req)
+
     def test_should_fail_with_plain_text_and_encoding(self):
         self.secret_req['payload_content_encoding'] = 'base64'
 

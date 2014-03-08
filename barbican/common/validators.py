@@ -81,10 +81,7 @@ class NewSecretValidator(ValidatorBase):
                 "bit_length": {"type": "integer", "minimum": 0},
                 "expiration": {"type": "string"},
                 "payload": {"type": "string"},
-                "payload_content_type": {
-                    "type": "string",
-                    "enum": mime_types.SUPPORTED
-                },
+                "payload_content_type": {"type": "string"},
                 "payload_content_encoding": {
                     "type": "string",
                     "enum": [
@@ -130,6 +127,14 @@ class NewSecretValidator(ValidatorBase):
                     schema=schema_name,
                     reason=_("If 'payload' is supplied, 'payload_content_type'"
                              " must also be supplied."),
+                    property="payload_content_type"
+                )
+
+            if content_type.lower() not in mime_types.SUPPORTED:
+                raise exception.InvalidObject(
+                    schema=schema_name,
+                    reason=_("payload_content_type is not one of "
+                             "{!s}").format(mime_types.SUPPORTED),
                     property="payload_content_type"
                 )
 
