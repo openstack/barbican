@@ -8,6 +8,7 @@ kombu>=2.4.8
 netaddr>=0.7.6
 oslo.config>=1.2.0
 PasteDeploy>=1.5.0
+Paste
 pbr>=0.5.21,<1.0
 pycrypto>=2.6
 pysqlite

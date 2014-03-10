@@ -152,8 +152,13 @@ class WhenTestingVersionResource(BaseTestCase):
             self._invoke_on_get()
             self.setUp()  # Need to re-setup
 
-    def test_should_fail_get_version(self):
-        self._assert_fail_rbac([None, 'bunkrolehere'], self._invoke_on_get)
+    def test_should_pass_get_version_with_bad_roles(self):
+        self.req = self._generate_req(roles=[None, 'bunkrolehere'])
+        self._invoke_on_get()
+
+    def test_should_pass_get_version_with_no_roles(self):
+        self.req = self._generate_req()
+        self._invoke_on_get()
 
     def test_should_pass_get_version_multiple_roles(self):
         self.req = self._generate_req(roles=['admin', 'observer', 'creator',

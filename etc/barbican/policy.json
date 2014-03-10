@@ -1,5 +1,5 @@
 {
-    "version:get": "rule:all_users",
+    "version:get": "@",
     "secret:decrypt": "rule:all_but_audit",
     "secret:get": "rule:all_users",
     "secret:put": "rule:admin_or_creator",
