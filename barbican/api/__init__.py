@@ -124,10 +124,10 @@ def generate_safe_exception_message(operation_name, excep):
         message = f.title
         status = f.status
     except policy.PolicyNotAuthorized:
-        message = u._('{0} attempt was not authorized - '
+        message = u._('{0} attempt not allowed - '
                       'please review your '
                       'user/tenant privileges').format(operation_name)
-        status = falcon.HTTP_401
+        status = falcon.HTTP_403
     except em.CryptoContentTypeNotSupportedException as cctnse:
         reason = u._("content-type of '{0}' not "
                      "supported").format(cctnse.content_type)
