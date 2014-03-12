@@ -134,7 +134,7 @@ class NewSecretValidator(ValidatorBase):
                 raise exception.InvalidObject(
                     schema=schema_name,
                     reason=_("payload_content_type is not one of "
-                             "{!s}").format(mime_types.SUPPORTED),
+                             "{0}").format(mime_types.SUPPORTED),
                     property="payload_content_type"
                 )
 
