@@ -12,11 +12,10 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import testtools
 
-import unittest
 
-
-class BaseTestCase(unittest.TestCase):
+class BaseTestCase(testtools.TestCase):
     def setUp(self):
         super(BaseTestCase, self).setUp()
         self.order_id = 'order1234'

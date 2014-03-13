@@ -15,7 +15,8 @@
 
 from Crypto import Random
 from mock import MagicMock
-import unittest
+
+import testtools
 
 from barbican.crypto import plugin
 
@@ -49,9 +50,10 @@ class TestCryptoPlugin(plugin.CryptoPluginBase):
             return False
 
 
-class WhenTestingSimpleCryptoPlugin(unittest.TestCase):
+class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
 
     def setUp(self):
+        super(WhenTestingSimpleCryptoPlugin, self).setUp()
         self.plugin = plugin.SimpleCryptoPlugin()
 
     def test_pad_binary_string(self):
@@ -84,8 +86,13 @@ class WhenTestingSimpleCryptoPlugin(unittest.TestCase):
         unencrypted = u'unicode_beer\U0001F37A'
         secret = MagicMock()
         secret.mime_type = 'text/plain'
-        with self.assertRaises(ValueError):
-            self.plugin.encrypt(unencrypted, MagicMock(), MagicMock())
+        self.assertRaises(
+            ValueError,
+            self.plugin.encrypt,
+            unencrypted,
+            MagicMock(),
+            MagicMock(),
+        )
 
     def test_byte_string_encryption(self):
         unencrypted = b'some_secret'

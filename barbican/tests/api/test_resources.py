@@ -21,11 +21,12 @@ resource classes. For RBAC tests of these classes, see the
 
 import base64
 import json
-import unittest
 import urllib
 
 import falcon
 import mock
+
+import testtools
 
 from barbican.api import strip_whitespace
 from barbican.api import resources as res
@@ -100,8 +101,10 @@ def create_container(id_ref):
     return container
 
 
-class WhenTestingVersionResource(unittest.TestCase):
+class WhenTestingVersionResource(testtools.TestCase):
     def setUp(self):
+        super(WhenTestingVersionResource, self).setUp()
+
         self.req = mock.MagicMock()
         self.resp = mock.MagicMock()
         self.resource = res.VersionResource()
@@ -119,10 +122,8 @@ class WhenTestingVersionResource(unittest.TestCase):
         self.assertEqual('current', parsed_body['v1'])
 
 
-class BaseSecretsResource(unittest.TestCase):
+class BaseSecretsResource(testtools.TestCase):
     """Base test class for the Secrets resource."""
-    def setUp(self):
-        pass
 
     def _init(self, payload=b'not-encrypted',
               payload_content_type='text/plain',
@@ -305,9 +306,11 @@ class BaseSecretsResource(unittest.TestCase):
                 self.payload_content_encoding
         self.stream.read.return_value = json.dumps(self.secret_req)
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp, self.keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.keystone_id
+        )
         self.assertEqual(falcon.HTTP_413, exception.status)
 
     def _test_should_fail_due_to_empty_payload(self):
@@ -323,9 +326,11 @@ class BaseSecretsResource(unittest.TestCase):
                 self.payload_content_encoding
         self.stream.read.return_value = json.dumps(self.secret_req)
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp, self.keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.keystone_id
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
 
@@ -364,9 +369,11 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
                            'payload': self.payload}
         self.stream.read.return_value = json.dumps(self.secret_req)
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp, self.keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.keystone_id,
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_create_secret_content_type_text_plain(self):
@@ -424,9 +431,11 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
         self.secret_req = {'payload_content_type':
                            'text/plain'}
         self.stream.read.return_value = json.dumps(self.secret_req)
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp, self.keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.keystone_id,
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
         self.secret_req = {'payload_content_type':
@@ -440,6 +449,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
 class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
     def setUp(self):
         super(WhenCreatingBinarySecretsUsingSecretsResource, self).setUp()
+
         self._init(payload="...lOtfqHaUUpe6NqLABgquYQ==",
                    payload_content_type='application/octet-stream',
                    payload_content_encoding='base64')
@@ -475,9 +485,11 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
              'payload_content_type': 'application/octet-stream'}
         )
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp, self.keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.keystone_id
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_create_secret_fails_with_binary_payload_bad_encoding(self):
@@ -491,9 +503,11 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
              'payload_content_encoding': 'bogus64'}
         )
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp, self.keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.keystone_id
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_create_secret_fails_with_binary_payload_no_content_type(self):
@@ -506,9 +520,11 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
              'payload_content_encoding': 'base64'}
         )
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp, self.keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.keystone_id
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_create_secret_fails_with_bad_payload(self):
@@ -522,14 +538,18 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
              'payload_content_encoding': 'base64'}
         )
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp, self.keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.keystone_id
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
 
-class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
+class WhenGettingSecretsListUsingSecretsResource(testtools.TestCase):
     def setUp(self):
+        super(WhenGettingSecretsListUsingSecretsResource, self).setUp()
+
         self.tenant_id = 'tenant1234'
         self.keystone_id = 'keystone1234'
         self.name = 'name 1234 !@#$%^&*()_+=-{}[];:<>,./?'
@@ -677,8 +697,13 @@ class WhenGettingSecretsListUsingSecretsResource(unittest.TestCase):
             return '/v1/{0}/secrets'.format(keystone_id)
 
 
-class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
+class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
+        testtools.TestCase):
     def setUp(self):
+        super(
+            WhenGettingPuttingOrDeletingSecretUsingSecretResource,
+            self,
+        ).setUp()
         self.tenant_id = 'tenantid1234'
         self.keystone_id = 'keystone1234'
         self.name = 'name1234'
@@ -815,30 +840,32 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
     def test_should_throw_exception_for_get_when_secret_not_found(self):
         self.secret_repo.get.return_value = None
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_get(self.req, self.resp, self.keystone_id,
-                                 self.secret.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_get,
+            self.req, self.resp, self.keystone_id, self.secret.id,
+        )
         self.assertEqual(falcon.HTTP_404, exception.status)
 
     def test_should_throw_exception_for_get_when_accept_not_supported(self):
         self.req.accept = 'bogusaccept'
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_get(self.req, self.resp, self.keystone_id,
-                                 self.secret.id)
-
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_get,
+            self.req, self.resp, self.keystone_id, self.secret.id,
+        )
         self.assertEqual(falcon.HTTP_406, exception.status)
 
     def test_should_throw_exception_for_get_when_datum_not_available(self):
         self.req.accept = 'text/plain'
         self.secret.encrypted_data = []
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_get(self.req, self.resp, self.keystone_id,
-                                 self.secret.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_get,
+            self.req, self.resp, self.keystone_id, self.secret.id,
+        )
         self.assertEqual(falcon.HTTP_404, exception.status)
 
     def test_should_put_secret_as_plain(self):
@@ -887,10 +914,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         # mock Content-Encoding header
         self.req.get_header.return_value = 'bogusencoding'
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_put(self.req, self.resp, self.keystone_id,
-                                 self.secret.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_put,
+            self.req, self.resp, self.keystone_id, self.secret.id,
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_should_fail_put_secret_as_json(self):
@@ -898,10 +926,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
 
         self.req.content_type = 'application/json'
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_put(self.req, self.resp, self.keystone_id,
-                                 self.secret.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_put,
+            self.req, self.resp, self.keystone_id, self.secret.id,
+        )
         self.assertEqual(falcon.HTTP_415, exception.status)
 
     def test_should_fail_put_secret_not_found(self):
@@ -910,10 +939,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         # Force error, due to secret not found.
         self.secret_repo.get.return_value = None
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_put(self.req, self.resp, self.keystone_id,
-                                 self.secret.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_put,
+            self.req, self.resp, self.keystone_id, self.secret.id,
+        )
         self.assertEqual(falcon.HTTP_404, exception.status)
 
     def test_should_fail_put_secret_no_payload(self):
@@ -922,10 +952,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         # Force error due to no data passed in the request.
         self.stream.read.return_value = None
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_put(self.req, self.resp, self.keystone_id,
-                                 self.secret.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_put,
+            self.req, self.resp, self.keystone_id, self.secret.id,
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_should_fail_put_secret_with_existing_datum(self):
@@ -934,11 +965,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         # Force error due to secret already having data
         self.secret.encrypted_data = [self.datum]
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_put(self.req, self.resp, self.keystone_id,
-                                 self.secret.id)
-
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_put,
+            self.req, self.resp, self.keystone_id, self.secret.id,
+        )
         self.assertEqual(falcon.HTTP_409, exception.status)
 
     def test_should_fail_due_to_empty_payload(self):
@@ -946,10 +977,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
 
         self.stream.read.return_value = ''
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_put(self.req, self.resp, self.keystone_id,
-                                 self.secret.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_put,
+            self.req, self.resp, self.keystone_id, self.secret.id,
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_should_fail_due_to_plain_text_too_large(self):
@@ -959,10 +991,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
             2 * validators.DEFAULT_MAX_SECRET_BYTES)])
         self.stream.read.return_value = big_text
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_put(self.req, self.resp, self.keystone_id,
-                                 self.secret.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_put,
+            self.req, self.resp, self.keystone_id, self.secret.id,
+        )
         self.assertEqual(falcon.HTTP_413, exception.status)
 
     def test_should_delete_secret(self):
@@ -977,10 +1010,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.secret_repo.delete_entity_by_id.side_effect = excep.NotFound(
             "Test not found exception")
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_delete(self.req, self.resp, self.keystone_id,
-                                    self.secret.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_delete,
+            self.req, self.resp, self.keystone_id, self.secret.id,
+        )
         self.assertEqual(falcon.HTTP_404, exception.status)
 
     def _setup_for_puts(self):
@@ -997,8 +1031,10 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(unittest.TestCase):
         self.req.stream = self.stream
 
 
-class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
+class WhenCreatingOrdersUsingOrdersResource(testtools.TestCase):
     def setUp(self):
+        super(WhenCreatingOrdersUsingOrdersResource, self).setUp()
+
         self.secret_name = 'name'
         self.secret_payload_content_type = 'application/octet-stream'
         self.secret_algorithm = "aes"
@@ -1055,24 +1091,28 @@ class WhenCreatingOrdersUsingOrdersResource(unittest.TestCase):
     def test_should_fail_add_new_order_no_secret(self):
         self.stream.read.return_value = '{}'
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp,
-                                  self.tenant_keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.tenant_keystone_id,
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_should_fail_add_new_order_bad_json(self):
         self.stream.read.return_value = ''
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp,
-                                  self.tenant_keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.tenant_keystone_id,
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
 
-class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
+class WhenGettingOrdersListUsingOrdersResource(testtools.TestCase):
     def setUp(self):
+        super(WhenGettingOrdersListUsingOrdersResource, self).setUp()
+
         self.tenant_id = 'tenant1234'
         self.keystone_id = 'keystoneid1234'
         self.name = 'name1234'
@@ -1172,8 +1212,9 @@ class WhenGettingOrdersListUsingOrdersResource(unittest.TestCase):
             return '/v1/{0}/orders'.format(self.keystone_id)
 
 
-class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
+class WhenGettingOrDeletingOrderUsingOrderResource(testtools.TestCase):
     def setUp(self):
+        super(WhenGettingOrDeletingOrderUsingOrderResource, self).setUp()
         self.tenant_keystone_id = 'keystoneid1234'
         self.requestor = 'requestor1234'
 
@@ -1208,27 +1249,30 @@ class WhenGettingOrDeletingOrderUsingOrderResource(unittest.TestCase):
     def test_should_throw_exception_for_get_when_order_not_found(self):
         self.order_repo.get.return_value = None
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
-                                 self.order.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_get,
+            self.req, self.resp, self.tenant_keystone_id, self.order.id,
+        )
         self.assertEqual(falcon.HTTP_404, exception.status)
 
     def test_should_throw_exception_for_delete_when_order_not_found(self):
         self.order_repo.delete_entity_by_id.side_effect = excep.NotFound(
             "Test not found exception")
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_delete(self.req, self.resp,
-                                    self.tenant_keystone_id,
-                                    self.order.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_delete,
+            self.req, self.resp, self.tenant_keystone_id, self.order.id,
+        )
         self.assertEqual(falcon.HTTP_404, exception.status)
 
 
-class WhenAddingNavigationHrefs(unittest.TestCase):
+class WhenAddingNavigationHrefs(testtools.TestCase):
 
     def setUp(self):
+        super(WhenAddingNavigationHrefs, self).setUp()
+
         self.resource_name = 'orders'
         self.keystone_id = '12345'
         self.num_elements = 100
@@ -1274,8 +1318,12 @@ class WhenAddingNavigationHrefs(unittest.TestCase):
         self.assertNotIn('next', data_with_hrefs)
 
 
-class WhenCreatingVerificationsUsingVerificationsResource(unittest.TestCase):
+class WhenCreatingVerificationsUsingVerificationsResource(testtools.TestCase):
     def setUp(self):
+        super(
+            WhenCreatingVerificationsUsingVerificationsResource,
+            self,
+        ).setUp()
         self.resource_type = 'image'
         self.resource_ref = 'http://www.images.com/v1/images/12345'
         self.resource_action = 'vm_attach'
@@ -1332,10 +1380,11 @@ class WhenCreatingVerificationsUsingVerificationsResource(unittest.TestCase):
         self.json = json.dumps(self.verify_req)
         self.stream.read.return_value = self.json
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp,
-                                  self.tenant_keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.tenant_keystone_id,
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_should_fail_verification_unsupported_resource_type(self):
@@ -1343,24 +1392,30 @@ class WhenCreatingVerificationsUsingVerificationsResource(unittest.TestCase):
         self.json = json.dumps(self.verify_req)
         self.stream.read.return_value = self.json
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp,
-                                  self.tenant_keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.tenant_keystone_id,
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_should_fail_verification_bad_json(self):
         self.stream.read.return_value = ''
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp,
-                                  self.tenant_keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.tenant_keystone_id,
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
 
-class WhenGettingOrDeletingVerificationUsingVerifyResource(unittest.TestCase):
+class WhenGettingOrDeletingVerificationUsingVerifyResource(testtools.TestCase):
     def setUp(self):
+        super(
+            WhenGettingOrDeletingVerificationUsingVerifyResource,
+            self,
+        ).setUp()
         self.tenant_keystone_id = 'keystoneid1234'
         self.requestor = 'requestor1234'
 
@@ -1395,21 +1450,22 @@ class WhenGettingOrDeletingVerificationUsingVerifyResource(unittest.TestCase):
     def test_should_throw_exception_for_get_when_verify_not_found(self):
         self.verify_repo.get.return_value = None
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
-                                 self.verification.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_get,
+            self.req, self.resp, self.tenant_keystone_id, self.verification.id,
+        )
         self.assertEqual(falcon.HTTP_404, exception.status)
 
     def test_should_throw_exception_for_delete_when_verify_not_found(self):
         self.verify_repo.delete_entity_by_id.side_effect = excep.NotFound(
             "Test not found exception")
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_delete(self.req, self.resp,
-                                    self.tenant_keystone_id,
-                                    self.verification.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_delete,
+            self.req, self.resp, self.tenant_keystone_id, self.verification.id,
+        )
         self.assertEqual(falcon.HTTP_404, exception.status)
 
     def _create_verification(self, id="id",
@@ -1427,8 +1483,10 @@ class WhenGettingOrDeletingVerificationUsingVerifyResource(unittest.TestCase):
         return verification
 
 
-class WhenGettingVerificationsListUsingResource(unittest.TestCase):
+class WhenGettingVerificationsListUsingResource(testtools.TestCase):
     def setUp(self):
+        super(WhenGettingVerificationsListUsingResource, self).setUp()
+
         self.tenant_id = 'tenant1234'
         self.keystone_id = 'keystoneid1234'
 
@@ -1517,7 +1575,7 @@ class WhenGettingVerificationsListUsingResource(unittest.TestCase):
             return '/v1/{0}/verifications'.format(self.keystone_id)
 
 
-class TestingJsonSanitization(unittest.TestCase):
+class TestingJsonSanitization(testtools.TestCase):
 
     def test_json_sanitization_without_array(self):
         json_without_array = {"name": "name", "algorithm": "AES",
@@ -1555,8 +1613,10 @@ class TestingJsonSanitization(unittest.TestCase):
                          .endswith(' '), "whitespace should be gone")
 
 
-class WhenCreatingContainersUsingContainersResource(unittest.TestCase):
+class WhenCreatingContainersUsingContainersResource(testtools.TestCase):
     def setUp(self):
+        super(WhenCreatingContainersUsingContainersResource, self).setUp()
+
         self.name = 'test container name'
         self.type = 'generic'
         self.secret_refs = [
@@ -1619,23 +1679,31 @@ class WhenCreatingContainersUsingContainersResource(unittest.TestCase):
     def test_should_fail_container_bad_json(self):
         self.stream.read.return_value = ''
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp,
-                                  self.tenant_keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.tenant_keystone_id,
+        )
         self.assertEqual(falcon.HTTP_400, exception.status)
 
     def test_should_throw_exception_when_secret_ref_doesnt_exist(self):
         self.secret_repo.get.return_value = None
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_post,
+            self.req, self.resp, self.tenant_keystone_id,
+        )
         self.assertEqual(falcon.HTTP_404, exception.status)
 
 
-class WhenGettingOrDeletingContainerUsingContainerResource(unittest.TestCase):
+class WhenGettingOrDeletingContainerUsingContainerResource(testtools.TestCase):
     def setUp(self):
+        super(
+            WhenGettingOrDeletingContainerUsingContainerResource,
+            self,
+        ).setUp()
+
         self.tenant_keystone_id = 'keystoneid1234'
         self.tenant_internal_id = 'tenantid1234'
 
@@ -1678,26 +1746,29 @@ class WhenGettingOrDeletingContainerUsingContainerResource(unittest.TestCase):
     def test_should_throw_exception_for_get_when_container_not_found(self):
         self.container_repo.get.return_value = None
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
-                                 self.container.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_get,
+            self.req, self.resp, self.tenant_keystone_id, self.container.id,
+        )
         self.assertEqual(falcon.HTTP_404, exception.status)
 
     def test_should_throw_exception_for_delete_when_container_not_found(self):
         self.container_repo.delete_entity_by_id.side_effect = excep.NotFound(
             "Test not found exception")
 
-        with self.assertRaises(falcon.HTTPError) as cm:
-            self.resource.on_delete(self.req, self.resp,
-                                    self.tenant_keystone_id,
-                                    self.container.id)
-        exception = cm.exception
+        exception = self.assertRaises(
+            falcon.HTTPError,
+            self.resource.on_delete,
+            self.req, self.resp, self.tenant_keystone_id, self.container.id,
+        )
         self.assertEqual(falcon.HTTP_404, exception.status)
 
 
-class WhenGettingContainersListUsingResource(unittest.TestCase):
+class WhenGettingContainersListUsingResource(testtools.TestCase):
     def setUp(self):
+        super(WhenGettingContainersListUsingResource, self).setUp()
+
         self.tenant_id = 'tenant1234'
         self.keystone_id = 'keystoneid1234'
 

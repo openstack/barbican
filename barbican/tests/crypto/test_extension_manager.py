@@ -15,7 +15,7 @@
 
 import base64
 import mock
-import unittest
+import testtools
 
 from barbican.crypto import extension_manager as em
 from barbican.crypto import mime_types as mt
@@ -41,9 +41,10 @@ class TestSupportsCryptoPlugin(CryptoPluginBase):
         return False
 
 
-class WhenTestingNormalizeBeforeEncryptionForBinary(unittest.TestCase):
+class WhenTestingNormalizeBeforeEncryptionForBinary(testtools.TestCase):
 
     def setUp(self):
+        super(WhenTestingNormalizeBeforeEncryptionForBinary, self).setUp()
         self.unencrypted = 'AAAAAAAA'
         self.content_type = 'application/octet-stream'
         self.content_encoding = 'base64'
@@ -69,42 +70,46 @@ class WhenTestingNormalizeBeforeEncryptionForBinary(unittest.TestCase):
     def test_encrypt_fail_binary_unknown_encoding(self):
         self.content_encoding = 'gzip'
 
-        with self.assertRaises(em.CryptoContentEncodingNotSupportedException)\
-                as cm:
-            unenc, content = em. \
-                normalize_before_encryption(self.unencrypted,
-                                            self.content_type,
-                                            self.content_encoding,
-                                            self.enforce_text_only)
-        ex = cm.exception
+        ex = self.assertRaises(
+            em.CryptoContentEncodingNotSupportedException,
+            em.normalize_before_encryption,
+            self.unencrypted,
+            self.content_type,
+            self.content_encoding,
+            self.enforce_text_only,
+        )
         self.assertEqual(self.content_encoding, ex.content_encoding)
 
     def test_encrypt_fail_binary_force_text_based_no_encoding(self):
         self.content_encoding = None
         self.enforce_text_only = True
-        with self.assertRaises(em.CryptoContentEncodingMustBeBase64):
-            unenc, content = em. \
-                normalize_before_encryption(self.unencrypted,
-                                            self.content_type,
-                                            self.content_encoding,
-                                            self.enforce_text_only)
+        self.assertRaises(
+            em.CryptoContentEncodingMustBeBase64,
+            em.normalize_before_encryption,
+            self.unencrypted,
+            self.content_type,
+            self.content_encoding,
+            self.enforce_text_only,
+        )
 
     def test_encrypt_fail_unknown_content_type(self):
         self.content_type = 'bogus'
-        with self.assertRaises(em.CryptoContentTypeNotSupportedException)\
-                as cm:
-            unenc, content = em \
-                .normalize_before_encryption(self.unencrypted,
-                                             self.content_type,
-                                             self.content_encoding,
-                                             self.enforce_text_only)
-        ex = cm.exception
+        ex = self.assertRaises(
+            em.CryptoContentTypeNotSupportedException,
+            em.normalize_before_encryption,
+            self.unencrypted,
+            self.content_type,
+            self.content_encoding,
+            self.enforce_text_only,
+        )
         self.assertEqual(self.content_type, ex.content_type)
 
 
-class WhenTestingNormalizeBeforeEncryptionForText(unittest.TestCase):
+class WhenTestingNormalizeBeforeEncryptionForText(testtools.TestCase):
 
     def setUp(self):
+        super(WhenTestingNormalizeBeforeEncryptionForText, self).setUp()
+
         self.unencrypted = 'AAAAAAAA'
         self.content_type = 'text/plain'
         self.content_encoding = 'base64'
@@ -130,41 +135,51 @@ class WhenTestingNormalizeBeforeEncryptionForText(unittest.TestCase):
 
     def test_raises_on_bogus_content_type(self):
         content_type = 'text/plain; charset=ISO-8859-1'
-        with self.assertRaises(em.CryptoContentTypeNotSupportedException):
-            unenc, content = em.normalize_before_encryption(
-                self.unencrypted,
-                content_type,
-                self.content_encoding,
-                self.enforce_text_only
-            )
+
+        self.assertRaises(
+            em.CryptoContentTypeNotSupportedException,
+            em.normalize_before_encryption,
+            self.unencrypted,
+            content_type,
+            self.content_encoding,
+            self.enforce_text_only
+        )
 
     def test_raises_on_no_payload(self):
         content_type = 'text/plain; charset=ISO-8859-1'
-        with self.assertRaises(em.CryptoNoPayloadProvidedException):
-            unenc, content = em.normalize_before_encryption(
-                None,
-                content_type,
-                self.content_encoding,
-                self.enforce_text_only
-            )
+        self.assertRaises(
+            em.CryptoNoPayloadProvidedException,
+            em.normalize_before_encryption,
+            None,
+            content_type,
+            self.content_encoding,
+            self.enforce_text_only
+        )
 
 
-class WhenTestingAnalyzeBeforeDecryption(unittest.TestCase):
+class WhenTestingAnalyzeBeforeDecryption(testtools.TestCase):
 
     def setUp(self):
+        super(WhenTestingAnalyzeBeforeDecryption, self).setUp()
+
         self.content_type = 'application/octet-stream'
 
     def test_decrypt_fail_bogus_content_type(self):
         self.content_type = 'bogus'
-        with self.assertRaises(em.CryptoAcceptNotSupportedException) as cm:
-            em.analyze_before_decryption(self.content_type)
-        ex = cm.exception
+
+        ex = self.assertRaises(
+            em.CryptoAcceptNotSupportedException,
+            em.analyze_before_decryption,
+            self.content_type,
+        )
         self.assertEqual(self.content_type, ex.accept)
 
 
-class WhenTestingDenormalizeAfterDecryption(unittest.TestCase):
+class WhenTestingDenormalizeAfterDecryption(testtools.TestCase):
 
     def setUp(self):
+        super(WhenTestingDenormalizeAfterDecryption, self).setUp()
+
         self.unencrypted = 'AAAAAAAA'
         self.content_type = 'application/octet-stream'
 
@@ -181,21 +196,28 @@ class WhenTestingDenormalizeAfterDecryption(unittest.TestCase):
 
     def test_decrypt_fail_unknown_content_type(self):
         self.content_type = 'bogus'
-        with self.assertRaises(em.CryptoGeneralException):
-            em.denormalize_after_decryption(self.unencrypted,
-                                            self.content_type)
+        self.assertRaises(
+            em.CryptoGeneralException,
+            em.denormalize_after_decryption,
+            self.unencrypted,
+            self.content_type,
+        )
 
     def test_decrypt_fail_binary_as_plain(self):
         self.unencrypted = '\xff'
         self.content_type = 'text/plain'
-        with self.assertRaises(em.CryptoAcceptNotSupportedException):
-            em.denormalize_after_decryption(self.unencrypted,
-                                            self.content_type)
+        self.assertRaises(
+            em.CryptoAcceptNotSupportedException,
+            em.denormalize_after_decryption,
+            self.unencrypted,
+            self.content_type,
+        )
 
 
-class WhenTestingCryptoExtensionManager(unittest.TestCase):
+class WhenTestingCryptoExtensionManager(testtools.TestCase):
 
     def setUp(self):
+        super(WhenTestingCryptoExtensionManager, self).setUp()
         self.manager = em.CryptoExtensionManager()
 
     def test_create_supported_algorithm(self):
@@ -206,45 +228,51 @@ class WhenTestingCryptoExtensionManager(unittest.TestCase):
         self.assertEqual(skg, self.manager._determine_type('des'))
 
     def test_create_unsupported_algorithm(self):
-        with self.assertRaises(em.CryptoAlgorithmNotSupportedException):
-            self.manager._determine_type('faux_alg')
+        self.assertRaises(
+            em.CryptoAlgorithmNotSupportedException,
+            self.manager._determine_type,
+            'faux_alg',
+        )
 
     def test_encrypt_no_plugin_found(self):
         self.manager.extensions = []
-        with self.assertRaises(em.CryptoPluginNotFound):
-            self.manager.encrypt(
-                'payload',
-                'content_type',
-                'content_encoding',
-                mock.MagicMock(),
-                mock.MagicMock(),
-                mock.MagicMock()
-            )
+        self.assertRaises(
+            em.CryptoPluginNotFound,
+            self.manager.encrypt,
+            'payload',
+            'content_type',
+            'content_encoding',
+            mock.MagicMock(),
+            mock.MagicMock(),
+            mock.MagicMock(),
+        )
 
     def test_encrypt_no_supported_plugin(self):
         plugin = TestSupportsCryptoPlugin()
         plugin_mock = mock.MagicMock(obj=plugin)
         self.manager.extensions = [plugin_mock]
-        with self.assertRaises(em.CryptoSupportedPluginNotFound):
-            self.manager.encrypt(
-                'payload',
-                'content_type',
-                'content_encoding',
-                mock.MagicMock(),
-                mock.MagicMock(),
-                mock.MagicMock()
-            )
+        self.assertRaises(
+            em.CryptoSupportedPluginNotFound,
+            self.manager.encrypt,
+            'payload',
+            'content_type',
+            'content_encoding',
+            mock.MagicMock(),
+            mock.MagicMock(),
+            mock.MagicMock(),
+        )
 
     def test_decrypt_no_plugin_found(self):
         """ Passing mocks here causes CryptoPluginNotFound because the mock
         won't match any of the available plugins
         """
-        with self.assertRaises(em.CryptoPluginNotFound):
-            self.manager.decrypt(
-                'text/plain',
-                mock.MagicMock(),
-                mock.MagicMock()
-            )
+        self.assertRaises(
+            em.CryptoPluginNotFound,
+            self.manager.decrypt,
+            'text/plain',
+            mock.MagicMock(),
+            mock.MagicMock(),
+        )
 
     def test_decrypt_no_supported_plugin_found(self):
         """ Similar to test_decrypt_no_plugin_found, but in this case
@@ -255,46 +283,50 @@ class WhenTestingCryptoExtensionManager(unittest.TestCase):
         fake_datum = mock.MagicMock()
         fake_datum.kek_meta_tenant = mock.MagicMock()
         fake_secret.encrypted_data = [fake_datum]
-        with self.assertRaises(em.CryptoPluginNotFound):
-            self.manager.decrypt(
-                'text/plain',
-                fake_secret,
-                mock.MagicMock()
-            )
+        self.assertRaises(
+            em.CryptoPluginNotFound,
+            self.manager.decrypt,
+            'text/plain',
+            fake_secret,
+            mock.MagicMock(),
+        )
 
     def test_generate_data_encryption_key_no_plugin_found(self):
         self.manager.extensions = []
-        with self.assertRaises(em.CryptoPluginNotFound):
-            self.manager.generate_data_encryption_key(
-                mock.MagicMock(),
-                mock.MagicMock(),
-                mock.MagicMock(),
-                mock.MagicMock()
-            )
+        self.assertRaises(
+            em.CryptoPluginNotFound,
+            self.manager.generate_data_encryption_key,
+            mock.MagicMock(),
+            mock.MagicMock(),
+            mock.MagicMock(),
+            mock.MagicMock(),
+        )
 
     def test_generate_data_encryption_key_no_supported_plugin(self):
         plugin = TestSupportsCryptoPlugin()
         plugin_mock = mock.MagicMock(obj=plugin)
         self.manager.extensions = [plugin_mock]
-        with self.assertRaises(em.CryptoSupportedPluginNotFound):
-            self.manager.generate_data_encryption_key(
-                mock.MagicMock(algorithm='AES'),
-                mock.MagicMock(),
-                mock.MagicMock(),
-                mock.MagicMock()
-            )
+        self.assertRaises(
+            em.CryptoSupportedPluginNotFound,
+            self.manager.generate_data_encryption_key,
+            mock.MagicMock(algorithm='AES'),
+            mock.MagicMock(),
+            mock.MagicMock(),
+            mock.MagicMock(),
+        )
 
     def test_find_or_create_kek_objects_bind_returns_none(self):
         plugin = TestSupportsCryptoPlugin()
         kek_repo = mock.MagicMock(name='kek_repo')
         bind_completed = mock.MagicMock(bind_completed=False)
         kek_repo.find_or_create_kek_datum.return_value = bind_completed
-        with self.assertRaises(em.CryptoKEKBindingException):
-            self.manager._find_or_create_kek_objects(
-                plugin,
-                mock.MagicMock(),
-                kek_repo
-            )
+        self.assertRaises(
+            em.CryptoKEKBindingException,
+            self.manager._find_or_create_kek_objects,
+            plugin,
+            mock.MagicMock(),
+            kek_repo,
+        )
 
     def test_find_or_create_kek_objects_saves_to_repo(self):
         kek_repo = mock.MagicMock(name='kek_repo')

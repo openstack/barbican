@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-
 import falcon
 import mock
+import testtools
 
 from barbican.crypto import extension_manager as em
 from barbican.model import models
@@ -25,9 +24,11 @@ from barbican.openstack.common import timeutils
 from barbican.tasks import resources
 
 
-class WhenBeginningOrder(unittest.TestCase):
+class WhenBeginningOrder(testtools.TestCase):
 
     def setUp(self):
+        super(WhenBeginningOrder, self).setUp()
+
         self.requestor = 'requestor1234'
         self.order = models.Order()
         self.order.id = "id1"
@@ -119,8 +120,12 @@ class WhenBeginningOrder(unittest.TestCase):
         self.order_repo.get = mock.MagicMock(return_value=None,
                                              side_effect=ValueError())
 
-        with self.assertRaises(ValueError):
-            self.resource.process(self.order.id, self.keystone_id)
+        self.assertRaises(
+            ValueError,
+            self.resource.process,
+            self.order.id,
+            self.keystone_id,
+        )
 
         # Order state doesn't change because can't retrieve it to change it.
         self.assertEqual(models.States.PENDING, self.order.status)
@@ -130,8 +135,12 @@ class WhenBeginningOrder(unittest.TestCase):
         self.tenant_repo.get = mock.MagicMock(return_value=None,
                                               side_effect=ValueError())
 
-        with self.assertRaises(ValueError):
-            self.resource.process(self.order.id, self.keystone_id)
+        self.assertRaises(
+            ValueError,
+            self.resource.process,
+            self.order.id,
+            self.keystone_id,
+        )
 
         self.assertEqual(models.States.ERROR, self.order.status)
         self.assertEqual(falcon.HTTP_500, self.order.error_status_code)
@@ -143,8 +152,12 @@ class WhenBeginningOrder(unittest.TestCase):
         self.order_repo.save = mock.MagicMock(return_value=None,
                                               side_effect=ValueError())
 
-        with self.assertRaises(ValueError):
-            self.resource.process(self.order.id, self.keystone_id)
+        self.assertRaises(
+            ValueError,
+            self.resource.process,
+            self.order.id,
+            self.keystone_id,
+        )
 
     def test_should_fail_during_error_report_fail(self):
         # Force an error during the error-report handling after
@@ -160,13 +173,19 @@ class WhenBeginningOrder(unittest.TestCase):
 
         # Should see the original exception (TypeError) instead of the
         # secondary one (ValueError).
-        with self.assertRaises(TypeError):
-            self.resource.process(self.order.id, self.keystone_id)
+        self.assertRaises(
+            TypeError,
+            self.resource.process,
+            self.order.id,
+            self.keystone_id,
+        )
 
 
-class WhenPerformingVerification(unittest.TestCase):
+class WhenPerformingVerification(testtools.TestCase):
 
     def setUp(self):
+        super(WhenPerformingVerification, self).setUp()
+
         self.verif = models.Verification()
         self.verif.id = "id1"
 
@@ -214,8 +233,12 @@ class WhenPerformingVerification(unittest.TestCase):
         self.verif_repo.get = mock.MagicMock(return_value=None,
                                              side_effect=ValueError())
 
-        with self.assertRaises(ValueError):
-            self.resource.process(self.verif.id, self.keystone_id)
+        self.assertRaises(
+            ValueError,
+            self.resource.process,
+            self.verif.id,
+            self.keystone_id,
+        )
 
         # Verification state doesn't change because can't retrieve
         #   it to change it.
@@ -226,5 +249,9 @@ class WhenPerformingVerification(unittest.TestCase):
         self.verif_repo.save = mock.MagicMock(return_value=None,
                                               side_effect=ValueError())
 
-        with self.assertRaises(ValueError):
-            self.resource.process(self.verif.id, self.keystone_id)
+        self.assertRaises(
+            ValueError,
+            self.resource.process,
+            self.verif.id,
+            self.keystone_id,
+        )

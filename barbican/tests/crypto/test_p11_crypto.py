@@ -14,15 +14,18 @@
 # limitations under the License.
 
 import mock
-import unittest
+
+import testtools
 
 from barbican.crypto import p11_crypto
 from barbican.crypto import plugin as plugin_import
 
 
-class WhenTestingP11CryptoPlugin(unittest.TestCase):
+class WhenTestingP11CryptoPlugin(testtools.TestCase):
 
     def setUp(self):
+        super(WhenTestingP11CryptoPlugin, self).setUp()
+
         self.p11_mock = mock.MagicMock(CKR_OK=0, CKF_RW_SESSION='RW',
                                        name='PyKCS11 mock')
         self.patcher = mock.patch('barbican.crypto.p11_crypto.PyKCS11',
@@ -36,6 +39,7 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
         self.session = self.pkcs11.openSession()
 
     def tearDown(self):
+        super(WhenTestingP11CryptoPlugin, self).tearDown()
         self.patcher.stop()
 
     def test_create_calls_generate_random(self):
@@ -54,18 +58,22 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
 
     def test_create_errors_when_rand_length_is_not_as_requested(self):
         self.session.generateRandom.return_value = [1, 2, 3, 4, 5, 6, 7]
-        with self.assertRaises(p11_crypto.P11CryptoPluginException):
-            self.plugin.create(
-                192,
-                plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
-                "AES"
-            )
+        self.assertRaises(
+            p11_crypto.P11CryptoPluginException,
+            self.plugin.create,
+            192,
+            plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+            "AES",
+        )
 
     def test_raises_error_with_no_library_path(self):
         m = mock.MagicMock()
         m.p11_crypto_plugin = mock.MagicMock(library_path=None)
-        with self.assertRaises(ValueError):
-            p11_crypto.P11CryptoPlugin(m)
+        self.assertRaises(
+            ValueError,
+            p11_crypto.P11CryptoPlugin,
+            m,
+        )
 
     def test_raises_error_with_bad_library_path(self):
         m = mock.MagicMock()
@@ -73,8 +81,11 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
         m.p11_crypto_plugin = mock.MagicMock(library_path="/dev/null")
 
         # TODO: Really raises PyKCS11.PyKCS11Error
-        with self.assertRaises(Exception):
-            p11_crypto.P11CryptoPlugin(m)
+        self.assertRaises(
+            Exception,
+            p11_crypto.P11CryptoPlugin,
+            m,
+        )
 
     def test_init_builds_sessions_and_login(self):
         self.pkcs11.openSession.assert_any_call(1)
@@ -83,8 +94,11 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
 
     def test_get_key_by_label_with_two_keys(self):
         self.session.findObjects.return_value = ['key1', 'key2']
-        with self.assertRaises(p11_crypto.P11CryptoPluginKeyException):
-            self.plugin._get_key_by_label('mylabel')
+        self.assertRaises(
+            p11_crypto.P11CryptoPluginKeyException,
+            self.plugin._get_key_by_label,
+            'mylabel',
+        )
 
     def test_get_key_by_label_with_one_key(self):
         key = 'key1'
@@ -108,8 +122,10 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
 
     def test_generate_iv_with_invalid_response_size(self):
         self.session.generateRandom.return_value = [1, 2, 3, 4, 5, 6, 7]
-        with self.assertRaises(p11_crypto.P11CryptoPluginException):
-            self.plugin._generate_iv()
+        self.assertRaises(
+            p11_crypto.P11CryptoPluginException,
+            self.plugin._generate_iv,
+        )
 
     def test_build_gcm_params(self):
         class GCM_Mock(object):
@@ -182,11 +198,11 @@ class WhenTestingP11CryptoPlugin(unittest.TestCase):
 
         gk = self.pkcs11.lib.C_Generate_Key
         # this is a way to test to make sure methods are NOT called
-        self.assertItemsEqual([], gk.call_args_list)
+        self.assertEqual([], gk.call_args_list)
         t = self.session._template2ckattrlist
-        self.assertItemsEqual([], t.call_args_list)
+        self.assertEqual([], t.call_args_list)
         m = self.p11_mock.LowLevel.CK_MECHANISM
-        self.assertItemsEqual([], m.call_args_list)
+        self.assertEqual([], m.call_args_list)
 
     def test_supports_encrypt_decrypt(self):
         self.assertTrue(

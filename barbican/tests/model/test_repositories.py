@@ -13,17 +13,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import unittest
+import testtools
 
 from oslo.config import cfg
 from barbican.model.repositories import clean_paging_values
 
 
-class WhenCleaningRepositoryPagingParameters(unittest.TestCase):
+class WhenCleaningRepositoryPagingParameters(testtools.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.CONF = cfg.CONF
+    def setUp(self):
+        super(WhenCleaningRepositoryPagingParameters, self).setUp()
+        self.CONF = cfg.CONF
 
     def test_parameters_not_assigned(self):
         """ The cleaner should use defaults when params are not specified"""

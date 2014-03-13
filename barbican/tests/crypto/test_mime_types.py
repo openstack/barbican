@@ -13,16 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
+import testtools
 
 from barbican.crypto import mime_types
 from barbican.model import models
 
 
-class WhenTestingIsBase64ProcessingNeeded(unittest.TestCase):
-
-    def setUp(self):
-        pass
+class WhenTestingIsBase64ProcessingNeeded(testtools.TestCase):
 
     def test_is_base64_needed(self):
         r = mime_types.is_base64_processing_needed('application/octet-stream',
@@ -51,7 +48,7 @@ class WhenTestingIsBase64ProcessingNeeded(unittest.TestCase):
         self.assertFalse(r)
 
 
-class WhenTestingIsBase64ProcessingSupported(unittest.TestCase):
+class WhenTestingIsBase64ProcessingSupported(testtools.TestCase):
 
     def test_is_base64_supported_application_octet_stream(self):
         r = mime_types.is_base64_encoding_supported('application/octet-stream')
@@ -65,9 +62,11 @@ class WhenTestingIsBase64ProcessingSupported(unittest.TestCase):
             self.assertFalse(r)
 
 
-class WhenTestingAugmentFieldsWithContentTypes(unittest.TestCase):
+class WhenTestingAugmentFieldsWithContentTypes(testtools.TestCase):
 
     def setUp(self):
+        super(WhenTestingAugmentFieldsWithContentTypes, self).setUp()
+
         self.secret = models.Secret({})
         self.secret.secret_id = "secret#1"
         self.datum = models.EncryptedDatum(self.secret)
@@ -114,7 +113,7 @@ class WhenTestingAugmentFieldsWithContentTypes(unittest.TestCase):
         self.assertEqual(self.datum.content_type, content_types['default'])
 
 
-class WhenTestingNormalizationOfMIMETypes(unittest.TestCase):
+class WhenTestingNormalizationOfMIMETypes(testtools.TestCase):
 
     def test_plain_text_normalization(self):
         mimes = ['text/plain',

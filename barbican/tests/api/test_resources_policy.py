@@ -20,7 +20,8 @@ For typical-flow business logic tests of these classes, see the
 """
 
 import os
-import unittest
+
+import testtools
 
 import falcon
 import mock
@@ -40,9 +41,10 @@ TEST_VAR_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
 ENFORCER = policy.Enforcer()
 
 
-class BaseTestCase(unittest.TestCase):
+class BaseTestCase(testtools.TestCase):
 
     def setUp(self):
+        super(BaseTestCase, self).setUp()
         CONF(args=['--config-dir', TEST_VAR_DIR])
         self.policy_enforcer = ENFORCER
         self.policy_enforcer.load_rules(True)
@@ -79,9 +81,8 @@ class BaseTestCase(unittest.TestCase):
 
     def _assert_post_rbac_exception(self, exception, role):
         """Assert that we received the expected RBAC-passed exception."""
-        fail_msg = "Expected RBAC pass on role '{0}'".format(role)
-        self.assertEqual(falcon.HTTP_500, exception.status, msg=fail_msg)
-        self.assertEquals('Read Error', exception.title, msg=fail_msg)
+        self.assertEqual(falcon.HTTP_500, exception.status)
+        self.assertEquals('Read Error', exception.title)
 
     def _generate_get_error(self):
         """Falcon exception generator to throw from early-exit mocks.
@@ -110,9 +111,8 @@ class BaseTestCase(unittest.TestCase):
 
             # Force an exception early past the RBAC passing.
             self.req.stream = self._generate_stream_for_exit()
-            with self.assertRaises(falcon.HTTPError) as cm:
-                method_under_test()
-            self._assert_post_rbac_exception(cm.exception, role)
+            exception = self.assertRaises(falcon.HTTPError, method_under_test)
+            self._assert_post_rbac_exception(exception, role)
 
             self.setUp()  # Need to re-setup
 
@@ -128,13 +128,8 @@ class BaseTestCase(unittest.TestCase):
             self.req = self._generate_req(roles=[role] if role else [],
                                           accept=accept)
 
-            with self.assertRaises(falcon.HTTPError) as cm:
-                method_under_test()
-
-            exception = cm.exception
-            self.assertEqual(falcon.HTTP_403, exception.status,
-                             msg="Expected RBAC fail for role '{0}'".format(
-                                 role))
+            exception = self.assertRaises(falcon.HTTPError, method_under_test)
+            self.assertEqual(falcon.HTTP_403, exception.status)
 
             self.setUp()  # Need to re-setup
 

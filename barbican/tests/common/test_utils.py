@@ -12,17 +12,17 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import unittest
-
 import mock
+import testtools
 
 from barbican.common import utils
 
 
-class WhenTestingAcceptEncodingGetter(unittest.TestCase):
+class WhenTestingAcceptEncodingGetter(testtools.TestCase):
 
     def setUp(self):
+        super(WhenTestingAcceptEncodingGetter, self).setUp()
+
         self.req = mock.Mock()
 
     def test_parses_accept_encoding_header(self):

@@ -13,13 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
+import testtools
 
 from barbican.model import models
 
 
-class WhenCreatingNewSecret(unittest.TestCase):
+class WhenCreatingNewSecret(testtools.TestCase):
     def setUp(self):
+        super(WhenCreatingNewSecret, self).setUp()
         self.parsed_secret = {'name': 'name',
                               'algorithm': 'algorithm',
                               'bit_length': 512,
@@ -36,8 +37,9 @@ class WhenCreatingNewSecret(unittest.TestCase):
         self.assertEqual(secret.mode, self.parsed_secret['mode'])
 
 
-class WhenCreatingNewContainer(unittest.TestCase):
+class WhenCreatingNewContainer(testtools.TestCase):
     def setUp(self):
+        super(WhenCreatingNewContainer, self).setUp()
         self.parsed_container = {'name': 'name',
                                  'type': 'generic',
                                  'secret_refs': [
