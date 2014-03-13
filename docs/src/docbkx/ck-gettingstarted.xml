@@ -132,7 +132,80 @@
         </section>
         <section xml:id="Service_Access_and_Endpoints">
             <title>Service Access and Endpoints</title>
-            <para></para>
+            <para>The following table summarizes the endpoints to use
+                for your Cloud Feeds API calls.</para>
+            <para>
+                <table rules="all" security="external">
+                    <caption>Regionalized Service Endpoints</caption>
+                    <col width="11%"/>
+                    <col width="11%"/>
+                    <col width="16%"/>
+                    <col width="16%"/>
+                    <col width="16%"/>
+                    <col width="16%"/>
+                    <col width="16%"/>
+                    <thead>
+                        <tr align="center">
+                            <td colspan="2">Region</td>
+                            <td colspan="5">Endpoint</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr align="left">
+                            <td colspan="2">Chicago (ORD)</td>
+                            <td colspan="5"
+                                   ><code>https://&lt;tbd></code></td>
+                        </tr>
+                        <tr align="left">
+                            <td colspan="2">Dallas/Ft. Worth
+                                (DFW)</td>
+                            <td colspan="5"
+                                   ><code>https://&lt;tbd></code></td>
+                        </tr>
+                        <tr align="left">
+                            <td colspan="2">London (LON)</td>
+                            <td colspan="5"
+                                   ><code>https://&lt;tbd></code></td>
+                        </tr>
+                        <tr align="left">
+                            <td colspan="2">Sydney (SYD)</td>
+                            <td colspan="5">
+                                <code>https://&lt;tbd></code></td>
+                        </tr>
+                        <tr align="left">
+                            <td colspan="2">Hong Kong (HKG)</td>
+                            <td colspan="5">
+                                <code>&lt;tbd></code></td>
+                        </tr>
+                    </tbody>
+                </table>Replace the sample account ID number, 1234,
+                with your actual account number returned as part of
+                the authentication response. Use your actual account
+                number wherever you see the field <emphasis
+                    role="bold">tenant id</emphasis> specified in this
+                guide. </para>
+            <note>
+                <itemizedlist>
+                    <listitem>
+                        <para>Choose the endpoint from the table for
+                            the datacenter where your Cloud resources
+                            are located.</para>
+                    </listitem>
+                    <listitem>
+                        <para>The Cloud Server that you use must be
+                            located in the same datacenter where your
+                            database resides.</para>
+                    </listitem>
+                    <listitem>
+                        <para>All examples in this guide assume that
+                            you are operating against the DFW
+                            datacenter, however if you are using a
+                            different datacenter, be sure to use the
+                            associated endpoint from the table above
+                            instead.</para>
+                    </listitem>
+                </itemizedlist>
+            </note>
         </section>
     </chapter>
     <chapter xml:id="Feeds_Sending_API_Requests">
