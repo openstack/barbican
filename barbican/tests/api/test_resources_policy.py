@@ -132,7 +132,7 @@ class BaseTestCase(unittest.TestCase):
                 method_under_test()
 
             exception = cm.exception
-            self.assertEqual(falcon.HTTP_401, exception.status,
+            self.assertEqual(falcon.HTTP_403, exception.status,
                              msg="Expected RBAC fail for role '{0}'".format(
                                  role))
 

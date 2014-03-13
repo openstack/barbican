@@ -36,9 +36,9 @@ from barbican import version
 LOG = utils.getLogger(__name__)
 
 
-def _authorization_failed(message, req, resp):
-    """Throw exception that authorization failed."""
-    api.abort(falcon.HTTP_401, message, req, resp)
+def _not_allowed(message, req, resp):
+    """Throw exception for forbidden resource."""
+    api.abort(falcon.HTTP_403, message, req, resp)
 
 
 def _secret_not_found(req, resp):
@@ -236,8 +236,8 @@ def enforce_rbac(req, resp, action_name, keystone_id=None):
 
         # Verify keystone_id matches the tenant ID.
         if keystone_id and keystone_id != ctx.tenant:
-            _authorization_failed(u._("URI tenant does not match "
-                                      "authenticated tenant."), req, resp)
+            _not_allowed(u._("URI tenant does not match "
+                             "authenticated tenant."), req, resp)
 
         # Enforce special case: secret GET decryption
         if 'secret:get' == action_name and not is_json_request_accept(req):
