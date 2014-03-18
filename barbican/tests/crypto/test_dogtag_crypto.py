@@ -21,6 +21,7 @@ import testtools
 try:
     from barbican.crypto import plugin as plugin_import
     from barbican.crypto.dogtag_crypto import DogtagCryptoPlugin
+    from barbican.crypto.dogtag_crypto import DogtagPluginAlgorithmException
     from barbican.model import models
     imports_ok = True
 except:
@@ -66,7 +67,7 @@ class WhenTestingDogtagCryptoPlugin(testtools.TestCase):
             secret.algorithm,
             secret.bit_length,
             None)
-        _encrypted, _kek_ext = self.plugin.generate(
+        self.plugin.generate_symmetric(
             generate_dto,
             mock.MagicMock(),
             mock.MagicMock()
@@ -77,6 +78,25 @@ class WhenTestingDogtagCryptoPlugin(testtools.TestCase):
             secret.algorithm.upper(),
             secret.bit_length,
             mock.ANY)
+
+    def test_generate_non_supported_algorithm(self):
+        if not imports_ok:
+            self.skipTest("Dogtag imports not available")
+        secret = models.Secret()
+        secret.bit_length = 128
+        secret.algorithm = "hmacsha256"
+        generate_dto = plugin_import.GenerateDTO(
+            plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+            secret.algorithm,
+            secret.bit_length,
+            None)
+        self.assertRaises(
+            DogtagPluginAlgorithmException,
+            self.plugin.generate_symmetric,
+            generate_dto,
+            mock.MagicMock(),
+            mock.MagicMock()
+        )
 
     def test_raises_error_with_no_pem_path(self):
         if not imports_ok:
@@ -153,6 +173,25 @@ class WhenTestingDogtagCryptoPlugin(testtools.TestCase):
         self.assertTrue(
             self.plugin.supports(
                 plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION
+            )
+        )
+
+    def test_supports_symmetric_hmacsha256_key_generation(self):
+        if not imports_ok:
+            self.skipTest("Dogtag imports not available")
+        self.assertFalse(
+            self.plugin.supports(
+                plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+                'hmacsha256', 128
+            )
+        )
+
+    def test_supports_asymmetric_key_generation(self):
+        if not imports_ok:
+            self.skipTest("Dogtag imports not available")
+        self.assertFalse(
+            self.plugin.supports(
+                plugin_import.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION
             )
         )
 

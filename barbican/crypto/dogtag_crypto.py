@@ -26,6 +26,7 @@ from pki.kraclient import KRAClient
 
 from barbican.crypto import plugin
 from barbican.openstack.common.gettextutils import _
+from barbican.common import exception
 
 CONF = cfg.CONF
 
@@ -54,6 +55,10 @@ dogtag_crypto_plugin_opts = [
 
 CONF.register_group(dogtag_crypto_plugin_group)
 CONF.register_opts(dogtag_crypto_plugin_opts, group=dogtag_crypto_plugin_group)
+
+
+class DogtagPluginAlgorithmException(exception.BarbicanException):
+    message = _("Invalid algorithm passed in")
 
 
 class DogtagCryptoPlugin(plugin.CryptoPluginBase):
@@ -138,7 +143,7 @@ class DogtagCryptoPlugin(plugin.CryptoPluginBase):
                                               encrypt_dto.unencrypted,
                                               key_algorithm=None,
                                               key_size=None)
-        return response.get_key_id(), None
+        return plugin.ResponseDTO(response.get_key_id(), None)
 
     def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
                 keystone_id):
@@ -173,7 +178,7 @@ class DogtagCryptoPlugin(plugin.CryptoPluginBase):
         """
         return kek_meta_dto
 
-    def generate(self, generate_dto, kek_meta_dto, keystone_id):
+    def generate_symmetric(self, generate_dto, kek_meta_dto, keystone_id):
         """
         Generate a symmetric key
 
@@ -189,18 +194,59 @@ class DogtagCryptoPlugin(plugin.CryptoPluginBase):
                   key.SymKeyGenerationRequest.ENCRYPT_USAGE]
 
         client_key_id = uuid.uuid4().hex
-        response = self.keyclient.generate_symmetric_key(
-            client_key_id, generate_dto.algorithm.upper(),
-            generate_dto.bit_length, usages)
-        return response.get_key_id(), None
+        algorithm = self._map_algorithm(generate_dto.algorithm.lower())
 
-    def supports(self, type_enum, algorithm=None, mode=None):
+        if algorithm is None:
+            raise DogtagPluginAlgorithmException
+
+        response = self.keyclient.generate_symmetric_key(
+            client_key_id,
+            algorithm,
+            generate_dto.bit_length,
+            usages)
+        return plugin.ResponseDTO(response.get_key_id(), None)
+
+    def generate_asymmetric(self, generate_dto, kek_meta_dto, keystone_id):
+        """
+        Generate a asymmetric key
+        """
+        raise NotImplementedError("Feature not implemented for dogtag crypto")
+
+    def supports(self, type_enum, algorithm=None, bit_length=None,
+                 mode=None):
         """
         Specifies what operations the plugin supports
         """
         if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:
             return True
         elif type_enum == plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION:
-            return True
+            return self._is_algorithm_supported(algorithm,
+                                                bit_length)
+        elif type_enum == plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION:
+            return False
         else:
             return False
+
+    @staticmethod
+    def _map_algorithm(algorithm):
+        """
+            Map Barbican algorithms to Dogtag plugin algorithms
+        """
+        if algorithm == "aes":
+            return key.KeyClient.AES_ALGORITHM
+        elif algorithm == "des":
+            return key.KeyClient.DES_ALGORITHM
+        elif algorithm == "3des":
+            return key.KeyClient.DES3_ALGORITHM
+        else:
+            return None
+
+    def _is_algorithm_supported(self, algorithm, bit_length=None):
+        """
+        check if algorithm and bit length are supported
+
+        For now, we will just check the algorithm. When dogtag adds a
+        call to check the bit length per algorithm, we can modify to
+        make that call
+        """
+        return self._map_algorithm(algorithm) is not None

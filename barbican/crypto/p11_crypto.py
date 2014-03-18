@@ -135,7 +135,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             'iv': base64.b64encode(iv)
         })
 
-        return cyphertext, kek_meta_extended
+        return plugin.ResponseDTO(cyphertext, kek_meta_extended)
 
     def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
                 keystone_id):
@@ -162,17 +162,22 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
 
         return kek_meta_dto
 
-    def generate(self, generate_dto, kek_meta_dto, keystone_id):
+    def generate_symmetric(self, generate_dto, kek_meta_dto, keystone_id):
         byte_length = generate_dto.bit_length / 8
         rand = self.session.generateRandom(byte_length)
         if len(rand) != byte_length:
             raise P11CryptoPluginException()
         return self.encrypt(plugin.EncryptDTO(rand), kek_meta_dto, keystone_id)
 
-    def supports(self, type_enum, algorithm=None, mode=None):
+    def generate_asymmetric(self, generate_dto, kek_meta_dto, keystone_id):
+        raise NotImplementedError("Feature not implemented for PKCS11")
+
+    def supports(self, type_enum, algorithm=None, bit_length=None, mode=None):
         if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:
             return True
         elif type_enum == plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION:
             return True
+        elif type_enum == plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION:
+            return False
         else:
             return False

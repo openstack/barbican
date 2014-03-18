@@ -19,7 +19,8 @@ import testtools
 
 from barbican.crypto import extension_manager as em
 from barbican.crypto import mime_types as mt
-from barbican.crypto.plugin import CryptoPluginBase, PluginSupportTypes
+from barbican.crypto.plugin import CryptoPluginBase, PluginSupportTypes, \
+    SimpleCryptoPlugin
 
 
 class TestSupportsCryptoPlugin(CryptoPluginBase):
@@ -34,10 +35,15 @@ class TestSupportsCryptoPlugin(CryptoPluginBase):
     def bind_kek_metadata(self, kek_meta_dto):
         return None
 
-    def generate(self, generate_dto, type_enum, kek_meta_dto, keystone_id):
+    def generate_symmetric(self, generate_dto, type_enum,
+                           kek_meta_dto, keystone_id):
         raise NotImplementedError()
 
-    def supports(self, type_enum, algorithm=None, mode=None):
+    def generate_asymmetric(self, generate_dto, type_enum,
+                            kek_meta_dto, keystone_id):
+        raise NotImplementedError("Feature not implemented for PKCS11")
+
+    def supports(self, type_enum, algorithm=None, bit_length=None, mode=None):
         return False
 
 
@@ -234,6 +240,13 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
             'faux_alg',
         )
 
+    def test_create_asymmetric_supported_algorithm(self):
+        skg = PluginSupportTypes.ASYMMETRIC_KEY_GENERATION
+        self.assertEqual(skg, self.manager._determine_type('RSA'))
+        self.assertEqual(skg, self.manager._determine_type('rsa'))
+        self.assertEqual(skg, self.manager._determine_type('DSA'))
+        self.assertEqual(skg, self.manager._determine_type('dsa'))
+
     def test_encrypt_no_plugin_found(self):
         self.manager.extensions = []
         self.assertRaises(
@@ -295,7 +308,7 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
         self.manager.extensions = []
         self.assertRaises(
             em.CryptoPluginNotFound,
-            self.manager.generate_data_encryption_key,
+            self.manager.generate_symmetric_encryption_key,
             mock.MagicMock(),
             mock.MagicMock(),
             mock.MagicMock(),
@@ -308,7 +321,7 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
         self.manager.extensions = [plugin_mock]
         self.assertRaises(
             em.CryptoSupportedPluginNotFound,
-            self.manager.generate_data_encryption_key,
+            self.manager.generate_symmetric_encryption_key,
             mock.MagicMock(algorithm='AES'),
             mock.MagicMock(),
             mock.MagicMock(),
@@ -338,3 +351,85 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
             kek_repo
         )
         kek_repo.save.assert_called_once()
+
+    def generate_asymmetric_encryption_keys_no_plugin_found(self):
+        self.manager.extensions = []
+        self.assertRaises(
+            em.CryptoPluginNotFound,
+            self.manager.generate_asymmetric_encryption_keys,
+            mock.MagicMock(),
+            mock.MagicMock(),
+            mock.MagicMock(),
+            mock.MagicMock(),
+        )
+
+    def generate_asymmetric_encryption_keys_no_supported_plugin(self):
+        plugin = TestSupportsCryptoPlugin()
+        plugin_mock = mock.MagicMock(obj=plugin)
+        self.manager.extensions = [plugin_mock]
+        self.assertRaises(
+            em.CryptoSupportedPluginNotFound,
+            self.manager.generate_asymmetric_encryption_keys,
+            mock.MagicMock(algorithm='DSA'),
+            mock.MagicMock(),
+            mock.MagicMock(),
+            mock.MagicMock()
+        )
+
+    def generate_asymmetric_encryption_rsa_keys_ensure_encoding(self):
+        plugin = SimpleCryptoPlugin()
+        plugin_mock = mock.MagicMock(obj=plugin)
+        self.manager.extensions = [plugin_mock]
+
+        meta = mock.MagicMock(algorithm='rsa',
+                              bit_length=1024,
+                              passphrase=None)
+
+        private_datum, public_datum, passphrase_datum = \
+            self.manager.generate_asymmetric_encryption_keys(meta,
+                                                             mock.MagicMock(),
+                                                             mock.MagicMock(),
+                                                             mock.MagicMock())
+        self.assertIsNotNone(private_datum)
+        self.assertIsNotNone(public_datum)
+        self.assertIsNone(passphrase_datum)
+
+        try:
+            base64.b64decode(private_datum.cypher_text)
+            base64.b64decode(public_datum.cypher_text)
+            if passphrase_datum:
+                base64.b64decode(passphrase_datum.cypher_text)
+            isB64Encoding = True
+        except Exception:
+            isB64Encoding = False
+
+        self.assertTrue(isB64Encoding)
+
+    def generate_asymmetric_encryption_dsa_keys_ensure_encoding(self):
+        plugin = SimpleCryptoPlugin()
+        plugin_mock = mock.MagicMock(obj=plugin)
+        self.manager.extensions = [plugin_mock]
+
+        meta = mock.MagicMock(algorithm='rsa',
+                              bit_length=1024,
+                              passphrase=None)
+
+        private_datum, public_datum, passphrase_datum = \
+            self.manager.generate_asymmetric_encryption_keys(meta,
+                                                             mock.MagicMock(),
+                                                             mock.MagicMock(),
+                                                             mock.MagicMock())
+        self.assertIsNotNone(private_datum)
+        self.assertIsNotNone(public_datum)
+        self.assertIsNone(passphrase_datum)
+
+        try:
+            base64.b64decode(private_datum.cypher_text)
+            base64.b64decode(public_datum.cypher_text)
+            if passphrase_datum:
+                base64.b64decode(passphrase_datum.cypher_text)
+            isB64Encoding = True
+        except Exception:
+            isB64Encoding = False
+
+        self.assertTrue(isB64Encoding)

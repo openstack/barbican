@@ -71,10 +71,14 @@ def create_secret(data, tenant, crypto_manager,
 
     elif ok_to_generate:
         LOG.debug('Generating new secret...')
-        new_datum = crypto_manager.generate_data_encryption_key(new_secret,
-                                                                content_type,
-                                                                tenant,
-                                                                kek_repo)
+        # TODO (atiwari): With new typed Order API proposal
+        # we need to translate new_secret to meta
+        # currently it is working as meta will have same attributes
+        new_datum = crypto_manager. \
+            generate_symmetric_encryption_key(new_secret,
+                                              content_type,
+                                              tenant,
+                                              kek_repo)
         time_keeper.mark('after secret generate')
 
     else:

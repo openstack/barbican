@@ -295,8 +295,8 @@ class CryptoExtensionManager(named.NamedExtensionManager):
         else:
             raise CryptoPluginNotFound()
 
-    def generate_data_encryption_key(self, secret, content_type, tenant,
-                                     kek_repo):
+    def generate_symmetric_encryption_key(self, secret, content_type, tenant,
+                                          kek_repo):
         """Delegates generating a key to the first supported plugin.
 
         Note that this key can be used by clients for their encryption
@@ -304,16 +304,8 @@ class CryptoExtensionManager(named.NamedExtensionManager):
         the plug-in key encryption process, and that encrypted datum
         is then returned from this method.
         """
-        if len(self.extensions) < 1:
-            raise CryptoPluginNotFound()
-
-        generation_type = self._determine_type(secret.algorithm)
-        for ext in self.extensions:
-            if ext.obj.supports(generation_type, secret.algorithm):
-                encrypting_plugin = ext.obj
-                break
-        else:
-            raise CryptoSupportedPluginNotFound()
+        encrypting_plugin = \
+            self._determine_crypto_plugin(secret.algorithm)
 
         kek_datum, kek_meta_dto = self._find_or_create_kek_objects(
             encrypting_plugin, tenant, kek_repo)
@@ -322,29 +314,107 @@ class CryptoExtensionManager(named.NamedExtensionManager):
         datum = models.EncryptedDatum(secret, kek_datum)
         datum.content_type = content_type
 
-        generate_dto = plugin_mod.GenerateDTO(generation_type,
-                                              secret.algorithm,
+        generate_dto = plugin_mod.GenerateDTO(secret.algorithm,
                                               secret.bit_length,
-                                              secret.mode)
-        # Create the encrypted secret.
-        datum.cypher_text, datum.kek_meta_extended =\
-            encrypting_plugin.generate(
-                generate_dto, kek_meta_dto, tenant.keystone_id)
+                                              secret.mode, None)
+        # Create the encrypted meta.
+        response_dto = encrypting_plugin.generate_symmetric(generate_dto,
+                                                            kek_meta_dto,
+                                                            tenant.keystone_id)
 
         # Convert binary data into a text-based format.
         # TODO(jwood) Figure out by storing binary (BYTEA) data in Postgres
         #  isn't working.
-        datum.cypher_text = base64.b64encode(datum.cypher_text)
-
+        datum.cypher_text = base64.b64encode(response_dto.cypher_text)
+        datum.kek_meta_extended = response_dto.kek_meta_extended
         return datum
 
+    def generate_asymmetric_encryption_keys(self, meta, content_type, tenant,
+                                            kek_repo):
+        """Delegates generating a asymmteric keys to the first
+        supported plugin based on `meta`. meta will provide extra
+        information to help key generation.
+        Based on passpharse in meta this method will return a tuple
+        with two/three objects.
+
+        Note that this key can be used by clients for their encryption
+        processes. This generated key is then be encrypted via
+        the plug-in key encryption process, and that encrypted datum
+        is then returned from this method.
+        """
+        encrypting_plugin = \
+            self._determine_crypto_plugin(meta.algorithm,
+                                          meta.bit_length,
+                                          meta.passphrase)
+
+        kek_datum, kek_meta_dto = self._find_or_create_kek_objects(
+            encrypting_plugin, tenant, kek_repo)
+
+        generate_dto = plugin_mod.GenerateDTO(meta.algorithm,
+                                              meta.bit_length,
+                                              None, meta.passphrase)
+        # generate the secret.
+        private_key_dto, public_key_dto, passwd_dto = \
+            encrypting_plugin.generate_asymmetric(
+                generate_dto,
+                kek_meta_dto,
+                tenant.keystone_id)
+
+        # Create an encrypted datum instances for each secret type
+        # and add the created cypher text.
+        priv_datum = models.EncryptedDatum(None, kek_datum)
+        priv_datum.content_type = content_type
+        priv_datum.cypher_text = base64.b64encode(private_key_dto.cypher_text)
+        priv_datum.kek_meta_extended = private_key_dto.kek_meta_extended
+
+        public_datum = models.EncryptedDatum(None, kek_datum)
+        public_datum.content_type = content_type
+        public_datum.cypher_text = base64.b64encode(public_key_dto.cypher_text)
+        public_datum.kek_meta_extended = public_key_dto.kek_meta_extended
+
+        passwd_datum = None
+        if passwd_dto:
+            passwd_datum = models.EncryptedDatum(None, kek_datum)
+            passwd_datum.content_type = content_type
+            passwd_datum.cypher_text = base64.b64encode(passwd_dto.cypher_text)
+            passwd_datum.kek_meta_extended = \
+                passwd_dto.kek_meta_extended
+
+        return (priv_datum, public_datum, passwd_datum)
+
     def _determine_type(self, algorithm):
-        """Determines the type (symmetric only for now) based on algorithm"""
+        """Determines the type (symmetric and asymmetric for now)
+        based on algorithm"""
         symmetric_algs = plugin_mod.PluginSupportTypes.SYMMETRIC_ALGORITHMS
+        asymmetric_algs = plugin_mod.PluginSupportTypes.ASYMMETRIC_ALGORITHMS
         if algorithm.lower() in symmetric_algs:
             return plugin_mod.PluginSupportTypes.SYMMETRIC_KEY_GENERATION
+        elif algorithm.lower() in asymmetric_algs:
+            return plugin_mod.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION
         else:
             raise CryptoAlgorithmNotSupportedException(algorithm)
+
+    #TODO(atiwari): Use meta object instead of individual attribute
+    #This has to be done while integration rest resources
+    def _determine_crypto_plugin(self, algorithm, bit_length=None,
+                                 mode=None):
+        """Determines the generation type and encrypting plug-in
+            which supports the generation of secret based on
+            generation type"""
+        if len(self.extensions) < 1:
+            raise CryptoPluginNotFound()
+
+        generation_type = self._determine_type(algorithm)
+        for ext in self.extensions:
+            if ext.obj.supports(generation_type, algorithm,
+                                bit_length,
+                                mode):
+                encrypting_plugin = ext.obj
+                break
+        else:
+            raise CryptoSupportedPluginNotFound()
+
+        return encrypting_plugin
 
     def _plugin_supports(self, plugin_inst, kek_metadata_tenant):
         """Tests for plugin support.

@@ -51,11 +51,10 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         secret.bit_length = 128
         secret.algorithm = "AES"
         generate_dto = plugin_import.GenerateDTO(
-            plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
             secret.algorithm,
             secret.bit_length,
-            None)
-        encrypted, kek_ext = self.plugin.generate(
+            None, None)
+        self.plugin.generate_symmetric(
             generate_dto,
             mock.MagicMock(),
             mock.MagicMock()
@@ -68,13 +67,12 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         secret.bit_length = 192
         secret.algorithm = "AES"
         generate_dto = plugin_import.GenerateDTO(
-            plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
             secret.algorithm,
             secret.bit_length,
-            None)
+            None, None)
         self.assertRaises(
             p11_crypto.P11CryptoPluginException,
-            self.plugin.generate,
+            self.plugin.generate_symmetric,
             generate_dto,
             mock.MagicMock(),
             mock.MagicMock()
@@ -168,16 +166,16 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         self.p11_mock.Mechanism.return_value = mech
         self.session.encrypt.return_value = [1, 2, 3, 4, 5]
         encrypt_dto = plugin_import.EncryptDTO(payload)
-        cyphertext, kek_meta_extended = self.plugin.encrypt(encrypt_dto,
-                                                            mock.MagicMock(),
-                                                            mock.MagicMock())
+        response_dto = self.plugin.encrypt(encrypt_dto,
+                                           mock.MagicMock(),
+                                           mock.MagicMock())
 
         self.session.encrypt.assert_called_once_with(key,
                                                      payload,
                                                      mech)
-        self.assertEqual(b'\x01\x02\x03\x04\x05', cyphertext)
+        self.assertEqual(b'\x01\x02\x03\x04\x05', response_dto.cypher_text)
         self.assertEqual('{"iv": "AQIDBAUGBwgJCgsMDQ4PEA=="}',
-                         kek_meta_extended)
+                         response_dto.kek_meta_extended)
 
     def test_decrypt(self):
         key = 'key1'

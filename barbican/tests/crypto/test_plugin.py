@@ -14,6 +14,10 @@
 # limitations under the License.
 
 from Crypto import Random
+from Crypto.PublicKey import RSA
+from Crypto.PublicKey import DSA
+from Crypto.Util import asn1
+
 from mock import MagicMock
 
 import testtools
@@ -40,10 +44,15 @@ class TestCryptoPlugin(plugin.CryptoPluginBase):
         kek_meta_dto.plugin_meta = None
         return kek_meta_dto
 
-    def generate(self, generate_dto, kek_meta_dto, keystone_id):
-        return "encrypted insecure key", None
+    def generate_symmetric(self, generate_dto, kek_meta_dto, keystone_id):
+        return plugin.ResponseDTO("encrypted insecure key", None)
 
-    def supports(self, type_enum, algorithm=None, mode=None):
+    def generate_asymmetric(self, generate_dto, kek_meta_dto, keystone_id):
+        return (plugin.ResponseDTO('insecure_private_key', None),
+                plugin.ResponseDTO('insecure_public_key', None),
+                None)
+
+    def supports(self, type_enum, algorithm=None, bit_length=None, mode=None):
         if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:
             return True
         elif type_enum == plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION:
@@ -100,22 +109,25 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
     def test_byte_string_encryption(self):
         unencrypted = b'some_secret'
         encrypt_dto = plugin.EncryptDTO(unencrypted)
-        encrypted, kek_ext = self.plugin.encrypt(encrypt_dto,
-                                                 MagicMock(),
-                                                 MagicMock())
-        decrypt_dto = plugin.DecryptDTO(encrypted)
+        response_dto = self.plugin.encrypt(encrypt_dto,
+                                           MagicMock(),
+                                           MagicMock())
+        decrypt_dto = plugin.DecryptDTO(response_dto.cypher_text)
         decrypted = self.plugin.decrypt(decrypt_dto, MagicMock(),
-                                        kek_ext, MagicMock())
+                                        response_dto.kek_meta_extended,
+                                        MagicMock())
         self.assertEqual(unencrypted, decrypted)
 
     def test_random_bytes_encryption(self):
         unencrypted = Random.get_random_bytes(10)
         encrypt_dto = plugin.EncryptDTO(unencrypted)
-        encrypted, kek_meta_ext = self.plugin.encrypt(encrypt_dto,
-                                                      MagicMock(), MagicMock())
-        decrypt_dto = plugin.DecryptDTO(encrypted)
+        response_dto = self.plugin.encrypt(encrypt_dto,
+                                           MagicMock(),
+                                           MagicMock())
+        decrypt_dto = plugin.DecryptDTO(response_dto.cypher_text)
         decrypted = self.plugin.decrypt(decrypt_dto, MagicMock(),
-                                        kek_meta_ext, MagicMock())
+                                        response_dto.kek_meta_extended,
+                                        MagicMock())
         self.assertEqual(unencrypted, decrypted)
 
     def test_generate_256_bit_key(self):
@@ -123,18 +135,17 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
         secret.bit_length = 256
         secret.algorithm = "AES"
         generate_dto = plugin.GenerateDTO(
-            plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
             secret.algorithm,
             secret.bit_length,
-            secret.mode)
-        encrypted, kek_ext = self.plugin.generate(
+            secret.mode, None)
+        response_dto = self.plugin.generate_symmetric(
             generate_dto,
             MagicMock(),
             MagicMock()
         )
-        decrypt_dto = plugin.DecryptDTO(encrypted)
+        decrypt_dto = plugin.DecryptDTO(response_dto.cypher_text)
         key = self.plugin.decrypt(decrypt_dto, MagicMock(),
-                                  kek_ext, MagicMock())
+                                  response_dto.kek_meta_extended, MagicMock())
         self.assertEqual(len(key), 32)
 
     def test_generate_192_bit_key(self):
@@ -142,18 +153,17 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
         secret.bit_length = 192
         secret.algorithm = "AES"
         generate_dto = plugin.GenerateDTO(
-            plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
             secret.algorithm,
             secret.bit_length,
-            None)
-        encrypted, kek_ext = self.plugin.generate(
+            None, None)
+        response_dto = self.plugin.generate_symmetric(
             generate_dto,
             MagicMock(),
             MagicMock()
         )
-        decrypt_dto = plugin.DecryptDTO(encrypted)
+        decrypt_dto = plugin.DecryptDTO(response_dto.cypher_text)
         key = self.plugin.decrypt(decrypt_dto, MagicMock(),
-                                  kek_ext, MagicMock())
+                                  response_dto.kek_meta_extended, MagicMock())
         self.assertEqual(len(key), 24)
 
     def test_generate_128_bit_key(self):
@@ -161,18 +171,17 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
         secret.bit_length = 128
         secret.algorithm = "AES"
         generate_dto = plugin.GenerateDTO(
-            plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
             secret.algorithm,
             secret.bit_length,
-            None)
-        encrypted, kek_ext = self.plugin.generate(
+            None, None)
+        response_dto = self.plugin.generate_symmetric(
             generate_dto,
             MagicMock(),
             MagicMock()
         )
-        decrypt_dto = plugin.DecryptDTO(encrypted)
+        decrypt_dto = plugin.DecryptDTO(response_dto.cypher_text)
         key = self.plugin.decrypt(decrypt_dto, MagicMock(),
-                                  kek_ext, MagicMock())
+                                  response_dto.kek_meta_extended, MagicMock())
         self.assertEqual(len(key), 16)
 
     def test_supports_encrypt_decrypt(self):
@@ -183,7 +192,26 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
     def test_supports_symmetric_key_generation(self):
         self.assertTrue(
             self.plugin.supports(
-                plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION)
+                plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION, 'AES', 64)
+        )
+        self.assertFalse(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION, 'AES')
+        )
+        self.assertTrue(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+                'hmacsha512', 128)
+        )
+        self.assertFalse(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+                'hmacsha512', 12)
+        )
+        self.assertFalse(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+                'Camillia', 128)
         )
 
     def test_does_not_support_unknown_type(self):
@@ -199,3 +227,128 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
         self.assertEqual(kek_metadata_dto.bit_length, 128)
         self.assertEqual(kek_metadata_dto.mode, 'cbc')
         self.assertIsNone(kek_metadata_dto.plugin_meta)
+
+    def test_supports_asymmetric_key_generation(self):
+        self.assertTrue(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                'DSA', 1024)
+        )
+        self.assertTrue(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                "RSA", 1024)
+        )
+        self.assertFalse(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                "DSA", 512)
+        )
+        self.assertFalse(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                "RSA", 64)
+        )
+
+    def test_generate_512_bit_RSA_key(self):
+        generate_dto = plugin.GenerateDTO('rsa', 512, None, None)
+        self.assertRaises(ValueError,
+                          self.plugin.generate_asymmetric,
+                          generate_dto,
+                          MagicMock(),
+                          MagicMock())
+
+    def test_generate_2048_bit_DSA_key(self):
+        generate_dto = plugin.GenerateDTO('dsa', 2048, None, None)
+        self.assertRaises(ValueError, self.plugin.generate_asymmetric,
+                          generate_dto,
+                          MagicMock(),
+                          MagicMock())
+
+    def test_generate_2048_bit_DSA_key_with_passphrase(self):
+        generate_dto = plugin.GenerateDTO('dsa', 2048, None, 'Passphrase')
+        self.assertRaises(ValueError, self.plugin.generate_asymmetric,
+                          generate_dto,
+                          MagicMock(),
+                          MagicMock())
+
+    def test_generate_asymmetric_1024_bit_key(self):
+        generate_dto = plugin.GenerateDTO('rsa', 1024, None, None)
+
+        private_dto, public_dto, passwd_dto = self.plugin.generate_asymmetric(
+            generate_dto, MagicMock(), MagicMock())
+
+        decrypt_dto = plugin.DecryptDTO(private_dto.cypher_text)
+        private_dto = self.plugin.decrypt(decrypt_dto,
+                                          MagicMock(),
+                                          private_dto.kek_meta_extended,
+                                          MagicMock())
+
+        decrypt_dto = plugin.DecryptDTO(public_dto.cypher_text)
+        public_dto = self.plugin.decrypt(decrypt_dto,
+                                         MagicMock(),
+                                         public_dto.kek_meta_extended,
+                                         MagicMock())
+
+        public_dto = RSA.importKey(public_dto)
+        private_dto = RSA.importKey(private_dto)
+        self.assertEqual(public_dto.size(), 1023)
+        self.assertEqual(private_dto.size(), 1023)
+        self.assertTrue(private_dto.has_private)
+
+    def test_generate_1024_bit_RSA_key_in_pem(self):
+        generate_dto = plugin.GenerateDTO('rsa', 1024, None, 'changeme')
+
+        private_dto, public_dto, passwd_dto = \
+            self.plugin.generate_asymmetric(generate_dto,
+                                            MagicMock(),
+                                            MagicMock())
+        decrypt_dto = plugin.DecryptDTO(private_dto.cypher_text)
+        private_dto = self.plugin.decrypt(decrypt_dto,
+                                          MagicMock(),
+                                          private_dto.kek_meta_extended,
+                                          MagicMock())
+
+        private_dto = RSA.importKey(private_dto, 'changeme')
+        self.assertTrue(private_dto.has_private())
+
+    def test_generate_1024_DSA_key_in_pem_and_reconstruct_key_der(self):
+        generate_dto = plugin.GenerateDTO('dsa', 1024, None, None)
+
+        private_dto, public_dto, passwd_dto = \
+            self.plugin.generate_asymmetric(generate_dto,
+                                            MagicMock(),
+                                            MagicMock())
+
+        decrypt_dto = plugin.DecryptDTO(private_dto.cypher_text)
+        private_dto = self.plugin.decrypt(decrypt_dto,
+                                          MagicMock(),
+                                          private_dto.kek_meta_extended,
+                                          MagicMock())
+
+        prv_seq = asn1.DerSequence()
+        data = "\n".join(private_dto.strip().split("\n")
+                         [1:-1]).decode("base64")
+        prv_seq.decode(data)
+        p, q, g, y, x = prv_seq[1:]
+
+        private_dto = DSA.construct((y, g, p, q, x))
+        self.assertTrue(private_dto.has_private())
+
+    def test_generate_128_bit_hmac_key(self):
+        secret = models.Secret()
+        secret.bit_length = 128
+        secret.algorithm = "hmacsha256"
+        generate_dto = plugin.GenerateDTO(
+            secret.algorithm,
+            secret.bit_length,
+            None, None)
+        response_dto = self.plugin.generate_symmetric(
+            generate_dto,
+            MagicMock(),
+            MagicMock()
+        )
+        decrypt_dto = plugin.DecryptDTO(response_dto.cypher_text)
+        key = self.plugin.decrypt(decrypt_dto, MagicMock(),
+                                  response_dto.kek_meta_extended, MagicMock())
+        self.assertEqual(len(key), 16)
