@@ -17,6 +17,7 @@
 API handler for Cloudkeep's Barbican
 """
 import falcon
+from oslo.config import cfg
 from pkgutil import simplegeneric
 
 from barbican.common import exception
@@ -28,7 +29,14 @@ from barbican.openstack.common import policy
 
 
 LOG = utils.getLogger(__name__)
-MAX_BYTES_REQUEST_INPUT_ACCEPTED = 1000000
+MAX_BYTES_REQUEST_INPUT_ACCEPTED = 15000
+common_opts = [
+    cfg.IntOpt('max_allowed_request_size_in_bytes',
+               default=MAX_BYTES_REQUEST_INPUT_ACCEPTED),
+]
+
+CONF = cfg.CONF
+CONF.register_opts(common_opts)
 
 
 class ApiResource(object):
@@ -68,7 +76,7 @@ def load_body(req, resp=None, validator=None):
     :return: A dict of values from the JSON request.
     """
     try:
-        raw_json = req.stream.read(MAX_BYTES_REQUEST_INPUT_ACCEPTED)
+        raw_json = req.stream.read(CONF.max_allowed_request_size_in_bytes)
     except IOError:
         LOG.exception("Problem reading request JSON stream.")
         abort(falcon.HTTP_500, 'Read Error', req, resp)
