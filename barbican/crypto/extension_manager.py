@@ -245,11 +245,12 @@ class CryptoExtensionManager(named.NamedExtensionManager):
         kek_datum, kek_meta_dto = self._find_or_create_kek_objects(
             encrypting_plugin, tenant, kek_repo)
 
+        encrypt_dto = plugin_mod.EncryptDTO(unencrypted)
         # Create an encrypted datum instance and add the encrypted cypher text.
         datum = models.EncryptedDatum(secret, kek_datum)
         datum.content_type = content_type
         datum.cypher_text, datum.kek_meta_extended = encrypting_plugin.encrypt(
-            unencrypted, kek_meta_dto, tenant.keystone_id
+            encrypt_dto, kek_meta_dto, tenant.keystone_id
         )
 
         # Convert binary data into a text-based format.
@@ -279,10 +280,11 @@ class CryptoExtensionManager(named.NamedExtensionManager):
                     #TODO(jwood) Figure out by storing binary (BYTEA) data in
                     #  Postgres isn't working.
                     encrypted = base64.b64decode(datum.cypher_text)
+                    decrypt_dto = plugin_mod.DecryptDTO(encrypted)
 
                     # Decrypt the secret.
                     unencrypted = decrypting_plugin \
-                        .decrypt(encrypted,
+                        .decrypt(decrypt_dto,
                                  kek_meta_dto,
                                  datum.kek_meta_extended,
                                  tenant.keystone_id)
@@ -313,16 +315,28 @@ class CryptoExtensionManager(named.NamedExtensionManager):
         else:
             raise CryptoSupportedPluginNotFound()
 
-        # Create the secret.
+        kek_datum, kek_meta_dto = self._find_or_create_kek_objects(
+            encrypting_plugin, tenant, kek_repo)
 
-        data_key = encrypting_plugin.create(secret.bit_length,
-                                            generation_type,
-                                            secret.algorithm,
-                                            secret.mode)
+        # Create an encrypted datum instance and add the created cypher text.
+        datum = models.EncryptedDatum(secret, kek_datum)
+        datum.content_type = content_type
 
-        # Encrypt the secret.
-        return self.encrypt(data_key, content_type, None, secret, tenant,
-                            kek_repo)
+        generate_dto = plugin_mod.GenerateDTO(generation_type,
+                                              secret.algorithm,
+                                              secret.bit_length,
+                                              secret.mode)
+        # Create the encrypted secret.
+        datum.cypher_text, datum.kek_meta_extended =\
+            encrypting_plugin.generate(
+                generate_dto, kek_meta_dto, tenant.keystone_id)
+
+        # Convert binary data into a text-based format.
+        # TODO(jwood) Figure out by storing binary (BYTEA) data in Postgres
+        #  isn't working.
+        datum.cypher_text = base64.b64encode(datum.cypher_text)
+
+        return datum
 
     def _determine_type(self, algorithm):
         """Determines the type (symmetric only for now) based on algorithm"""

@@ -19,16 +19,18 @@ from mock import MagicMock
 import testtools
 
 from barbican.crypto import plugin
+from barbican.model import models
 
 
 class TestCryptoPlugin(plugin.CryptoPluginBase):
     """Crypto plugin implementation for testing the plugin manager."""
 
-    def encrypt(self, unencrypted, kek_meta_dto, keystone_id):
+    def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
         cypher_text = b'cypher_text'
         return cypher_text, None
 
-    def decrypt(self, encrypted, kek_meta_dto, kek_meta_extended, keystone_id):
+    def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
+                keystone_id):
         return b'unencrypted_data'
 
     def bind_kek_metadata(self, kek_meta_dto):
@@ -38,8 +40,8 @@ class TestCryptoPlugin(plugin.CryptoPluginBase):
         kek_meta_dto.plugin_meta = None
         return kek_meta_dto
 
-    def create(self, bit_length, type_enum, algorithm=None, mode=None):
-        return "insecure_key"
+    def generate(self, generate_dto, kek_meta_dto, keystone_id):
+        return "encrypted insecure key", None
 
     def supports(self, type_enum, algorithm=None, mode=None):
         if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:
@@ -84,55 +86,93 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
 
     def test_encrypt_unicode_raises_value_error(self):
         unencrypted = u'unicode_beer\U0001F37A'
+        encrypt_dto = plugin.EncryptDTO(unencrypted)
         secret = MagicMock()
         secret.mime_type = 'text/plain'
         self.assertRaises(
             ValueError,
             self.plugin.encrypt,
-            unencrypted,
+            encrypt_dto,
             MagicMock(),
             MagicMock(),
         )
 
     def test_byte_string_encryption(self):
         unencrypted = b'some_secret'
-        encrypted, kek_ext = self.plugin.encrypt(unencrypted,
+        encrypt_dto = plugin.EncryptDTO(unencrypted)
+        encrypted, kek_ext = self.plugin.encrypt(encrypt_dto,
                                                  MagicMock(),
                                                  MagicMock())
-        decrypted = self.plugin.decrypt(encrypted, MagicMock(),
+        decrypt_dto = plugin.DecryptDTO(encrypted)
+        decrypted = self.plugin.decrypt(decrypt_dto, MagicMock(),
                                         kek_ext, MagicMock())
         self.assertEqual(unencrypted, decrypted)
 
     def test_random_bytes_encryption(self):
         unencrypted = Random.get_random_bytes(10)
-        encrypted, kek_meta_ext = self.plugin.encrypt(unencrypted,
+        encrypt_dto = plugin.EncryptDTO(unencrypted)
+        encrypted, kek_meta_ext = self.plugin.encrypt(encrypt_dto,
                                                       MagicMock(), MagicMock())
-        decrypted = self.plugin.decrypt(encrypted, MagicMock(),
+        decrypt_dto = plugin.DecryptDTO(encrypted)
+        decrypted = self.plugin.decrypt(decrypt_dto, MagicMock(),
                                         kek_meta_ext, MagicMock())
         self.assertEqual(unencrypted, decrypted)
 
-    def test_create_256_bit_key(self):
-        key = self.plugin.create(
-            256,
+    def test_generate_256_bit_key(self):
+        secret = models.Secret()
+        secret.bit_length = 256
+        secret.algorithm = "AES"
+        generate_dto = plugin.GenerateDTO(
             plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
-            "AES"
+            secret.algorithm,
+            secret.bit_length,
+            secret.mode)
+        encrypted, kek_ext = self.plugin.generate(
+            generate_dto,
+            MagicMock(),
+            MagicMock()
         )
+        decrypt_dto = plugin.DecryptDTO(encrypted)
+        key = self.plugin.decrypt(decrypt_dto, MagicMock(),
+                                  kek_ext, MagicMock())
         self.assertEqual(len(key), 32)
 
-    def test_create_192_bit_key(self):
-        key = self.plugin.create(
-            192,
+    def test_generate_192_bit_key(self):
+        secret = models.Secret()
+        secret.bit_length = 192
+        secret.algorithm = "AES"
+        generate_dto = plugin.GenerateDTO(
             plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
-            "AES"
+            secret.algorithm,
+            secret.bit_length,
+            None)
+        encrypted, kek_ext = self.plugin.generate(
+            generate_dto,
+            MagicMock(),
+            MagicMock()
         )
+        decrypt_dto = plugin.DecryptDTO(encrypted)
+        key = self.plugin.decrypt(decrypt_dto, MagicMock(),
+                                  kek_ext, MagicMock())
         self.assertEqual(len(key), 24)
 
-    def test_create_128_bit_key(self):
-        key = self.plugin.create(
-            128,
+    def test_generate_128_bit_key(self):
+        secret = models.Secret()
+        secret.bit_length = 128
+        secret.algorithm = "AES"
+        generate_dto = plugin.GenerateDTO(
             plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
-            "AES"
+            secret.algorithm,
+            secret.bit_length,
+            None)
+        encrypted, kek_ext = self.plugin.generate(
+            generate_dto,
+            MagicMock(),
+            MagicMock()
         )
+        decrypt_dto = plugin.DecryptDTO(encrypted)
+        key = self.plugin.decrypt(decrypt_dto, MagicMock(),
+                                  kek_ext, MagicMock())
         self.assertEqual(len(key), 16)
 
     def test_supports_encrypt_decrypt(self):
