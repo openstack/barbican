@@ -17,6 +17,38 @@ LOCAL_CONFIG=$LOCAL_CONFIG_DIR/barbican-api.conf
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo 'DIR: '$DIR
 
+debug_barbican()
+{
+    #   Start barbican server in debug mode.
+    #   Note: for Eclipse IDE users
+    #   Make sure PYTHONPATH is set with pydev
+    #   export PYTHONPATH=/<eclipse_home>/plugins/org.python.pydev_2.8.2.2013090511/pysrc"
+    #   Note: for Pycharm IDE users
+    #   Follow the instruction in link below
+    #   https://github.com/cloudkeep/barbican/wiki/Developer-Guide-for-Contributors#debugging-using-pycharm
+    #   Following are two commands to start barbican in debug mode
+    #   (1) ./barbican.sh debug
+    #   (2) ./barbican.sh debug --pydev-debug-host localhost  --pydev-debug-port 5678
+
+    if [ -z $3 ] ;
+    then
+        debug_host=localhost
+    else
+        debug_host=$3
+    fi
+
+    if [ -z $5 ] ; then
+       debug_port=5678
+    else
+       debug_port=$5
+    fi
+
+    echo "Starting barbican in debug mode ..." --pydev-debug-host $debug_host --pydev-debug-port $debug_port
+    PYDEV_DEBUG_PARAM="--env PYDEV_DEBUG_HOST=$debug_host --env PYDEV_DEBUG_PORT=$debug_port"
+
+    uwsgi --master --emperor $CONFIG_DIR/vassals -H $VENV_DIR $PYDEV_DEBUG_PARAM
+}
+
 start_barbican()
 {
     # Start barbican server up.
@@ -78,6 +110,9 @@ case "$1" in
   install)
     install_barbican
     ;;
+  debug)
+    debug_barbican $*
+    ;;
   start)
     start_barbican
     ;;
@@ -91,6 +126,7 @@ case "$1" in
     ;;
 
   *)
-    echo "Usage: barbican.sh  {install|start|stop|restart}"
+    echo "Usage: barbican.sh  {install|start|stop|debug <debug_params>|restart}"
+    echo "where debug_params are: --pydev-debug-host <host> --pydev-debug-port <port>, <host> defaults to 'localhost' and <port> defaults to '5678'"
     exit 1
 esac

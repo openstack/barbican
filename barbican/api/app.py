@@ -43,7 +43,7 @@ def create_main_app(global_config, **local_conf):
     # Configure oslo logging and configuration services.
     config.parse_args()
     log.setup('barbican')
-
+    config.setup_remote_pydev_debug()
     # Crypto Plugin Manager
     crypto_mgr = ext.CryptoExtensionManager()
 

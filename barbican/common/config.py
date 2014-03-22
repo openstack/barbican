@@ -38,6 +38,8 @@ CONF.import_opt('log_date_format', 'barbican.openstack.common.log')
 CONF.import_opt('use_syslog', 'barbican.openstack.common.log')
 CONF.import_opt('syslog_log_facility', 'barbican.openstack.common.log')
 
+LOG = logging.getLogger(__name__)
+
 
 def parse_args(args=None, usage=None, default_config_files=None):
     CONF(args=args,
@@ -46,6 +48,9 @@ def parse_args(args=None, usage=None, default_config_files=None):
          version=__version__,
          usage=usage,
          default_config_files=default_config_files)
+
+    CONF.pydev_debug_host = os.environ.get('PYDEV_DEBUG_HOST')
+    CONF.pydev_debug_port = os.environ.get('PYDEV_DEBUG_PORT')
 
 
 def setup_logging():
@@ -91,3 +96,25 @@ def setup_logging():
 
     handler.setFormatter(formatter)
     root_logger.addHandler(handler)
+
+
+def setup_remote_pydev_debug():
+    """Required setup for remote debugging"""
+
+    if CONF.pydev_debug_host and CONF.pydev_debug_port:
+        try:
+            try:
+                from pydev import pydevd
+            except ImportError:
+                import pydevd
+
+            pydevd.settrace(CONF.pydev_debug_host,
+                            port=int(CONF.pydev_debug_port),
+                            stdoutToServer=True,
+                            stderrToServer=True)
+        except Exception:
+            LOG.exception('Unable to join debugger, please '
+                          'make sure that the debugger processes is '
+                          'listening on debug-host \'%s\' debug-port \'%s\'.',
+                          CONF.pydev_debug_host, CONF.pydev_debug_port)
+            raise
