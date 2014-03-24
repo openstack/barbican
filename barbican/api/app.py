@@ -69,15 +69,15 @@ def create_main_app(global_config, **local_conf):
     if newrelic_loaded:
         wsgi_app = newrelic.agent.WSGIApplicationWrapper(wsgi_app)
 
-    api.add_route('/v1/{keystone_id}/secrets', secrets)
-    api.add_route('/v1/{keystone_id}/secrets/{secret_id}', secret)
-    api.add_route('/v1/{keystone_id}/orders', orders)
-    api.add_route('/v1/{keystone_id}/orders/{order_id}', order)
-    api.add_route('/v1/{keystone_id}/verifications', verifications)
-    api.add_route('/v1/{keystone_id}/verifications/{verification_id}',
+    api.add_route('/{keystone_id}/secrets', secrets)
+    api.add_route('/{keystone_id}/secrets/{secret_id}', secret)
+    api.add_route('/{keystone_id}/orders', orders)
+    api.add_route('/{keystone_id}/orders/{order_id}', order)
+    api.add_route('/{keystone_id}/verifications', verifications)
+    api.add_route('/{keystone_id}/verifications/{verification_id}',
                   verification)
-    api.add_route('/v1/{keystone_id}/containers/', containers)
-    api.add_route('/v1/{keystone_id}/containers/{container_id}', container)
+    api.add_route('/{keystone_id}/containers/', containers)
+    api.add_route('/{keystone_id}/containers/{container_id}', container)
 
     # For performance testing only
     api.add_route('/{0}'.format(performance_uri), performance)
