@@ -56,6 +56,13 @@ def downgrade(to_version, sql_url=None):
         alembic_command.downgrade(alembic_cfg, to_version)
 
 
+def stamp(to_version='head', sql_url=None):
+    """Stamp the specified version, with no migration performed."""
+    alembic_cfg = init_config(sql_url)
+    if alembic_cfg:
+        alembic_command.stamp(alembic_cfg, to_version)
+
+
 def generate(autogenerate=True, message='generate changes', sql_url=None):
     """Generate a version file."""
     alembic_cfg = init_config(sql_url)

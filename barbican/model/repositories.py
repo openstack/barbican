@@ -141,11 +141,21 @@ def get_engine():
             sa_logger.setLevel(logging.DEBUG)
 
         if CONF.db_auto_create:
-            LOG.info(_('auto-creating barbican registry DB'))
-            models.register_models(_ENGINE)
+            meta = sqlalchemy.MetaData()
+            meta.reflect(bind=_ENGINE)
+            tables = meta.tables
+            if tables and 'alembic_version' in tables:
+                # Upgrade the database to the latest version.
+                LOG.info(_('Updating schema to latest version'))
+                commands.upgrade()
+            else:
+                # Create database tables from our models.
+                LOG.info(_('Auto-creating barbican registry DB'))
+                models.register_models(_ENGINE)
 
-            # Upgrade the database to the latest version.
-            commands.upgrade()
+                # Sync the alembic version 'head' with current models.
+                commands.stamp()
+
         else:
             LOG.info(_('not auto-creating barbican registry DB'))
 
