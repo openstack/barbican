@@ -43,6 +43,7 @@ install -m 644 etc/barbican/policy.json $RPM_BUILD_ROOT/etc/barbican
 install -m 644 etc/init/barbican-api.conf $RPM_BUILD_ROOT/etc/init
 install -m 644 etc/init/barbican-worker.conf $RPM_BUILD_ROOT/etc/init
 install bin/barbican-worker.py $RPM_BUILD_ROOT/usr/bin
+install bin/barbican-db-manage.py $RPM_BUILD_ROOT/usr/bin
 install -m 644 -D etc/barbican/barbican* $RPM_BUILD_ROOT/etc/barbican
 install -m 644 -D etc/barbican/vassals/*.ini $RPM_BUILD_ROOT/etc/barbican/vassals
 touch $RPM_BUILD_ROOT/var/log/barbican/barbican-api.log
@@ -83,6 +84,7 @@ Barbican Key Manager API daemon
 %verify(not md5 size mtime) %attr(0750, barbican,root) /var/log/barbican/barbican-api.log
 /etc/logrotate.d/barbican-api
 %attr(0755,root,root) /usr/bin/barbican.sh
+%attr(0755,root,root) /usr/bin/barbican-db-manage.py
 %config(noreplace) /etc/init/barbican-api.conf
 %config(noreplace) /etc/barbican/*
 
@@ -109,6 +111,7 @@ Barbican Key Manager worker daemon
 %verify(not md5 size mtime) %attr(0750, barbican,root) /var/log/barbican/barbican-api.log
 /etc/logrotate.d/barbican-api
 %attr(0755,root,root) /usr/bin/barbican-worker.py
+%attr(0755,root,root) /usr/bin/barbican-db-manage.py
 %config(noreplace) /etc/init/barbican-worker.conf
 %config(noreplace) /etc/barbican/*
 
