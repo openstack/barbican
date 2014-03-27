@@ -9,4 +9,5 @@ curl -X POST -d \
 		 "payload_content_type": "application/octet-stream"
 		}
 }'\
-http://localhost:9311/v1/12345/orders
+https://endpointURL/v1/12345/orders
+

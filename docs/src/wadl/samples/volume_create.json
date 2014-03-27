@@ -1,8 +1,0 @@
-{
-    "volume": {
-        "display_name": "vol-001",
-        "display_description": "Another volume.",
-        "size": 100,
-        "volume_type": "SATA",
-     }
-}

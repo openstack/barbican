@@ -1,12 +1,13 @@
-curl -X POST -d \
+curl -X POST -H 'Content-Type: application/json' -H 'Accept: application/json' -d \
  '{
    "secret":
-	       {
-		"name": "secretname",
-		 "algorithm": "aes",
-		 "bit_length": 256,
-		 "mode": "cbc",
-		 "payload_content_type": "application/octet-stream"
-		}
+	   {
+        "mode": "cbc",
+        "bit_length": 256,
+        "name": "secretname",
+        "algorithm": "aes",
+        "payload_content_type": "application/octet-stream"
+        }
+    }
 }'\
-http://localhost:9311/v1/12345/orders
+https://endpointURL/v1/tenantID/orders
