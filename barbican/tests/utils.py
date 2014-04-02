@@ -19,7 +19,6 @@ class BaseTestCase(testtools.TestCase):
     def setUp(self):
         super(BaseTestCase, self).setUp()
         self.order_id = 'order1234'
-        self.verification_id = 'verif1234'
         self.keystone_id = 'keystone1234'
 
     def tearDown(self):

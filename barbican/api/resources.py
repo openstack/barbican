@@ -53,13 +53,6 @@ def _order_not_found(req, resp):
                                    'another castle.'), req, resp)
 
 
-def _verification_not_found(req, resp):
-    """Throw exception indicating verification not found."""
-    api.abort(falcon.HTTP_404, u._('Not Found. Sorry but your verification '
-                                   'result is in '
-                                   'another castle.'), req, resp)
-
-
 def _container_not_found(req, resp):
     """Throw exception indicating container not found."""
     api.abort(falcon.HTTP_404, u._('Not Found. Sorry but your container '
@@ -101,15 +94,6 @@ def convert_secret_to_href(keystone_id, secret_id):
     return utils.hostname_for_refs(keystone_id=keystone_id, resource=resource)
 
 
-def convert_verification_to_href(keystone_id, verification_id):
-    """Convert the tenant/verification IDs to a HATEOS-style href."""
-    if verification_id:
-        resource = 'verifications/' + verification_id
-    else:
-        resource = 'verifications/????'
-    return utils.hostname_for_refs(keystone_id=keystone_id, resource=resource)
-
-
 def convert_order_to_href(keystone_id, order_id):
     """Convert the tenant/order IDs to a HATEOS-style href."""
     if order_id:
@@ -140,11 +124,6 @@ def convert_to_hrefs(keystone_id, fields):
         fields['order_ref'] = convert_order_to_href(keystone_id,
                                                     fields['order_id'])
         del fields['order_id']
-    if 'verification_id' in fields:
-        fields['verification_ref'] = \
-            convert_verification_to_href(keystone_id,
-                                         fields['verification_id'])
-        del fields['verification_id']
 
     if 'container_id' in fields:
         fields['container_ref'] = \
@@ -587,109 +566,6 @@ class OrderResource(api.ApiResource):
         except exception.NotFound:
             LOG.exception('Problem deleting order')
             _order_not_found(req, resp)
-
-        resp.status = falcon.HTTP_200
-
-
-class VerificationsResource(api.ApiResource):
-    """Handles Verification creation requests.
-
-    Creating a verification entity initiates verification processing
-    on a target resource. The results of this verification processing
-    can be monitored via this entity.
-    """
-
-    def __init__(self, tenant_repo=None, verification_repo=None,
-                 queue_resource=None):
-        self.tenant_repo = tenant_repo or repo.TenantRepo()
-        self.verification_repo = verification_repo or repo.VerificationRepo()
-        self.validator = validators.VerificationValidator()
-        self.queue = queue_resource or async_client.TaskClient()
-
-    @handle_exceptions(u._('Verification creation'))
-    @handle_rbac('verifications:post')
-    def on_post(self, req, resp, keystone_id):
-        LOG.debug('Start on_post for tenant-ID {0}:...'.format(keystone_id))
-
-        data = api.load_body(req, resp, self.validator)
-        tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
-
-        new_verification = models.Verification(data)
-        new_verification.tenant_id = tenant.id
-        self.verification_repo.create_from(new_verification)
-
-        # Send to workers to process.
-        self.queue.process_verification(verification_id=new_verification.id,
-                                        keystone_id=keystone_id)
-
-        resp.status = falcon.HTTP_202
-        resp.set_header('Location',
-                        '/{0}/verifications/{1}'.format(keystone_id,
-                                                        new_verification.id))
-        url = convert_verification_to_href(keystone_id, new_verification.id)
-        LOG.debug('URI to verification is {0}'.format(url))
-        resp.body = json.dumps({'verification_ref': url})
-
-    @handle_exceptions(u._('Verification(s) retrieval'))
-    @handle_rbac('verifications:get')
-    def on_get(self, req, resp, keystone_id):
-        LOG.debug('Start verifications on_get '
-                  'for tenant-ID {0}:'.format(keystone_id))
-
-        result = self.verification_repo.get_by_create_date(
-            keystone_id,
-            offset_arg=req.get_param('offset'),
-            limit_arg=req.get_param('limit'),
-            suppress_exception=True
-        )
-
-        verifications, offset, limit, total = result
-
-        if not verifications:
-            resp_verif_overall = {'verifications': [], 'total': total}
-        else:
-            resp_verif = [convert_to_hrefs(keystone_id,
-                                           v.to_dict_fields()) for
-                          v in verifications]
-            resp_verif_overall = add_nav_hrefs('verifications', keystone_id,
-                                               offset, limit, total,
-                                               {'verifications': resp_verif})
-            resp_verif_overall.update({'total': total})
-
-        resp.status = falcon.HTTP_200
-        resp.body = json.dumps(resp_verif_overall,
-                               default=json_handler)
-
-
-class VerificationResource(api.ApiResource):
-    """Handles Verification entity retrieval and deletion requests."""
-
-    def __init__(self, verification_repo=None):
-        self.repo = verification_repo or repo.VerificationRepo()
-
-    @handle_exceptions(u._('Verification retrieval'))
-    @handle_rbac('verification:get')
-    def on_get(self, req, resp, keystone_id, verification_id):
-        verif = self.repo.get(entity_id=verification_id,
-                              keystone_id=keystone_id,
-                              suppress_exception=True)
-        if not verif:
-            _verification_not_found(req, resp)
-
-        resp.status = falcon.HTTP_200
-        resp.body = json.dumps(convert_to_hrefs(keystone_id,
-                                                verif.to_dict_fields()),
-                               default=json_handler)
-
-    @handle_exceptions(u._('Verification deletion'))
-    @handle_rbac('verification:delete')
-    def on_delete(self, req, resp, keystone_id, verification_id):
-
-        try:
-            self.repo.delete_entity_by_id(entity_id=verification_id,
-                                          keystone_id=keystone_id)
-        except exception.NotFound:
-            _verification_not_found(req, resp)
 
         resp.status = falcon.HTTP_200
 

@@ -56,8 +56,6 @@ def create_main_app(global_config, **local_conf):
     secret = res.SecretResource(crypto_mgr)
     orders = res.OrdersResource()
     order = res.OrderResource()
-    verifications = res.VerificationsResource()
-    verification = res.VerificationResource()
     containers = res.ContainersResource()
     container = res.ContainerResource()
 
@@ -73,9 +71,6 @@ def create_main_app(global_config, **local_conf):
     api.add_route('/{keystone_id}/secrets/{secret_id}', secret)
     api.add_route('/{keystone_id}/orders', orders)
     api.add_route('/{keystone_id}/orders/{order_id}', order)
-    api.add_route('/{keystone_id}/verifications', verifications)
-    api.add_route('/{keystone_id}/verifications/{verification_id}',
-                  verification)
     api.add_route('/{keystone_id}/containers/', containers)
     api.add_route('/{keystone_id}/containers/{container_id}', container)
 

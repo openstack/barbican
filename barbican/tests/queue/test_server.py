@@ -38,24 +38,6 @@ class WhenUsingBeginOrderTask(utils.BaseTestCase):
             .assert_called_with(self.order_id, self.keystone_id)
 
 
-class WhenUsingPerformVerificationTask(utils.BaseTestCase):
-    """Test using the Tasks class for 'verification' task."""
-
-    def setUp(self):
-        super(WhenUsingPerformVerificationTask, self).setUp()
-
-        self.tasks = server.Tasks()
-
-    @patch('barbican.tasks.resources.PerformVerification')
-    def test_should_process_verification(self, mock_begin_verification):
-        mock_begin_verification.return_value.process.return_value = None
-        self.tasks.process_verification(context=None,
-                                        verification_id=self.verification_id,
-                                        keystone_id=self.keystone_id)
-        mock_begin_verification.return_value.process\
-            .assert_called_with(self.verification_id, self.keystone_id)
-
-
 class WhenUsingTaskServer(utils.BaseTestCase):
     """Test using the asynchronous task client."""
 

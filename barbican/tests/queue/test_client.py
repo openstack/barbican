@@ -40,15 +40,6 @@ class WhenUsingAsyncTaskClient(utils.BaseTestCase):
                                                  order_id=self.order_id,
                                                  keystone_id=self.keystone_id)
 
-    def test_should_process_verification(self):
-        self.client.process_verification(verification_id=self.verification_id,
-                                         keystone_id=self.keystone_id)
-        queue.get_client.assert_called_with()
-        self.mock_client.cast.assert_called_with({}, 'process_verification',
-                                                 verification_id=
-                                                 self.verification_id,
-                                                 keystone_id=self.keystone_id)
-
 
 class WhenCreatingDirectTaskClient(utils.BaseTestCase):
     """Test using the synchronous task client (i.e. standalone mode)."""

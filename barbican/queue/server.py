@@ -50,16 +50,6 @@ class Tasks(object):
             LOG.exception(">>>>> Task exception seen, details reported "
                           "on the Orders entity.")
 
-    def process_verification(self, context, verification_id, keystone_id):
-        """Process Verification."""
-        LOG.debug('Verification id is {0}'.format(verification_id))
-        task = resources.PerformVerification()
-        try:
-            task.process(verification_id, keystone_id)
-        except Exception:
-            LOG.exception(">>>>> Task exception seen, details reported "
-                          "on the the Verification entity.")
-
 
 class TaskServer(Tasks, service.Service):
     """Server to process asynchronous tasking from Barbican API nodes.
