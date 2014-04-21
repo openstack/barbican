@@ -124,12 +124,12 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             )
         )
 
-    def encrypt(self, unencrypted, kek_meta_dto, keystone_id):
+    def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
         key = self._get_key_by_label(kek_meta_dto.kek_label)
         iv = self._generate_iv()
         gcm = self._build_gcm_params(iv)
         mech = PyKCS11.Mechanism(self.algorithm, gcm)
-        encrypted = self.session.encrypt(key, unencrypted, mech)
+        encrypted = self.session.encrypt(key, encrypt_dto.unencrypted, mech)
         cyphertext = b''.join(chr(i) for i in encrypted)
         kek_meta_extended = json.dumps({
             'iv': base64.b64encode(iv)
@@ -137,13 +137,14 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
 
         return cyphertext, kek_meta_extended
 
-    def decrypt(self, encrypted, kek_meta_dto, kek_meta_extended, keystone_id):
+    def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
+                keystone_id):
         key = self._get_key_by_label(kek_meta_dto.kek_label)
         meta_extended = json.loads(kek_meta_extended)
         iv = base64.b64decode(meta_extended['iv'])
         gcm = self._build_gcm_params(iv)
         mech = PyKCS11.Mechanism(self.algorithm, gcm)
-        decrypted = self.session.decrypt(key, encrypted, mech)
+        decrypted = self.session.decrypt(key, decrypt_dto.encrypted, mech)
         secret = b''.join(chr(i) for i in decrypted)
         return secret
 
@@ -161,12 +162,12 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
 
         return kek_meta_dto
 
-    def create(self, bit_length, type_enum, algorithm=None, mode=None):
-        byte_length = bit_length / 8
+    def generate(self, generate_dto, kek_meta_dto, keystone_id):
+        byte_length = generate_dto.bit_length / 8
         rand = self.session.generateRandom(byte_length)
         if len(rand) != byte_length:
             raise P11CryptoPluginException()
-        return rand
+        return self.encrypt(plugin.EncryptDTO(rand), kek_meta_dto, keystone_id)
 
     def supports(self, type_enum, algorithm=None, mode=None):
         if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:

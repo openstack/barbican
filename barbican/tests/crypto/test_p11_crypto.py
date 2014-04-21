@@ -19,6 +19,7 @@ import testtools
 
 from barbican.crypto import p11_crypto
 from barbican.crypto import plugin as plugin_import
+from barbican.model import models
 
 
 class WhenTestingP11CryptoPlugin(testtools.TestCase):
@@ -42,28 +43,41 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         super(WhenTestingP11CryptoPlugin, self).tearDown()
         self.patcher.stop()
 
-    def test_create_calls_generate_random(self):
+    def test_generate_calls_generate_random(self):
         self.session.generateRandom.return_value = [1, 2, 3, 4, 5, 6, 7,
                                                     8, 9, 10, 11, 12, 13,
-                                                    14, 15, 16, 17, 18, 19,
-                                                    20, 21, 22, 23, 24, 25,
-                                                    26, 27, 28, 29, 30, 31, 32]
-        key = self.plugin.create(
-            256,
+                                                    14, 15, 16]
+        secret = models.Secret()
+        secret.bit_length = 128
+        secret.algorithm = "AES"
+        generate_dto = plugin_import.GenerateDTO(
             plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
-            "AES"
+            secret.algorithm,
+            secret.bit_length,
+            None)
+        encrypted, kek_ext = self.plugin.generate(
+            generate_dto,
+            mock.MagicMock(),
+            mock.MagicMock()
         )
-        self.assertEqual(len(key), 32)
-        self.session.generateRandom.assert_called_once_with(32)
+        self.session.generateRandom.assert_called_twice_with(16)
 
-    def test_create_errors_when_rand_length_is_not_as_requested(self):
+    def test_generate_errors_when_rand_length_is_not_as_requested(self):
         self.session.generateRandom.return_value = [1, 2, 3, 4, 5, 6, 7]
+        secret = models.Secret()
+        secret.bit_length = 192
+        secret.algorithm = "AES"
+        generate_dto = plugin_import.GenerateDTO(
+            plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+            secret.algorithm,
+            secret.bit_length,
+            None)
         self.assertRaises(
             p11_crypto.P11CryptoPluginException,
-            self.plugin.create,
-            192,
-            plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
-            "AES",
+            self.plugin.generate,
+            generate_dto,
+            mock.MagicMock(),
+            mock.MagicMock()
         )
 
     def test_raises_error_with_no_library_path(self):
@@ -153,7 +167,8 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         mech = mock.MagicMock()
         self.p11_mock.Mechanism.return_value = mech
         self.session.encrypt.return_value = [1, 2, 3, 4, 5]
-        cyphertext, kek_meta_extended = self.plugin.encrypt(payload,
+        encrypt_dto = plugin_import.EncryptDTO(payload)
+        cyphertext, kek_meta_extended = self.plugin.encrypt(encrypt_dto,
                                                             mock.MagicMock(),
                                                             mock.MagicMock())
 
@@ -172,7 +187,8 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         mech = mock.MagicMock()
         self.p11_mock.Mechanism.return_value = mech
         kek_meta_extended = '{"iv": "AQIDBAUGBwgJCgsMDQ4PEA=="}'
-        payload = self.plugin.decrypt(ct,
+        decrypt_dto = plugin_import.DecryptDTO(ct)
+        payload = self.plugin.decrypt(decrypt_dto,
                                       mock.MagicMock(),
                                       kek_meta_extended,
                                       mock.MagicMock())

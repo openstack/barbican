@@ -25,16 +25,16 @@ from barbican.crypto.plugin import CryptoPluginBase, PluginSupportTypes
 class TestSupportsCryptoPlugin(CryptoPluginBase):
     """Crypto plugin for testing supports."""
 
-    def encrypt(self, unencrypted, kek_meta_dto, tenant):
+    def encrypt(self, encrypt_dto, kek_meta_dto, tenant):
         raise NotImplementedError()
 
-    def decrypt(self, encrypted, kek_meta_dto, kek_meta_extended, tenant):
+    def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended, tenant):
         raise NotImplementedError()
 
     def bind_kek_metadata(self, kek_meta_dto):
         return None
 
-    def create(self, bit_length, type_enum, algorithm=None, mode=None):
+    def generate(self, generate_dto, type_enum, kek_meta_dto, keystone_id):
         raise NotImplementedError()
 
     def supports(self, type_enum, algorithm=None, mode=None):

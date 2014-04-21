@@ -64,6 +64,45 @@ class KEKMetaDTO(object):
         self.plugin_meta = kek_datum.plugin_meta
 
 
+class GenerateDTO(object):
+    """
+    Data transfer object for secret generation.
+
+    All data needed to determine the kinds of secrets to be generated
+    is passed in instances of this object.
+    """
+
+    def __init__(self, generation_type, algorithm, bit_length, mode):
+        self.generation_type = generation_type
+        self.algorithm = algorithm
+        self.bit_length = bit_length
+        self.mode = mode
+
+
+class DecryptDTO(object):
+    """
+    Data Transfer object for secret decryption.
+
+    All data needed to determine the kinds of secrets to be decrypted
+    is passed in instances of this object.
+    """
+
+    def __init__(self, encrypted):
+        self.encrypted = encrypted
+
+
+class EncryptDTO(object):
+    """
+    Data Transfer object for secret encryption.
+
+    All data needed to determine the kinds of secrets to be encrypted
+    is passed in instances of this object.
+    """
+
+    def __init__(self, unencrypted):
+        self.unencrypted = unencrypted
+
+
 def indicate_bind_completed(kek_meta_dto, kek_datum):
     """
     Updates the supplied kek_datum instance per the contents of the supplied
@@ -88,10 +127,11 @@ class CryptoPluginBase(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def encrypt(self, unencrypted, kek_meta_dto, keystone_id):
+    def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
         """Encrypt unencrypted data in the context of the provided tenant.
 
-        :param unencrypted: byte data to be encrypted.
+        :param encrypt_dto: data transfer object containing the byte data
+               to be encrypted.
         :param kek_meta_dto: Key encryption key metadata to use for encryption.
         :param keystone_id: keystone_id associated with the unencrypted data.
         :returns: encrypted data and kek_meta_extended, the former the
@@ -103,10 +143,12 @@ class CryptoPluginBase(object):
         raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
-    def decrypt(self, encrypted, kek_meta_dto, kek_meta_extended, keystone_id):
+    def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
+                keystone_id):
         """Decrypt encrypted_datum in the context of the provided tenant.
 
-        :param encrypted: cyphertext to be decrypted.
+        :param decrypt_dto: data transfer object containing the cyphertext
+               to be decrypted.
         :param kek_meta_dto: Key encryption key metadata to use for decryption
         :param kek_meta_extended: Optional per-secret KEK metadata to use for
         decryption.
@@ -139,8 +181,21 @@ class CryptoPluginBase(object):
         raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
-    def create(self, bit_length, type_enum, algorithm=None, mode=None):
-        """Create a new key."""
+    def generate(self, generate_dto, kek_meta_dto, keystone_id):
+        """
+        Generate a new key.
+
+        :param generate_dto: data transfer object for the record
+               associated with this generation request.  Some relevant
+               parameters can be extracted from this object, including
+               bit_length, algorithm and mode
+        :param kek_meta_dto: Key encryption key metadata to use for decryption
+        :param keystone_id: keystone_id associated with the data.
+        :returns: encrypted data and kek_meta_extended, the former the
+        resultant cypher text, the latter being optional per-secret metadata
+        needed to decrypt (over and above the per-tenant metadata managed
+        outside of the plugins)
+        """
         raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
@@ -172,7 +227,8 @@ class SimpleCryptoPlugin(CryptoPluginBase):
         unpadded = unencrypted[:-pad_length]
         return unpadded
 
-    def encrypt(self, unencrypted, kek_meta_dto, keystone_id):
+    def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
+        unencrypted = encrypt_dto.unencrypted
         if not isinstance(unencrypted, str):
             raise ValueError('Unencrypted data must be a byte type, '
                              'but was {0}'.format(type(unencrypted)))
@@ -184,7 +240,9 @@ class SimpleCryptoPlugin(CryptoPluginBase):
 
         return cyphertext, None
 
-    def decrypt(self, encrypted, kek_meta_dto, kek_meta_extended, keystone_id):
+    def decrypt(self, encrypted_dto, kek_meta_dto, kek_meta_extended,
+                keystone_id):
+        encrypted = encrypted_dto.encrypted
         iv = encrypted[:self.block_size]
         cypher_text = encrypted[self.block_size:]
         decryptor = AES.new(self.kek, AES.MODE_CBC, iv)
@@ -198,9 +256,10 @@ class SimpleCryptoPlugin(CryptoPluginBase):
         kek_meta_dto.plugin_meta = None
         return kek_meta_dto
 
-    def create(self, bit_length, type_enum, algorithm=None, mode=None):
-        byte_length = bit_length / 8
-        return Random.get_random_bytes(byte_length)
+    def generate(self, generate_dto, kek_meta_dto, keystone_id):
+        byte_length = int(generate_dto.bit_length) / 8
+        unencrypted = Random.get_random_bytes(byte_length)
+        return self.encrypt(EncryptDTO(unencrypted), kek_meta_dto, keystone_id)
 
     def supports(self, type_enum, algorithm=None, mode=None):
         if type_enum == PluginSupportTypes.ENCRYPT_DECRYPT:
