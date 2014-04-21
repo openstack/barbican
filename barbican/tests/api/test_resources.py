@@ -20,22 +20,21 @@ resource classes. For RBAC tests of these classes, see the
 """
 
 import base64
-import json
 import urllib
 
-import falcon
 import mock
-
 import testtools
+import pecan
+from webtest import TestApp
 
 from barbican.api import strip_whitespace
-from barbican.api import resources as res
+from barbican.api import app
+from barbican.api import controllers
 from barbican.common import exception as excep
 from barbican.common import utils
 from barbican.common import validators
 from barbican.crypto import extension_manager as em
 from barbican.model import models
-from barbican.openstack.common import jsonutils
 from barbican.tests.crypto import test_plugin as ctp
 
 
@@ -49,6 +48,7 @@ def create_secret(id_ref="id", name="name",
             'bit_length': bit_length,
             'mode': mode}
     secret = models.Secret(info)
+    secret.id = id_ref
     if encrypted_datum:
         secret.encrypted_data = [encrypted_datum]
     return secret
@@ -90,29 +90,55 @@ def create_container(id_ref):
     return container
 
 
-class WhenTestingVersionResource(testtools.TestCase):
-    def setUp(self):
-        super(WhenTestingVersionResource, self).setUp()
+class FunctionalTest(testtools.TestCase):
 
-        self.req = mock.MagicMock()
-        self.resp = mock.MagicMock()
-        self.resource = res.VersionResource()
+    def setUp(self):
+        super(FunctionalTest, self).setUp()
+        root = self.root
+        config = {'app': {'root': root}}
+        pecan.set_config(config, overwrite=True)
+        self.app = TestApp(pecan.make_app(root))
+
+    def tearDown(self):
+        super(FunctionalTest, self).tearDown()
+        pecan.set_config({}, overwrite=True)
+
+    @property
+    def root(self):
+        return controllers.versions.VersionController()
+
+
+class WhenTestingVersionResource(FunctionalTest):
 
     def test_should_return_200_on_get(self):
-        self.resource.on_get(self.req, self.resp)
-        self.assertEqual(falcon.HTTP_200, self.resp.status)
+        resp = self.app.get('/')
+        self.assertEqual(200, resp.status_int)
 
     def test_should_return_version_json(self):
-        self.resource.on_get(self.req, self.resp)
+        resp = self.app.get('/')
 
-        parsed_body = json.loads(self.resp.body)
-
-        self.assertTrue('v1' in parsed_body)
-        self.assertEqual('current', parsed_body['v1'])
+        self.assertTrue('v1' in resp.json)
+        self.assertEqual('current', resp.json['v1'])
 
 
-class BaseSecretsResource(testtools.TestCase):
+class BaseSecretsResource(FunctionalTest):
     """Base test class for the Secrets resource."""
+
+    def setUp(self):
+        super(BaseSecretsResource, self).setUp()
+        self.app = TestApp(app.PecanAPI(self.root))
+
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            secrets = controllers.secrets.SecretsController(
+                self.crypto_mgr, self.tenant_repo, self.secret_repo,
+                self.tenant_secret_repo, self.datum_repo, self.kek_repo
+            )
+
+        return RootController()
 
     def _init(self, payload=b'not-encrypted',
               payload_content_type='text/plain',
@@ -135,7 +161,6 @@ class BaseSecretsResource(testtools.TestCase):
         if payload_content_encoding:
             self.secret_req['payload_content_encoding'] = \
                 payload_content_encoding
-        self.json = json.dumps(self.secret_req)
 
         self.keystone_id = 'keystone1234'
         self.tenant_entity_id = 'tid1234'
@@ -162,33 +187,21 @@ class BaseSecretsResource(testtools.TestCase):
         self.kek_repo = mock.MagicMock()
         self.kek_repo.find_or_create_kek_metadata.return_value = self.kek_datum
 
-        self.stream = mock.MagicMock()
-        self.stream.read.return_value = self.json
-
-        self.req = mock.MagicMock()
-        self.req.stream = self.stream
-
-        self.resp = mock.MagicMock()
         self.conf = mock.MagicMock()
         self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
         self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
         self.crypto_mgr = em.CryptoExtensionManager(conf=self.conf)
 
-        self.resource = res.SecretsResource(self.crypto_mgr,
-                                            self.tenant_repo,
-                                            self.secret_repo,
-                                            self.tenant_secret_repo,
-                                            self.datum_repo,
-                                            self.kek_repo)
-
     def _test_should_add_new_secret_with_expiration(self):
         expiration = '2114-02-28 12:14:44.180394-05:00'
         self.secret_req.update({'expiration': expiration})
-        self.stream.read.return_value = json.dumps(self.secret_req)
 
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req
+        )
 
-        self.assertEqual(self.resp.status, falcon.HTTP_201)
+        self.assertEqual(resp.status_int, 201)
 
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
@@ -201,9 +214,11 @@ class BaseSecretsResource(testtools.TestCase):
         :param check_tenant_id: True if the retrieved Tenant id needs to be
         verified, False to skip this check (necessary for new-Tenant flows).
         """
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
-
-        self.assertEqual(self.resp.status, falcon.HTTP_201)
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req
+        )
+        self.assertEqual(resp.status_int, 201)
 
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
@@ -240,9 +255,10 @@ class BaseSecretsResource(testtools.TestCase):
         self.assertEqual(self.keystone_id, tenant.keystone_id)
 
     def _test_should_add_new_secret_metadata_without_payload(self):
-        self.stream.read.return_value = json.dumps({'name': self.name})
-
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
+        self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            {'name': self.name}
+        )
 
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
@@ -275,9 +291,7 @@ class BaseSecretsResource(testtools.TestCase):
         if self.payload_content_encoding:
             self.secret_req['payload_content_encoding'] = \
                 self.payload_content_encoding
-        self.stream.read.return_value = json.dumps(self.secret_req)
-
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
+        self.app.post_json('/%s/secrets/' % self.keystone_id, self.secret_req)
 
     def _test_should_fail_due_to_payload_too_large(self):
         big_text = ''.join(['A' for x
@@ -293,14 +307,13 @@ class BaseSecretsResource(testtools.TestCase):
         if self.payload_content_encoding:
             self.secret_req['payload_content_encoding'] = \
                 self.payload_content_encoding
-        self.stream.read.return_value = json.dumps(self.secret_req)
 
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_post,
-            self.req, self.resp, self.keystone_id
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req,
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_413, exception.status)
+        self.assertEqual(resp.status_int, 413)
 
     def _test_should_fail_due_to_empty_payload(self):
         self.secret_req = {'name': self.name,
@@ -313,20 +326,16 @@ class BaseSecretsResource(testtools.TestCase):
         if self.payload_content_encoding:
             self.secret_req['payload_content_encoding'] = \
                 self.payload_content_encoding
-        self.stream.read.return_value = json.dumps(self.secret_req)
 
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_post,
-            self.req, self.resp, self.keystone_id
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req,
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        assert resp.status_int == 400
 
 
 class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
-    def setUp(self):
-        super(WhenCreatingPlainTextSecretsUsingSecretsResource, self).setUp()
-        self._init()  # Default settings setup a plain-text secret.
 
     def test_should_add_new_secret_one_step(self):
         self._test_should_add_new_secret_one_step()
@@ -356,14 +365,13 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
                            'bit_length': self.secret_bit_length,
                            'mode': self.secret_mode,
                            'payload': self.payload}
-        self.stream.read.return_value = json.dumps(self.secret_req)
 
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_post,
-            self.req, self.resp, self.keystone_id,
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req,
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.assertEqual(resp.status_int, 400)
 
     def test_create_secret_content_type_text_plain(self):
         # payload_content_type has trailing space
@@ -373,10 +381,12 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
                            'bit_length': self.secret_bit_length,
                            'mode': self.secret_mode,
                            'payload': self.payload}
-        self.stream.read.return_value = json.dumps(self.secret_req)
 
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
-        self.assertEqual(self.resp.status, falcon.HTTP_201)
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req
+        )
+        self.assertEqual(resp.status_int, 201)
 
         self.secret_req = {'name': self.name,
                            'payload_content_type': '  text/plain',
@@ -384,10 +394,12 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
                            'bit_length': self.secret_bit_length,
                            'mode': self.secret_mode,
                            'payload': self.payload}
-        self.stream.read.return_value = json.dumps(self.secret_req)
 
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
-        self.assertEqual(self.resp.status, falcon.HTTP_201)
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req
+        )
+        self.assertEqual(resp.status_int, 201)
 
     def test_create_secret_content_type_text_plain_space_charset_utf8(self):
         # payload_content_type has trailing space
@@ -398,10 +410,12 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
                            'bit_length': self.secret_bit_length,
                            'mode': self.secret_mode,
                            'payload': self.payload}
-        self.stream.read.return_value = json.dumps(self.secret_req)
 
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
-        self.assertEqual(self.resp.status, falcon.HTTP_201)
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req
+        )
+        self.assertEqual(resp.status_int, 201)
 
         self.secret_req = {'name': self.name,
                            'payload_content_type':
@@ -410,38 +424,42 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
                            'bit_length': self.secret_bit_length,
                            'mode': self.secret_mode,
                            'payload': self.payload}
-        self.stream.read.return_value = json.dumps(self.secret_req)
 
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
-        self.assertEqual(self.resp.status, falcon.HTTP_201)
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req
+        )
+        self.assertEqual(resp.status_int, 201)
 
     def test_create_secret_with_only_content_type(self):
         # No payload just content_type
         self.secret_req = {'payload_content_type':
                            'text/plain'}
-        self.stream.read.return_value = json.dumps(self.secret_req)
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_post,
-            self.req, self.resp, self.keystone_id,
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req,
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.assertEqual(resp.status_int, 400)
 
         self.secret_req = {'payload_content_type':
                            'text/plain',
                            'payload': 'somejunk'}
-        self.stream.read.return_value = json.dumps(self.secret_req)
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
-        self.assertEqual(self.resp.status, falcon.HTTP_201)
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req
+        )
+        self.assertEqual(resp.status_int, 201)
 
 
 class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
-    def setUp(self):
-        super(WhenCreatingBinarySecretsUsingSecretsResource, self).setUp()
 
+    @property
+    def root(self):
         self._init(payload="...lOtfqHaUUpe6NqLABgquYQ==",
                    payload_content_type='application/octet-stream',
                    payload_content_encoding='base64')
+        return super(WhenCreatingBinarySecretsUsingSecretsResource, self).root
 
     def test_should_add_new_secret_one_step(self):
         self._test_should_add_new_secret_one_step()
@@ -465,80 +483,94 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
         self._test_should_fail_due_to_empty_payload()
 
     def test_create_secret_fails_with_binary_payload_no_encoding(self):
-        self.stream.read.return_value = json.dumps(
-            {'name': self.name,
-             'algorithm': self.secret_algorithm,
-             'bit_length': self.secret_bit_length,
-             'mode': self.secret_mode,
-             'payload': 'lOtfqHaUUpe6NqLABgquYQ==',
-             'payload_content_type': 'application/octet-stream'}
+        self.secret_req = {
+            'name': self.name,
+            'algorithm': self.secret_algorithm,
+            'bit_length': self.secret_bit_length,
+            'mode': self.secret_mode,
+            'payload': 'lOtfqHaUUpe6NqLABgquYQ==',
+            'payload_content_type': 'application/octet-stream'
+        }
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req,
+            expect_errors=True
         )
-
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_post,
-            self.req, self.resp, self.keystone_id
-        )
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.assertEqual(resp.status_int, 400)
 
     def test_create_secret_fails_with_binary_payload_bad_encoding(self):
-        self.stream.read.return_value = json.dumps(
-            {'name': self.name,
-             'algorithm': self.secret_algorithm,
-             'bit_length': self.secret_bit_length,
-             'mode': self.secret_mode,
-             'payload': 'lOtfqHaUUpe6NqLABgquYQ==',
-             'payload_content_type': 'application/octet-stream',
-             'payload_content_encoding': 'bogus64'}
-        )
+        self.secret_req = {
+            'name': self.name,
+            'algorithm': self.secret_algorithm,
+            'bit_length': self.secret_bit_length,
+            'mode': self.secret_mode,
+            'payload': 'lOtfqHaUUpe6NqLABgquYQ==',
+            'payload_content_type': 'application/octet-stream',
+            'payload_content_encoding': 'bogus64'
+        }
 
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_post,
-            self.req, self.resp, self.keystone_id
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req,
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.assertEqual(resp.status_int, 400)
 
     def test_create_secret_fails_with_binary_payload_no_content_type(self):
-        self.stream.read.return_value = json.dumps(
-            {'name': self.name,
-             'algorithm': self.secret_algorithm,
-             'bit_length': self.secret_bit_length,
-             'mode': self.secret_mode,
-             'payload': 'lOtfqHaUUpe6NqLABgquYQ==',
-             'payload_content_encoding': 'base64'}
-        )
+        self.secret_req = {
+            'name': self.name,
+            'algorithm': self.secret_algorithm,
+            'bit_length': self.secret_bit_length,
+            'mode': self.secret_mode,
+            'payload': 'lOtfqHaUUpe6NqLABgquYQ==',
+            'payload_content_encoding': 'base64'
+        }
 
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_post,
-            self.req, self.resp, self.keystone_id
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req,
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.assertEqual(resp.status_int, 400)
 
     def test_create_secret_fails_with_bad_payload(self):
-        self.stream.read.return_value = json.dumps(
-            {'name': self.name,
-             'algorithm': self.secret_algorithm,
-             'bit_length': self.secret_bit_length,
-             'mode': self.secret_mode,
-             'payload': 'AAAAAAAAA',
-             'payload_content_type': 'application/octet-stream',
-             'payload_content_encoding': 'base64'}
+        self.secret_req = {
+            'name': self.name,
+            'algorithm': self.secret_algorithm,
+            'bit_length': self.secret_bit_length,
+            'mode': self.secret_mode,
+            'payload': 'AAAAAAAAA',
+            'payload_content_type': 'application/octet-stream',
+            'payload_content_encoding': 'base64'
+        }
+
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req,
+            expect_errors=True
         )
-
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_post,
-            self.req, self.resp, self.keystone_id
-        )
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.assertEqual(resp.status_int, 400)
 
 
-class WhenGettingSecretsListUsingSecretsResource(testtools.TestCase):
+class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
+
     def setUp(self):
         super(WhenGettingSecretsListUsingSecretsResource, self).setUp()
+        self.app = TestApp(app.PecanAPI(self.root))
 
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            secrets = controllers.secrets.SecretsController(
+                self.crypto_mgr, self.tenant_repo, self.secret_repo,
+                self.tenant_secret_repo, self.datum_repo, self.kek_repo
+            )
+
+        return RootController()
+
+    def _init(self):
         self.tenant_id = 'tenant1234'
         self.keystone_id = 'keystone1234'
         self.name = 'name 1234 !@#$%^&*()_+=-{}[];:<>,./?'
@@ -582,31 +614,22 @@ class WhenGettingSecretsListUsingSecretsResource(testtools.TestCase):
         self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
         self.crypto_mgr = em.CryptoExtensionManager(conf=self.conf)
 
-        self.req = mock.MagicMock()
-        self.req.accept = 'application/json'
-        self.req.get_param = mock.Mock()
         self.params = {'offset': self.offset,
                        'limit': self.limit,
                        'name': None,
                        'alg': None,
                        'bits': 0,
                        'mode': None}
-        self.req.get_param.side_effect = self.params.get
-
-        self.resp = mock.MagicMock()
-        self.resource = res.SecretsResource(self.crypto_mgr, self.tenant_repo,
-                                            self.secret_repo,
-                                            self.tenant_secret_repo,
-                                            self.datum_repo,
-                                            self.kek_repo)
 
     def test_should_list_secrets_by_name(self):
         # Quote the name parameter to simulate how it would be
         # received in practice via a REST-ful GET query.
         self.params['name'] = urllib.quote_plus(self.name)
 
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
-
+        resp = self.app.get(
+            '/%s/secrets/' % self.keystone_id,
+            dict((k, v) for k, v in self.params.items() if v is not None)
+        )
         # Verify that the name is unquoted correctly in the
         # secrets.on_get function prior to searching the repo.
         self.secret_repo.get_by_create_date \
@@ -618,14 +641,16 @@ class WhenGettingSecretsListUsingSecretsResource(testtools.TestCase):
                                      alg=None, mode=None,
                                      bits=0)
 
-        resp_body = jsonutils.loads(self.resp.body)
-        self.assertIn('secrets', resp_body)
-        secrets = resp_body['secrets']
+        self.assertIn('secrets', resp.namespace)
+        secrets = resp.namespace['secrets']
         # The result should be the unquoted name
         self.assertEqual(secrets[0]['name'], self.name)
 
     def test_should_get_list_secrets(self):
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        resp = self.app.get(
+            '/%s/secrets/' % self.keystone_id,
+            dict((k, v) for k, v in self.params.items() if v is not None)
+        )
 
         self.secret_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
@@ -635,33 +660,38 @@ class WhenGettingSecretsListUsingSecretsResource(testtools.TestCase):
                                      name=None, alg=None, mode=None,
                                      bits=0)
 
-        resp_body = jsonutils.loads(self.resp.body)
-        self.assertTrue('previous' in resp_body)
-        self.assertTrue('next' in resp_body)
+        self.assertTrue('previous' in resp.namespace)
+        self.assertTrue('next' in resp.namespace)
 
         url_nav_next = self._create_url(self.keystone_id,
                                         self.offset + self.limit, self.limit)
-        self.assertTrue(self.resp.body.count(url_nav_next) == 1)
+        self.assertTrue(resp.body.count(url_nav_next) == 1)
 
         url_nav_prev = self._create_url(self.keystone_id,
                                         0, self.limit)
-        self.assertTrue(self.resp.body.count(url_nav_prev) == 1)
+        self.assertTrue(resp.body.count(url_nav_prev) == 1)
 
         url_hrefs = self._create_url(self.keystone_id)
-        self.assertTrue(self.resp.body.count(url_hrefs) ==
+        self.assertTrue(resp.body.count(url_hrefs) ==
                         (self.num_secrets + 2))
 
     def test_response_should_include_total(self):
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
-        resp_body = jsonutils.loads(self.resp.body)
-        self.assertIn('total', resp_body)
-        self.assertEqual(resp_body['total'], self.total)
+        resp = self.app.get(
+            '/%s/secrets/' % self.keystone_id,
+            dict((k, v) for k, v in self.params.items() if v is not None)
+        )
+
+        self.assertIn('total', resp.namespace)
+        self.assertEqual(resp.namespace['total'], self.total)
 
     def test_should_handle_no_secrets(self):
 
         del self.secrets[:]
 
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        resp = self.app.get(
+            '/%s/secrets/' % self.keystone_id,
+            dict((k, v) for k, v in self.params.items() if v is not None)
+        )
 
         self.secret_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
@@ -671,28 +701,40 @@ class WhenGettingSecretsListUsingSecretsResource(testtools.TestCase):
                                      name=None, alg=None, mode=None,
                                      bits=0)
 
-        resp_body = jsonutils.loads(self.resp.body)
-        self.assertFalse('previous' in resp_body)
-        self.assertFalse('next' in resp_body)
+        self.assertFalse('previous' in resp.namespace)
+        self.assertFalse('next' in resp.namespace)
 
     def _create_url(self, keystone_id, offset_arg=None, limit_arg=None):
         if limit_arg:
             offset = int(offset_arg)
             limit = int(limit_arg)
-            return '/v1/{0}/secrets?limit={1}&offset={2}'.format(keystone_id,
-                                                                 limit,
-                                                                 offset)
+            return '/{0}/secrets?limit={1}&offset={2}'.format(keystone_id,
+                                                              limit,
+                                                              offset)
         else:
-            return '/v1/{0}/secrets'.format(keystone_id)
+            return '/{0}/secrets'.format(keystone_id)
 
 
-class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
-        testtools.TestCase):
+class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
     def setUp(self):
         super(
-            WhenGettingPuttingOrDeletingSecretUsingSecretResource,
-            self,
+            WhenGettingPuttingOrDeletingSecretUsingSecretResource, self
         ).setUp()
+        self.app = TestApp(app.PecanAPI(self.root))
+
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            secrets = controllers.secrets.SecretsController(
+                self.crypto_mgr, self.tenant_repo, self.secret_repo,
+                self.tenant_secret_repo, self.datum_repo, self.kek_repo
+            )
+
+        return RootController()
+
+    def _init(self):
         self.tenant_id = 'tenantid1234'
         self.keystone_id = 'keystone1234'
         self.name = 'name1234'
@@ -738,132 +780,122 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
         self.secret_repo.get.return_value = self.secret
         self.secret_repo.delete_entity_by_id.return_value = None
 
+        self.tenant_secret_repo = mock.MagicMock()
+
         self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
 
         self.kek_repo = mock.MagicMock()
-
-        self.req = mock.MagicMock()
-        self.req.accept = 'application/json'
-        self.req.accept_encoding = 'gzip'
-        self.resp = mock.MagicMock()
 
         self.conf = mock.MagicMock()
         self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
         self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
         self.crypto_mgr = em.CryptoExtensionManager(conf=self.conf)
 
-        self.resource = res.SecretResource(self.crypto_mgr,
-                                           self.tenant_repo,
-                                           self.secret_repo,
-                                           self.datum_repo,
-                                           self.kek_repo)
-
     def test_should_get_secret_as_json(self):
-        self.resource.on_get(self.req, self.resp, self.keystone_id,
-                             self.secret.id)
-
+        resp = self.app.get(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'}
+        )
         self.secret_repo \
             .get.assert_called_once_with(entity_id=self.secret.id,
                                          keystone_id=self.keystone_id,
                                          suppress_exception=True)
+        self.assertEquals(resp.status_int, 200)
 
-        self.assertEqual(self.resp.status, falcon.HTTP_200)
-
-        resp_body = jsonutils.loads(self.resp.body)
-        self.assertNotIn('content_encodings', resp_body)
-        self.assertIn('content_types', resp_body)
+        self.assertNotIn('content_encodings', resp.namespace)
+        self.assertIn('content_types', resp.namespace)
         self.assertIn(self.datum.content_type,
-                      resp_body['content_types'].itervalues())
-        self.assertNotIn('mime_type', resp_body)
+                      resp.namespace['content_types'].itervalues())
+        self.assertNotIn('mime_type', resp.namespace)
 
     def test_should_get_secret_as_plain(self):
-        self.req.accept = 'text/plain'
-
-        self.resource.on_get(self.req, self.resp, self.keystone_id,
-                             self.secret.id)
+        resp = self.app.get(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            headers={'Accept': 'text/plain'}
+        )
 
         self.secret_repo \
             .get.assert_called_once_with(entity_id=self.secret.id,
                                          keystone_id=self.keystone_id,
                                          suppress_exception=True)
+        self.assertEquals(resp.status_int, 200)
 
-        self.assertEqual(self.resp.status, falcon.HTTP_200)
-
-        resp_body = self.resp.body
-        self.assertIsNotNone(resp_body)
+        self.assertIsNotNone(resp.body)
 
     def test_should_get_secret_meta_for_binary(self):
-        self.req.accept = 'application/json'
         self.datum.content_type = "application/octet-stream"
         self.datum.cypher_text = 'aaaa'
 
-        self.resource.on_get(self.req, self.resp, self.keystone_id,
-                             self.secret.id)
+        resp = self.app.get(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'}
+        )
 
         self.secret_repo \
             .get.assert_called_once_with(entity_id=self.secret.id,
                                          keystone_id=self.keystone_id,
                                          suppress_exception=True)
 
-        self.assertEqual(self.resp.status, falcon.HTTP_200)
+        self.assertEqual(resp.status_int, 200)
 
-        resp_body = jsonutils.loads(self.resp.body)
-        self.assertIsNotNone(resp_body)
-        self.assertIn('content_types', resp_body)
+        self.assertIsNotNone(resp.namespace)
+        self.assertIn('content_types', resp.namespace)
         self.assertIn(self.datum.content_type,
-                      resp_body['content_types'].itervalues())
+                      resp.namespace['content_types'].itervalues())
 
     def test_should_get_secret_as_binary(self):
-        self.req.accept = 'application/octet-stream'
-        # mock Content-Encoding header
-        self.req.get_header.return_value = None
-        self.datum.content_type = 'application/octet-stream'
+        self.datum.content_type = "application/octet-stream"
         self.datum.cypher_text = 'aaaa'
 
-        self.resource.on_get(self.req, self.resp, self.keystone_id,
-                             self.secret.id)
+        resp = self.app.get(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            headers={
+                'Accept': 'application/octet-stream',
+                'Accept-Encoding': 'gzip'
+            }
+        )
 
-        self.assertEqual(self.resp.body, 'unencrypted_data')
+        self.assertEqual(resp.body, 'unencrypted_data')
 
     def test_should_throw_exception_for_get_when_secret_not_found(self):
         self.secret_repo.get.return_value = None
 
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_get,
-            self.req, self.resp, self.keystone_id, self.secret.id,
+        resp = self.app.get(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'},
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_404, exception.status)
+        self.assertEqual(resp.status_int, 404)
 
     def test_should_throw_exception_for_get_when_accept_not_supported(self):
-        self.req.accept = 'bogusaccept'
-
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_get,
-            self.req, self.resp, self.keystone_id, self.secret.id,
+        resp = self.app.get(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            headers={'Accept': 'bogusaccept', 'Accept-Encoding': 'gzip'},
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_406, exception.status)
+        self.assertEqual(resp.status_int, 406)
 
     def test_should_throw_exception_for_get_when_datum_not_available(self):
-        self.req.accept = 'text/plain'
         self.secret.encrypted_data = []
 
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_get,
-            self.req, self.resp, self.keystone_id, self.secret.id,
+        resp = self.app.get(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            headers={'Accept': 'text/plain'},
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_404, exception.status)
+        self.assertEqual(resp.status_int, 404)
 
     def test_should_put_secret_as_plain(self):
-        self._setup_for_puts()
+        self.secret.encrypted_data = []
 
-        self.resource.on_put(self.req, self.resp, self.keystone_id,
-                             self.secret.id)
+        resp = self.app.put(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            'plain text',
+            headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
+        )
 
-        self.assertEqual(self.resp.status, falcon.HTTP_200)
+        self.assertEqual(resp.status_int, 200)
 
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
@@ -873,124 +905,132 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
         validate_datum(self, datum)
 
     def test_should_put_secret_as_binary(self):
-        self._setup_for_puts()
-        self.req.content_type = 'application/octet-stream'
+        self.secret.encrypted_data = []
 
-        self.resource.on_put(self.req, self.resp, self.keystone_id,
-                             self.secret.id)
+        resp = self.app.put(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            'plain text',
+            headers={
+                'Accept': 'text/plain',
+                'Content-Type': 'application/octet-stream'
+            },
+        )
 
-        self.assertEqual(self.resp.status, falcon.HTTP_200)
+        self.assertEqual(resp.status_int, 200)
 
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
         self.assertIsInstance(datum, models.EncryptedDatum)
 
     def test_should_put_encoded_secret_as_binary(self):
-        self._setup_for_puts()
-        self.stream.read.return_value = base64.b64encode(self.payload)
-        self.req.content_type = 'application/octet-stream'
-        # mock Content-Encoding header
-        self.req.get_header.return_value = 'base64'
+        self.secret.encrypted_data = []
+        resp = self.app.put(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            base64.b64encode('plain text'),
+            headers={
+                'Accept': 'text/plain',
+                'Content-Type': 'application/octet-stream',
+                'Content-Encoding': 'base64'
+            },
+        )
 
-        self.resource.on_put(self.req, self.resp, self.keystone_id,
-                             self.secret.id)
-
-        self.assertEqual(self.resp.status, falcon.HTTP_200)
+        self.assertEqual(resp.status_int, 200)
 
     def test_should_fail_to_put_secret_with_unsupported_encoding(self):
-        self._setup_for_puts()
-        self.req.content_type = 'application/octet-stream'
-        # mock Content-Encoding header
-        self.req.get_header.return_value = 'bogusencoding'
-
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_put,
-            self.req, self.resp, self.keystone_id, self.secret.id,
+        self.secret.encrypted_data = []
+        resp = self.app.put(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            'plain text',
+            headers={
+                'Accept': 'text/plain',
+                'Content-Type': 'application/octet-stream',
+                'Content-Encoding': 'bogusencoding'
+            },
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_400, exception.status)
+
+        self.assertEqual(resp.status_int, 400)
 
     def test_should_fail_put_secret_as_json(self):
-        self._setup_for_puts()
-
-        self.req.content_type = 'application/json'
-
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_put,
-            self.req, self.resp, self.keystone_id, self.secret.id,
+        self.secret.encrypted_data = []
+        resp = self.app.put(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            'plain text',
+            headers={
+                'Accept': 'text/plain',
+                'Content-Type': 'application/json'
+            },
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_415, exception.status)
+
+        self.assertEqual(resp.status_int, 415)
 
     def test_should_fail_put_secret_not_found(self):
-        self._setup_for_puts()
-
         # Force error, due to secret not found.
         self.secret_repo.get.return_value = None
 
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_put,
-            self.req, self.resp, self.keystone_id, self.secret.id,
+        self.secret.encrypted_data = []
+        resp = self.app.put(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            'plain text',
+            headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_404, exception.status)
+
+        self.assertEqual(resp.status_int, 404)
 
     def test_should_fail_put_secret_no_payload(self):
-        self._setup_for_puts()
-
-        # Force error due to no data passed in the request.
-        self.stream.read.return_value = None
-
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_put,
-            self.req, self.resp, self.keystone_id, self.secret.id,
+        self.secret.encrypted_data = []
+        resp = self.app.put(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            # response.body = None
+            headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_400, exception.status)
+
+        self.assertEqual(resp.status_int, 400)
 
     def test_should_fail_put_secret_with_existing_datum(self):
-        self._setup_for_puts()
-
         # Force error due to secret already having data
         self.secret.encrypted_data = [self.datum]
 
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_put,
-            self.req, self.resp, self.keystone_id, self.secret.id,
+        resp = self.app.put(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            'plain text',
+            headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_409, exception.status)
+        self.assertEqual(resp.status_int, 409)
 
     def test_should_fail_due_to_empty_payload(self):
-        self._setup_for_puts()
+        self.secret.encrypted_data = []
 
-        self.stream.read.return_value = ''
-
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_put,
-            self.req, self.resp, self.keystone_id, self.secret.id,
+        resp = self.app.put(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '',
+            headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.assertEqual(resp.status_int, 400)
 
     def test_should_fail_due_to_plain_text_too_large(self):
-        self._setup_for_puts()
-
         big_text = ''.join(['A' for x in xrange(
             2 * validators.DEFAULT_MAX_SECRET_BYTES)])
-        self.stream.read.return_value = big_text
 
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_put,
-            self.req, self.resp, self.keystone_id, self.secret.id,
+        self.secret.encrypted_data = []
+
+        resp = self.app.put(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            big_text,
+            headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_413, exception.status)
+        self.assertEqual(resp.status_int, 413)
 
     def test_should_delete_secret(self):
-        self.resource.on_delete(self.req, self.resp, self.keystone_id,
-                                self.secret.id)
-
+        self.app.delete(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id)
+        )
         self.secret_repo.delete_entity_by_id \
             .assert_called_once_with(entity_id=self.secret.id,
                                      keystone_id=self.keystone_id)
@@ -999,31 +1039,32 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
         self.secret_repo.delete_entity_by_id.side_effect = excep.NotFound(
             "Test not found exception")
 
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_delete,
-            self.req, self.resp, self.keystone_id, self.secret.id,
+        resp = self.app.delete(
+            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_404, exception.status)
-
-    def _setup_for_puts(self):
-        self.payload = "plain_text"
-        self.req.accept = "text/plain"
-        self.req.content_type = "text/plain"
-        # mock Content-Encoding header
-        self.req.get_header.return_value = None
-
-        self.secret.encrypted_data = []
-
-        self.stream = mock.MagicMock()
-        self.stream.read.return_value = self.payload
-        self.req.stream = self.stream
+        self.assertEqual(resp.status_int, 404)
 
 
-class WhenCreatingOrdersUsingOrdersResource(testtools.TestCase):
+class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
     def setUp(self):
-        super(WhenCreatingOrdersUsingOrdersResource, self).setUp()
+        super(
+            WhenCreatingOrdersUsingOrdersResource, self
+        ).setUp()
+        self.app = TestApp(app.PecanAPI(self.root))
 
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            orders = controllers.orders.OrdersController(self.tenant_repo,
+                                                         self.order_repo,
+                                                         self.queue_resource)
+
+        return RootController()
+
+    def _init(self):
         self.secret_name = 'name'
         self.secret_payload_content_type = 'application/octet-stream'
         self.secret_algorithm = "aes"
@@ -1046,28 +1087,23 @@ class WhenCreatingOrdersUsingOrdersResource(testtools.TestCase):
         self.queue_resource = mock.MagicMock()
         self.queue_resource.process_order.return_value = None
 
-        self.stream = mock.MagicMock()
-
-        order_req = {'secret': {'name': self.secret_name,
-                                'payload_content_type':
-                                self.secret_payload_content_type,
-                                'algorithm': self.secret_algorithm,
-                                'bit_length': self.secret_bit_length,
-                                'mode': self.secret_mode}}
-        self.json = json.dumps(order_req)
-        self.stream.read.return_value = self.json
-
-        self.req = mock.MagicMock()
-        self.req.stream = self.stream
-
-        self.resp = mock.MagicMock()
-        self.resource = res.OrdersResource(self.tenant_repo, self.order_repo,
-                                           self.queue_resource)
+        self.order_req = {
+            'secret': {
+                'name': self.secret_name,
+                'payload_content_type':
+                self.secret_payload_content_type,
+                'algorithm': self.secret_algorithm,
+                'bit_length': self.secret_bit_length,
+                'mode': self.secret_mode
+            }
+        }
 
     def test_should_add_new_order(self):
-        self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
-
-        self.assertEqual(falcon.HTTP_202, self.resp.status)
+        resp = self.app.post_json(
+            '/%s/orders/' % self.tenant_keystone_id,
+            self.order_req
+        )
+        self.assertEqual(resp.status_int, 202)
 
         self.queue_resource.process_order \
             .assert_called_once_with(order_id=None,
@@ -1078,30 +1114,41 @@ class WhenCreatingOrdersUsingOrdersResource(testtools.TestCase):
         self.assertIsInstance(order, models.Order)
 
     def test_should_fail_add_new_order_no_secret(self):
-        self.stream.read.return_value = '{}'
-
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_post,
-            self.req, self.resp, self.tenant_keystone_id,
+        resp = self.app.post_json(
+            '/%s/orders/' % self.tenant_keystone_id,
+            {},
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.assertEquals(resp.status_int, 400)
 
     def test_should_fail_add_new_order_bad_json(self):
-        self.stream.read.return_value = ''
-
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_post,
-            self.req, self.resp, self.tenant_keystone_id,
+        resp = self.app.post(
+            '/%s/orders/' % self.tenant_keystone_id,
+            '',
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.assertEquals(resp.status_int, 400)
 
 
-class WhenGettingOrdersListUsingOrdersResource(testtools.TestCase):
+class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
     def setUp(self):
-        super(WhenGettingOrdersListUsingOrdersResource, self).setUp()
+        super(
+            WhenGettingOrdersListUsingOrdersResource, self
+        ).setUp()
+        self.app = TestApp(app.PecanAPI(self.root))
 
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            orders = controllers.orders.OrdersController(self.tenant_repo,
+                                                         self.order_repo,
+                                                         self.queue_resource)
+
+        return RootController()
+
+    def _init(self):
         self.tenant_id = 'tenant1234'
         self.keystone_id = 'keystoneid1234'
         self.name = 'name1234'
@@ -1133,16 +1180,13 @@ class WhenGettingOrdersListUsingOrdersResource(testtools.TestCase):
         self.queue_resource = mock.MagicMock()
         self.queue_resource.process_order.return_value = None
 
-        self.req = mock.MagicMock()
-        self.req.accept = 'application/json'
-        self.req.get_param = mock.Mock()
-        self.req.get_param.side_effect = [self.offset, self.limit]
-        self.resp = mock.MagicMock()
-        self.resource = res.OrdersResource(self.tenant_repo, self.order_repo,
-                                           self.queue_resource)
+        self.params = {
+            'offset': self.offset,
+            'limit': self.limit
+        }
 
     def test_should_get_list_orders(self):
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        resp = self.app.get('/%s/orders/' % self.keystone_id, self.params)
 
         self.order_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
@@ -1150,33 +1194,31 @@ class WhenGettingOrdersListUsingOrdersResource(testtools.TestCase):
                                      limit_arg=self.limit,
                                      suppress_exception=True)
 
-        resp_body = jsonutils.loads(self.resp.body)
-        self.assertTrue('previous' in resp_body)
-        self.assertTrue('next' in resp_body)
+        self.assertTrue('previous' in resp.namespace)
+        self.assertTrue('next' in resp.namespace)
 
         url_nav_next = self._create_url(self.keystone_id,
                                         self.offset + self.limit, self.limit)
-        self.assertTrue(self.resp.body.count(url_nav_next) == 1)
+        self.assertTrue(resp.body.count(url_nav_next) == 1)
 
         url_nav_prev = self._create_url(self.keystone_id,
                                         0, self.limit)
-        self.assertTrue(self.resp.body.count(url_nav_prev) == 1)
+        self.assertTrue(resp.body.count(url_nav_prev) == 1)
 
         url_hrefs = self._create_url(self.keystone_id)
-        self.assertTrue(self.resp.body.count(url_hrefs) ==
+        self.assertTrue(resp.body.count(url_hrefs) ==
                         (self.num_orders + 2))
 
     def test_response_should_include_total(self):
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
-        resp_body = jsonutils.loads(self.resp.body)
-        self.assertIn('total', resp_body)
-        self.assertEqual(resp_body['total'], self.total)
+        resp = self.app.get('/%s/orders/' % self.keystone_id, self.params)
+        self.assertIn('total', resp.namespace)
+        self.assertEqual(resp.namespace['total'], self.total)
 
     def test_should_handle_no_orders(self):
 
         del self.orders[:]
 
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        resp = self.app.get('/%s/orders/' % self.keystone_id, self.params)
 
         self.order_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
@@ -1186,24 +1228,39 @@ class WhenGettingOrdersListUsingOrdersResource(testtools.TestCase):
                                                                self.limit),
                                      suppress_exception=True)
 
-        resp_body = jsonutils.loads(self.resp.body)
-        self.assertFalse('previous' in resp_body)
-        self.assertFalse('next' in resp_body)
+        self.assertFalse('previous' in resp.namespace)
+        self.assertFalse('next' in resp.namespace)
 
     def _create_url(self, keystone_id, offset_arg=None, limit_arg=None):
         if limit_arg:
             offset = int(offset_arg)
             limit = int(limit_arg)
-            return '/v1/{0}/orders?limit={1}&offset={2}'.format(keystone_id,
-                                                                limit,
-                                                                offset)
+            return '/{0}/orders?limit={1}&offset={2}'.format(keystone_id,
+                                                             limit,
+                                                             offset)
         else:
-            return '/v1/{0}/orders'.format(self.keystone_id)
+            return '/{0}/orders'.format(self.keystone_id)
 
 
-class WhenGettingOrDeletingOrderUsingOrderResource(testtools.TestCase):
+class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
     def setUp(self):
-        super(WhenGettingOrDeletingOrderUsingOrderResource, self).setUp()
+        super(
+            WhenGettingOrDeletingOrderUsingOrderResource, self
+        ).setUp()
+        self.app = TestApp(app.PecanAPI(self.root))
+
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            orders = controllers.orders.OrdersController(self.tenant_repo,
+                                                         self.order_repo,
+                                                         self.queue_resource)
+
+        return RootController()
+
+    def _init(self):
         self.tenant_keystone_id = 'keystoneid1234'
         self.requestor = 'requestor1234'
 
@@ -1213,14 +1270,12 @@ class WhenGettingOrDeletingOrderUsingOrderResource(testtools.TestCase):
         self.order_repo.get.return_value = self.order
         self.order_repo.delete_entity_by_id.return_value = None
 
-        self.req = mock.MagicMock()
-        self.resp = mock.MagicMock()
-
-        self.resource = res.OrderResource(self.order_repo)
+        self.tenant_repo = mock.MagicMock()
+        self.queue_resource = mock.MagicMock()
 
     def test_should_get_order(self):
-        self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
-                             self.order.id)
+        self.app.get('/%s/orders/%s/' % (self.tenant_keystone_id,
+                                         self.order.id))
 
         self.order_repo.get \
             .assert_called_once_with(entity_id=self.order.id,
@@ -1228,33 +1283,28 @@ class WhenGettingOrDeletingOrderUsingOrderResource(testtools.TestCase):
                                      suppress_exception=True)
 
     def test_should_delete_order(self):
-        self.resource.on_delete(self.req, self.resp, self.tenant_keystone_id,
-                                self.order.id)
-
+        self.app.delete('/%s/orders/%s/' % (self.tenant_keystone_id,
+                                            self.order.id))
         self.order_repo.delete_entity_by_id \
             .assert_called_once_with(entity_id=self.order.id,
                                      keystone_id=self.tenant_keystone_id)
 
     def test_should_throw_exception_for_get_when_order_not_found(self):
         self.order_repo.get.return_value = None
-
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_get,
-            self.req, self.resp, self.tenant_keystone_id, self.order.id,
+        resp = self.app.get(
+            '/%s/orders/%s/' % (self.tenant_keystone_id, self.order.id),
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_404, exception.status)
+        self.assertEqual(resp.status_int, 404)
 
     def test_should_throw_exception_for_delete_when_order_not_found(self):
         self.order_repo.delete_entity_by_id.side_effect = excep.NotFound(
             "Test not found exception")
-
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_delete,
-            self.req, self.resp, self.tenant_keystone_id, self.order.id,
+        resp = self.app.delete(
+            '/%s/orders/%s/' % (self.tenant_keystone_id, self.order.id),
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_404, exception.status)
+        self.assertEqual(resp.status_int, 404)
 
 
 class WhenAddingNavigationHrefs(testtools.TestCase):
@@ -1271,11 +1321,11 @@ class WhenAddingNavigationHrefs(testtools.TestCase):
         offset = 0
         limit = 10
 
-        data_with_hrefs = res.add_nav_hrefs(self.resource_name,
-                                            self.keystone_id,
-                                            offset, limit,
-                                            self.num_elements,
-                                            self.data)
+        data_with_hrefs = controllers.hrefs.add_nav_hrefs(self.resource_name,
+                                                          self.keystone_id,
+                                                          offset, limit,
+                                                          self.num_elements,
+                                                          self.data)
 
         self.assertNotIn('previous', data_with_hrefs)
         self.assertIn('next', data_with_hrefs)
@@ -1284,11 +1334,11 @@ class WhenAddingNavigationHrefs(testtools.TestCase):
         offset = 10
         limit = 10
 
-        data_with_hrefs = res.add_nav_hrefs(self.resource_name,
-                                            self.keystone_id,
-                                            offset, limit,
-                                            self.num_elements,
-                                            self.data)
+        data_with_hrefs = controllers.hrefs.add_nav_hrefs(self.resource_name,
+                                                          self.keystone_id,
+                                                          offset, limit,
+                                                          self.num_elements,
+                                                          self.data)
 
         self.assertIn('previous', data_with_hrefs)
         self.assertIn('next', data_with_hrefs)
@@ -1297,11 +1347,11 @@ class WhenAddingNavigationHrefs(testtools.TestCase):
         offset = 90
         limit = 10
 
-        data_with_hrefs = res.add_nav_hrefs(self.resource_name,
-                                            self.keystone_id,
-                                            offset, limit,
-                                            self.num_elements,
-                                            self.data)
+        data_with_hrefs = controllers.hrefs.add_nav_hrefs(self.resource_name,
+                                                          self.keystone_id,
+                                                          offset, limit,
+                                                          self.num_elements,
+                                                          self.data)
 
         self.assertIn('previous', data_with_hrefs)
         self.assertNotIn('next', data_with_hrefs)
@@ -1345,10 +1395,25 @@ class TestingJsonSanitization(testtools.TestCase):
                          .endswith(' '), "whitespace should be gone")
 
 
-class WhenCreatingContainersUsingContainersResource(testtools.TestCase):
+class WhenCreatingContainersUsingContainersResource(FunctionalTest):
     def setUp(self):
-        super(WhenCreatingContainersUsingContainersResource, self).setUp()
+        super(
+            WhenCreatingContainersUsingContainersResource, self
+        ).setUp()
+        self.app = TestApp(app.PecanAPI(self.root))
 
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            containers = controllers.containers.ContainersController(
+                self.tenant_repo, self.container_repo, self.secret_repo
+            )
+
+        return RootController()
+
+    def _init(self):
         self.name = 'test container name'
         self.type = 'generic'
         self.secret_refs = [
@@ -1382,60 +1447,58 @@ class WhenCreatingContainersUsingContainersResource(testtools.TestCase):
         self.secret_repo = mock.MagicMock()
         self.secret_repo.create_from.return_value = None
 
-        self.stream = mock.MagicMock()
-
         self.container_req = {'name': self.name,
                               'type': self.type,
                               'secret_refs': self.secret_refs}
 
-        self.json = json.dumps(self.container_req)
-        self.stream.read.return_value = self.json
-
-        self.req = mock.MagicMock()
-        self.req.stream = self.stream
-
-        self.resp = mock.MagicMock()
-        self.resource = res.ContainersResource(self.tenant_repo,
-                                               self.container_repo,
-                                               self.secret_repo)
-
     def test_should_add_new_container(self):
-        self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
-
-        self.assertEqual(falcon.HTTP_202, self.resp.status)
+        resp = self.app.post_json(
+            '/%s/containers/' % self.tenant_keystone_id,
+            self.container_req
+        )
+        self.assertEqual(resp.status_int, 202)
 
         args, kwargs = self.container_repo.create_from.call_args
         container = args[0]
         self.assertIsInstance(container, models.Container)
 
     def test_should_fail_container_bad_json(self):
-        self.stream.read.return_value = ''
-
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_post,
-            self.req, self.resp, self.tenant_keystone_id,
+        resp = self.app.post(
+            '/%s/containers/' % self.tenant_keystone_id,
+            '',
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_400, exception.status)
+        self.assertEquals(resp.status_int, 400)
 
     def test_should_throw_exception_when_secret_ref_doesnt_exist(self):
         self.secret_repo.get.return_value = None
-
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_post,
-            self.req, self.resp, self.tenant_keystone_id,
+        resp = self.app.post_json(
+            '/%s/containers/' % self.tenant_keystone_id,
+            self.container_req,
+            expect_errors=True
         )
-        self.assertEqual(falcon.HTTP_404, exception.status)
+        self.assertEqual(resp.status_int, 404)
 
 
-class WhenGettingOrDeletingContainerUsingContainerResource(testtools.TestCase):
+class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
     def setUp(self):
         super(
-            WhenGettingOrDeletingContainerUsingContainerResource,
-            self,
+            WhenGettingOrDeletingContainerUsingContainerResource, self
         ).setUp()
+        self.app = TestApp(app.PecanAPI(self.root))
 
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            containers = controllers.containers.ContainersController(
+                self.tenant_repo, self.container_repo, self.secret_repo
+            )
+
+        return RootController()
+
+    def _init(self):
         self.tenant_keystone_id = 'keystoneid1234'
         self.tenant_internal_id = 'tenantid1234'
 
@@ -1452,15 +1515,12 @@ class WhenGettingOrDeletingContainerUsingContainerResource(testtools.TestCase):
         self.container_repo.get.return_value = self.container
         self.container_repo.delete_entity_by_id.return_value = None
 
-        self.req = mock.MagicMock()
-        self.resp = mock.MagicMock()
-
-        self.resource = res.ContainerResource(self.tenant_repo,
-                                              self.container_repo)
+        self.secret_repo = mock.MagicMock()
 
     def test_should_get_container(self):
-        self.resource.on_get(self.req, self.resp, self.tenant_keystone_id,
-                             self.container.id)
+        self.app.get('/%s/containers/%s/' % (
+            self.tenant_keystone_id, self.container.id
+        ))
 
         self.container_repo.get \
             .assert_called_once_with(entity_id=self.container.id,
@@ -1468,8 +1528,9 @@ class WhenGettingOrDeletingContainerUsingContainerResource(testtools.TestCase):
                                      suppress_exception=True)
 
     def test_should_delete_container(self):
-        self.resource.on_delete(self.req, self.resp, self.tenant_keystone_id,
-                                self.container.id)
+        self.app.delete('/%s/containers/%s/' % (
+            self.tenant_keystone_id, self.container.id
+        ))
 
         self.container_repo.delete_entity_by_id \
             .assert_called_once_with(entity_id=self.container.id,
@@ -1477,30 +1538,40 @@ class WhenGettingOrDeletingContainerUsingContainerResource(testtools.TestCase):
 
     def test_should_throw_exception_for_get_when_container_not_found(self):
         self.container_repo.get.return_value = None
-
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_get,
-            self.req, self.resp, self.tenant_keystone_id, self.container.id,
-        )
-        self.assertEqual(falcon.HTTP_404, exception.status)
+        resp = self.app.get('/%s/containers/%s/' % (
+            self.tenant_keystone_id, self.container.id
+        ), expect_errors=True)
+        self.assertEqual(resp.status_int, 404)
 
     def test_should_throw_exception_for_delete_when_container_not_found(self):
         self.container_repo.delete_entity_by_id.side_effect = excep.NotFound(
             "Test not found exception")
 
-        exception = self.assertRaises(
-            falcon.HTTPError,
-            self.resource.on_delete,
-            self.req, self.resp, self.tenant_keystone_id, self.container.id,
-        )
-        self.assertEqual(falcon.HTTP_404, exception.status)
+        resp = self.app.delete('/%s/containers/%s/' % (
+            self.tenant_keystone_id, self.container.id
+        ), expect_errors=True)
+        self.assertEqual(resp.status_int, 404)
 
 
-class WhenGettingContainersListUsingResource(testtools.TestCase):
+class WhenGettingContainersListUsingResource(FunctionalTest):
     def setUp(self):
-        super(WhenGettingContainersListUsingResource, self).setUp()
+        super(
+            WhenGettingContainersListUsingResource, self
+        ).setUp()
+        self.app = TestApp(app.PecanAPI(self.root))
 
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            containers = controllers.containers.ContainersController(
+                self.tenant_repo, self.container_repo, self.secret_repo
+            )
+
+        return RootController()
+
+    def _init(self):
         self.tenant_id = 'tenant1234'
         self.keystone_id = 'keystoneid1234'
 
@@ -1519,18 +1590,16 @@ class WhenGettingContainersListUsingResource(testtools.TestCase):
         self.tenant_repo = mock.MagicMock()
         self.secret_repo = mock.MagicMock()
 
-        self.req = mock.MagicMock()
-        self.req.accept = 'application/json'
-        self.req.get_param = mock.Mock()
-        self.req.get_param.side_effect = [self.offset, self.limit, None, None,
-                                          None, 0]
-        self.resp = mock.MagicMock()
-        self.resource = res.ContainersResource(self.tenant_repo,
-                                               self.container_repo,
-                                               self.secret_repo)
+        self.params = {
+            'offset': self.offset,
+            'limit': self.limit,
+        }
 
     def test_should_get_list_containers(self):
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        resp = self.app.get(
+            '/%s/containers/' % self.keystone_id,
+            self.params
+        )
 
         self.container_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
@@ -1538,33 +1607,37 @@ class WhenGettingContainersListUsingResource(testtools.TestCase):
                                      limit_arg=self.limit,
                                      suppress_exception=True)
 
-        resp_body = jsonutils.loads(self.resp.body)
-        self.assertTrue('previous' in resp_body)
-        self.assertTrue('next' in resp_body)
+        self.assertTrue('previous' in resp.namespace)
+        self.assertTrue('next' in resp.namespace)
 
         url_nav_next = self._create_url(self.keystone_id,
                                         self.offset + self.limit, self.limit)
-        self.assertTrue(self.resp.body.count(url_nav_next) == 1)
+        self.assertTrue(resp.body.count(url_nav_next) == 1)
 
         url_nav_prev = self._create_url(self.keystone_id,
                                         0, self.limit)
-        self.assertTrue(self.resp.body.count(url_nav_prev) == 1)
+        self.assertTrue(resp.body.count(url_nav_prev) == 1)
 
         url_hrefs = self._create_url(self.keystone_id)
-        self.assertTrue(self.resp.body.count(url_hrefs) ==
+        self.assertTrue(resp.body.count(url_hrefs) ==
                         (self.num_containers + 2))
 
     def test_response_should_include_total(self):
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
-        resp_body = jsonutils.loads(self.resp.body)
-        self.assertIn('total', resp_body)
-        self.assertEqual(resp_body['total'], self.total)
+        resp = self.app.get(
+            '/%s/containers/' % self.keystone_id,
+            self.params
+        )
+        self.assertIn('total', resp.namespace)
+        self.assertEqual(resp.namespace['total'], self.total)
 
     def test_should_handle_no_containers(self):
 
         del self.containers[:]
 
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        resp = self.app.get(
+            '/%s/containers/' % self.keystone_id,
+            self.params
+        )
 
         self.container_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
@@ -1572,16 +1645,15 @@ class WhenGettingContainersListUsingResource(testtools.TestCase):
                                      limit_arg=self.limit,
                                      suppress_exception=True)
 
-        resp_body = jsonutils.loads(self.resp.body)
-        self.assertFalse('previous' in resp_body)
-        self.assertFalse('next' in resp_body)
+        self.assertFalse('previous' in resp.namespace)
+        self.assertFalse('next' in resp.namespace)
 
     def _create_url(self, keystone_id, offset_arg=None, limit_arg=None):
         if limit_arg:
             offset = int(offset_arg)
             limit = int(limit_arg)
-            return '/v1/{0}/containers' \
+            return '/{0}/containers' \
                    '?limit={1}&offset={2}'.format(keystone_id,
                                                   limit, offset)
         else:
-            return '/v1/{0}/containers'.format(self.keystone_id)
+            return '/{0}/containers'.format(self.keystone_id)

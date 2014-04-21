@@ -16,8 +16,10 @@
 """
 API application handler for Cloudkeep's Barbican
 """
+import json
 
-import falcon
+import pecan
+from webob import exc as webob_exc
 
 try:
     import newrelic.agent
@@ -27,7 +29,8 @@ except ImportError:
 
 from oslo.config import cfg
 
-from barbican.api import resources as res
+from barbican.api.controllers import (performance, orders, secrets, containers,
+                                      versions)
 from barbican.common import config
 from barbican.crypto import extension_manager as ext
 from barbican.openstack.common import log
@@ -35,6 +38,46 @@ from barbican import queue
 
 if newrelic_loaded:
     newrelic.agent.initialize('/etc/newrelic/newrelic.ini')
+
+
+class JSONErrorHook(pecan.hooks.PecanHook):
+
+    def on_error(self, state, exc):
+        if isinstance(exc, webob_exc.HTTPError):
+            exc.body = json.dumps({
+                'code': exc.status_int,
+                'title': exc.title,
+                'description': exc.detail
+            })
+            return exc.body
+
+
+class PecanAPI(pecan.Pecan):
+
+    # For performance testing only
+    performance_uri = 'mu-1a90dfd0-7e7abba4-4e459908-fc097d60'
+    performance_controller = performance.PerformanceController()
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('hooks', []).append(JSONErrorHook())
+        super(PecanAPI, self).__init__(*args, **kwargs)
+
+    def route(self, req, node, path):
+        # Pop the tenant ID from the path
+        path = path.split('/')[1:]
+        first_path = path.pop(0)
+
+        # Route to the special performance controller
+        if first_path == self.performance_uri:
+            return self.performance_controller.index, []
+
+        path = '/%s' % '/'.join(path)
+        controller, remainder = super(PecanAPI, self).route(req, node, path)
+
+        # Pass the tenant ID as the first argument to the controller
+        remainder = list(remainder)
+        remainder.insert(0, first_path)
+        return controller, remainder
 
 
 def create_main_app(global_config, **local_conf):
@@ -51,50 +94,21 @@ def create_main_app(global_config, **local_conf):
     CONF = cfg.CONF
     queue.init(CONF)
 
-    # Resources
-    secrets = res.SecretsResource(crypto_mgr)
-    secret = res.SecretResource(crypto_mgr)
-    orders = res.OrdersResource()
-    order = res.OrderResource()
-    containers = res.ContainersResource()
-    container = res.ContainerResource()
+    class RootController(object):
+        secrets = secrets.SecretsController(crypto_mgr)
+        orders = orders.OrdersController()
+        containers = containers.ContainersController()
 
-    # For performance testing only
-    performance = res.PerformanceResource()
-    performance_uri = 'mu-1a90dfd0-7e7abba4-4e459908-fc097d60'
-
-    wsgi_app = api = falcon.API()
+    wsgi_app = PecanAPI(RootController(), force_canonical=False)
     if newrelic_loaded:
         wsgi_app = newrelic.agent.WSGIApplicationWrapper(wsgi_app)
-
-    api.add_route('/{keystone_id}/secrets', secrets)
-    api.add_route('/{keystone_id}/secrets/{secret_id}', secret)
-    api.add_route('/{keystone_id}/orders', orders)
-    api.add_route('/{keystone_id}/orders/{order_id}', order)
-    api.add_route('/{keystone_id}/containers/', containers)
-    api.add_route('/{keystone_id}/containers/{container_id}', container)
-
-    # For performance testing only
-    api.add_route('/{0}'.format(performance_uri), performance)
-
     return wsgi_app
 
 
 def create_admin_app(global_config, **local_conf):
     config.parse_args()
-
-    versions = res.VersionResource()
-    wsgi_app = api = falcon.API()
-    api.add_route('/', versions)
-
+    wsgi_app = pecan.make_app(versions.VersionController())
     return wsgi_app
 
 
-def create_version_app(global_config, **local_conf):
-    config.parse_args()
-
-    versions = res.VersionResource()
-    wsgi_app = api = falcon.API()
-    api.add_route('/', versions)
-
-    return wsgi_app
+create_version_app = create_admin_app

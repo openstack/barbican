@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import falcon
 import mock
 import testtools
 
@@ -143,7 +142,7 @@ class WhenBeginningOrder(testtools.TestCase):
         )
 
         self.assertEqual(models.States.ERROR, self.order.status)
-        self.assertEqual(falcon.HTTP_500, self.order.error_status_code)
+        self.assertEqual(500, self.order.error_status_code)
         self.assertEqual(u._('Create Secret failure seen - please contact '
                              'site administrator.'), self.order.error_reason)
 

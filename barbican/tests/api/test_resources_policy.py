@@ -23,11 +23,13 @@ import os
 
 import testtools
 
-import falcon
 import mock
+from webob import exc
 from oslo.config import cfg
 
-from barbican.api import resources as res
+from barbican.api.controllers import orders
+from barbican.api.controllers import secrets
+from barbican.api.controllers import versions
 from barbican import context
 from barbican.openstack.common import policy
 
@@ -39,6 +41,52 @@ TEST_VAR_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                             '../../../etc', 'barbican'))
 
 ENFORCER = policy.Enforcer()
+
+
+class TestableResource(object):
+
+    def __init__(self, *args, **kwargs):
+        self.controller = self.controller_cls(*args, **kwargs)
+
+    def on_get(self, req, resp, *args, **kwargs):
+        with mock.patch('pecan.request', req):
+            with mock.patch('pecan.response', resp):
+                return self.controller.index(*args, **kwargs)
+
+    def on_post(self, req, resp, *args, **kwargs):
+        with mock.patch('pecan.request', req):
+            with mock.patch('pecan.response', resp):
+                return self.controller.on_post(*args, **kwargs)
+
+    def on_put(self, req, resp, *args, **kwargs):
+        with mock.patch('pecan.request', req):
+            with mock.patch('pecan.response', resp):
+                return self.controller.on_put(*args, **kwargs)
+
+    def on_delete(self, req, resp, *args, **kwargs):
+        with mock.patch('pecan.request', req):
+            with mock.patch('pecan.response', resp):
+                return self.controller.on_delete(*args, **kwargs)
+
+
+class VersionResource(TestableResource):
+    controller_cls = versions.VersionController
+
+
+class SecretsResource(TestableResource):
+    controller_cls = secrets.SecretsController
+
+
+class SecretResource(TestableResource):
+    controller_cls = secrets.SecretController
+
+
+class OrdersResource(TestableResource):
+    controller_cls = orders.OrdersController
+
+
+class OrderResource(TestableResource):
+    controller_cls = orders.OrderController
 
 
 class BaseTestCase(testtools.TestCase):
@@ -61,9 +109,12 @@ class BaseTestCase(testtools.TestCase):
             'roles': roles or [],
             'policy_enforcer': self.policy_enforcer,
         }
-        req.env = {}
-        req.env['barbican.context'] = context.RequestContext(**kwargs)
-        req.accept = accept
+        req.environ = {}
+        req.environ['barbican.context'] = context.RequestContext(**kwargs)
+        if accept:
+            req.accept.header_value.return_value = accept
+        else:
+            req.accept = None
 
         return req
 
@@ -81,8 +132,7 @@ class BaseTestCase(testtools.TestCase):
 
     def _assert_post_rbac_exception(self, exception, role):
         """Assert that we received the expected RBAC-passed exception."""
-        self.assertEqual(falcon.HTTP_500, exception.status)
-        self.assertEqual('Read Error', exception.title)
+        self.assertEqual(500, exception.status_int)
 
     def _generate_get_error(self):
         """Falcon exception generator to throw from early-exit mocks.
@@ -95,7 +145,7 @@ class BaseTestCase(testtools.TestCase):
         """
         # The 'Read Error' clause needs to match that asserted in
         #    _assert_post_rbac_exception() above.
-        return falcon.HTTPError(falcon.HTTP_500, 'Read Error')
+        return exc.HTTPInternalServerError(message='Read Error')
 
     def _assert_pass_rbac(self, roles, method_under_test, accept=None):
         """Assert that RBAC authorization rules passed for the specified roles.
@@ -110,8 +160,9 @@ class BaseTestCase(testtools.TestCase):
                                           accept=accept)
 
             # Force an exception early past the RBAC passing.
-            self.req.stream = self._generate_stream_for_exit()
-            exception = self.assertRaises(falcon.HTTPError, method_under_test)
+            self.req.body_file = self._generate_stream_for_exit()
+            exception = self.assertRaises(exc.HTTPInternalServerError,
+                                          method_under_test)
             self._assert_post_rbac_exception(exception, role)
 
             self.setUp()  # Need to re-setup
@@ -128,8 +179,8 @@ class BaseTestCase(testtools.TestCase):
             self.req = self._generate_req(roles=[role] if role else [],
                                           accept=accept)
 
-            exception = self.assertRaises(falcon.HTTPError, method_under_test)
-            self.assertEqual(falcon.HTTP_403, exception.status)
+            exception = self.assertRaises(exc.HTTPForbidden, method_under_test)
+            self.assertEqual(403, exception.status_int)
 
             self.setUp()  # Need to re-setup
 
@@ -139,7 +190,7 @@ class WhenTestingVersionResource(BaseTestCase):
     def setUp(self):
         super(WhenTestingVersionResource, self).setUp()
 
-        self.resource = res.VersionResource()
+        self.resource = VersionResource()
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
@@ -184,13 +235,13 @@ class WhenTestingSecretsResource(BaseTestCase):
                                             ._generate_get_error())
         self.secret_repo.get_by_create_date = get_by_create_date
 
-        self.resource = res.SecretsResource(crypto_manager=mock.MagicMock(),
-                                            tenant_repo=mock.MagicMock(),
-                                            secret_repo=self.secret_repo,
-                                            tenant_secret_repo=mock
-                                            .MagicMock(),
-                                            datum_repo=mock.MagicMock(),
-                                            kek_repo=mock.MagicMock())
+        self.resource = SecretsResource(crypto_manager=mock.MagicMock(),
+                                        tenant_repo=mock.MagicMock(),
+                                        secret_repo=self.secret_repo,
+                                        tenant_secret_repo=mock
+                                        .MagicMock(),
+                                        datum_repo=mock.MagicMock(),
+                                        kek_repo=mock.MagicMock())
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
@@ -233,11 +284,12 @@ class WhenTestingSecretResource(BaseTestCase):
         self.secret_repo.get = fail_method
         self.secret_repo.delete_entity_by_id = fail_method
 
-        self.resource = res.SecretResource(crypto_manager=mock.MagicMock(),
-                                           tenant_repo=mock.MagicMock(),
-                                           secret_repo=self.secret_repo,
-                                           datum_repo=mock.MagicMock(),
-                                           kek_repo=mock.MagicMock())
+        self.resource = SecretResource(self.secret_id,
+                                       crypto_manager=mock.MagicMock(),
+                                       tenant_repo=mock.MagicMock(),
+                                       secret_repo=self.secret_repo,
+                                       datum_repo=mock.MagicMock(),
+                                       kek_repo=mock.MagicMock())
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
@@ -276,15 +328,15 @@ class WhenTestingSecretResource(BaseTestCase):
 
     def _invoke_on_get(self):
         self.resource.on_get(self.req, self.resp,
-                             self.keystone_id, self.secret_id)
+                             self.keystone_id)
 
     def _invoke_on_put(self):
         self.resource.on_put(self.req, self.resp,
-                             self.keystone_id, self.secret_id)
+                             self.keystone_id)
 
     def _invoke_on_delete(self):
         self.resource.on_delete(self.req, self.resp,
-                                self.keystone_id, self.secret_id)
+                                self.keystone_id)
 
 
 class WhenTestingOrdersResource(BaseTestCase):
@@ -302,9 +354,9 @@ class WhenTestingOrdersResource(BaseTestCase):
                                             ._generate_get_error())
         self.order_repo.get_by_create_date = get_by_create_date
 
-        self.resource = res.OrdersResource(tenant_repo=mock.MagicMock(),
-                                           order_repo=self.order_repo,
-                                           queue_resource=mock.MagicMock())
+        self.resource = OrdersResource(tenant_repo=mock.MagicMock(),
+                                       order_repo=self.order_repo,
+                                       queue_resource=mock.MagicMock())
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
@@ -347,7 +399,8 @@ class WhenTestingOrderResource(BaseTestCase):
         self.order_repo.get = fail_method
         self.order_repo.delete_entity_by_id = fail_method
 
-        self.resource = res.OrderResource(order_repo=self.order_repo)
+        self.resource = OrderResource(self.order_id,
+                                      order_repo=self.order_repo)
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
@@ -368,9 +421,7 @@ class WhenTestingOrderResource(BaseTestCase):
                                self._invoke_on_delete)
 
     def _invoke_on_get(self):
-        self.resource.on_get(self.req, self.resp,
-                             self.keystone_id, self.order_id)
+        self.resource.on_get(self.req, self.resp, self.keystone_id)
 
     def _invoke_on_delete(self):
-        self.resource.on_delete(self.req, self.resp,
-                                self.keystone_id, self.order_id)
+        self.resource.on_delete(self.req, self.resp, self.keystone_id)
