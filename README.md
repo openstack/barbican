@@ -59,7 +59,7 @@ Barbican will handle many types of secrets, including:
   is capable of presenting these secrets in various formats to ease
   integration.
 
-For the symmetric and asymmetric key types, Barbican supports full lifecycle
+For the symmetric and asymmetric key types, Barbican supports full life cycle
 management including provisioning, expiration, reporting, etc. A plugin system
 allows for multiple certificate authority support (including public and private
 CAs).
