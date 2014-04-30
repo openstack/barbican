@@ -2,5 +2,9 @@ coverage>=3.6
 discover
 hacking>=0.8.0,<0.9
 mock>=1.0
-testrepository>=0.0.17
-testtools>=0.9.32,<0.9.35
+testrepository>=0.0.18
+testtools>=0.9.34
+
+# Documentation build requirements
+sphinx>=1.1.2,<1.2
+oslosphinx
