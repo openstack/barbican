@@ -30,6 +30,33 @@ def suite():
     return suite
 
 
+class WhenTestingValidatorsFunctions(testtools.TestCase):
+
+    def test_secret_too_big_is_false_for_small_secrets(self):
+        data = b'\xb0'
+
+        is_too_big = validators.secret_too_big(data)
+
+        self.assertFalse(is_too_big)
+
+    def test_secret_too_big_is_true_for_big_secrets(self):
+        data = b'\x01' * validators.CONF.max_allowed_secret_in_bytes
+        data += b'\x01'
+
+        is_too_big = validators.secret_too_big(data)
+
+        self.assertTrue(is_too_big)
+
+    def test_secret_too_big_is_true_for_big_unicode_secrets(self):
+        beer = u'\U0001F37A'
+        data = beer * (validators.CONF.max_allowed_secret_in_bytes / 4)
+        data += u'1'
+
+        is_too_big = validators.secret_too_big(data)
+
+        self.assertTrue(is_too_big)
+
+
 class WhenTestingSecretValidator(testtools.TestCase):
 
     def setUp(self):
