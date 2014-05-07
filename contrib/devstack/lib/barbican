@@ -92,7 +92,7 @@ function configure_barbican {
     iniset $BARBICAN_CONF DEFAULT debug False
 
     # Set the log file location
-    iniset $BARBICAN_CONF DEFAULT log_file "$BARBICAN_API_LOG_DIR/api.log"
+    iniset $BARBICAN_CONF DEFAULT log_file "$BARBICAN_API_LOG_DIR/barbican.log"
 
     # Install the policy file for the API server
     cp $BARBICAN_DIR/etc/barbican/policy.json $BARBICAN_CONF_DIR
@@ -148,11 +148,18 @@ function install_barbicanclient {
 
 # start_barbican - Start running processes, including screen
 function start_barbican {
-    screen_it barbican "uwsgi --master --emperor $BARBICAN_CONF_DIR/vassals --logto $BARBICAN_API_LOG_DIR/api.log"
+    screen_it barbican "uwsgi --master --emperor $BARBICAN_CONF_DIR/vassals --logto $BARBICAN_API_LOG_DIR/barbican.log"
 }
 
 # stop_barbican - Stop running processes
 function stop_barbican {
+    # This will eventually be refactored to work like
+    # Solum and Manila (script to kick off a wsgiref server)
+    # For now, this will stop uWSGI rather than have it hang
+    killall -9 uwsgi
+
+    # This cleans up the PID file, but uses pkill so Barbican
+    # uWSGI emperor process doesn't actually stop
     screen_stop barbican
 }
 
