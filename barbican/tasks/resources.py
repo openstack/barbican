@@ -18,6 +18,8 @@ Task resources for the Barbican API.
 """
 import abc
 
+import six
+
 from barbican import api
 from barbican.common import resources as res
 from barbican.common import utils
@@ -29,10 +31,9 @@ from barbican.openstack.common import gettextutils as u
 LOG = utils.getLogger(__name__)
 
 
+@six.add_metaclass(abc.ABCMeta)
 class BaseTask(object):
     """Base asychronous task."""
-
-    __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def get_name(self):

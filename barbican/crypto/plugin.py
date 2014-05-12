@@ -18,6 +18,7 @@ import abc
 from Crypto.Cipher import AES
 from Crypto import Random
 from oslo.config import cfg
+import six
 
 from barbican.openstack.common.gettextutils import _
 
@@ -121,10 +122,9 @@ def indicate_bind_completed(kek_meta_dto, kek_datum):
     kek_datum.plugin_meta = kek_meta_dto.plugin_meta
 
 
+@six.add_metaclass(abc.ABCMeta)
 class CryptoPluginBase(object):
     """Base class for Crypto plugins."""
-
-    __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):

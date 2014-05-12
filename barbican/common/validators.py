@@ -39,10 +39,10 @@ def get_invalid_property(validation_error):
         return validation_error.schema_path[1]
 
 
+@six.add_metaclass(abc.ABCMeta)
 class ValidatorBase(object):
     """Base class for validators."""
 
-    __metaclass__ = abc.ABCMeta
     name = ''
 
     @abc.abstractmethod
