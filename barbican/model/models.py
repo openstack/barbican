@@ -21,6 +21,7 @@ from sqlalchemy.ext import compiler
 from sqlalchemy.ext import declarative
 from sqlalchemy import orm
 
+from barbican.common import exception
 from barbican.common import utils
 from barbican.openstack.common import timeutils
 
@@ -216,6 +217,7 @@ class Secret(BASE, ModelBase):
     #   metadata is retrieved.
     #   See barbican.api.resources.py::SecretsResource.on_get()
     encrypted_data = orm.relationship("EncryptedDatum", lazy='joined')
+    secret_metadata = orm.relationship("SecretMetadatum", lazy='joined')
 
     def __init__(self, parsed_request=None):
         """Creates secret from a dict."""
@@ -232,6 +234,9 @@ class Secret(BASE, ModelBase):
 
     def _do_delete_children(self, session):
         """Sub-class hook: delete children relationships."""
+        for datum in self.secret_metadata:
+            datum.delete(session)
+
         for datum in self.encrypted_data:
             datum.delete(session)
 
@@ -240,16 +245,58 @@ class Secret(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        return {'secret_id': self.id,
-                'name': self.name or self.id,
-                'expiration': self.expiration,
-                'algorithm': self.algorithm,
-                'bit_length': self.bit_length,
-                'mode': self.mode}
+        fields = {'secret_id': self.id,
+                  'name': self.name or self.id,
+                  'expiration': self.expiration,
+                  'algorithm': self.algorithm,
+                  'bit_length': self.bit_length,
+                  'mode': self.mode}
+        #TODO(kaitlin.farr) will change implementation to avoid overwriting
+        #   existing fields in a future patch
+        for m in self.secret_metadata:
+            metadata_field = m._do_extra_dict_fields()
+            fields.update({metadata_field['key']: metadata_field['value']})
+        return fields
+
+
+class SecretMetadatum(BASE, ModelBase):
+    """Represents the metadatum for a single key-value pair for a Secret"""
+
+    __tablename__ = "secret_metadata"
+
+    secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
+                          nullable=False)
+    key = sa.Column(sa.String(255), nullable=False)
+    value = sa.Column(sa.String(255), nullable=False)
+
+    def __init__(self, secret, key, value):
+        super(SecretMetadatum, self).__init__()
+
+        msg = ("Must supply non-None {0} argument for SecretMetadatum entry.")
+
+        if secret is None:
+            raise exception.MissingArgumentError(msg.format("secret"))
+        else:
+            self.secret_id = secret.id
+
+        if key is None:
+            raise exception.MissingArgumentError(msg.format("key"))
+        else:
+            self.key = key
+
+        if value is None:
+            raise exception.MissingArgumentError(msg.format("value"))
+        else:
+            self.value = value
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {'key': self.key,
+                'value': self.value}
 
 
 class EncryptedDatum(BASE, ModelBase):
-    """Represents a the encrypted data for a Secret."""
+    """Represents the encrypted data for a Secret."""
 
     __tablename__ = 'encrypted_data'
 
