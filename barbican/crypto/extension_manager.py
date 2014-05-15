@@ -305,7 +305,9 @@ class CryptoExtensionManager(named.NamedExtensionManager):
         is then returned from this method.
         """
         encrypting_plugin = \
-            self._determine_crypto_plugin(secret.algorithm)
+            self._determine_crypto_plugin(secret.algorithm,
+                                          secret.bit_length,
+                                          secret.mode)
 
         kek_datum, kek_meta_dto = self._find_or_create_kek_objects(
             encrypting_plugin, tenant, kek_repo)
