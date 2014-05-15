@@ -188,7 +188,7 @@ class BaseSecretsResource(testtools.TestCase):
 
         self.resource.on_post(self.req, self.resp, self.keystone_id)
 
-        self.assertEquals(self.resp.status, falcon.HTTP_201)
+        self.assertEqual(self.resp.status, falcon.HTTP_201)
 
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
@@ -203,7 +203,7 @@ class BaseSecretsResource(testtools.TestCase):
         """
         self.resource.on_post(self.req, self.resp, self.keystone_id)
 
-        self.assertEquals(self.resp.status, falcon.HTTP_201)
+        self.assertEqual(self.resp.status, falcon.HTTP_201)
 
         args, kwargs = self.secret_repo.create_from.call_args
         secret = args[0]
@@ -376,7 +376,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
         self.stream.read.return_value = json.dumps(self.secret_req)
 
         self.resource.on_post(self.req, self.resp, self.keystone_id)
-        self.assertEquals(self.resp.status, falcon.HTTP_201)
+        self.assertEqual(self.resp.status, falcon.HTTP_201)
 
         self.secret_req = {'name': self.name,
                            'payload_content_type': '  text/plain',
@@ -387,7 +387,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
         self.stream.read.return_value = json.dumps(self.secret_req)
 
         self.resource.on_post(self.req, self.resp, self.keystone_id)
-        self.assertEquals(self.resp.status, falcon.HTTP_201)
+        self.assertEqual(self.resp.status, falcon.HTTP_201)
 
     def test_create_secret_content_type_text_plain_space_charset_utf8(self):
         # payload_content_type has trailing space
@@ -401,7 +401,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
         self.stream.read.return_value = json.dumps(self.secret_req)
 
         self.resource.on_post(self.req, self.resp, self.keystone_id)
-        self.assertEquals(self.resp.status, falcon.HTTP_201)
+        self.assertEqual(self.resp.status, falcon.HTTP_201)
 
         self.secret_req = {'name': self.name,
                            'payload_content_type':
@@ -413,7 +413,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
         self.stream.read.return_value = json.dumps(self.secret_req)
 
         self.resource.on_post(self.req, self.resp, self.keystone_id)
-        self.assertEquals(self.resp.status, falcon.HTTP_201)
+        self.assertEqual(self.resp.status, falcon.HTTP_201)
 
     def test_create_secret_with_only_content_type(self):
         # No payload just content_type
@@ -432,7 +432,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
                            'payload': 'somejunk'}
         self.stream.read.return_value = json.dumps(self.secret_req)
         self.resource.on_post(self.req, self.resp, self.keystone_id)
-        self.assertEquals(self.resp.status, falcon.HTTP_201)
+        self.assertEqual(self.resp.status, falcon.HTTP_201)
 
 
 class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
@@ -768,7 +768,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
                                          keystone_id=self.keystone_id,
                                          suppress_exception=True)
 
-        self.assertEquals(self.resp.status, falcon.HTTP_200)
+        self.assertEqual(self.resp.status, falcon.HTTP_200)
 
         resp_body = jsonutils.loads(self.resp.body)
         self.assertNotIn('content_encodings', resp_body)
@@ -788,7 +788,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
                                          keystone_id=self.keystone_id,
                                          suppress_exception=True)
 
-        self.assertEquals(self.resp.status, falcon.HTTP_200)
+        self.assertEqual(self.resp.status, falcon.HTTP_200)
 
         resp_body = self.resp.body
         self.assertIsNotNone(resp_body)
@@ -806,7 +806,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
                                          keystone_id=self.keystone_id,
                                          suppress_exception=True)
 
-        self.assertEquals(self.resp.status, falcon.HTTP_200)
+        self.assertEqual(self.resp.status, falcon.HTTP_200)
 
         resp_body = jsonutils.loads(self.resp.body)
         self.assertIsNotNone(resp_body)
@@ -1067,7 +1067,7 @@ class WhenCreatingOrdersUsingOrdersResource(testtools.TestCase):
     def test_should_add_new_order(self):
         self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
 
-        self.assertEquals(falcon.HTTP_202, self.resp.status)
+        self.assertEqual(falcon.HTTP_202, self.resp.status)
 
         self.queue_resource.process_order \
             .assert_called_once_with(order_id=None,
@@ -1402,7 +1402,7 @@ class WhenCreatingContainersUsingContainersResource(testtools.TestCase):
     def test_should_add_new_container(self):
         self.resource.on_post(self.req, self.resp, self.tenant_keystone_id)
 
-        self.assertEquals(falcon.HTTP_202, self.resp.status)
+        self.assertEqual(falcon.HTTP_202, self.resp.status)
 
         args, kwargs = self.container_repo.create_from.call_args
         container = args[0]

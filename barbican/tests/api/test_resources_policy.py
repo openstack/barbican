@@ -82,7 +82,7 @@ class BaseTestCase(testtools.TestCase):
     def _assert_post_rbac_exception(self, exception, role):
         """Assert that we received the expected RBAC-passed exception."""
         self.assertEqual(falcon.HTTP_500, exception.status)
-        self.assertEquals('Read Error', exception.title)
+        self.assertEqual('Read Error', exception.title)
 
     def _generate_get_error(self):
         """Falcon exception generator to throw from early-exit mocks.
