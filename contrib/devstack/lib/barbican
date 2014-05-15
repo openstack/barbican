@@ -148,7 +148,7 @@ function install_barbicanclient {
 
 # start_barbican - Start running processes, including screen
 function start_barbican {
-    screen_it barbican "uwsgi --master --emperor $BARBICAN_CONF_DIR/vassals --logto $BARBICAN_API_LOG_DIR/barbican.log"
+    screen_it barbican "uwsgi --master --emperor $BARBICAN_CONF_DIR/vassals --logto $BARBICAN_API_LOG_DIR/barbican.log -b 65535"
 }
 
 # stop_barbican - Stop running processes
