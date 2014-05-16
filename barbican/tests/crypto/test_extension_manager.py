@@ -315,6 +315,21 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
             mock.MagicMock(),
         )
 
+    def test_generate_symmetric_encryption_key(self):
+        secret = mock.MagicMock(algorithm='aes', bit_length=128)
+        content_type = 'application/octet-stream'
+        tenant = mock.MagicMock()
+        kek_repo = mock.MagicMock(name='kek_repo')
+
+        plugin = SimpleCryptoPlugin()
+        plugin_mock = mock.MagicMock(obj=plugin)
+        self.manager.extensions = [plugin_mock]
+
+        datum = self.manager.generate_symmetric_encryption_key(
+            secret, content_type, tenant, kek_repo
+        )
+        self.assertIsNotNone(datum)
+
     def test_generate_data_encryption_key_no_supported_plugin(self):
         plugin = TestSupportsCryptoPlugin()
         plugin_mock = mock.MagicMock(obj=plugin)
