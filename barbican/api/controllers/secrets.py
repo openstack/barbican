@@ -166,41 +166,22 @@ class SecretsController(object):
         LOG.debug('Start secrets on_get '
                   'for tenant-ID {0}:'.format(keystone_id))
 
-        name = kw.get('name')
+        name = kw.get('name', '')
         if name:
             name = urllib.unquote_plus(name)
 
-        offset = kw.get('offset')
-        if offset is not None:
-            try:
-                offset = int(offset)
-            except ValueError:
-                # as per Github issue 171, if offset is invalid then
-                # the default should be used.
-                offset = None
-
-        limit = kw.get('limit')
-        if limit is not None:
-            try:
-                limit = int(limit)
-            except ValueError:
-                # as per Github issue 171, if limit is invalid then
-                # the default should be used.
-                limit = None
-
-        bits = kw.get('bits')
-        if bits is not None:
-            try:
-                bits = int(bits)
-            except ValueError:
-                # as per Github issue 171, if bits is invalid then
-                # the default should be used.
-                bits = None
+        bits = kw.get('bits', 0)
+        try:
+            bits = int(bits)
+        except ValueError:
+            # as per Github issue 171, if bits is invalid then
+            # the default should be used.
+            bits = 0
 
         result = self.secret_repo.get_by_create_date(
             keystone_id,
-            offset_arg=offset,
-            limit_arg=limit,
+            offset_arg=kw.get('offset', 0),
+            limit_arg=kw.get('limit', None),
             name=name,
             alg=kw.get('alg'),
             mode=kw.get('mode'),

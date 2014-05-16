@@ -100,8 +100,8 @@ class ContainersController(object):
 
         result = self.container_repo.get_by_create_date(
             keystone_id,
-            offset_arg=int(kw.get('offset')),
-            limit_arg=int(kw.get('limit')),
+            offset_arg=kw.get('offset', 0),
+            limit_arg=kw.get('limit', None),
             suppress_exception=True
         )
 

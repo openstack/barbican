@@ -102,28 +102,10 @@ class OrdersController(object):
         LOG.debug('Start orders on_get '
                   'for tenant-ID {0}:'.format(keystone_id))
 
-        offset = kw.get('offset')
-        if offset is not None:
-            try:
-                offset = int(offset)
-            except ValueError:
-                # as per Github issue 171, if offset is invalid then
-                # the default should be used.
-                offset = None
-
-        limit = kw.get('limit')
-        if limit is not None:
-            try:
-                limit = int(limit)
-            except ValueError:
-                # as per Github issue 171, if limit is invalid then
-                # the default should be used.
-                limit = None
-
         result = self.order_repo \
             .get_by_create_date(keystone_id,
-                                offset_arg=offset,
-                                limit_arg=limit,
+                                offset_arg=kw.get('offset', 0),
+                                limit_arg=kw.get('limit', None),
                                 suppress_exception=True)
         orders, offset, limit, total = result
 
