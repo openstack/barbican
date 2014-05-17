@@ -35,11 +35,11 @@ class TestSupportsCryptoPlugin(CryptoPluginBase):
     def bind_kek_metadata(self, kek_meta_dto):
         return None
 
-    def generate_symmetric(self, generate_dto, type_enum,
+    def generate_symmetric(self, generate_dto,
                            kek_meta_dto, keystone_id):
         raise NotImplementedError()
 
-    def generate_asymmetric(self, generate_dto, type_enum,
+    def generate_asymmetric(self, generate_dto,
                             kek_meta_dto, keystone_id):
         raise NotImplementedError("Feature not implemented for PKCS11")
 
