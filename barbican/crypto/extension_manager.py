@@ -249,9 +249,12 @@ class CryptoExtensionManager(named.NamedExtensionManager):
         # Create an encrypted datum instance and add the encrypted cypher text.
         datum = models.EncryptedDatum(secret, kek_datum)
         datum.content_type = content_type
-        datum.cypher_text, datum.kek_meta_extended = encrypting_plugin.encrypt(
+        response_dto = encrypting_plugin.encrypt(
             encrypt_dto, kek_meta_dto, tenant.keystone_id
         )
+
+        datum.cypher_text = response_dto.cypher_text
+        datum.kek_meta_extended = response_dto.kek_meta_extended
 
         # Convert binary data into a text-based format.
         #TODO(jwood) Figure out by storing binary (BYTEA) data in Postgres
