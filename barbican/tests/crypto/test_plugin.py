@@ -31,7 +31,7 @@ class TestCryptoPlugin(plugin.CryptoPluginBase):
 
     def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
         cypher_text = b'cypher_text'
-        return cypher_text, None
+        return plugin.ResponseDTO(cypher_text, None)
 
     def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
                 keystone_id):

@@ -275,6 +275,18 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
             mock.MagicMock(),
         )
 
+    def test_encrypt_response_dto(self):
+        plugin = SimpleCryptoPlugin()
+        plugin_mock = mock.MagicMock(obj=plugin)
+        self.manager.extensions = [plugin_mock]
+
+        response_dto = self.manager.encrypt(
+            'payload', 'text/plain', None, mock.MagicMock(), mock.MagicMock(),
+            mock.MagicMock(), False
+        )
+
+        self.assertIsNotNone(response_dto)
+
     def test_decrypt_no_plugin_found(self):
         """ Passing mocks here causes CryptoPluginNotFound because the mock
         won't match any of the available plugins
