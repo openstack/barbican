@@ -634,8 +634,8 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
         # secrets.on_get function prior to searching the repo.
         self.secret_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
-                                     offset_arg=self.offset,
-                                     limit_arg=self.limit,
+                                     offset_arg=u'{0}'.format(self.offset),
+                                     limit_arg=u'{0}'.format(self.limit),
                                      suppress_exception=True,
                                      name=self.name,
                                      alg=None, mode=None,
@@ -654,10 +654,10 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
         self.secret_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
-                                     offset_arg=self.offset,
-                                     limit_arg=self.limit,
+                                     offset_arg=u'{0}'.format(self.offset),
+                                     limit_arg=u'{0}'.format(self.limit),
                                      suppress_exception=True,
-                                     name=None, alg=None, mode=None,
+                                     name='', alg=None, mode=None,
                                      bits=0)
 
         self.assertTrue('previous' in resp.namespace)
@@ -695,10 +695,10 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
         self.secret_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
-                                     offset_arg=self.offset,
-                                     limit_arg=self.limit,
+                                     offset_arg=u'{0}'.format(self.offset),
+                                     limit_arg=u'{0}'.format(self.limit),
                                      suppress_exception=True,
-                                     name=None, alg=None, mode=None,
+                                     name='', alg=None, mode=None,
                                      bits=0)
 
         self.assertFalse('previous' in resp.namespace)
@@ -1190,8 +1190,8 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
 
         self.order_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
-                                     offset_arg=self.offset,
-                                     limit_arg=self.limit,
+                                     offset_arg=u'{0}'.format(self.offset),
+                                     limit_arg=u'{0}'.format(self.limit),
                                      suppress_exception=True)
 
         self.assertTrue('previous' in resp.namespace)
@@ -1222,10 +1222,8 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
 
         self.order_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
-                                     offset_arg=self.params.get('offset',
-                                                                self.offset),
-                                     limit_arg=self.params.get('limit',
-                                                               self.limit),
+                                     offset_arg=u'{0}'.format(self.offset),
+                                     limit_arg=u'{0}'.format(self.limit),
                                      suppress_exception=True)
 
         self.assertFalse('previous' in resp.namespace)
@@ -1603,8 +1601,8 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
 
         self.container_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
-                                     offset_arg=self.offset,
-                                     limit_arg=self.limit,
+                                     offset_arg=u'{0}'.format(self.offset),
+                                     limit_arg=u'{0}'.format(self.limit),
                                      suppress_exception=True)
 
         self.assertTrue('previous' in resp.namespace)
@@ -1641,8 +1639,8 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
 
         self.container_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
-                                     offset_arg=self.offset,
-                                     limit_arg=self.limit,
+                                     offset_arg=u'{0}'.format(self.offset),
+                                     limit_arg=u'{0}'.format(self.limit),
                                      suppress_exception=True)
 
         self.assertFalse('previous' in resp.namespace)
