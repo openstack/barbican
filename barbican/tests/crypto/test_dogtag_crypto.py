@@ -63,9 +63,9 @@ class WhenTestingDogtagCryptoPlugin(testtools.TestCase):
         secret.bit_length = 128
         secret.algorithm = "AES"
         generate_dto = plugin_import.GenerateDTO(
-            plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
             secret.algorithm,
             secret.bit_length,
+            None,
             None)
         self.plugin.generate_symmetric(
             generate_dto,
@@ -136,9 +136,9 @@ class WhenTestingDogtagCryptoPlugin(testtools.TestCase):
             self.skipTest("Dogtag imports not available")
         payload = 'encrypt me!!'
         encrypt_dto = plugin_import.EncryptDTO(payload)
-        _cyphertext, _kek_meta_extended = self.plugin.encrypt(encrypt_dto,
-                                                              mock.MagicMock(),
-                                                              mock.MagicMock())
+        self.plugin.encrypt(encrypt_dto,
+                            mock.MagicMock(),
+                            mock.MagicMock())
         self.keyclient_mock.archive_key.assert_called_once_with(
             mock.ANY,
             "passPhrase",
@@ -172,7 +172,8 @@ class WhenTestingDogtagCryptoPlugin(testtools.TestCase):
             self.skipTest("Dogtag imports not available")
         self.assertTrue(
             self.plugin.supports(
-                plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION
+                plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+                'aes', 256
             )
         )
 
