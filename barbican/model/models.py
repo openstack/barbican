@@ -217,7 +217,8 @@ class Secret(BASE, ModelBase):
     #   metadata is retrieved.
     #   See barbican.api.resources.py::SecretsResource.on_get()
     encrypted_data = orm.relationship("EncryptedDatum", lazy='joined')
-    secret_metadata = orm.relationship("SecretMetadatum", lazy='joined')
+    secret_store_metadata = orm.relationship("SecretStoreMetadatum",
+                                             lazy='joined')
 
     def __init__(self, parsed_request=None):
         """Creates secret from a dict."""
@@ -234,7 +235,7 @@ class Secret(BASE, ModelBase):
 
     def _do_delete_children(self, session):
         """Sub-class hook: delete children relationships."""
-        for datum in self.secret_metadata:
+        for datum in self.secret_store_metadata:
             datum.delete(session)
 
         for datum in self.encrypted_data:
@@ -245,24 +246,18 @@ class Secret(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        fields = {'secret_id': self.id,
-                  'name': self.name or self.id,
-                  'expiration': self.expiration,
-                  'algorithm': self.algorithm,
-                  'bit_length': self.bit_length,
-                  'mode': self.mode}
-        #TODO(kaitlin.farr) will change implementation to avoid overwriting
-        #   existing fields in a future patch
-        for m in self.secret_metadata:
-            metadata_field = m._do_extra_dict_fields()
-            fields.update({metadata_field['key']: metadata_field['value']})
-        return fields
+        return {'secret_id': self.id,
+                'name': self.name or self.id,
+                'expiration': self.expiration,
+                'algorithm': self.algorithm,
+                'bit_length': self.bit_length,
+                'mode': self.mode}
 
 
-class SecretMetadatum(BASE, ModelBase):
-    """Represents the metadatum for a single key-value pair for a Secret"""
+class SecretStoreMetadatum(BASE, ModelBase):
+    """Represents Secret Store metadatum for a single key-value pair"""
 
-    __tablename__ = "secret_metadata"
+    __tablename__ = "secret_store_metadata"
 
     secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
                           nullable=False)
@@ -270,24 +265,22 @@ class SecretMetadatum(BASE, ModelBase):
     value = sa.Column(sa.String(255), nullable=False)
 
     def __init__(self, secret, key, value):
-        super(SecretMetadatum, self).__init__()
+        super(SecretStoreMetadatum, self).__init__()
 
-        msg = ("Must supply non-None {0} argument for SecretMetadatum entry.")
+        msg = ("Must supply non-None {0} argument "
+               "for SecretStoreMetadatum entry.")
 
         if secret is None:
             raise exception.MissingArgumentError(msg.format("secret"))
-        else:
-            self.secret_id = secret.id
+        self.secret_id = secret.id
 
         if key is None:
             raise exception.MissingArgumentError(msg.format("key"))
-        else:
-            self.key = key
+        self.key = key
 
         if value is None:
             raise exception.MissingArgumentError(msg.format("value"))
-        else:
-            self.value = value
+        self.value = value
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""

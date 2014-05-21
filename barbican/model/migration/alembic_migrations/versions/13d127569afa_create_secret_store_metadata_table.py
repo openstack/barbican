@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""create_secret_metadata_table
+"""create_secret_store_metadata_table
 
 Revision ID: 13d127569afa
 Revises: 1a0c2cdafb38
@@ -33,10 +33,10 @@ from barbican.model import repositories as rep
 
 def upgrade():
     meta = sa.MetaData()
-    meta.reflect(bind=rep._ENGINE, only=['secret_metadata'])
-    if 'secret_metadata' not in meta.tables.keys():
+    meta.reflect(bind=rep._ENGINE, only=['secret_store_metadata'])
+    if 'secret_store_metadata' not in meta.tables.keys():
         op.create_table(
-            'secret_metadata',
+            'secret_store_metadata',
             sa.Column('id', sa.String(length=36), nullable=False),
             sa.Column('created_at', sa.DateTime(), nullable=False),
             sa.Column('updated_at', sa.DateTime(), nullable=False),
@@ -52,4 +52,4 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_table('secret_metadata')
+    op.drop_table('secret_store_metadata')
