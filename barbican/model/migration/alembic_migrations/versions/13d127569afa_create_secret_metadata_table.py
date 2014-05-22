@@ -28,24 +28,28 @@ down_revision = '1a0c2cdafb38'
 from alembic import op
 import sqlalchemy as sa
 
+from barbican.model import repositories as rep
+
 
 def upgrade():
     meta = sa.MetaData()
     meta.reflect(bind=rep._ENGINE, only=['secret_metadata'])
     if 'secret_metadata' not in meta.tables.keys():
-        op.create_table('secret_metadata',
-        sa.Column('id', sa.String(length=36), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('updated_at', sa.DateTime(), nullable=False),
-        sa.Column('deleted_at', sa.DateTime(), nullable=True),
-        sa.Column('deleted', sa.Boolean(), nullable=False),
-        sa.Column('status', sa.String(length=20), nullable=False),
-        sa.Column('secret_id', sa.String(length=36), nullable=False),
-        sa.Column('key', sa.String(length=255), nullable=False),
-        sa.Column('value', sa.String(length=255), nullable=False),
-        sa.ForeignKeyConstraint(['secret_id'], ['secrets.id'],),
-        sa.PrimaryKeyConstraint('id'),
+        op.create_table(
+            'secret_metadata',
+            sa.Column('id', sa.String(length=36), nullable=False),
+            sa.Column('created_at', sa.DateTime(), nullable=False),
+            sa.Column('updated_at', sa.DateTime(), nullable=False),
+            sa.Column('deleted_at', sa.DateTime(), nullable=True),
+            sa.Column('deleted', sa.Boolean(), nullable=False),
+            sa.Column('status', sa.String(length=20), nullable=False),
+            sa.Column('secret_id', sa.String(length=36), nullable=False),
+            sa.Column('key', sa.String(length=255), nullable=False),
+            sa.Column('value', sa.String(length=255), nullable=False),
+            sa.ForeignKeyConstraint(['secret_id'], ['secrets.id'],),
+            sa.PrimaryKeyConstraint('id'),
         )
+
 
 def downgrade():
     op.drop_table('secret_metadata')
