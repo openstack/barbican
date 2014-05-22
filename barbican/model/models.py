@@ -37,9 +37,9 @@ class States(object):
     ERROR = 'ERROR'
 
     @classmethod
-    def is_valid(self, state_to_test):
+    def is_valid(cls, state_to_test):
         """Tests if a state is a valid one."""
-        return state_to_test in self.__dict__
+        return state_to_test in cls.__dict__
 
 
 @compiler.compiles(sa.BigInteger, 'sqlite')
@@ -478,9 +478,44 @@ class Container(BASE, ModelBase):
                         if hasattr(container_secret, 'name') else None
                     } for container_secret in self.container_secrets]}
 
+
+class TransportKey(BASE, ModelBase):
+    """
+    Represents the transport key used for wrapping secrets in transit
+    to/from clients when storing/retrieving secrets.
+    """
+
+    __tablename__ = 'transport_keys'
+
+    plugin_name = sa.Column(sa.String(255), nullable=False)
+    transport_key = sa.Column(sa.Text, nullable=False)
+
+    def __init__(self, plugin_name, transport_key):
+        """Creates transport key entity ."""
+        super(TransportKey, self).__init__()
+
+        msg = "Must supply non-None {0} argument for TransportKey entry."
+
+        if plugin_name is None:
+            raise exception.MissingArgumentError(msg.format("plugin_name"))
+        else:
+            self.plugin_name = plugin_name
+
+        if transport_key is None:
+            raise exception.MissingArgumentError(msg.format("transport_key"))
+        else:
+            self.transport_key = transport_key
+
+        self.status = States.ACTIVE
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {'transport_key_id': self.id,
+                'plugin_name': self.plugin_name}
+
 # Keep this tuple synchronized with the models in the file
 MODELS = [TenantSecret, Tenant, Secret, EncryptedDatum, Order, Container,
-          ContainerSecret]
+          ContainerSecret, TransportKey]
 
 
 def register_models(engine):

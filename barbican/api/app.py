@@ -30,7 +30,7 @@ except ImportError:
 from oslo.config import cfg
 
 from barbican.api.controllers import (performance, orders, secrets, containers,
-                                      versions)
+                                      transportkeys, versions)
 from barbican.common import config
 from barbican.crypto import extension_manager as ext
 from barbican.openstack.common import log
@@ -98,6 +98,7 @@ def create_main_app(global_config, **local_conf):
         secrets = secrets.SecretsController(crypto_mgr)
         orders = orders.OrdersController()
         containers = containers.ContainersController()
+        transport_keys = transportkeys.TransportKeysController()
 
     wsgi_app = PecanAPI(RootController(), force_canonical=False)
     if newrelic_loaded:
