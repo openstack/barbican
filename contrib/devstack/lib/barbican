@@ -41,7 +41,7 @@ BARBICAN_AUTH_CACHE_DIR=${BARBICAN_AUTH_CACHE_DIR:-/var/cache/barbican}
 BARBICAN_BIN_DIR=$(get_python_exec_prefix)
 
 # Set Barbican repository
-BARBICAN_REPO=${BARBICAN_REPO:-${GIT_BASE}/stackforge/barbican.git}
+BARBICAN_REPO=${BARBICAN_REPO:-${GIT_BASE}/openstack/barbican.git}
 BARBICAN_BRANCH=${BARBICAN_BRANCH:-master}
 
 # Set client library repository
