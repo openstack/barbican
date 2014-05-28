@@ -57,16 +57,65 @@ class PluginSupportTypes(object):
 
 class KEKMetaDTO(object):
     """
-    Data transfer object to support key encryption key (KEK) definition.
+    Key Encryption Keys (KEKs) in Barbican are intended to represent a distinct
+    key that is used to perform encryption on secrets for a particular project
+    (tenant).
 
-    Instances are passed into third-party plugins rather than passing in
-    KekDatum instances directly. This provides a level of isolation from
-    these third party systems and Barbican's data model.
-    """
+    ``KEKMetaDTO`` objects are provided to cryptographic backends by Barbican
+    to allow plugins to persist metadata related to the project's (tenant's)
+    KEK.
+
+    For example, a plugin that interfaces with a Hardware Security Module (HSM)
+    may want to use a different encryption key for each tenant. Such a plugin
+    could use the ``KEKMetaDTO`` object to save the key ID used for that
+    tenant.  Barbican will persist the KEK metadata and ensure that it is
+    provided to the plugin every time a request from that same tenant is
+    processed.
+
+    .. attribute:: plugin_name
+
+        String attribute used by Barbican to identify the plugin that is bound
+        to the KEK metadata.  Plugins should not change this attribute.
+
+    .. attribute:: kek_label
+
+        String attribute used to label the project's (tenant's) KEK by the
+        plugin.  The value of this attribute should be meaningful to the
+        plugin.  Barbican does not use this value.
+
+    .. attribute:: algorithm
+
+        String attribute used to identify the encryption algorithm used by the
+        plugin. e.g. "AES", "3DES", etc.  This value should be meaningful to
+        the plugin.  Barbican does not use this value.
+
+    .. attribute:: mode
+
+        String attribute used to identify the algorithm mode used by the
+        plugin.  e.g. "CBC", "GCM", etc.  This value should be meaningful to
+        the plugin.  Barbican does not use this value.
+
+    .. attribute:: bit_length
+
+        Integer attribute used to identify the bit length of the KEK by the
+        plugin.  This value should be meaningful to the plugin.  Barbican does
+        not use this value.
+
+    .. attribute:: plugin_meta
+
+       String attribute used to persist any additional metadata that does not
+       fit in any other attribute.  The value of this attribute is defined by
+       the plugin.  It could be used to store external system references, such
+       as Key IDs in an HSM, URIs to an external service, or any other data
+       that the plugin deems necessary to persist.  Because this is just a
+       plain text field, a plug in may even choose to persist data such as key
+       value pairs in a JSON object.
+   """
 
     def __init__(self, kek_datum):
         """
         kek_datum is typically a barbican.model.models.EncryptedDatum instance.
+        Plugins should never have to create their own instance of this class.
         """
         self.kek_label = kek_datum.kek_label
         self.plugin_name = kek_datum.plugin_name
@@ -78,10 +127,30 @@ class KEKMetaDTO(object):
 
 class GenerateDTO(object):
     """
-    Data transfer object for secret generation.
+    Data Transfer Object used to pass all the necessary data for the plugin to
+    generate a secret on behalf of the user.
 
-    All data needed to determine the kinds of secrets to be generated
-    is passed in instances of this object.
+    .. attribute:: generation_type
+
+        String attribute used to identify the type of secret that should be
+        generated. This will be either ``"symmetric"`` or ``"asymmetric"``.
+
+    .. attribute:: algoritm
+
+        String attribute used to specify what type of algorithm the secret will
+        be used for.  e.g. ``"AES"`` for a ``"symmetric"`` type, or ``"RSA"``
+        for ``"asymmetric"``.
+
+    .. attribute:: mode
+
+        String attribute used to specify what algorithm mode the secret will be
+        used for.  e.g. ``"CBC"`` for ``"AES"`` algorithm.
+
+    .. attribute:: bit_length
+
+        Integer attribute used to specify the bit length of the secret.  For
+        example, this attribute could specify the key length for an encryption
+        key to be used in AES-CBC.
     """
 
     def __init__(self, algorithm, bit_length, mode, passphrase=None):
@@ -104,10 +173,20 @@ class ResponseDTO(object):
 
 class DecryptDTO(object):
     """
-    Data Transfer object for secret decryption.
+    Data Transfer Object used to pass all the necessary data for the plugin to
+    perform decryption of a secret.
 
-    All data needed to determine the kinds of secrets to be decrypted
-    is passed in instances of this object.
+    Currently, this DTO only contains the data produced by the plugin during
+    encryption, but in the future this DTO will contain more information, such
+    as a transport key for secret wrapping back to the client.
+
+    .. attribute:: encrypted
+
+        The data that was produced by the plugin during encryption.  For some
+        plugins this will be the actual bytes that need to be decrypted to
+        produce the secret.  In other implementations, this may just be a
+        reference to some external system that can produce the unencrypted
+        secret.
     """
 
     def __init__(self, encrypted):
@@ -116,10 +195,15 @@ class DecryptDTO(object):
 
 class EncryptDTO(object):
     """
-    Data Transfer object for secret encryption.
+    Data Transfer Object used to pass all the necessary data for the plugin to
+    perform encryption of a secret.
 
-    All data needed to determine the kinds of secrets to be encrypted
-    is passed in instances of this object.
+    Currently, this DTO only contains the raw bytes to be encrypted by the
+    plugin, but in the future this may contain more information.
+
+    .. attribute:: unencrypted
+
+        The secret data in Bytes to be encrypted by the plugin.
     """
 
     def __init__(self, unencrypted):
@@ -146,23 +230,67 @@ def indicate_bind_completed(kek_meta_dto, kek_datum):
 
 @six.add_metaclass(abc.ABCMeta)
 class CryptoPluginBase(object):
-    """Base class for Crypto plugins."""
+    """
+    Base class for all Crypto plugins.  Implementations of this abstract base
+    class will be used by Barbican to perform cryptographic operations on
+    secrets.
+
+    Barbican requests operations by invoking the methods on an instance of the
+    implementing class.  Barbican's plugin manager handles the life-cycle of
+    the Data Transfer Objects (DTOs) that are passed into these methods, and
+    persist the data that is assigned to these DTOs by the plugin."""
 
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
-        """Encrypt unencrypted data in the context of the provided tenant.
+        """
+        This method will be called by Barbican when requesting an encryption
+        opertation on a secret on behalf of a project (tenant).
 
-        :param encrypt_dto: data transfer object containing the byte data
-               to be encrypted.
-        :param kek_meta_dto: Key encryption key metadata to use for encryption.
-        :param keystone_id: keystone_id associated with the unencrypted data.
-        :returns: An object of type ResponseDTO containing encrypted data and
-        kek_meta_extended, the former the resultant cypher text, the latter
-        being optional per-secret metadata needed to decrypt (over and above
-        the per-tenant metadata managed outside of the plugins)
+        :param encrypt_dto: :class:`EncryptDTO` instance containing the raw
+            secret byte data to be encrypted.
+        :type encrypt_dto: :class:`EncryptDTO`
+        :param kek_meta_dto: :class:`KEKMetaDTO` instance containing
+            information about the project's (tenant's) Key Encryption Key (KEK)
+            to be used for encryption.  Plugins may assume that binding via
+            :meth:`bind_kek_metadata` has already taken place before this
+            instance is passed in.
+        :type kek_meta_dto: :class:`KEKMetaDTO`
+        :param keystone_id: Project (tenant) ID associated with the unencrypted
+            data.
+        :return: A tuple containing two items ``(ciphertext,
+            kek_metadata_extended)``.  In a typical plugin implementation, the
+            first item in the tuple should be the ciphertext byte data
+            resulting from the encryption of the secret data.  The second item
+            is an optional String object to be persisted alongside the
+            ciphertext.
 
+            Barbican guarantees that both the ``ciphertext`` and
+            ``kek_metadata_extended`` will be persisted and then given back to
+            the plugin when requesting a decryption operation.
+
+            It should be noted that Barbican does not require that the data
+            returned for the ``ciphertext`` be the actual encrypted
+            bytes of the secret data.  The only requirement is that the plugin
+            is able to use whatever data it chooses to return in ``ciphertext``
+            to produce the secret data during decryption.  This allows more
+            complex plugins to make decisions regarding the storage of the
+            encrypted data.  For example, the DogTag plugin stores the
+            encrypted bytes in an external system and uses Barbican to store an
+            identifier to the external system in ``ciphertext``.  During
+            decryption, Barbican gives the external identifier back to the
+            DogTag plugin, and then the plugin is able to use the identifier to
+            retrieve the secret data from the external storage system.
+
+            ``kek_metadata_extended`` takes the idea of Key Encryption Key
+            (KEK) metadata further by giving plugins the option to store
+            secret-level KEK metadata.  One example of using secret-level KEK
+            metadata would be plugins that want to use a unique KEK for every
+            secret that is encrypted.  Such a plugin could use
+            ``kek_metadata_extended`` to store the Key ID for the KEK used to
+            encrypt this particular secret.
+        :rtype: tuple
         """
         raise NotImplementedError  # pragma: no cover
 
@@ -333,7 +461,7 @@ class SimpleCryptoPlugin(CryptoPluginBase):
 
         public_key = private_key.publickey()
 
-        #Note (atiwari): key wrapping format PEM only supported
+        # Note (atiwari): key wrapping format PEM only supported
         if generate_dto.algorithm.lower() == 'rsa':
             public_key, private_key = self._wrap_key(public_key, private_key,
                                                      generate_dto.passphrase)
