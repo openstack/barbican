@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import mock
-from mock import patch
 
 from barbican import queue
 from barbican.queue import server
@@ -28,7 +27,7 @@ class WhenUsingBeginOrderTask(utils.BaseTestCase):
 
         self.tasks = server.Tasks()
 
-    @patch('barbican.tasks.resources.BeginOrder')
+    @mock.patch('barbican.tasks.resources.BeginOrder')
     def test_should_process_order(self, mock_begin_order):
         mock_begin_order.return_value.process.return_value = None
         self.tasks.process_order(context=None,
