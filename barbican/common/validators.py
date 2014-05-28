@@ -354,3 +354,50 @@ class ContainerValidator(ValidatorBase):
         for secret_ref in secret_refs:
                 if secret_ref.get('name') not in supported_names:
                     return True
+
+
+class NewTransportKeyValidator(ValidatorBase):
+    """Validate a new transport key."""
+
+    def __init__(self):
+        self.name = 'Transport Key'
+
+        self.schema = {
+            "type": "object",
+            "properties": {
+                "plugin_name": {"type": "string"},
+                "transport_key": {"type": "string"},
+            },
+        }
+
+    def validate(self, json_data, parent_schema=None):
+        schema_name = self._full_name(parent_schema)
+
+        try:
+            schema.validate(json_data, self.schema)
+        except schema.ValidationError as e:
+            raise exception.InvalidObject(schema=schema_name,
+                                          reason=e.message,
+                                          property=get_invalid_property(e))
+
+        # Validate/normalize 'name'.
+        plugin_name = json_data.get('plugin_name', '').strip()
+        if not plugin_name:
+            raise exception.InvalidObject(
+                schema=schema_name,
+                reason=_("plugin_name must be provided"),
+                property="plugin_name"
+            )
+        json_data['plugin_name'] = plugin_name
+
+        # Validate 'transport_key'.
+        transport_key = json_data.get('transport_key', '').strip()
+        if not transport_key:
+            raise exception.InvalidObject(
+                schema=schema_name,
+                reason=_("transport_key must be provided"),
+                property="transport_key"
+            )
+        json_data['transport_key'] = transport_key
+
+        return json_data

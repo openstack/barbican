@@ -40,6 +40,15 @@ def convert_container_to_href(keystone_id, container_id):
     return utils.hostname_for_refs(keystone_id=keystone_id, resource=resource)
 
 
+def convert_transport_key_to_href(keystone_id, transport_key_id):
+    """Convert the transport key IDs to a HATEOS-style href."""
+    if transport_key_id:
+        resource = 'transport_keys/' + transport_key_id
+    else:
+        resource = 'transport_keys/????'
+    return utils.hostname_for_refs(keystone_id=keystone_id, resource=resource)
+
+
 #TODO: (hgedikli) handle list of fields in here
 def convert_to_hrefs(keystone_id, fields):
     """Convert id's within a fields dict to HATEOS-style hrefs."""

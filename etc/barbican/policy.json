@@ -22,5 +22,9 @@
     "admin_or_user": "role:admin or project_id:%(project_id)s",
     "admin_or_creator": "role:admin or role:creator",
     "all_but_audit": "role:admin or role:observer or role:creator",
-    "all_users": "role:admin or role:observer or role:creator or role:audit"
+    "all_users": "role:admin or role:observer or role:creator or role:audit",
+    "transport_key:get": "rule:all_users",
+    "transport_key:delete": "rule:admin",
+    "transport_keys:get": "rule:all_users",
+    "transport_keys:post": "rule:admin"
 }

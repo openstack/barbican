@@ -800,3 +800,63 @@ class ContainerRepo(BaseRepo):
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
+
+
+class TransportKeyRepo(BaseRepo):
+    """
+    Repository for the TransportKey entity (that stores transport keys
+    for wrapping the secret data to/from a barbican client).
+    """
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "TransportKey"
+
+    def _do_create_instance(self):
+        return models.TransportKey()
+
+    def get_by_create_date(self, plugin_name=None,
+                           offset_arg=None, limit_arg=None,
+                           suppress_exception=False, session=None):
+        """
+        Returns a list of transport keys, ordered from latest created first.
+        The search accepts plugin_id as an optional parameter for the search.
+        """
+
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
+
+        session = self.get_session(session)
+
+        try:
+            query = session.query(models.TransportKey) \
+                           .order_by(models.TransportKey.created_at)
+            if plugin_name is not None:
+                query = session.query(models.TransportKey).\
+                    filter_by(deleted=False, plugin_name=plugin_name)
+            else:
+                query = query.filter_by(deleted=False)
+
+            start = offset
+            end = offset + limit
+            LOG.debug('Retrieving from {0} to {1}'.format(start, end))
+            total = query.count()
+            entities = query[start:end]
+            LOG.debug('Number of entities retrieved: {0} out of {1}'.format(
+                len(entities), total))
+
+        except sa_orm.exc.NoResultFound:
+            entities = None
+            total = 0
+            if not suppress_exception:
+                raise exception.NotFound("No {0}'s found".format(
+                    self._do_entity_name()))
+
+        return entities, offset, limit, total
+
+    def _do_build_get_query(self, entity_id, keystone_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.TransportKey).filter_by(id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
