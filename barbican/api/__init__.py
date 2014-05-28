@@ -16,10 +16,10 @@
 """
 API handler for Cloudkeep's Barbican
 """
-import pecan
-from webob import exc
 from oslo.config import cfg
-from pkgutil import simplegeneric
+import pecan
+import pkgutil
+from webob import exc
 
 from barbican.common import exception
 from barbican.common import utils
@@ -167,7 +167,7 @@ def generate_safe_exception_message(operation_name, excep):
     return status, message
 
 
-@simplegeneric
+@pkgutil.simplegeneric
 def get_items(obj):
     """This is used to get items from either
        a list or a dictionary. While false

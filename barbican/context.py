@@ -16,13 +16,12 @@
 #    under the License.
 
 from barbican.common import utils
-from barbican.openstack.common import policy
 from barbican.openstack.common import local
+from barbican.openstack.common import policy
 
 
 class RequestContext(object):
-    """
-    Stores information about the security context under which the user
+    """Stores information about the security context under which the user
     accesses the system, as well as additional request information.
     """
 
