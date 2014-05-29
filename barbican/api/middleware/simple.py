@@ -22,14 +22,14 @@ purposes only.
 
 from oslo.config import cfg
 
-from barbican.api.middleware import Middleware
+from barbican.api import middleware
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
 CONF = cfg.CONF
 
 
-class SimpleFilter(Middleware):
+class SimpleFilter(middleware.Middleware):
 
     def __init__(self, app):
         super(SimpleFilter, self).__init__(app)
