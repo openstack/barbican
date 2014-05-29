@@ -192,7 +192,7 @@ class NewSecretValidator(ValidatorBase):
         expiration_raw = json_data.get('expiration', None)
         if expiration_raw and expiration_raw.strip():
             try:
-                expiration_tz = timeutils.parse_isotime(expiration_raw)
+                expiration_tz = timeutils.parse_isotime(expiration_raw.strip())
                 expiration = timeutils.normalize_time(expiration_tz)
             except ValueError:
                 LOG.exception("Problem parsing expiration date")
