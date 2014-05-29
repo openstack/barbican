@@ -29,8 +29,12 @@ except ImportError:
 
 from oslo.config import cfg
 
-from barbican.api.controllers import (performance, orders, secrets, containers,
-                                      transportkeys, versions)
+from barbican.api.controllers import containers
+from barbican.api.controllers import orders
+from barbican.api.controllers import performance
+from barbican.api.controllers import secrets
+from barbican.api.controllers import transportkeys
+from barbican.api.controllers import versions
 from barbican.common import config
 from barbican.crypto import extension_manager as ext
 from barbican.openstack.common import log
@@ -81,7 +85,7 @@ class PecanAPI(pecan.Pecan):
 
 
 def create_main_app(global_config, **local_conf):
-    """uWSGI factory method for the Barbican-API application"""
+    """uWSGI factory method for the Barbican-API application."""
 
     # Configure oslo logging and configuration services.
     config.parse_args()

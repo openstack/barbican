@@ -18,14 +18,14 @@ Barbican middleware modules.
 """
 import sys
 import webob.dec
+
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
 
 
 class Middleware(object):
-    """
-    Base WSGI middleware wrapper. These classes require an application to be
+    """Base WSGI middleware wrapper. These classes require an application to be
     initialized that will be called next.  By default the middleware will
     simply call its wrapped app, or you can override __call__ to customize its
     behavior.
@@ -41,8 +41,7 @@ class Middleware(object):
         return filter
 
     def process_request(self, req):
-        """
-        Called on each request.
+        """Called on each request.
 
         If this returns None, the next application down the stack will be
         executed. If it returns a response then that response will be returned
@@ -67,8 +66,7 @@ class Middleware(object):
 
 # Brought over from an OpenStack project
 class Debug(Middleware):
-    """
-    Helper class that can be inserted into any WSGI application chain
+    """Helper class that can be inserted into any WSGI application chain
     to get information about the request and response.
     """
 
@@ -91,8 +89,7 @@ class Debug(Middleware):
 
     @staticmethod
     def print_generator(app_iter):
-        """
-        Iterator that prints the contents of a wrapper string iterator
+        """Iterator that prints the contents of a wrapper string iterator
         when iterated.
         """
         LOG.debug(("*" * 40) + " BODY")

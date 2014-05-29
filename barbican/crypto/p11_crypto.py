@@ -1,7 +1,19 @@
+#  Licensed under the Apache License, Version 2.0 (the "License"); you may
+#  not use this file except in compliance with the License. You may obtain
+#  a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#  License for the specific language governing permissions and limitations
+#  under the License.
+
 try:
     import PyKCS11
 except ImportError:
-    PyKCS11 = {}  # TODO: remove testing workaround
+    PyKCS11 = {}  # TODO(reaperhulk): remove testing workaround
 
 
 import base64
@@ -11,8 +23,8 @@ from oslo.config import cfg
 from barbican.common import exception
 from barbican.crypto import plugin
 
-from barbican.openstack.common import jsonutils as json
 from barbican.openstack.common.gettextutils import _
+from barbican.openstack.common import jsonutils as json
 
 
 CONF = cfg.CONF
@@ -40,8 +52,7 @@ class P11CryptoPluginException(exception.BarbicanException):
 
 
 class P11CryptoPlugin(plugin.CryptoPluginBase):
-    """
-    PKCS11 supporting implementation of the crypto plugin.
+    """PKCS11 supporting implementation of the crypto plugin.
     Generates a key per tenant and encrypts using AES-256-GCM.
     This implementation currently relies on an unreleased fork of PyKCS11.
     """
@@ -95,7 +106,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         return gcm
 
     def _generate_kek(self, kek_label):
-        # TODO: review template to ensure it's what we want
+        # TODO(reaperhulk): review template to ensure it's what we want
         template = (
             (PyKCS11.CKA_CLASS, PyKCS11.CKO_SECRET_KEY),
             (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_AES),

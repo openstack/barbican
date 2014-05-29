@@ -24,8 +24,8 @@ import os
 import testtools
 
 import mock
-from webob import exc
 from oslo.config import cfg
+from webob import exc
 
 from barbican.api.controllers import orders
 from barbican.api.controllers import secrets

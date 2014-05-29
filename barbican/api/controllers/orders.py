@@ -13,14 +13,16 @@
 import pecan
 
 from barbican import api
-from barbican.api.controllers import hrefs, handle_exceptions, handle_rbac
-from barbican.openstack.common import gettextutils as u
+from barbican.api.controllers import handle_exceptions
+from barbican.api.controllers import handle_rbac
+from barbican.api.controllers import hrefs
 from barbican.common import exception
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
 from barbican.model import models
 from barbican.model import repositories as repo
+from barbican.openstack.common import gettextutils as u
 from barbican.queue import client as async_client
 
 LOG = utils.getLogger(__name__)

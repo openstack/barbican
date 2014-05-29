@@ -13,14 +13,16 @@
 import pecan
 
 from barbican import api
-from barbican.api.controllers import hrefs, handle_exceptions, handle_rbac
-from barbican.openstack.common import gettextutils as u
+from barbican.api.controllers import handle_exceptions
+from barbican.api.controllers import handle_rbac
+from barbican.api.controllers import hrefs
 from barbican.common import exception
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
 from barbican.model import models
 from barbican.model import repositories as repo
+from barbican.openstack.common import gettextutils as u
 
 LOG = utils.getLogger(__name__)
 
@@ -76,7 +78,7 @@ class ContainerController(object):
 
 
 class ContainersController(object):
-    """ Handles Container creation requests. """
+    """Handles Container creation requests."""
 
     def __init__(self, tenant_repo=None, container_repo=None,
                  secret_repo=None):
@@ -135,7 +137,7 @@ class ContainersController(object):
         new_container = models.Container(data)
         new_container.tenant_id = tenant.id
 
-        #TODO: (hgedikli) performance optimizations
+        #TODO(hgedikli): performance optimizations
         for secret_ref in new_container.container_secrets:
             secret = self.secret_repo.get(entity_id=secret_ref.secret_id,
                                           keystone_id=keystone_id,

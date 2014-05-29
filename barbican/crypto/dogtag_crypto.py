@@ -24,9 +24,9 @@ import pki.cryptoutil as cryptoutil
 import pki.key as key
 from pki.kraclient import KRAClient
 
+from barbican.common import exception
 from barbican.crypto import plugin
 from barbican.openstack.common.gettextutils import _
-from barbican.common import exception
 
 CONF = cfg.CONF
 
@@ -62,12 +62,12 @@ class DogtagPluginAlgorithmException(exception.BarbicanException):
 
 
 class DogtagCryptoPlugin(plugin.CryptoPluginBase):
-    """Dogtag implementation of the crypto plugin with DRM as the backend"""
+    """Dogtag implementation of the crypto plugin with DRM as the backend."""
 
     TRANSPORT_NICK = "DRM transport cert"
 
     def __init__(self, conf=CONF):
-        """Constructor - create the keyclient"""
+        """Constructor - create the keyclient."""
         pem_path = conf.dogtag_crypto_plugin.pem_path
         if pem_path is None:
             raise ValueError(_("pem_path is required"))
@@ -124,8 +124,7 @@ class DogtagCryptoPlugin(plugin.CryptoPluginBase):
                 DogtagCryptoPlugin.TRANSPORT_NICK)
 
     def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
-        """
-        Store a secret in the DRM
+        """Store a secret in the DRM
 
         This will likely require another parameter which includes the wrapped
         session key to be passed.  Until that is added, we will call
@@ -147,8 +146,7 @@ class DogtagCryptoPlugin(plugin.CryptoPluginBase):
 
     def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
                 keystone_id):
-        """
-        Retrieve a secret from the DRM
+        """Retrieve a secret from the DRM
 
         The encrypted parameter simply contains the plain text key_id by which
         the secret is known to the DRM.  The remaining parameters are not
@@ -173,14 +171,11 @@ class DogtagCryptoPlugin(plugin.CryptoPluginBase):
         return key.data
 
     def bind_kek_metadata(self, kek_meta_dto):
-        """
-        This function is not used by this plugin
-        """
+        """This function is not used by this plugin."""
         return kek_meta_dto
 
     def generate_symmetric(self, generate_dto, kek_meta_dto, keystone_id):
-        """
-        Generate a symmetric key
+        """Generate a symmetric key
 
         This calls generate_symmetric_key() on the DRM passing in the
         algorithm, bit_length and id (used as the client_key_id) from
@@ -207,16 +202,12 @@ class DogtagCryptoPlugin(plugin.CryptoPluginBase):
         return plugin.ResponseDTO(response.get_key_id(), None)
 
     def generate_asymmetric(self, generate_dto, kek_meta_dto, keystone_id):
-        """
-        Generate a asymmetric key
-        """
+        """Generate an asymmetric key."""
         raise NotImplementedError("Feature not implemented for dogtag crypto")
 
     def supports(self, type_enum, algorithm=None, bit_length=None,
                  mode=None):
-        """
-        Specifies what operations the plugin supports
-        """
+        """Specifies what operations the plugin supports."""
         if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:
             return True
         elif type_enum == plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION:
@@ -229,9 +220,7 @@ class DogtagCryptoPlugin(plugin.CryptoPluginBase):
 
     @staticmethod
     def _map_algorithm(algorithm):
-        """
-            Map Barbican algorithms to Dogtag plugin algorithms
-        """
+        """Map Barbican algorithms to Dogtag plugin algorithms."""
         if algorithm == "aes":
             return key.KeyClient.AES_ALGORITHM
         elif algorithm == "des":
@@ -242,8 +231,7 @@ class DogtagCryptoPlugin(plugin.CryptoPluginBase):
             return None
 
     def _is_algorithm_supported(self, algorithm, bit_length=None):
-        """
-        check if algorithm and bit length are supported
+        """Check if algorithm and bit length are supported
 
         For now, we will just check the algorithm. When dogtag adds a
         call to check the bit length per algorithm, we can modify to

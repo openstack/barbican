@@ -17,8 +17,8 @@
 Barbican exception subclasses
 """
 
-
 import urlparse
+
 from barbican.openstack.common.gettextutils import _
 
 _FATAL_EXCEPTION_FORMAT_ERRORS = False
@@ -30,8 +30,7 @@ class RedirectException(Exception):
 
 
 class BarbicanException(Exception):
-    """
-    Base Barbican Exception
+    """Base Barbican Exception
 
     To correctly use this class, inherit from it and define
     a 'message' property. That message will get printf'd

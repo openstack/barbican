@@ -21,22 +21,22 @@ quite intense for sqlalchemy, and maybe could be simplified.
 """
 
 
-import time
 import logging
+import time
 import uuid
 
 from oslo.config import cfg
 
 import sqlalchemy
-import sqlalchemy.orm as sa_orm
 from sqlalchemy import or_
+import sqlalchemy.orm as sa_orm
 
 from barbican.common import exception
-from barbican.model import models
-from barbican.model.migration import commands
-from barbican.openstack.common import timeutils
-from barbican.openstack.common.gettextutils import _
 from barbican.common import utils
+from barbican.model.migration import commands
+from barbican.model import models
+from barbican.openstack.common.gettextutils import _
+from barbican.openstack.common import timeutils
 
 LOG = utils.getLogger(__name__)
 
@@ -68,9 +68,7 @@ _IDLE_TIMEOUT = None
 
 
 def setup_db_env():
-    """
-    Setup configuration for database
-    """
+    """Setup configuration for database."""
     global sa_logger, _IDLE_TIMEOUT, _MAX_RETRIES, _RETRY_INTERVAL, _CONNECTION
 
     _IDLE_TIMEOUT = CONF.sql_idle_timeout
@@ -84,8 +82,7 @@ def setup_db_env():
 
 
 def configure_db():
-    """
-    Establish the database, create an engine if needed, and
+    """Establish the database, create an engine if needed, and
     register the models.
     """
     setup_db_env()
@@ -93,7 +90,7 @@ def configure_db():
 
 
 def get_session(autocommit=True, expire_on_commit=False):
-    """Helper method to grab session"""
+    """Helper method to grab session."""
     global _MAKER
     if not _MAKER:
         get_engine()
@@ -113,7 +110,7 @@ def get_engine():
         if not _CONNECTION:
             raise exception.BarbicanException('No _CONNECTION configured')
 
-#TODO:        connection_dict = sqlalchemy.engine.url.make_url(_CONNECTION)
+    #TODO(jfwood) connection_dict = sqlalchemy.engine.url.make_url(_CONNECTION)
 
         engine_args = {
             'pool_recycle': _IDLE_TIMEOUT,
@@ -125,8 +122,9 @@ def get_engine():
                                                               engine_args))
             _ENGINE = sqlalchemy.create_engine(_CONNECTION, **engine_args)
 
-#TODO:          if 'mysql' in connection_dict.drivername:
-#TODO:          sqlalchemy.event.listen(_ENGINE, 'checkout', ping_listener)
+        #TODO(jfwood): if 'mysql' in connection_dict.drivername:
+        #TODO(jfwood): sqlalchemy.event.listen(_ENGINE, 'checkout',
+        #TODO(jfwood):                         ping_listener)
 
             _ENGINE.connect = wrap_db_error(_ENGINE.connect)
             _ENGINE.connect()
@@ -242,8 +240,7 @@ def clean_paging_values(offset_arg=0, limit_arg=CONF.default_limit_paging):
 
 
 class BaseRepo(object):
-    """
-    Base repository for the barbican entities.
+    """Base repository for the barbican entities.
 
     This class provides template methods that allow sub-classes to hook
     specific functionality as needed.
@@ -318,8 +315,7 @@ class BaseRepo(object):
         return entity
 
     def save(self, entity):
-        """
-        Saves the state of the entity.
+        """Saves the state of the entity.
 
         :raises NotFound if entity does not exist.
         """
@@ -342,15 +338,14 @@ class BaseRepo(object):
                                          % entity.id)
 
     def update(self, entity_id, values, purge_props=False):
-        """
-        Set the given properties on an entity and update it.
+        """Set the given properties on an entity and update it.
 
         :raises NotFound if entity does not exist.
         """
         return self._update(entity_id, values, purge_props)
 
     def delete_entity_by_id(self, entity_id, keystone_id):
-        """Remove the entity by its ID"""
+        """Remove the entity by its ID."""
 
         session = get_session()
         with session.begin():
@@ -370,8 +365,7 @@ class BaseRepo(object):
         return "Entity"
 
     def _do_create_instance(self):
-        """
-        Sub-class hook: return new entity instance (in Python, not in db).
+        """Sub-class hook: return new entity instance (in Python, not in db).
         """
         return None
 
@@ -380,15 +374,13 @@ class BaseRepo(object):
         return None
 
     def _do_convert_values(self, values):
-        """
-        Sub-class hook: convert text-based values to
-        target types for the database.
+        """Sub-class hook: convert text-based values to target types for the
+        database.
         """
         pass
 
     def _do_validate(self, values):
-        """
-        Sub-class hook: validate values.
+        """Sub-class hook: validate values.
 
         Validates the incoming data and raises a Invalid exception
         if anything is out of order.
@@ -397,7 +389,7 @@ class BaseRepo(object):
         """
         status = values.get('status', None)
         if not status:
-            #TODO: I18n this!
+            #TODO(jfwood): I18n this!
             msg = "{0} status is required.".format(self._do_entity_name())
             raise exception.Invalid(msg)
 
@@ -409,8 +401,7 @@ class BaseRepo(object):
         return values
 
     def _update(self, entity_id, values, purge_props=False):
-        """
-        Used internally by update()
+        """Used internally by update()
 
         :param values: A dict of attributes to set
         :param entity_id: If None, create the entity, otherwise,
@@ -500,8 +491,7 @@ class SecretRepo(BaseRepo):
     def get_by_create_date(self, keystone_id, offset_arg=None, limit_arg=None,
                            name=None, alg=None, mode=None, bits=0,
                            suppress_exception=False, session=None):
-        """
-        Returns a list of secrets, ordered by the date they were created at
+        """Returns a list of secrets, ordered by the date they were created at
         and paged based on the offset and limit fields. The keystone_id is
         external-to-Barbican value assigned to the tenant by Keystone.
         """
@@ -564,7 +554,7 @@ class SecretRepo(BaseRepo):
         utcnow = timeutils.utcnow()
 
         # Note: Must use '== None' below, not 'is None'.
-        # TODO: Performance? Is the many-to-many join needed?
+        # TODO(jfwood): Performance? Is the many-to-many join needed?
         return session.query(models.Secret).filter_by(id=entity_id) \
                       .filter_by(deleted=False) \
                       .filter(or_(models.Secret.expiration == None,
@@ -579,8 +569,7 @@ class SecretRepo(BaseRepo):
 
 
 class EncryptedDatumRepo(BaseRepo):
-    """
-    Repository for the EncryptedDatum entity (that stores encrypted
+    """Repository for the EncryptedDatum entity (that stores encrypted
     information on behalf of a Secret).
     """
 
@@ -601,8 +590,7 @@ class EncryptedDatumRepo(BaseRepo):
 
 
 class KEKDatumRepo(BaseRepo):
-    """
-    Repository for the KEKDatum entity (that stores key encryption key (KEK)
+    """Repository for the KEKDatum entity (that stores key encryption key (KEK)
     metadata used by crypto plugins to encrypt/decrypt secrets).
     """
 
@@ -610,13 +598,13 @@ class KEKDatumRepo(BaseRepo):
                                  plugin_name,
                                  suppress_exception=False,
                                  session=None):
-        """ Find or create a KEK datum instance. """
+        """Find or create a KEK datum instance."""
 
         kek_datum = None
 
         session = self.get_session(session)
 
-        # TODO: Reverse this...attempt insert first, then get on fail.
+        # TODO(jfwood): Reverse this...attempt insert first, then get on fail.
         try:
             query = session.query(models.KEKDatum) \
                            .filter_by(tenant_id=tenant.id) \
@@ -679,8 +667,7 @@ class OrderRepo(BaseRepo):
 
     def get_by_create_date(self, keystone_id, offset_arg=None, limit_arg=None,
                            suppress_exception=False, session=None):
-        """
-        Returns a list of orders, ordered by the date they were created at
+        """Returns a list of orders, ordered by the date they were created at
         and paged based on the offset and limit fields.
 
         :param keystone_id: The keystone id for the tenant.
@@ -747,8 +734,7 @@ class ContainerRepo(BaseRepo):
 
     def get_by_create_date(self, keystone_id, offset_arg=None, limit_arg=None,
                            suppress_exception=False, session=None):
-        """
-        Returns a list of containers, ordered by the date they were
+        """Returns a list of containers, ordered by the date they were
         created at and paged based on the offset and limit fields. The
         keystone_id is external-to-Barbican value assigned to the tenant
         by Keystone.
@@ -803,8 +789,7 @@ class ContainerRepo(BaseRepo):
 
 
 class TransportKeyRepo(BaseRepo):
-    """
-    Repository for the TransportKey entity (that stores transport keys
+    """Repository for the TransportKey entity (that stores transport keys
     for wrapping the secret data to/from a barbican client).
     """
 
@@ -818,8 +803,7 @@ class TransportKeyRepo(BaseRepo):
     def get_by_create_date(self, plugin_name=None,
                            offset_arg=None, limit_arg=None,
                            suppress_exception=False, session=None):
-        """
-        Returns a list of transport keys, ordered from latest created first.
+        """Returns a list of transport keys, ordered from latest created first.
         The search accepts plugin_id as an optional parameter for the search.
         """
 

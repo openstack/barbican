@@ -19,12 +19,12 @@ import tempfile
 import testtools
 
 try:
-    from barbican.crypto import plugin as plugin_import
     from barbican.crypto.dogtag_crypto import DogtagCryptoPlugin
     from barbican.crypto.dogtag_crypto import DogtagPluginAlgorithmException
+    from barbican.crypto import plugin as plugin_import
     from barbican.model import models
     imports_ok = True
-except:
+except ImportError:
     # dogtag imports probably not available
     imports_ok = False
 

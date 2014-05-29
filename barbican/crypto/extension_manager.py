@@ -94,8 +94,7 @@ class CryptoPayloadDecodingError(exception.BarbicanException):
 
 
 class CryptoSupportedPluginNotFound(exception.BarbicanException):
-    """
-    Raised when no plugins are found that support the requested
+    """Raised when no plugins are found that support the requested
     operation.
     """
     message = "Crypto plugin not found for requested operation."
@@ -389,7 +388,8 @@ class CryptoExtensionManager(named.NamedExtensionManager):
 
     def _determine_type(self, algorithm):
         """Determines the type (symmetric and asymmetric for now)
-        based on algorithm"""
+        based on algorithm
+        """
         symmetric_algs = plugin_mod.PluginSupportTypes.SYMMETRIC_ALGORITHMS
         asymmetric_algs = plugin_mod.PluginSupportTypes.ASYMMETRIC_ALGORITHMS
         if algorithm.lower() in symmetric_algs:
@@ -405,7 +405,8 @@ class CryptoExtensionManager(named.NamedExtensionManager):
                                  mode=None):
         """Determines the generation type and encrypting plug-in
             which supports the generation of secret based on
-            generation type"""
+            generation type
+        """
         if len(self.extensions) < 1:
             raise CryptoPluginNotFound()
 

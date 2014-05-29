@@ -441,9 +441,9 @@ class Container(BASE, ModelBase):
                 for secret_ref in parsed_request.get('secret_refs'):
                     container_secret = ContainerSecret()
                     container_secret.name = secret_ref.get('name')
-                    #TODO: (hgedikli) move this into a common location
-                    #TODO: (hgedikli) validate provided url
-                    #TODO: (hgedikli) parse out secret_id with regex
+                    #TODO(hgedikli) move this into a common location
+                    #TODO(hgedikli) validate provided url
+                    #TODO(hgedikli) parse out secret_id with regex
                     secret_id = secret_ref.get('secret_ref')
                     if secret_id.endswith('/'):
                         secret_id = secret_id.rsplit('/', 2)[1]
@@ -473,8 +473,7 @@ class Container(BASE, ModelBase):
 
 
 class TransportKey(BASE, ModelBase):
-    """
-    Represents the transport key used for wrapping secrets in transit
+    """Represents the transport key used for wrapping secrets in transit
     to/from clients when storing/retrieving secrets.
     """
 
