@@ -26,7 +26,7 @@ from oslo.config import cfg
 import six
 
 from barbican.common import utils
-from barbican.openstack.common.gettextutils import _
+from barbican.openstack.common import gettextutils as u
 
 LOG = utils.getLogger(__name__)
 
@@ -37,7 +37,8 @@ simple_crypto_plugin_group = cfg.OptGroup(name='simple_crypto_plugin',
 simple_crypto_plugin_opts = [
     cfg.StrOpt('kek',
                default=b'sixteen_byte_key',
-               help=_('Key encryption key to be used by Simple Crypto Plugin'))
+               help=u._('Key encryption key to be used by Simple Crypto '
+                        'Plugin'))
 ]
 CONF.register_group(simple_crypto_plugin_group)
 CONF.register_opts(simple_crypto_plugin_opts, group=simple_crypto_plugin_group)

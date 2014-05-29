@@ -22,7 +22,7 @@ import six
 from barbican.common import exception
 from barbican.common import utils
 from barbican.crypto import mime_types
-from barbican.openstack.common.gettextutils import _
+from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import timeutils
 
 
@@ -74,8 +74,8 @@ class ValidatorBase(object):
         """
         schema_name = self.name
         if parent_schema:
-            schema_name = _("{0}' within '{1}").format(self.name,
-                                                       parent_schema)
+            schema_name = u._("{0}' within '{1}").format(self.name,
+                                                         parent_schema)
         return schema_name
 
 
@@ -128,8 +128,9 @@ class NewSecretValidator(ValidatorBase):
             utcnow = timeutils.utcnow()
             if expiration <= utcnow:
                 raise exception.InvalidObject(schema=schema_name,
-                                              reason=_("'expiration' is "
-                                                       "before current time"),
+                                              reason=u._("'expiration' is "
+                                                         "before current "
+                                                         "time"),
                                               property="expiration")
         json_data['expiration'] = expiration
 
@@ -139,16 +140,17 @@ class NewSecretValidator(ValidatorBase):
             if content_type is None:
                 raise exception.InvalidObject(
                     schema=schema_name,
-                    reason=_("If 'payload' is supplied, 'payload_content_type'"
-                             " must also be supplied."),
+                    reason=u._("If 'payload' is supplied, "
+                               "'payload_content_type' must "
+                               "also be supplied."),
                     property="payload_content_type"
                 )
 
             if content_type.lower() not in mime_types.SUPPORTED:
                 raise exception.InvalidObject(
                     schema=schema_name,
-                    reason=_("payload_content_type is not one of "
-                             "{0}").format(mime_types.SUPPORTED),
+                    reason=u._("payload_content_type is not one of "
+                               "{0}").format(mime_types.SUPPORTED),
                     property="payload_content_type"
                 )
 
@@ -157,9 +159,9 @@ class NewSecretValidator(ValidatorBase):
                     content_encoding is None:
                 raise exception.InvalidObject(
                     schema=schema_name,
-                    reason=_("payload_content_encoding must be specified "
-                             "when payload_content_type is application/"
-                             "octet-stream."),
+                    reason=u._("payload_content_encoding must be specified "
+                               "when payload_content_type is application/"
+                               "octet-stream."),
                     property="payload_content_encoding"
                 )
 
@@ -167,8 +169,9 @@ class NewSecretValidator(ValidatorBase):
                     content_encoding is not None:
                 raise exception.InvalidObject(
                     schema=schema_name,
-                    reason=_("payload_content_encoding must not be specified "
-                             "when payload_content_type is text/plain"),
+                    reason=u._("payload_content_encoding must not be "
+                               "specified when payload_content_type is "
+                               "text/plain"),
                     property="payload_content_encoding"
                 )
 
@@ -179,9 +182,9 @@ class NewSecretValidator(ValidatorBase):
             payload = payload.strip()
             if not payload:
                 raise exception.InvalidObject(schema=schema_name,
-                                              reason=_("If 'payload' "
-                                                       "specified, must be "
-                                                       "non empty"),
+                                              reason=u._("If 'payload' "
+                                                         "specified, must "
+                                                         "be non empty"),
                                               property="payload")
 
             json_data['payload'] = payload
@@ -189,8 +192,8 @@ class NewSecretValidator(ValidatorBase):
                 parent_schema is None:
                 raise exception.InvalidObject(
                     schema=schema_name,
-                    reason=_("payload must be provided "
-                             "when payload_content_type is specified"),
+                    reason=u._("payload must be provided "
+                               "when payload_content_type is specified"),
                     property="payload"
                 )
 
@@ -207,8 +210,8 @@ class NewSecretValidator(ValidatorBase):
             except ValueError:
                 LOG.exception("Problem parsing expiration date")
                 raise exception.InvalidObject(schema=schema_name,
-                                              reason=_("Invalid date "
-                                                       "for 'expiration'"),
+                                              reason=u._("Invalid date "
+                                                         "for 'expiration'"),
                                               property="expiration")
 
         return expiration
@@ -238,17 +241,17 @@ class NewOrderValidator(ValidatorBase):
         secret = json_data.get('secret')
         if secret is None:
             raise exception.InvalidObject(schema=schema_name,
-                                          reason=_("'secret' attributes "
-                                                   "are required"),
+                                          reason=u._("'secret' attributes "
+                                                     "are required"),
                                           property="secret")
 
         # If secret group is provided, validate it now.
         self.secret_validator.validate(secret, parent_schema=self.name)
         if 'payload' in secret:
             raise exception.InvalidObject(schema=schema_name,
-                                          reason=_("'payload' not "
-                                                   "allowed for secret "
-                                                   "generation"),
+                                          reason=u._("'payload' not "
+                                                     "allowed for secret "
+                                                     "generation"),
                                           property="secret")
 
         # Validation secret generation related fields.
@@ -257,35 +260,36 @@ class NewOrderValidator(ValidatorBase):
         if secret.get('payload_content_type') != 'application/octet-stream':
             raise exception.UnsupportedField(field='payload_content_type',
                                              schema=schema_name,
-                                             reason=_("Only 'application/oc"
-                                                      "tet-stream' supported"))
+                                             reason=u._("Only 'application/oc "
+                                                        "tet-stream' "
+                                                        "supported"))
 
         if secret.get('mode', '').lower() != 'cbc':
             raise exception.UnsupportedField(field="mode",
                                              schema=schema_name,
-                                             reason=_("Only 'cbc' "
-                                                      "supported"))
+                                             reason=u._("Only 'cbc' "
+                                                        "supported"))
 
         if secret.get('algorithm', '').lower() != 'aes':
             raise exception.UnsupportedField(field="algorithm",
                                              schema=schema_name,
-                                             reason=_("Only 'aes' "
-                                                      "supported"))
+                                             reason=u._("Only 'aes' "
+                                                        "supported"))
 
         # TODO(reaperhulk): Future API change will move from bit to byte_length
         bit_length = int(secret.get('bit_length', 0))
         if bit_length <= 0:
             raise exception.UnsupportedField(field="bit_length",
                                              schema=schema_name,
-                                             reason=_("Must have non-zero "
-                                                      "positive bit_length "
-                                                      "to generate secret"))
+                                             reason=u._("Must have non-zero "
+                                                        "positive bit_length "
+                                                        "to generate secret"))
         if bit_length % 8 != 0:
             raise exception.UnsupportedField(field="bit_length",
                                              schema=schema_name,
-                                             reason=_("Must be a positive "
-                                                      "integer that is a "
-                                                      "multiple of 8"))
+                                             reason=u._("Must be a positive "
+                                                        "integer that is a "
+                                                        "multiple of 8"))
 
         return json_data
 
@@ -337,8 +341,8 @@ class ContainerValidator(ValidatorBase):
             if len(set(secret_refs_names)) != len(secret_refs):
                 raise exception.\
                     InvalidObject(schema=schema_name,
-                                  reason=_("Duplicate reference names"
-                                           " are not allowed"),
+                                  reason=u._("Duplicate reference names"
+                                             " are not allowed"),
                                   property="secret_refs")
 
             if container_type == 'rsa':
@@ -351,11 +355,11 @@ class ContainerValidator(ValidatorBase):
                         secret_refs) > 3:
                     raise exception.\
                         InvalidObject(schema=schema_name,
-                                      reason=_("only 'private_key',"
-                                               " 'public_key'"
-                                               " and 'private_key_passphrase'"
-                                               " reference names are allowed"
-                                               " for RSA type"),
+                                      reason=u._("only 'private_key',"
+                                                 " 'public_key' and"
+                                                 " 'private_key_passphrase'"
+                                                 " reference names are allowed"
+                                                 " for RSA type"),
                                       property="secret_refs")
 
         return json_data
@@ -395,7 +399,7 @@ class NewTransportKeyValidator(ValidatorBase):
         if not plugin_name:
             raise exception.InvalidObject(
                 schema=schema_name,
-                reason=_("plugin_name must be provided"),
+                reason=u._("plugin_name must be provided"),
                 property="plugin_name"
             )
         json_data['plugin_name'] = plugin_name
@@ -405,7 +409,7 @@ class NewTransportKeyValidator(ValidatorBase):
         if not transport_key:
             raise exception.InvalidObject(
                 schema=schema_name,
-                reason=_("transport_key must be provided"),
+                reason=u._("transport_key must be provided"),
                 property="transport_key"
             )
         json_data['transport_key'] = transport_key

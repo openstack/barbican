@@ -27,9 +27,9 @@ import pecan
 import testtools
 import webtest
 
+from barbican import api
 from barbican.api import app
 from barbican.api import controllers
-from barbican.api import strip_whitespace
 from barbican.common import exception as excep
 from barbican.common import utils
 from barbican.common import validators
@@ -1367,7 +1367,7 @@ class TestingJsonSanitization(testtools.TestCase):
                         .startswith(' '), "whitespace should be there")
         self.assertTrue(json_without_array['payload_content_type']
                         .endswith(' '), "whitespace should be there")
-        strip_whitespace(json_without_array)
+        api.strip_whitespace(json_without_array)
         self.assertFalse(json_without_array['payload_content_type']
                          .startswith(' '), "whitespace should be gone")
         self.assertFalse(json_without_array['payload_content_type']
@@ -1386,7 +1386,7 @@ class TestingJsonSanitization(testtools.TestCase):
                         .startswith(' '), "whitespace should be there")
         self.assertTrue(json_with_array['an-array'][1]['name']
                         .endswith(' '), "whitespace should be there")
-        strip_whitespace(json_with_array)
+        api.strip_whitespace(json_with_array)
         self.assertFalse(json_with_array['an-array'][0]['name']
                          .startswith(' '), "whitespace should be gone")
         self.assertFalse(json_with_array['an-array'][1]['name']

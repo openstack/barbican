@@ -26,7 +26,7 @@ from pki.kraclient import KRAClient
 
 from barbican.common import exception
 from barbican.crypto import plugin
-from barbican.openstack.common.gettextutils import _
+from barbican.openstack.common import gettextutils as u
 
 CONF = cfg.CONF
 
@@ -35,22 +35,22 @@ dogtag_crypto_plugin_group = cfg.OptGroup(name='dogtag_crypto_plugin',
 dogtag_crypto_plugin_opts = [
     cfg.StrOpt('pem_path',
                default=None,
-               help=_('Path to PEM file for authentication')),
+               help=u._('Path to PEM file for authentication')),
     cfg.StrOpt('pem_password',
                default=None,
-               help=_('Password to unlock PEM file')),
+               help=u._('Password to unlock PEM file')),
     cfg.StrOpt('drm_host',
                default="localhost",
-               help=_('Hostname for the DRM')),
+               help=u._('Hostname for the DRM')),
     cfg.StrOpt('drm_port',
                default="8443",
-               help=_('Port for the DRM')),
+               help=u._('Port for the DRM')),
     cfg.StrOpt('nss_db_path',
                default=None,
-               help=_('Path to the NSS certificate database')),
+               help=u._('Path to the NSS certificate database')),
     cfg.StrOpt('nss_password',
                default=None,
-               help=_('Password for NSS certificate database'))
+               help=u._('Password for NSS certificate database'))
 ]
 
 CONF.register_group(dogtag_crypto_plugin_group)
@@ -58,7 +58,7 @@ CONF.register_opts(dogtag_crypto_plugin_opts, group=dogtag_crypto_plugin_group)
 
 
 class DogtagPluginAlgorithmException(exception.BarbicanException):
-    message = _("Invalid algorithm passed in")
+    message = u._("Invalid algorithm passed in")
 
 
 class DogtagCryptoPlugin(plugin.CryptoPluginBase):
@@ -70,11 +70,11 @@ class DogtagCryptoPlugin(plugin.CryptoPluginBase):
         """Constructor - create the keyclient."""
         pem_path = conf.dogtag_crypto_plugin.pem_path
         if pem_path is None:
-            raise ValueError(_("pem_path is required"))
+            raise ValueError(u._("pem_path is required"))
 
         pem_password = conf.dogtag_crypto_plugin.pem_password
         if pem_password is None:
-            raise ValueError(_("pem_password is required"))
+            raise ValueError(u._("pem_password is required"))
 
         crypto = None
         create_nss_db = False
@@ -83,7 +83,7 @@ class DogtagCryptoPlugin(plugin.CryptoPluginBase):
         if nss_db_path is not None:
             nss_password = conf.dogtag_crypto_plugin.nss_password
             if nss_password is None:
-                raise ValueError(_("nss_password is required"))
+                raise ValueError(u._("nss_password is required"))
 
             if not os.path.exists(nss_db_path):
                 create_nss_db = True

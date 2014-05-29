@@ -17,14 +17,14 @@ import unittest
 
 import mock
 
-from barbican.api.middleware.simple import SimpleFilter
+from barbican.api.middleware import simple
 
 
 class WhenTestingSimpleMiddleware(unittest.TestCase):
 
     def setUp(self):
         self.app = mock.MagicMock()
-        self.middle = SimpleFilter(self.app)
+        self.middle = simple.SimpleFilter(self.app)
         self.req = mock.MagicMock()
 
     def test_should_process_request(self):

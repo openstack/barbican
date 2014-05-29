@@ -14,17 +14,16 @@
 # limitations under the License.
 
 import base64
+
 import mock
 import testtools
 
 from barbican.crypto import extension_manager as em
 from barbican.crypto import mime_types as mt
-from barbican.crypto.plugin import CryptoPluginBase
-from barbican.crypto.plugin import PluginSupportTypes
-from barbican.crypto.plugin import SimpleCryptoPlugin
+from barbican.crypto import plugin
 
 
-class TestSupportsCryptoPlugin(CryptoPluginBase):
+class TestSupportsCryptoPlugin(plugin.CryptoPluginBase):
     """Crypto plugin for testing supports."""
 
     def encrypt(self, encrypt_dto, kek_meta_dto, tenant):
@@ -228,7 +227,7 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
         self.manager = em.CryptoExtensionManager()
 
     def test_create_supported_algorithm(self):
-        skg = PluginSupportTypes.SYMMETRIC_KEY_GENERATION
+        skg = plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION
         self.assertEqual(skg, self.manager._determine_type('AES'))
         self.assertEqual(skg, self.manager._determine_type('aes'))
         self.assertEqual(skg, self.manager._determine_type('DES'))
@@ -242,7 +241,7 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
         )
 
     def test_create_asymmetric_supported_algorithm(self):
-        skg = PluginSupportTypes.ASYMMETRIC_KEY_GENERATION
+        skg = plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION
         self.assertEqual(skg, self.manager._determine_type('RSA'))
         self.assertEqual(skg, self.manager._determine_type('rsa'))
         self.assertEqual(skg, self.manager._determine_type('DSA'))
@@ -277,8 +276,8 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
         )
 
     def test_encrypt_response_dto(self):
-        plugin = SimpleCryptoPlugin()
-        plugin_mock = mock.MagicMock(obj=plugin)
+        plg = plugin.SimpleCryptoPlugin()
+        plugin_mock = mock.MagicMock(obj=plg)
         self.manager.extensions = [plugin_mock]
 
         response_dto = self.manager.encrypt(
@@ -334,8 +333,8 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
         tenant = mock.MagicMock()
         kek_repo = mock.MagicMock(name='kek_repo')
 
-        plugin = SimpleCryptoPlugin()
-        plugin_mock = mock.MagicMock(obj=plugin)
+        plg = plugin.SimpleCryptoPlugin()
+        plugin_mock = mock.MagicMock(obj=plg)
         self.manager.extensions = [plugin_mock]
 
         datum = self.manager.generate_symmetric_encryption_key(
@@ -405,8 +404,8 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
         )
 
     def generate_asymmetric_encryption_rsa_keys_ensure_encoding(self):
-        plugin = SimpleCryptoPlugin()
-        plugin_mock = mock.MagicMock(obj=plugin)
+        plg = plugin.SimpleCryptoPlugin()
+        plugin_mock = mock.MagicMock(obj=plg)
         self.manager.extensions = [plugin_mock]
 
         meta = mock.MagicMock(algorithm='rsa',
@@ -434,8 +433,8 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
         self.assertTrue(isB64Encoding)
 
     def generate_asymmetric_encryption_dsa_keys_ensure_encoding(self):
-        plugin = SimpleCryptoPlugin()
-        plugin_mock = mock.MagicMock(obj=plugin)
+        plg = plugin.SimpleCryptoPlugin()
+        plugin_mock = mock.MagicMock(obj=plg)
         self.manager.extensions = [plugin_mock]
 
         meta = mock.MagicMock(algorithm='rsa',

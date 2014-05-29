@@ -35,7 +35,7 @@ from barbican.common import exception
 from barbican.common import utils
 from barbican.model.migration import commands
 from barbican.model import models
-from barbican.openstack.common.gettextutils import _
+from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import timeutils
 
 LOG = utils.getLogger(__name__)
@@ -129,8 +129,8 @@ def get_engine():
             _ENGINE.connect = wrap_db_error(_ENGINE.connect)
             _ENGINE.connect()
         except Exception as err:
-            msg = _("Error configuring registry database with supplied "
-                    "sql_connection. Got error: %s") % err
+            msg = u._("Error configuring registry database with supplied "
+                      "sql_connection. Got error: %s") % err
             LOG.exception(msg)
             raise
 
@@ -144,18 +144,18 @@ def get_engine():
             tables = meta.tables
             if tables and 'alembic_version' in tables:
                 # Upgrade the database to the latest version.
-                LOG.info(_('Updating schema to latest version'))
+                LOG.info(u._('Updating schema to latest version'))
                 commands.upgrade()
             else:
                 # Create database tables from our models.
-                LOG.info(_('Auto-creating barbican registry DB'))
+                LOG.info(u._('Auto-creating barbican registry DB'))
                 models.register_models(_ENGINE)
 
                 # Sync the alembic version 'head' with current models.
                 commands.stamp()
 
         else:
-            LOG.info(_('not auto-creating barbican registry DB'))
+            LOG.info(u._('not auto-creating barbican registry DB'))
 
     return _ENGINE
 
@@ -194,7 +194,7 @@ def wrap_db_error(f):
 
             remaining_attempts = _MAX_RETRIES
             while True:
-                LOG.warning(_('SQL connection failed. %d attempts left.'),
+                LOG.warning(u._('SQL connection failed. %d attempts left.'),
                             remaining_attempts)
                 remaining_attempts -= 1
                 time.sleep(_RETRY_INTERVAL)

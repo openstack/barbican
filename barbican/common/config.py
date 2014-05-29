@@ -25,8 +25,8 @@ import sys
 
 from oslo.config import cfg
 
-from barbican.openstack.common.gettextutils import _
-from barbican.version import __version__
+from barbican.openstack.common import gettextutils as u
+import barbican.version
 
 CONF = cfg.CONF
 CONF.import_opt('verbose', 'barbican.openstack.common.log')
@@ -46,7 +46,7 @@ def parse_args(args=None, usage=None, default_config_files=None):
     CONF(args=args,
          project='barbican',
          prog='barbican-api',
-         version=__version__,
+         version=barbican.version.__version__,
          usage=usage,
          default_config_files=default_config_files)
 
@@ -81,7 +81,7 @@ def setup_logging():
             facility = getattr(logging.handlers.SysLogHandler,
                                CONF.syslog_log_facility)
         except AttributeError:
-            raise ValueError(_("Invalid syslog facility"))
+            raise ValueError(u._("Invalid syslog facility"))
 
         handler = logging.handlers.SysLogHandler(address='/dev/log',
                                                  facility=facility)

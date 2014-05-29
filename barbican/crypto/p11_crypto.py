@@ -23,7 +23,7 @@ from oslo.config import cfg
 from barbican.common import exception
 from barbican.crypto import plugin
 
-from barbican.openstack.common.gettextutils import _
+from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import jsonutils as json
 
 
@@ -34,21 +34,21 @@ p11_crypto_plugin_group = cfg.OptGroup(name='p11_crypto_plugin',
 p11_crypto_plugin_opts = [
     cfg.StrOpt('library_path',
                default=None,
-               help=_('Path to vendor PKCS11 library')),
+               help=u._('Path to vendor PKCS11 library')),
     cfg.StrOpt('login',
                default=None,
-               help=_('Password to login to PKCS11 session'))
+               help=u._('Password to login to PKCS11 session'))
 ]
 CONF.register_group(p11_crypto_plugin_group)
 CONF.register_opts(p11_crypto_plugin_opts, group=p11_crypto_plugin_group)
 
 
 class P11CryptoPluginKeyException(exception.BarbicanException):
-    message = _("More than one key found for label")
+    message = u._("More than one key found for label")
 
 
 class P11CryptoPluginException(exception.BarbicanException):
-    message = _("General exception")
+    message = u._("General exception")
 
 
 class P11CryptoPlugin(plugin.CryptoPluginBase):
@@ -63,7 +63,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         self.algorithm = 0x8000011c  # CKM_AES_GCM vendor prefixed.
         self.pkcs11 = PyKCS11.PyKCS11Lib()
         if conf.p11_crypto_plugin.library_path is None:
-            raise ValueError(_("library_path is required"))
+            raise ValueError(u._("library_path is required"))
         else:
             self.pkcs11.load(conf.p11_crypto_plugin.library_path)
         # initialize the library. PyKCS11 does not supply this for free
