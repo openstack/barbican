@@ -23,13 +23,13 @@ import base64
 import urllib
 
 import mock
-import testtools
 import pecan
-from webtest import TestApp
+import testtools
+import webtest
 
-from barbican.api import strip_whitespace
 from barbican.api import app
 from barbican.api import controllers
+from barbican.api import strip_whitespace
 from barbican.common import exception as excep
 from barbican.common import utils
 from barbican.common import validators
@@ -97,7 +97,7 @@ class FunctionalTest(testtools.TestCase):
         root = self.root
         config = {'app': {'root': root}}
         pecan.set_config(config, overwrite=True)
-        self.app = TestApp(pecan.make_app(root))
+        self.app = webtest.TestApp(pecan.make_app(root))
 
     def tearDown(self):
         super(FunctionalTest, self).tearDown()
@@ -126,7 +126,7 @@ class BaseSecretsResource(FunctionalTest):
 
     def setUp(self):
         super(BaseSecretsResource, self).setUp()
-        self.app = TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
 
     @property
     def root(self):
@@ -556,7 +556,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
     def setUp(self):
         super(WhenGettingSecretsListUsingSecretsResource, self).setUp()
-        self.app = TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
 
     @property
     def root(self):
@@ -720,7 +720,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         super(
             WhenGettingPuttingOrDeletingSecretUsingSecretResource, self
         ).setUp()
-        self.app = TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
 
     @property
     def root(self):
@@ -801,7 +801,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             .get.assert_called_once_with(entity_id=self.secret.id,
                                          keystone_id=self.keystone_id,
                                          suppress_exception=True)
-        self.assertEquals(resp.status_int, 200)
+        self.assertEqual(resp.status_int, 200)
 
         self.assertNotIn('content_encodings', resp.namespace)
         self.assertIn('content_types', resp.namespace)
@@ -819,7 +819,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             .get.assert_called_once_with(entity_id=self.secret.id,
                                          keystone_id=self.keystone_id,
                                          suppress_exception=True)
-        self.assertEquals(resp.status_int, 200)
+        self.assertEqual(resp.status_int, 200)
 
         self.assertIsNotNone(resp.body)
 
@@ -1051,7 +1051,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         super(
             WhenCreatingOrdersUsingOrdersResource, self
         ).setUp()
-        self.app = TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
 
     @property
     def root(self):
@@ -1119,7 +1119,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
             {},
             expect_errors=True
         )
-        self.assertEquals(resp.status_int, 400)
+        self.assertEqual(resp.status_int, 400)
 
     def test_should_fail_add_new_order_bad_json(self):
         resp = self.app.post(
@@ -1127,7 +1127,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
             '',
             expect_errors=True
         )
-        self.assertEquals(resp.status_int, 400)
+        self.assertEqual(resp.status_int, 400)
 
 
 class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
@@ -1135,7 +1135,7 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
         super(
             WhenGettingOrdersListUsingOrdersResource, self
         ).setUp()
-        self.app = TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
 
     @property
     def root(self):
@@ -1245,7 +1245,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         super(
             WhenGettingOrDeletingOrderUsingOrderResource, self
         ).setUp()
-        self.app = TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
 
     @property
     def root(self):
@@ -1398,7 +1398,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
         super(
             WhenCreatingContainersUsingContainersResource, self
         ).setUp()
-        self.app = TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
 
     @property
     def root(self):
@@ -1466,7 +1466,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
             '',
             expect_errors=True
         )
-        self.assertEquals(resp.status_int, 400)
+        self.assertEqual(resp.status_int, 400)
 
     def test_should_throw_exception_when_secret_ref_doesnt_exist(self):
         self.secret_repo.get.return_value = None
@@ -1483,7 +1483,7 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
         super(
             WhenGettingOrDeletingContainerUsingContainerResource, self
         ).setUp()
-        self.app = TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
 
     @property
     def root(self):
@@ -1556,7 +1556,7 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
         super(
             WhenGettingContainersListUsingResource, self
         ).setUp()
-        self.app = TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
 
     @property
     def root(self):

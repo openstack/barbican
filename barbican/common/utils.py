@@ -104,8 +104,7 @@ def get_accepted_encodings_direct(content_encoding_header):
 
 
 def generate_fullname_for(o):
-    """
-    Produce a fully qualified class name for the specified instance.
+    """Produce a fully qualified class name for the specified instance.
 
     :param o: The instance to generate information from.
     :return: A string providing the package.module information for the
@@ -121,8 +120,7 @@ def generate_fullname_for(o):
 
 
 class TimeKeeper(object):
-    """
-    Keeps track of elapsed times and then allows for dumping a smmary to
+    """Keeps track of elapsed times and then allows for dumping a summary to
     logs. This class can be used to profile a method as a fine grain level.
     """
 
@@ -134,8 +132,7 @@ class TimeKeeper(object):
         self.elapsed = []
 
     def mark(self, note=None):
-        """
-        Mark a moment in time, with an optional note as to what is
+        """Mark a moment in time, with an optional note as to what is
         occurring at the time.
         :param note: Optional note
         """
@@ -144,9 +141,7 @@ class TimeKeeper(object):
         self.time_last = time_curr
 
     def dump(self):
-        """
-        Dump the elapsed time(s) to log.
-        """
+        """Dump the elapsed time(s) to log."""
         self.logger.debug("Timing output for '{0}'".format(self.name))
         for timec, timed, note in self.elapsed:
             self.logger.debug("    time current/elapsed/notes:"

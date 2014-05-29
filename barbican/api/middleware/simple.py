@@ -21,6 +21,7 @@ purposes only.
 """
 
 from oslo.config import cfg
+
 from barbican.api.middleware import Middleware
 from barbican.common import utils
 
@@ -34,6 +35,6 @@ class SimpleFilter(Middleware):
         super(SimpleFilter, self).__init__(app)
 
     def process_request(self, req):
-        """Just announce we have been called"""
+        """Just announce we have been called."""
         LOG.debug("Calling SimpleFilter")
         return None

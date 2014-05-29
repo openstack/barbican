@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 import datetime
+import unittest
 
 import testtools
 
@@ -571,7 +571,7 @@ class WhenTestingContainerValidator(testtools.TestCase):
             self.container_req,
         )
 
-        #TODO: (hgedikli) figure out why invalid_property is null here
+        #TODO(hgedikli): figure out why invalid_property is null here
         #self.assertEqual('type', e.exception.invalid_property)
 
     def test_should_fail_empty_type(self):

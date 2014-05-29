@@ -17,7 +17,9 @@ import urllib
 import pecan
 
 from barbican import api
-from barbican.api.controllers import (hrefs, handle_exceptions, handle_rbac)
+from barbican.api.controllers import handle_exceptions
+from barbican.api.controllers import handle_rbac
+from barbican.api.controllers import hrefs
 from barbican.common import exception
 from barbican.common import utils
 from barbican.common import validators
@@ -61,7 +63,7 @@ class TransportKeyController(object):
         try:
             self.repo.delete_entity_by_id(entity_id=self.transport_key_id,
                                           keystone_id=keystone_id)
-            # TODO (alee) response should be 204 on success
+            # TODO(alee) response should be 204 on success
             # pecan.response.status = 204
         except exception.NotFound:
             LOG.exception('Problem deleting transport_key')
@@ -121,7 +123,7 @@ class TransportKeysController(object):
     def on_post(self, keystone_id):
         LOG.debug('Start transport_keys on_post')
 
-        # TODO (alee) POST should determine the plugin name and call the
+        # TODO(alee) POST should determine the plugin name and call the
         # relevant get_transport_key() call.  We will implement this once
         # we figure out how the plugins will be enumerated.
 

@@ -20,8 +20,8 @@ from oslo.config import cfg
 
 from barbican.common import utils
 from barbican.openstack.common import service
-from barbican.tasks import resources
 from barbican import queue
+from barbican.tasks import resources
 
 
 LOG = utils.getLogger(__name__)

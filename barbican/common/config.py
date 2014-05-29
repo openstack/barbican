@@ -23,9 +23,10 @@ import logging.handlers
 import os
 import sys
 
-from barbican.version import __version__
-from barbican.openstack.common.gettextutils import _
 from oslo.config import cfg
+
+from barbican.openstack.common.gettextutils import _
+from barbican.version import __version__
 
 CONF = cfg.CONF
 CONF.import_opt('verbose', 'barbican.openstack.common.log')
@@ -54,9 +55,7 @@ def parse_args(args=None, usage=None, default_config_files=None):
 
 
 def setup_logging():
-    """
-    Sets up the logging options
-    """
+    """Sets up the logging options."""
 
     if CONF.log_config_append:
         # Use a logging configuration file for all settings...
@@ -99,7 +98,7 @@ def setup_logging():
 
 
 def setup_remote_pydev_debug():
-    """Required setup for remote debugging"""
+    """Required setup for remote debugging."""
 
     if CONF.pydev_debug_host and CONF.pydev_debug_port:
         try:

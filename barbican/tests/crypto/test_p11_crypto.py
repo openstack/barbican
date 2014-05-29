@@ -92,9 +92,10 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         self.pkcs11.lib.C_Initialize.return_value = 12345
         m.p11_crypto_plugin = mock.MagicMock(library_path="/dev/null")
 
-        # TODO: Really raises PyKCS11.PyKCS11Error
+        # TODO(reaperhulk): Really raises PyKCS11.PyKCS11Error
+        pykcs11error = Exception
         self.assertRaises(
-            Exception,
+            pykcs11error,
             p11_crypto.P11CryptoPlugin,
             m,
         )

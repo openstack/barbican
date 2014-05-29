@@ -49,7 +49,7 @@ def convert_transport_key_to_href(keystone_id, transport_key_id):
     return utils.hostname_for_refs(keystone_id=keystone_id, resource=resource)
 
 
-#TODO: (hgedikli) handle list of fields in here
+#TODO(hgedikli) handle list of fields in here
 def convert_to_hrefs(keystone_id, fields):
     """Convert id's within a fields dict to HATEOS-style hrefs."""
     if 'secret_id' in fields:

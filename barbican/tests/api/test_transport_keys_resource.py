@@ -21,7 +21,7 @@ transport key resource classes.
 import mock
 import pecan
 import testtools
-from webtest import TestApp
+import webtest
 
 from barbican.api import app
 from barbican.api import controllers
@@ -56,7 +56,7 @@ SAMPLE_TRANSPORT_KEY = """
 def create_transport_key(id_ref="id",
                          plugin_name="default_plugin",
                          transport_key=None):
-    """ Generate a transport cert entity instance """
+    """Generate a transport cert entity instance."""
     tkey = models.TransportKey(plugin_name, transport_key)
     tkey.id = id_ref
     return tkey
@@ -69,7 +69,7 @@ class FunctionalTest(testtools.TestCase):
         root = self.root
         config = {'app': {'root': root}}
         pecan.set_config(config, overwrite=True)
-        self.app = TestApp(pecan.make_app(root))
+        self.app = webtest.TestApp(pecan.make_app(root))
 
     def tearDown(self):
         super(FunctionalTest, self).tearDown()
@@ -85,7 +85,7 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
         super(
             WhenGettingTransKeysListUsingTransportKeysResource, self
         ).setUp()
-        self.app = TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
 
     @property
     def root(self):
@@ -186,7 +186,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
         super(
             WhenCreatingTransKeysListUsingTransportKeysResource, self
         ).setUp()
-        self.app = TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
 
     @property
     def root(self):
@@ -225,7 +225,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
             {},
             expect_errors=True
         )
-        self.assertEquals(resp.status_int, 400)
+        self.assertEqual(resp.status_int, 400)
 
     def test_should_fail_add_new_transport_key_bad_json(self):
         resp = self.app.post(
@@ -233,7 +233,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
             '',
             expect_errors=True
         )
-        self.assertEquals(resp.status_int, 400)
+        self.assertEqual(resp.status_int, 400)
 
 
 class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
@@ -242,7 +242,7 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
         super(
             WhenGettingOrDeletingTransKeyUsingTransportKeyResource, self
         ).setUp()
-        self.app = TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
 
     @property
     def root(self):

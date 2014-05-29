@@ -16,14 +16,16 @@
 import abc
 
 from Crypto.Cipher import AES
-from Crypto.PublicKey import RSA
 from Crypto.PublicKey import DSA
-from Crypto.Util import asn1
+from Crypto.PublicKey import RSA
 from Crypto import Random
-from oslo.config import cfg
-import six
-from barbican.common import utils
+from Crypto.Util import asn1
 
+from oslo.config import cfg
+
+import six
+
+from barbican.common import utils
 from barbican.openstack.common.gettextutils import _
 
 LOG = utils.getLogger(__name__)
@@ -56,10 +58,9 @@ class PluginSupportTypes(object):
 
 
 class KEKMetaDTO(object):
-    """
-    Key Encryption Keys (KEKs) in Barbican are intended to represent a distinct
-    key that is used to perform encryption on secrets for a particular project
-    (tenant).
+    """Key Encryption Keys (KEKs) in Barbican are intended to represent a
+    distinct key that is used to perform encryption on secrets for a particular
+    project (tenant).
 
     ``KEKMetaDTO`` objects are provided to cryptographic backends by Barbican
     to allow plugins to persist metadata related to the project's (tenant's)
@@ -113,9 +114,9 @@ class KEKMetaDTO(object):
    """
 
     def __init__(self, kek_datum):
-        """
-        kek_datum is typically a barbican.model.models.EncryptedDatum instance.
-        Plugins should never have to create their own instance of this class.
+        """kek_datum is typically a barbican.model.models.EncryptedDatum
+        instance.  Plugins should never have to create their own instance of
+        this class.
         """
         self.kek_label = kek_datum.kek_label
         self.plugin_name = kek_datum.plugin_name
@@ -126,9 +127,8 @@ class KEKMetaDTO(object):
 
 
 class GenerateDTO(object):
-    """
-    Data Transfer Object used to pass all the necessary data for the plugin to
-    generate a secret on behalf of the user.
+    """Data Transfer Object used to pass all the necessary data for the plugin
+    to generate a secret on behalf of the user.
 
     .. attribute:: generation_type
 
@@ -161,10 +161,7 @@ class GenerateDTO(object):
 
 
 class ResponseDTO(object):
-    """
-    Data transfer object for secret generation response.
-
-    """
+    """Data transfer object for secret generation response."""
 
     def __init__(self, cypher_text, kek_meta_extended=None):
         self.cypher_text = cypher_text
@@ -172,9 +169,8 @@ class ResponseDTO(object):
 
 
 class DecryptDTO(object):
-    """
-    Data Transfer Object used to pass all the necessary data for the plugin to
-    perform decryption of a secret.
+    """Data Transfer Object used to pass all the necessary data for the plugin
+    to perform decryption of a secret.
 
     Currently, this DTO only contains the data produced by the plugin during
     encryption, but in the future this DTO will contain more information, such
@@ -194,9 +190,8 @@ class DecryptDTO(object):
 
 
 class EncryptDTO(object):
-    """
-    Data Transfer Object used to pass all the necessary data for the plugin to
-    perform encryption of a secret.
+    """Data Transfer Object used to pass all the necessary data for the plugin
+    to perform encryption of a secret.
 
     Currently, this DTO only contains the raw bytes to be encrypted by the
     plugin, but in the future this may contain more information.
@@ -211,8 +206,7 @@ class EncryptDTO(object):
 
 
 def indicate_bind_completed(kek_meta_dto, kek_datum):
-    """
-    Updates the supplied kek_datum instance per the contents of the supplied
+    """Updates the supplied kek_datum instance per the contents of the supplied
     kek_meta_dto instance. This function is typically used once plugins have
     had a chance to bind kek_meta_dto to their crypto systems.
 
@@ -230,23 +224,22 @@ def indicate_bind_completed(kek_meta_dto, kek_datum):
 
 @six.add_metaclass(abc.ABCMeta)
 class CryptoPluginBase(object):
-    """
-    Base class for all Crypto plugins.  Implementations of this abstract base
-    class will be used by Barbican to perform cryptographic operations on
+    """Base class for all Crypto plugins.  Implementations of this abstract
+    base class will be used by Barbican to perform cryptographic operations on
     secrets.
 
     Barbican requests operations by invoking the methods on an instance of the
     implementing class.  Barbican's plugin manager handles the life-cycle of
     the Data Transfer Objects (DTOs) that are passed into these methods, and
-    persist the data that is assigned to these DTOs by the plugin."""
+    persist the data that is assigned to these DTOs by the plugin.
+    """
 
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
-        """
-        This method will be called by Barbican when requesting an encryption
-        opertation on a secret on behalf of a project (tenant).
+        """This method will be called by Barbican when requesting an encryption
+        operation on a secret on behalf of a project (tenant).
 
         :param encrypt_dto: :class:`EncryptDTO` instance containing the raw
             secret byte data to be encrypted.
@@ -312,8 +305,7 @@ class CryptoPluginBase(object):
 
     @abc.abstractmethod
     def bind_kek_metadata(self, kek_meta_dto):
-        """
-        Bind a key encryption key (KEK) metadata to the sub-system
+        """Bind a key encryption key (KEK) metadata to the sub-system
         handling encryption/decryption, updating information about the
         key encryption key (KEK) metadata in the supplied 'kek_metadata'
         data-transfer-object instance, and then returning this instance.
@@ -334,8 +326,7 @@ class CryptoPluginBase(object):
 
     @abc.abstractmethod
     def generate_symmetric(self, generate_dto, kek_meta_dto, keystone_id):
-        """
-        Generate a new key.
+        """Generate a new key.
 
         :param generate_dto: data transfer object for the record
                associated with this generation request.  Some relevant
@@ -527,10 +518,7 @@ class SimpleCryptoPlugin(CryptoPluginBase):
         return (public_key, private_key)
 
     def _is_algorithm_supported(self, algorithm=None, bit_length=None):
-        """
-        check if algorithm and bit_length combination is supported
-
-        """
+        """check if algorithm and bit_length combination is supported."""
         if algorithm is None or bit_length is None:
             return False
 

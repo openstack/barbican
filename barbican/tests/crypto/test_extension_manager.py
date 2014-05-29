@@ -19,8 +19,9 @@ import testtools
 
 from barbican.crypto import extension_manager as em
 from barbican.crypto import mime_types as mt
-from barbican.crypto.plugin import CryptoPluginBase, PluginSupportTypes, \
-    SimpleCryptoPlugin
+from barbican.crypto.plugin import CryptoPluginBase
+from barbican.crypto.plugin import PluginSupportTypes
+from barbican.crypto.plugin import SimpleCryptoPlugin
 
 
 class TestSupportsCryptoPlugin(CryptoPluginBase):
@@ -288,8 +289,8 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
         self.assertIsNotNone(response_dto)
 
     def test_decrypt_no_plugin_found(self):
-        """ Passing mocks here causes CryptoPluginNotFound because the mock
-        won't match any of the available plugins
+        """Passing mocks here causes CryptoPluginNotFound because the mock
+        won't match any of the available plugins.
         """
         self.assertRaises(
             em.CryptoPluginNotFound,
@@ -300,7 +301,7 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
         )
 
     def test_decrypt_no_supported_plugin_found(self):
-        """ Similar to test_decrypt_no_plugin_found, but in this case
+        """Similar to test_decrypt_no_plugin_found, but in this case
         no plugin can be found that supports the specified secret's
         encrypted data.
         """
