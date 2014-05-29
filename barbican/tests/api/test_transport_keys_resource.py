@@ -225,7 +225,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
             {},
             expect_errors=True
         )
-        self.assertEquals(resp.status_int, 400)
+        self.assertEqual(resp.status_int, 400)
 
     def test_should_fail_add_new_transport_key_bad_json(self):
         resp = self.app.post(
@@ -233,7 +233,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
             '',
             expect_errors=True
         )
-        self.assertEquals(resp.status_int, 400)
+        self.assertEqual(resp.status_int, 400)
 
 
 class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):

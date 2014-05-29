@@ -801,7 +801,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             .get.assert_called_once_with(entity_id=self.secret.id,
                                          keystone_id=self.keystone_id,
                                          suppress_exception=True)
-        self.assertEquals(resp.status_int, 200)
+        self.assertEqual(resp.status_int, 200)
 
         self.assertNotIn('content_encodings', resp.namespace)
         self.assertIn('content_types', resp.namespace)
@@ -819,7 +819,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             .get.assert_called_once_with(entity_id=self.secret.id,
                                          keystone_id=self.keystone_id,
                                          suppress_exception=True)
-        self.assertEquals(resp.status_int, 200)
+        self.assertEqual(resp.status_int, 200)
 
         self.assertIsNotNone(resp.body)
 
@@ -1119,7 +1119,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
             {},
             expect_errors=True
         )
-        self.assertEquals(resp.status_int, 400)
+        self.assertEqual(resp.status_int, 400)
 
     def test_should_fail_add_new_order_bad_json(self):
         resp = self.app.post(
@@ -1127,7 +1127,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
             '',
             expect_errors=True
         )
-        self.assertEquals(resp.status_int, 400)
+        self.assertEqual(resp.status_int, 400)
 
 
 class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
@@ -1466,7 +1466,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
             '',
             expect_errors=True
         )
-        self.assertEquals(resp.status_int, 400)
+        self.assertEqual(resp.status_int, 400)
 
     def test_should_throw_exception_when_secret_ref_doesnt_exist(self):
         self.secret_repo.get.return_value = None
