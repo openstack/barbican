@@ -15,7 +15,7 @@
 
 import abc
 
-from Crypto.Cipher import AES
+from cryptography import fernet
 from Crypto.PublicKey import DSA
 from Crypto.PublicKey import RSA
 from Crypto import Random
@@ -36,7 +36,7 @@ simple_crypto_plugin_group = cfg.OptGroup(name='simple_crypto_plugin',
                                           title="Simple Crypto Plugin Options")
 simple_crypto_plugin_opts = [
     cfg.StrOpt('kek',
-               default=b'sixteen_byte_key',
+               default=b'dGhpcnR5X3R3b19ieXRlX2tleWJsYWhibGFoYmxhaGg=',
                help=u._('Key encryption key to be used by Simple Crypto '
                         'Plugin'))
 ]
@@ -378,41 +378,21 @@ class SimpleCryptoPlugin(CryptoPluginBase):
 
     def __init__(self, conf=CONF):
         self.kek = conf.simple_crypto_plugin.kek
-        self.block_size = AES.block_size
-
-    def _pad(self, unencrypted):
-        """Adds padding to unencrypted byte string."""
-        pad_length = self.block_size - (
-            len(unencrypted) % self.block_size
-        )
-        return unencrypted + (chr(pad_length) * pad_length)
-
-    def _strip_pad(self, unencrypted):
-        pad_length = ord(unencrypted[-1:])
-        unpadded = unencrypted[:-pad_length]
-        return unpadded
 
     def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
         unencrypted = encrypt_dto.unencrypted
         if not isinstance(unencrypted, str):
             raise ValueError('Unencrypted data must be a byte type, '
                              'but was {0}'.format(type(unencrypted)))
-        padded_data = self._pad(unencrypted)
-        iv = Random.get_random_bytes(self.block_size)
-        encryptor = AES.new(self.kek, AES.MODE_CBC, iv)
-
-        cyphertext = iv + encryptor.encrypt(padded_data)
-
+        encryptor = fernet.Fernet(self.kek)
+        cyphertext = encryptor.encrypt(unencrypted)
         return ResponseDTO(cyphertext, None)
 
     def decrypt(self, encrypted_dto, kek_meta_dto, kek_meta_extended,
                 keystone_id):
         encrypted = encrypted_dto.encrypted
-        iv = encrypted[:self.block_size]
-        cypher_text = encrypted[self.block_size:]
-        decryptor = AES.new(self.kek, AES.MODE_CBC, iv)
-        padded_secret = decryptor.decrypt(cypher_text)
-        return self._strip_pad(padded_secret)
+        decryptor = fernet.Fernet(self.kek)
+        return decryptor.decrypt(encrypted)
 
     def bind_kek_metadata(self, kek_meta_dto):
         kek_meta_dto.algorithm = 'aes'

@@ -67,32 +67,6 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
         super(WhenTestingSimpleCryptoPlugin, self).setUp()
         self.plugin = plugin.SimpleCryptoPlugin()
 
-    def test_pad_binary_string(self):
-        binary_string = b'some_binary_string'
-        padded_string = (
-            b'some_binary_string' +
-            b'\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e'
-        )
-        self.assertEqual(self.plugin._pad(binary_string), padded_string)
-
-    def test_pad_random_bytes(self):
-        random_bytes = Random.get_random_bytes(10)
-        padded_bytes = random_bytes + b'\x06\x06\x06\x06\x06\x06'
-        self.assertEqual(self.plugin._pad(random_bytes), padded_bytes)
-
-    def test_strip_padding_from_binary_string(self):
-        binary_string = b'some_binary_string'
-        padded_string = (
-            b'some_binary_string' +
-            b'\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e\x0e'
-        )
-        self.assertEqual(self.plugin._strip_pad(padded_string), binary_string)
-
-    def test_strip_padding_from_random_bytes(self):
-        random_bytes = Random.get_random_bytes(10)
-        padded_bytes = random_bytes + b'\x06\x06\x06\x06\x06\x06'
-        self.assertEqual(self.plugin._strip_pad(padded_bytes), random_bytes)
-
     def test_encrypt_unicode_raises_value_error(self):
         unencrypted = u'unicode_beer\U0001F37A'
         encrypt_dto = plugin.EncryptDTO(unencrypted)
