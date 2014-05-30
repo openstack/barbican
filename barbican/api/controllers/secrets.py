@@ -16,10 +16,8 @@ import urllib
 import pecan
 
 from barbican import api
-from barbican.api.controllers import handle_exceptions
-from barbican.api.controllers import handle_rbac
+from barbican.api import controllers
 from barbican.api.controllers import hrefs
-from barbican.api.controllers import is_json_request_accept
 from barbican.common import exception
 from barbican.common import resources as res
 from barbican.common import utils
@@ -65,8 +63,8 @@ class SecretController(object):
 
     @pecan.expose(generic=True)
     @allow_all_content_types
-    @handle_exceptions(u._('Secret retrieval'))
-    @handle_rbac('secret:get')
+    @controllers.handle_exceptions(u._('Secret retrieval'))
+    @controllers.handle_rbac('secret:get')
     def index(self, keystone_id):
 
         secret = self.repo.get(entity_id=self.secret_id,
@@ -75,7 +73,7 @@ class SecretController(object):
         if not secret:
             _secret_not_found()
 
-        if is_json_request_accept(pecan.request):
+        if controllers.is_json_request_accept(pecan.request):
             # Metadata-only response, no decryption necessary.
             pecan.override_template('json', 'application/json')
             secret_fields = mime_types.augment_fields_with_content_types(
@@ -92,8 +90,8 @@ class SecretController(object):
 
     @index.when(method='PUT')
     @allow_all_content_types
-    @handle_exceptions(u._('Secret update'))
-    @handle_rbac('secret:put')
+    @controllers.handle_exceptions(u._('Secret update'))
+    @controllers.handle_rbac('secret:put')
     def on_put(self, keystone_id):
 
         if not pecan.request.content_type or \
@@ -128,8 +126,8 @@ class SecretController(object):
                                    self.kek_repo)
 
     @index.when(method='DELETE')
-    @handle_exceptions(u._('Secret deletion'))
-    @handle_rbac('secret:delete')
+    @controllers.handle_exceptions(u._('Secret deletion'))
+    @controllers.handle_rbac('secret:delete')
     def on_delete(self, keystone_id):
 
         try:
@@ -162,8 +160,8 @@ class SecretsController(object):
                                 self.datum_repo, self.kek_repo), remainder
 
     @pecan.expose(generic=True, template='json')
-    @handle_exceptions(u._('Secret(s) retrieval'))
-    @handle_rbac('secrets:get')
+    @controllers.handle_exceptions(u._('Secret(s) retrieval'))
+    @controllers.handle_rbac('secrets:get')
     def index(self, keystone_id, **kw):
         LOG.debug('Start secrets on_get '
                   'for tenant-ID {0}:'.format(keystone_id))
@@ -212,8 +210,8 @@ class SecretsController(object):
         return secrets_resp_overall
 
     @index.when(method='POST', template='json')
-    @handle_exceptions(u._('Secret creation'))
-    @handle_rbac('secrets:post')
+    @controllers.handle_exceptions(u._('Secret creation'))
+    @controllers.handle_rbac('secrets:post')
     def on_post(self, keystone_id):
         LOG.debug('Start on_post for tenant-ID {0}:...'.format(keystone_id))
 

@@ -13,8 +13,7 @@
 import pecan
 
 from barbican import api
-from barbican.api.controllers import handle_exceptions
-from barbican.api.controllers import handle_rbac
+from barbican.api import controllers
 from barbican.api.controllers import hrefs
 from barbican.common import exception
 from barbican.common import resources as res
@@ -53,8 +52,8 @@ class OrderController(object):
         self.repo = order_repo or repo.OrderRepo()
 
     @pecan.expose(generic=True, template='json')
-    @handle_exceptions(u._('Order retrieval'))
-    @handle_rbac('order:get')
+    @controllers.handle_exceptions(u._('Order retrieval'))
+    @controllers.handle_rbac('order:get')
     def index(self, keystone_id):
         order = self.repo.get(entity_id=self.order_id, keystone_id=keystone_id,
                               suppress_exception=True)
@@ -64,13 +63,13 @@ class OrderController(object):
         return hrefs.convert_to_hrefs(keystone_id, order.to_dict_fields())
 
     @index.when(method='PUT')
-    @handle_exceptions(u._('Order update'))
+    @controllers.handle_exceptions(u._('Order update'))
     def on_put(self, keystone_id):
         _order_update_not_supported()
 
     @index.when(method='DELETE')
-    @handle_exceptions(u._('Order deletion'))
-    @handle_rbac('order:delete')
+    @controllers.handle_exceptions(u._('Order deletion'))
+    @controllers.handle_rbac('order:delete')
     def on_delete(self, keystone_id):
 
         try:
@@ -98,8 +97,8 @@ class OrdersController(object):
         return OrderController(order_id, self.order_repo), remainder
 
     @pecan.expose(generic=True, template='json')
-    @handle_exceptions(u._('Order(s) retrieval'))
-    @handle_rbac('orders:get')
+    @controllers.handle_exceptions(u._('Order(s) retrieval'))
+    @controllers.handle_rbac('orders:get')
     def index(self, keystone_id, **kw):
         LOG.debug('Start orders on_get '
                   'for tenant-ID {0}:'.format(keystone_id))
@@ -127,14 +126,14 @@ class OrdersController(object):
         return orders_resp_overall
 
     @pecan.expose(generic=True, template='json')
-    @handle_exceptions(u._('Order update'))
-    @handle_rbac('orders:put')
+    @controllers.handle_exceptions(u._('Order update'))
+    @controllers.handle_rbac('orders:put')
     def on_put(self, keystone_id):
         _order_update_not_supported()
 
     @index.when(method='POST', template='json')
-    @handle_exceptions(u._('Order creation'))
-    @handle_rbac('orders:post')
+    @controllers.handle_exceptions(u._('Order creation'))
+    @controllers.handle_rbac('orders:post')
     def on_post(self, keystone_id):
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)

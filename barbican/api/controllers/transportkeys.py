@@ -17,8 +17,7 @@ import urllib
 import pecan
 
 from barbican import api
-from barbican.api.controllers import handle_exceptions
-from barbican.api.controllers import handle_rbac
+from barbican.api import controllers as con
 from barbican.api.controllers import hrefs
 from barbican.common import exception
 from barbican.common import utils
@@ -44,8 +43,8 @@ class TransportKeyController(object):
         self.repo = transport_key_repo or repo.TransportKeyRepo()
 
     @pecan.expose(generic=True)
-    @handle_exceptions(u._('Transport Key retrieval'))
-    @handle_rbac('transport_key:get')
+    @con.handle_exceptions(u._('Transport Key retrieval'))
+    @con.handle_rbac('transport_key:get')
     def index(self, keystone_id):
         LOG.debug("== Getting transport key for %s" % keystone_id)
         transport_key = self.repo.get(entity_id=self.transport_key_id)
@@ -56,8 +55,8 @@ class TransportKeyController(object):
         return transport_key
 
     @index.when(method='DELETE')
-    @handle_exceptions(u._('Transport Key deletion'))
-    @handle_rbac('transport_key:delete')
+    @con.handle_exceptions(u._('Transport Key deletion'))
+    @con.handle_rbac('transport_key:delete')
     def on_delete(self, keystone_id):
         LOG.debug("== Deleting transport key ===")
         try:
@@ -83,8 +82,8 @@ class TransportKeysController(object):
         return TransportKeyController(transport_key_id, self.repo), remainder
 
     @pecan.expose(generic=True, template='json')
-    @handle_exceptions(u._('Transport Key(s) retrieval'))
-    @handle_rbac('transport_keys:get')
+    @con.handle_exceptions(u._('Transport Key(s) retrieval'))
+    @con.handle_rbac('transport_keys:get')
     def index(self, keystone_id, **kw):
         LOG.debug('Start transport_keys on_get')
 
@@ -118,8 +117,8 @@ class TransportKeysController(object):
         return transport_keys_resp_overall
 
     @index.when(method='POST', template='json')
-    @handle_exceptions(u._('Transport Key Creation'))
-    @handle_rbac('transport_keys:post')
+    @con.handle_exceptions(u._('Transport Key Creation'))
+    @con.handle_rbac('transport_keys:post')
     def on_post(self, keystone_id):
         LOG.debug('Start transport_keys on_post')
 

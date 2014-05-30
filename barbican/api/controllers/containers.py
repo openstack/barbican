@@ -13,9 +13,7 @@
 import pecan
 
 from barbican import api
-from barbican.api.controllers import handle_exceptions
-from barbican.api.controllers import handle_rbac
-from barbican.api.controllers import hrefs
+from barbican.api import controllers
 from barbican.common import exception
 from barbican.common import resources as res
 from barbican.common import utils
@@ -43,8 +41,8 @@ class ContainerController(object):
         self.validator = validators.ContainerValidator()
 
     @pecan.expose(generic=True, template='json')
-    @handle_exceptions(u._('Container retrieval'))
-    @handle_rbac('container:get')
+    @controllers.handle_exceptions(u._('Container retrieval'))
+    @controllers.handle_rbac('container:get')
     def index(self, keystone_id):
         container = self.container_repo.get(entity_id=self.container_id,
                                             keystone_id=keystone_id,
@@ -55,16 +53,16 @@ class ContainerController(object):
         dict_fields = container.to_dict_fields()
 
         for secret_ref in dict_fields['secret_refs']:
-            hrefs.convert_to_hrefs(keystone_id, secret_ref)
+            controllers.hrefs.convert_to_hrefs(keystone_id, secret_ref)
 
-        return hrefs.convert_to_hrefs(
+        return controllers.hrefs.convert_to_hrefs(
             keystone_id,
-            hrefs.convert_to_hrefs(keystone_id, dict_fields)
+            controllers.hrefs.convert_to_hrefs(keystone_id, dict_fields)
         )
 
     @index.when(method='DELETE', template='')
-    @handle_exceptions(u._('Container deletion'))
-    @handle_rbac('container:delete')
+    @controllers.handle_exceptions(u._('Container deletion'))
+    @controllers.handle_rbac('container:delete')
     def on_delete(self, keystone_id):
 
         try:
@@ -94,8 +92,8 @@ class ContainersController(object):
                                    self.container_repo), remainder
 
     @pecan.expose(generic=True, template='json')
-    @handle_exceptions(u._('Containers(s) retrieval'))
-    @handle_rbac('containers:get')
+    @controllers.handle_exceptions(u._('Containers(s) retrieval'))
+    @controllers.handle_rbac('containers:get')
     def index(self, keystone_id, **kw):
         LOG.debug('Start containers on_get '
                   'for tenant-ID {0}:'.format(keystone_id))
@@ -113,20 +111,25 @@ class ContainersController(object):
             resp_ctrs_overall = {'containers': [], 'total': total}
         else:
             resp_ctrs = [
-                hrefs.convert_to_hrefs(keystone_id, c.to_dict_fields())
+                controllers.hrefs.convert_to_hrefs(keystone_id,
+                                                   c.to_dict_fields())
                 for c in containers
             ]
-            resp_ctrs_overall = hrefs.add_nav_hrefs('containers',
-                                                    keystone_id, offset,
-                                                    limit, total,
-                                                    {'containers': resp_ctrs})
+            resp_ctrs_overall = controllers.hrefs.add_nav_hrefs(
+                'containers',
+                keystone_id,
+                offset,
+                limit,
+                total,
+                {'containers': resp_ctrs}
+            )
             resp_ctrs_overall.update({'total': total})
 
         return resp_ctrs_overall
 
     @index.when(method='POST', template='json')
-    @handle_exceptions(u._('Container creation'))
-    @handle_rbac('containers:post')
+    @controllers.handle_exceptions(u._('Container creation'))
+    @controllers.handle_rbac('containers:post')
     def on_post(self, keystone_id):
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
@@ -143,8 +146,10 @@ class ContainersController(object):
                                           keystone_id=keystone_id,
                                           suppress_exception=True)
             if not secret:
-                pecan.abort(404, u._("Secret provided for '%s'"
-                                     " doesn't exist." % secret_ref.name))
+                # This only partially localizes the error message and
+                # doesn't localize secret_ref.name.
+                pecan.abort(404, u._("Secret provided for '{0}' doesn't"
+                                     " exist.").format(secret_ref.name))
 
         self.container_repo.create_from(new_container)
 
@@ -152,5 +157,6 @@ class ContainersController(object):
         pecan.response.headers['Location'] = '/{0}/containers/{1}'.format(
             keystone_id, new_container.id
         )
-        url = hrefs.convert_container_to_href(keystone_id, new_container.id)
+        url = controllers.hrefs.convert_container_to_href(keystone_id,
+                                                          new_container.id)
         return {'container_ref': url}
