@@ -14,11 +14,11 @@
 # limitations under the License.
 
 import abc
+import os
 
 from cryptography import fernet
 from Crypto.PublicKey import DSA
 from Crypto.PublicKey import RSA
-from Crypto import Random
 from Crypto.Util import asn1
 
 from oslo.config import cfg
@@ -403,7 +403,7 @@ class SimpleCryptoPlugin(CryptoPluginBase):
 
     def generate_symmetric(self, generate_dto, kek_meta_dto, keystone_id):
         byte_length = int(generate_dto.bit_length) / 8
-        unencrypted = Random.get_random_bytes(byte_length)
+        unencrypted = os.urandom(byte_length)
 
         return self.encrypt(EncryptDTO(unencrypted),
                             kek_meta_dto,

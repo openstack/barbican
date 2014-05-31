@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 from Crypto.PublicKey import DSA
 from Crypto.PublicKey import RSA
-from Crypto import Random
 from Crypto.Util import asn1
 
 import mock
@@ -93,7 +94,7 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
         self.assertEqual(unencrypted, decrypted)
 
     def test_random_bytes_encryption(self):
-        unencrypted = Random.get_random_bytes(10)
+        unencrypted = os.urandom(10)
         encrypt_dto = plugin.EncryptDTO(unencrypted)
         response_dto = self.plugin.encrypt(encrypt_dto,
                                            mock.MagicMock(),
