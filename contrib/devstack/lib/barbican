@@ -45,7 +45,7 @@ BARBICAN_REPO=${BARBICAN_REPO:-${GIT_BASE}/openstack/barbican.git}
 BARBICAN_BRANCH=${BARBICAN_BRANCH:-master}
 
 # Set client library repository
-BARBICANCLIENT_REPO=${BARBICANCLIENT_REPO:-${GIT_BASE}/stackforge/python-barbicanclient.git}
+BARBICANCLIENT_REPO=${BARBICANCLIENT_REPO:-${GIT_BASE}/openstack/python-barbicanclient.git}
 BARBICANCLIENT_BRANCH=${BARBICANCLIENT_BRANCH:-master}
 
 # Tell Tempest this project is present
