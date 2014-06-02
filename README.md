@@ -12,7 +12,7 @@ The other systems are:
   provides access to secrets from the Barbican API.
 * [Palisade](https://github.com/cloudkeep/palisade) - AngularJS based web ui
   for the Barbican API.
-* [Python-barbicanclient](https://github.com/cloudkeep/python-barbicanclient) -
+* [Python-barbicanclient](https://github.com/openstack/python-barbicanclient) -
   A convenient Python-based library to interact with the Barbican API.
 
 Additional documentation can be found on the [Github
