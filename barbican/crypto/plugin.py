@@ -235,8 +235,6 @@ class CryptoPluginBase(object):
     persist the data that is assigned to these DTOs by the plugin.
     """
 
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractmethod
     def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
         """This method will be called by Barbican when requesting an encryption
