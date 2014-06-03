@@ -49,9 +49,22 @@ class save_and_reraise_exception(object):
               decide_if_need_reraise()
               if not should_be_reraised:
                   ctxt.reraise = False
+
+    If another exception occurs and reraise flag is False,
+    the saved exception will not be logged.
+
+    If the caller wants to raise new exception during exception handling
+    he/she sets reraise to False initially with an ability to set it back to
+    True if needed::
+
+      except Exception:
+          with save_and_reraise_exception(reraise=False) as ctxt:
+              [if statements to determine whether to raise a new exception]
+              # Not raising a new exception, so reraise
+              ctxt.reraise = True
     """
-    def __init__(self):
-        self.reraise = True
+    def __init__(self, reraise=True):
+        self.reraise = reraise
 
     def __enter__(self):
         self.type_, self.value, self.tb, = sys.exc_info()
@@ -59,10 +72,11 @@ class save_and_reraise_exception(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None:
-            logging.error(_LE('Original exception being dropped: %s'),
-                          traceback.format_exception(self.type_,
-                                                     self.value,
-                                                     self.tb))
+            if self.reraise:
+                logging.error(_LE('Original exception being dropped: %s'),
+                              traceback.format_exception(self.type_,
+                                                         self.value,
+                                                         self.tb))
             return False
         if self.reraise:
             six.reraise(self.type_, self.value, self.tb)

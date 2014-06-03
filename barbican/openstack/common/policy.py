@@ -93,10 +93,11 @@ from barbican.openstack.common import log as logging
 policy_opts = [
     cfg.StrOpt('policy_file',
                default='policy.json',
-               help=_('JSON file containing policy')),
+               help=_('The JSON file that defines policies.')),
     cfg.StrOpt('policy_default_rule',
                default='default',
-               help=_('Rule enforced when requested rule is not found')),
+               help=_('Default rule. Enforced when a requested rule is not '
+                      'found.')),
 ]
 
 CONF = cfg.CONF
@@ -182,27 +183,31 @@ class Enforcer(object):
                   is called this will be overwritten.
     :param default_rule: Default rule to use, CONF.default_rule will
                          be used if none is specified.
+    :param use_conf: Whether to load rules from cache or config file.
     """
 
-    def __init__(self, policy_file=None, rules=None, default_rule=None):
+    def __init__(self, policy_file=None, rules=None,
+                 default_rule=None, use_conf=True):
         self.rules = Rules(rules, default_rule)
         self.default_rule = default_rule or CONF.policy_default_rule
 
         self.policy_path = None
         self.policy_file = policy_file or CONF.policy_file
+        self.use_conf = use_conf
 
-    def set_rules(self, rules, overwrite=True):
+    def set_rules(self, rules, overwrite=True, use_conf=False):
         """Create a new Rules object based on the provided dict of rules.
 
         :param rules: New rules to use. It should be an instance of dict.
         :param overwrite: Whether to overwrite current rules or update them
                           with the new rules.
+        :param use_conf: Whether to reload rules from cache or config file.
         """
 
         if not isinstance(rules, dict):
             raise TypeError(_("Rules must be an instance of dict or Rules, "
                             "got %s instead") % type(rules))
-
+        self.use_conf = use_conf
         if overwrite:
             self.rules = Rules(rules, self.default_rule)
         else:
@@ -222,15 +227,19 @@ class Enforcer(object):
         :param force_reload: Whether to overwrite current rules.
         """
 
-        if not self.policy_path:
-            self.policy_path = self._get_policy_path()
+        if force_reload:
+            self.use_conf = force_reload
 
-        reloaded, data = fileutils.read_cached_file(self.policy_path,
-                                                    force_reload=force_reload)
-        if reloaded or not self.rules:
-            rules = Rules.load_json(data, self.default_rule)
-            self.set_rules(rules)
-            LOG.debug("Rules successfully reloaded")
+        if self.use_conf:
+            if not self.policy_path:
+                self.policy_path = self._get_policy_path()
+
+            reloaded, data = fileutils.read_cached_file(
+                self.policy_path, force_reload=force_reload)
+            if reloaded or not self.rules:
+                rules = Rules.load_json(data, self.default_rule)
+                self.set_rules(rules)
+                LOG.debug("Rules successfully reloaded")
 
     def _get_policy_path(self):
         """Locate the policy json data file.
