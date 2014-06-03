@@ -1,6 +1,50 @@
-curl -X POST -d \
-'{
-    "payload": "my-secret-here",
-    "payload_content_type": "text/plain"
- }'\
-  http://localhost:9311/v1/12345/secrets
+{
+    "total": 15,
+    "orders": [
+        {
+            "status": "PENDING",
+            "secret_ref": "https://endpointURL/v1/12345/secrets/????",
+            "updated": "2014-03-19T22:40:06.720872",
+            "created": "2014-03-19T22:40:06.720860",
+            "secret": {
+                "name": "secretname",
+                "algorithm": "aes",
+                "payload_content_type": "application/octet-stream",
+                "expiration": null,
+                "bit_length": 256,
+                "mode": "cbc"
+            },
+            "order_ref": "https://endpointURL/v1/12345/orders/94ade532-9657-41e1-87ae-c8cbdfa836e0"
+        },
+        {
+            "status": "PENDING",
+            "secret_ref": "https://endpointURL/v1/12345/secrets/????",
+            "updated": "2014-03-19T22:41:18.930095",
+            "created": "2014-03-19T22:41:18.930081",
+            "secret": {
+                "name": "secretname",
+                "algorithm": "aes",
+                "payload_content_type": "application/octet-stream",
+                "expiration": null,
+                "bit_length": 256,
+                "mode": "cbc"
+            },
+            "order_ref": "https://endpointURL/v1/12345/orders/50212509-9c87-4a71-be3e-9ad59c290ede"
+        },
+        {
+            "status": "ACTIVE",
+            "secret_ref": "https://endpointURL/v1/12345/secrets/6e0bfe9f-8a59-4e29-81af-ea57eec96f28",
+            "updated": "2014-03-25T16:42:20.584453",
+            "created": "2014-03-25T16:42:20.430822",
+            "secret": {
+                "name": "secretname",
+                "algorithm": "aes",
+                "payload_content_type": "application/octet-stream",
+                "expiration": null,
+                "bit_length": 256,
+                "mode": "cbc"
+            },
+            "order_ref": "https://endpointURL/v1/12345/orders/488cd596-f1a6-4abe-8cb0-16608f5b0359"
+        }
+    ],
+    "next": "https://endpointURL/v1/12345/orders?limit=10&offset=10"

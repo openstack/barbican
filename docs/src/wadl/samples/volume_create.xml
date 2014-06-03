@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<volume xmlns="http://docs.rackspace.com/volume/api/v1"
-        display_name="vol-001"
-        display_description="Another volume."
-        size="100"
-        volume_type="SATA">
-
-</volume>

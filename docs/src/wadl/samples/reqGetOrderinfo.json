@@ -1,1 +1,2 @@
-curl http://localhost:9311/v1/12345/orders/62d57f53-ecfe-4ae4-87bd-fab2f24e29bc
+curl -H 'Accept: application/json'\
+https://endpointURL/v1/12345/orders/62d57f53-ecfe-4ae4-87bd-fab2f24e29bc

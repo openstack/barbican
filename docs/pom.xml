@@ -45,8 +45,7 @@
 	<configuration>
 	  <enableDisqus>intranet</enableDisqus>
 	  <feedbackEmail>constanze.kratel@RACKSPACE.COM</feedbackEmail>	  
-	  <branding>rackspace</branding>
-	  <builtForOpenStack>1</builtForOpenStack>
+	  <branding>builtforOpenStack</branding>
 	  <showXslMessages>true</showXslMessages>
 	</configuration>
       </plugin>
