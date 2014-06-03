@@ -16,10 +16,10 @@
 import abc
 import os
 
-from cryptography import fernet
 from Crypto.PublicKey import DSA
 from Crypto.PublicKey import RSA
 from Crypto.Util import asn1
+from cryptography import fernet
 
 from oslo.config import cfg
 
