@@ -23,6 +23,19 @@ from barbican.crypto import mime_types as mt
 from barbican.crypto import plugin
 
 
+def get_mocked_kek_repo():
+    # For SimpleCryptoPlugin, per-tenant KEKs are stored in
+    # kek_meta_dto.plugin_meta. SimpleCryptoPlugin does a get-or-create
+    # on the plugin_meta field, so plugin_meta should be None initially.
+    kek_datum = mock.MagicMock()
+    kek_datum.plugin_meta = None
+    kek_datum.bind_completed = False
+    kek_repo = mock.MagicMock(name='kek_repo')
+    kek_repo.find_or_create_kek_datum = mock.MagicMock()
+    kek_repo.find_or_create_kek_datum.return_value = kek_datum
+    return kek_repo
+
+
 class TestSupportsCryptoPlugin(plugin.CryptoPluginBase):
     """Crypto plugin for testing supports."""
 
@@ -280,9 +293,11 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
         plugin_mock = mock.MagicMock(obj=plg)
         self.manager.extensions = [plugin_mock]
 
+        kek_repo = get_mocked_kek_repo()
+
         response_dto = self.manager.encrypt(
             'payload', 'text/plain', None, mock.MagicMock(), mock.MagicMock(),
-            mock.MagicMock(), False
+            kek_repo, False
         )
 
         self.assertIsNotNone(response_dto)
@@ -331,7 +346,7 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
         secret = mock.MagicMock(algorithm='aes', bit_length=128)
         content_type = 'application/octet-stream'
         tenant = mock.MagicMock()
-        kek_repo = mock.MagicMock(name='kek_repo')
+        kek_repo = get_mocked_kek_repo()
 
         plg = plugin.SimpleCryptoPlugin()
         plugin_mock = mock.MagicMock(obj=plg)
