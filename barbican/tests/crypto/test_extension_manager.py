@@ -377,7 +377,7 @@ class WhenTestingCryptoExtensionManager(testtools.TestCase):
             mock.MagicMock(),
             kek_repo
         )
-        kek_repo.save.assert_called_once()
+        self.assertEqual(1, kek_repo.save.call_count)
 
     def generate_asymmetric_encryption_keys_no_plugin_found(self):
         self.manager.extensions = []
