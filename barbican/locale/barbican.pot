@@ -1,0 +1,969 @@
+# Translations template for barbican.
+# Copyright (C) 2014 ORGANIZATION
+# This file is distributed under the same license as the barbican project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2014.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: barbican 2014.1.dev72.ga205a27\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2014-06-04 22:35+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 1.3\n"
+
+#: barbican/api/__init__.py:114
+msgid "{0} attempt not allowed - please review your user/tenant privileges"
+msgstr ""
+
+#: barbican/api/__init__.py:119
+msgid "content-type of '{0}' not supported"
+msgstr ""
+
+#: barbican/api/__init__.py:123
+msgid "content-encoding of '{0}' not supported"
+msgstr ""
+
+#: barbican/api/__init__.py:127
+msgid "accept of '{0}' not supported"
+msgstr ""
+
+#: barbican/api/__init__.py:131
+msgid "No payload provided"
+msgstr ""
+
+#: barbican/api/__init__.py:134
+msgid "Not Found.  Sorry but your secret is in another castle"
+msgstr ""
+
+#: barbican/api/__init__.py:138 barbican/crypto/extension_manager.py:92
+msgid "Problem decoding payload"
+msgstr ""
+
+#: barbican/api/__init__.py:141
+msgid ""
+"Text-based binary secret payloads must specify a content-encoding of "
+"'base64'"
+msgstr ""
+
+#: barbican/api/__init__.py:145
+msgid "No plugin was found that supports the requested algorithm"
+msgstr ""
+
+#: barbican/api/__init__.py:149
+msgid "No plugin was found that could support your request"
+msgstr ""
+
+#: barbican/api/__init__.py:153
+msgid "No information provided to process"
+msgstr ""
+
+#: barbican/api/__init__.py:156
+msgid "Provided information too large to process"
+msgstr ""
+
+#: barbican/api/__init__.py:160
+msgid "{0} failure seen - please contact site administrator."
+msgstr ""
+
+#: barbican/api/__init__.py:164
+msgid "{0} issue seen - {1}."
+msgstr ""
+
+#: barbican/api/controllers/__init__.py:48
+msgid "URI tenant does not match authenticated tenant."
+msgstr ""
+
+#: barbican/api/controllers/__init__.py:78
+msgid "System"
+msgstr ""
+
+#: barbican/api/controllers/containers.py:30
+msgid "Not Found. Sorry but your container is in another castle."
+msgstr ""
+
+#: barbican/api/controllers/containers.py:44
+msgid "Container retrieval"
+msgstr ""
+
+#: barbican/api/controllers/containers.py:64
+msgid "Container deletion"
+msgstr ""
+
+#: barbican/api/controllers/containers.py:95
+msgid "Containers(s) retrieval"
+msgstr ""
+
+#: barbican/api/controllers/containers.py:131
+msgid "Container creation"
+msgstr ""
+
+#: barbican/api/controllers/containers.py:151
+msgid "Secret provided for '{0}' doesn't exist."
+msgstr ""
+
+#: barbican/api/controllers/orders.py:32
+msgid "Not Found. Sorry but your order is in another castle."
+msgstr ""
+
+#: barbican/api/controllers/orders.py:38
+msgid "Secret metadata expected but not received."
+msgstr ""
+
+#: barbican/api/controllers/orders.py:43
+msgid "Order update is not supported."
+msgstr ""
+
+#: barbican/api/controllers/orders.py:55
+msgid "Order retrieval"
+msgstr ""
+
+#: barbican/api/controllers/orders.py:66 barbican/api/controllers/orders.py:129
+msgid "Order update"
+msgstr ""
+
+#: barbican/api/controllers/orders.py:71
+msgid "Order deletion"
+msgstr ""
+
+#: barbican/api/controllers/orders.py:100
+msgid "Order(s) retrieval"
+msgstr ""
+
+#: barbican/api/controllers/orders.py:135
+msgid "Order creation"
+msgstr ""
+
+#: barbican/api/controllers/secrets.py:41
+msgid "Not Found. Sorry but your secret is in another castle."
+msgstr ""
+
+#: barbican/api/controllers/secrets.py:47
+msgid "Secret already has data, cannot modify it."
+msgstr ""
+
+#: barbican/api/controllers/secrets.py:66
+msgid "Secret retrieval"
+msgstr ""
+
+#: barbican/api/controllers/secrets.py:93
+msgid "Secret update"
+msgstr ""
+
+#: barbican/api/controllers/secrets.py:101
+msgid "Content-Type of '{0}' is not supported for PUT."
+msgstr ""
+
+#: barbican/api/controllers/secrets.py:129
+msgid "Secret deletion"
+msgstr ""
+
+#: barbican/api/controllers/secrets.py:163
+msgid "Secret(s) retrieval"
+msgstr ""
+
+#: barbican/api/controllers/secrets.py:213
+msgid "Secret creation"
+msgstr ""
+
+#: barbican/api/controllers/transportkeys.py:34
+msgid "Not Found. Transport Key not found."
+msgstr ""
+
+#: barbican/api/controllers/transportkeys.py:46
+msgid "Transport Key retrieval"
+msgstr ""
+
+#: barbican/api/controllers/transportkeys.py:58
+msgid "Transport Key deletion"
+msgstr ""
+
+#: barbican/api/controllers/transportkeys.py:85
+msgid "Transport Key(s) retrieval"
+msgstr ""
+
+#: barbican/api/controllers/transportkeys.py:120
+msgid "Transport Key Creation"
+msgstr ""
+
+#: barbican/api/controllers/versions.py:29
+msgid "Version retrieval"
+msgstr ""
+
+#: barbican/api/middleware/context.py:34
+msgid ""
+"When true, this option sets the owner of an image to be the tenant. "
+"Otherwise, the owner of the  image will be the authenticated user issuing"
+" the request."
+msgstr ""
+
+#: barbican/api/middleware/context.py:39
+msgid "Role used to identify an authenticated user as administrator."
+msgstr ""
+
+#: barbican/api/middleware/context.py:42
+msgid ""
+"Allow unauthenticated users to access the API with read-only privileges. "
+"This only applies when using ContextMiddleware."
+msgstr ""
+
+#: barbican/api/middleware/context.py:61
+msgid "Unable to retrieve request id from context"
+msgstr ""
+
+#: barbican/api/middleware/context.py:126
+msgid "Invalid service catalog json."
+msgstr ""
+
+#: barbican/common/config.py:84
+msgid "Invalid syslog facility"
+msgstr ""
+
+#: barbican/common/exception.py:39
+msgid "An unknown exception occurred"
+msgstr ""
+
+#: barbican/common/exception.py:56
+msgid "Missing required argument."
+msgstr ""
+
+#: barbican/common/exception.py:60
+#, python-format
+msgid "Missing required credential: %(required)s"
+msgstr ""
+
+#: barbican/common/exception.py:64
+#, python-format
+msgid ""
+"Incorrect auth strategy, expected \"%(expected)s\" but received "
+"\"%(received)s\""
+msgstr ""
+
+#: barbican/common/exception.py:69
+msgid "An object with the specified identifier was not found."
+msgstr ""
+
+#: barbican/common/exception.py:73
+#, python-format
+msgid "Unknown scheme '%(scheme)s' found in URI"
+msgstr ""
+
+#: barbican/common/exception.py:77
+msgid "The Store URI was malformed."
+msgstr ""
+
+#: barbican/common/exception.py:81
+msgid "An object with the same identifier already exists."
+msgstr ""
+
+#: barbican/common/exception.py:85
+msgid "There is not enough disk space on the image storage media."
+msgstr ""
+
+#: barbican/common/exception.py:89
+msgid "Permission to write image storage media denied."
+msgstr ""
+
+#: barbican/common/exception.py:93
+#, python-format
+msgid "Connect error/bad request to Auth service at URL %(url)s."
+msgstr ""
+
+#: barbican/common/exception.py:97
+#, python-format
+msgid "Auth service at URL %(url)s not found."
+msgstr ""
+
+#: barbican/common/exception.py:101
+msgid "Authorization failed."
+msgstr ""
+
+#: barbican/common/exception.py:105
+msgid "You are not authenticated."
+msgstr ""
+
+#: barbican/common/exception.py:109 barbican/common/exception.py:117
+#: barbican/common/exception.py:126
+msgid "You are not authorized to complete this action."
+msgstr ""
+
+#: barbican/common/exception.py:113
+msgid "Operation is not supported."
+msgstr ""
+
+#: barbican/common/exception.py:121
+#, python-format
+msgid "Image %(image_id)s is protected and cannot be deleted."
+msgstr ""
+
+#: barbican/common/exception.py:130
+msgid "Data supplied was not valid."
+msgstr ""
+
+#: barbican/common/exception.py:134
+msgid "No data supplied to process."
+msgstr ""
+
+#: barbican/common/exception.py:138
+msgid "Sort key supplied was not valid."
+msgstr ""
+
+#: barbican/common/exception.py:142
+msgid "Unable to filter using the specified range."
+msgstr ""
+
+#: barbican/common/exception.py:146
+#, python-format
+msgid "Attribute '%(property)s' is read-only."
+msgstr ""
+
+#: barbican/common/exception.py:150
+#, python-format
+msgid "Attribute '%(property)s' is reserved."
+msgstr ""
+
+#: barbican/common/exception.py:154
+#, python-format
+msgid "Redirecting to %(uri)s for authorization."
+msgstr ""
+
+#: barbican/common/exception.py:158
+msgid "There was an error migrating the database."
+msgstr ""
+
+#: barbican/common/exception.py:162
+msgid "There was an error connecting to a server"
+msgstr ""
+
+#: barbican/common/exception.py:166
+msgid "There was an error configuring the client."
+msgstr ""
+
+#: barbican/common/exception.py:170
+#, python-format
+msgid ""
+"The request returned a 302 Multiple Choices. This generally means that "
+"you have not included a version indicator in a request URI.\n"
+"\n"
+"The body of response returned:\n"
+"%(body)s"
+msgstr ""
+
+#: barbican/common/exception.py:177
+#, python-format
+msgid ""
+"The request returned a 413 Request Entity Too Large. This generally means"
+" that rate limiting or a quota threshold was breached.\n"
+"\n"
+"The response body:\n"
+"%(body)s"
+msgstr ""
+
+#: barbican/common/exception.py:188
+msgid ""
+"The request returned 503 Service Unavilable. This generally occurs on "
+"service overload or other transient outage."
+msgstr ""
+
+#: barbican/common/exception.py:199
+msgid "The request returned 500 Internal Server Error."
+msgstr ""
+
+#: barbican/common/exception.py:203
+#, python-format
+msgid ""
+"The request returned an unexpected status: %(status)s.\n"
+"\n"
+"The response body:\n"
+"%(body)s"
+msgstr ""
+
+#: barbican/common/exception.py:208
+#, python-format
+msgid "Invalid content type %(content_type)s"
+msgstr ""
+
+#: barbican/common/exception.py:212
+#, python-format
+msgid "Invalid content encoding %(content_encoding)s"
+msgstr ""
+
+#: barbican/common/exception.py:216
+msgid "Error while attempting to decode payload."
+msgstr ""
+
+#: barbican/common/exception.py:220
+#, python-format
+msgid "Registry was not configured correctly on API server. Reason: %(reason)s"
+msgstr ""
+
+#: barbican/common/exception.py:225
+#, python-format
+msgid "Store %(store_name)s could not be configured correctly. Reason: %(reason)s"
+msgstr ""
+
+#: barbican/common/exception.py:230
+#, python-format
+msgid ""
+"Driver %(driver_name)s could not be configured correctly. Reason: "
+"%(reason)s"
+msgstr ""
+
+#: barbican/common/exception.py:235
+msgid "Deleting images from this store is not supported."
+msgstr ""
+
+#: barbican/common/exception.py:239
+msgid "Configuration for store failed. Adding images to this store is disabled."
+msgstr ""
+
+#: barbican/common/exception.py:244
+#, python-format
+msgid "'%(strategy)s' is not an available notifier strategy."
+msgstr ""
+
+#: barbican/common/exception.py:248
+#, python-format
+msgid "Maximum redirects (%(redirects)s) was exceeded."
+msgstr ""
+
+#: barbican/common/exception.py:252
+msgid "Received invalid HTTP redirect."
+msgstr ""
+
+#: barbican/common/exception.py:256
+msgid "Response from Keystone does not contain a Barbican endpoint."
+msgstr ""
+
+#: barbican/common/exception.py:261
+#, python-format
+msgid ""
+"Multiple 'image' service matches for region %(region)s. This generally "
+"means that a region is required and you have not supplied one."
+msgstr ""
+
+#: barbican/common/exception.py:267
+#, python-format
+msgid "Server worker creation failed: %(reason)s."
+msgstr ""
+
+#: barbican/common/exception.py:271
+#, python-format
+msgid "Unable to load schema: %(reason)s"
+msgstr ""
+
+#: barbican/common/exception.py:275
+#, python-format
+msgid "Provided object does not match schema '%(schema)s': %(reason)s"
+msgstr ""
+
+#: barbican/common/exception.py:284
+#, python-format
+msgid ""
+"No support for value set on field '%(field)s' on schema '%(schema)s': "
+"%(reason)s"
+msgstr ""
+
+#: barbican/common/exception.py:293
+#, python-format
+msgid "Provided header feature is unsupported: %(feature)s"
+msgstr ""
+
+#: barbican/common/exception.py:297
+msgid ""
+"The image cannot be deleted because it is in use through the backend "
+"store outside of Barbican."
+msgstr ""
+
+#: barbican/common/exception.py:302
+msgid "The provided image is too large."
+msgstr ""
+
+#: barbican/common/validators.py:77
+msgid "{0}' within '{1}"
+msgstr ""
+
+#: barbican/common/validators.py:131
+msgid "'expiration' is before current time"
+msgstr ""
+
+#: barbican/common/validators.py:143
+msgid "If 'payload' is supplied, 'payload_content_type' must also be supplied."
+msgstr ""
+
+#: barbican/common/validators.py:152
+msgid "payload_content_type is not one of {0}"
+msgstr ""
+
+#: barbican/common/validators.py:162
+msgid ""
+"payload_content_encoding must be specified when payload_content_type is "
+"application/octet-stream."
+msgstr ""
+
+#: barbican/common/validators.py:172
+msgid ""
+"payload_content_encoding must not be specified when payload_content_type "
+"is text/plain"
+msgstr ""
+
+#: barbican/common/validators.py:185
+msgid "If 'payload' specified, must be non empty"
+msgstr ""
+
+#: barbican/common/validators.py:195
+msgid "payload must be provided when payload_content_type is specified"
+msgstr ""
+
+#: barbican/common/validators.py:213
+msgid "Invalid date for 'expiration'"
+msgstr ""
+
+#: barbican/common/validators.py:244
+msgid "'secret' attributes are required"
+msgstr ""
+
+#: barbican/common/validators.py:252
+msgid "'payload' not allowed for secret generation"
+msgstr ""
+
+#: barbican/common/validators.py:263
+msgid "Only 'application/oc tet-stream' supported"
+msgstr ""
+
+#: barbican/common/validators.py:270
+msgid "Only 'cbc' supported"
+msgstr ""
+
+#: barbican/common/validators.py:276
+msgid "Only 'aes' supported"
+msgstr ""
+
+#: barbican/common/validators.py:284
+msgid "Must have non-zero positive bit_length to generate secret"
+msgstr ""
+
+#: barbican/common/validators.py:290
+msgid "Must be a positive integer that is a multiple of 8"
+msgstr ""
+
+#: barbican/common/validators.py:344
+msgid "Duplicate reference names are not allowed"
+msgstr ""
+
+#: barbican/common/validators.py:358
+msgid ""
+"only 'private_key', 'public_key' and 'private_key_passphrase' reference "
+"names are allowed for RSA type"
+msgstr ""
+
+#: barbican/common/validators.py:402
+msgid "plugin_name must be provided"
+msgstr ""
+
+#: barbican/common/validators.py:412
+msgid "transport_key must be provided"
+msgstr ""
+
+#: barbican/crypto/dogtag_crypto.py:38
+msgid "Path to PEM file for authentication"
+msgstr ""
+
+#: barbican/crypto/dogtag_crypto.py:41
+msgid "Password to unlock PEM file"
+msgstr ""
+
+#: barbican/crypto/dogtag_crypto.py:44
+msgid "Hostname for the DRM"
+msgstr ""
+
+#: barbican/crypto/dogtag_crypto.py:47
+msgid "Port for the DRM"
+msgstr ""
+
+#: barbican/crypto/dogtag_crypto.py:50
+msgid "Path to the NSS certificate database"
+msgstr ""
+
+#: barbican/crypto/dogtag_crypto.py:53
+msgid "Password for NSS certificate database"
+msgstr ""
+
+#: barbican/crypto/dogtag_crypto.py:61
+msgid "Invalid algorithm passed in"
+msgstr ""
+
+#: barbican/crypto/dogtag_crypto.py:73
+msgid "pem_path is required"
+msgstr ""
+
+#: barbican/crypto/dogtag_crypto.py:77
+msgid "pem_password is required"
+msgstr ""
+
+#: barbican/crypto/dogtag_crypto.py:86
+msgid "nss_password is required"
+msgstr ""
+
+#: barbican/crypto/extension_manager.py:38
+msgid "Extension namespace to search for plugins."
+msgstr ""
+
+#: barbican/crypto/extension_manager.py:42
+msgid "List of crypto plugins to load."
+msgstr ""
+
+#: barbican/crypto/extension_manager.py:53
+msgid "Crypto Content Type of '{0}' not supported"
+msgstr ""
+
+#: barbican/crypto/extension_manager.py:63
+msgid "Crypto Content-Encoding of '{0}' not supported"
+msgstr ""
+
+#: barbican/crypto/extension_manager.py:73
+msgid "Crypto Accept of '{0}' not supported"
+msgstr ""
+
+#: barbican/crypto/extension_manager.py:82
+msgid "Crypto algorithm of '{0}' not supported"
+msgstr ""
+
+#: barbican/crypto/extension_manager.py:105
+msgid "Crypto plugin not found."
+msgstr ""
+
+#: barbican/crypto/extension_manager.py:112
+msgid "No secret information provided to encrypt."
+msgstr ""
+
+#: barbican/crypto/extension_manager.py:120
+msgid "No secret information located for secret {0}"
+msgstr ""
+
+#: barbican/crypto/extension_manager.py:130
+msgid "Encoding type must be 'base64' for text-based payloads."
+msgstr ""
+
+#: barbican/crypto/extension_manager.py:136
+#: barbican/crypto/extension_manager.py:146
+msgid "Unknown"
+msgstr ""
+
+#: barbican/crypto/extension_manager.py:138
+msgid "Failed to bind kek metadata for plugin: {0}"
+msgstr ""
+
+#: barbican/crypto/extension_manager.py:148
+msgid "Problem seen during crypto processing - Reason: {0}"
+msgstr ""
+
+#: barbican/crypto/extension_manager.py:209
+msgid "Unexpected content-type: '{0}'"
+msgstr ""
+
+#: barbican/crypto/p11_crypto.py:37
+msgid "Path to vendor PKCS11 library"
+msgstr ""
+
+#: barbican/crypto/p11_crypto.py:40
+msgid "Password to login to PKCS11 session"
+msgstr ""
+
+#: barbican/crypto/p11_crypto.py:47
+msgid "More than one key found for label"
+msgstr ""
+
+#: barbican/crypto/p11_crypto.py:51
+msgid "General exception"
+msgstr ""
+
+#: barbican/crypto/p11_crypto.py:66
+msgid "library_path is required"
+msgstr ""
+
+#: barbican/crypto/plugin.py:40
+msgid "Key encryption key to be used by Simple Crypto Plugin"
+msgstr ""
+
+#: barbican/model/repositories.py:132
+#, python-format
+msgid ""
+"Error configuring registry database with supplied sql_connection. Got "
+"error: %s"
+msgstr ""
+
+#: barbican/model/repositories.py:147
+msgid "Updating schema to latest version"
+msgstr ""
+
+#: barbican/model/repositories.py:151
+msgid "Auto-creating barbican registry DB"
+msgstr ""
+
+#: barbican/model/repositories.py:158
+msgid "not auto-creating barbican registry DB"
+msgstr ""
+
+#: barbican/model/repositories.py:197
+#, python-format
+msgid "SQL connection failed. %d attempts left."
+msgstr ""
+
+#: barbican/openstack/common/eventlet_backdoor.py:142
+#, python-format
+msgid "Eventlet backdoor listening on %(port)s for process %(pid)d"
+msgstr ""
+
+#: barbican/openstack/common/gettextutils.py:320
+msgid "Message objects do not support addition."
+msgstr ""
+
+#: barbican/openstack/common/gettextutils.py:330
+msgid ""
+"Message objects do not support str() because they may contain non-ascii "
+"characters. Please use unicode() or translate() instead."
+msgstr ""
+
+#: barbican/openstack/common/log.py:327
+#, python-format
+msgid "Deprecated: %s"
+msgstr ""
+
+#: barbican/openstack/common/log.py:438
+#, python-format
+msgid "Error loading logging config %(log_config)s: %(err_msg)s"
+msgstr ""
+
+#: barbican/openstack/common/log.py:489
+#, python-format
+msgid "syslog facility must be one of: %s"
+msgstr ""
+
+#: barbican/openstack/common/log.py:722
+#, python-format
+msgid "Fatal call to deprecated config: %(msg)s"
+msgstr ""
+
+#: barbican/openstack/common/loopingcall.py:84
+#, python-format
+msgid "task run outlasted interval by %s sec"
+msgstr ""
+
+#: barbican/openstack/common/loopingcall.py:91
+msgid "in fixed duration looping call"
+msgstr ""
+
+#: barbican/openstack/common/loopingcall.py:131
+#, python-format
+msgid "Dynamic looping call sleeping for %.02f seconds"
+msgstr ""
+
+#: barbican/openstack/common/loopingcall.py:138
+msgid "in dynamic looping call"
+msgstr ""
+
+#: barbican/openstack/common/policy.py:96
+msgid "The JSON file that defines policies."
+msgstr ""
+
+#: barbican/openstack/common/policy.py:99
+msgid "Default rule. Enforced when a requested rule is not found."
+msgstr ""
+
+#: barbican/openstack/common/policy.py:114
+#, python-format
+msgid "Policy doesn't allow %s to be performed."
+msgstr ""
+
+#: barbican/openstack/common/policy.py:208
+#, python-format
+msgid "Rules must be an instance of dict or Rules, got %s instead"
+msgstr ""
+
+#: barbican/openstack/common/processutils.py:90
+#, python-format
+msgid "Got unknown keyword args to utils.execute: %r"
+msgstr ""
+
+#: barbican/openstack/common/processutils.py:99
+#, python-format
+msgid "Running cmd (subprocess): %s"
+msgstr ""
+
+#: barbican/openstack/common/processutils.py:114
+#, python-format
+msgid "Result was %s"
+msgstr ""
+
+#: barbican/openstack/common/processutils.py:128
+#, python-format
+msgid "%r failed. Retrying."
+msgstr ""
+
+#: barbican/openstack/common/service.py:118
+#: barbican/openstack/common/service.py:335
+msgid "Full set of CONF:"
+msgstr ""
+
+#: barbican/openstack/common/service.py:127
+#: barbican/openstack/common/service.py:217
+#, python-format
+msgid "Caught %s, exiting"
+msgstr ""
+
+#: barbican/openstack/common/service.py:139
+msgid "Exception during rpc cleanup."
+msgstr ""
+
+#: barbican/openstack/common/service.py:188
+msgid "Parent process has died unexpectedly, exiting"
+msgstr ""
+
+#: barbican/openstack/common/service.py:223
+msgid "Unhandled exception"
+msgstr ""
+
+#: barbican/openstack/common/service.py:256
+msgid "Forking too fast, sleeping"
+msgstr ""
+
+#: barbican/openstack/common/service.py:278
+#, python-format
+msgid "Started child %d"
+msgstr ""
+
+#: barbican/openstack/common/service.py:288
+#, python-format
+msgid "Starting %d workers"
+msgstr ""
+
+#: barbican/openstack/common/service.py:305
+#, python-format
+msgid "Child %(pid)d killed by signal %(sig)d"
+msgstr ""
+
+#: barbican/openstack/common/service.py:309
+#, python-format
+msgid "Child %(pid)s exited with status %(code)d"
+msgstr ""
+
+#: barbican/openstack/common/service.py:313
+#, python-format
+msgid "pid %d not in child list"
+msgstr ""
+
+#: barbican/openstack/common/service.py:345
+#, python-format
+msgid "Caught %s, stopping children"
+msgstr ""
+
+#: barbican/openstack/common/service.py:363
+#, python-format
+msgid "Waiting on %d children to exit"
+msgstr ""
+
+#: barbican/openstack/common/sslutils.py:52
+#, python-format
+msgid "Unable to find cert_file : %s"
+msgstr ""
+
+#: barbican/openstack/common/sslutils.py:55
+#, python-format
+msgid "Unable to find ca_file : %s"
+msgstr ""
+
+#: barbican/openstack/common/sslutils.py:58
+#, python-format
+msgid "Unable to find key_file : %s"
+msgstr ""
+
+#: barbican/openstack/common/sslutils.py:61
+msgid ""
+"When running server in SSL mode, you must specify both a cert_file and "
+"key_file option value in your configuration file"
+msgstr ""
+
+#: barbican/openstack/common/sslutils.py:100
+#, python-format
+msgid "Invalid SSL version : %s"
+msgstr ""
+
+#: barbican/openstack/common/strutils.py:92
+#, python-format
+msgid "Unrecognized value '%(val)s', acceptable values are: %(acceptable)s"
+msgstr ""
+
+#: barbican/openstack/common/strutils.py:197
+#, python-format
+msgid "Invalid unit system: \"%s\""
+msgstr ""
+
+#: barbican/openstack/common/strutils.py:206
+#, python-format
+msgid "Invalid string format: %s"
+msgstr ""
+
+#: barbican/openstack/common/crypto/utils.py:29
+msgid "An unknown error occurred in crypto utils."
+msgstr ""
+
+#: barbican/openstack/common/crypto/utils.py:36
+#, python-format
+msgid "Block size of %(given)d is too big, max = %(maximum)d"
+msgstr ""
+
+#: barbican/openstack/common/crypto/utils.py:45
+#, python-format
+msgid "Length of %(given)d is too long, max = %(maximum)d"
+msgstr ""
+
+#: barbican/queue/__init__.py:34
+msgid "True enables queuing, False invokes workers synchronously"
+msgstr ""
+
+#: barbican/queue/__init__.py:37
+msgid "Queue namespace"
+msgstr ""
+
+#: barbican/queue/__init__.py:39
+msgid "Queue topic name"
+msgstr ""
+
+#: barbican/queue/__init__.py:41
+msgid "Version of tasks invoked via queue"
+msgstr ""
+
+#: barbican/queue/__init__.py:43
+msgid "Server name for RPC task processing server"
+msgstr ""
+
+#: barbican/tasks/resources.py:62
+msgid "Could not retrieve information needed to process task '{0}'."
+msgstr ""
+
+#: barbican/tasks/resources.py:70
+msgid "Could not perform processing for task '{0}'."
+msgstr ""
+
+#: barbican/tasks/resources.py:80
+msgid "Problem handling an error for task '{0}', raising original exception."
+msgstr ""
+
+#: barbican/tasks/resources.py:89
+msgid "Could not process after successfully executing task '{0}'."
+msgstr ""
+
+#: barbican/tasks/resources.py:146
+msgid "Create Secret"
+msgstr ""
+
+#: barbican/tests/tasks/test_resources.py:146
+msgid "Create Secret failure seen - please contact site administrator."
+msgstr ""
+
