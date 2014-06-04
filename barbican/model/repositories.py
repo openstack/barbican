@@ -599,6 +599,10 @@ class KEKDatumRepo(BaseRepo):
                                  suppress_exception=False,
                                  session=None):
         """Find or create a KEK datum instance."""
+        if not plugin_name:
+            raise exception.BarbicanException(
+                u._('Tried to register crypto plugin with null or empty '
+                    'name.'))
 
         kek_datum = None
 
@@ -615,6 +619,7 @@ class KEKDatumRepo(BaseRepo):
             kek_datum = query.one()
 
         except sa_orm.exc.NoResultFound:
+
             kek_datum = models.KEKDatum()
 
             kek_datum.kek_label = "tenant-{0}-key-{1}".format(

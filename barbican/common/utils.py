@@ -22,6 +22,7 @@ import uuid
 
 from oslo.config import cfg
 
+from barbican.openstack.common import gettextutils as u
 import barbican.openstack.common.log as logging
 
 
@@ -103,20 +104,21 @@ def get_accepted_encodings_direct(content_encoding_header):
                                      cmp=lambda a, b: cmp(b[1], a[1]))]
 
 
-def generate_fullname_for(o):
+def generate_fullname_for(instance):
     """Produce a fully qualified class name for the specified instance.
 
-    :param o: The instance to generate information from.
+    :param instance: The instance to generate information from.
     :return: A string providing the package.module information for the
     instance.
+    :raises: ValueError if the given instance is null
     """
-    if not o:
-        return 'None'
+    if not instance:
+        raise ValueError(u._("Cannot generate a fullname for a null instance"))
 
-    module = o.__class__.__module__
-    if module is None or module == str.__class__.__module__:
-        return o.__class__.__name__
-    return module + '.' + o.__class__.__name__
+    module = instance.__class__.__module__
+    if module is None or module == "__builtin__":
+        return instance.__class__.__name__
+    return module + '.' + instance.__class__.__name__
 
 
 class TimeKeeper(object):
