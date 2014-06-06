@@ -507,7 +507,7 @@ class TransportKey(BASE, ModelBase):
 
 # Keep this tuple synchronized with the models in the file
 MODELS = [TenantSecret, Tenant, Secret, EncryptedDatum, Order, Container,
-          ContainerSecret, TransportKey]
+          ContainerSecret, TransportKey, SecretStoreMetadatum]
 
 
 def register_models(engine):
