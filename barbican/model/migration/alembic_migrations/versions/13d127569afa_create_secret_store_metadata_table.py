@@ -28,13 +28,12 @@ down_revision = '1a0c2cdafb38'
 from alembic import op
 import sqlalchemy as sa
 
-from barbican.model import repositories as rep
-
 
 def upgrade():
-    meta = sa.MetaData()
-    meta.reflect(bind=rep._ENGINE, only=['secret_store_metadata'])
-    if 'secret_store_metadata' not in meta.tables.keys():
+    ctx = op.get_context()
+    con = op.get_bind()
+    table_exists = ctx.dialect.has_table(con.engine, 'secret_store_metadata')
+    if not table_exists:
         op.create_table(
             'secret_store_metadata',
             sa.Column('id', sa.String(length=36), nullable=False),
