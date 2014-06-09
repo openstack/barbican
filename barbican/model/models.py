@@ -104,7 +104,7 @@ class ModelBase(object):
         return self
 
     def next(self):
-        n = self._i.next().name
+        n = next(self._i).name
         return n, getattr(self, n)
 
     def keys(self):
