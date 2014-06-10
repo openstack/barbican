@@ -335,7 +335,7 @@ class CryptoExtensionManager(named.NamedExtensionManager):
 
     def generate_asymmetric_encryption_keys(self, meta, content_type, tenant,
                                             kek_repo):
-        """Delegates generating a asymmteric keys to the first
+        """Delegates generating asymmteric keys to the first
         supported plugin based on `meta`. meta will provide extra
         information to help key generation.
         Based on passpharse in meta this method will return a tuple

@@ -170,7 +170,7 @@
                 <parameter>payload</parameter> parameter against the
               secrets resource and then include the payload in a
               subsequent <command>PUT</command> request. This mode
-              enables you to upload a a binary file to the Barbican
+              enables you to upload a binary file to the Barbican
               database directly for encrypted storage.</para>
           </listitem>
         </itemizedlist>
@@ -567,7 +567,7 @@
       </para>
       <section xml:id="Generating_Order">
         <title>Generating an order</title>
-        <para>This section describes how to generate an order throught
+        <para>This section describes how to generate an order through
           the Barbican API.</para>
         <para>
           <orderedlist>

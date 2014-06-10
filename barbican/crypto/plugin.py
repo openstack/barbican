@@ -136,7 +136,7 @@ class GenerateDTO(object):
         String attribute used to identify the type of secret that should be
         generated. This will be either ``"symmetric"`` or ``"asymmetric"``.
 
-    .. attribute:: algoritm
+    .. attribute:: algorithm
 
         String attribute used to specify what type of algorithm the secret will
         be used for.  e.g. ``"AES"`` for a ``"symmetric"`` type, or ``"RSA"``

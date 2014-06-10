@@ -163,7 +163,7 @@
 					provided, only the secret metadata will be
 					retrievable from Barbican and any attempt to
 					retrieve decrypted data for that secret will fail.
-					Defering the secret information to a PUT request
+					Deferring the secret information to a PUT request
 					is useful for secrets that are in binary format
 					and are not suitable for base64 encoding.
 				</wadl:doc>
@@ -459,7 +459,7 @@ The following values are supported:</para>
 		</response>
 		<response status="404">
 			<doc title="Error">This error code is returned when the
-				supplied UUID doesn't match a order in the data store,
+				supplied UUID doesn't match an order in the data store,
 				which means the order doesn't exist. </doc>
 		</response>
 	</method>
