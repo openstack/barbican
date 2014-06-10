@@ -11,7 +11,7 @@
               <representation mediaType="application/json"/>
           </response>
           <response status="400" xmlns="http://wadl.dev.java.net/2009/02">
-              <doc title="Error">A general error occured.</doc>
+              <doc title="Error">A general error occurred.</doc>
               <representation mediaType="application/xml" element="identity:badRequest"/>
               <representation mediaType="application/json"/>
           </response>

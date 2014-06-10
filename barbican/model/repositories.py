@@ -382,7 +382,7 @@ class BaseRepo(object):
     def _do_validate(self, values):
         """Sub-class hook: validate values.
 
-        Validates the incoming data and raises a Invalid exception
+        Validates the incoming data and raises an Invalid exception
         if anything is out of order.
 
         :param values: Mapping of entity metadata to check

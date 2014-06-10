@@ -606,7 +606,7 @@
                         specifying the secret payload and then
                         submitting a subsequent <command>PUT</command>
                         request with the payload. This storage mode
-                        enables you to upload a a binary file to the
+                        enables you to upload a binary file to the
                         Barbican database directly for encrypted
                         storage. For more information, read <olink
                             targetdoc="ck-devguide"
@@ -783,7 +783,7 @@
                         <para>
                             <programlisting>curl -i -H 'Content-Type: application/json' -d '{"name": "Binary Key File"}' http://<replaceable>endpointURL</replaceable>/v1/12345/secrets</programlisting>
                         </para>
-                        <para>If the call is successfull, you receive
+                        <para>If the call is successful, you receive
                             a <code>200 OK</code> response as shown in
                             the following example:</para>
                         <para>
