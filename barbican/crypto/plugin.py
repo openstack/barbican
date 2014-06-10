@@ -375,28 +375,41 @@ class SimpleCryptoPlugin(CryptoPluginBase):
     """Insecure implementation of the crypto plugin."""
 
     def __init__(self, conf=CONF):
-        self.kek = conf.simple_crypto_plugin.kek
+        self.master_kek = conf.simple_crypto_plugin.kek
+
+    def _get_kek(self, kek_meta_dto):
+        if not kek_meta_dto.plugin_meta:
+            raise ValueError('KEK not yet created.')
+        # the kek is stored encrypted. Need to decrypt.
+        encryptor = fernet.Fernet(self.master_kek)
+        return encryptor.decrypt(kek_meta_dto.plugin_meta)
 
     def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
+        kek = self._get_kek(kek_meta_dto)
         unencrypted = encrypt_dto.unencrypted
         if not isinstance(unencrypted, str):
             raise ValueError('Unencrypted data must be a byte type, '
                              'but was {0}'.format(type(unencrypted)))
-        encryptor = fernet.Fernet(self.kek)
+        encryptor = fernet.Fernet(kek)
         cyphertext = encryptor.encrypt(unencrypted)
         return ResponseDTO(cyphertext, None)
 
     def decrypt(self, encrypted_dto, kek_meta_dto, kek_meta_extended,
                 keystone_id):
+        kek = self._get_kek(kek_meta_dto)
         encrypted = encrypted_dto.encrypted
-        decryptor = fernet.Fernet(self.kek)
+        decryptor = fernet.Fernet(kek)
         return decryptor.decrypt(encrypted)
 
     def bind_kek_metadata(self, kek_meta_dto):
         kek_meta_dto.algorithm = 'aes'
         kek_meta_dto.bit_length = 128
         kek_meta_dto.mode = 'cbc'
-        kek_meta_dto.plugin_meta = None
+        if not kek_meta_dto.plugin_meta:
+            # the kek is stored encrypted in the plugin_meta field
+            encryptor = fernet.Fernet(self.master_kek)
+            key = fernet.Fernet.generate_key()
+            kek_meta_dto.plugin_meta = encryptor.encrypt(key)
         return kek_meta_dto
 
     def generate_symmetric(self, generate_dto, kek_meta_dto, keystone_id):
