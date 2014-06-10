@@ -452,7 +452,8 @@ class Container(BASE, ModelBase):
     __tablename__ = 'containers'
 
     name = sa.Column(sa.String(255))
-    type = sa.Column(sa.Enum('generic', 'rsa', name='container_types'))
+    type = sa.Column(sa.Enum('generic', 'rsa', 'certificate',
+                             name='container_types'))
     tenant_id = sa.Column(sa.String(36), sa.ForeignKey('tenants.id'),
                           nullable=False)
 

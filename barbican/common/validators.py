@@ -306,7 +306,7 @@ class ContainerValidator(ValidatorBase):
                 "type": {
                     "type": "string",
                     #TODO: (hgedikli) move this to a common location
-                    "enum": ["generic", "rsa"]
+                    "enum": ["generic", "rsa", "certificate"]
                 },
                 "secret_refs": {"type": "array", "items": {
                     "type": "object",
@@ -360,6 +360,23 @@ class ContainerValidator(ValidatorBase):
                                                  " 'private_key_passphrase'"
                                                  " reference names are allowed"
                                                  " for RSA type"),
+                                      property="secret_refs")
+
+            if container_type == 'certificate':
+                supported_names = ('certificate',
+                                   'private_key',
+                                   'private_key_passphrase')
+
+                if self.contains_unsupported_names(secret_refs,
+                                                   supported_names) or len(
+                        secret_refs) > 3:
+                    raise exception.\
+                        InvalidObject(schema=schema_name,
+                                      reason=u._("only 'private_key',"
+                                                 " 'certificate' and"
+                                                 " 'private_key_passphrase'"
+                                                 " reference names are allowed"
+                                                 " for Certificate type"),
                                       property="secret_refs")
 
         return json_data
