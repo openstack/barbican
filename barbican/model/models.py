@@ -20,11 +20,12 @@ import sqlalchemy as sa
 from sqlalchemy.ext import compiler
 from sqlalchemy.ext import declarative
 from sqlalchemy import orm
+from sqlalchemy import types as sql_types
 
 from barbican.common import exception
 from barbican.common import utils
+from barbican.openstack.common import jsonutils as json
 from barbican.openstack.common import timeutils
-
 
 LOG = utils.getLogger(__name__)
 BASE = declarative.declarative_base()
@@ -45,6 +46,24 @@ class States(object):
 @compiler.compiles(sa.BigInteger, 'sqlite')
 def compile_big_int_sqlite(type_, compiler, **kw):
     return 'INTEGER'
+
+
+class JsonBlob(sql_types.TypeDecorator):
+    """JsonBlob is custom type for fields
+        which need to store JSON text
+    """
+
+    impl = sa.Text
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            value = json.dumps(value)
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            value = json.loads(value)
+        return value
 
 
 class ModelBase(object):
@@ -370,13 +389,15 @@ class KEKDatum(BASE, ModelBase):
 class Order(BASE, ModelBase):
     """Represents an Order in the datastore.
 
-    Orders are requests for Barbican to create secret information,
-    ranging from simple AES key generation requests to automated
-    requests to Certificate Authorities to generate SSL certificates.
+    Orders are requests for Barbican to generate secrets,
+    ranging from symmetric, asymmetric keys to automated
+    requests to Certificate Authorities to generate SSL
+    certificates.
     """
 
     __tablename__ = 'orders'
 
+    type = sa.Column(sa.String(255), nullable=False, default='key')
     tenant_id = sa.Column(sa.String(36), sa.ForeignKey('tenants.id'),
                           nullable=False)
 
@@ -389,9 +410,12 @@ class Order(BASE, ModelBase):
     secret_mode = sa.Column(sa.String(255))
     secret_payload_content_type = sa.Column(sa.String(255), nullable=False)
     secret_expiration = sa.Column(sa.DateTime, default=None)
+    meta = sa.Column(JsonBlob(), nullable=True)
 
     secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
                           nullable=True)
+    container_id = sa.Column(sa.String(36), sa.ForeignKey('containers.id'),
+                             nullable=True)
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -402,8 +426,13 @@ class Order(BASE, ModelBase):
                           'expiration': self.secret_expiration,
                           'payload_content_type':
                           self.secret_payload_content_type},
-               'secret_id': self.secret_id,
+               'type': self.type,
+               'meta': self.meta,
                'order_id': self.id}
+        if self.secret_id:
+            ret['secret_id'] = self.secret_id
+        if self.container_id:
+            ret['container_id'] = self.container_id
         if self.error_status_code:
             ret['error_status_code'] = self.error_status_code
         if self.error_reason:
