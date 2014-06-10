@@ -544,6 +544,10 @@ msgstr ""
 msgid "Duplicate reference names are not allowed"
 msgstr ""
 
+#: barbican/common/validators.py:367
+msgid "Duplicate secret ids are not allowed"
+msgstr ""
+
 #: barbican/common/validators.py:373
 msgid ""
 "only 'private_key', 'public_key' and 'private_key_passphrase' reference "
