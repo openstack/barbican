@@ -18,9 +18,10 @@ import os
 from Crypto.PublicKey import DSA
 from Crypto.PublicKey import RSA
 from Crypto.Util import asn1
+from cryptography import fernet
 
 import mock
-
+import six
 import testtools
 
 from barbican.crypto import plugin
@@ -89,6 +90,32 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
             kek_meta_dto,
             mock.MagicMock(),
         )
+
+    def test_encrypt_with_unicode_kek_must_pass(self):
+        """Test plan:
+                Generate a kek
+                Encrypt with master kek
+                Convert to unicode
+                call plugin.encrypt on unencrypted
+                decrypt response cypher_text
+                Compare with unencrypted
+        """
+        tenant_kek = fernet.Fernet.generate_key()
+        encryptor = fernet.Fernet(self.plugin.master_kek)
+        ENC_tenant_kek = encryptor.encrypt(tenant_kek)
+        UENC_tenant_kek = six.u(ENC_tenant_kek)
+        kek_meta_dto = self._get_mocked_kek_meta_dto()
+        kek_meta_dto.plugin_meta = UENC_tenant_kek
+
+        unencrypted = 'PlainTextSecret'
+        encrypt_dto = plugin.EncryptDTO(unencrypted)
+        response_dto = self.plugin.encrypt(encrypt_dto,
+                                           kek_meta_dto,
+                                           mock.MagicMock())
+
+        tenant_encryptor = fernet.Fernet(tenant_kek)
+        decrypted = tenant_encryptor.decrypt(response_dto.cypher_text)
+        self.assertEqual(unencrypted, decrypted)
 
     def test_decrypt_kek_not_created(self):
         kek_meta_dto = mock.MagicMock()

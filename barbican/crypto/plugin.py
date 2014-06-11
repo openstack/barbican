@@ -382,6 +382,10 @@ class SimpleCryptoPlugin(CryptoPluginBase):
             raise ValueError('KEK not yet created.')
         # the kek is stored encrypted. Need to decrypt.
         encryptor = fernet.Fernet(self.master_kek)
+        # Note : If plugin_meta type is unicode, encode to byte.
+        if isinstance(kek_meta_dto.plugin_meta, six.text_type):
+            kek_meta_dto.plugin_meta = kek_meta_dto.plugin_meta.encode('utf-8')
+
         return encryptor.decrypt(kek_meta_dto.plugin_meta)
 
     def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
