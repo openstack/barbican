@@ -33,7 +33,7 @@ LOG = utils.getLogger(__name__)
 
 
 db_opts = [
-    cfg.StrOpt('sql_connection', default=None),
+    cfg.StrOpt('sql_connection'),
 ]
 
 CONF = cfg.CONF

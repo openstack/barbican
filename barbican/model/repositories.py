@@ -54,7 +54,7 @@ db_opts = [
     cfg.IntOpt('sql_max_retries', default=60),
     cfg.IntOpt('sql_retry_interval', default=1),
     cfg.BoolOpt('db_auto_create', default=True),
-    cfg.StrOpt('sql_connection', default=None),
+    cfg.StrOpt('sql_connection'),
     cfg.IntOpt('max_limit_paging', default=100),
     cfg.IntOpt('default_limit_paging', default=10),
 ]

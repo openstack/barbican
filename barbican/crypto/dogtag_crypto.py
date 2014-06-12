@@ -34,10 +34,8 @@ dogtag_crypto_plugin_group = cfg.OptGroup(name='dogtag_crypto_plugin',
                                           title="Dogtag Crypto Plugin Options")
 dogtag_crypto_plugin_opts = [
     cfg.StrOpt('pem_path',
-               default=None,
                help=u._('Path to PEM file for authentication')),
     cfg.StrOpt('pem_password',
-               default=None,
                help=u._('Password to unlock PEM file')),
     cfg.StrOpt('drm_host',
                default="localhost",
@@ -46,10 +44,8 @@ dogtag_crypto_plugin_opts = [
                default="8443",
                help=u._('Port for the DRM')),
     cfg.StrOpt('nss_db_path',
-               default=None,
                help=u._('Path to the NSS certificate database')),
     cfg.StrOpt('nss_password',
-               default=None,
                help=u._('Password for NSS certificate database'))
 ]
 

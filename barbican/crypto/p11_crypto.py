@@ -33,10 +33,8 @@ p11_crypto_plugin_group = cfg.OptGroup(name='p11_crypto_plugin',
                                        title="PKCS11 Crypto Plugin Options")
 p11_crypto_plugin_opts = [
     cfg.StrOpt('library_path',
-               default=None,
                help=u._('Path to vendor PKCS11 library')),
     cfg.StrOpt('login',
-               default=None,
                help=u._('Password to login to PKCS11 session'))
 ]
 CONF.register_group(p11_crypto_plugin_group)
