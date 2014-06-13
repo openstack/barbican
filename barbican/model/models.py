@@ -139,12 +139,18 @@ class ModelBase(object):
         return self.__dict__.copy()
 
     def to_dict_fields(self):
+        created_at = self.created_at.isoformat() if self.created_at \
+            else self.created_at
+
+        updated_at = self.updated_at.isoformat() if self.updated_at \
+            else self.updated_at
+
         """Returns a dictionary of just the db fields of this entity."""
-        dict_fields = {'created': self.created_at,
-                       'updated': self.updated_at,
+        dict_fields = {'created': created_at,
+                       'updated': updated_at,
                        'status': self.status}
         if self.deleted_at:
-            dict_fields['deleted'] = self.deleted_at
+            dict_fields['deleted'] = self.deleted_at.isoformat()
         if self.deleted:
             dict_fields['is_deleted'] = True
         dict_fields.update(self._do_extra_dict_fields())
@@ -267,7 +273,8 @@ class Secret(BASE, ModelBase):
         """Sub-class hook method: return dict of fields."""
         return {'secret_id': self.id,
                 'name': self.name or self.id,
-                'expiration': self.expiration,
+                'expiration': self.expiration.isoformat() if self.expiration
+                else self.expiration,
                 'algorithm': self.algorithm,
                 'bit_length': self.bit_length,
                 'mode': self.mode}
