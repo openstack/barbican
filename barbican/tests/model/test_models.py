@@ -73,6 +73,29 @@ class WhenCreatingNewContainer(testtools.TestCase):
         self.assertEqual(container.container_secrets[2].secret_id,
                          self.parsed_container['secret_refs'][2]['secret_ref'])
 
+    def test_new_certificate_container_is_created_from_dict(self):
+        self.parsed_container['type'] = 'certificate'
+        container = models.Container(self.parsed_container)
+        self.assertEqual(container.name, self.parsed_container['name'])
+        self.assertEqual(container.type, self.parsed_container['type'])
+        self.assertEqual(len(container.container_secrets),
+                         len(self.parsed_container['secret_refs']))
+
+        self.assertEqual(container.container_secrets[0].name,
+                         self.parsed_container['secret_refs'][0]['name'])
+        self.assertEqual(container.container_secrets[0].secret_id,
+                         self.parsed_container['secret_refs'][0]['secret_ref'])
+
+        self.assertEqual(container.container_secrets[1].name,
+                         self.parsed_container['secret_refs'][1]['name'])
+        self.assertEqual(container.container_secrets[1].secret_id,
+                         self.parsed_container['secret_refs'][1]['secret_ref'])
+
+        self.assertEqual(container.container_secrets[2].name,
+                         self.parsed_container['secret_refs'][2]['name'])
+        self.assertEqual(container.container_secrets[2].secret_id,
+                         self.parsed_container['secret_refs'][2]['secret_ref'])
+
     def test_parse_secret_ref_uri(self):
         self.parsed_container['secret_refs'][0]['secret_ref'] =\
             'http://localhost:9110/123/secrets/123456'

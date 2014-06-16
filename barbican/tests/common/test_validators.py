@@ -751,5 +751,59 @@ class WhenTestingRSAContainerValidator(testtools.TestCase):
         self.assertEqual('secret_refs', exception.invalid_property)
 
 
+class WhenTestingCertificateContainerValidator(testtools.TestCase):
+
+    def setUp(self):
+        super(WhenTestingCertificateContainerValidator, self).setUp()
+
+        self.name = 'name'
+        self.type = 'certificate'
+        self.secret_refs = [
+            {
+                'name': 'certificate',
+                'secret_ref': 'S4dfsdrf'
+            },
+            {
+                'name': 'private_key',
+                'secret_ref': '123'
+            },
+            {
+                'name': 'private_key_passphrase',
+                'secret_ref': '123'
+            }
+        ]
+
+        self.container_req = {'name': self.name,
+                              'type': self.type,
+                              'secret_refs': self.secret_refs}
+
+        self.validator = validators.ContainerValidator()
+
+    def test_should_fail_more_than_3_secret_refs(self):
+        new_secret_ref = {
+            'name': 'new secret ref',
+            'secret_ref': '234234'
+        }
+        self.container_req['secret_refs'].append(new_secret_ref)
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.container_req,
+        )
+
+        self.assertEqual('secret_refs', exception.invalid_property)
+
+    def test_should_fail_unsupported_names_in_secret_refs(self):
+        self.container_req['secret_refs'][0]['name'] = 'public_key'
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.container_req,
+        )
+
+        self.assertEqual('secret_refs', exception.invalid_property)
+
 if __name__ == '__main__':
     unittest.main()
