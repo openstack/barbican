@@ -770,6 +770,10 @@ class WhenTestingCertificateContainerValidator(testtools.TestCase):
             {
                 'name': 'private_key_passphrase',
                 'secret_ref': '123'
+            },
+            {
+                'name': 'intermediates',
+                'secret_ref': '123'
             }
         ]
 
@@ -779,7 +783,7 @@ class WhenTestingCertificateContainerValidator(testtools.TestCase):
 
         self.validator = validators.ContainerValidator()
 
-    def test_should_fail_more_than_3_secret_refs(self):
+    def test_should_fail_more_than_4_secret_refs(self):
         new_secret_ref = {
             'name': 'new secret ref',
             'secret_ref': '234234'
