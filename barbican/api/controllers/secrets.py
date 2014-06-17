@@ -92,7 +92,7 @@ class SecretController(object):
     @allow_all_content_types
     @controllers.handle_exceptions(u._('Secret update'))
     @controllers.handle_rbac('secret:put')
-    def on_put(self, keystone_id):
+    def on_put(self, keystone_id, **kwargs):
 
         if not pecan.request.content_type or \
                 pecan.request.content_type == 'application/json':
@@ -128,7 +128,7 @@ class SecretController(object):
     @index.when(method='DELETE')
     @controllers.handle_exceptions(u._('Secret deletion'))
     @controllers.handle_rbac('secret:delete')
-    def on_delete(self, keystone_id):
+    def on_delete(self, keystone_id, **kwargs):
 
         try:
             self.repo.delete_entity_by_id(entity_id=self.secret_id,
@@ -212,7 +212,7 @@ class SecretsController(object):
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('Secret creation'))
     @controllers.handle_rbac('secrets:post')
-    def on_post(self, keystone_id):
+    def on_post(self, keystone_id, **kwargs):
         LOG.debug('Start on_post for tenant-ID {0}:...'.format(keystone_id))
 
         data = api.load_body(pecan.request, validator=self.validator)

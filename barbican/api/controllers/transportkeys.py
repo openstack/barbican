@@ -57,7 +57,7 @@ class TransportKeyController(object):
     @index.when(method='DELETE')
     @con.handle_exceptions(u._('Transport Key deletion'))
     @con.handle_rbac('transport_key:delete')
-    def on_delete(self, keystone_id):
+    def on_delete(self, keystone_id, **kwargs):
         LOG.debug("== Deleting transport key ===")
         try:
             self.repo.delete_entity_by_id(entity_id=self.transport_key_id,
@@ -119,7 +119,7 @@ class TransportKeysController(object):
     @index.when(method='POST', template='json')
     @con.handle_exceptions(u._('Transport Key Creation'))
     @con.handle_rbac('transport_keys:post')
-    def on_post(self, keystone_id):
+    def on_post(self, keystone_id, **kwargs):
         LOG.debug('Start transport_keys on_post')
 
         # TODO(alee) POST should determine the plugin name and call the

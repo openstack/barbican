@@ -64,13 +64,13 @@ class OrderController(object):
 
     @index.when(method='PUT')
     @controllers.handle_exceptions(u._('Order update'))
-    def on_put(self, keystone_id):
+    def on_put(self, keystone_id, **kwargs):
         _order_update_not_supported()
 
     @index.when(method='DELETE')
     @controllers.handle_exceptions(u._('Order deletion'))
     @controllers.handle_rbac('order:delete')
-    def on_delete(self, keystone_id):
+    def on_delete(self, keystone_id, **kwargs):
 
         try:
             self.repo.delete_entity_by_id(entity_id=self.order_id,
@@ -128,13 +128,13 @@ class OrdersController(object):
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Order update'))
     @controllers.handle_rbac('orders:put')
-    def on_put(self, keystone_id):
+    def on_put(self, keystone_id, **kwargs):
         _order_update_not_supported()
 
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('Order creation'))
     @controllers.handle_rbac('orders:post')
-    def on_post(self, keystone_id):
+    def on_post(self, keystone_id, **kwargs):
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
 

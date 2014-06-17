@@ -63,7 +63,7 @@ class ContainerController(object):
     @index.when(method='DELETE', template='')
     @controllers.handle_exceptions(u._('Container deletion'))
     @controllers.handle_rbac('container:delete')
-    def on_delete(self, keystone_id):
+    def on_delete(self, keystone_id, **kwargs):
 
         try:
             self.container_repo.delete_entity_by_id(
@@ -130,7 +130,7 @@ class ContainersController(object):
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('Container creation'))
     @controllers.handle_rbac('containers:post')
-    def on_post(self, keystone_id):
+    def on_post(self, keystone_id, **kwargs):
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
 
