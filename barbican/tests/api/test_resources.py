@@ -22,6 +22,7 @@ resource classes. For RBAC tests of these classes, see the
 import base64
 import urllib
 
+import mimetypes
 import mock
 import pecan
 import testtools
@@ -88,6 +89,37 @@ def create_container(id_ref):
     container_secret.secret_id = '123'
     container.container_secrets.append(container_secret)
     return container
+
+
+class SecretAllowAllMimeTypesDecoratorTest(testtools.TestCase):
+
+    def setUp(self):
+        super(SecretAllowAllMimeTypesDecoratorTest, self).setUp()
+        self.mimetype_values = set(mimetypes.types_map.values())
+
+    @pecan.expose(generic=True)
+    @controllers.secrets.allow_all_content_types
+    def _empty_pecan_exposed_function(self):
+        pass
+
+    def _empty_function(self):
+        pass
+
+    def test_mimetypes_successfully_added_to_mocked_function(self):
+        empty_function = mock.MagicMock()
+        empty_function._pecan = {}
+        func = controllers.secrets.allow_all_content_types(empty_function)
+        cfg = func._pecan
+        self.assertEqual(len(self.mimetype_values), len(cfg['content_types']))
+
+    def test_mimetypes_successfully_added_to_pecan_exposed_function(self):
+        cfg = self._empty_pecan_exposed_function._pecan
+        self.assertEqual(len(self.mimetype_values), len(cfg['content_types']))
+
+    def test_decorator_raises_if_function_not_pecan_exposed(self):
+        self.assertRaises(AttributeError,
+                          controllers.secrets.allow_all_content_types,
+                          self._empty_function)
 
 
 class FunctionalTest(testtools.TestCase):

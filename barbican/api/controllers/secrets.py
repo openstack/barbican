@@ -31,8 +31,9 @@ LOG = utils.getLogger(__name__)
 
 def allow_all_content_types(f):
     cfg = pecan.util._cfg(f)
-    for value in mimetypes.types_map.values():
-        cfg.setdefault('content_types', {})[value] = ''
+    cfg.setdefault('content_types', {})
+    cfg['content_types'].update((value, '')
+                                for value in mimetypes.types_map.values())
     return f
 
 
