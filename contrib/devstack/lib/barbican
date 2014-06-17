@@ -101,6 +101,9 @@ function configure_barbican {
     # Set the database connection url
     iniset $BARBICAN_CONF DEFAULT sql_connection `database_connection_url barbican`
 
+    # Increase default request buffer size, keystone auth PKI tokens can be very long
+    iniset $BARBICAN_CONF_DIR/vassals/barbican-api.ini uwsgi buffer-size 65535
+
     # Rabbit settings
     if is_service_enabled rabbit; then
         iniset $BARBICAN_CONF 'secrets' broker rabbit://guest:$RABBIT_PASSWORD@$RABBIT_HOST
@@ -148,7 +151,7 @@ function install_barbicanclient {
 
 # start_barbican - Start running processes, including screen
 function start_barbican {
-    screen_it barbican "uwsgi --master --emperor $BARBICAN_CONF_DIR/vassals --logto $BARBICAN_API_LOG_DIR/barbican.log -b 65535"
+    screen_it barbican "uwsgi --master --emperor $BARBICAN_CONF_DIR/vassals"
 }
 
 # stop_barbican - Stop running processes
