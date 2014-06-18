@@ -16,7 +16,43 @@
 import abc
 import six
 
-# Constants used by SecretStores
+from oslo.config import cfg
+from stevedore import named
+
+from barbican.common import exception
+from barbican.openstack.common import gettextutils as u
+
+
+CONF = cfg.CONF
+DEFAULT_PLUGIN_NAMESPACE = 'barbican.secretstore.plugin'
+DEFAULT_PLUGINS = ['store_crypto']
+
+store_opt_group = cfg.OptGroup(name='secretstore',
+                               title='Secret Store Plugin Options')
+store_opts = [
+    cfg.StrOpt('namespace',
+               default=DEFAULT_PLUGIN_NAMESPACE,
+               help=u._('Extension namespace to search for plugins.')
+               ),
+    cfg.MultiStrOpt('enabled_secretstore_plugins',
+                    default=DEFAULT_PLUGINS,
+                    help=u._('List of secret store plugins to load.')
+                    )
+]
+CONF.register_group(store_opt_group)
+CONF.register_opts(store_opts, group=store_opt_group)
+
+
+class SecretStorePluginNotFound(exception.BarbicanException):
+    """Raised when no plugins are installed."""
+    message = u._("Secret store plugin not found.")
+
+
+class SecretStoreSupportedPluginNotFound(exception.BarbicanException):
+    """Raised when no plugins are found that support the requested
+    operation.
+    """
+    message = "Secret store plugin not found for requested operation."
 
 
 class SecretType(object):
@@ -202,3 +238,46 @@ class SecretStoreBase(object):
         :param secret_metadata: secret_metadata
         """
         raise NotImplementedError  # pragma: no cover
+
+
+class SecretStorePluginManager(named.NamedExtensionManager):
+    def __init__(self, conf=CONF, invoke_on_load=True,
+                 invoke_args=(), invoke_kwargs={}):
+        super(SecretStorePluginManager, self).__init__(
+            conf.secretstore.namespace,
+            conf.secretstore.enabled_secretstore_plugins,
+            invoke_on_load=invoke_on_load,
+            invoke_args=invoke_args,
+            invoke_kwds=invoke_kwargs
+        )
+
+    def get_plugin_store(self):
+        """Gets a secret store plugin.
+
+        :returns: SecretStoreBase plugin implementation
+        """
+
+        if len(self.extensions) < 1:
+            raise SecretStorePluginNotFound()
+
+        return self.extensions[0].obj
+
+    def get_plugin_generate(self, key_spec):
+        """Gets a secret generate plugin.
+
+        :param key_spec: KeySpec that contains details on the type of key to
+        generate
+        :returns: SecretStoreBase plugin implementation
+        """
+
+        if len(self.extensions) < 1:
+            raise SecretStorePluginNotFound()
+
+        for ext in self.extensions:
+            if ext.obj.generate_supports(key_spec):
+                generate_plugin = ext.obj
+                break
+        else:
+            raise SecretStoreSupportedPluginNotFound()
+
+        return generate_plugin
