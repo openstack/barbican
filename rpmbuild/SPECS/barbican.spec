@@ -18,11 +18,12 @@ Requires(pre): shadow-utils
 Requires: python-alembic, python-crypto, python-dateutil
 Requires: python-eventlet, python-falcon-barbican, python-iso8601, python-jsonschema
 Requires: python-keystoneclient-barbican
-Requires: python-kombu, python-oslo.config, python-pastedeploy-barbican
+Requires: python-kombu, python-oslo-config, python-oslo-messaging,
+Requires: python-pastedeploy-barbican
 Requires: python-pysqlite, python-wsgiref-barbican
 Requires: python-sqlalchemy >= 0.7.8, python-sqlalchemy <= 0.7.99
-Requires: python-stevedore, python-oslo.messaging
-Requires: python-uwsgi, python-webob-barbican, python-netaddr, python-babel, python-pbr
+Requires: python-stevedore, python-uwsgi
+Requires: python-webob-barbican, python-netaddr, python-babel, python-pbr
 
 %description
 Common files for Barbican Key Management API (barbican-api) and

@@ -12,8 +12,6 @@ fpm -s python -t rpm uWSGI
 fpm -s python -t rpm -n python-wsgiref-barbican -v 0.1.2 wsgiref
 fpm -s python -t rpm pysqlite
 fpm -s python -t rpm -v 0.13.0 eventlet
-fpm -s python -t rpm oslo.config
-fpm -s python -t rpm oslo.messaging
 fpm -s python -t rpm iso8601
 fpm -s python -t rpm -v 3.0.8 kombu
 fpm -s python -t rpm -n python-webob-barbican -v 1.2.3 webob
@@ -86,9 +84,6 @@ fpm -s python -t rpm netaddr
 fpm -s python -t rpm Babel
 fpm -s python -t rpm pytz
 
-#oslo messaging depends on
-fpm -s python -t rpm pyyaml
-
 # python-alembic
 fpm -s python -t rpm mako
 # --> mako needs markupsafe
@@ -120,9 +115,6 @@ fpm -s python -t rpm -v 1.3.3 amqp
 # --> latest amqp is incompatible
 fpm -s python -t rpm importlib
 # fpm -s python -t rpm ordereddict
-
-# oslo.config
-# fpm -s python -t rpm argparse
 
 # python-stevedore
 # fpm -s python -t rpm argparse
