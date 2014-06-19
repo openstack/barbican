@@ -365,16 +365,18 @@ class ContainerValidator(ValidatorBase):
             if container_type == 'certificate':
                 supported_names = ('certificate',
                                    'private_key',
-                                   'private_key_passphrase')
+                                   'private_key_passphrase',
+                                   'intermediates')
 
                 if self.contains_unsupported_names(secret_refs,
                                                    supported_names) or len(
-                        secret_refs) > 3:
+                        secret_refs) > 4:
                     raise exception.\
                         InvalidObject(schema=schema_name,
                                       reason=u._("only 'private_key',"
-                                                 " 'certificate' and"
-                                                 " 'private_key_passphrase'"
+                                                 " 'certificate' ,"
+                                                 " 'private_key_passphrase', "
+                                                 " or 'intermediates' "
                                                  " reference names are allowed"
                                                  " for Certificate type"),
                                       property="secret_refs")
