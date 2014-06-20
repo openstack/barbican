@@ -13,6 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-SecretStore services for Barbican.
-"""
+#TODO(john-wood-w) Add test of KMIP implementation.
