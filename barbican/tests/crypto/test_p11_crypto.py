@@ -219,6 +219,13 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         m = self.p11_mock.LowLevel.CK_MECHANISM
         self.assertEqual([], m.call_args_list)
 
+    def test_generate_asymmetric_raises_error(self):
+        self.assertRaises(NotImplementedError,
+                          self.plugin.generate_asymmetric,
+                          mock.MagicMock(),
+                          mock.MagicMock(),
+                          mock.MagicMock())
+
     def test_supports_encrypt_decrypt(self):
         self.assertTrue(
             self.plugin.supports(
@@ -230,6 +237,13 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         self.assertTrue(
             self.plugin.supports(
                 plugin_import.PluginSupportTypes.SYMMETRIC_KEY_GENERATION
+            )
+        )
+
+    def test_does_not_support_asymmetric_key_generation(self):
+        self.assertFalse(
+            self.plugin.supports(
+                plugin_import.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION
             )
         )
 

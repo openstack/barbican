@@ -297,8 +297,8 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
                           kek_meta_dto,
                           mock.MagicMock())
 
-    def test_generate_2048_bit_DSA_key_with_passphrase(self):
-        generate_dto = plugin.GenerateDTO('dsa', 2048, None, 'Passphrase')
+    def test_generate_1024_bit_DSA_key_with_passphrase(self):
+        generate_dto = plugin.GenerateDTO('dsa', 1024, None, 'Passphrase')
         kek_meta_dto = self._get_mocked_kek_meta_dto()
         self.assertRaises(ValueError, self.plugin.generate_asymmetric,
                           generate_dto,
