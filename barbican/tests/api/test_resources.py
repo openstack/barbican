@@ -1047,6 +1047,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             expect_errors=True
         )
         self.assertEqual(resp.status_int, 404)
+        #Error response should have json content type
+        self.assertEqual(resp.content_type, "application/json")
 
 
 class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
@@ -1306,6 +1308,8 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
             expect_errors=True
         )
         self.assertEqual(resp.status_int, 404)
+        #Error response should have json content type
+        self.assertEqual(resp.content_type, "application/json")
 
 
 class WhenAddingNavigationHrefs(testtools.TestCase):
@@ -1552,6 +1556,8 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
             self.tenant_keystone_id, self.container.id
         ), expect_errors=True)
         self.assertEqual(resp.status_int, 404)
+        #Error response should have json content type
+        self.assertEqual(resp.content_type, "application/json")
 
 
 class WhenGettingContainersListUsingResource(FunctionalTest):

@@ -53,6 +53,7 @@ class JSONErrorHook(pecan.hooks.PecanHook):
                 'title': exc.title,
                 'description': exc.detail
             })
+            state.response.content_type = "application/json"
             return exc.body
 
 
