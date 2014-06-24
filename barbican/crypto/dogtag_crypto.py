@@ -19,10 +19,10 @@ import uuid
 
 from oslo.config import cfg
 import pki
-from pki.client import PKIConnection
+import pki.client
 import pki.cryptoutil as cryptoutil
 import pki.key as key
-from pki.kraclient import KRAClient
+import pki.kraclient
 
 from barbican.common import exception
 from barbican.crypto import plugin
@@ -89,10 +89,11 @@ class DogtagCryptoPlugin(plugin.CryptoPluginBase):
             crypto = cryptoutil.NSSCryptoUtil(nss_db_path, nss_password)
 
         # set up connection
-        connection = PKIConnection('https',
-                                   conf.dogtag_crypto_plugin.drm_host,
-                                   conf.dogtag_crypto_plugin.drm_port,
-                                   'kra')
+        connection = pki.client.PKIConnection(
+            'https',
+            conf.dogtag_crypto_plugin.drm_host,
+            conf.dogtag_crypto_plugin.drm_port,
+            'kra')
         connection.set_authentication_cert(pem_path)
 
         # what happened to the password?
@@ -101,7 +102,7 @@ class DogtagCryptoPlugin(plugin.CryptoPluginBase):
         # code will end up being in the DRM python client
 
         #create kraclient
-        kraclient = KRAClient(connection, crypto)
+        kraclient = pki.kraclient.KRAClient(connection, crypto)
         self.keyclient = kraclient.keys
         self.systemcert_client = kraclient.system_certs
 
