@@ -75,6 +75,15 @@ class WhenTestingSecretStorePluginManager(testtools.TestCase):
             self.manager.get_plugin_store,
         )
 
+    def test_get_generate_no_plugin_found(self):
+        self.manager.extensions = []
+        keySpec = str.KeySpec('AES', 128)
+        self.assertRaises(
+            str.SecretStorePluginNotFound,
+            self.manager.get_plugin_generate,
+            keySpec,
+        )
+
     def test_get_generate_no_supported_plugin(self):
         plugin = TestSecretStore(False)
         plugin_mock = mock.MagicMock(obj=plugin)
