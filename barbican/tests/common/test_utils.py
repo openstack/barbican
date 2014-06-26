@@ -18,6 +18,44 @@ import testtools
 from barbican.common import utils
 
 
+class WhenTestingHostnameForRefsGetter(testtools.TestCase):
+
+    def setUp(self):
+        super(WhenTestingHostnameForRefsGetter, self).setUp()
+
+        self.host = 'host'
+        self.version = 'version'
+        self.keystone_id = 'keystone_id'
+        self.resource = 'resource'
+
+        self._old_host = utils.CONF.host_href
+        self._old_version = utils.API_VERSION
+        utils.CONF.host_href = self.host
+        utils.API_VERSION = self.version
+
+    def tearDown(self):
+        super(WhenTestingHostnameForRefsGetter, self).tearDown()
+        utils.CONF.host_href = self._old_host
+        utils.API_VERSION = self._old_version
+
+    def test_hostname_for_refs_no_keystone_id(self):
+        uri = utils.hostname_for_refs(resource=self.resource)
+        self.assertEqual(uri, "{0}/{1}".format(self.host, self.version))
+
+    def test_hostname_for_refs_no_resource(self):
+        uri = utils.hostname_for_refs(keystone_id=self.keystone_id)
+        self.assertEqual(uri, "{0}/{1}/{2}".format(self.host,
+                                                   self.version,
+                                                   self.keystone_id))
+
+    def test_hostname_for_refs_with_resource_and_keystone_id(self):
+        uri = utils.hostname_for_refs(keystone_id=self.keystone_id,
+                                      resource=self.resource)
+        self.assertEqual(uri, "{0}/{1}/{2}/{3}".format(self.host, self.version,
+                                                       self.keystone_id,
+                                                       self.resource))
+
+
 class WhenTestingAcceptEncodingGetter(testtools.TestCase):
 
     def setUp(self):
@@ -50,3 +88,44 @@ class WhenTestingAcceptEncodingGetter(testtools.TestCase):
         self.req.get_header.return_value = 'base64;q=0.5, gzip;q=0.6, compress'
         ae = utils.get_accepted_encodings(self.req)
         self.assertEqual(ae, ['compress', 'gzip', 'base64'])
+
+    def test_returns_none_on_invalid_quality_type(self):
+        self.req.get_header.return_value = 'base64;q=three'
+        ae = utils.get_accepted_encodings(self.req)
+        self.assertIsNone(ae)
+
+    def test_returns_none_on_quality_too_large(self):
+        self.req.get_header.return_value = 'base64;q=1.1'
+        ae = utils.get_accepted_encodings(self.req)
+        self.assertIsNone(ae)
+
+    def test_returns_none_on_quality_too_small(self):
+        self.req.get_header.return_value = 'base64;q=-0.1'
+        ae = utils.get_accepted_encodings(self.req)
+        self.assertIsNone(ae)
+
+    def test_ignores_encoding_with_zero_quality_value(self):
+        self.req.get_header.return_value = 'base64;q=0.5, gzip;q=0.0, compress'
+        ae = utils.get_accepted_encodings(self.req)
+        self.assertEqual(ae, ['compress', 'base64'])
+
+
+class WhenTestingGenerateFullClassnameForInstance(testtools.TestCase):
+
+    def setUp(self):
+        super(WhenTestingGenerateFullClassnameForInstance, self).setUp()
+
+        self.instance = mock.Mock()
+
+    def test_returns_none_on_null_instance(self):
+        name = utils.generate_fullname_for(None)
+        self.assertEqual('None', name)
+
+    def test_returns_class_name_on_null_module(self):
+        self.instance.__class__.__module__ = None
+        name = utils.generate_fullname_for(self.instance)
+        self.assertEqual('Mock', name)
+
+    def test_returns_qualified_name(self):
+        name = utils.generate_fullname_for(self.instance)
+        self.assertEqual('mock.Mock', name)
