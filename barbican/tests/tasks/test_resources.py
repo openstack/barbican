@@ -95,7 +95,7 @@ class WhenBeginningOrder(testtools.TestCase):
         secret = args[0]
         self.assertIsInstance(secret, models.Secret)
         self.assertEqual(secret.name, self.secret_name)
-        self.assertEqual(secret.expiration, self.secret_expiration)
+        self.assertEqual(secret.expiration, self.secret_expiration.isoformat())
 
         args, kwargs = self.tenant_secret_repo.create_from.call_args
         tenant_secret = args[0]
