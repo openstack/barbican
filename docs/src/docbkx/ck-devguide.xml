@@ -227,14 +227,15 @@
         <section xml:id="One_step_secret_using_UTF">
           <title>One-step sequence for secrets using
             UTF-8/ASCII</title>
-          <para>The following table shows the sequence for creating an
+          <para>The following table shows the sequence for creating and
             retrieving a secret using UTF-8/ASCII format. When you
-            submit the <command>POST</command> request, set the
-              <parameter>payload_content_type</parameter> parameter to
-              <code>text/plain</code> and do not specify a
+            submit a <command>POST</command> request with the
+              <parameter>payload_content_type</parameter> parameter set to
+              <code>text/plain</code> and do not specify the
               <parameter>payload_content_encoding</parameter>
-            parameter. When you make the <command>POST</command>
-            request, the supplied payload will be encrypted.</para>
+            parameter, the payload sent with the <command>POST</command> request
+            will be encrypted and you should receive a response
+             with a secret reference URL.</para>
           <para>
             <table rules="all">
               <caption>One-Step UTF-8/ASCII Secret
@@ -282,15 +283,15 @@
         <section xml:id="One_Step_Binary_Secret">
           <title>One-step sequence for binary secrets</title>
           <para>The following table shows the one-step sequence for
-            creating an retrieving a secret using binary format. When
-            you submit the <command>POST</command> request, set the
-              <parameter>payload_content_type</parameter> parameter to
+            creating and retrieving a secret using binary format. When
+            you submit a <command>POST</command> request with the
+              <parameter>payload_content_type</parameter> parameter set to
               <code>application/octet-stream</code> and the
               <parameter>payload_content_encoding</parameter>
-            parameter to <code>base64</code>. When you make the
-              <command>POST</command> request, the supplied payload
-            will be converted from base64 to binary format and then
-            encrypted.</para>
+            parameter set to <code>base64</code>, the payload
+            will be converted from base64 to binary format and encrypted.
+             You should also receive a response
+             with a secret reference URL.</para>
           <table rules="all">
             <caption>One-Step Binary Secret Create/Retrieve</caption>
             <col width="16%"/>
@@ -338,15 +339,16 @@
         <section xml:id="Two_Step_Binary_Secret">
           <title>Two-step sequence for binary secrets</title>
           <para>The following table shows the two-step sequence for
-            creating an retrieving a secret using binary format. First
-            submit a POST request without specifying a payload and a
-            corresponding content type and content encoding.
-            Submitting a POST request without payload creates metadata
-            for the secret. To add payload information, submit a PUT
-            request with the secret id that was returned from the POST
-            request. and set the content type to application/octet
-            stream and the content encoding to base64, which converts
-            the payload from base64 to binary format and then encrypts
+            creating and retrieving a secret using binary format. First
+            submit a <command>POST</command> request without specifying
+             a payload, <code>payload_content_type</code>, or <code>payload_content_encoding</code>.
+            Submitting a <command>POST</command> request without this
+            information creates metadata for the secret. To add payload 
+            information, submit a <command>PUT</command> request with the 
+            secret id that was returned from the <command>POST</command>
+            request, and set the content type to <code>application/octet</code>
+            stream and the content encoding to <code>base64</code>. This will convert
+            the payload from <code>base64</code> to binary format and then encrypt
             it.</para>
           <para>
             <table rules="all">
@@ -421,16 +423,16 @@
         <section xml:id="Two_Step_Plain_Text_Secret">
           <title>Two-step sequence for plain text secrets</title>
           <para>The following table shows the two-step sequence for
-            creating an retrieving a secret using binary format. First
+            creating and retrieving a secret using binary format. First
             submit a <command>POST</command> request without
-            specifying a payload and a corresponding content type and
-            content encoding. Submitting a <command>POST</command>
+            specifying a payload, <code>payload_content_type</code>, or
+            <code>payload_content_encoding</code>. Submitting a <command>POST</command>
             request without payload creates metadata for the secret.
             To add payload information, submit a
               <command>PUT</command> request with the secret id that
-            was returned from the <command>POST</command> request. and
-            set the content type to <code>text/plain</code> which
-            stores the payload as is.</para>
+            was returned from the <command>POST</command> request, and
+            set the content type to <code>text/plain</code> which will
+            store the payload as is.</para>
           <para>
             <table rules="all">
               <caption>Two-Step Plain-Text Secret
