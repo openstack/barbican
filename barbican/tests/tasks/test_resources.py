@@ -16,7 +16,6 @@
 import mock
 import testtools
 
-from barbican.crypto import extension_manager as em
 from barbican.model import models
 from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import timeutils
@@ -61,6 +60,8 @@ class WhenBeginningOrder(testtools.TestCase):
         self.order_repo = mock.MagicMock()
         self.order_repo.get.return_value = self.order
 
+        self.secret = models.Secret()
+
         self.secret_repo = mock.MagicMock()
         self.secret_repo.create_from.return_value = None
 
@@ -72,18 +73,19 @@ class WhenBeginningOrder(testtools.TestCase):
 
         self.kek_repo = mock.MagicMock()
 
-        self.conf = mock.MagicMock()
-        self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
-        self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
-        self.crypto_mgr = em.CryptoExtensionManager(conf=self.conf)
+        self.secret_meta_repo = mock.MagicMock()
 
-        self.resource = resources.BeginOrder(self.crypto_mgr,
-                                             self.tenant_repo, self.order_repo,
+        self.resource = resources.BeginOrder(self.tenant_repo, self.order_repo,
                                              self.secret_repo,
                                              self.tenant_secret_repo,
-                                             self.datum_repo, self.kek_repo)
+                                             self.datum_repo, self.kek_repo,
+                                             self.secret_meta_repo
+                                             )
 
-    def test_should_process_order(self):
+    @mock.patch('barbican.plugin.resources.generate_secret')
+    def test_should_process_order(self, mock_generate_secret):
+        mock_generate_secret.return_value = self.secret
+
         self.resource.process(self.order.id, self.keystone_id)
 
         self.order_repo.get \
@@ -91,28 +93,14 @@ class WhenBeginningOrder(testtools.TestCase):
                                      keystone_id=self.keystone_id)
         self.assertEqual(self.order.status, models.States.ACTIVE)
 
-        args, kwargs = self.secret_repo.create_from.call_args
-        secret = args[0]
-        self.assertIsInstance(secret, models.Secret)
-        self.assertEqual(secret.name, self.secret_name)
-        self.assertEqual(secret.expiration, self.secret_expiration.isoformat())
-
-        args, kwargs = self.tenant_secret_repo.create_from.call_args
-        tenant_secret = args[0]
-        self.assertIsInstance(tenant_secret, models.TenantSecret)
-        self.assertEqual(tenant_secret.tenant_id, self.tenant_id)
-        self.assertEqual(tenant_secret.secret_id, secret.id)
-
-        args, kwargs = self.datum_repo.create_from.call_args
-        datum = args[0]
-        self.assertIsInstance(datum, models.EncryptedDatum)
-        self.assertIsNotNone(datum.cypher_text)
-
-        self.assertIsNone(datum.kek_meta_extended)
-        self.assertIsNotNone(datum.kek_meta_tenant)
-        self.assertTrue(datum.kek_meta_tenant.bind_completed)
-        self.assertIsNotNone(datum.kek_meta_tenant.plugin_name)
-        self.assertIsNotNone(datum.kek_meta_tenant.kek_label)
+        secret_info = self.order.to_dict_fields()['secret']
+        mock_generate_secret\
+            .assert_called_once_with(
+                secret_info,
+                secret_info.get('payload_content_type',
+                                'application/octet-stream'),
+                self.tenant, mock.ANY
+            )
 
     def test_should_fail_during_retrieval(self):
         # Force an error during the order retrieval phase.
@@ -146,7 +134,11 @@ class WhenBeginningOrder(testtools.TestCase):
         self.assertEqual(u._('Create Secret failure seen - please contact '
                              'site administrator.'), self.order.error_reason)
 
-    def test_should_fail_during_success_report_fail(self):
+    @mock.patch('barbican.plugin.resources.generate_secret')
+    def test_should_fail_during_success_report_fail(self,
+                                                    mock_generate_secret):
+        mock_generate_secret.return_value = self.secret
+
         # Force an error during the processing handler phase.
         self.order_repo.save = mock.MagicMock(return_value=None,
                                               side_effect=ValueError())

@@ -20,6 +20,7 @@ import sqlalchemy as sa
 from sqlalchemy.ext import compiler
 from sqlalchemy.ext import declarative
 from sqlalchemy import orm
+from sqlalchemy.orm import collections as col
 from sqlalchemy import types as sql_types
 
 from barbican.common import exception
@@ -242,8 +243,12 @@ class Secret(BASE, ModelBase):
     #   metadata is retrieved.
     #   See barbican.api.resources.py::SecretsResource.on_get()
     encrypted_data = orm.relationship("EncryptedDatum", lazy='joined')
-    secret_store_metadata = orm.relationship("SecretStoreMetadatum",
-                                             lazy='joined')
+
+    secret_store_metadata = orm.\
+        relationship("SecretStoreMetadatum",
+                     collection_class=col.attribute_mapped_collection('key'),
+                     backref="secret",
+                     cascade="all, delete-orphan")
 
     def __init__(self, parsed_request=None):
         """Creates secret from a dict."""
@@ -260,14 +265,14 @@ class Secret(BASE, ModelBase):
 
     def _do_delete_children(self, session):
         """Sub-class hook: delete children relationships."""
-        for datum in self.secret_store_metadata:
-            datum.delete(session)
+        for k, v in self.secret_store_metadata.items():
+            v.delete(session)
 
         for datum in self.encrypted_data:
             datum.delete(session)
 
         for secret_ref in self.container_secrets:
-                session.delete(secret_ref)
+            session.delete(secret_ref)
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -290,15 +295,11 @@ class SecretStoreMetadatum(BASE, ModelBase):
     key = sa.Column(sa.String(255), nullable=False)
     value = sa.Column(sa.String(255), nullable=False)
 
-    def __init__(self, secret, key, value):
+    def __init__(self, key, value):
         super(SecretStoreMetadatum, self).__init__()
 
         msg = ("Must supply non-None {0} argument "
                "for SecretStoreMetadatum entry.")
-
-        if secret is None:
-            raise exception.MissingArgumentError(msg.format("secret"))
-        self.secret_id = secret.id
 
         if key is None:
             raise exception.MissingArgumentError(msg.format("key"))

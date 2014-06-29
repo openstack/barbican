@@ -21,9 +21,9 @@ import six
 
 from barbican.common import exception
 from barbican.common import utils
-from barbican.crypto import mime_types
 from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import timeutils
+from barbican.plugin.util import mime_types
 
 
 LOG = utils.getLogger(__name__)

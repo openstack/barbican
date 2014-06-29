@@ -24,8 +24,9 @@ import mock
 import six
 import testtools
 
-from barbican.crypto import plugin
 from barbican.model import models
+from barbican.plugin.crypto import crypto as plugin
+from barbican.plugin.crypto import simple_crypto as simple
 
 
 class TestCryptoPlugin(plugin.CryptoPluginBase):
@@ -67,7 +68,7 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
 
     def setUp(self):
         super(WhenTestingSimpleCryptoPlugin, self).setUp()
-        self.plugin = plugin.SimpleCryptoPlugin()
+        self.plugin = simple.SimpleCryptoPlugin()
 
     def _get_mocked_kek_meta_dto(self):
         # For SimpleCryptoPlugin, per-tenant KEKs are stored in

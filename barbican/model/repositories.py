@@ -239,6 +239,38 @@ def clean_paging_values(offset_arg=0, limit_arg=CONF.default_limit_paging):
     return offset, limit
 
 
+class Repositories(object):
+    """Convenient way to pass repositories around.
+
+    Selecting a given repository has 3 choices:
+       1) Use a specified repository instance via **kwargs
+       2) Create a repository here if it is specified as None via **kwargs
+       3) Just use None if no repository is specified
+    """
+    def __init__(self, **kwargs):
+        if kwargs:
+            # Enforce that either all arguments are non-None or else all None.
+            test_set = set(kwargs.values())
+            if None in test_set and len(test_set) > 1:
+                raise NotImplementedError('No support for mixing None '
+                                          'and non-None repository instances')
+
+            # Only set properties for specified repositories.
+            self._set_repo('tenant_repo', TenantRepo, kwargs)
+            self._set_repo('tenant_secret_repo', TenantSecretRepo, kwargs)
+            self._set_repo('secret_repo', SecretRepo, kwargs)
+            self._set_repo('datum_repo', EncryptedDatumRepo, kwargs)
+            self._set_repo('kek_repo', KEKDatumRepo, kwargs)
+            self._set_repo('secret_meta_repo', SecretStoreMetadatumRepo,
+                           kwargs)
+            self._set_repo('order_repo', OrderRepo, kwargs)
+            self._set_repo('transport_key_repo', TransportKeyRepo, kwargs)
+
+    def _set_repo(self, repo_name, repo_cls, specs):
+        if specs and repo_name in specs:
+            setattr(self, repo_name, specs[repo_name] or repo_cls())
+
+
 class BaseRepo(object):
     """Base repository for the barbican entities.
 
@@ -583,6 +615,42 @@ class EncryptedDatumRepo(BaseRepo):
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.EncryptedDatum).filter_by(id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
+class SecretStoreMetadatumRepo(BaseRepo):
+    """Repository for the SecretStoreMetadatum entity (that stores key/value
+    information on behalf of a Secret).
+    """
+
+    def save(self, metadata, secret_model):
+        """Saves the the specified metadata for the secret.
+
+        :raises NotFound if entity does not exist.
+        """
+        now = timeutils.utcnow()
+        session = get_session()
+        with session.begin():
+            for k, v in metadata.items():
+                meta_model = models.SecretStoreMetadatum(k, v)
+                meta_model.updated_at = now
+                meta_model.secret = secret_model
+                meta_model.save(session=session)
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "SecretStoreMetadatum"
+
+    def _do_create_instance(self):
+        return models.SecretStoreMetadatum()
+
+    def _do_build_get_query(self, entity_id, keystone_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.SecretStoreMetadatum).\
+            filter_by(id=entity_id)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""

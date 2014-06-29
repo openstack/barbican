@@ -22,10 +22,10 @@ import pkgutil
 
 from barbican.common import exception
 from barbican.common import utils
-from barbican.crypto import extension_manager as em
 from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import jsonutils as json
 from barbican.openstack.common import policy
+from barbican.plugin.interface import secret_store as s
 
 
 LOG = utils.getLogger(__name__)
@@ -111,40 +111,34 @@ def generate_safe_exception_message(operation_name, excep):
                       'please review your '
                       'user/tenant privileges').format(operation_name)
         status = 403
-    except em.CryptoContentTypeNotSupportedException as cctnse:
+
+    except s.SecretContentTypeNotSupportedException as sctnse:
         reason = u._("content-type of '{0}' not "
-                     "supported").format(cctnse.content_type)
+                     "supported").format(sctnse.content_type)
         status = 400
-    except em.CryptoContentEncodingNotSupportedException as cc:
+    except s.SecretContentEncodingNotSupportedException as ce:
         reason = u._("content-encoding of '{0}' not "
-                     "supported").format(cc.content_encoding)
+                     "supported").format(ce.content_encoding)
         status = 400
-    except em.CryptoAcceptNotSupportedException as canse:
-        reason = u._("accept of '{0}' not "
-                     "supported").format(canse.accept)
-        status = 406
-    except em.CryptoNoPayloadProvidedException:
-        reason = u._("No payload provided")
-        status = 400
-    except em.CryptoNoSecretOrDataFoundException:
-        reason = u._("Not Found.  Sorry but your secret is in "
-                     "another castle")
-        status = 404
-    except em.CryptoPayloadDecodingError:
-        reason = u._("Problem decoding payload")
-        status = 400
-    except em.CryptoContentEncodingMustBeBase64:
-        reason = u._("Text-based binary secret payloads must "
-                     "specify a content-encoding of 'base64'")
-        status = 400
-    except em.CryptoAlgorithmNotSupportedException:
-        reason = u._("No plugin was found that supports the "
-                     "requested algorithm")
-        status = 400
-    except em.CryptoSupportedPluginNotFound:
+    except s.SecretStorePluginNotFound:
         reason = u._("No plugin was found that could support "
                      "your request")
         status = 400
+    except s.SecretPayloadDecodingError:
+        reason = u._("Problem decoding payload")
+        status = 400
+    except s.SecretContentEncodingMustBeBase64:
+        reason = u._("Text-based binary secret payloads must "
+                     "specify a content-encoding of 'base64'")
+        status = 400
+    except s.SecretNotFoundException:
+        reason = u._("Not Found.  Sorry but your secret is in "
+                     "another castle")
+        status = 404
+    except s.SecretAlgorithmNotSupportedException:
+        reason = u._("Requested algorithm is not supported")
+        status = 400
+
     except exception.NoDataToProcess:
         reason = u._("No information provided to process")
         status = 400
@@ -152,6 +146,7 @@ def generate_safe_exception_message(operation_name, excep):
         reason = u._("Provided information too large "
                      "to process")
         status = 413
+
     except Exception:
         message = u._('{0} failure seen - please contact site '
                       'administrator.').format(operation_name)

@@ -235,13 +235,13 @@ class WhenTestingSecretsResource(BaseTestCase):
                                             ._generate_get_error())
         self.secret_repo.get_by_create_date = get_by_create_date
 
-        self.resource = SecretsResource(crypto_manager=mock.MagicMock(),
-                                        tenant_repo=mock.MagicMock(),
+        self.resource = SecretsResource(tenant_repo=mock.MagicMock(),
                                         secret_repo=self.secret_repo,
                                         tenant_secret_repo=mock
                                         .MagicMock(),
                                         datum_repo=mock.MagicMock(),
-                                        kek_repo=mock.MagicMock())
+                                        kek_repo=mock.MagicMock(),
+                                        secret_meta_repo=mock.MagicMock())
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
@@ -285,7 +285,6 @@ class WhenTestingSecretResource(BaseTestCase):
         self.secret_repo.delete_entity_by_id = fail_method
 
         self.resource = SecretResource(self.secret_id,
-                                       crypto_manager=mock.MagicMock(),
                                        tenant_repo=mock.MagicMock(),
                                        secret_repo=self.secret_repo,
                                        datum_repo=mock.MagicMock(),

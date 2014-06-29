@@ -21,12 +21,12 @@ import abc
 import six
 
 from barbican import api
-from barbican.common import resources as res
 from barbican.common import utils
-from barbican.crypto import extension_manager as em
 from barbican.model import models
 from barbican.model import repositories as rep
 from barbican.openstack.common import gettextutils as u
+from barbican.plugin import resources as plugin
+
 
 LOG = utils.getLogger(__name__)
 
@@ -145,21 +145,21 @@ class BeginOrder(BaseTask):
     def get_name(self):
         return u._('Create Secret')
 
-    def __init__(self, crypto_manager=None, tenant_repo=None, order_repo=None,
+    def __init__(self, tenant_repo=None, order_repo=None,
                  secret_repo=None, tenant_secret_repo=None,
-                 datum_repo=None, kek_repo=None):
+                 datum_repo=None, kek_repo=None, secret_meta_repo=None):
         LOG.debug('Creating BeginOrder task processor')
-        self.order_repo = order_repo or rep.OrderRepo()
-        self.tenant_repo = tenant_repo or rep.TenantRepo()
-        self.secret_repo = secret_repo or rep.SecretRepo()
-        self.tenant_secret_repo = tenant_secret_repo or rep.TenantSecretRepo()
-        self.datum_repo = datum_repo or rep.EncryptedDatumRepo()
-        self.kek_repo = kek_repo or rep.KEKDatumRepo()
-        self.crypto_manager = crypto_manager or em.CryptoExtensionManager()
+        self.repos = rep.Repositories(tenant_repo=tenant_repo,
+                                      tenant_secret_repo=tenant_secret_repo,
+                                      secret_repo=secret_repo,
+                                      datum_repo=datum_repo,
+                                      kek_repo=kek_repo,
+                                      secret_meta_repo=secret_meta_repo,
+                                      order_repo=order_repo)
 
     def retrieve_entity(self, order_id, keystone_id):
-        return self.order_repo.get(entity_id=order_id,
-                                   keystone_id=keystone_id)
+        return self.repos.order_repo.get(entity_id=order_id,
+                                         keystone_id=keystone_id)
 
     def handle_processing(self, order, *args, **kwargs):
         self.handle_order(order)
@@ -169,11 +169,11 @@ class BeginOrder(BaseTask):
         order.status = models.States.ERROR
         order.error_status_code = status
         order.error_reason = message
-        self.order_repo.save(order)
+        self.repos.order_repo.save(order)
 
     def handle_success(self, order, *args, **kwargs):
         order.status = models.States.ACTIVE
-        self.order_repo.save(order)
+        self.repos.order_repo.save(order)
 
     def handle_order(self, order):
         """Handle secret creation.
@@ -188,14 +188,15 @@ class BeginOrder(BaseTask):
         secret_info = order_info['secret']
 
         # Retrieve the tenant.
-        tenant = self.tenant_repo.get(order.tenant_id)
+        tenant = self.repos.tenant_repo.get(order.tenant_id)
 
         # Create Secret
-        new_secret = res.create_secret(secret_info, tenant,
-                                       self.crypto_manager, self.secret_repo,
-                                       self.tenant_secret_repo,
-                                       self.datum_repo, self.kek_repo,
-                                       ok_to_generate=True)
+        new_secret = plugin.\
+            generate_secret(secret_info,
+                            secret_info.get('payload_content_type',
+                                            'application/octet-stream'),
+                            tenant, self.repos)
+
         order.secret_id = new_secret.id
 
         LOG.debug("...done creating order's secret.")

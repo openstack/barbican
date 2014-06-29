@@ -15,8 +15,8 @@
 
 import testtools
 
-from barbican.crypto import mime_types
 from barbican.model import models
+from barbican.plugin.util import mime_types
 
 
 class WhenTestingIsBase64ProcessingNeeded(testtools.TestCase):

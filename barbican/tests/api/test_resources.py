@@ -20,6 +20,7 @@ resource classes. For RBAC tests of these classes, see the
 """
 
 import base64
+import logging
 import urllib
 
 import mimetypes
@@ -32,11 +33,12 @@ from barbican import api
 from barbican.api import app
 from barbican.api import controllers
 from barbican.common import exception as excep
-from barbican.common import utils
 from barbican.common import validators
-from barbican.crypto import extension_manager as em
 from barbican.model import models
-from barbican.tests.crypto import test_plugin as ctp
+from barbican.openstack.common import timeutils
+
+
+LOG = logging.getLogger(__name__)
 
 
 def create_secret(id_ref="id", name="name",
@@ -166,8 +168,9 @@ class BaseSecretsResource(FunctionalTest):
 
         class RootController(object):
             secrets = controllers.secrets.SecretsController(
-                self.crypto_mgr, self.tenant_repo, self.secret_repo,
-                self.tenant_secret_repo, self.datum_repo, self.kek_repo
+                self.tenant_repo, self.secret_repo,
+                self.tenant_secret_repo, self.datum_repo, self.kek_repo,
+                self.secret_meta_repo
             )
 
         return RootController()
@@ -202,8 +205,10 @@ class BaseSecretsResource(FunctionalTest):
         self.tenant_repo = mock.MagicMock()
         self.tenant_repo.find_by_keystone_id.return_value = self.tenant
 
+        self.secret = models.Secret()
+        self.secret.id = '123'
         self.secret_repo = mock.MagicMock()
-        self.secret_repo.create_from.return_value = None
+        self.secret_repo.create_from.return_value = self.secret
 
         self.tenant_secret_repo = mock.MagicMock()
         self.tenant_secret_repo.create_from.return_value = None
@@ -212,19 +217,22 @@ class BaseSecretsResource(FunctionalTest):
         self.datum_repo.create_from.return_value = None
 
         self.kek_datum = models.KEKDatum()
-        self.kek_datum.plugin_name = utils.generate_fullname_for(
-            ctp.TestCryptoPlugin())
         self.kek_datum.kek_label = "kek_label"
         self.kek_datum.bind_completed = False
+        self.kek_datum.algorithm = ''
+        self.kek_datum.bit_length = 0
+        self.kek_datum.mode = ''
+        self.kek_datum.plugin_meta = ''
+
         self.kek_repo = mock.MagicMock()
-        self.kek_repo.find_or_create_kek_metadata.return_value = self.kek_datum
+        self.kek_repo.find_or_create_kek_datum.return_value = self.kek_datum
 
-        self.conf = mock.MagicMock()
-        self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
-        self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
-        self.crypto_mgr = em.CryptoExtensionManager(conf=self.conf)
+        self.secret_meta_repo = mock.MagicMock()
 
-    def _test_should_add_new_secret_with_expiration(self):
+    @mock.patch('barbican.plugin.resources.store_secret')
+    def _test_should_add_new_secret_with_expiration(self, mock_store_secret):
+        mock_store_secret.return_value = self.secret
+
         expiration = '2114-02-28 12:14:44.180394-05:00'
         self.secret_req.update({'expiration': expiration})
 
@@ -235,45 +243,48 @@ class BaseSecretsResource(FunctionalTest):
 
         self.assertEqual(resp.status_int, 201)
 
-        args, kwargs = self.secret_repo.create_from.call_args
-        secret = args[0]
-        expected = expiration[:-6].replace('12', '17', 1)
-        self.assertEqual(expected, str(secret.expiration))
+        # Validation replaces the time.
+        expected = dict(self.secret_req)
+        expiration_raw = expected['expiration']
+        expiration_raw = expiration_raw[:-6].replace('12', '17', 1)
+        expiration_tz = timeutils.parse_isotime(expiration_raw.strip())
+        expected['expiration'] = timeutils.normalize_time(expiration_tz)
+        mock_store_secret\
+            .assert_called_once_with(
+                self.secret_req.get('payload'),
+                self.secret_req.get('payload_content_type',
+                                    'application/octet-stream'),
+                self.secret_req.get('payload_content_encoding'),
+                expected, None, self.tenant, mock.ANY
+            )
 
-    def _test_should_add_new_secret_one_step(self, check_tenant_id=True):
+    @mock.patch('barbican.plugin.resources.store_secret')
+    def _test_should_add_new_secret_one_step(self, mock_store_secret,
+                                             check_tenant_id=True):
         """Test the one-step secret creation.
 
         :param check_tenant_id: True if the retrieved Tenant id needs to be
         verified, False to skip this check (necessary for new-Tenant flows).
         """
+        mock_store_secret.return_value = self.secret
+
         resp = self.app.post_json(
             '/%s/secrets/' % self.keystone_id,
             self.secret_req
         )
         self.assertEqual(resp.status_int, 201)
 
-        args, kwargs = self.secret_repo.create_from.call_args
-        secret = args[0]
-        self.assertIsInstance(secret, models.Secret)
-        self.assertEqual(secret.name, self.name)
-        self.assertEqual(secret.algorithm, self.secret_algorithm)
-        self.assertEqual(secret.bit_length, self.secret_bit_length)
-        self.assertEqual(secret.mode, self.secret_mode)
-
-        args, kwargs = self.tenant_secret_repo.create_from.call_args
-        tenant_secret = args[0]
-        self.assertIsInstance(tenant_secret, models.TenantSecret)
-        if check_tenant_id:
-            self.assertEqual(tenant_secret.tenant_id, self.tenant_entity_id)
-        self.assertEqual(tenant_secret.secret_id, secret.id)
-
-        args, kwargs = self.datum_repo.create_from.call_args
-        datum = args[0]
-        self.assertIsInstance(datum, models.EncryptedDatum)
-        self.assertEqual(base64.b64encode('cypher_text'), datum.cypher_text)
-        self.assertEqual(self.payload_content_type, datum.content_type)
-
-        validate_datum(self, datum)
+        expected = dict(self.secret_req)
+        expected['expiration'] = None
+        mock_store_secret\
+            .assert_called_once_with(
+                self.secret_req.get('payload'),
+                self.secret_req.get('payload_content_type',
+                                    'application/octet-stream'),
+                self.secret_req.get('payload_content_encoding'),
+                expected, None, self.tenant if check_tenant_id else mock.ANY,
+                mock.ANY
+            )
 
     def _test_should_add_new_secret_if_tenant_does_not_exist(self):
         self.tenant_repo.get.return_value = None
@@ -305,7 +316,11 @@ class BaseSecretsResource(FunctionalTest):
 
         self.assertFalse(self.datum_repo.create_from.called)
 
-    def _test_should_add_new_secret_payload_almost_too_large(self):
+    @mock.patch('barbican.plugin.resources.store_secret')
+    def _test_should_add_secret_payload_almost_too_large(self,
+                                                         mock_store_secret):
+        mock_store_secret.return_value = self.secret
+
         if validators.DEFAULT_MAX_SECRET_BYTES % 4:
             raise ValueError('Tests currently require max secrets divides by '
                              '4 evenly, due to base64 encoding.')
@@ -382,7 +397,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
         self._test_should_add_new_secret_metadata_without_payload()
 
     def test_should_add_new_secret_payload_almost_too_large(self):
-        self._test_should_add_new_secret_payload_almost_too_large()
+        self._test_should_add_secret_payload_almost_too_large()
 
     def test_should_fail_due_to_payload_too_large(self):
         self._test_should_fail_due_to_payload_too_large()
@@ -405,83 +420,88 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
         )
         self.assertEqual(resp.status_int, 400)
 
-    def test_create_secret_content_type_text_plain(self):
-        # payload_content_type has trailing space
-        self.secret_req = {'name': self.name,
-                           'payload_content_type': 'text/plain ',
-                           'algorithm': self.secret_algorithm,
-                           'bit_length': self.secret_bit_length,
-                           'mode': self.secret_mode,
-                           'payload': self.payload}
-
-        resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
-            self.secret_req
-        )
-        self.assertEqual(resp.status_int, 201)
-
-        self.secret_req = {'name': self.name,
-                           'payload_content_type': '  text/plain',
-                           'algorithm': self.secret_algorithm,
-                           'bit_length': self.secret_bit_length,
-                           'mode': self.secret_mode,
-                           'payload': self.payload}
-
-        resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
-            self.secret_req
-        )
-        self.assertEqual(resp.status_int, 201)
-
-    def test_create_secret_content_type_text_plain_space_charset_utf8(self):
-        # payload_content_type has trailing space
-        self.secret_req = {'name': self.name,
-                           'payload_content_type':
-                           'text/plain; charset=utf-8 ',
-                           'algorithm': self.secret_algorithm,
-                           'bit_length': self.secret_bit_length,
-                           'mode': self.secret_mode,
-                           'payload': self.payload}
-
-        resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
-            self.secret_req
-        )
-        self.assertEqual(resp.status_int, 201)
-
-        self.secret_req = {'name': self.name,
-                           'payload_content_type':
-                           '  text/plain; charset=utf-8',
-                           'algorithm': self.secret_algorithm,
-                           'bit_length': self.secret_bit_length,
-                           'mode': self.secret_mode,
-                           'payload': self.payload}
-
-        resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
-            self.secret_req
-        )
-        self.assertEqual(resp.status_int, 201)
-
-    def test_create_secret_with_only_content_type(self):
-        # No payload just content_type
-        self.secret_req = {'payload_content_type':
-                           'text/plain'}
-        resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
-            self.secret_req,
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 400)
-
-        self.secret_req = {'payload_content_type':
-                           'text/plain',
-                           'payload': 'somejunk'}
-        resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
-            self.secret_req
-        )
-        self.assertEqual(resp.status_int, 201)
+#TODO(jwood) These tests are integration-style unit tests of the REST -> Pecan
+#   resources, which are more painful to test now that we have a two-tier
+#   plugin lookup framework. These tests should instead be re-located to
+#   unit tests of the secret_store.py and store_crypto.py modules. A separate
+#   CR will add the additional unit tests.
+#     def test_create_secret_content_type_text_plain(self):
+#         # payload_content_type has trailing space
+#         self.secret_req = {'name': self.name,
+#                            'payload_content_type': 'text/plain ',
+#                            'algorithm': self.secret_algorithm,
+#                            'bit_length': self.secret_bit_length,
+#                            'mode': self.secret_mode,
+#                            'payload': self.payload}
+#
+#         resp = self.app.post_json(
+#             '/%s/secrets/' % self.keystone_id,
+#             self.secret_req
+#         )
+#         self.assertEqual(resp.status_int, 201)
+#
+#         self.secret_req = {'name': self.name,
+#                            'payload_content_type': '  text/plain',
+#                            'algorithm': self.secret_algorithm,
+#                            'bit_length': self.secret_bit_length,
+#                            'mode': self.secret_mode,
+#                            'payload': self.payload}
+#
+#         resp = self.app.post_json(
+#             '/%s/secrets/' % self.keystone_id,
+#             self.secret_req
+#         )
+#         self.assertEqual(resp.status_int, 201)
+#
+#     def test_create_secret_content_type_text_plain_space_charset_utf8(self):
+#         # payload_content_type has trailing space
+#         self.secret_req = {'name': self.name,
+#                            'payload_content_type':
+#                            'text/plain; charset=utf-8 ',
+#                            'algorithm': self.secret_algorithm,
+#                            'bit_length': self.secret_bit_length,
+#                            'mode': self.secret_mode,
+#                            'payload': self.payload}
+#
+#         resp = self.app.post_json(
+#             '/%s/secrets/' % self.keystone_id,
+#             self.secret_req
+#         )
+#         self.assertEqual(resp.status_int, 201)
+#
+#         self.secret_req = {'name': self.name,
+#                            'payload_content_type':
+#                            '  text/plain; charset=utf-8',
+#                            'algorithm': self.secret_algorithm,
+#                            'bit_length': self.secret_bit_length,
+#                            'mode': self.secret_mode,
+#                            'payload': self.payload}
+#
+#         resp = self.app.post_json(
+#             '/%s/secrets/' % self.keystone_id,
+#             self.secret_req
+#         )
+#         self.assertEqual(resp.status_int, 201)
+#
+#     def test_create_secret_with_only_content_type(self):
+#         # No payload just content_type
+#         self.secret_req = {'payload_content_type':
+#                            'text/plain'}
+#         resp = self.app.post_json(
+#             '/%s/secrets/' % self.keystone_id,
+#             self.secret_req,
+#             expect_errors=True
+#         )
+#         self.assertEqual(resp.status_int, 400)
+#
+#         self.secret_req = {'payload_content_type':
+#                            'text/plain',
+#                            'payload': 'somejunk'}
+#         resp = self.app.post_json(
+#             '/%s/secrets/' % self.keystone_id,
+#             self.secret_req
+#         )
+#         self.assertEqual(resp.status_int, 201)
 
 
 class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
@@ -506,7 +526,7 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
         self._test_should_add_new_secret_metadata_without_payload()
 
     def test_should_add_new_secret_payload_almost_too_large(self):
-        self._test_should_add_new_secret_payload_almost_too_large()
+        self._test_should_add_secret_payload_almost_too_large()
 
     def test_should_fail_due_to_payload_too_large(self):
         self._test_should_fail_due_to_payload_too_large()
@@ -596,8 +616,9 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
         class RootController(object):
             secrets = controllers.secrets.SecretsController(
-                self.crypto_mgr, self.tenant_repo, self.secret_repo,
-                self.tenant_secret_repo, self.datum_repo, self.kek_repo
+                self.tenant_repo, self.secret_repo,
+                self.tenant_secret_repo, self.datum_repo, self.kek_repo,
+                self.secret_meta_repo
             )
 
         return RootController()
@@ -641,10 +662,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
         self.kek_repo = mock.MagicMock()
 
-        self.conf = mock.MagicMock()
-        self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
-        self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
-        self.crypto_mgr = em.CryptoExtensionManager(conf=self.conf)
+        self.secret_meta_repo = mock.MagicMock()
 
         self.params = {'offset': self.offset,
                        'limit': self.limit,
@@ -760,8 +778,9 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         class RootController(object):
             secrets = controllers.secrets.SecretsController(
-                self.crypto_mgr, self.tenant_repo, self.secret_repo,
-                self.tenant_secret_repo, self.datum_repo, self.kek_repo
+                self.tenant_repo, self.secret_repo,
+                self.tenant_secret_repo, self.datum_repo, self.kek_repo,
+                self.secret_meta_repo
             )
 
         return RootController()
@@ -784,8 +803,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.kek_tenant.active = True
         self.kek_tenant.bind_completed = False
         self.kek_tenant.kek_label = "kek_label"
-        self.kek_tenant.plugin_name = utils.generate_fullname_for(
-            ctp.TestCryptoPlugin())
 
         self.datum = models.EncryptedDatum()
         self.datum.id = datum_id
@@ -807,6 +824,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.keystone_id = self.keystone_id
         self.tenant_repo = mock.MagicMock()
         self.tenant_repo.get.return_value = self.tenant
+        self.tenant_repo.find_by_keystone_id.return_value = self.tenant
 
         self.secret_repo = mock.MagicMock()
         self.secret_repo.get.return_value = self.secret
@@ -819,10 +837,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.kek_repo = mock.MagicMock()
 
-        self.conf = mock.MagicMock()
-        self.conf.crypto.namespace = 'barbican.test.crypto.plugin'
-        self.conf.crypto.enabled_crypto_plugins = ['test_crypto']
-        self.crypto_mgr = em.CryptoExtensionManager(conf=self.conf)
+        self.secret_meta_repo = mock.MagicMock()
 
     def test_should_get_secret_as_json(self):
         resp = self.app.get(
@@ -841,7 +856,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
                       resp.namespace['content_types'].itervalues())
         self.assertNotIn('mime_type', resp.namespace)
 
-    def test_should_get_secret_as_plain(self):
+    @mock.patch('barbican.plugin.resources.get_secret')
+    def test_should_get_secret_as_plain(self, mock_get_secret):
+        data = 'unencrypted_data'
+        mock_get_secret.return_value = data
+
         resp = self.app.get(
             '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
             headers={'Accept': 'text/plain'}
@@ -853,7 +872,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
                                          suppress_exception=True)
         self.assertEqual(resp.status_int, 200)
 
-        self.assertIsNotNone(resp.body)
+        self.assertEqual(resp.body, data)
+        mock_get_secret\
+            .assert_called_once_with('text/plain',
+                                     self.secret,
+                                     self.tenant)
 
     def test_should_get_secret_meta_for_binary(self):
         self.datum.content_type = "application/octet-stream"
@@ -876,7 +899,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.assertIn(self.datum.content_type,
                       resp.namespace['content_types'].itervalues())
 
-    def test_should_get_secret_as_binary(self):
+    @mock.patch('barbican.plugin.resources.get_secret')
+    def test_should_get_secret_as_binary(self, mock_get_secret):
+        data = 'unencrypted_data'
+        mock_get_secret.return_value = data
+
         self.datum.content_type = "application/octet-stream"
         self.datum.cypher_text = 'aaaa'
 
@@ -888,7 +915,12 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             }
         )
 
-        self.assertEqual(resp.body, 'unencrypted_data')
+        self.assertEqual(resp.body, data)
+
+        mock_get_secret\
+            .assert_called_once_with('application/octet-stream',
+                                     self.secret,
+                                     self.tenant)
 
     def test_should_throw_exception_for_get_when_secret_not_found(self):
         self.secret_repo.get.return_value = None
@@ -908,17 +940,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         )
         self.assertEqual(resp.status_int, 406)
 
-    def test_should_throw_exception_for_get_when_datum_not_available(self):
-        self.secret.encrypted_data = []
-
-        resp = self.app.get(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
-            headers={'Accept': 'text/plain'},
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 404)
-
-    def test_should_put_secret_as_plain(self):
+    @mock.patch('barbican.plugin.resources.store_secret')
+    def test_should_put_secret_as_plain(self, mock_store_secret):
         self.secret.encrypted_data = []
 
         resp = self.app.put(
@@ -929,14 +952,13 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.assertEqual(resp.status_int, 204)
 
-        args, kwargs = self.datum_repo.create_from.call_args
-        datum = args[0]
-        self.assertIsInstance(datum, models.EncryptedDatum)
-        self.assertEqual(base64.b64encode('cypher_text'), datum.cypher_text)
+        mock_store_secret\
+            .assert_called_once_with('plain text', 'text/plain',
+                                     None, self.secret.to_dict_fields,
+                                     self.secret, self.tenant, mock.ANY)
 
-        validate_datum(self, datum)
-
-    def test_should_put_secret_as_binary(self):
+    @mock.patch('barbican.plugin.resources.store_secret')
+    def test_should_put_secret_as_binary(self, mock_store_secret):
         self.secret.encrypted_data = []
 
         resp = self.app.put(
@@ -950,15 +972,18 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.assertEqual(resp.status_int, 204)
 
-        args, kwargs = self.datum_repo.create_from.call_args
-        datum = args[0]
-        self.assertIsInstance(datum, models.EncryptedDatum)
+        mock_store_secret\
+            .assert_called_once_with('plain text', 'application/octet-stream',
+                                     None, self.secret.to_dict_fields,
+                                     self.secret, self.tenant, mock.ANY)
 
-    def test_should_put_encoded_secret_as_binary(self):
+    @mock.patch('barbican.plugin.resources.store_secret')
+    def test_should_put_encoded_secret_as_binary(self, mock_store_secret):
         self.secret.encrypted_data = []
+        payload = base64.b64encode('plain text')
         resp = self.app.put(
             '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
-            base64.b64encode('plain text'),
+            payload,
             headers={
                 'Accept': 'text/plain',
                 'Content-Type': 'application/octet-stream',
@@ -967,6 +992,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         )
 
         self.assertEqual(resp.status_int, 204)
+
+        mock_store_secret\
+            .assert_called_once_with(payload, 'application/octet-stream',
+                                     'base64', self.secret.to_dict_fields,
+                                     self.secret, self.tenant, mock.ANY)
 
     def test_should_fail_to_put_secret_with_unsupported_encoding(self):
         self.secret.encrypted_data = []
@@ -1059,17 +1089,17 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         )
         self.assertEqual(resp.status_int, 413)
 
-    def test_should_delete_secret(self):
+    @mock.patch('barbican.plugin.resources.delete_secret')
+    def test_should_delete_secret(self, mock_delete_secret):
         self.app.delete(
             '/%s/secrets/%s/' % (self.keystone_id, self.secret.id)
         )
-        self.secret_repo.delete_entity_by_id \
-            .assert_called_once_with(entity_id=self.secret.id,
-                                     keystone_id=self.keystone_id)
+
+        mock_delete_secret\
+            .assert_called_once_with(self.secret, self.keystone_id, mock.ANY)
 
     def test_should_throw_exception_for_delete_when_secret_not_found(self):
-        self.secret_repo.delete_entity_by_id.side_effect = excep.NotFound(
-            "Test not found exception")
+        self.secret_repo.get.return_value = None
 
         resp = self.app.delete(
             '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),

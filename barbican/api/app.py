@@ -36,7 +36,6 @@ from barbican.api.controllers import secrets
 from barbican.api.controllers import transportkeys
 from barbican.api.controllers import versions
 from barbican.common import config
-from barbican.crypto import extension_manager as ext
 from barbican.openstack.common import log
 from barbican import queue
 
@@ -92,15 +91,13 @@ def create_main_app(global_config, **local_conf):
     config.parse_args()
     log.setup('barbican')
     config.setup_remote_pydev_debug()
-    # Crypto Plugin Manager
-    crypto_mgr = ext.CryptoExtensionManager()
 
     # Queuing initialization
     CONF = cfg.CONF
     queue.init(CONF)
 
     class RootController(object):
-        secrets = secrets.SecretsController(crypto_mgr)
+        secrets = secrets.SecretsController()
         orders = orders.OrdersController()
         containers = containers.ContainersController()
         transport_keys = transportkeys.TransportKeysController()

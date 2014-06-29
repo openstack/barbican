@@ -17,9 +17,9 @@ import mock
 
 import testtools
 
-from barbican.crypto import p11_crypto
-from barbican.crypto import plugin as plugin_import
 from barbican.model import models
+from barbican.plugin.crypto import crypto as plugin_import
+from barbican.plugin.crypto import p11_crypto
 
 
 class WhenTestingP11CryptoPlugin(testtools.TestCase):
@@ -29,7 +29,7 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
 
         self.p11_mock = mock.MagicMock(CKR_OK=0, CKF_RW_SESSION='RW',
                                        name='PyKCS11 mock')
-        self.patcher = mock.patch('barbican.crypto.p11_crypto.PyKCS11',
+        self.patcher = mock.patch('barbican.plugin.crypto.p11_crypto.PyKCS11',
                                   new=self.p11_mock)
         self.patcher.start()
         self.pkcs11 = self.p11_mock.PyKCS11Lib()
