@@ -927,8 +927,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
         )
 
-        # empty-body PUTs return HTTP 204 in newer versions of pecan
-        self.assertIn(resp.status_int, (200, 204))
+        self.assertEqual(resp.status_int, 204)
 
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
@@ -949,8 +948,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             },
         )
 
-        # empty-body PUTs return HTTP 204 in newer versions of pecan
-        self.assertIn(resp.status_int, (200, 204))
+        self.assertEqual(resp.status_int, 204)
 
         args, kwargs = self.datum_repo.create_from.call_args
         datum = args[0]
@@ -968,8 +966,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             },
         )
 
-        # empty-body PUTs return HTTP 204 in newer versions of pecan
-        self.assertIn(resp.status_int, (200, 204))
+        self.assertEqual(resp.status_int, 204)
 
     def test_should_fail_to_put_secret_with_unsupported_encoding(self):
         self.secret.encrypted_data = []
