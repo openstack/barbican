@@ -430,7 +430,9 @@ class Order(BASE, ModelBase):
                           'algorithm': self.secret_algorithm,
                           'bit_length': self.secret_bit_length,
                           'mode': self.secret_mode,
-                          'expiration': self.secret_expiration,
+                          'expiration': self.secret_expiration.isoformat()
+                          if self.secret_expiration
+                          else self.secret_expiration,
                           'payload_content_type':
                           self.secret_payload_content_type},
                'type': self.type,
