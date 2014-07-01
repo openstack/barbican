@@ -375,7 +375,7 @@ class KEKDatum(BASE, ModelBase):
 
     __tablename__ = 'kek_data'
 
-    plugin_name = sa.Column(sa.String(255))
+    plugin_name = sa.Column(sa.String(255), nullable=False)
     kek_label = sa.Column(sa.String(255))
 
     tenant_id = sa.Column(sa.String(36), sa.ForeignKey('tenants.id'),
@@ -546,7 +546,7 @@ class TransportKey(BASE, ModelBase):
 
 # Keep this tuple synchronized with the models in the file
 MODELS = [TenantSecret, Tenant, Secret, EncryptedDatum, Order, Container,
-          ContainerSecret, TransportKey, SecretStoreMetadatum]
+          ContainerSecret, TransportKey, SecretStoreMetadatum, KEKDatum]
 
 
 def register_models(engine):

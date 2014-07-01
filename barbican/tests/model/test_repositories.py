@@ -11,9 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import mock
 from oslo.config import cfg
+import sqlalchemy.orm as sa_orm
 import testtools
 
+from barbican.common import exception
 from barbican.model import repositories
 
 
@@ -83,3 +86,29 @@ class WhenCleaningRepositoryPagingParameters(testtools.TestCase):
             offset_arg=1,
             limit_arg=limit)
         self.assertEqual(clean_limit, self.CONF.max_limit_paging)
+
+    def test_should_raise_exception_create_kek_datum_with_null_name(self):
+        repositories._ENGINE = mock.MagicMock()
+        tenant = mock.MagicMock(id="1")
+        plugin_name = None
+        suppress_exception = False
+        session = mock.MagicMock()
+        session.query.side_effect = sa_orm.exc.NoResultFound()
+
+        kek_repo = repositories.KEKDatumRepo()
+        self.assertRaises(exception.BarbicanException,
+                          kek_repo.find_or_create_kek_datum, tenant,
+                          plugin_name, suppress_exception, session)
+
+    def test_should_raise_exception_create_kek_datum_with_empty_name(self):
+        repositories._ENGINE = mock.MagicMock()
+        tenant = mock.MagicMock(id="1")
+        plugin_name = ""
+        suppress_exception = False
+        session = mock.MagicMock()
+        session.query.side_effect = sa_orm.exc.NoResultFound()
+
+        kek_repo = repositories.KEKDatumRepo()
+        self.assertRaises(exception.BarbicanException,
+                          kek_repo.find_or_create_kek_datum, tenant,
+                          plugin_name, suppress_exception, session)
