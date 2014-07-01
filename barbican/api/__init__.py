@@ -19,7 +19,6 @@ API handler for Cloudkeep's Barbican
 from oslo.config import cfg
 import pecan
 import pkgutil
-from webob import exc
 
 from barbican.common import exception
 from barbican.common import utils
@@ -107,9 +106,6 @@ def generate_safe_exception_message(operation_name, excep):
 
     try:
         raise excep
-    except exc.HTTPError as f:
-        message = f.title
-        status = f.status
     except policy.PolicyNotAuthorized:
         message = u._('{0} attempt not allowed - '
                       'please review your '
