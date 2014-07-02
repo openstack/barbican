@@ -119,6 +119,7 @@ class TransportKeysController(object):
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('Transport Key Creation'))
     @controllers.enforce_rbac('transport_keys:post')
+    @controllers.enforce_content_types(['application/json'])
     def on_post(self, keystone_id, **kwargs):
         LOG.debug('Start transport_keys on_post')
 

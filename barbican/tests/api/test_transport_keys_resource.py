@@ -231,9 +231,18 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
         resp = self.app.post(
             '/%s/transport_keys/' % self.keystone_id,
             '',
-            expect_errors=True
+            expect_errors=True,
+            content_type='application/json'
         )
         self.assertEqual(resp.status_int, 400)
+
+    def test_should_raise_add_new_transport_key_no_content_type_header(self):
+        resp = self.app.post(
+            '/%s/transport_keys/' % self.keystone_id,
+            self.transport_key_req,
+            expect_errors=True,
+        )
+        self.assertEqual(resp.status_int, 415)
 
 
 class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):

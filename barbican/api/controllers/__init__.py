@@ -95,3 +95,27 @@ def handle_exceptions(operation_name=u._('System')):
         return handler
 
     return exceptions_decorator
+
+
+def _do_enforce_content_types(pecan_req, valid_content_types):
+    """Check to see that content type in the request is one of the valid
+    types passed in by our caller.
+    """
+    if pecan_req.content_type not in valid_content_types:
+        m = "Unexpected content type: {0}.  Expected content types are: {1}"\
+            .format(pecan_req.content_type, valid_content_types)
+        pecan.abort(415, m)
+
+
+def enforce_content_types(valid_content_types=[]):
+    """Decorator handling content type enforcement on behalf of REST verbs."""
+
+    def content_types_decorator(fn):
+
+        def content_types_enforcer(inst, *args, **kwargs):
+            _do_enforce_content_types(pecan.request, valid_content_types)
+            return fn(inst, *args, **kwargs)
+
+        return content_types_enforcer
+
+    return content_types_decorator

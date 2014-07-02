@@ -97,6 +97,8 @@ class SecretController(object):
     @allow_all_content_types
     @controllers.handle_exceptions(u._('Secret update'))
     @controllers.enforce_rbac('secret:put')
+    @controllers.enforce_content_types(['application/octet-stream',
+                                       'text/plain'])
     def on_put(self, keystone_id, **kwargs):
 
         if not pecan.request.content_type or \
@@ -224,6 +226,7 @@ class SecretsController(object):
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('Secret creation'))
     @controllers.enforce_rbac('secrets:post')
+    @controllers.enforce_content_types(['application/json'])
     def on_post(self, keystone_id, **kwargs):
         LOG.debug('Start on_post for tenant-ID {0}:...'.format(keystone_id))
 
