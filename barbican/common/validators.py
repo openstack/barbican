@@ -115,7 +115,7 @@ class NewSecretValidator(ValidatorBase):
                 "name": {"type": "string"},
                 "algorithm": {"type": "string"},
                 "mode": {"type": "string"},
-                "bit_length": {"type": "integer", "minimum": 0},
+                "bit_length": {"type": "integer", "minimum": 1},
                 "expiration": {"type": "string"},
                 "payload": {"type": "string"},
                 "payload_content_type": {"type": "string"},
@@ -302,12 +302,6 @@ class NewOrderValidator(ValidatorBase):
 
         # TODO(reaperhulk): Future API change will move from bit to byte_length
         bit_length = int(secret.get('bit_length', 0))
-        if bit_length <= 0:
-            raise exception.UnsupportedField(field="bit_length",
-                                             schema=schema_name,
-                                             reason=u._("Must have non-zero "
-                                                        "positive bit_length "
-                                                        "to generate secret"))
         if bit_length % 8 != 0:
             raise exception.UnsupportedField(field="bit_length",
                                              schema=schema_name,

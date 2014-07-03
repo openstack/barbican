@@ -526,6 +526,23 @@ class WhenTestingOrderValidator(testtools.TestCase):
 
         self.assertEqual('algorithm', exception.invalid_field)
 
+    def test_should_fail_invalid_json_data_type(self):
+        self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            [],
+        )
+
+    def test_should_fail_payload_in_secret(self):
+        self.order_req['secret']['payload'] = "YWJjZGVmZw=="
+        self.order_req['secret']['payload_content_encoding'] = 'base64'
+
+        self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.order_req
+        )
+
 
 class WhenTestingContainerValidator(testtools.TestCase):
 
@@ -702,6 +719,9 @@ class WhenTestingRSAContainerValidator(testtools.TestCase):
 
         self.validator = validators.ContainerValidator()
 
+    def test_should_validate_all_fields(self):
+        self.validator.validate(self.container_req)
+
     def test_should_fail_no_names_in_secret_refs(self):
         del self.container_req['secret_refs'][0]['name']
 
@@ -783,6 +803,9 @@ class WhenTestingCertificateContainerValidator(testtools.TestCase):
 
         self.validator = validators.ContainerValidator()
 
+    def test_should_validate_all_fields(self):
+        self.validator.validate(self.container_req)
+
     def test_should_fail_more_than_4_secret_refs(self):
         new_secret_ref = {
             'name': 'new secret ref',
@@ -808,6 +831,38 @@ class WhenTestingCertificateContainerValidator(testtools.TestCase):
         )
 
         self.assertEqual('secret_refs', exception.invalid_property)
+
+
+class WhenTestingTransportKeyValidator(testtools.TestCase):
+
+    def setUp(self):
+        super(WhenTestingTransportKeyValidator, self).setUp()
+
+        self.plugin_name = 'name'
+        self.transport_key = 'abcdef'
+        self.transport_req = {'plugin_name': self.plugin_name,
+                              'transport_key': self.transport_key}
+
+        self.validator = validators.NewTransportKeyValidator()
+
+    def test_should_fail_with_invalid_json_data_type(self):
+        self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            []
+        )
+
+    def test_should_fail_with_empty_transport_key(self):
+        self.transport_req['transport_key'] = ''
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.transport_req
+        )
+
+        self.assertEqual('transport_key', exception.invalid_property)
+
 
 if __name__ == '__main__':
     unittest.main()
