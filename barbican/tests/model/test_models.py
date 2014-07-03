@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import testtools
 
 from barbican.model import models
@@ -30,11 +31,14 @@ class WhenCreatingNewSecret(testtools.TestCase):
         self.parsed_order = {'secret': self.parsed_secret}
 
     def test_new_secret_is_created_from_dict(self):
+        date_time = datetime.datetime.now().isoformat()
+        self.parsed_secret['expiration'] = date_time
         secret = models.Secret(self.parsed_secret)
         self.assertEqual(secret.name, self.parsed_secret['name'])
         self.assertEqual(secret.algorithm, self.parsed_secret['algorithm'])
         self.assertEqual(secret.bit_length, self.parsed_secret['bit_length'])
         self.assertEqual(secret.mode, self.parsed_secret['mode'])
+        self.assertIsInstance(secret.expiration, datetime.datetime)
 
 
 class WhenCreatingNewContainer(testtools.TestCase):
