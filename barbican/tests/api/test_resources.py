@@ -1163,6 +1163,26 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         )
         self.assertEqual(resp.status_int, 400)
 
+    def test_should_fail_add_new_order_unsupported_field(self):
+        # Using unsupported algorithm field for this test
+        self.unsupported_req = {
+            'secret': {
+                'name': self.secret_name,
+                'payload_content_type':
+                self.secret_payload_content_type,
+                'algorithm': "not supported",
+                'bit_length': self.secret_bit_length,
+                'mode': self.secret_mode
+            }
+        }
+        resp = self.app.post_json(
+            '/%s/orders/' % self.tenant_keystone_id,
+            self.unsupported_req,
+            expect_errors=True
+        )
+
+        self.assertEqual(resp.status_int, 400)
+
 
 class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
     def setUp(self):
