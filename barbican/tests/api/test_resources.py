@@ -35,11 +35,27 @@ from barbican.api import controllers
 from barbican.api.controllers import hrefs
 from barbican.common import exception as excep
 from barbican.common import validators
+import barbican.context
 from barbican.model import models
 from barbican.openstack.common import timeutils
 
 
 LOG = logging.getLogger(__name__)
+
+
+def get_barbican_env(keystone_id):
+    """Create and return a barbican.context for use with
+       the RBAC decorator by injecting the provided
+       keystone_id
+    """
+    kwargs = {'roles': None,
+              'user': None,
+              'tenant': keystone_id,
+              'is_admin': True}
+    ctx = barbican.context.RequestContext(**kwargs)
+    ctx.policy_enforcer = None
+    barbican_env = {'barbican.context': ctx}
+    return barbican_env
 
 
 def create_secret(id_ref="id", name="name",
@@ -171,6 +187,7 @@ class BaseSecretsResource(FunctionalTest):
     def setUp(self):
         super(BaseSecretsResource, self).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.keystone_id)
 
     @property
     def root(self):
@@ -243,7 +260,6 @@ class BaseSecretsResource(FunctionalTest):
             'default_plugin_name', 'XXXABCDEF')
         self.transport_key_id = 'tkey12345'
         self.tkey_url = hrefs.convert_transport_key_to_href(
-            self.keystone_id,
             self.transport_key.id)
         self.transport_key_repo = mock.MagicMock()
 
@@ -255,7 +271,7 @@ class BaseSecretsResource(FunctionalTest):
         self.secret_req.update({'expiration': expiration})
 
         resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             self.secret_req
         )
 
@@ -289,7 +305,7 @@ class BaseSecretsResource(FunctionalTest):
         mock_store_secret.return_value = self.secret, None
 
         resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             self.secret_req
         )
         self.assertEqual(resp.status_int, 201)
@@ -320,10 +336,7 @@ class BaseSecretsResource(FunctionalTest):
         mock_store_secret.return_value = self.secret, None
         self.secret_req['transport_key_id'] = self.transport_key_id
 
-        resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
-            self.secret_req
-        )
+        resp = self.app.post_json('/secrets/', self.secret_req)
         self.assertEqual(resp.status_int, 201)
 
         expected = dict(self.secret_req)
@@ -354,7 +367,7 @@ class BaseSecretsResource(FunctionalTest):
 
     def _test_should_add_new_secret_metadata_without_payload(self):
         self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             {'name': self.name}
         )
 
@@ -376,9 +389,8 @@ class BaseSecretsResource(FunctionalTest):
                                                        mock_store_secret):
 
         mock_store_secret.return_value = self.secret, self.transport_key
-
         resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             {'name': self.name,
              'transport_key_needed': 'true'}
         )
@@ -409,7 +421,7 @@ class BaseSecretsResource(FunctionalTest):
         if self.payload_content_encoding:
             self.secret_req['payload_content_encoding'] = \
                 self.payload_content_encoding
-        self.app.post_json('/%s/secrets/' % self.keystone_id, self.secret_req)
+        self.app.post_json('/secrets/', self.secret_req)
 
     def _test_should_raise_due_to_payload_too_large(self):
         big_text = ''.join(['A' for x
@@ -427,7 +439,7 @@ class BaseSecretsResource(FunctionalTest):
                 self.payload_content_encoding
 
         resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             self.secret_req,
             expect_errors=True
         )
@@ -446,7 +458,7 @@ class BaseSecretsResource(FunctionalTest):
                 self.payload_content_encoding
 
         resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             self.secret_req,
             expect_errors=True
         )
@@ -491,7 +503,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
                            'payload': self.payload}
 
         resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             self.secret_req,
             expect_errors=True
         )
@@ -512,7 +524,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
 #                            'payload': self.payload}
 #
 #         resp = self.app.post_json(
-#             '/%s/secrets/' % self.keystone_id,
+#             '/secrets/',
 #             self.secret_req
 #         )
 #         self.assertEqual(resp.status_int, 201)
@@ -525,7 +537,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
 #                            'payload': self.payload}
 #
 #         resp = self.app.post_json(
-#             '/%s/secrets/' % self.keystone_id,
+#             '/secrets/',
 #             self.secret_req
 #         )
 #         self.assertEqual(resp.status_int, 201)
@@ -541,7 +553,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
 #                            'payload': self.payload}
 #
 #         resp = self.app.post_json(
-#             '/%s/secrets/' % self.keystone_id,
+#             '/secrets/',
 #             self.secret_req
 #         )
 #         self.assertEqual(resp.status_int, 201)
@@ -555,7 +567,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
 #                            'payload': self.payload}
 #
 #         resp = self.app.post_json(
-#             '/%s/secrets/' % self.keystone_id,
+#             '/secrets/',
 #             self.secret_req
 #         )
 #         self.assertEqual(resp.status_int, 201)
@@ -565,7 +577,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
 #         self.secret_req = {'payload_content_type':
 #                            'text/plain'}
 #         resp = self.app.post_json(
-#             '/%s/secrets/' % self.keystone_id,
+#             '/secrets/',
 #             self.secret_req,
 #             expect_errors=True
 #         )
@@ -575,7 +587,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
 #                            'text/plain',
 #                            'payload': 'somejunk'}
 #         resp = self.app.post_json(
-#             '/%s/secrets/' % self.keystone_id,
+#             '/secrets/',
 #             self.secret_req
 #         )
 #         self.assertEqual(resp.status_int, 201)
@@ -627,7 +639,7 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
             'payload_content_type': 'application/octet-stream'
         }
         resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             self.secret_req,
             expect_errors=True
         )
@@ -645,7 +657,7 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
         }
 
         resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             self.secret_req,
             expect_errors=True
         )
@@ -662,7 +674,7 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
         }
 
         resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             self.secret_req,
             expect_errors=True
         )
@@ -680,7 +692,7 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
         }
 
         resp = self.app.post_json(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             self.secret_req,
             expect_errors=True
         )
@@ -692,6 +704,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
     def setUp(self):
         super(WhenGettingSecretsListUsingSecretsResource, self).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.keystone_id)
 
     @property
     def root(self):
@@ -761,7 +774,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
         self.params['name'] = urllib.quote_plus(self.name)
 
         resp = self.app.get(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             dict((k, v) for k, v in self.params.items() if v is not None)
         )
         # Verify that the name is unquoted correctly in the
@@ -782,7 +795,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
     def test_should_get_list_secrets(self):
         resp = self.app.get(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             dict((k, v) for k, v in self.params.items() if v is not None)
         )
 
@@ -811,7 +824,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
     def test_response_should_include_total(self):
         resp = self.app.get(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             dict((k, v) for k, v in self.params.items() if v is not None)
         )
 
@@ -823,7 +836,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
         del self.secrets[:]
 
         resp = self.app.get(
-            '/%s/secrets/' % self.keystone_id,
+            '/secrets/',
             dict((k, v) for k, v in self.params.items() if v is not None)
         )
 
@@ -842,11 +855,10 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
         if limit_arg:
             offset = int(offset_arg)
             limit = int(limit_arg)
-            return '/{0}/secrets?limit={1}&offset={2}'.format(keystone_id,
-                                                              limit,
-                                                              offset)
+            return '/secrets?limit={0}&offset={1}'.format(limit,
+                                                          offset)
         else:
-            return '/{0}/secrets'.format(keystone_id)
+            return '/secrets'
 
 
 class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
@@ -855,6 +867,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             WhenGettingPuttingOrDeletingSecretUsingSecretResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.keystone_id)
 
     @property
     def root(self):
@@ -933,7 +946,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
     def test_should_get_secret_as_json(self, mock_get_transport_key):
         mock_get_transport_key.return_value = None
         resp = self.app.get(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'}
         )
         self.secret_repo \
@@ -954,7 +967,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         mock_get_secret.return_value = data
 
         resp = self.app.get(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             headers={'Accept': 'text/plain'}
         )
 
@@ -979,8 +992,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         twsk = "trans_wrapped_session_key"
         resp = self.app.get(
-            '/%s/secrets/%s/?trans_wrapped_session_key=%s&transport_key_id=%s'
-            % (self.keystone_id, self.secret.id, twsk, self.transport_key_id),
+            '/secrets/{0}/?trans_wrapped_session_key={1}&transport_key_id={2}'
+            .format(self.secret.id, twsk, self.transport_key_id),
             headers={'Accept': 'text/plain'}
         )
 
@@ -1006,8 +1019,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         twsk = "trans_wrapped_session_key"
         resp = self.app.get(
-            '/%s/secrets/%s/?trans_wrapped_session_key=%s'
-            % (self.keystone_id, self.secret.id, twsk),
+            '/secrets/{0}/?trans_wrapped_session_key={1}'.format(
+                self.secret.id, twsk),
             headers={'Accept': 'text/plain'},
             expect_errors=True
         )
@@ -1025,7 +1038,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.datum.cypher_text = 'aaaa'
 
         resp = self.app.get(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'}
         )
 
@@ -1049,8 +1062,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.datum.cypher_text = 'aaaa'
 
         resp = self.app.get(
-            '/%s/secrets/%s/?transport_key_needed=true'
-            % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/?transport_key_needed=true'.format(
+                self.secret.id),
             headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'}
         )
 
@@ -1069,7 +1082,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.assertEqual(
             resp.namespace['transport_key_ref'],
             hrefs.convert_transport_key_to_href(
-                self.keystone_id, self.transport_key_id)
+                self.transport_key_id)
         )
 
     @mock.patch('barbican.plugin.resources.get_secret')
@@ -1081,7 +1094,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.datum.cypher_text = 'aaaa'
 
         resp = self.app.get(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             headers={
                 'Accept': 'application/octet-stream',
                 'Accept-Encoding': 'gzip'
@@ -1101,7 +1114,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret_repo.get.return_value = None
 
         resp = self.app.get(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'},
             expect_errors=True
         )
@@ -1109,7 +1122,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
     def test_should_throw_exception_for_get_when_accept_not_supported(self):
         resp = self.app.get(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             headers={'Accept': 'bogusaccept', 'Accept-Encoding': 'gzip'},
             expect_errors=True
         )
@@ -1120,7 +1133,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret.encrypted_data = []
 
         resp = self.app.put(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             'plain text',
             headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
         )
@@ -1138,8 +1151,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret.encrypted_data = []
 
         resp = self.app.put(
-            '/%s/secrets/%s/?transport_key_id=%s' %
-            (self.keystone_id, self.secret.id, self.transport_key_id),
+            '/secrets/{0}/?transport_key_id={1}'.format(
+                self.secret.id, self.transport_key_id),
             'plain text',
             headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
         )
@@ -1157,7 +1170,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret.encrypted_data = []
 
         resp = self.app.put(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             'plain text',
             headers={
                 'Accept': 'text/plain',
@@ -1179,8 +1192,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret.encrypted_data = []
 
         resp = self.app.put(
-            '/%s/secrets/%s/?transport_key_id=%s' %
-            (self.keystone_id, self.secret.id, self.transport_key_id),
+            '/secrets/{0}/?transport_key_id={1}'.format(
+                self.secret.id, self.transport_key_id),
             'plain text',
             headers={
                 'Accept': 'text/plain',
@@ -1202,7 +1215,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret.encrypted_data = []
         payload = base64.b64encode('plain text')
         resp = self.app.put(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             payload,
             headers={
                 'Accept': 'text/plain',
@@ -1222,7 +1235,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
     def test_should_raise_to_put_secret_with_unsupported_encoding(self):
         self.secret.encrypted_data = []
         resp = self.app.put(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             'plain text',
             headers={
                 'Accept': 'text/plain',
@@ -1237,7 +1250,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
     def test_should_raise_put_secret_as_json(self):
         self.secret.encrypted_data = []
         resp = self.app.put(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             'plain text',
             headers={
                 'Accept': 'text/plain',
@@ -1254,7 +1267,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.secret.encrypted_data = []
         resp = self.app.put(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             'plain text',
             headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
             expect_errors=True
@@ -1265,7 +1278,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
     def test_should_raise_put_secret_no_payload(self):
         self.secret.encrypted_data = []
         resp = self.app.put(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             # response.body = None
             headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
             expect_errors=True
@@ -1278,7 +1291,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret.encrypted_data = [self.datum]
 
         resp = self.app.put(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             'plain text',
             headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
             expect_errors=True
@@ -1289,7 +1302,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret.encrypted_data = []
 
         resp = self.app.put(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             '',
             headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
             expect_errors=True
@@ -1303,7 +1316,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret.encrypted_data = []
 
         resp = self.app.put(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             big_text,
             headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
             expect_errors=True
@@ -1313,7 +1326,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
     @mock.patch('barbican.plugin.resources.delete_secret')
     def test_should_delete_secret(self, mock_delete_secret):
         self.app.delete(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id)
+            '/secrets/{0}/'.format(self.secret.id)
         )
 
         mock_delete_secret\
@@ -1323,7 +1336,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret_repo.get.return_value = None
 
         resp = self.app.delete(
-            '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
+            '/secrets/{0}/'.format(self.secret.id),
             expect_errors=True
         )
         self.assertEqual(resp.status_int, 404)
@@ -1337,6 +1350,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
             WhenCreatingOrdersUsingOrdersResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
 
     @property
     def root(self):
@@ -1385,7 +1399,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
 
     def test_should_add_new_order(self):
         resp = self.app.post_json(
-            '/%s/orders/' % self.tenant_keystone_id,
+            '/orders/',
             self.order_req
         )
         self.assertEqual(resp.status_int, 202)
@@ -1400,7 +1414,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
 
     def test_should_raise_add_new_order_no_secret(self):
         resp = self.app.post_json(
-            '/%s/orders/' % self.tenant_keystone_id,
+            '/orders/',
             {},
             expect_errors=True
         )
@@ -1408,7 +1422,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
 
     def test_should_raise_add_new_order_bad_json(self):
         resp = self.app.post(
-            '/%s/orders/' % self.tenant_keystone_id,
+            '/orders/',
             '',
             expect_errors=True,
             headers={'Content-Type': 'application/json'},
@@ -1428,7 +1442,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
             }
         }
         resp = self.app.post_json(
-            '/%s/orders/' % self.tenant_keystone_id,
+            '/orders/',
             self.unsupported_req,
             expect_errors=True
         )
@@ -1437,7 +1451,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
 
     def test_should_raise_add_new_order_no_content_type_header(self):
         resp = self.app.post(
-            '/%s/orders/' % self.tenant_keystone_id,
+            '/orders/',
             self.order_req,
             expect_errors=True,
         )
@@ -1450,6 +1464,7 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
             WhenGettingOrdersListUsingOrdersResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.keystone_id)
 
     @property
     def root(self):
@@ -1500,7 +1515,7 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
         }
 
     def test_should_get_list_orders(self):
-        resp = self.app.get('/%s/orders/' % self.keystone_id, self.params)
+        resp = self.app.get('/orders/', self.params)
 
         self.order_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
@@ -1524,7 +1539,7 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
                         (self.num_orders + 2))
 
     def test_response_should_include_total(self):
-        resp = self.app.get('/%s/orders/' % self.keystone_id, self.params)
+        resp = self.app.get('/orders/', self.params)
         self.assertIn('total', resp.namespace)
         self.assertEqual(resp.namespace['total'], self.total)
 
@@ -1532,7 +1547,7 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
 
         del self.orders[:]
 
-        resp = self.app.get('/%s/orders/' % self.keystone_id, self.params)
+        resp = self.app.get('/orders/', self.params)
 
         self.order_repo.get_by_create_date \
             .assert_called_once_with(self.keystone_id,
@@ -1547,11 +1562,10 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
         if limit_arg:
             offset = int(offset_arg)
             limit = int(limit_arg)
-            return '/{0}/orders?limit={1}&offset={2}'.format(keystone_id,
-                                                             limit,
-                                                             offset)
+            return '/orders?limit={0}&offset={1}'.format(limit,
+                                                         offset)
         else:
-            return '/{0}/orders'.format(self.keystone_id)
+            return '/orders'
 
 
 class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
@@ -1560,6 +1574,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
             WhenGettingOrDeletingOrderUsingOrderResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
 
     @property
     def root(self):
@@ -1586,8 +1601,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         self.queue_resource = mock.MagicMock()
 
     def test_should_get_order(self):
-        self.app.get('/%s/orders/%s/' % (self.tenant_keystone_id,
-                                         self.order.id))
+        self.app.get('/orders/{0}/'.format(self.order.id))
 
         self.order_repo.get \
             .assert_called_once_with(entity_id=self.order.id,
@@ -1595,8 +1609,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
                                      suppress_exception=True)
 
     def test_should_delete_order(self):
-        self.app.delete('/%s/orders/%s/' % (self.tenant_keystone_id,
-                                            self.order.id))
+        self.app.delete('/orders/{0}/'.format(self.order.id))
         self.order_repo.delete_entity_by_id \
             .assert_called_once_with(entity_id=self.order.id,
                                      keystone_id=self.tenant_keystone_id)
@@ -1604,7 +1617,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
     def test_should_throw_exception_for_get_when_order_not_found(self):
         self.order_repo.get.return_value = None
         resp = self.app.get(
-            '/%s/orders/%s/' % (self.tenant_keystone_id, self.order.id),
+            '/orders/{0}/'.format(self.order.id),
             expect_errors=True
         )
         self.assertEqual(resp.status_int, 404)
@@ -1613,7 +1626,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         self.order_repo.delete_entity_by_id.side_effect = excep.NotFound(
             "Test not found exception")
         resp = self.app.delete(
-            '/%s/orders/%s/' % (self.tenant_keystone_id, self.order.id),
+            '/orders/{0}/'.format(self.order.id),
             expect_errors=True
         )
         self.assertEqual(resp.status_int, 404)
@@ -1636,7 +1649,6 @@ class WhenAddingNavigationHrefs(testtools.TestCase):
         limit = 10
 
         data_with_hrefs = controllers.hrefs.add_nav_hrefs(self.resource_name,
-                                                          self.keystone_id,
                                                           offset, limit,
                                                           self.num_elements,
                                                           self.data)
@@ -1649,7 +1661,6 @@ class WhenAddingNavigationHrefs(testtools.TestCase):
         limit = 10
 
         data_with_hrefs = controllers.hrefs.add_nav_hrefs(self.resource_name,
-                                                          self.keystone_id,
                                                           offset, limit,
                                                           self.num_elements,
                                                           self.data)
@@ -1662,7 +1673,6 @@ class WhenAddingNavigationHrefs(testtools.TestCase):
         limit = 10
 
         data_with_hrefs = controllers.hrefs.add_nav_hrefs(self.resource_name,
-                                                          self.keystone_id,
                                                           offset, limit,
                                                           self.num_elements,
                                                           self.data)
@@ -1715,6 +1725,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
             WhenCreatingContainersUsingContainersResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
 
     @property
     def root(self):
@@ -1771,7 +1782,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
 
     def test_should_add_new_container(self):
         resp = self.app.post_json(
-            '/%s/containers/' % self.tenant_keystone_id,
+            '/containers/',
             self.container_req
         )
         self.assertEqual(resp.status_int, 201)
@@ -1782,7 +1793,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
 
     def test_should_raise_container_bad_json(self):
         resp = self.app.post(
-            '/%s/containers/' % self.tenant_keystone_id,
+            '/containers/',
             '',
             expect_errors=True,
             headers={'Content-Type': 'application/json'},
@@ -1791,7 +1802,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
 
     def test_should_raise_container_no_content_type_header(self):
         resp = self.app.post(
-            '/%s/containers/' % self.tenant_keystone_id,
+            '/containers/',
             self.container_req,
             expect_errors=True,
         )
@@ -1800,7 +1811,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
     def test_should_throw_exception_when_secret_ref_doesnt_exist(self):
         self.secret_repo.get.return_value = None
         resp = self.app.post_json(
-            '/%s/containers/' % self.tenant_keystone_id,
+            '/containers/',
             self.container_req,
             expect_errors=True
         )
@@ -1813,6 +1824,7 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
             WhenGettingOrDeletingContainerUsingContainerResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
 
     @property
     def root(self):
@@ -1848,8 +1860,8 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
         self.consumer_repo = mock.MagicMock()
 
     def test_should_get_container(self):
-        self.app.get('/%s/containers/%s/' % (
-            self.tenant_keystone_id, self.container.id
+        self.app.get('/containers/{0}/'.format(
+            self.container.id
         ))
 
         self.container_repo.get \
@@ -1858,8 +1870,8 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
                                      suppress_exception=True)
 
     def test_should_delete_container(self):
-        self.app.delete('/%s/containers/%s/' % (
-            self.tenant_keystone_id, self.container.id
+        self.app.delete('/containers/{0}/'.format(
+            self.container.id
         ))
 
         self.container_repo.delete_entity_by_id \
@@ -1868,8 +1880,8 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
 
     def test_should_throw_exception_for_get_when_container_not_found(self):
         self.container_repo.get.return_value = None
-        resp = self.app.get('/%s/containers/%s/' % (
-            self.tenant_keystone_id, self.container.id
+        resp = self.app.get('/containers/{0}/'.format(
+            self.container.id
         ), expect_errors=True)
         self.assertEqual(resp.status_int, 404)
 
@@ -1877,8 +1889,8 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
         self.container_repo.delete_entity_by_id.side_effect = excep.NotFound(
             "Test not found exception")
 
-        resp = self.app.delete('/%s/containers/%s/' % (
-            self.tenant_keystone_id, self.container.id
+        resp = self.app.delete('/containers/{0}/'.format(
+            self.container.id
         ), expect_errors=True)
         self.assertEqual(resp.status_int, 404)
         #Error response should have json content type
@@ -1891,6 +1903,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
             WhenCreatingConsumersUsingConsumersResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
 
     @property
     def root(self):
@@ -1953,8 +1966,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
 
     def test_should_add_new_consumer(self):
         resp = self.app.post_json(
-            '/{0}/containers/{1}/consumers/'.format(self.tenant_keystone_id,
-                                                    self.container.id),
+            '/containers/{0}/consumers/'.format(self.container.id),
             self.consumer_ref
         )
         self.assertEqual(resp.status_int, 200)
@@ -1965,8 +1977,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
 
     def test_should_fail_consumer_bad_json(self):
         resp = self.app.post(
-            '/{0}/containers/{1}/consumers/'.format(self.tenant_keystone_id,
-                                                    self.container.id),
+            '/containers/{0}/consumers/'.format(self.container.id),
             '',
             expect_errors=True
         )
@@ -1975,8 +1986,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
     def test_should_404_consumer_bad_container_id(self):
         self.container_repo.get.side_effect = excep.NotFound()
         resp = self.app.post_json(
-            '/{0}/containers/{1}/consumers/'.format(self.tenant_keystone_id,
-                                                    'bad_id'),
+            '/containers/{0}/consumers/'.format('bad_id'),
             self.consumer_ref, expect_errors=True
         )
         self.container_repo.get.side_effect = None
@@ -1985,8 +1995,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
     def test_should_raise_exception_when_container_ref_doesnt_exist(self):
         self.container_repo.get.return_value = None
         resp = self.app.post_json(
-            '/{0}/containers/{1}/consumers/'.format(self.tenant_keystone_id,
-                                                    self.container.id),
+            '/containers/{0}/consumers/'.format(self.container.id),
             self.consumer_ref,
             expect_errors=True
         )
@@ -1999,6 +2008,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
             WhenGettingOrDeletingConsumersUsingConsumerResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
 
     @property
     def root(self):
@@ -2043,8 +2053,8 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
     def test_should_get_consumer(self):
         self.consumer_repo.get_by_container_id.return_value = \
             ([self.consumer], 0, 0, 1)
-        resp = self.app.get('/{0}/containers/{1}/consumers/'.format(
-            self.tenant_keystone_id, self.container.id
+        resp = self.app.get('/containers/{0}/consumers/'.format(
+            self.container.id
         ))
         self.assertEqual(resp.status_int, 200)
 
@@ -2058,37 +2068,37 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
 
     def test_should_404_with_bad_container_id(self):
         self.container_repo.get.side_effect = excep.NotFound()
-        resp = self.app.get('/{0}/containers/{1}/consumers/'.format(
-            self.tenant_keystone_id, 'bad_id'
+        resp = self.app.get('/containers/{0}/consumers/'.format(
+            'bad_id'
         ), expect_errors=True)
         self.container_repo.get.side_effect = None
         self.assertEqual(resp.status_int, 404)
 
     def test_should_get_consumer_by_id(self):
         self.consumer_repo.get.return_value = self.consumer
-        resp = self.app.get('/{0}/containers/{1}/consumers/{2}/'.format(
-            self.tenant_keystone_id, self.container.id, self.consumer.id
+        resp = self.app.get('/containers/{0}/consumers/{1}/'.format(
+            self.container.id, self.consumer.id
         ))
         self.assertEqual(resp.status_int, 200)
 
     def test_should_404_with_bad_consumer_id(self):
         self.consumer_repo.get.return_value = None
-        resp = self.app.get('/{0}/containers/{1}/consumers/{2}/'.format(
-            self.tenant_keystone_id, self.container.id, 'bad_id'
+        resp = self.app.get('/containers/{0}/consumers/{1}/'.format(
+            self.container.id, 'bad_id'
         ), expect_errors=True)
         self.assertEqual(resp.status_int, 404)
 
     def test_should_get_no_consumers(self):
         self.consumer_repo.get_by_container_id.return_value = \
             ([], 0, 0, 0)
-        resp = self.app.get('/{0}/containers/{1}/consumers/'.format(
-            self.tenant_keystone_id, self.container.id
+        resp = self.app.get('/containers/{0}/consumers/'.format(
+            self.container.id
         ))
         self.assertEqual(resp.status_int, 200)
 
     def test_should_delete_consumer(self):
-        self.app.delete_json('/{0}/containers/{1}/consumers/'.format(
-            self.tenant_keystone_id, self.container.id
+        self.app.delete_json('/containers/{0}/consumers/'.format(
+            self.container.id
         ), self.consumer_ref)
 
         self.consumer_repo.delete_entity_by_id \
@@ -2097,8 +2107,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
 
     def test_should_fail_deleting_consumer_bad_json(self):
         resp = self.app.delete(
-            '/{0}/containers/{1}/consumers/'.format(self.tenant_keystone_id,
-                                                    self.container.id),
+            '/containers/{0}/consumers/'.format(self.container.id),
             '',
             expect_errors=True
         )
@@ -2107,8 +2116,8 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
     def test_should_404_on_delete_when_consumer_not_found(self):
         old_return = self.consumer_repo.get_by_values.return_value
         self.consumer_repo.get_by_values.return_value = None
-        resp = self.app.delete_json('/{0}/containers/{1}/consumers/'.format(
-            self.tenant_keystone_id, self.container.id
+        resp = self.app.delete_json('/containers/{0}/consumers/'.format(
+            self.container.id
         ), self.consumer_ref, expect_errors=True)
         self.consumer_repo.get_by_values.return_value = old_return
         self.assertEqual(resp.status_int, 404)
@@ -2117,8 +2126,8 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
 
     def test_should_404_on_delete_when_consumer_not_found_later(self):
         self.consumer_repo.delete_entity_by_id.side_effect = excep.NotFound()
-        resp = self.app.delete_json('/{0}/containers/{1}/consumers/'.format(
-            self.tenant_keystone_id, self.container.id
+        resp = self.app.delete_json('/containers/{0}/consumers/'.format(
+            self.container.id
         ), self.consumer_ref, expect_errors=True)
         self.consumer_repo.delete_entity_by_id.side_effect = None
         self.assertEqual(resp.status_int, 404)
@@ -2132,6 +2141,7 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
             WhenGettingContainersListUsingResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.keystone_id)
 
     @property
     def root(self):
@@ -2172,7 +2182,7 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
 
     def test_should_get_list_containers(self):
         resp = self.app.get(
-            '/%s/containers/' % self.keystone_id,
+            '/containers/',
             self.params
         )
 
@@ -2199,7 +2209,7 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
 
     def test_response_should_include_total(self):
         resp = self.app.get(
-            '/%s/containers/' % self.keystone_id,
+            '/containers/',
             self.params
         )
         self.assertIn('total', resp.namespace)
@@ -2210,7 +2220,7 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
         del self.containers[:]
 
         resp = self.app.get(
-            '/%s/containers/' % self.keystone_id,
+            '/containers/',
             self.params
         )
 
@@ -2227,8 +2237,7 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
         if limit_arg:
             offset = int(offset_arg)
             limit = int(limit_arg)
-            return '/{0}/containers' \
-                   '?limit={1}&offset={2}'.format(keystone_id,
-                                                  limit, offset)
+            return '/containers' \
+                   '?limit={0}&offset={1}'.format(limit, offset)
         else:
-            return '/{0}/containers'.format(self.keystone_id)
+            return '/containers'

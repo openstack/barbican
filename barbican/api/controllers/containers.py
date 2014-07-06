@@ -60,18 +60,16 @@ class ContainerController(object):
         dict_fields = container.to_dict_fields()
 
         for secret_ref in dict_fields['secret_refs']:
-            controllers.hrefs.convert_to_hrefs(keystone_id, secret_ref)
+            controllers.hrefs.convert_to_hrefs(secret_ref)
 
         return controllers.hrefs.convert_to_hrefs(
-            keystone_id,
-            controllers.hrefs.convert_to_hrefs(keystone_id, dict_fields)
+            controllers.hrefs.convert_to_hrefs(dict_fields)
         )
 
     @index.when(method='DELETE', template='')
     @controllers.handle_exceptions(u._('Container deletion'))
     @controllers.enforce_rbac('container:delete')
     def on_delete(self, keystone_id, **kwargs):
-
         try:
             self.container_repo.delete_entity_by_id(
                 entity_id=self.container_id,
@@ -120,13 +118,11 @@ class ContainersController(object):
             resp_ctrs_overall = {'containers': [], 'total': total}
         else:
             resp_ctrs = [
-                controllers.hrefs.convert_to_hrefs(keystone_id,
-                                                   c.to_dict_fields())
+                controllers.hrefs.convert_to_hrefs(c.to_dict_fields())
                 for c in containers
             ]
             resp_ctrs_overall = controllers.hrefs.add_nav_hrefs(
                 'containers',
-                keystone_id,
                 offset,
                 limit,
                 total,
@@ -167,6 +163,5 @@ class ContainersController(object):
         pecan.response.headers['Location'] = '/{0}/containers/{1}'.format(
             keystone_id, new_container.id
         )
-        url = controllers.hrefs.convert_container_to_href(keystone_id,
-                                                          new_container.id)
+        url = controllers.hrefs.convert_container_to_href(new_container.id)
         return {'container_ref': url}

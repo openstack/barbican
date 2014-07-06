@@ -104,7 +104,7 @@ class SecretController(object):
                     secret)
                 if transport_key_id is not None:
                     secret_fields['transport_key_id'] = transport_key_id
-            return hrefs.convert_to_hrefs(keystone_id, secret_fields)
+            return hrefs.convert_to_hrefs(secret_fields)
         else:
             tenant = res.get_or_create_tenant(keystone_id,
                                               self.repos.tenant_repo)
@@ -250,11 +250,11 @@ class SecretsController(object):
             secret_fields = lambda sf: putil.mime_types\
                 .augment_fields_with_content_types(sf)
             secrets_resp = [
-                hrefs.convert_to_hrefs(keystone_id, secret_fields(s))
+                hrefs.convert_to_hrefs(secret_fields(s))
                 for s in secrets
             ]
             secrets_resp_overall = hrefs.add_nav_hrefs(
-                'secrets', keystone_id, offset, limit, total,
+                'secrets', offset, limit, total,
                 {'secrets': secrets_resp}
             )
             secrets_resp_overall.update({'total': total})
@@ -285,14 +285,14 @@ class SecretsController(object):
             transport_key_id=data.get('transport_key_id'))
 
         pecan.response.status = 201
-        pecan.response.headers['Location'] = '/{0}/secrets/{1}'.format(
-            keystone_id, new_secret.id
+        pecan.response.headers['Location'] = '/secrets/{0}'.format(
+            new_secret.id
         )
-        url = hrefs.convert_secret_to_href(keystone_id, new_secret.id)
+        url = hrefs.convert_secret_to_href(new_secret.id)
         LOG.debug('URI to secret is {0}'.format(url))
         if transport_key_model is not None:
             tkey_url = hrefs.convert_transport_key_to_href(
-                keystone_id, transport_key_model.id)
+                transport_key_model.id)
             return {'secret_ref': url, 'transport_key_ref': tkey_url}
         else:
             return {'secret_ref': url}

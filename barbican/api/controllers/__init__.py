@@ -30,31 +30,32 @@ def is_json_request_accept(req):
         or req.accept.header_value == '*/*'
 
 
-def _do_enforce_rbac(req, action_name, keystone_id=None):
+def _get_barbican_context(req):
+    if 'barbican.context' in req.environ:
+        return req.environ['barbican.context']
+    else:
+        return None
+
+
+def _do_enforce_rbac(req, action_name, ctx):
     """Enforce RBAC based on 'request' information."""
-    if action_name and 'barbican.context' in req.environ:
+    if action_name and ctx:
 
         # Prepare credentials information.
-        ctx = req.environ['barbican.context']  # Placed here by context.py
-                                               #   middleware
         credentials = {
             'roles': ctx.roles,
             'user': ctx.user,
-            'tenant': ctx.tenant,
+            'tenant': ctx.tenant
         }
-
-        # Verify keystone_id matches the tenant ID.
-        if keystone_id and keystone_id != ctx.tenant:
-            pecan.abort(403, u._("URI tenant does not match "
-                        "authenticated tenant."))
 
         # Enforce special case: secret GET decryption
         if 'secret:get' == action_name and not is_json_request_accept(req):
             action_name = 'secret:decrypt'  # Override to perform special rules
 
         # Enforce access controls.
-        ctx.policy_enforcer.enforce(action_name, {}, credentials,
-                                    do_raise=True)
+        if ctx.policy_enforcer:
+            ctx.policy_enforcer.enforce(action_name, {}, credentials,
+                                        do_raise=True)
 
 
 def enforce_rbac(action_name='default'):
@@ -62,11 +63,20 @@ def enforce_rbac(action_name='default'):
 
     def rbac_decorator(fn):
         def enforcer(inst, *args, **kwargs):
-
             # Enforce RBAC rules.
-            _do_enforce_rbac(pecan.request, action_name,
-                             keystone_id=kwargs.get('keystone_id'))
 
+            # context placed here by context.py
+            # middleware
+            ctx = _get_barbican_context(pecan.request)
+            if ctx:
+                keystone_id = ctx.tenant
+            else:
+                keystone_id = None
+
+            _do_enforce_rbac(pecan.request, action_name, ctx)
+            # insert keystone_id as the first arg to the guarded method
+            args = list(args)
+            args.insert(0, keystone_id)
             # Execute guarded method now.
             return fn(inst, *args, **kwargs)
 

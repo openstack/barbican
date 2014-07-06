@@ -67,20 +67,20 @@ class PecanAPI(pecan.Pecan):
         super(PecanAPI, self).__init__(*args, **kwargs)
 
     def route(self, req, node, path):
-        # Pop the tenant ID from the path
-        path = path.split('/')[1:]
-        first_path = path.pop(0)
-
+        # parse the first part of the URL. It could be the
+        # resource name or the ID of the performance controller
+        # example: /secrets
+        parts = path.split('/')
+        if len(parts) > 1:
+            first_path = parts[1]
+        else:
+            first_path = None
         # Route to the special performance controller
         if first_path == self.performance_uri:
             return self.performance_controller.index, []
 
-        path = '/%s' % '/'.join(path)
         controller, remainder = super(PecanAPI, self).route(req, node, path)
 
-        # Pass the tenant ID as the first argument to the controller
-        remainder = list(remainder)
-        remainder.insert(0, first_path)
         return controller, remainder
 
 

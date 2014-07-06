@@ -60,7 +60,7 @@ class OrderController(object):
         if not order:
             _order_not_found()
 
-        return hrefs.convert_to_hrefs(keystone_id, order.to_dict_fields())
+        return hrefs.convert_to_hrefs(order.to_dict_fields())
 
     @index.when(method='PUT')
     @controllers.handle_exceptions(u._('Order update'))
@@ -115,10 +115,10 @@ class OrdersController(object):
                                    'total': total}
         else:
             orders_resp = [
-                hrefs.convert_to_hrefs(keystone_id, o.to_dict_fields())
+                hrefs.convert_to_hrefs(o.to_dict_fields())
                 for o in orders
             ]
-            orders_resp_overall = hrefs.add_nav_hrefs('orders', keystone_id,
+            orders_resp_overall = hrefs.add_nav_hrefs('orders',
                                                       offset, limit, total,
                                                       {'orders': orders_resp})
             orders_resp_overall.update({'total': total})
@@ -168,5 +168,5 @@ class OrdersController(object):
         pecan.response.headers['Location'] = '/{0}/orders/{1}'.format(
             keystone_id, new_order.id
         )
-        url = hrefs.convert_order_to_href(keystone_id, new_order.id)
+        url = hrefs.convert_order_to_href(new_order.id)
         return {'order_ref': url}

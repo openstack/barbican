@@ -53,8 +53,7 @@ class ContainerConsumerController(object):
         dict_fields = consumer.to_dict_fields()
 
         return controllers.hrefs.convert_to_hrefs(
-            keystone_id,
-            controllers.hrefs.convert_to_hrefs(keystone_id, dict_fields)
+            controllers.hrefs.convert_to_hrefs(dict_fields)
         )
 
 
@@ -99,13 +98,11 @@ class ContainerConsumersController(object):
             resp_ctrs_overall = {'consumers': [], 'total': total}
         else:
             resp_ctrs = [
-                controllers.hrefs.convert_to_hrefs(keystone_id,
-                                                   c.to_dict_fields())
+                controllers.hrefs.convert_to_hrefs(c.to_dict_fields())
                 for c in consumers
             ]
             resp_ctrs_overall = controllers.hrefs.add_nav_hrefs(
                 'consumers',
-                keystone_id,
                 offset,
                 limit,
                 total,
@@ -172,9 +169,8 @@ class ContainerConsumersController(object):
             controllers.containers.container_not_found()
 
         for secret_ref in dict_fields['secret_refs']:
-            controllers.hrefs.convert_to_hrefs(keystone_id, secret_ref)
+            controllers.hrefs.convert_to_hrefs(secret_ref)
 
         return controllers.hrefs.convert_to_hrefs(
-            keystone_id,
-            controllers.hrefs.convert_to_hrefs(keystone_id, dict_fields)
+            controllers.hrefs.convert_to_hrefs(dict_fields)
         )

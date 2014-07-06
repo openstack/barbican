@@ -67,9 +67,8 @@ class ConsumersTestCase(base.TestCase):
         super(ConsumersTestCase, self).setUp()
         # Set up two secrets
         secret_json_data = json.dumps(create_secret_data)
-        project_id = self.client.project_id
         resp, body = self.client.post(
-            '{0}/secrets'.format(project_id), secret_json_data, headers={
+            '/secrets', secret_json_data, headers={
             'content-type': 'application/json'})
         self.assertEqual(resp.status, 201)
 
@@ -77,7 +76,7 @@ class ConsumersTestCase(base.TestCase):
         secret_ref_1 = returned_data['secret_ref']
         self.assertIsNotNone(secret_ref_1)
         resp, body = self.client.post(
-            '{0}/secrets'.format(project_id), secret_json_data, headers={
+            '/secrets', secret_json_data, headers={
             'content-type': 'application/json'})
         self.assertEqual(resp.status, 201)
 
@@ -90,7 +89,7 @@ class ConsumersTestCase(base.TestCase):
         create_container_data['secret_refs'][1]['secret_ref'] = secret_ref_2
         container_json_data = json.dumps(create_container_data)
         resp, body = self.client.post(
-            '{0}/containers'.format(project_id), container_json_data,
+            '/containers', container_json_data,
             headers={'content-type': 'application/json'})
         self.assertEqual(resp.status, 201)
 
@@ -104,10 +103,8 @@ class ConsumersTestCase(base.TestCase):
         create the consumer is provided in a single POST.
         """
         json_data = json.dumps(create_consumer_data)
-        project_id = self.client.project_id
         resp, body = self.client.post(
-            '{0}/containers/{1}/consumers'.format(project_id,
-                                                  self.container_id),
+            '/containers/{0}/consumers'.format(self.container_id),
             json_data, headers={'content-type': 'application/json'})
         self.assertEqual(resp.status, 200)
 
@@ -121,12 +118,10 @@ class ConsumersTestCase(base.TestCase):
         the consumer is deleted and verified to no longer exist.
         """
         json_data = json.dumps(create_consumer_data_for_delete)
-        project_id = self.client.project_id
 
         #Register the consumer once
         resp, body = self.client.post(
-            '{0}/containers/{1}/consumers'.format(project_id,
-                                                  self.container_id),
+            '/containers/{0}/consumers'.format(self.container_id),
             json_data, headers={'content-type': 'application/json'})
         self.assertEqual(resp.status, 200)
 
@@ -137,8 +132,7 @@ class ConsumersTestCase(base.TestCase):
 
         #Delete the consumer
         resp, body = self.client.delete(
-            '{0}/containers/{1}/consumers'.format(project_id,
-                                                  self.container_id),
+            '/containers/{0}/consumers'.format(self.container_id),
             body=json_data, headers={'content-type': 'application/json'})
         self.assertEqual(resp.status, 200)
 
@@ -152,12 +146,10 @@ class ConsumersTestCase(base.TestCase):
         the consumer is deleted and verified to no longer exist.
         """
         json_data = json.dumps(create_consumer_data_for_recreate)
-        project_id = self.client.project_id
 
         #Register the consumer once
         resp, body = self.client.post(
-            '{0}/containers/{1}/consumers'.format(project_id,
-                                                  self.container_id),
+            '/containers/{0}/consumers'.format(self.container_id),
             json_data, headers={'content-type': 'application/json'})
         self.assertEqual(resp.status, 200)
 
@@ -168,8 +160,7 @@ class ConsumersTestCase(base.TestCase):
 
         #Delete the consumer
         resp, body = self.client.delete(
-            '{0}/containers/{1}/consumers'.format(project_id,
-                                                  self.container_id),
+            '/containers/{0}/consumers'.format(self.container_id),
             body=json_data, headers={'content-type': 'application/json'})
         self.assertEqual(resp.status, 200)
 
@@ -180,8 +171,7 @@ class ConsumersTestCase(base.TestCase):
 
         #Register the consumer again
         resp, body = self.client.post(
-            '{0}/containers/{1}/consumers'.format(project_id,
-                                                  self.container_id),
+            '/containers/{0}/consumers'.format(self.container_id),
             json_data, headers={'content-type': 'application/json'})
         self.assertEqual(resp.status, 200)
 
@@ -195,12 +185,10 @@ class ConsumersTestCase(base.TestCase):
         the consumer is deleted and verified to no longer exist.
         """
         json_data = json.dumps(create_consumer_data_for_idempotency)
-        project_id = self.client.project_id
 
         #Register the consumer once
         resp, body = self.client.post(
-            '{0}/containers/{1}/consumers'.format(project_id,
-                                                  self.container_id),
+            '/containers/{0}/consumers'.format(self.container_id),
             json_data, headers={'content-type': 'application/json'})
         self.assertEqual(resp.status, 200)
 
@@ -211,8 +199,7 @@ class ConsumersTestCase(base.TestCase):
 
         #Register the consumer again, without deleting it first
         resp, body = self.client.post(
-            '{0}/containers/{1}/consumers'.format(project_id,
-                                                  self.container_id),
+            '/containers/{0}/consumers'.format(self.container_id),
             json_data, headers={'content-type': 'application/json'})
         self.assertEqual(resp.status, 200)
 
