@@ -782,7 +782,7 @@
       <para>You will find your tenant Id after the final '/' in the
           <code>publicURL</code> field returned by the authentication
         response. For example, in Example 2,
-          “Authentication Response for US Endpoint: JSON” the
+          "Authentication Response for US Endpoint: JSON" the
           <code>publicURL</code> field for <code>secrets</code>
           ("https://&lt;endpoint&gt;/v1.0/<emphasis
           role="bold">1100111</emphasis>") shows that the tenant Id is

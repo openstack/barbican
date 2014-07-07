@@ -794,7 +794,7 @@ Location: http://<replaceable>endpointURL</replaceable>/12345/secrets/a83018d1-e
 x-openstack-request-id: req-ea090bd4-5bfc-47ae-a388-746485d947f1
                                                                                    
 {
-  "secret_ref": "http://<replaceable>endpointURL/</replaceable>v1/12345/secrets/a83018d1-e657-4957-9ddd-42a479753e6b”
+  "secret_ref": "http://<replaceable>endpointURL/</replaceable>v1/12345/secrets/a83018d1-e657-4957-9ddd-42a479753e6b"
 }
 </programlisting>
                         </para>
@@ -817,7 +817,7 @@ x-openstack-request-id: req-ea090bd4-5bfc-47ae-a388-746485d947f1
                             secret key file you just created as sghown
                             in the following example:</para>
             <para>
-                <programlisting>curl -i -X PUT -H 'Content-Type: application/octet-stream’ \ 
+                <programlisting>curl -i -X PUT -H 'Content-Type: application/octet-stream' \
      -T ./secret_key_file http://<replaceable>endpointURL</replaceable>/v1/12345/secrets/a83018d1-e657-4957-9ddd-42a479753e6b
 </programlisting>
             </para></listitem>
