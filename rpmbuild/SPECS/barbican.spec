@@ -25,8 +25,9 @@ Requires: python-six, python-sqlalchemy, python-stevedore
 Requires: python-webob
 
 %description
-Common files for Barbican Key Management API (barbican-api) and
-Barbican Worker (barbican-worker)
+Common files for Barbican Key Management API (barbican-api),
+Barbican Worker (barbican-worker) and Barbican Keystone Listener
+(barbican-keystone-listener)
 
 %prep
 %setup -n barbican-%{version} -q
@@ -42,7 +43,9 @@ mkdir -p $RPM_BUILD_ROOT/var/l{ib,og}/barbican
 install -m 644 etc/barbican/policy.json $RPM_BUILD_ROOT/etc/barbican
 install -m 644 etc/init/barbican-api.conf $RPM_BUILD_ROOT/etc/init
 install -m 644 etc/init/barbican-worker.conf $RPM_BUILD_ROOT/etc/init
+install -m 644 etc/init/barbican-keystone-listener.conf $RPM_BUILD_ROOT/etc/init
 install bin/barbican-worker.py $RPM_BUILD_ROOT/usr/bin
+install bin/barbican-keystone-listener.py $RPM_BUILD_ROOT/usr/bin
 install bin/barbican-db-manage.py $RPM_BUILD_ROOT/usr/bin
 install -m 644 -D etc/barbican/barbican* $RPM_BUILD_ROOT/etc/barbican
 install -m 644 -D etc/barbican/vassals/*.ini $RPM_BUILD_ROOT/etc/barbican/vassals
@@ -121,3 +124,29 @@ if [ $1 -eq 0 ] ; then
     /sbin/stop barbican-worker >/dev/null 2>&1 || :
 fi
 
+
+# -------------------------
+# Keystone Listener package
+# -------------------------
+%package -n barbican-keystone-listener
+Summary: Barbican Keystone Listener daemon
+Requires: barbican-common
+
+%description -n barbican-keystone-listener
+Barbican Keystone Listener daemon
+
+%files -n barbican-keystone-listener
+%defattr(-,root,root)
+%dir /var/lib/barbican
+%verify(not md5 size mtime) %attr(0750, barbican,root) /var/log/barbican/barbican-keystone-listener.log
+/etc/logrotate.d/barbican-api
+%attr(0755,root,root) /usr/bin/barbican-keystone-listener.py
+%attr(0755,root,root) /usr/bin/barbican-db-manage.py
+%config(noreplace) /etc/init/barbican-keystone-listener.conf
+%config(noreplace) /etc/barbican/*
+
+%preun -n barbican-keystone-listener
+if [ $1 -eq 0 ] ; then
+    # Package removal, not upgrade
+    /sbin/stop barbican-keystone-listener >/dev/null 2>&1 || :
+fi

@@ -293,6 +293,29 @@ def clean_paging_values(offset_arg=0, limit_arg=CONF.default_limit_paging):
     return offset, limit
 
 
+def delete_all_project_resources(tenant_id, repos):
+    """Logic to cleanup all project resources.
+
+    This cleanup uses same alchemy session to perform all db operations as a
+    transaction and will commit only when all db operations are performed
+    without error.
+    """
+    session = get_session()
+
+    repos.container_repo.delete_project_entities(
+        tenant_id, suppress_exception=False, session=session)
+    # secret children SecretStoreMetadatum, EncryptedDatum
+    # and container_secrets are deleted as part of secret delete
+    repos.secret_repo.delete_project_entities(
+        tenant_id, suppress_exception=False, session=session)
+    repos.kek_repo.delete_project_entities(
+        tenant_id, suppress_exception=False, session=session)
+    repos.tenant_secret_repo.delete_project_entities(
+        tenant_id, suppress_exception=False, session=session)
+    repos.tenant_repo.delete_project_entities(
+        tenant_id, suppress_exception=False, session=session)
+
+
 class Repositories(object):
     """Convenient way to pass repositories around.
 
@@ -538,6 +561,72 @@ class BaseRepo(object):
             if getattr(entity_ref, k) != values[k]:
                 setattr(entity_ref, k, values[k])
 
+    def _build_get_project_entities_query(self, tenant_id, session):
+        """Sub-class hook: build a query to retrieve entities for a given
+        project.
+
+        :param tenant_id: id of barbican tenant (project) entity
+        :param session: existing db session reference.
+        :returns: A query object for getting all project related entities
+
+        This query is used by `get_project_entities` and
+        `delete_project_entities` functions in BaseRepo class.
+
+        This will filter deleted entities if there.
+        """
+        msg = u._("{0} is missing query build method for get project "
+                  "entities.").format(self._do_entity_name())
+        raise NotImplementedError(msg)
+
+    def get_project_entities(self, tenant_id, session=None):
+        """Gets entities associated with a given project.
+
+        :param tenant_id: id of barbican tenant (project) entity
+        :param session: existing db session reference. If None, gets session.
+        :returns: list of matching entities found otherwise returns empty list
+                  if no entity exists for a given project.
+
+        Sub-class should implement `_build_get_project_entities_query` function
+        to delete related entities otherwise it would raise NotImplementedError
+        on its usage.
+        """
+
+        session = self.get_session(session)
+        query = self._build_get_project_entities_query(tenant_id, session)
+        if query:
+            return query.all()
+        else:
+            return []
+
+    def delete_project_entities(self, tenant_id,
+                                suppress_exception=False,
+                                session=None):
+        """Deletes entities for a given project.
+
+        :param tenant_id: id of barbican tenant (project) entity
+        :param suppress_exception: Pass True if want to suppress exception
+        :param session: existing db session reference. If None, gets session.
+
+        Sub-class should implement `_build_get_project_entities_query` function
+        to delete related entities otherwise it would raise NotImplementedError
+        on its usage.
+        """
+        session = self.get_session(session)
+        query = self._build_get_project_entities_query(tenant_id,
+                                                       session=session)
+        try:
+            # query cannot be None as related repo class is expected to
+            # implement it otherwise error is raised in build query call
+            for entity in query:
+                # Its a soft delete so its more like entity update
+                entity.delete(session=session)
+        except sqlalchemy.exc.SQLAlchemyError:
+            LOG.exception('Problem finding project related entity to delete')
+            if not suppress_exception:
+                raise exception.BarbicanException('Error deleting project '
+                                                  'entities for tenant_id=%s',
+                                                  tenant_id)
+
 
 class TenantRepo(BaseRepo):
     """Repository for the Tenant entity."""
@@ -572,6 +661,12 @@ class TenantRepo(BaseRepo):
                                             keystone_id))
 
         return entity
+
+    def _build_get_project_entities_query(self, tenant_id, session):
+        """Builds query for retrieving project for given id.
+        """
+        return session.query(models.Tenant).filter_by(id=tenant_id).filter_by(
+            deleted=False)
 
 
 class SecretRepo(BaseRepo):
@@ -663,6 +758,18 @@ class SecretRepo(BaseRepo):
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
+
+    def _build_get_project_entities_query(self, tenant_id, session):
+        """Builds query for retrieving Secrets associated with a given
+        project via TenantSecret association.
+
+        :param tenant_id: id of barbican tenant (project) entity
+        :param session: existing db session reference.
+        """
+        query = session.query(models.Secret).filter_by(deleted=False)
+        query = query.join(models.TenantSecret, models.Secret.tenant_assocs)
+        query = query.filter(models.TenantSecret.tenant_id == tenant_id)
+        return query
 
 
 class EncryptedDatumRepo(BaseRepo):
@@ -802,6 +909,16 @@ class KEKDatumRepo(BaseRepo):
         """Sub-class hook: validate values."""
         pass
 
+    def _build_get_project_entities_query(self, tenant_id, session):
+        """Builds query for retrieving KEK Datum instance(s) related to given
+        project.
+
+        :param tenant_id: id of barbican tenant (project) entity
+        :param session: existing db session reference.
+        """
+        return session.query(models.KEKDatum).filter_by(
+            tenant_id=tenant_id).filter_by(deleted=False)
+
 
 class TenantSecretRepo(BaseRepo):
     """Repository for the TenantSecret entity."""
@@ -820,6 +937,15 @@ class TenantSecretRepo(BaseRepo):
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
+
+    def _build_get_project_entities_query(self, tenant_id, session):
+        """Builds query for retrieving TenantSecret related to given project.
+
+        :param tenant_id: id of barbican tenant (project) entity
+        :param session: existing db session reference.
+        """
+        return session.query(models.TenantSecret).filter_by(
+            tenant_id=tenant_id).filter_by(deleted=False)
 
 
 class OrderRepo(BaseRepo):
@@ -890,6 +1016,15 @@ class OrderRepo(BaseRepo):
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
+
+    def _build_get_project_entities_query(self, tenant_id, session):
+        """Builds query for retrieving orders related to given project.
+
+        :param tenant_id: id of barbican tenant (project) entity
+        :param session: existing db session reference.
+        """
+        return session.query(models.Order).filter_by(
+            tenant_id=tenant_id).filter_by(deleted=False)
 
 
 class OrderPluginMetadatumRepo(BaseRepo):
@@ -1007,6 +1142,15 @@ class ContainerRepo(BaseRepo):
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
+
+    def _build_get_project_entities_query(self, tenant_id, session):
+        """Builds query for retrieving container related to given project.
+
+        :param tenant_id: id of barbican tenant (project) entity
+        :param session: existing db session reference.
+        """
+        return session.query(models.Container).filter_by(
+            deleted=False).filter_by(tenant_id=tenant_id)
 
 
 class ContainerSecretRepo(BaseRepo):

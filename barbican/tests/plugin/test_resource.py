@@ -48,6 +48,7 @@ class WhenTestingPluginResource(testtools.TestCase):
             **gen_plugin_config
         )
         self.gen_plugin_patcher.start()
+        self.addCleanup(self.gen_plugin_patcher.stop)
 
         tenant_repo = mock.MagicMock()
         secret_repo = mock.MagicMock()
