@@ -295,7 +295,7 @@ class NewOrderValidator(ValidatorBase):
                                                         "supported"))
 
         # TODO(reaperhulk): Future API change will move from bit to byte_length
-        bit_length = int(secret.get('bit_length', 0))
+        bit_length = int(secret.get('bit_length', 1))
         if bit_length % 8 != 0:
             raise exception.UnsupportedField(field="bit_length",
                                              schema=schema_name,
