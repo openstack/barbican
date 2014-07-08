@@ -770,6 +770,27 @@ class WhenTestingRSAContainerValidator(testtools.TestCase):
 
         self.assertEqual('secret_refs', exception.invalid_property)
 
+    def test_should_raise_if_required_name_missing(self):
+        name = 'name'
+        type = 'certificate'
+        secret_refs = [
+            {
+                'name': 'private_key',
+                'secret_ref': '123'
+            },
+            {
+                'name': 'private_key_passphrase',
+                'secret_ref': '123'
+            }
+        ]
+        container_req = {'name': name, 'type': type,
+                         'secret_refs': secret_refs}
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            container_req)
+        self.assertEqual('secret_refs', exception.invalid_property)
+
 
 class WhenTestingCertificateContainerValidator(testtools.TestCase):
 
@@ -806,7 +827,7 @@ class WhenTestingCertificateContainerValidator(testtools.TestCase):
     def test_should_validate_all_fields(self):
         self.validator.validate(self.container_req)
 
-    def test_should_fail_more_than_4_secret_refs(self):
+    def test_should_raise_more_than_4_secret_refs(self):
         new_secret_ref = {
             'name': 'new secret ref',
             'secret_ref': '234234'
@@ -816,20 +837,37 @@ class WhenTestingCertificateContainerValidator(testtools.TestCase):
         exception = self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
-            self.container_req,
-        )
-
+            self.container_req)
         self.assertEqual('secret_refs', exception.invalid_property)
 
-    def test_should_fail_unsupported_names_in_secret_refs(self):
+    def test_should_raise_unsupported_names_in_secret_refs(self):
         self.container_req['secret_refs'][0]['name'] = 'public_key'
 
         exception = self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
-            self.container_req,
-        )
+            self.container_req)
+        self.assertEqual('secret_refs', exception.invalid_property)
 
+    def test_should_raise_if_required_name_missing(self):
+        name = 'name'
+        type = 'certificate'
+        secret_refs = [
+            {
+                'name': 'private_key',
+                'secret_ref': '123'
+            },
+            {
+                'name': 'intermediates',
+                'secret_ref': '123'
+            }
+        ]
+        container_req = {'name': name, 'type': type,
+                         'secret_refs': secret_refs}
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            container_req)
         self.assertEqual('secret_refs', exception.invalid_property)
 
 

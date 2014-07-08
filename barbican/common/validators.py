@@ -256,27 +256,21 @@ class NewOrderValidator(ValidatorBase):
     def validate(self, json_data, parent_schema=None):
         schema_name = self._full_name(parent_schema)
 
-        try:
-            schema.validate(json_data, self.schema)
-        except schema.ValidationError as e:
-            raise exception.InvalidObject(schema=schema_name, reason=e.message,
-                                          property=get_invalid_property(e))
+        self._assert_schema_is_valid(json_data, schema_name)
 
         secret = json_data.get('secret')
-        if secret is None:
-            raise exception.InvalidObject(schema=schema_name,
-                                          reason=u._("'secret' attributes "
-                                                     "are required"),
-                                          property="secret")
+        self._assert_validity(secret is not None,
+                              schema_name,
+                              u._("'secret' attributes are required"),
+                              "secret")
 
         # If secret group is provided, validate it now.
         self.secret_validator.validate(secret, parent_schema=self.name)
-        if 'payload' in secret:
-            raise exception.InvalidObject(schema=schema_name,
-                                          reason=u._("'payload' not "
-                                                     "allowed for secret "
-                                                     "generation"),
-                                          property="secret")
+        self._assert_validity('payload' not in secret,
+                              schema_name,
+                              u._("'payload' not allowed for secret "
+                                  "generation"),
+                              "secret")
 
         # Validation secret generation related fields.
         # TODO(jfwood): Invoke the crypto plugin for this purpose
@@ -326,13 +320,15 @@ class ContainerValidator(ValidatorBase):
                     #TODO: (hgedikli) move this to a common location
                     "enum": ["generic", "rsa", "certificate"]
                 },
-                "secret_refs": {"type": "array", "items": {
-                    "type": "object",
-                    "required": ["secret_ref"],
-                    "properties": {
-                        "secret_ref": {"type": "string", "minLength": 1}
+                "secret_refs": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": ["secret_ref"],
+                        "properties": {
+                            "secret_ref": {"type": "string", "minLength": 1}
+                        }
                     }
-                }
                 }
             },
             "required": ["type"]
@@ -341,70 +337,81 @@ class ContainerValidator(ValidatorBase):
     def validate(self, json_data, parent_schema=None):
         schema_name = self._full_name(parent_schema)
 
-        try:
-            schema.validate(json_data, self.schema)
-        except schema.ValidationError as e:
-            raise exception.InvalidObject(schema=schema_name,
-                                          reason=e.message,
-                                          property=get_invalid_property(e))
+        self._assert_schema_is_valid(json_data, schema_name)
 
         container_type = json_data.get('type')
         secret_refs = json_data.get('secret_refs')
 
-        if secret_refs:
-            secret_refs_names = [secret_ref['name']
-                                 if 'name' in secret_ref else ''
-                                 for secret_ref in secret_refs]
+        if not secret_refs:
+            return json_data
 
-            if len(set(secret_refs_names)) != len(secret_refs):
-                raise exception.\
-                    InvalidObject(schema=schema_name,
-                                  reason=u._("Duplicate reference names"
-                                             " are not allowed"),
-                                  property="secret_refs")
+        secret_refs_names = set(secret_ref['name']
+                                if 'name' in secret_ref else ''
+                                for secret_ref in secret_refs)
 
-            if container_type == 'rsa':
-                supported_names = ('public_key',
-                                   'private_key',
-                                   'private_key_passphrase')
+        self._assert_validity(
+            len(secret_refs_names) == len(secret_refs),
+            schema_name,
+            u._("Duplicate reference names are not allowed"),
+            "secret_refs")
 
-                if self.contains_unsupported_names(secret_refs,
-                                                   supported_names) or len(
-                        secret_refs) > 3:
-                    raise exception.\
-                        InvalidObject(schema=schema_name,
-                                      reason=u._("only 'private_key',"
-                                                 " 'public_key' and"
-                                                 " 'private_key_passphrase'"
-                                                 " reference names are allowed"
-                                                 " for RSA type"),
-                                      property="secret_refs")
-
-            if container_type == 'certificate':
-                supported_names = ('certificate',
-                                   'private_key',
-                                   'private_key_passphrase',
-                                   'intermediates')
-
-                if self.contains_unsupported_names(secret_refs,
-                                                   supported_names) or len(
-                        secret_refs) > 4:
-                    raise exception.\
-                        InvalidObject(schema=schema_name,
-                                      reason=u._("only 'private_key',"
-                                                 " 'certificate' ,"
-                                                 " 'private_key_passphrase', "
-                                                 " or 'intermediates' "
-                                                 " reference names are allowed"
-                                                 " for Certificate type"),
-                                      property="secret_refs")
+        if container_type == 'rsa':
+            self._validate_rsa(secret_refs_names, schema_name)
+        elif container_type == 'certificate':
+            self._validate_certificate(secret_refs_names, schema_name)
 
         return json_data
 
-    def contains_unsupported_names(self, secret_refs, supported_names):
-        for secret_ref in secret_refs:
-                if secret_ref.get('name') not in supported_names:
-                    return True
+    def _validate_rsa(self, secret_refs_names, schema_name):
+        required_names = set(['public_key', 'private_key'])
+        optional_names = set(['private_key_passphrase'])
+        contains_unsupported_names = self._contains_unsupported_names(
+            secret_refs_names, required_names | optional_names)
+        self._assert_validity(
+            not contains_unsupported_names,
+            schema_name,
+            u._("only 'private_key', 'public_key' and "
+                "'private_key_passphrase' reference names are "
+                "allowed for RSA type"),
+            "secret_refs")
+
+        self._assert_validity(
+            self._has_minimum_required(secret_refs_names, required_names),
+            schema_name,
+            u._("The minimum required reference names are 'public_key' and"
+                "'private_key' for RSA type"),
+            "secret_refs")
+
+    def _validate_certificate(self, secret_refs_names, schema_name):
+        required_names = set(['certificate'])
+        optional_names = set(['private_key', 'private_key_passphrase',
+                              'intermediates'])
+        contains_unsupported_names = self._contains_unsupported_names(
+            secret_refs_names, required_names.union(optional_names))
+        self._assert_validity(
+            not contains_unsupported_names,
+            schema_name,
+            u._("only 'private_key', 'certificate' , "
+                "'private_key_passphrase',  or 'intermediates' "
+                "reference names are allowed for Certificate type"),
+            "secret_refs")
+
+        self._assert_validity(
+            self._has_minimum_required(secret_refs_names, required_names),
+            schema_name,
+            u._("The minimum required reference name is 'certificate' "
+                "for Certificate type"),
+            "secret_refs")
+
+    def _contains_unsupported_names(self, secret_refs_names, supported_names):
+        if secret_refs_names.difference(supported_names):
+            return True
+        return False
+
+    def _has_minimum_required(self, secret_refs_names, required_names):
+        if required_names.issubset(secret_refs_names):
+            return True
+        return False
 
 
 class NewTransportKeyValidator(ValidatorBase):
@@ -424,31 +431,20 @@ class NewTransportKeyValidator(ValidatorBase):
     def validate(self, json_data, parent_schema=None):
         schema_name = self._full_name(parent_schema)
 
-        try:
-            schema.validate(json_data, self.schema)
-        except schema.ValidationError as e:
-            raise exception.InvalidObject(schema=schema_name,
-                                          reason=e.message,
-                                          property=get_invalid_property(e))
+        self._assert_schema_is_valid(json_data, schema_name)
 
-        # Validate/normalize 'name'.
         plugin_name = json_data.get('plugin_name', '').strip()
-        if not plugin_name:
-            raise exception.InvalidObject(
-                schema=schema_name,
-                reason=u._("plugin_name must be provided"),
-                property="plugin_name"
-            )
+        self._assert_validity(plugin_name,
+                              schema_name,
+                              u._("plugin_name must be provided"),
+                              "plugin_name")
         json_data['plugin_name'] = plugin_name
 
-        # Validate 'transport_key'.
         transport_key = json_data.get('transport_key', '').strip()
-        if not transport_key:
-            raise exception.InvalidObject(
-                schema=schema_name,
-                reason=u._("transport_key must be provided"),
-                property="transport_key"
-            )
+        self._assert_validity(transport_key,
+                              schema_name,
+                              u._("transport_key must be provided"),
+                              "transport_key")
         json_data['transport_key'] = transport_key
 
         return json_data
