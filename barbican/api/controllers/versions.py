@@ -12,7 +12,7 @@
 
 import pecan
 
-from barbican.api import controllers as con
+from barbican.api import controllers
 from barbican.common import utils
 from barbican.openstack.common import gettextutils as u
 from barbican import version
@@ -26,8 +26,8 @@ class VersionController(object):
         LOG.debug('=== Creating VersionController ===')
 
     @pecan.expose('json')
-    @con.handle_exceptions(u._('Version retrieval'))
-    @con.handle_rbac('version:get')
+    @controllers.handle_exceptions(u._('Version retrieval'))
+    @controllers.enforce_rbac('version:get')
     def index(self):
         return {
             'v1': 'current',

@@ -42,7 +42,7 @@ class ContainerController(object):
 
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Container retrieval'))
-    @controllers.handle_rbac('container:get')
+    @controllers.enforce_rbac('container:get')
     def index(self, keystone_id):
         container = self.container_repo.get(entity_id=self.container_id,
                                             keystone_id=keystone_id,
@@ -62,7 +62,7 @@ class ContainerController(object):
 
     @index.when(method='DELETE', template='')
     @controllers.handle_exceptions(u._('Container deletion'))
-    @controllers.handle_rbac('container:delete')
+    @controllers.enforce_rbac('container:delete')
     def on_delete(self, keystone_id, **kwargs):
 
         try:
@@ -93,7 +93,7 @@ class ContainersController(object):
 
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Containers(s) retrieval'))
-    @controllers.handle_rbac('containers:get')
+    @controllers.enforce_rbac('containers:get')
     def index(self, keystone_id, **kw):
         LOG.debug('Start containers on_get '
                   'for tenant-ID {0}:'.format(keystone_id))
@@ -129,7 +129,7 @@ class ContainersController(object):
 
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('Container creation'))
-    @controllers.handle_rbac('containers:post')
+    @controllers.enforce_rbac('containers:post')
     def on_post(self, keystone_id, **kwargs):
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
