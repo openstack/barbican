@@ -53,7 +53,7 @@ class OrderController(object):
 
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Order retrieval'))
-    @controllers.handle_rbac('order:get')
+    @controllers.enforce_rbac('order:get')
     def index(self, keystone_id):
         order = self.repo.get(entity_id=self.order_id, keystone_id=keystone_id,
                               suppress_exception=True)
@@ -69,7 +69,7 @@ class OrderController(object):
 
     @index.when(method='DELETE')
     @controllers.handle_exceptions(u._('Order deletion'))
-    @controllers.handle_rbac('order:delete')
+    @controllers.enforce_rbac('order:delete')
     def on_delete(self, keystone_id, **kwargs):
 
         try:
@@ -98,7 +98,7 @@ class OrdersController(object):
 
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Order(s) retrieval'))
-    @controllers.handle_rbac('orders:get')
+    @controllers.enforce_rbac('orders:get')
     def index(self, keystone_id, **kw):
         LOG.debug('Start orders on_get '
                   'for tenant-ID {0}:'.format(keystone_id))
@@ -127,13 +127,13 @@ class OrdersController(object):
 
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Order update'))
-    @controllers.handle_rbac('orders:put')
+    @controllers.enforce_rbac('orders:put')
     def on_put(self, keystone_id, **kwargs):
         _order_update_not_supported()
 
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('Order creation'))
-    @controllers.handle_rbac('orders:post')
+    @controllers.enforce_rbac('orders:post')
     def on_post(self, keystone_id, **kwargs):
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)

@@ -30,7 +30,7 @@ def is_json_request_accept(req):
         or req.accept.header_value == '*/*'
 
 
-def enforce_rbac(req, action_name, keystone_id=None):
+def _do_enforce_rbac(req, action_name, keystone_id=None):
     """Enforce RBAC based on 'request' information."""
     if action_name and 'barbican.context' in req.environ:
 
@@ -57,15 +57,15 @@ def enforce_rbac(req, action_name, keystone_id=None):
                                     do_raise=True)
 
 
-def handle_rbac(action_name='default'):
+def enforce_rbac(action_name='default'):
     """Decorator handling RBAC enforcement on behalf of REST verb methods."""
 
     def rbac_decorator(fn):
         def enforcer(inst, *args, **kwargs):
 
             # Enforce RBAC rules.
-            enforce_rbac(pecan.request, action_name,
-                         keystone_id=kwargs.get('keystone_id'))
+            _do_enforce_rbac(pecan.request, action_name,
+                             keystone_id=kwargs.get('keystone_id'))
 
             # Execute guarded method now.
             return fn(inst, *args, **kwargs)

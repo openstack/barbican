@@ -69,7 +69,7 @@ class SecretController(object):
     @pecan.expose(generic=True)
     @allow_all_content_types
     @controllers.handle_exceptions(u._('Secret retrieval'))
-    @controllers.handle_rbac('secret:get')
+    @controllers.enforce_rbac('secret:get')
     def index(self, keystone_id):
 
         secret = self.repos.secret_repo.get(entity_id=self.secret_id,
@@ -96,7 +96,7 @@ class SecretController(object):
     @index.when(method='PUT')
     @allow_all_content_types
     @controllers.handle_exceptions(u._('Secret update'))
-    @controllers.handle_rbac('secret:put')
+    @controllers.enforce_rbac('secret:put')
     def on_put(self, keystone_id, **kwargs):
 
         if not pecan.request.content_type or \
@@ -134,7 +134,7 @@ class SecretController(object):
 
     @index.when(method='DELETE')
     @controllers.handle_exceptions(u._('Secret deletion'))
-    @controllers.handle_rbac('secret:delete')
+    @controllers.enforce_rbac('secret:delete')
     def on_delete(self, keystone_id, **kwargs):
 
         secret_model = self.repos.secret_repo.get(entity_id=self.secret_id,
@@ -173,7 +173,7 @@ class SecretsController(object):
 
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Secret(s) retrieval'))
-    @controllers.handle_rbac('secrets:get')
+    @controllers.enforce_rbac('secrets:get')
     def index(self, keystone_id, **kw):
         LOG.debug('Start secrets on_get '
                   'for tenant-ID {0}:'.format(keystone_id))
@@ -223,7 +223,7 @@ class SecretsController(object):
 
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('Secret creation'))
-    @controllers.handle_rbac('secrets:post')
+    @controllers.enforce_rbac('secrets:post')
     def on_post(self, keystone_id, **kwargs):
         LOG.debug('Start on_post for tenant-ID {0}:...'.format(keystone_id))
 
