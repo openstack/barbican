@@ -22,7 +22,7 @@
         service capabilities, based on roles defined by Rackspace (see
             <xref linkend="RBAC_product_roles_table"/>). The
         permissions to perform certain operations in the &PRODNAME;
-        API – create, read, update, delete – are assigned to specific
+        API - create, read, update, delete - are assigned to specific
         roles. The account owner assigns these roles, either
         multiproduct (global) or product-specific (for example, &PROD; only)
         to account users. </para>
