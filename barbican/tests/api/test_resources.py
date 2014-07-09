@@ -954,7 +954,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         mock_store_secret\
             .assert_called_once_with('plain text', 'text/plain',
-                                     None, self.secret.to_dict_fields,
+                                     None, self.secret.to_dict_fields(),
                                      self.secret, self.tenant, mock.ANY)
 
     @mock.patch('barbican.plugin.resources.store_secret')
@@ -974,7 +974,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         mock_store_secret\
             .assert_called_once_with('plain text', 'application/octet-stream',
-                                     None, self.secret.to_dict_fields,
+                                     None, self.secret.to_dict_fields(),
                                      self.secret, self.tenant, mock.ANY)
 
     @mock.patch('barbican.plugin.resources.store_secret')
@@ -995,7 +995,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         mock_store_secret\
             .assert_called_once_with(payload, 'application/octet-stream',
-                                     'base64', self.secret.to_dict_fields,
+                                     'base64', self.secret.to_dict_fields(),
                                      self.secret, self.tenant, mock.ANY)
 
     def test_should_fail_to_put_secret_with_unsupported_encoding(self):

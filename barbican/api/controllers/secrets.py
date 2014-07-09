@@ -64,7 +64,8 @@ class SecretController(object):
         self.repos = repo.Repositories(tenant_repo=tenant_repo,
                                        secret_repo=secret_repo,
                                        datum_repo=datum_repo,
-                                       kek_repo=kek_repo)
+                                       kek_repo=kek_repo,
+                                       secret_meta_repo=secret_meta_repo)
 
     @pecan.expose(generic=True)
     @allow_all_content_types
@@ -131,7 +132,7 @@ class SecretController(object):
         content_encoding = pecan.request.headers.get('Content-Encoding')
 
         plugin.store_secret(payload, content_type,
-                            content_encoding, secret_model.to_dict_fields,
+                            content_encoding, secret_model.to_dict_fields(),
                             secret_model, tenant_model, self.repos)
 
     @index.when(method='DELETE')
