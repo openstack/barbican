@@ -125,6 +125,10 @@ class NewSecretValidator(ValidatorBase):
                         "base64"
                     ]
                 },
+                "transport_key_needed": {
+                    "type": "string",
+                    "enum": ["true", "false"]
+                },
             },
         }
 

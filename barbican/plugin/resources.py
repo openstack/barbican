@@ -18,8 +18,8 @@ from barbican.plugin.util import translations as tr
 
 
 def store_secret(unencrypted_raw, content_type_raw, content_encoding,
-                 spec, secret_model, tenant_model,
-                 repos):
+                 spec, secret_model, tenant_model, repos,
+                 transport_key_needed=False):
     """Store a provided secret into secure backend."""
 
     # Create a secret model is one isn't provided.
@@ -35,8 +35,27 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
     #   leave. A subsequent call to this method should provide both the Secret
     #   entity created here *and* the secret data to store into it.
     if not unencrypted_raw:
+        key_model = None
+        if transport_key_needed:
+            # get_plugin_store() will throw an exception if no suitable
+            # plugin with transport key is found
+            store_plugin = secret_store.SecretStorePluginManager().\
+                get_plugin_store(True)
+            plugin_name = utils.generate_fullname_for(store_plugin)
+
+            key_repo = repos.transport_key_repo
+            key_model = key_repo.get_latest_transport_key(plugin_name)
+
+            if not key_model or not store_plugin.is_transport_key_current(
+                    key_model.transport_key):
+                # transport key does not exist or is not current.
+                # need to get a new transport key
+                transport_key = store_plugin.get_transport_key()
+                new_key_model = models.TransportKey(plugin_name, transport_key)
+                key_model = key_repo.create_from(new_key_model)
+
         _save_secret(secret_model, tenant_model, repos)
-        return secret_model
+        return secret_model, key_model
 
     # Locate a suitable plugin to store the secret.
     store_plugin = secret_store.SecretStorePluginManager().get_plugin_store()
@@ -66,7 +85,7 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
     _save_secret_metadata(secret_model, secret_metadata, store_plugin,
                           content_type, repos)
 
-    return secret_model
+    return secret_model, None
 
 
 def get_secret(requesting_content_type, secret_model, tenant_model):

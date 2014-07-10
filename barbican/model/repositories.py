@@ -910,6 +910,15 @@ class TransportKeyRepo(BaseRepo):
 
         return entities, offset, limit, total
 
+    def get_latest_transport_key(self, plugin_name, suppress_exception=False,
+                                 session=None):
+        """Returns the latest transport key for a given plugin
+        """
+        entity, offset, limit, total = self.get_by_create_date(
+            plugin_name, offset_arg=0, limit_arg=1,
+            suppress_exception=suppress_exception, session=session)
+        return entity
+
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.TransportKey).filter_by(id=entity_id)

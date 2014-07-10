@@ -32,6 +32,7 @@ import webtest
 from barbican import api
 from barbican.api import app
 from barbican.api import controllers
+from barbican.api.controllers import hrefs
 from barbican.common import exception as excep
 from barbican.common import validators
 from barbican.model import models
@@ -170,7 +171,7 @@ class BaseSecretsResource(FunctionalTest):
             secrets = controllers.secrets.SecretsController(
                 self.tenant_repo, self.secret_repo,
                 self.tenant_secret_repo, self.datum_repo, self.kek_repo,
-                self.secret_meta_repo
+                self.secret_meta_repo, self.transport_key_repo
             )
 
         return RootController()
@@ -229,9 +230,17 @@ class BaseSecretsResource(FunctionalTest):
 
         self.secret_meta_repo = mock.MagicMock()
 
+        self.transport_key = models.TransportKey(
+            'default_plugin_name', 'XXXABCDEF')
+        self.transport_key.id = 'tkey12345'
+        self.tkey_url = hrefs.convert_transport_key_to_href(
+            self.keystone_id,
+            self.transport_key.id)
+        self.transport_key_repo = mock.MagicMock()
+
     @mock.patch('barbican.plugin.resources.store_secret')
     def _test_should_add_new_secret_with_expiration(self, mock_store_secret):
-        mock_store_secret.return_value = self.secret
+        mock_store_secret.return_value = self.secret, None
 
         expiration = '2114-02-28 12:14:44.180394-05:00'
         self.secret_req.update({'expiration': expiration})
@@ -255,7 +264,8 @@ class BaseSecretsResource(FunctionalTest):
                 self.secret_req.get('payload_content_type',
                                     'application/octet-stream'),
                 self.secret_req.get('payload_content_encoding'),
-                expected, None, self.tenant, mock.ANY
+                expected, None, self.tenant, mock.ANY,
+                transport_key_needed=False
             )
 
     @mock.patch('barbican.plugin.resources.store_secret')
@@ -266,7 +276,7 @@ class BaseSecretsResource(FunctionalTest):
         :param check_tenant_id: True if the retrieved Tenant id needs to be
         verified, False to skip this check (necessary for new-Tenant flows).
         """
-        mock_store_secret.return_value = self.secret
+        mock_store_secret.return_value = self.secret, None
 
         resp = self.app.post_json(
             '/%s/secrets/' % self.keystone_id,
@@ -282,8 +292,10 @@ class BaseSecretsResource(FunctionalTest):
                 self.secret_req.get('payload_content_type',
                                     'application/octet-stream'),
                 self.secret_req.get('payload_content_encoding'),
-                expected, None, self.tenant if check_tenant_id else mock.ANY,
-                mock.ANY
+                expected, None,
+                self.tenant if check_tenant_id else mock.ANY,
+                mock.ANY,
+                transport_key_needed=False
             )
 
     def _test_should_add_new_secret_if_tenant_does_not_exist(self):
@@ -317,9 +329,25 @@ class BaseSecretsResource(FunctionalTest):
         self.assertFalse(self.datum_repo.create_from.called)
 
     @mock.patch('barbican.plugin.resources.store_secret')
+    def _test_should_add_new_secret_metadata_with_tkey(self,
+                                                       mock_store_secret):
+
+        mock_store_secret.return_value = self.secret, self.transport_key
+
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            {'name': self.name,
+             'transport_key_needed': 'true'}
+        )
+
+        self.assertTrue('secret_ref' in resp.json)
+        self.assertTrue('transport_key_ref' in resp.json)
+        self.assertEqual(resp.json['transport_key_ref'], self.tkey_url)
+
+    @mock.patch('barbican.plugin.resources.store_secret')
     def _test_should_add_secret_payload_almost_too_large(self,
                                                          mock_store_secret):
-        mock_store_secret.return_value = self.secret
+        mock_store_secret.return_value = self.secret, None
 
         if validators.DEFAULT_MAX_SECRET_BYTES % 4:
             raise ValueError('Tests currently require max secrets divides by '
@@ -395,6 +423,9 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
 
     def test_should_add_new_secret_metadata_without_payload(self):
         self._test_should_add_new_secret_metadata_without_payload()
+
+    def test_should_add_new_secret_metadata_with_tkey(self):
+        self._test_should_add_new_secret_metadata_with_tkey()
 
     def test_should_add_new_secret_payload_almost_too_large(self):
         self._test_should_add_secret_payload_almost_too_large()
@@ -525,6 +556,9 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
     def test_should_add_new_secret_metadata_without_payload(self):
         self._test_should_add_new_secret_metadata_without_payload()
 
+    def test_should_add_new_secret_metadata_with_tkey(self):
+        self._test_should_add_new_secret_metadata_with_tkey()
+
     def test_should_add_new_secret_payload_almost_too_large(self):
         self._test_should_add_secret_payload_almost_too_large()
 
@@ -618,7 +652,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
             secrets = controllers.secrets.SecretsController(
                 self.tenant_repo, self.secret_repo,
                 self.tenant_secret_repo, self.datum_repo, self.kek_repo,
-                self.secret_meta_repo
+                self.secret_meta_repo, self.transport_key_repo
             )
 
         return RootController()
@@ -670,6 +704,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
                        'alg': None,
                        'bits': 0,
                        'mode': None}
+        self.transport_key_repo = mock.MagicMock()
 
     def test_should_list_secrets_by_name(self):
         # Quote the name parameter to simulate how it would be
@@ -780,7 +815,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             secrets = controllers.secrets.SecretsController(
                 self.tenant_repo, self.secret_repo,
                 self.tenant_secret_repo, self.datum_repo, self.kek_repo,
-                self.secret_meta_repo
+                self.secret_meta_repo, self.transport_key_repo
             )
 
         return RootController()
@@ -838,6 +873,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.kek_repo = mock.MagicMock()
 
         self.secret_meta_repo = mock.MagicMock()
+
+        self.transport_key_repo = mock.MagicMock()
 
     def test_should_get_secret_as_json(self):
         resp = self.app.get(

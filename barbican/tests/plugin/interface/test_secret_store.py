@@ -45,6 +45,41 @@ class TestSecretStore(str.SecretStoreBase):
         raise NotImplementedError  # pragma: no cover
 
 
+class TestSecretStoreWithTransportKey(str.SecretStoreBase):
+    """Secret store plugin for testing support.
+
+    This plugin will override the relevant methods for key wrapping.
+    """
+
+    def __init__(self, generate_supports_response):
+        super(TestSecretStoreWithTransportKey, self).__init__()
+        self.generate_supports_response = generate_supports_response
+
+    def generate_symmetric_key(self, key_spec):
+        raise NotImplementedError  # pragma: no cover
+
+    def generate_asymmetric_key(self, key_spec):
+        raise NotImplementedError  # pragma: no cover
+
+    def store_secret(self, secret_dto):
+        raise NotImplementedError  # pragma: no cover
+
+    def get_secret(self, secret_metadata):
+        raise NotImplementedError  # pragma: no cover
+
+    def generate_supports(self, key_spec):
+        return self.generate_supports_response
+
+    def delete_secret(self, secret_metadata):
+        raise NotImplementedError  # pragma: no cover
+
+    def get_transport_key(self):
+        return "transport key"
+
+    def is_transport_key_current(self, transport_key):
+        return True
+
+
 class WhenTestingSecretStorePluginManager(testtools.TestCase):
 
     def setUp(self):
@@ -94,3 +129,22 @@ class WhenTestingSecretStorePluginManager(testtools.TestCase):
             self.manager.get_plugin_generate,
             keySpec,
         )
+
+    def test_get_store_no_plugin_with_tkey(self):
+        plugin = TestSecretStore(False)
+        plugin_mock = mock.MagicMock(obj=plugin)
+        self.manager.extensions = [plugin_mock]
+        self.assertRaises(
+            str.SecretStoreSupportedPluginNotFound,
+            self.manager.get_plugin_store,
+            True,
+        )
+
+    def test_get_store_with_tkey(self):
+        plugin1 = TestSecretStore(False)
+        plugin1_mock = mock.MagicMock(obj=plugin1)
+        plugin2 = TestSecretStoreWithTransportKey(False)
+        plugin2_mock = mock.MagicMock(obj=plugin2)
+        self.manager.extensions = [plugin1_mock, plugin2_mock]
+        self.assertEqual(plugin2,
+                         self.manager.get_plugin_store(True))

@@ -55,7 +55,8 @@ class SecretController(object):
 
     def __init__(self, secret_id,
                  tenant_repo=None, secret_repo=None, datum_repo=None,
-                 kek_repo=None, secret_meta_repo=None):
+                 kek_repo=None, secret_meta_repo=None,
+                 transport_key_repo=None):
         LOG.debug('=== Creating SecretController ===')
         self.secret_id = secret_id
 
@@ -65,7 +66,8 @@ class SecretController(object):
                                        secret_repo=secret_repo,
                                        datum_repo=datum_repo,
                                        kek_repo=kek_repo,
-                                       secret_meta_repo=secret_meta_repo)
+                                       secret_meta_repo=secret_meta_repo,
+                                       transport_key_repo=transport_key_repo)
 
     @pecan.expose(generic=True)
     @allow_all_content_types
@@ -155,7 +157,7 @@ class SecretsController(object):
     def __init__(self,
                  tenant_repo=None, secret_repo=None,
                  tenant_secret_repo=None, datum_repo=None, kek_repo=None,
-                 secret_meta_repo=None):
+                 secret_meta_repo=None, transport_key_repo=None):
         LOG.debug('Creating SecretsController')
         self.validator = validators.NewSecretValidator()
         self.repos = repo.Repositories(tenant_repo=tenant_repo,
@@ -163,7 +165,8 @@ class SecretsController(object):
                                        secret_repo=secret_repo,
                                        datum_repo=datum_repo,
                                        kek_repo=kek_repo,
-                                       secret_meta_repo=secret_meta_repo)
+                                       secret_meta_repo=secret_meta_repo,
+                                       transport_key_repo=transport_key_repo)
 
     @pecan.expose()
     def _lookup(self, secret_id, *remainder):
@@ -172,7 +175,8 @@ class SecretsController(object):
                                 self.repos.secret_repo,
                                 self.repos.datum_repo,
                                 self.repos.kek_repo,
-                                self.repos.secret_meta_repo), remainder
+                                self.repos.secret_meta_repo,
+                                self.repos.transport_key_repo), remainder
 
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Secret(s) retrieval'))
@@ -234,12 +238,17 @@ class SecretsController(object):
         data = api.load_body(pecan.request, validator=self.validator)
         tenant = res.get_or_create_tenant(keystone_id, self.repos.tenant_repo)
 
-        new_secret = plugin.store_secret(data.get('payload'),
-                                         data.get('payload_content_type',
-                                                  'application/octet-stream'),
-                                         data.get('payload_content_encoding'),
-                                         data, None, tenant,
-                                         self.repos)
+        transport_key_needed = \
+            data.get('transport_key_needed', 'false').lower() == 'true'
+
+        new_secret, transport_key_model = plugin.store_secret(
+            data.get('payload'),
+            data.get('payload_content_type',
+                     'application/octet-stream'),
+            data.get('payload_content_encoding'),
+            data, None, tenant,
+            self.repos,
+            transport_key_needed=transport_key_needed)
 
         pecan.response.status = 201
         pecan.response.headers['Location'] = '/{0}/secrets/{1}'.format(
@@ -247,4 +256,9 @@ class SecretsController(object):
         )
         url = hrefs.convert_secret_to_href(keystone_id, new_secret.id)
         LOG.debug('URI to secret is {0}'.format(url))
-        return {'secret_ref': url}
+        if transport_key_model is not None:
+            tkey_url = hrefs.convert_transport_key_to_href(
+                keystone_id, transport_key_model.id)
+            return {'secret_ref': url, 'transport_key_ref': tkey_url}
+        else:
+            return {'secret_ref': url}

@@ -341,6 +341,31 @@ class SecretStoreBase(object):
         """
         raise NotImplementedError  # pragma: no cover
 
+    def get_transport_key(self):
+        """Gets a transport key.
+
+        Returns the current valid transport key associated with this plugin.
+        The transport key is expected to be a base64 encoded x509 certificate
+        containing a public key.  Admins are responsible for deleting old keys
+        from the database using the DELETE method on the TransportKey resource.
+
+        By default, returns None.  Plugins that support transport key
+        wrapping should override this method.
+        """
+        return None
+
+    def is_transport_key_current(self, transport_key):
+        """Determines if the provided transport key is the current valid key
+
+        Returns true if the transport key is the current valid transport key.
+        If the key is not valid, then barbican core will request a new
+        transport key from the plugin.
+
+        Returns False by default.  Plugins that support transport key wrapping
+        should override this method.
+        """
+        return False
+
 
 class SecretStorePluginManager(named.NamedExtensionManager):
     def __init__(self, conf=CONF, invoke_on_load=True,
@@ -353,16 +378,24 @@ class SecretStorePluginManager(named.NamedExtensionManager):
             invoke_kwds=invoke_kwargs
         )
 
-    def get_plugin_store(self):
+    def get_plugin_store(self, transport_key_needed=False):
         """Gets a secret store plugin.
-
+        :param: transport_key_needed: set to True if a transport
+        key is required.
         :returns: SecretStoreBase plugin implementation
         """
 
         if len(self.extensions) < 1:
             raise SecretStorePluginNotFound()
 
-        return self.extensions[0].obj
+        if not transport_key_needed:
+            return self.extensions[0].obj
+
+        for ext in self.extensions:
+            if ext.obj.get_transport_key() is not None:
+                    return ext.obj
+
+        raise SecretStoreSupportedPluginNotFound()
 
     def get_plugin_retrieve_delete(self, plugin_name):
         """Gets a secret retrieve/delete plugin.

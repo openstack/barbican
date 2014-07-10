@@ -246,7 +246,8 @@ class WhenTestingSecretsResource(BaseTestCase):
                                         .MagicMock(),
                                         datum_repo=mock.MagicMock(),
                                         kek_repo=mock.MagicMock(),
-                                        secret_meta_repo=mock.MagicMock())
+                                        secret_meta_repo=mock.MagicMock(),
+                                        transport_key_repo=mock.MagicMock())
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
@@ -298,7 +299,8 @@ class WhenTestingSecretResource(BaseTestCase):
                                        secret_repo=self.secret_repo,
                                        datum_repo=mock.MagicMock(),
                                        kek_repo=mock.MagicMock(),
-                                       secret_meta_repo=mock.MagicMock())
+                                       secret_meta_repo=mock.MagicMock(),
+                                       transport_key_repo=mock.MagicMock())
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
