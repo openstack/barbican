@@ -249,7 +249,7 @@ class WhenTestingSecretsResource(BaseTestCase):
     def test_should_pass_create_secret(self):
         self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_post)
 
-    def test_should_fail_create_secret(self):
+    def test_should_raise_create_secret(self):
         self._assert_fail_rbac([None, 'audit', 'observer', 'bogus'],
                                self._invoke_on_post)
 
@@ -257,7 +257,7 @@ class WhenTestingSecretsResource(BaseTestCase):
         self._assert_pass_rbac(['admin', 'observer', 'creator'],
                                self._invoke_on_get)
 
-    def test_should_fail_get_secrets(self):
+    def test_should_raise_get_secrets(self):
         self._assert_fail_rbac([None, 'audit', 'bogus'],
                                self._invoke_on_get)
 
@@ -298,7 +298,7 @@ class WhenTestingSecretResource(BaseTestCase):
                                self._invoke_on_get,
                                accept='notjsonaccepttype')
 
-    def test_should_fail_decrypt_secret(self):
+    def test_should_raise_decrypt_secret(self):
         self._assert_fail_rbac([None, 'audit', 'bogus'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype')
@@ -307,21 +307,21 @@ class WhenTestingSecretResource(BaseTestCase):
         self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
                                self._invoke_on_get)
 
-    def test_should_fail_get_secret(self):
+    def test_should_raise_get_secret(self):
         self._assert_fail_rbac([None, 'bogus'],
                                self._invoke_on_get)
 
     def test_should_pass_put_secret(self):
         self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_put)
 
-    def test_should_fail_put_secret(self):
+    def test_should_raise_put_secret(self):
         self._assert_fail_rbac([None, 'audit', 'observer', 'bogus'],
                                self._invoke_on_put)
 
     def test_should_pass_delete_secret(self):
         self._assert_pass_rbac(['admin'], self._invoke_on_delete)
 
-    def test_should_fail_delete_secret(self):
+    def test_should_raise_delete_secret(self):
         self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
                                self._invoke_on_delete)
 
@@ -363,7 +363,7 @@ class WhenTestingOrdersResource(BaseTestCase):
     def test_should_pass_create_order(self):
         self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_post)
 
-    def test_should_fail_create_order(self):
+    def test_should_raise_create_order(self):
         self._assert_fail_rbac([None, 'audit', 'observer', 'bogus'],
                                self._invoke_on_post)
 
@@ -371,7 +371,7 @@ class WhenTestingOrdersResource(BaseTestCase):
         self._assert_pass_rbac(['admin', 'observer', 'creator'],
                                self._invoke_on_get)
 
-    def test_should_fail_get_orders(self):
+    def test_should_raise_get_orders(self):
         self._assert_fail_rbac([None, 'audit', 'bogus'],
                                self._invoke_on_get)
 
@@ -408,14 +408,14 @@ class WhenTestingOrderResource(BaseTestCase):
         self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
                                self._invoke_on_get)
 
-    def test_should_fail_get_order(self):
+    def test_should_raise_get_order(self):
         self._assert_fail_rbac([None, 'bogus'],
                                self._invoke_on_get)
 
     def test_should_pass_delete_order(self):
         self._assert_pass_rbac(['admin'], self._invoke_on_delete)
 
-    def test_should_fail_delete_order(self):
+    def test_should_raise_delete_order(self):
         self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
                                self._invoke_on_delete)
 

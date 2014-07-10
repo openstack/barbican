@@ -152,7 +152,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
         self.assertTrue('expiration' in result)
         self.assertTrue(not result['expiration'])
 
-    def test_should_fail_numeric_name(self):
+    def test_should_raise_numeric_name(self):
         self.secret_req['name'] = 123
 
         exception = self.assertRaises(
@@ -162,7 +162,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
         )
         self.assertEqual('name', exception.invalid_property)
 
-    def test_should_fail_negative_bit_length(self):
+    def test_should_raise_negative_bit_length(self):
         self.secret_req['bit_length'] = -23
 
         exception = self.assertRaises(
@@ -172,7 +172,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
         )
         self.assertEqual('bit_length', exception.invalid_property)
 
-    def test_should_fail_non_integer_bit_length(self):
+    def test_should_raise_non_integer_bit_length(self):
         self.secret_req['bit_length'] = "23"
 
         exception = self.assertRaises(
@@ -182,7 +182,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
         )
         self.assertEqual('bit_length', exception.invalid_property)
 
-    def test_validation_should_fail_with_empty_payload(self):
+    def test_validation_should_raise_with_empty_payload(self):
         self.secret_req['payload'] = '   '
 
         exception = self.assertRaises(
@@ -192,7 +192,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
         )
         self.assertEqual('payload', exception.invalid_property)
 
-    def test_should_fail_already_expired(self):
+    def test_should_raise_already_expired(self):
         self.secret_req['expiration'] = '2004-02-28T19:14:44.180394'
 
         exception = self.assertRaises(
@@ -202,7 +202,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
         )
         self.assertEqual('expiration', exception.invalid_property)
 
-    def test_should_fail_expiration_nonsense(self):
+    def test_should_raise_expiration_nonsense(self):
         self.secret_req['expiration'] = 'nonsense'
 
         exception = self.assertRaises(
@@ -212,7 +212,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
         )
         self.assertEqual('expiration', exception.invalid_property)
 
-    def test_should_fail_all_nulls(self):
+    def test_should_raise_all_nulls(self):
         self.secret_req = {'name': None,
                            'algorithm': None,
                            'bit_length': None,
@@ -224,7 +224,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
             self.secret_req,
         )
 
-    def test_should_fail_all_empties(self):
+    def test_should_raise_all_empties(self):
         self.secret_req = {'name': '',
                            'algorithm': '',
                            'bit_length': '',
@@ -236,7 +236,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
             self.secret_req,
         )
 
-    def test_should_fail_no_payload_content_type(self):
+    def test_should_raise_no_payload_content_type(self):
         del self.secret_req['payload_content_type']
 
         self.assertRaises(
@@ -245,7 +245,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
             self.secret_req,
         )
 
-    def test_should_fail_with_message_w_bad_payload_content_type(self):
+    def test_should_raise_with_message_w_bad_payload_content_type(self):
         self.secret_req['payload_content_type'] = 'plain/text'
 
         try:
@@ -265,7 +265,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
         self.secret_req['payload_content_type'] = 'TEXT/PLAIN'
         self.validator.validate(self.secret_req)
 
-    def test_should_fail_with_mixed_case_wrong_payload_content_type(self):
+    def test_should_raise_with_mixed_case_wrong_payload_content_type(self):
         self.secret_req['payload_content_type'] = 'TeXT/PlaneS'
 
         self.assertRaises(
@@ -274,7 +274,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
             self.secret_req,
         )
 
-    def test_should_fail_with_upper_case_wrong_payload_content_type(self):
+    def test_should_raise_with_upper_case_wrong_payload_content_type(self):
         self.secret_req['payload_content_type'] = 'TEXT/PLANE'
 
         self.assertRaises(
@@ -283,7 +283,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
             self.secret_req,
         )
 
-    def test_should_fail_with_plain_text_and_encoding(self):
+    def test_should_raise_with_plain_text_and_encoding(self):
         self.secret_req['payload_content_encoding'] = 'base64'
 
         self.assertRaises(
@@ -292,7 +292,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
             self.secret_req,
         )
 
-    def test_should_fail_with_wrong_encoding(self):
+    def test_should_raise_with_wrong_encoding(self):
         self.secret_req['payload_content_type'] = 'application/octet-stream'
         self.secret_req['payload_content_encoding'] = 'unsupported'
 
@@ -363,7 +363,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
         self.assertTrue('expiration' in result)
         self.assertTrue(not result['expiration'])
 
-    def test_should_fail_numeric_name(self):
+    def test_should_raise_numeric_name(self):
         self.secret_req['name'] = 123
 
         exception = self.assertRaises(
@@ -374,7 +374,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
 
         self.assertEqual('name', exception.invalid_property)
 
-    def test_should_fail_bad_mode(self):
+    def test_should_raise_bad_mode(self):
         self.secret_req['mode'] = 'badmode'
 
         exception = self.assertRaises(
@@ -385,7 +385,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
 
         self.assertEqual('mode', exception.invalid_field)
 
-    def test_should_fail_negative_bit_length(self):
+    def test_should_raise_negative_bit_length(self):
         self.secret_req['bit_length'] = -23
 
         exception = self.assertRaises(
@@ -396,7 +396,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
 
         self.assertEqual('bit_length', exception.invalid_property)
 
-    def test_should_fail_non_integer_bit_length(self):
+    def test_should_raise_non_integer_bit_length(self):
         self.secret_req['bit_length'] = "23"
 
         exception = self.assertRaises(
@@ -407,7 +407,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
 
         self.assertEqual('bit_length', exception.invalid_property)
 
-    def test_should_fail_non_multiple_eight_bit_length(self):
+    def test_should_raise_non_multiple_eight_bit_length(self):
         self.secret_req['bit_length'] = 129
 
         exception = self.assertRaises(
@@ -418,7 +418,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
 
         self.assertEqual('bit_length', exception.invalid_field)
 
-    def test_should_fail_secret_not_order_schema_provided(self):
+    def test_should_raise_secret_not_order_schema_provided(self):
         exception = self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
@@ -427,7 +427,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
 
         self.assertEqual('secret', exception.invalid_property)
 
-    def test_should_fail_payload_provided(self):
+    def test_should_raise_payload_provided(self):
         self.secret_req['payload'] = '  '
 
         exception = self.assertRaises(
@@ -438,7 +438,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
 
         self.assertTrue('payload' in exception.invalid_property)
 
-    def test_should_fail_already_expired(self):
+    def test_should_raise_already_expired(self):
         self.secret_req['expiration'] = '2004-02-28T19:14:44.180394'
 
         exception = self.assertRaises(
@@ -449,7 +449,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
 
         self.assertEqual('expiration', exception.invalid_property)
 
-    def test_should_fail_expiration_nonsense(self):
+    def test_should_raise_expiration_nonsense(self):
         self.secret_req['expiration'] = 'nonsense'
 
         exception = self.assertRaises(
@@ -460,7 +460,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
 
         self.assertEqual('expiration', exception.invalid_property)
 
-    def test_should_fail_all_nulls(self):
+    def test_should_raise_all_nulls(self):
         self.secret_req = {'name': None,
                            'algorithm': None,
                            'bit_length': None,
@@ -473,7 +473,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
             self.order_req,
         )
 
-    def test_should_fail_all_empties(self):
+    def test_should_raise_all_empties(self):
         self.secret_req = {'name': '',
                            'algorithm': '',
                            'bit_length': '',
@@ -486,7 +486,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
             self.order_req,
         )
 
-    def test_should_fail_no_payload_content_type(self):
+    def test_should_raise_no_payload_content_type(self):
         del self.secret_req['payload_content_type']
 
         self.assertRaises(
@@ -495,7 +495,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
             self.order_req,
         )
 
-    def test_should_fail_unsupported_payload_content_type(self):
+    def test_should_raise_unsupported_payload_content_type(self):
         self.secret_req['payload_content_type'] = 'text/plain'
 
         self.assertRaises(
@@ -504,7 +504,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
             self.order_req,
         )
 
-    def test_should_fail_empty_mode(self):
+    def test_should_raise_empty_mode(self):
         del self.secret_req['mode']
 
         exception = self.assertRaises(
@@ -515,7 +515,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
 
         self.assertEqual('mode', exception.invalid_field)
 
-    def test_should_fail_empty_algorithm(self):
+    def test_should_raise_empty_algorithm(self):
         del self.secret_req['algorithm']
 
         exception = self.assertRaises(
@@ -526,14 +526,14 @@ class WhenTestingOrderValidator(testtools.TestCase):
 
         self.assertEqual('algorithm', exception.invalid_field)
 
-    def test_should_fail_invalid_json_data_type(self):
+    def test_should_raise_invalid_json_data_type(self):
         self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
             [],
         )
 
-    def test_should_fail_payload_in_secret(self):
+    def test_should_raise_payload_in_secret(self):
         self.order_req['secret']['payload'] = "YWJjZGVmZw=="
         self.order_req['secret']['payload_content_encoding'] = 'base64'
 
@@ -579,7 +579,7 @@ class WhenTestingContainerValidator(testtools.TestCase):
         self.container_req['name'] = '    '
         self.validator.validate(self.container_req)
 
-    def test_should_fail_no_type(self):
+    def test_should_raise_no_type(self):
         del self.container_req['type']
 
         self.assertRaises(
@@ -591,7 +591,7 @@ class WhenTestingContainerValidator(testtools.TestCase):
         #TODO(hgedikli): figure out why invalid_property is null here
         #self.assertEqual('type', e.exception.invalid_property)
 
-    def test_should_fail_empty_type(self):
+    def test_should_raise_empty_type(self):
         self.container_req['type'] = ''
 
         exception = self.assertRaises(
@@ -602,7 +602,7 @@ class WhenTestingContainerValidator(testtools.TestCase):
 
         self.assertEqual('type', exception.invalid_property)
 
-    def test_should_fail_not_supported_type(self):
+    def test_should_raise_not_supported_type(self):
         self.container_req['type'] = 'testtype'
 
         exception = self.assertRaises(
@@ -613,7 +613,7 @@ class WhenTestingContainerValidator(testtools.TestCase):
 
         self.assertEqual('type', exception.invalid_property)
 
-    def test_should_fail_numeric_name(self):
+    def test_should_raise_numeric_name(self):
         self.container_req['name'] = 123
 
         exception = self.assertRaises(
@@ -624,7 +624,7 @@ class WhenTestingContainerValidator(testtools.TestCase):
 
         self.assertEqual('name', exception.invalid_property)
 
-    def test_should_fail_all_nulls(self):
+    def test_should_raise_all_nulls(self):
         self.container_req = {'name': None,
                               'type': None,
                               'bit_length': None,
@@ -636,7 +636,7 @@ class WhenTestingContainerValidator(testtools.TestCase):
             self.container_req,
         )
 
-    def test_should_fail_all_empties(self):
+    def test_should_raise_all_empties(self):
         self.container_req = {'name': '',
                               'type': '',
                               'secret_refs': []}
@@ -651,7 +651,7 @@ class WhenTestingContainerValidator(testtools.TestCase):
         self.container_req['secret_refs'] = []
         self.validator.validate(self.container_req)
 
-    def test_should_fail_no_secret_ref_in_secret_refs(self):
+    def test_should_raise_no_secret_ref_in_secret_refs(self):
         del self.container_req['secret_refs'][0]['secret_ref']
 
         self.assertRaises(
@@ -660,7 +660,7 @@ class WhenTestingContainerValidator(testtools.TestCase):
             self.container_req,
         )
 
-    def test_should_fail_empty_secret_ref_in_secret_refs(self):
+    def test_should_raise_empty_secret_ref_in_secret_refs(self):
         self.container_req['secret_refs'][0]['secret_ref'] = ''
 
         self.assertRaises(
@@ -669,7 +669,7 @@ class WhenTestingContainerValidator(testtools.TestCase):
             self.container_req,
         )
 
-    def test_should_fail_numeric_secret_ref_in_secret_refs(self):
+    def test_should_raise_numeric_secret_ref_in_secret_refs(self):
         self.container_req['secret_refs'][0]['secret_ref'] = 123
 
         self.assertRaises(
@@ -678,7 +678,7 @@ class WhenTestingContainerValidator(testtools.TestCase):
             self.container_req,
         )
 
-    def test_should_fail_duplicate_names_in_secret_refs(self):
+    def test_should_raise_duplicate_names_in_secret_refs(self):
         self.container_req['secret_refs'].append(
             self.container_req['secret_refs'][0])
 
@@ -722,7 +722,7 @@ class WhenTestingRSAContainerValidator(testtools.TestCase):
     def test_should_validate_all_fields(self):
         self.validator.validate(self.container_req)
 
-    def test_should_fail_no_names_in_secret_refs(self):
+    def test_should_raise_no_names_in_secret_refs(self):
         del self.container_req['secret_refs'][0]['name']
 
         exception = self.assertRaises(
@@ -733,7 +733,7 @@ class WhenTestingRSAContainerValidator(testtools.TestCase):
 
         self.assertEqual('secret_refs', exception.invalid_property)
 
-    def test_should_fail_empty_names_in_secret_refs(self):
+    def test_should_raise_empty_names_in_secret_refs(self):
         self.container_req['secret_refs'][0]['name'] = ''
 
         exception = self.assertRaises(
@@ -744,7 +744,7 @@ class WhenTestingRSAContainerValidator(testtools.TestCase):
 
         self.assertEqual('secret_refs', exception.invalid_property)
 
-    def test_should_fail_unsupported_names_in_secret_refs(self):
+    def test_should_raise_unsupported_names_in_secret_refs(self):
         self.container_req['secret_refs'][0]['name'] = 'testttt'
 
         exception = self.assertRaises(
@@ -755,7 +755,7 @@ class WhenTestingRSAContainerValidator(testtools.TestCase):
 
         self.assertEqual('secret_refs', exception.invalid_property)
 
-    def test_should_fail_more_than_3_secret_refs(self):
+    def test_should_raise_more_than_3_secret_refs(self):
         new_secret_ref = {
             'name': 'new secret ref',
             'secret_ref': '234234'
@@ -883,14 +883,14 @@ class WhenTestingTransportKeyValidator(testtools.TestCase):
 
         self.validator = validators.NewTransportKeyValidator()
 
-    def test_should_fail_with_invalid_json_data_type(self):
+    def test_should_raise_with_invalid_json_data_type(self):
         self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
             []
         )
 
-    def test_should_fail_with_empty_transport_key(self):
+    def test_should_raise_with_empty_transport_key(self):
         self.transport_req['transport_key'] = ''
 
         exception = self.assertRaises(

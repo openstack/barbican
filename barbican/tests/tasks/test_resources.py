@@ -102,7 +102,7 @@ class WhenBeginningOrder(testtools.TestCase):
                 self.tenant, mock.ANY
             )
 
-    def test_should_fail_during_retrieval(self):
+    def test_should_raise_during_retrieval(self):
         # Force an error during the order retrieval phase.
         self.order_repo.get = mock.MagicMock(return_value=None,
                                              side_effect=ValueError())
@@ -117,7 +117,7 @@ class WhenBeginningOrder(testtools.TestCase):
         # Order state doesn't change because can't retrieve it to change it.
         self.assertEqual(models.States.PENDING, self.order.status)
 
-    def test_should_fail_during_processing(self):
+    def test_should_raise_during_processing(self):
         # Force an error during the processing handler phase.
         self.tenant_repo.get = mock.MagicMock(return_value=None,
                                               side_effect=ValueError())
@@ -135,8 +135,8 @@ class WhenBeginningOrder(testtools.TestCase):
                              'site administrator.'), self.order.error_reason)
 
     @mock.patch('barbican.plugin.resources.generate_secret')
-    def test_should_fail_during_success_report_fail(self,
-                                                    mock_generate_secret):
+    def test_should_raise_during_success_report_fail(self,
+                                                     mock_generate_secret):
         mock_generate_secret.return_value = self.secret
 
         # Force an error during the processing handler phase.
@@ -150,7 +150,7 @@ class WhenBeginningOrder(testtools.TestCase):
             self.keystone_id,
         )
 
-    def test_should_fail_during_error_report_fail(self):
+    def test_should_raise_during_error_report_fail(self):
         # Force an error during the error-report handling after
         # error in processing handler phase.
 

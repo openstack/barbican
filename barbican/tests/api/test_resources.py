@@ -340,7 +340,7 @@ class BaseSecretsResource(FunctionalTest):
                 self.payload_content_encoding
         self.app.post_json('/%s/secrets/' % self.keystone_id, self.secret_req)
 
-    def _test_should_fail_due_to_payload_too_large(self):
+    def _test_should_raise_due_to_payload_too_large(self):
         big_text = ''.join(['A' for x
                             in xrange(validators.DEFAULT_MAX_SECRET_BYTES +
                                       10)])
@@ -362,7 +362,7 @@ class BaseSecretsResource(FunctionalTest):
         )
         self.assertEqual(resp.status_int, 413)
 
-    def _test_should_fail_due_to_empty_payload(self):
+    def _test_should_raise_due_to_empty_payload(self):
         self.secret_req = {'name': self.name,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
@@ -399,13 +399,13 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
     def test_should_add_new_secret_payload_almost_too_large(self):
         self._test_should_add_secret_payload_almost_too_large()
 
-    def test_should_fail_due_to_payload_too_large(self):
-        self._test_should_fail_due_to_payload_too_large()
+    def test_should_raise_due_to_payload_too_large(self):
+        self._test_should_raise_due_to_payload_too_large()
 
-    def test_should_fail_due_to_empty_payload(self):
-        self._test_should_fail_due_to_empty_payload()
+    def test_should_raise_due_to_empty_payload(self):
+        self._test_should_raise_due_to_empty_payload()
 
-    def test_should_fail_due_to_unsupported_payload_content_type(self):
+    def test_should_raise_due_to_unsupported_payload_content_type(self):
         self.secret_req = {'name': self.name,
                            'payload_content_type': 'somethingbogushere',
                            'algorithm': self.secret_algorithm,
@@ -528,11 +528,11 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
     def test_should_add_new_secret_payload_almost_too_large(self):
         self._test_should_add_secret_payload_almost_too_large()
 
-    def test_should_fail_due_to_payload_too_large(self):
-        self._test_should_fail_due_to_payload_too_large()
+    def test_should_raise_due_to_payload_too_large(self):
+        self._test_should_raise_due_to_payload_too_large()
 
-    def test_should_fail_due_to_empty_payload(self):
-        self._test_should_fail_due_to_empty_payload()
+    def test_should_raise_due_to_empty_payload(self):
+        self._test_should_raise_due_to_empty_payload()
 
     def test_create_secret_fails_with_binary_payload_no_encoding(self):
         self.secret_req = {
@@ -998,7 +998,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
                                      'base64', self.secret.to_dict_fields,
                                      self.secret, self.tenant, mock.ANY)
 
-    def test_should_fail_to_put_secret_with_unsupported_encoding(self):
+    def test_should_raise_to_put_secret_with_unsupported_encoding(self):
         self.secret.encrypted_data = []
         resp = self.app.put(
             '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
@@ -1013,7 +1013,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.assertEqual(resp.status_int, 400)
 
-    def test_should_fail_put_secret_as_json(self):
+    def test_should_raise_put_secret_as_json(self):
         self.secret.encrypted_data = []
         resp = self.app.put(
             '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
@@ -1027,7 +1027,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.assertEqual(resp.status_int, 415)
 
-    def test_should_fail_put_secret_not_found(self):
+    def test_should_raise_put_secret_not_found(self):
         # Force error, due to secret not found.
         self.secret_repo.get.return_value = None
 
@@ -1041,7 +1041,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.assertEqual(resp.status_int, 404)
 
-    def test_should_fail_put_secret_no_payload(self):
+    def test_should_raise_put_secret_no_payload(self):
         self.secret.encrypted_data = []
         resp = self.app.put(
             '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
@@ -1052,7 +1052,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.assertEqual(resp.status_int, 400)
 
-    def test_should_fail_put_secret_with_existing_datum(self):
+    def test_should_raise_put_secret_with_existing_datum(self):
         # Force error due to secret already having data
         self.secret.encrypted_data = [self.datum]
 
@@ -1064,7 +1064,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         )
         self.assertEqual(resp.status_int, 409)
 
-    def test_should_fail_due_to_empty_payload(self):
+    def test_should_raise_due_to_empty_payload(self):
         self.secret.encrypted_data = []
 
         resp = self.app.put(
@@ -1075,7 +1075,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         )
         self.assertEqual(resp.status_int, 400)
 
-    def test_should_fail_due_to_plain_text_too_large(self):
+    def test_should_raise_due_to_plain_text_too_large(self):
         big_text = ''.join(['A' for x in xrange(
             2 * validators.DEFAULT_MAX_SECRET_BYTES)])
 
@@ -1177,7 +1177,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         order = args[0]
         self.assertIsInstance(order, models.Order)
 
-    def test_should_fail_add_new_order_no_secret(self):
+    def test_should_raise_add_new_order_no_secret(self):
         resp = self.app.post_json(
             '/%s/orders/' % self.tenant_keystone_id,
             {},
@@ -1185,7 +1185,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         )
         self.assertEqual(resp.status_int, 400)
 
-    def test_should_fail_add_new_order_bad_json(self):
+    def test_should_raise_add_new_order_bad_json(self):
         resp = self.app.post(
             '/%s/orders/' % self.tenant_keystone_id,
             '',
@@ -1193,7 +1193,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         )
         self.assertEqual(resp.status_int, 400)
 
-    def test_should_fail_add_new_order_unsupported_field(self):
+    def test_should_raise_add_new_order_unsupported_field(self):
         # Using unsupported algorithm field for this test
         self.unsupported_req = {
             'secret': {
@@ -1546,7 +1546,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
         container = args[0]
         self.assertIsInstance(container, models.Container)
 
-    def test_should_fail_container_bad_json(self):
+    def test_should_raise_container_bad_json(self):
         resp = self.app.post(
             '/%s/containers/' % self.tenant_keystone_id,
             '',

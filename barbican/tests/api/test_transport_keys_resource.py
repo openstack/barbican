@@ -219,7 +219,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
         order = args[0]
         self.assertIsInstance(order, models.TransportKey)
 
-    def test_should_fail_add_new_transport_key_no_secret(self):
+    def test_should_raise_add_new_transport_key_no_secret(self):
         resp = self.app.post_json(
             '/%s/transport_keys/' % self.keystone_id,
             {},
@@ -227,7 +227,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
         )
         self.assertEqual(resp.status_int, 400)
 
-    def test_should_fail_add_new_transport_key_bad_json(self):
+    def test_should_raise_add_new_transport_key_bad_json(self):
         resp = self.app.post(
             '/%s/transport_keys/' % self.keystone_id,
             '',
