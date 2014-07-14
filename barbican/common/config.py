@@ -18,14 +18,10 @@ Configuration setup for Barbican.
 """
 
 import logging
-import logging.config
-import logging.handlers
 import os
-import sys
 
 from oslo.config import cfg
 
-from barbican.openstack.common import gettextutils as u
 import barbican.version
 
 CONF = cfg.CONF
@@ -52,49 +48,6 @@ def parse_args(args=None, usage=None, default_config_files=None):
 
     CONF.pydev_debug_host = os.environ.get('PYDEV_DEBUG_HOST')
     CONF.pydev_debug_port = os.environ.get('PYDEV_DEBUG_PORT')
-
-
-def setup_logging():
-    """Sets up the logging options."""
-
-    if CONF.log_config_append:
-        # Use a logging configuration file for all settings...
-        if os.path.exists(CONF.log_config_append):
-            logging.config.fileConfig(CONF.log_config_append)
-            return
-        else:
-            raise RuntimeError("Unable to locate specified logging "
-                               "config file: %s" % CONF.log_config_append)
-
-    root_logger = logging.root
-    if CONF.debug:
-        root_logger.setLevel(logging.DEBUG)
-    elif CONF.verbose:
-        root_logger.setLevel(logging.INFO)
-    else:
-        root_logger.setLevel(logging.WARNING)
-
-    formatter = logging.Formatter(CONF.log_format, CONF.log_date_format)
-
-    if CONF.use_syslog:
-        try:
-            facility = getattr(logging.handlers.SysLogHandler,
-                               CONF.syslog_log_facility)
-        except AttributeError:
-            raise ValueError(u._("Invalid syslog facility"))
-
-        handler = logging.handlers.SysLogHandler(address='/dev/log',
-                                                 facility=facility)
-    elif CONF.log_file:
-        logfile = CONF.log_file
-        if CONF.log_dir:
-            logfile = os.path.join(CONF.log_dir, logfile)
-        handler = logging.handlers.WatchedFileHandler(logfile)
-    else:
-        handler = logging.StreamHandler(sys.stdout)
-
-    handler.setFormatter(formatter)
-    root_logger.addHandler(handler)
 
 
 def setup_remote_pydev_debug():
