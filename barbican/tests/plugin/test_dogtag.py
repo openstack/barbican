@@ -58,7 +58,8 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
         if not imports_ok:
             self.skipTest("Dogtag imports not available")
         key_spec = sstore.KeySpec(sstore.KeyAlgorithm.AES, 128)
-        self.plugin.generate_symmetric_key(key_spec)
+        context = mock.MagicMock()
+        self.plugin.generate_symmetric_key(key_spec, context)
 
         self.keyclient_mock.generate_symmetric_key.assert_called_once_with(
             mock.ANY,
@@ -70,10 +71,12 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
         if not imports_ok:
             self.skipTest("Dogtag imports not available")
         key_spec = sstore.KeySpec(sstore.KeyAlgorithm.EC, 192)
+        context = mock.MagicMock()
         self.assertRaises(
             dogtag_import.DogtagPluginAlgorithmException,
             self.plugin.generate_symmetric_key,
-            key_spec
+            key_spec,
+            context
         )
 
     def test_raises_error_with_no_pem_path(self):
@@ -113,11 +116,14 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
         if not imports_ok:
             self.skipTest("Dogtag imports not available")
         payload = 'encrypt me!!'
+        key_spec = mock.MagicMock()
+        content_type = mock.MagicMock()
+        context = mock.MagicMock()
         secret_dto = sstore.SecretDTO(sstore.SecretType.SYMMETRIC,
-                                      sstore.KeyFormat.RAW,
                                       payload,
-                                      mock.MagicMock())
-        self.plugin.store_secret(secret_dto)
+                                      key_spec,
+                                      content_type)
+        self.plugin.store_secret(secret_dto, context)
         self.keyclient_mock.archive_key.assert_called_once_with(
             mock.ANY,
             "passPhrase",
@@ -128,14 +134,15 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
     def test_get_secret(self):
         if not imports_ok:
             self.skipTest("Dogtag imports not available")
+        key_spec = mock.MagicMock()
+        context = mock.MagicMock()
         secret_metadata = {
-            dogtag_import.DogtagPlugin.SECRET_FORMAT: sstore.KeyFormat.RAW,
             dogtag_import.DogtagPlugin.SECRET_TYPE:
             sstore.SecretType.SYMMETRIC,
-            dogtag_import.DogtagPlugin.SECRET_KEYSPEC: mock.MagicMock(),
+            dogtag_import.DogtagPlugin.SECRET_KEYSPEC: key_spec,
             dogtag_import.DogtagPlugin.KEY_ID: 'key1'
         }
-        self.plugin.get_secret(secret_metadata)
+        self.plugin.get_secret(secret_metadata, context)
 
         self.keyclient_mock.retrieve_key.assert_called_once_with('key1')
 

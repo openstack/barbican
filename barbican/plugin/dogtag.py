@@ -65,7 +65,6 @@ class DogtagPlugin(sstore.SecretStoreBase):
     # metadata constants
     KEY_ID = "key_id"
     SECRET_TYPE = "secret_type"
-    SECRET_FORMAT = "secret_format"
     SECRET_KEYSPEC = "secret_keyspec"
 
     def __init__(self, conf=CONF):
@@ -126,7 +125,7 @@ class DogtagPlugin(sstore.SecretStoreBase):
             self.keyclient.set_transport_cert(
                 DogtagPlugin.TRANSPORT_NICK)
 
-    def store_secret(self, secret_dto):
+    def store_secret(self, secret_dto, context):
         """Store a secret in the DRM
 
         This will likely require another parameter which includes the wrapped
@@ -149,11 +148,10 @@ class DogtagPlugin(sstore.SecretStoreBase):
                                               key_algorithm=None,
                                               key_size=None)
         return {DogtagPlugin.SECRET_TYPE: secret_dto.type,
-                DogtagPlugin.SECRET_FORMAT: secret_dto.format,
                 DogtagPlugin.SECRET_KEYSPEC: secret_dto.key_spec,
                 DogtagPlugin.KEY_ID: response.get_key_id()}
 
-    def get_secret(self, secret_metadata):
+    def get_secret(self, secret_metadata, context):
         """Retrieve a secret from the DRM
 
         The secret_metadata is simply the dict returned by a store_secret() or
@@ -175,10 +173,13 @@ class DogtagPlugin(sstore.SecretStoreBase):
         key_id = secret_metadata[DogtagPlugin.KEY_ID]
 
         recovered_key = self.keyclient.retrieve_key(key_id)
+
+        # TODO(alee) remove final field when content_type is removed
+        # from secret_dto
         ret = sstore.SecretDTO(secret_metadata[DogtagPlugin.SECRET_TYPE],
-                               secret_metadata[DogtagPlugin.SECRET_FORMAT],
                                recovered_key,
-                               secret_metadata[DogtagPlugin.SECRET_KEYSPEC])
+                               secret_metadata[DogtagPlugin.SECRET_KEYSPEC],
+                               None)
 
         return ret
 
@@ -190,7 +191,7 @@ class DogtagPlugin(sstore.SecretStoreBase):
         """
         pass
 
-    def generate_symmetric_key(self, key_spec):
+    def generate_symmetric_key(self, key_spec, context):
         """Generate a symmetric key
 
         This calls generate_symmetric_key() on the DRM passing in the
@@ -215,11 +216,10 @@ class DogtagPlugin(sstore.SecretStoreBase):
             key_spec.bit_length,
             usages)
         return {DogtagPlugin.SECRET_KEYSPEC: key_spec,
-                DogtagPlugin.SECRET_FORMAT: sstore.KeyFormat.RAW,
                 DogtagPlugin.SECRET_TYPE: sstore.SecretType.SYMMETRIC,
                 DogtagPlugin.KEY_ID: response.get_key_id()}
 
-    def generate_asymmetric_key(self, key_spec):
+    def generate_asymmetric_key(self, key_spec, context):
         """Generate an asymmetric key."""
         raise NotImplementedError(
             "Feature not yet implemented by dogtag plugin")
