@@ -16,6 +16,8 @@
 """
 Defines database models for Barbican
 """
+import six
+
 import sqlalchemy as sa
 from sqlalchemy.ext import compiler
 from sqlalchemy.ext import declarative
@@ -161,6 +163,14 @@ class ModelBase(object):
         """Sub-class hook method: return dict of fields."""
         return {}
 
+    def _iso_to_datetime(self, expiration):
+        """Convert ISO formatted string to datetime."""
+        if isinstance(expiration, six.string_types):
+            expiration_iso = timeutils.parse_isotime(expiration.strip())
+            expiration = timeutils.normalize_time(expiration_iso)
+
+        return expiration
+
 
 class TenantSecret(BASE, ModelBase):
     """Represents an association between a Tenant and a Secret."""
@@ -256,7 +266,9 @@ class Secret(BASE, ModelBase):
 
         if parsed_request:
             self.name = parsed_request.get('name')
-            self.expiration = parsed_request.get('expiration')
+            expiration = self._iso_to_datetime(parsed_request.get
+                                               ('expiration'))
+            self.expiration = expiration
             self.algorithm = parsed_request.get('algorithm')
             self.bit_length = parsed_request.get('bit_length')
             self.mode = parsed_request.get('mode')
