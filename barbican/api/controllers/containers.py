@@ -130,6 +130,7 @@ class ContainersController(object):
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('Container creation'))
     @controllers.enforce_rbac('containers:post')
+    @controllers.enforce_content_types(['application/json'])
     def on_post(self, keystone_id, **kwargs):
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)

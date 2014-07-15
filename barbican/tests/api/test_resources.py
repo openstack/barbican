@@ -1189,7 +1189,8 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         resp = self.app.post(
             '/%s/orders/' % self.tenant_keystone_id,
             '',
-            expect_errors=True
+            expect_errors=True,
+            headers={'Content-Type': 'application/json'},
         )
         self.assertEqual(resp.status_int, 400)
 
@@ -1212,6 +1213,14 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         )
 
         self.assertEqual(resp.status_int, 400)
+
+    def test_should_raise_add_new_order_no_content_type_header(self):
+        resp = self.app.post(
+            '/%s/orders/' % self.tenant_keystone_id,
+            self.order_req,
+            expect_errors=True,
+        )
+        self.assertEqual(resp.status_int, 415)
 
 
 class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
@@ -1550,9 +1559,18 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
         resp = self.app.post(
             '/%s/containers/' % self.tenant_keystone_id,
             '',
-            expect_errors=True
+            expect_errors=True,
+            headers={'Content-Type': 'application/json'},
         )
         self.assertEqual(resp.status_int, 400)
+
+    def test_should_raise_container_no_content_type_header(self):
+        resp = self.app.post(
+            '/%s/containers/' % self.tenant_keystone_id,
+            self.container_req,
+            expect_errors=True,
+        )
+        self.assertEqual(resp.status_int, 415)
 
     def test_should_throw_exception_when_secret_ref_doesnt_exist(self):
         self.secret_repo.get.return_value = None

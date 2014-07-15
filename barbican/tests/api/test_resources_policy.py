@@ -98,7 +98,7 @@ class BaseTestCase(testtools.TestCase):
         self.policy_enforcer.load_rules(True)
         self.resp = mock.MagicMock()
 
-    def _generate_req(self, roles=None, accept=None):
+    def _generate_req(self, roles=None, accept=None, content_type=None):
         """Generate a fake HTTP request with security context added to it."""
         req = mock.MagicMock()
         req.get_param.return_value = None
@@ -111,6 +111,7 @@ class BaseTestCase(testtools.TestCase):
         }
         req.environ = {}
         req.environ['barbican.context'] = context.RequestContext(**kwargs)
+        req.content_type = content_type
         if accept:
             req.accept.header_value.return_value = accept
         else:
@@ -147,7 +148,8 @@ class BaseTestCase(testtools.TestCase):
         #    _assert_post_rbac_exception() above.
         return exc.HTTPInternalServerError(message='Read Error')
 
-    def _assert_pass_rbac(self, roles, method_under_test, accept=None):
+    def _assert_pass_rbac(self, roles, method_under_test, accept=None,
+                          content_type=None):
         """Assert that RBAC authorization rules passed for the specified roles.
 
         :param roles: List of roles to check, one at a time
@@ -157,7 +159,8 @@ class BaseTestCase(testtools.TestCase):
         """
         for role in roles:
             self.req = self._generate_req(roles=[role] if role else [],
-                                          accept=accept)
+                                          accept=accept,
+                                          content_type=content_type)
 
             # Force an exception early past the RBAC passing.
             self.req.body_file = self._generate_stream_for_exit()
@@ -167,7 +170,8 @@ class BaseTestCase(testtools.TestCase):
 
             self.setUp()  # Need to re-setup
 
-    def _assert_fail_rbac(self, roles, method_under_test, accept=None):
+    def _assert_fail_rbac(self, roles, method_under_test, accept=None,
+                          content_type=None):
         """Assert that RBAC rules failed for one of the specified roles.
 
         :param roles: List of roles to check, one at a time
@@ -177,7 +181,8 @@ class BaseTestCase(testtools.TestCase):
         """
         for role in roles:
             self.req = self._generate_req(roles=[role] if role else [],
-                                          accept=accept)
+                                          accept=accept,
+                                          content_type=content_type)
 
             exception = self.assertRaises(exc.HTTPForbidden, method_under_test)
             self.assertEqual(403, exception.status_int)
@@ -247,19 +252,23 @@ class WhenTestingSecretsResource(BaseTestCase):
         self.assertIsNotNone(self.policy_enforcer.rules)
 
     def test_should_pass_create_secret(self):
-        self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_post)
+        self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_post,
+                               content_type='application/json')
 
     def test_should_raise_create_secret(self):
         self._assert_fail_rbac([None, 'audit', 'observer', 'bogus'],
-                               self._invoke_on_post)
+                               self._invoke_on_post,
+                               content_type='application/json')
 
     def test_should_pass_get_secrets(self):
         self._assert_pass_rbac(['admin', 'observer', 'creator'],
-                               self._invoke_on_get)
+                               self._invoke_on_get,
+                               content_type='application/json')
 
     def test_should_raise_get_secrets(self):
         self._assert_fail_rbac([None, 'audit', 'bogus'],
-                               self._invoke_on_get)
+                               self._invoke_on_get,
+                               content_type='application/json')
 
     def _invoke_on_post(self):
         self.resource.on_post(self.req, self.resp, self.keystone_id)
@@ -296,7 +305,8 @@ class WhenTestingSecretResource(BaseTestCase):
     def test_should_pass_decrypt_secret(self):
         self._assert_pass_rbac(['admin', 'observer', 'creator'],
                                self._invoke_on_get,
-                               accept='notjsonaccepttype')
+                               accept='notjsonaccepttype',
+                               content_type='application/json')
 
     def test_should_raise_decrypt_secret(self):
         self._assert_fail_rbac([None, 'audit', 'bogus'],
@@ -312,11 +322,13 @@ class WhenTestingSecretResource(BaseTestCase):
                                self._invoke_on_get)
 
     def test_should_pass_put_secret(self):
-        self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_put)
+        self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_put,
+                               content_type="application/octet-stream")
 
     def test_should_raise_put_secret(self):
         self._assert_fail_rbac([None, 'audit', 'observer', 'bogus'],
-                               self._invoke_on_put)
+                               self._invoke_on_put,
+                               content_type="application/octet-stream")
 
     def test_should_pass_delete_secret(self):
         self._assert_pass_rbac(['admin'], self._invoke_on_delete)
@@ -361,7 +373,8 @@ class WhenTestingOrdersResource(BaseTestCase):
         self.assertIsNotNone(self.policy_enforcer.rules)
 
     def test_should_pass_create_order(self):
-        self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_post)
+        self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_post,
+                               content_type='application/json')
 
     def test_should_raise_create_order(self):
         self._assert_fail_rbac([None, 'audit', 'observer', 'bogus'],
