@@ -14,6 +14,7 @@ import pecan
 
 from barbican import api
 from barbican.api import controllers
+from barbican.api.controllers import consumers
 from barbican.common import exception
 from barbican.common import resources as res
 from barbican.common import utils
@@ -25,7 +26,7 @@ from barbican.openstack.common import gettextutils as u
 LOG = utils.getLogger(__name__)
 
 
-def _container_not_found():
+def container_not_found():
     """Throw exception indicating container not found."""
     pecan.abort(404, u._('Not Found. Sorry but your container is in '
                          'another castle.'))
@@ -34,11 +35,17 @@ def _container_not_found():
 class ContainerController(object):
     """Handles Container entity retrieval and deletion requests."""
 
-    def __init__(self, container_id, tenant_repo=None, container_repo=None):
+    def __init__(self, container_id, tenant_repo=None, container_repo=None,
+                 consumer_repo=None):
+        #TODO(rm_work): refactor this to use repo-factory method
         self.container_id = container_id
         self.tenant_repo = tenant_repo or repo.TenantRepo()
         self.container_repo = container_repo or repo.ContainerRepo()
+        self.consumer_repo = consumer_repo or repo.ContainerConsumerRepo()
         self.validator = validators.ContainerValidator()
+        self.consumers = consumers.ContainerConsumersController(
+            container_id, self.tenant_repo, self.consumer_repo,
+            self.container_repo)
 
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Container retrieval'))
@@ -48,7 +55,7 @@ class ContainerController(object):
                                             keystone_id=keystone_id,
                                             suppress_exception=True)
         if not container:
-            _container_not_found()
+            container_not_found()
 
         dict_fields = container.to_dict_fields()
 
@@ -72,24 +79,26 @@ class ContainerController(object):
             )
         except exception.NotFound:
             LOG.exception('Problem deleting container')
-            _container_not_found()
+            container_not_found()
 
 
 class ContainersController(object):
     """Handles Container creation requests."""
 
     def __init__(self, tenant_repo=None, container_repo=None,
-                 secret_repo=None):
-
+                 secret_repo=None, consumer_repo=None):
+        #TODO(rm_work): refactor this to use repo-factory method
         self.tenant_repo = tenant_repo or repo.TenantRepo()
         self.container_repo = container_repo or repo.ContainerRepo()
         self.secret_repo = secret_repo or repo.SecretRepo()
+        self.consumer_repo = consumer_repo or repo.ContainerConsumerRepo()
         self.validator = validators.ContainerValidator()
 
     @pecan.expose()
     def _lookup(self, container_id, *remainder):
-        return ContainerController(container_id, self.tenant_repo,
-                                   self.container_repo), remainder
+        return (ContainerController(container_id, self.tenant_repo,
+                                    self.container_repo, self.consumer_repo),
+                remainder)
 
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Containers(s) retrieval'))

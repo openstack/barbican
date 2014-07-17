@@ -110,3 +110,29 @@ class WhenCreatingNewContainer(testtools.TestCase):
             'http://localhost:9110/123/secrets/123456/'
         container = models.Container(self.parsed_container)
         self.assertEqual(container.container_secrets[0].secret_id, '123456')
+
+
+class WhenCreatingNewConsumer(testtools.TestCase):
+    def setUp(self):
+        super(WhenCreatingNewConsumer, self).setUp()
+        self.parsed_consumer = {'name': 'name',
+                                'URL': 'URL'}
+        self.container_id = '12345container'
+
+    def test_new_consumer_is_created_from_dict(self):
+        consumer = models.ContainerConsumerMetadatum(self.container_id,
+                                                     self.parsed_consumer)
+        self.assertEqual(consumer.name, self.parsed_consumer['name'])
+        self.assertEqual(consumer.URL, self.parsed_consumer['URL'])
+        self.assertEqual(consumer.status, models.States.ACTIVE)
+
+    def test_new_consumer_has_correct_hash(self):
+        consumer_one = models.ContainerConsumerMetadatum(self.container_id,
+                                                         self.parsed_consumer)
+        consumer_two = models.ContainerConsumerMetadatum(self.container_id,
+                                                         self.parsed_consumer)
+        different_container = '67890container'
+        consumer_three = models.ContainerConsumerMetadatum(
+            different_container, self.parsed_consumer)
+        self.assertEqual(consumer_one.data_hash, consumer_two.data_hash)
+        self.assertNotEqual(consumer_one.data_hash, consumer_three.data_hash)

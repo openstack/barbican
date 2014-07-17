@@ -963,5 +963,47 @@ class WhenTestingTransportKeyValidator(testtools.TestCase):
         self.assertEqual('transport_key', exception.invalid_property)
 
 
+class WhenTestingConsumerValidator(testtools.TestCase):
+
+    def setUp(self):
+        super(WhenTestingConsumerValidator, self).setUp()
+
+        self.name = 'name'
+        self.URL = 'http://my.url/resource/UUID'
+        self.consumer_req = {'name': self.name,
+                             'URL': self.URL}
+        self.validator = validators.ContainerConsumerValidator()
+
+    def test_should_raise_with_invalid_json_data_type(self):
+        self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            []
+        )
+
+    def test_should_raise_with_missing_name(self):
+        consumer_req = {'URL': self.URL}
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            consumer_req
+        )
+
+        self.assertIn('\'name\'', exception.args[0])
+
+    def test_should_raise_with_missing_URL(self):
+        consumer_req = {'name': self.name}
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            consumer_req
+        )
+
+        self.assertIn('\'URL\'', exception.args[0])
+
+    def test_should_validate_all_fields(self):
+        self.validator.validate(self.consumer_req)
+
 if __name__ == '__main__':
     unittest.main()

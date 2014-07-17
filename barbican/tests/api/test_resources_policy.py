@@ -27,6 +27,7 @@ import mock
 from oslo.config import cfg
 from webob import exc
 
+from barbican.api.controllers import consumers
 from barbican.api.controllers import orders
 from barbican.api.controllers import secrets
 from barbican.api.controllers import versions
@@ -87,6 +88,14 @@ class OrdersResource(TestableResource):
 
 class OrderResource(TestableResource):
     controller_cls = orders.OrderController
+
+
+class ConsumersResource(TestableResource):
+    controller_cls = consumers.ContainerConsumersController
+
+
+class ConsumerResource(TestableResource):
+    controller_cls = consumers.ContainerConsumerController
 
 
 class BaseTestCase(testtools.TestCase):
@@ -440,3 +449,98 @@ class WhenTestingOrderResource(BaseTestCase):
 
     def _invoke_on_delete(self):
         self.resource.on_delete(self.req, self.resp, self.keystone_id)
+
+
+class WhenTestingConsumersResource(BaseTestCase):
+    """RBAC tests for the barbican.api.resources.ConsumersResource class."""
+    def setUp(self):
+        super(WhenTestingConsumersResource, self).setUp()
+
+        self.keystone_id = '12345tenant'
+        self.container_id = '12345container'
+
+        # Force an error on GET calls that pass RBAC, as we are not testing
+        #   such flows in this test module.
+        self.consumer_repo = mock.MagicMock()
+        get_by_container_id = mock.MagicMock(return_value=None,
+                                             side_effect=self
+                                             ._generate_get_error())
+        self.consumer_repo.get_by_container_id = get_by_container_id
+
+        self.resource = ConsumersResource(container_id=self.container_id,
+                                          tenant_repo=mock.MagicMock(),
+                                          consumer_repo=self.consumer_repo,
+                                          container_repo=mock.MagicMock())
+
+    def test_rules_should_be_loaded(self):
+        self.assertIsNotNone(self.policy_enforcer.rules)
+
+    def test_should_pass_create_consumer(self):
+        self._assert_pass_rbac(['admin'], self._invoke_on_post,
+                               content_type='application/json')
+
+    def test_should_raise_create_consumer(self):
+        self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
+                               self._invoke_on_post,
+                               content_type='application/json')
+
+    def test_should_pass_delete_consumer(self):
+        self._assert_pass_rbac(['admin'], self._invoke_on_delete,
+                               content_type='application/json')
+
+    def test_should_raise_delete_consumer(self):
+        self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
+                               self._invoke_on_delete)
+
+    def test_should_pass_get_consumers(self):
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               content_type='application/json')
+
+    def test_should_raise_get_consumers(self):
+        self._assert_fail_rbac([None, 'bogus'],
+                               self._invoke_on_get,
+                               content_type='application/json')
+
+    def _invoke_on_post(self):
+        self.resource.on_post(self.req, self.resp, self.keystone_id)
+
+    def _invoke_on_delete(self):
+        self.resource.on_delete(self.req, self.resp, self.keystone_id)
+
+    def _invoke_on_get(self):
+        self.resource.on_get(self.req, self.resp, self.keystone_id)
+
+
+class WhenTestingConsumerResource(BaseTestCase):
+    """RBAC tests for the barbican.api.resources.ConsumerResource class."""
+    def setUp(self):
+        super(WhenTestingConsumerResource, self).setUp()
+
+        self.keystone_id = '12345tenant'
+        self.consumer_id = '12345consumer'
+
+        # Force an error on GET calls that pass RBAC, as we are not testing
+        #   such flows in this test module.
+        self.consumer_repo = mock.MagicMock()
+        fail_method = mock.MagicMock(return_value=None,
+                                     side_effect=self._generate_get_error())
+        self.consumer_repo.get = fail_method
+
+        self.resource = ConsumerResource(consumer_id=self.consumer_id,
+                                         tenant_repo=mock.MagicMock(),
+                                         consumer_repo=self.consumer_repo)
+
+    def test_rules_should_be_loaded(self):
+        self.assertIsNotNone(self.policy_enforcer.rules)
+
+    def test_should_pass_get_consumer(self):
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get)
+
+    def test_should_raise_get_consumer(self):
+        self._assert_fail_rbac([None, 'bogus'],
+                               self._invoke_on_get)
+
+    def _invoke_on_get(self):
+        self.resource.on_get(self.req, self.resp, self.keystone_id)

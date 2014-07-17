@@ -339,8 +339,9 @@ class BaseRepo(object):
                 entity.save(session=session)
             except sqlalchemy.exc.IntegrityError:
                 LOG.exception('Problem saving entity for create')
-                raise exception.Duplicate("Entity ID %s already exists!"
-                                          % values['id'])
+                values_id = values['id'] if values else None
+                raise exception.Duplicate("Entity ID {0} already exists!"
+                                          .format(values_id))
         LOG.debug('Elapsed repo '
                   'create secret:{0}'.format(time.time() - start))  # DEBUG
 
@@ -855,6 +856,102 @@ class ContainerRepo(BaseRepo):
             .filter_by(deleted=False)\
             .join(models.Tenant, models.Container.tenant)\
             .filter(models.Tenant.keystone_id == keystone_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
+class ContainerConsumerRepo(BaseRepo):
+    """Repository for the Service entity."""
+
+    def get_by_container_id(self, container_id,
+                            offset_arg=None, limit_arg=None,
+                            suppress_exception=False, session=None):
+        """Returns a list of Consumers, ordered by the date they were
+        created at and paged based on the offset and limit fields. The
+        keystone_id is external-to-Barbican value assigned to the tenant
+        by Keystone.
+        """
+
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
+
+        session = self.get_session(session)
+
+        try:
+            query = session.query(models.ContainerConsumerMetadatum) \
+                           .order_by(models.ContainerConsumerMetadatum.name)
+            query = query.filter_by(deleted=False) \
+                         .filter(models.ContainerConsumerMetadatum.container_id
+                                 == container_id)
+            start = offset
+            end = offset + limit
+            LOG.debug('Retrieving from {0} to {1}'.format(start, end))
+            total = query.count()
+            entities = query[start:end]
+            LOG.debug('Number entities retrieved: {0} out of {1}'.format(
+                len(entities), total
+            ))
+
+        except sa_orm.exc.NoResultFound:
+            entities = None
+            total = 0
+            if not suppress_exception:
+                raise exception.NotFound("No %ss found"
+                                         % (self._do_entity_name()))
+
+        return entities, offset, limit, total
+
+    def get_by_values(self, container_id, name, URL, suppress_exception=False,
+                      show_deleted=False, session=None):
+        session = self.get_session(session)
+
+        try:
+            query = session.query(models.ContainerConsumerMetadatum) \
+                .filter_by(container_id=container_id) \
+                .filter_by(name=name).filter_by(URL=URL)
+            if not show_deleted:
+                query.filter_by(deleted=False)
+            consumer = query.one()
+        except sa_orm.exc.NoResultFound:
+            if not suppress_exception:
+                raise exception.NotFound("Could not find %s"
+                                         % (self._do_entity_name()))
+        except sa_orm.exc.MultipleResultsFound:
+            if not suppress_exception:
+                raise exception.NotFound("Found more than one %s"
+                                         % (self._do_entity_name()))
+        return consumer
+
+    def create_from(self, new_consumer):
+        try:
+            super(ContainerConsumerRepo, self).create_from(new_consumer)
+        except exception.Duplicate:
+            #This operation is idempotent, so log this and move on
+            LOG.debug("Consumer {0} already exists for container {1},"
+                      " continuing..."
+                      .format((new_consumer.name, new_consumer.URL),
+                              new_consumer.container_id))
+            #Get the existing entry and reuse it by clearing the deleted flags
+            existing_consumer = self.get_by_values(
+                new_consumer.container_id, new_consumer.name, new_consumer.URL,
+                show_deleted=True)
+            existing_consumer.deleted = False
+            existing_consumer.deleted_at = None
+            #We are not concerned about timing here -- set only, no reads
+            existing_consumer.save()
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "ContainerConsumer"
+
+    def _do_create_instance(self):
+        return models.ContainerConsumerMetadatum("uuid")
+
+    def _do_build_get_query(self, entity_id, keystone_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.ContainerConsumerMetadatum) \
+            .filter_by(id=entity_id).filter_by(deleted=False)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""

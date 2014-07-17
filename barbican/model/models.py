@@ -16,6 +16,7 @@
 """
 Defines database models for Barbican
 """
+import hashlib
 import six
 
 import sqlalchemy as sa
@@ -482,6 +483,7 @@ class Container(BASE, ModelBase):
                              name='container_types'))
     tenant_id = sa.Column(sa.String(36), sa.ForeignKey('tenants.id'),
                           nullable=False)
+    consumers = sa.orm.relationship("ContainerConsumerMetadatum")
 
     def __init__(self, parsed_request=None):
         """Creates a Container entity from a dict."""
@@ -525,7 +527,52 @@ class Container(BASE, ModelBase):
                         'secret_id': container_secret.secret_id,
                         'name': container_secret.name
                         if hasattr(container_secret, 'name') else None
-                    } for container_secret in self.container_secrets]}
+                    } for container_secret in self.container_secrets],
+                'consumers': [
+                    {
+                        'name': consumer.name,
+                        'URL': consumer.URL
+                    } for consumer in self.consumers if not consumer.deleted
+                ]}
+
+
+class ContainerConsumerMetadatum(BASE, ModelBase):
+    """Stores Consumer Registrations for Containers in the datastore.
+
+    Services can register interest in Containers. Services will provide a type
+    and a URL for the object that is using the Container.
+    """
+
+    __tablename__ = 'container_consumer_metadata'
+
+    container_id = sa.Column(sa.String(36), sa.ForeignKey('containers.id'),
+                             nullable=False)
+    name = sa.Column(sa.String(36))
+    URL = sa.Column(sa.String(500))
+    data_hash = sa.Column(sa.CHAR(64))
+
+    __table_args__ = (
+        sa.UniqueConstraint('data_hash',
+                            name='_consumer_hashed_container_name_url_uc'),
+        sa.Index('values_index', 'container_id', 'name', 'URL')
+    )
+
+    def __init__(self, container_id, parsed_request=None):
+        """Registers a Consumer to a Container"""
+        super(ContainerConsumerMetadatum, self).__init__()
+
+        if parsed_request:
+            self.container_id = container_id
+            self.name = parsed_request.get('name')
+            self.URL = parsed_request.get('URL')
+            hash_text = ''.join((self.container_id, self.name, self.URL))
+            self.data_hash = hashlib.sha256(hash_text).hexdigest()
+            self.status = States.ACTIVE
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {'name': self.name,
+                'URL': self.URL}
 
 
 class TransportKey(BASE, ModelBase):
@@ -563,7 +610,8 @@ class TransportKey(BASE, ModelBase):
 
 # Keep this tuple synchronized with the models in the file
 MODELS = [TenantSecret, Tenant, Secret, EncryptedDatum, Order, Container,
-          ContainerSecret, TransportKey, SecretStoreMetadatum, KEKDatum]
+          ContainerConsumerMetadatum, ContainerSecret, TransportKey,
+          SecretStoreMetadatum, KEKDatum]
 
 
 def register_models(engine):
