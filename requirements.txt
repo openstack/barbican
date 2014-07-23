@@ -15,7 +15,7 @@ pbr>=0.6,!=0.7,<1.0
 pecan>=0.6.0
 pycrypto>=2.6
 pysqlite
-python-keystoneclient>=0.9.0
+keystonemiddleware>=1.0.0
 six>=1.7.0
 SQLAlchemy>=0.7.8,<=0.9.99
 stevedore>=0.12
