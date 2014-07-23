@@ -507,9 +507,9 @@ class TenantRepo(BaseRepo):
             entity = query.one()
 
         except sa_orm.exc.NoResultFound:
-            LOG.exception("Problem getting Tenant {0}".format(keystone_id))
             entity = None
             if not suppress_exception:
+                LOG.exception("Problem getting Tenant {0}".format(keystone_id))
                 raise exception.NotFound("No %s found with keystone-ID %s"
                                          % (self._do_entity_name(),
                                             keystone_id))
