@@ -196,7 +196,7 @@ class SecretDTO(object):
 
     #TODO(john-wood-w) Remove 'content_type' once secret normalization work is
     #  completed.
-    def __init__(self, type, secret, key_spec, content_type):
+    def __init__(self, type, secret, key_spec, content_type, transport_key):
         """Creates a new SecretDTO.
 
         The secret is stored in the secret parameter. In the future this
@@ -207,11 +207,15 @@ class SecretDTO(object):
         :param key_spec: KeySpec key specifications
         :param content_type: Content type of the secret, one of MIME
                types such as 'text/plain' or 'application/octet-stream'
+        :param transport_key: presence of this parameter indicates that the
+               secret has been encrypted using a transport key.  The transport
+               key is a base64 encoded x509 transport certificate.
         """
         self.type = type
         self.secret = secret
         self.key_spec = key_spec
         self.content_type = content_type
+        self.transport_key = transport_key
 
 
 #TODO(john-wood-w) Remove this class once repository factory work is
@@ -378,8 +382,9 @@ class SecretStorePluginManager(named.NamedExtensionManager):
             invoke_kwds=invoke_kwargs
         )
 
-    def get_plugin_store(self, transport_key_needed=False):
+    def get_plugin_store(self, plugin_name=None, transport_key_needed=False):
         """Gets a secret store plugin.
+        :param: plugin_name: set to plugin_name to get specific plugin
         :param: transport_key_needed: set to True if a transport
         key is required.
         :returns: SecretStoreBase plugin implementation
@@ -387,6 +392,12 @@ class SecretStorePluginManager(named.NamedExtensionManager):
 
         if len(self.extensions) < 1:
             raise SecretStorePluginNotFound()
+
+        if plugin_name is not None:
+            for ext in self.extensions:
+                if utils.generate_fullname_for(ext.obj) == plugin_name:
+                    return ext.obj
+            raise SecretStoreSupportedPluginNotFound()
 
         if not transport_key_needed:
             return self.extensions[0].obj

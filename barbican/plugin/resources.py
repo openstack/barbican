@@ -17,9 +17,50 @@ from barbican.plugin.interface import secret_store
 from barbican.plugin.util import translations as tr
 
 
+def get_transport_key_model(repos, transport_key_needed):
+    key_model = None
+    if transport_key_needed:
+        # get_plugin_store() will throw an exception if no suitable
+        # plugin with transport key is found
+        store_plugin = secret_store.SecretStorePluginManager(). \
+            get_plugin_store(transport_key_needed=True)
+        plugin_name = utils.generate_fullname_for(store_plugin)
+
+        key_repo = repos.transport_key_repo
+        key_model = key_repo.get_latest_transport_key(plugin_name)
+
+        if not key_model or not store_plugin.is_transport_key_current(
+                key_model.transport_key):
+            # transport key does not exist or is not current.
+            # need to get a new transport key
+            transport_key = store_plugin.get_transport_key()
+            new_key_model = models.TransportKey(plugin_name, transport_key)
+            key_model = key_repo.create_from(new_key_model)
+    return key_model
+
+
+def get_plugin_name_and_transport_key(repos, transport_key_id):
+    plugin_name = None
+    transport_key = None
+    if transport_key_id is not None:
+        transport_key_model = repos.transport_key_repo.get(
+            entity_id=transport_key_id)
+        if transport_key_model is None:
+            raise ValueError("Invalid transport key ID provided")
+
+        plugin_name = transport_key_model.plugin_name
+        if plugin_name is None:
+            raise ValueError("Invalid plugin name for transport key")
+
+        transport_key = transport_key_model.transport_key
+
+    return plugin_name, transport_key
+
+
 def store_secret(unencrypted_raw, content_type_raw, content_encoding,
                  spec, secret_model, tenant_model, repos,
-                 transport_key_needed=False):
+                 transport_key_needed=False,
+                 transport_key_id=None):
     """Store a provided secret into secure backend."""
 
     # Create a secret model is one isn't provided.
@@ -35,30 +76,17 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
     #   leave. A subsequent call to this method should provide both the Secret
     #   entity created here *and* the secret data to store into it.
     if not unencrypted_raw:
-        key_model = None
-        if transport_key_needed:
-            # get_plugin_store() will throw an exception if no suitable
-            # plugin with transport key is found
-            store_plugin = secret_store.SecretStorePluginManager().\
-                get_plugin_store(True)
-            plugin_name = utils.generate_fullname_for(store_plugin)
-
-            key_repo = repos.transport_key_repo
-            key_model = key_repo.get_latest_transport_key(plugin_name)
-
-            if not key_model or not store_plugin.is_transport_key_current(
-                    key_model.transport_key):
-                # transport key does not exist or is not current.
-                # need to get a new transport key
-                transport_key = store_plugin.get_transport_key()
-                new_key_model = models.TransportKey(plugin_name, transport_key)
-                key_model = key_repo.create_from(new_key_model)
+        key_model = get_transport_key_model(repos, transport_key_needed)
 
         _save_secret(secret_model, tenant_model, repos)
         return secret_model, key_model
 
+    plugin_name, transport_key = get_plugin_name_and_transport_key(
+        repos, transport_key_id)
+
     # Locate a suitable plugin to store the secret.
-    store_plugin = secret_store.SecretStorePluginManager().get_plugin_store()
+    store_plugin = secret_store.SecretStorePluginManager().\
+        get_plugin_store(plugin_name=plugin_name)
 
     # Normalize inputs prior to storage.
     #TODO(john-wood-w) Normalize all secrets to base64, so we don't have to
@@ -76,8 +104,11 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
     key_spec = secret_store.KeySpec(alg=spec.get('algorithm'),
                                     bit_length=spec.get('bit_length'),
                                     mode=spec.get('mode'))
-    secret_dto = secret_store.SecretDTO(None, unencrypted, key_spec,
-                                        content_type)
+    secret_dto = secret_store.SecretDTO(type=None,
+                                        secret=unencrypted,
+                                        key_spec=key_spec,
+                                        content_type=content_type,
+                                        transport_key=transport_key)
     secret_metadata = store_plugin.store_secret(secret_dto, context)
 
     # Save secret and metadata.

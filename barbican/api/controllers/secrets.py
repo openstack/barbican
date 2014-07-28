@@ -113,6 +113,8 @@ class SecretController(object):
                 )
             )
 
+        transport_key_id = kwargs.get('transport_key_id')
+
         payload = pecan.request.body
         if not payload:
             raise exception.NoDataToProcess()
@@ -135,7 +137,8 @@ class SecretController(object):
 
         plugin.store_secret(payload, content_type,
                             content_encoding, secret_model.to_dict_fields(),
-                            secret_model, tenant_model, self.repos)
+                            secret_model, tenant_model, self.repos,
+                            transport_key_id=transport_key_id)
 
     @index.when(method='DELETE')
     @controllers.handle_exceptions(u._('Secret deletion'))
@@ -248,7 +251,8 @@ class SecretsController(object):
             data.get('payload_content_encoding'),
             data, None, tenant,
             self.repos,
-            transport_key_needed=transport_key_needed)
+            transport_key_needed=transport_key_needed,
+            transport_key_id=data.get('transport_key_id'))
 
         pecan.response.status = 201
         pecan.response.headers['Location'] = '/{0}/secrets/{1}'.format(

@@ -232,7 +232,7 @@ class BaseSecretsResource(FunctionalTest):
 
         self.transport_key = models.TransportKey(
             'default_plugin_name', 'XXXABCDEF')
-        self.transport_key.id = 'tkey12345'
+        self.transport_key_id = 'tkey12345'
         self.tkey_url = hrefs.convert_transport_key_to_href(
             self.keystone_id,
             self.transport_key.id)
@@ -265,7 +265,8 @@ class BaseSecretsResource(FunctionalTest):
                                     'application/octet-stream'),
                 self.secret_req.get('payload_content_encoding'),
                 expected, None, self.tenant, mock.ANY,
-                transport_key_needed=False
+                transport_key_needed=False,
+                transport_key_id=None
             )
 
     @mock.patch('barbican.plugin.resources.store_secret')
@@ -295,7 +296,40 @@ class BaseSecretsResource(FunctionalTest):
                 expected, None,
                 self.tenant if check_tenant_id else mock.ANY,
                 mock.ANY,
-                transport_key_needed=False
+                transport_key_needed=False,
+                transport_key_id=None
+            )
+
+    @mock.patch('barbican.plugin.resources.store_secret')
+    def _test_should_add_new_secret_one_step_with_tkey_id(
+            self, mock_store_secret, check_tenant_id=True):
+        """Test the one-step secret creation with transport_key_id set
+
+        :param check_tenant_id: True if the retrieved Tenant id needs to be
+        verified, False to skip this check (necessary for new-Tenant flows).
+        """
+        mock_store_secret.return_value = self.secret, None
+        self.secret_req['transport_key_id'] = self.transport_key_id
+
+        resp = self.app.post_json(
+            '/%s/secrets/' % self.keystone_id,
+            self.secret_req
+        )
+        self.assertEqual(resp.status_int, 201)
+
+        expected = dict(self.secret_req)
+        expected['expiration'] = None
+        mock_store_secret\
+            .assert_called_once_with(
+                self.secret_req.get('payload'),
+                self.secret_req.get('payload_content_type',
+                                    'application/octet-stream'),
+                self.secret_req.get('payload_content_encoding'),
+                expected, None,
+                self.tenant if check_tenant_id else mock.ANY,
+                mock.ANY,
+                transport_key_needed=False,
+                transport_key_id=self.transport_key_id
             )
 
     def _test_should_add_new_secret_if_tenant_does_not_exist(self):
@@ -414,6 +448,9 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
 
     def test_should_add_new_secret_one_step(self):
         self._test_should_add_new_secret_one_step()
+
+    def test_should_add_new_secret_one_step_with_tkey_id(self):
+        self._test_should_add_new_secret_one_step_with_tkey_id()
 
     def test_should_add_new_secret_with_expiration(self):
         self._test_should_add_new_secret_with_expiration()
@@ -546,6 +583,9 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
 
     def test_should_add_new_secret_one_step(self):
         self._test_should_add_new_secret_one_step()
+
+    def test_should_add_new_secret_one_step_with_tkey_id(self):
+        self._test_should_add_new_secret_one_step_with_tkey_id()
 
     def test_should_add_new_secret_with_expiration(self):
         self._test_should_add_new_secret_with_expiration()
@@ -875,6 +915,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret_meta_repo = mock.MagicMock()
 
         self.transport_key_repo = mock.MagicMock()
+        self.transport_key_id = 'tkey12345'
 
     def test_should_get_secret_as_json(self):
         resp = self.app.get(
@@ -990,9 +1031,29 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.assertEqual(resp.status_int, 204)
 
         mock_store_secret\
-            .assert_called_once_with('plain text', 'text/plain',
-                                     None, self.secret.to_dict_fields(),
-                                     self.secret, self.tenant, mock.ANY)
+            .assert_called_once_with('plain text', 'text/plain', None,
+                                     self.secret.to_dict_fields(),
+                                     self.secret, self.tenant, mock.ANY,
+                                     transport_key_id=None)
+
+    @mock.patch('barbican.plugin.resources.store_secret')
+    def test_should_put_secret_as_plain_with_tkey_id(self, mock_store_secret):
+        self.secret.encrypted_data = []
+
+        resp = self.app.put(
+            '/%s/secrets/%s/?transport_key_id=%s' %
+            (self.keystone_id, self.secret.id, self.transport_key_id),
+            'plain text',
+            headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
+        )
+
+        self.assertEqual(resp.status_int, 204)
+
+        mock_store_secret\
+            .assert_called_once_with('plain text', 'text/plain', None,
+                                     self.secret.to_dict_fields(),
+                                     self.secret, self.tenant, mock.ANY,
+                                     transport_key_id=self.transport_key_id)
 
     @mock.patch('barbican.plugin.resources.store_secret')
     def test_should_put_secret_as_binary(self, mock_store_secret):
@@ -1011,8 +1072,33 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         mock_store_secret\
             .assert_called_once_with('plain text', 'application/octet-stream',
-                                     None, self.secret.to_dict_fields(),
-                                     self.secret, self.tenant, mock.ANY)
+                                     None,
+                                     self.secret.to_dict_fields(),
+                                     self.secret, self.tenant, mock.ANY,
+                                     transport_key_id=None)
+
+    @mock.patch('barbican.plugin.resources.store_secret')
+    def test_should_put_secret_as_binary_with_tkey_id(self, mock_store_secret):
+        self.secret.encrypted_data = []
+
+        resp = self.app.put(
+            '/%s/secrets/%s/?transport_key_id=%s' %
+            (self.keystone_id, self.secret.id, self.transport_key_id),
+            'plain text',
+            headers={
+                'Accept': 'text/plain',
+                'Content-Type': 'application/octet-stream'
+            },
+        )
+
+        self.assertEqual(resp.status_int, 204)
+
+        mock_store_secret\
+            .assert_called_once_with('plain text', 'application/octet-stream',
+                                     None,
+                                     self.secret.to_dict_fields(),
+                                     self.secret, self.tenant, mock.ANY,
+                                     transport_key_id=self.transport_key_id)
 
     @mock.patch('barbican.plugin.resources.store_secret')
     def test_should_put_encoded_secret_as_binary(self, mock_store_secret):
@@ -1033,7 +1119,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         mock_store_secret\
             .assert_called_once_with(payload, 'application/octet-stream',
                                      'base64', self.secret.to_dict_fields(),
-                                     self.secret, self.tenant, mock.ANY)
+                                     self.secret, self.tenant, mock.ANY,
+                                     transport_key_id=None)
 
     def test_should_raise_to_put_secret_with_unsupported_encoding(self):
         self.secret.encrypted_data = []

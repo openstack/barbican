@@ -137,7 +137,7 @@ class WhenTestingSecretStorePluginManager(testtools.TestCase):
         self.assertRaises(
             str.SecretStoreSupportedPluginNotFound,
             self.manager.get_plugin_store,
-            True,
+            transport_key_needed=True,
         )
 
     def test_get_store_with_tkey(self):
@@ -146,5 +146,6 @@ class WhenTestingSecretStorePluginManager(testtools.TestCase):
         plugin2 = TestSecretStoreWithTransportKey(False)
         plugin2_mock = mock.MagicMock(obj=plugin2)
         self.manager.extensions = [plugin1_mock, plugin2_mock]
-        self.assertEqual(plugin2,
-                         self.manager.get_plugin_store(True))
+        self.assertEqual(
+            plugin2,
+            self.manager.get_plugin_store(transport_key_needed=True))
