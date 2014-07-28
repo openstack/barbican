@@ -147,7 +147,24 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
         }
         self.plugin.get_secret(secret_metadata, context)
 
-        self.keyclient_mock.retrieve_key.assert_called_once_with('key1')
+        self.keyclient_mock.retrieve_key.assert_called_once_with('key1', None)
+
+    def test_get_secret_with_twsk(self):
+        if not imports_ok:
+            self.skipTest("Dogtag imports not available")
+        key_spec = mock.MagicMock()
+        context = mock.MagicMock()
+        twsk = mock.MagicMock()
+        secret_metadata = {
+            dogtag_import.DogtagPlugin.SECRET_TYPE:
+            sstore.SecretType.SYMMETRIC,
+            dogtag_import.DogtagPlugin.SECRET_KEYSPEC: key_spec,
+            dogtag_import.DogtagPlugin.KEY_ID: 'key1',
+            'trans_wrapped_session_key': twsk
+        }
+        self.plugin.get_secret(secret_metadata, context)
+
+        self.keyclient_mock.retrieve_key.assert_called_once_with('key1', twsk)
 
     def test_supports_symmetric_aes_key_generation(self):
         key_spec = sstore.KeySpec(sstore.KeyAlgorithm.AES, 256)

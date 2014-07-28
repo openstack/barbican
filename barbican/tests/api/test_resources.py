@@ -914,10 +914,15 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.secret_meta_repo = mock.MagicMock()
 
+        self.transport_key_model = models.TransportKey(
+            "default_plugin", "my transport key")
         self.transport_key_repo = mock.MagicMock()
+        self.transport_key_repo.get.return_value = self.transport_key_model
         self.transport_key_id = 'tkey12345'
 
-    def test_should_get_secret_as_json(self):
+    @mock.patch('barbican.plugin.resources.get_transport_key_id_for_retrieval')
+    def test_should_get_secret_as_json(self, mock_get_transport_key):
+        mock_get_transport_key.return_value = None
         resp = self.app.get(
             '/%s/secrets/%s/' % (self.keystone_id, self.secret.id),
             headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'}
@@ -954,9 +959,59 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         mock_get_secret\
             .assert_called_once_with('text/plain',
                                      self.secret,
-                                     self.tenant)
+                                     self.tenant,
+                                     None,
+                                     None)
 
-    def test_should_get_secret_meta_for_binary(self):
+    @mock.patch('barbican.plugin.resources.get_secret')
+    def test_should_get_secret_as_plain_with_twsk(self, mock_get_secret):
+        data = 'encrypted_data'
+        mock_get_secret.return_value = data
+
+        twsk = "trans_wrapped_session_key"
+        resp = self.app.get(
+            '/%s/secrets/%s/?trans_wrapped_session_key=%s&transport_key_id=%s'
+            % (self.keystone_id, self.secret.id, twsk, self.transport_key_id),
+            headers={'Accept': 'text/plain'}
+        )
+
+        self.secret_repo \
+            .get.assert_called_once_with(entity_id=self.secret.id,
+                                         keystone_id=self.keystone_id,
+                                         suppress_exception=True)
+        self.assertEqual(resp.status_int, 200)
+
+        self.assertEqual(resp.body, data)
+        mock_get_secret\
+            .assert_called_once_with('text/plain',
+                                     self.secret,
+                                     self.tenant,
+                                     twsk,
+                                     self.transport_key_model.transport_key)
+
+    @mock.patch('barbican.plugin.resources.get_secret')
+    def test_should_throw_exception_for_get_when_twsk_but_no_tkey_id(
+            self, mock_get_secret):
+        data = 'encrypted_data'
+        mock_get_secret.return_value = data
+
+        twsk = "trans_wrapped_session_key"
+        resp = self.app.get(
+            '/%s/secrets/%s/?trans_wrapped_session_key=%s'
+            % (self.keystone_id, self.secret.id, twsk),
+            headers={'Accept': 'text/plain'},
+            expect_errors=True
+        )
+
+        self.secret_repo \
+            .get.assert_called_once_with(entity_id=self.secret.id,
+                                         keystone_id=self.keystone_id,
+                                         suppress_exception=True)
+        self.assertEqual(resp.status_int, 400)
+
+    @mock.patch('barbican.plugin.resources.get_transport_key_id_for_retrieval')
+    def test_should_get_secret_meta_for_binary(self, mock_get_transport_key):
+        mock_get_transport_key.return_value = None
         self.datum.content_type = "application/octet-stream"
         self.datum.cypher_text = 'aaaa'
 
@@ -976,6 +1031,37 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.assertIn('content_types', resp.namespace)
         self.assertIn(self.datum.content_type,
                       resp.namespace['content_types'].itervalues())
+
+    @mock.patch('barbican.plugin.resources.get_transport_key_id_for_retrieval')
+    def test_should_get_secret_meta_for_binary_with_tkey(
+            self, mock_get_transport_key_id):
+        mock_get_transport_key_id.return_value = self.transport_key_id
+        self.datum.content_type = "application/octet-stream"
+        self.datum.cypher_text = 'aaaa'
+
+        resp = self.app.get(
+            '/%s/secrets/%s/?transport_key_needed=true'
+            % (self.keystone_id, self.secret.id),
+            headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'}
+        )
+
+        self.secret_repo \
+            .get.assert_called_once_with(entity_id=self.secret.id,
+                                         keystone_id=self.keystone_id,
+                                         suppress_exception=True)
+
+        self.assertEqual(resp.status_int, 200)
+
+        self.assertIsNotNone(resp.namespace)
+        self.assertIn('content_types', resp.namespace)
+        self.assertIn(self.datum.content_type,
+                      resp.namespace['content_types'].itervalues())
+        self.assertIn('transport_key_ref', resp.namespace)
+        self.assertEqual(
+            resp.namespace['transport_key_ref'],
+            hrefs.convert_transport_key_to_href(
+                self.keystone_id, self.transport_key_id)
+        )
 
     @mock.patch('barbican.plugin.resources.get_secret')
     def test_should_get_secret_as_binary(self, mock_get_secret):
@@ -998,7 +1084,9 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         mock_get_secret\
             .assert_called_once_with('application/octet-stream',
                                      self.secret,
-                                     self.tenant)
+                                     self.tenant,
+                                     None,
+                                     None)
 
     def test_should_throw_exception_for_get_when_secret_not_found(self):
         self.secret_repo.get.return_value = None

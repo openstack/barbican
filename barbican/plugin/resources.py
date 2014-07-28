@@ -119,13 +119,18 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
     return secret_model, None
 
 
-def get_secret(requesting_content_type, secret_model, tenant_model):
+def get_secret(requesting_content_type, secret_model, tenant_model,
+               twsk=None, transport_key=None):
     tr.analyze_before_decryption(requesting_content_type)
 
     # Construct metadata dict from data model.
     #   Note: Must use the dict/tuple format for py2.6 usage.
     secret_metadata = dict((k, v.value) for (k, v) in
                            secret_model.secret_store_metadata.items())
+
+    if twsk is not None:
+        secret_metadata['trans_wrapped_session_key'] = twsk
+        secret_metadata['transport_key'] = transport_key
 
     # Locate a suitable plugin to store the secret.
     retrieve_plugin = secret_store.SecretStorePluginManager()\
@@ -138,9 +143,26 @@ def get_secret(requesting_content_type, secret_model, tenant_model):
                                               tenant_model=tenant_model)
     secret_dto = retrieve_plugin.get_secret(secret_metadata, context)
 
+    if twsk is not None:
+        del secret_metadata['transport_key']
+        del secret_metadata['trans_wrapped_session_key']
+
     # Denormalize the secret.
     return tr.denormalize_after_decryption(secret_dto.secret,
                                            requesting_content_type)
+
+
+def get_transport_key_id_for_retrieval(secret_model):
+    """Return a transport key ID for retrieval if the plugin supports it."""
+
+    secret_metadata = dict((k, v.value) for (k, v) in
+                           secret_model.secret_store_metadata.items())
+
+    retrieve_plugin = secret_store.SecretStorePluginManager()\
+        .get_plugin_retrieve_delete(secret_metadata.get('plugin_name'))
+
+    transport_key_id = retrieve_plugin.get_transport_key()
+    return transport_key_id
 
 
 def generate_secret(spec, content_type,

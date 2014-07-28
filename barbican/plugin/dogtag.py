@@ -175,20 +175,25 @@ class DogtagPlugin(sstore.SecretStoreBase):
 
         Note: There are two ways to retrieve secrets from the DRM.
 
-        The first, which is implemented here, will call retrieve_key without
-        a wrapping key.  This relies on the DRM client to generate a wrapping
-        key (and wrap it with the DRM transport cert), and is completely
-        transparent to the Barbican server.  What is returned to the caller
-        is the unencrypted secret.
+        The first method calls retrieve_key without a wrapping key.  This
+        relies on the DRM client to generate a wrapping key (and wrap it with
+        the DRM transport cert), and is completely transparent to the
+        Barbican server.  What is returned to the caller is the
+        unencrypted secret.
 
-        The second way is to provide a wrapping key that ideally would be
-        generated on the barbican client.  That way only the client will be
-        able to unwrap the secret.  This is not yet implemented (but will be
-        shortly)
+        The second way is to provide a wrapping key that would be generated
+        on the barbican client.  That way only the client will be
+        able to unwrap the secret.  This wrapping key is provided in the
+        secret_metadata by Barbican core.
         """
         key_id = secret_metadata[DogtagPlugin.KEY_ID]
+        twsk = None
+        if 'trans_wrapped_session_key' in secret_metadata:
+            twsk = secret_metadata['trans_wrapped_session_key']
 
-        recovered_key = self.keyclient.retrieve_key(key_id)
+        # TODO(alee-3) send transport key as well when dogtag client API
+        # changes in case the transport key has changed.
+        recovered_key = self.keyclient.retrieve_key(key_id, twsk)
 
         # TODO(alee) remove final field when content_type is removed
         # from secret_dto

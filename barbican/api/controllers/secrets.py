@@ -50,6 +50,17 @@ def _secret_already_has_data():
     pecan.abort(409, u._("Secret already has data, cannot modify it."))
 
 
+def _request_has_twsk_but_no_transport_key_id():
+    """Throw exception for bad wrapping parameters.
+
+    Throw exception if transport key wrapped session key has been provided,
+    but the transport key id has not.
+    """
+    pecan.abort(400, u._('Transport key wrapped session key has been '
+                         'provided to wrap secrets for retrieval, but the '
+                         'transport key id has not been provided.'))
+
+
 class SecretController(object):
     """Handles Secret retrieval and deletion requests."""
 
@@ -73,7 +84,7 @@ class SecretController(object):
     @allow_all_content_types
     @controllers.handle_exceptions(u._('Secret retrieval'))
     @controllers.enforce_rbac('secret:get')
-    def index(self, keystone_id):
+    def index(self, keystone_id, **kwargs):
 
         secret = self.repos.secret_repo.get(entity_id=self.secret_id,
                                             keystone_id=keystone_id,
@@ -86,15 +97,34 @@ class SecretController(object):
             pecan.override_template('json', 'application/json')
             secret_fields = putil.mime_types.augment_fields_with_content_types(
                 secret)
+            transport_key_needed = \
+                kwargs.get('transport_key_needed', 'false').lower() == 'true'
+            if transport_key_needed:
+                transport_key_id = plugin.get_transport_key_id_for_retrieval(
+                    secret)
+                if transport_key_id is not None:
+                    secret_fields['transport_key_id'] = transport_key_id
             return hrefs.convert_to_hrefs(keystone_id, secret_fields)
         else:
             tenant = res.get_or_create_tenant(keystone_id,
                                               self.repos.tenant_repo)
             pecan.override_template('', pecan.request.accept.header_value)
+            transport_key = None
+            twsk = kwargs.get('trans_wrapped_session_key', None)
+            if twsk is not None:
+                transport_key_id = kwargs.get('transport_key_id', None)
+                if transport_key_id is None:
+                    _request_has_twsk_but_no_transport_key_id()
+                transport_key_model = self.repos.transport_key_repo.get(
+                    entity_id=transport_key_id,
+                    suppress_exception=True)
+                transport_key = transport_key_model.transport_key
 
             return plugin.get_secret(pecan.request.accept.header_value,
                                      secret,
-                                     tenant)
+                                     tenant,
+                                     twsk,
+                                     transport_key)
 
     @index.when(method='PUT')
     @allow_all_content_types

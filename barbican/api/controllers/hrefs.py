@@ -67,6 +67,12 @@ def convert_to_hrefs(keystone_id, fields):
             convert_container_to_href(keystone_id, fields['container_id'])
         del fields['container_id']
 
+    if 'transport_key_id' in fields:
+        fields['transport_key_ref'] = convert_transport_key_to_href(
+            keystone_id,
+            fields['transport_key_id'])
+        del fields['transport_key_id']
+
     return fields
 
 
