@@ -317,7 +317,7 @@ class ContainerValidator(ValidatorBase):
                 "name": {"type": "string"},
                 "type": {
                     "type": "string",
-                    #TODO: (hgedikli) move this to a common location
+                    # TODO: (hgedikli) move this to a common location
                     "enum": ["generic", "rsa", "certificate"]
                 },
                 "secret_refs": {
@@ -353,6 +353,18 @@ class ContainerValidator(ValidatorBase):
             len(secret_refs_names) == len(secret_refs),
             schema_name,
             u._("Duplicate reference names are not allowed"),
+            "secret_refs")
+
+        # The combination of container_id and secret_id is expected to be
+        # primary key for container_secret so same secret id (ref) cannot be
+        # used within a container
+        secret_ids = set(self._get_secret_id_from_ref(secret_ref)
+                         for secret_ref in secret_refs)
+
+        self._assert_validity(
+            len(secret_ids) == len(secret_refs),
+            schema_name,
+            u._("Duplicate secret ids are not allowed"),
             "secret_refs")
 
         if container_type == 'rsa':
@@ -412,6 +424,15 @@ class ContainerValidator(ValidatorBase):
         if required_names.issubset(secret_refs_names):
             return True
         return False
+
+    def _get_secret_id_from_ref(self, secret_ref):
+        secret_id = secret_ref.get('secret_ref')
+        if secret_id.endswith('/'):
+            secret_id = secret_id.rsplit('/', 2)[1]
+        elif '/' in secret_id:
+            secret_id = secret_id.rsplit('/', 1)[1]
+
+        return secret_id
 
 
 class NewTransportKeyValidator(ValidatorBase):

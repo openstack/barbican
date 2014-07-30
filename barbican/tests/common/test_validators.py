@@ -554,11 +554,11 @@ class WhenTestingContainerValidator(testtools.TestCase):
         self.secret_refs = [
             {
                 'name': 'testname',
-                'secret_ref': '123'
+                'secret_ref': '1231'
             },
             {
                 'name': 'testname2',
-                'secret_ref': '123'
+                'secret_ref': '1232'
             }
         ]
 
@@ -588,8 +588,8 @@ class WhenTestingContainerValidator(testtools.TestCase):
             self.container_req,
         )
 
-        #TODO(hgedikli): figure out why invalid_property is null here
-        #self.assertEqual('type', e.exception.invalid_property)
+        # TODO(hgedikli): figure out why invalid_property is null here
+        # self.assertEqual('type', e.exception.invalid_property)
 
     def test_should_raise_empty_type(self):
         self.container_req['type'] = ''
@@ -690,6 +690,55 @@ class WhenTestingContainerValidator(testtools.TestCase):
 
         self.assertEqual('secret_refs', exception.invalid_property)
 
+    def test_should_raise_duplicate_secret_ids_in_secret_refs(self):
+
+        secret_ref = self.container_req['secret_refs'][0]
+        secret_ref['name'] = 'testname3'
+        self.container_req['secret_refs'].append(secret_ref)
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.container_req,
+        )
+
+        self.assertEqual('secret_refs', exception.invalid_property)
+
+    def test_should_raise_duplicate_secret_ref_format_ids_in_secret_refs(self):
+        """Test duplicate secret_id presence as part of single container.
+
+           Here secret_id is represented in different format and secret_id is
+           extracted from there.
+        """
+
+        secret_refs = [
+            {
+                'name': 'testname',
+                'secret_ref': 'http://localhost:9311/v1/12345/secrets/1231'
+            },
+            {
+                'name': 'testname2',
+                'secret_ref': 'http://localhost:9311/v1/12345/secrets//1232'
+            },
+            {
+                'name': 'testname3',
+                'secret_ref': 'http://localhost:9311/v1/12345/secrets//1231/'
+
+            }
+        ]
+
+        container_req = {'name': 'name',
+                         'type': 'generic',
+                         'secret_refs': secret_refs}
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            container_req,
+        )
+
+        self.assertEqual('secret_refs', exception.invalid_property)
+
 
 class WhenTestingRSAContainerValidator(testtools.TestCase):
 
@@ -701,15 +750,15 @@ class WhenTestingRSAContainerValidator(testtools.TestCase):
         self.secret_refs = [
             {
                 'name': 'public_key',
-                'secret_ref': '123'
+                'secret_ref': '1231'
             },
             {
                 'name': 'private_key',
-                'secret_ref': '123'
+                'secret_ref': '1232'
             },
             {
                 'name': 'private_key_passphrase',
-                'secret_ref': '123'
+                'secret_ref': '1233'
             }
         ]
 
@@ -746,6 +795,18 @@ class WhenTestingRSAContainerValidator(testtools.TestCase):
 
     def test_should_raise_unsupported_names_in_secret_refs(self):
         self.container_req['secret_refs'][0]['name'] = 'testttt'
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.container_req,
+        )
+
+        self.assertEqual('secret_refs', exception.invalid_property)
+
+    def test_should_raise_duplicate_secret_id_in_secret_refs(self):
+        self.container_req['secret_refs'][0]['secret_ref'] = \
+            self.container_req['secret_refs'][2]['secret_ref']
 
         exception = self.assertRaises(
             excep.InvalidObject,
@@ -806,15 +867,15 @@ class WhenTestingCertificateContainerValidator(testtools.TestCase):
             },
             {
                 'name': 'private_key',
-                'secret_ref': '123'
+                'secret_ref': '1231'
             },
             {
                 'name': 'private_key_passphrase',
-                'secret_ref': '123'
+                'secret_ref': '1232'
             },
             {
                 'name': 'intermediates',
-                'secret_ref': '123'
+                'secret_ref': '1233'
             }
         ]
 

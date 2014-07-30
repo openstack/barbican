@@ -1512,15 +1512,15 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
         self.secret_refs = [
             {
                 'name': 'test secret 1',
-                'secret_ref': '123'
+                'secret_ref': '1231'
             },
             {
                 'name': 'test secret 2',
-                'secret_ref': '123'
+                'secret_ref': '1232'
             },
             {
                 'name': 'test secret 3',
-                'secret_ref': '123'
+                'secret_ref': '1233'
             }
         ]
 
