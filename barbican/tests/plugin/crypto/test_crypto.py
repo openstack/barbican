@@ -50,14 +50,19 @@ class TestCryptoPlugin(plugin.CryptoPluginBase):
         return plugin.ResponseDTO("encrypted insecure key", None)
 
     def generate_asymmetric(self, generate_dto, kek_meta_dto, keystone_id):
+        passwd_res_dto = (plugin.ResponseDTO('passphrase', None)
+                          if generate_dto.passphrase else None)
         return (plugin.ResponseDTO('insecure_private_key', None),
                 plugin.ResponseDTO('insecure_public_key', None),
-                None)
+                passwd_res_dto)
 
+    # TODO(atiwari): fix bug 1331815
     def supports(self, type_enum, algorithm=None, bit_length=None, mode=None):
         if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:
             return True
         elif type_enum == plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION:
+            return True
+        elif type_enum == plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION:
             return True
         else:
             return False

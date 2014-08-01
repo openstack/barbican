@@ -209,7 +209,64 @@ def generate_secret(spec, content_type,
 
 def generate_asymmetric_secret(spec, content_type,
                                tenant_model, repos):
-    raise NotImplementedError("Feature not yet implemented")
+    """Generate an asymmetric secret and store
+        into a secure backend.
+    """
+    # Locate a suitable plugin to store the secret.
+    key_spec = secret_store.KeySpec(alg=spec.get('algorithm'),
+                                    bit_length=spec.get('bit_length'),
+                                    passphrase=spec.get('passphrase'))
+
+    generate_plugin = secret_store.SecretStorePluginManager()\
+        .get_plugin_generate(key_spec)
+
+    # Create secret models to eventually save metadata to.
+    private_secret_model = models.Secret(spec)
+    public_secret_model = models.Secret(spec)
+    passphrase_secret_model = models.Secret(spec)\
+        if spec.get('passphrase') else None
+
+    # Generate the secret.
+    # TODO(john-wood-w) Remove the SecretStoreContext once repository factory
+    #  and unit test patch work is completed.
+    context = secret_store.\
+        SecretStoreContext(content_type=content_type,
+                           private_secret_model=private_secret_model,
+                           public_secret_model=public_secret_model,
+                           passphrase_secret_model=passphrase_secret_model,
+                           tenant_model=tenant_model,
+                           repos=repos)
+
+    asymmetric_meta_dto = generate_plugin.\
+        generate_asymmetric_key(key_spec, context)
+
+    # Save secret and metadata.
+    _save_secret(private_secret_model, tenant_model, repos)
+    _save_secret_metadata(private_secret_model,
+                          asymmetric_meta_dto.private_key_meta,
+                          generate_plugin,
+                          content_type, repos)
+
+    _save_secret(public_secret_model, tenant_model, repos)
+    _save_secret_metadata(public_secret_model,
+                          asymmetric_meta_dto.public_key_meta,
+                          generate_plugin,
+                          content_type, repos)
+
+    if spec.get('passphrase'):
+        _save_secret(passphrase_secret_model, tenant_model, repos)
+        _save_secret_metadata(passphrase_secret_model,
+                              asymmetric_meta_dto.passphrase_meta,
+                              generate_plugin,
+                              content_type, repos)
+
+    # Now create container
+    container_model = _save_container(spec, tenant_model, repos,
+                                      private_secret_model,
+                                      public_secret_model,
+                                      passphrase_secret_model)
+
+    return container_model
 
 
 def delete_secret(secret_model, project_id, repos):
@@ -267,3 +324,39 @@ def _secret_already_has_stored_data(secret_model):
     if not secret_model:
         return False
     return secret_model.encrypted_data or secret_model.secret_store_metadata
+
+
+def _save_container(spec, tenant_model, repos, private_secret_model,
+                    public_secret_model, passphrase_secret_model):
+    container_model = models.Container()
+    container_model.name = spec.get('name')
+    container_model.type = spec.get('algorithm', '').lower()
+    container_model.status = models.States.ACTIVE
+    container_model.tenant_id = tenant_model.id
+    repos.container_repo.create_from(container_model)
+
+    # create container_secret for private_key
+    _create_container_secret_association(repos, 'private_key',
+                                         private_secret_model,
+                                         container_model)
+
+    # create container_secret for public_key
+    _create_container_secret_association(repos, 'public_key',
+                                         public_secret_model,
+                                         container_model)
+
+    if spec.get('passphrase'):
+        # create container_secret for passphrase
+        _create_container_secret_association(repos, 'private_key_passphrase',
+                                             passphrase_secret_model,
+                                             container_model)
+    return container_model
+
+
+def _create_container_secret_association(repos, assoc_name, secret_model,
+                                         container_model):
+    container_secret = models.ContainerSecret()
+    container_secret.name = assoc_name
+    container_secret.container_id = container_model.id
+    container_secret.secret_id = secret_model.id
+    repos.container_secret_repo.create_from(container_secret)

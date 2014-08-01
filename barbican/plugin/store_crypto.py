@@ -55,23 +55,22 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
 
         encrypt_dto = crypto.EncryptDTO(secret_dto.secret)
 
+        # Enhance the context with content_type, This is needed to build
+        # datum_model to store
+        if not getattr(context, 'content_type', ''):
+            context.content_type = secret_dto.content_type
+
         # Create an encrypted datum instance and add the encrypted cyphertext.
-        datum_model = models.EncryptedDatum(context.secret_model,
-                                            kek_datum_model)
-        datum_model.content_type = secret_dto.content_type
         response_dto = encrypting_plugin.encrypt(
             encrypt_dto, kek_meta_dto, context.tenant_model.keystone_id
         )
-        datum_model.kek_meta_extended = response_dto.kek_meta_extended
-
         # Convert binary data into a text-based format.
         #TODO(jwood) Figure out by storing binary (BYTEA) data in Postgres
         #  isn't working.
-        datum_model.cypher_text = base64.b64encode(response_dto.cypher_text)
-
-        self._store_secret_and_datum(context.tenant_model,
+        self._store_secret_and_datum(context,
                                      context.secret_model,
-                                     datum_model, context.repos)
+                                     kek_datum_model,
+                                     response_dto)
 
         return None
 
@@ -134,10 +133,6 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
             generating_plugin, context.tenant_model, context.repos.kek_repo)
 
         # Create an encrypted datum instance and add the created cypher text.
-        datum_model = models.EncryptedDatum(context.secret_model,
-                                            kek_datum_model)
-        datum_model.content_type = context.content_type
-
         generate_dto = crypto.GenerateDTO(key_spec.alg,
                                           key_spec.bit_length,
                                           key_spec.mode, None)
@@ -149,17 +144,62 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
         # Convert binary data into a text-based format.
         # TODO(jwood) Figure out by storing binary (BYTEA) data in Postgres
         #  isn't working.
-        datum_model.cypher_text = base64.b64encode(response_dto.cypher_text)
-        datum_model.kek_meta_extended = response_dto.kek_meta_extended
-
-        self._store_secret_and_datum(context.tenant_model,
-                                     context.secret_model, datum_model,
-                                     context.repos)
+        self._store_secret_and_datum(context,
+                                     context.secret_model,
+                                     kek_datum_model,
+                                     response_dto)
 
         return None
 
     def generate_asymmetric_key(self, key_spec, context):
-        raise NotImplementedError("Feature not yet implemented")
+        """Generates an asymmetric key.
+
+        Returns a AsymmetricKeyMetadataDTO object containing
+        metadata(s) for asymmetric key components. The metadata
+        can be used to retrieve individual components of
+        asymmetric key pair.
+        """
+
+        plugin_type = self._determine_generation_type(key_spec.alg)
+        if crypto.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION != plugin_type:
+            raise sstore.SecretAlgorithmNotSupportedException(key_spec.alg)
+
+        generating_plugin = manager.PLUGIN_MANAGER\
+            .get_plugin_store_generate(plugin_type,
+                                       key_spec.alg,
+                                       key_spec.bit_length,
+                                       None)
+
+        # Find or create a key encryption key metadata.
+        kek_datum_model, kek_meta_dto = self._find_or_create_kek_objects(
+            generating_plugin, context.tenant_model, context.repos.kek_repo)
+
+        generate_dto = crypto.GenerateDTO(key_spec.alg,
+                                          key_spec.bit_length,
+                                          None, key_spec.passphrase)
+
+        # Create the encrypted meta.
+        private_key_dto, public_key_dto, passwd_dto = generating_plugin.\
+            generate_asymmetric(generate_dto, kek_meta_dto,
+                                context.tenant_model.keystone_id)
+
+        self._store_secret_and_datum(context,
+                                     context.private_secret_model,
+                                     kek_datum_model,
+                                     private_key_dto)
+
+        self._store_secret_and_datum(context,
+                                     context.public_secret_model,
+                                     kek_datum_model,
+                                     public_key_dto)
+
+        if passwd_dto:
+            self._store_secret_and_datum(context,
+                                         context.passphrase_secret_model,
+                                         kek_datum_model,
+                                         passwd_dto)
+
+        return sstore.AsymmetricKeyMetadataDTO()
 
     def generate_supports(self, key_spec):
         """Key generation supported?
@@ -201,20 +241,27 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
 
         return kek_datum_model, kek_meta_dto
 
-    def _store_secret_and_datum(self, tenant_model, secret_model, datum_model,
-                                repos=None):
+    def _store_secret_and_datum(self, context,
+                                secret_model,
+                                kek_datum_model,
+                                generated_dto):
         # Create Secret entities in data store.
         if not secret_model.id:
-            repos.secret_repo.create_from(secret_model)
+            context.repos.secret_repo.create_from(secret_model)
             new_assoc = models.TenantSecret()
-            new_assoc.tenant_id = tenant_model.id
+            new_assoc.tenant_id = context.tenant_model.id
             new_assoc.secret_id = secret_model.id
             new_assoc.role = "admin"
             new_assoc.status = models.States.ACTIVE
-            repos.tenant_secret_repo.create_from(new_assoc)
-        if datum_model:
-            datum_model.secret_id = secret_model.id
-            repos.datum_repo.create_from(datum_model)
+            context.repos.tenant_secret_repo.create_from(new_assoc)
+
+        # setup and store encrypted datum
+        datum_model = models.EncryptedDatum(secret_model, kek_datum_model)
+        datum_model.content_type = context.content_type
+        datum_model.cypher_text = base64.b64encode(generated_dto.cypher_text)
+        datum_model.kek_meta_extended = generated_dto.kek_meta_extended
+        datum_model.secret_id = secret_model.id
+        context.repos.datum_repo.create_from(datum_model)
 
     def _indicate_bind_completed(self, kek_meta_dto, kek_datum):
         """Updates the supplied kek_datum instance

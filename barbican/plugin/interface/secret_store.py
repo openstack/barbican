@@ -14,9 +14,9 @@
 # limitations under the License.
 
 import abc
+import six
 
 from oslo.config import cfg
-import six
 from stevedore import named
 
 from barbican.common import exception
@@ -177,9 +177,16 @@ class KeyAlgorithm(object):
     RSA = "rsa"
     """Constant for the Elliptic Curve algorithm."""
     EC = "ec"
+    """Constant for the HMACSHA1 algorithm."""
+    HMACSHA1 = "hmacsha1"
+    """Constant for the HMACSHA256 algorithm."""
+    HMACSHA256 = "hmacsha256"
+    """Constant for the HMACSHA348 algorithm."""
+    HMACSHA348 = "hmacsha348"
+    """Constant for the HMACSHA512 algorithm."""
+    HMACSHA512 = "hmacsha512"
     """List of asymmetric algorithms"""
     ASYMMETRIC_ALGORITHMS = [DIFFIE_HELLMAN, DSA, RSA, EC]
-
     """Constant for the AES algorithm."""
     AES = "aes"
     """Constant for the DES algorithm."""
@@ -187,28 +194,34 @@ class KeyAlgorithm(object):
     """Constant for the DESede (triple-DES) algorithm."""
     DESEDE = "desede"
     """List of symmetric algorithms"""
-    SYMMETRIC_ALGORITHMS = [AES, DES, DESEDE]
+    SYMMETRIC_ALGORITHMS = [AES, DES, DESEDE, HMACSHA1,
+                            HMACSHA256, HMACSHA348, HMACSHA512]
 
     def get_secret_type(self, alg):
-        if str(alg).lower() in self.SYMMETRIC_ALGORITHMS:
-            return SecretType.SYMMETRIC
-        else:  # TODO(kaitlin-farr) add asymmetric once it's supported
-            return None
+        if alg and isinstance(alg, six.string_types):
+            if alg.lower() in self.SYMMETRIC_ALGORITHMS:
+                return SecretType.SYMMETRIC
+            else:
+                return None
+        else:
+            None
 
 
 class KeySpec(object):
     """This object specifies the algorithm and bit length for a key."""
 
-    def __init__(self, alg=None, bit_length=None, mode=None):
+    def __init__(self, alg=None, bit_length=None, mode=None, passphrase=None):
         """Creates a new KeySpec.
 
         :param alg:algorithm for the key
         :param bit_length:bit length of the key
         :param mode:algorithm mode for the key
+        :param passphrase:passphrase for the private_key
         """
         self.alg = alg
         self.bit_length = bit_length
         self.mode = mode  # TODO(john-wood-w) Paul, is 'mode' required?
+        self.passphrase = passphrase
 
 
 class SecretDTO(object):
@@ -241,6 +254,26 @@ class SecretDTO(object):
         self.key_spec = key_spec
         self.content_type = content_type
         self.transport_key = transport_key
+
+
+class AsymmetricKeyMetadataDTO(object):
+    """This DTO encapsulates metadata(s) for asymmetric key
+    components. These components are private_key_meta,
+    public_key_meta and passphrase_meta.
+    """
+
+    def __init__(self, private_key_meta=None,
+                 public_key_meta=None,
+                 passphrase_meta=None):
+        """Constructor for AsymmetricKeyMetadataDTO
+
+        :param private_key_meta: private key metadata
+        :param public_key_meta: public key metadata
+        :param passphrase_meta: passphrase key metadata
+        """
+        self.private_key_meta = private_key_meta
+        self.public_key_meta = public_key_meta
+        self.passphrase_meta = passphrase_meta
 
 
 #TODO(john-wood-w) Remove this class once repository factory work is
@@ -293,20 +326,21 @@ class SecretStoreBase(object):
 
     @abc.abstractmethod
     def generate_asymmetric_key(self, key_spec, context):
-        """Generate a new asymmetric key and store it.
+        """Generate a new asymmetric key pair and store it.
 
-        Generates a new asymmetric key and stores it in the secret store.
-        A dictionary is returned that contains metadata about the newly created
-        key pairs. The dictionary of metadata is stored by Barbican and
-        passed into other methods to aid the plugins. This can be useful for
-        plugins that generate a unique ID in the external data store and use it
-        to retrieve the key in the future. The returned dictionary may be empty
-        if the SecretStore does not require it.
+        Generates a new asymmetric key pair and stores it in the secret
+        store. An object of type AsymmetricKeyMetadataDTO will be returned
+        containing attributes of metadata for newly created key pairs.
+        The metadata is stored by Barbican and passed into other methods
+        to aid the plugins. This can be useful for plugins that generate
+        a unique ID in the external data store and use it to retrieve the
+        key pairs in the future.
 
         :param key_spec: KeySpec that contains details on the type of key to
         generate
         :param context: SecretStoreContext for secret
-        :returns: a dictionary that contains metadata about the key
+        :returns: An object of type AsymmetricKeyMetadataDTO containing
+        metadata about the key pair.
         """
         raise NotImplementedError  # pragma: no cover
 

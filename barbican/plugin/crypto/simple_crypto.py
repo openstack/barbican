@@ -138,13 +138,18 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
 
         passphrase_dto = None
         if generate_dto.passphrase:
-            encrypt_dto = c.EncryptDTO(generate_dto.passphrase)
-            passphrase_dto = self.encrypt(encrypt_dto,
+            if isinstance(generate_dto.passphrase, six.text_type):
+                generate_dto.passphrase = \
+                    generate_dto.passphrase.encode('utf-8')
+
+            passphrase_dto = self.encrypt(c.EncryptDTO(generate_dto.
+                                                       passphrase),
                                           kek_meta_dto,
                                           keystone_id)
 
         return private_dto, public_dto, passphrase_dto
 
+    # TODO(atiwari): fix bug 1331815
     def supports(self, type_enum, algorithm=None, bit_length=None,
                  mode=None):
         if type_enum == c.PluginSupportTypes.ENCRYPT_DECRYPT:

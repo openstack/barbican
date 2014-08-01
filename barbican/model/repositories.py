@@ -268,6 +268,9 @@ class Repositories(object):
             self._set_repo('order_plugin_meta_repo', OrderPluginMetadatumRepo,
                            kwargs)
             self._set_repo('transport_key_repo', TransportKeyRepo, kwargs)
+            self._set_repo('container_repo', ContainerRepo, kwargs)
+            self._set_repo('container_secret_repo', ContainerSecretRepo,
+                           kwargs)
 
     def _set_repo(self, repo_name, repo_cls, specs):
         if specs and repo_name in specs:
@@ -915,6 +918,25 @@ class ContainerRepo(BaseRepo):
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
+
+
+class ContainerSecretRepo(BaseRepo):
+        """Repository for the ContainerSecret entity."""
+        def _do_entity_name(self):
+            """Sub-class hook: return entity name, such as for debugging."""
+            return "ContainerSecret"
+
+        def _do_create_instance(self):
+            return models.ContainerSecret()
+
+        def _do_build_get_query(self, entity_id, keystone_id, session):
+            """Sub-class hook: build a retrieve query."""
+            return session.query(models.ContainerSecret
+                                 ).filter_by(id=entity_id)
+
+        def _do_validate(self, values):
+            """Sub-class hook: validate values."""
+            pass
 
 
 class ContainerConsumerRepo(BaseRepo):

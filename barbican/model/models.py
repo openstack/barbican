@@ -203,7 +203,7 @@ class TenantSecret(BASE, ModelBase):
         'tenant_id', 'secret_id', name='_tenant_secret_uc'),)
 
 
-class ContainerSecret(BASE):
+class ContainerSecret(BASE, ModelBase):
     """Represents an association between a Container and a Secret."""
 
     __tablename__ = 'container_secret'
@@ -466,6 +466,14 @@ class Order(BASE, ModelBase):
         backref="order",
         cascade="all, delete-orphan")
 
+    def __init__(self, parsed_request=None):
+            """Creates a Order entity from a dict."""
+            super(Order, self).__init__()
+            if parsed_request:
+                self.type = parsed_request.get('type')
+                self.meta = parsed_request.get('meta')
+                self.status = States.ACTIVE
+
     def _do_delete_children(self, session):
         """Sub-class hook: delete children relationships."""
         for k, v in self.order_plugin_metadata.items():
@@ -551,7 +559,7 @@ class Container(BASE, ModelBase):
     __tablename__ = 'containers'
 
     name = sa.Column(sa.String(255))
-    type = sa.Column(sa.Enum('generic', 'rsa', 'certificate',
+    type = sa.Column(sa.Enum('generic', 'rsa', 'dsa', 'certificate',
                              name='container_types'))
     tenant_id = sa.Column(sa.String(36), sa.ForeignKey('tenants.id'),
                           nullable=False)
