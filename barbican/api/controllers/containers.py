@@ -154,7 +154,7 @@ class ContainersController(object):
 
         self.container_repo.create_from(new_container)
 
-        pecan.response.status = 202
+        pecan.response.status = 201
         pecan.response.headers['Location'] = '/{0}/containers/{1}'.format(
             keystone_id, new_container.id
         )

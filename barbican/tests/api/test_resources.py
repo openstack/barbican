@@ -1586,7 +1586,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
             '/%s/containers/' % self.tenant_keystone_id,
             self.container_req
         )
-        self.assertEqual(resp.status_int, 202)
+        self.assertEqual(resp.status_int, 201)
 
         args, kwargs = self.container_repo.create_from.call_args
         container = args[0]
