@@ -27,13 +27,11 @@ except ImportError:
     imports_ok = False
 
 
+@testtools.skipIf(not imports_ok, "Dogtag imports not available")
 class WhenTestingDogtagPlugin(testtools.TestCase):
 
     def setUp(self):
         super(WhenTestingDogtagPlugin, self).setUp()
-        if not imports_ok:
-            return
-
         self.keyclient_mock = mock.MagicMock(name="KeyClient mock")
         self.patcher = mock.patch('pki.cryptoutil.NSSCryptoUtil')
         self.patcher.start()
@@ -49,14 +47,10 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
 
     def tearDown(self):
         super(WhenTestingDogtagPlugin, self).tearDown()
-        if not imports_ok:
-            return
         self.patcher.stop()
         os.rmdir(self.nss_dir)
 
     def test_generate(self):
-        if not imports_ok:
-            self.skipTest("Dogtag imports not available")
         key_spec = sstore.KeySpec(sstore.KeyAlgorithm.AES, 128)
         context = mock.MagicMock()
         self.plugin.generate_symmetric_key(key_spec, context)
@@ -68,8 +62,6 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
             mock.ANY)
 
     def test_generate_non_supported_algorithm(self):
-        if not imports_ok:
-            self.skipTest("Dogtag imports not available")
         key_spec = sstore.KeySpec(sstore.KeyAlgorithm.EC, 192)
         context = mock.MagicMock()
         self.assertRaises(
@@ -80,8 +72,6 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
         )
 
     def test_raises_error_with_no_pem_path(self):
-        if not imports_ok:
-            self.skipTest("Dogtag imports not available")
         m = mock.MagicMock()
         m.dogtag_plugin = mock.MagicMock(pem_path=None)
         self.assertRaises(
@@ -91,8 +81,6 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
         )
 
     def test_raises_error_with_no_pem_password(self):
-        if not imports_ok:
-            self.skipTest("Dogtag imports not available")
         m = mock.MagicMock()
         m.dogtag_plugin = mock.MagicMock(pem_password=None)
         self.assertRaises(
@@ -102,8 +90,6 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
         )
 
     def test_raises_error_with_no_nss_password(self):
-        if not imports_ok:
-            self.skipTest("Dogtag imports not available")
         m = mock.MagicMock()
         m.dogtag_plugin = mock.MagicMock(nss_password=None)
         self.assertRaises(
@@ -113,8 +99,6 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
         )
 
     def test_store_secret(self):
-        if not imports_ok:
-            self.skipTest("Dogtag imports not available")
         payload = 'encrypt me!!'
         key_spec = mock.MagicMock()
         content_type = mock.MagicMock()
@@ -134,8 +118,6 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
             key_size=None)
 
     def test_store_secret_with_tkey_id(self):
-        if not imports_ok:
-            self.skipTest("Dogtag imports not available")
         payload = 'data wrapped in PKIArchiveOptions object'
         key_spec = mock.MagicMock()
         content_type = mock.MagicMock()
@@ -155,8 +137,6 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
             key_size=None)
 
     def test_get_secret(self):
-        if not imports_ok:
-            self.skipTest("Dogtag imports not available")
         key_spec = mock.MagicMock()
         context = mock.MagicMock()
         secret_metadata = {
@@ -170,32 +150,24 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
         self.keyclient_mock.retrieve_key.assert_called_once_with('key1')
 
     def test_supports_symmetric_aes_key_generation(self):
-        if not imports_ok:
-            self.skipTest("Dogtag imports not available")
         key_spec = sstore.KeySpec(sstore.KeyAlgorithm.AES, 256)
         self.assertTrue(
             self.plugin.generate_supports(key_spec)
         )
 
     def test_supports_asymmetric_ec_key_generation(self):
-        if not imports_ok:
-            self.skipTest("Dogtag imports not available")
         key_spec = sstore.KeySpec(sstore.KeyAlgorithm.EC, 156)
         self.assertFalse(
             self.plugin.generate_supports(key_spec)
         )
 
     def test_supports_symmetric_dh_key_generation(self):
-        if not imports_ok:
-            self.skipTest("Dogtag imports not available")
         key_spec = sstore.KeySpec(sstore.KeyAlgorithm.DIFFIE_HELLMAN, 156)
         self.assertFalse(
             self.plugin.generate_supports(key_spec)
         )
 
     def test_does_not_support_unknown_type(self):
-        if not imports_ok:
-            self.skipTest("Dogtag imports not available")
         key_spec = sstore.KeySpec("SOMETHING_RANDOM", 156)
         self.assertFalse(
             self.plugin.generate_supports(key_spec)
