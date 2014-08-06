@@ -199,9 +199,10 @@ class ContainerSecret(BASE):
                           primary_key=True)
     name = sa.Column(sa.String(255), nullable=True)
 
+    # Eager load this relationship via 'lazy=False'.
     container = orm.relationship('Container',
                                  backref=orm.backref('container_secrets',
-                                                     lazy='joined'))
+                                                     lazy=False))
     secrets = orm.relationship('Secret',
                                backref=orm.backref('container_secrets'))
 
@@ -252,7 +253,8 @@ class Secret(BASE, ModelBase):
     #   building of the list of supported content types when secret
     #   metadata is retrieved.
     #   See barbican.api.resources.py::SecretsResource.on_get()
-    encrypted_data = orm.relationship("EncryptedDatum", lazy='joined')
+    # Eager load this relationship via 'lazy=False'.
+    encrypted_data = orm.relationship("EncryptedDatum", lazy=False)
 
     secret_store_metadata = orm.\
         relationship("SecretStoreMetadatum",
@@ -342,7 +344,9 @@ class EncryptedDatum(BASE, ModelBase):
     cypher_text = sa.Column(sa.Text)
 
     kek_meta_extended = sa.Column(sa.Text)
-    kek_meta_tenant = orm.relationship("KEKDatum")
+
+    # Eager load this relationship via 'lazy=False'.
+    kek_meta_tenant = orm.relationship("KEKDatum", lazy=False)
 
     def __init__(self, secret=None, kek_datum=None):
         """Creates encrypted datum from a secret and KEK metadata."""
