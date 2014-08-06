@@ -119,12 +119,35 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
         key_spec = mock.MagicMock()
         content_type = mock.MagicMock()
         context = mock.MagicMock()
+        transport_key = None
         secret_dto = sstore.SecretDTO(sstore.SecretType.SYMMETRIC,
                                       payload,
                                       key_spec,
-                                      content_type)
+                                      content_type,
+                                      transport_key)
         self.plugin.store_secret(secret_dto, context)
         self.keyclient_mock.archive_key.assert_called_once_with(
+            mock.ANY,
+            "passPhrase",
+            payload,
+            key_algorithm=None,
+            key_size=None)
+
+    def test_store_secret_with_tkey_id(self):
+        if not imports_ok:
+            self.skipTest("Dogtag imports not available")
+        payload = 'data wrapped in PKIArchiveOptions object'
+        key_spec = mock.MagicMock()
+        content_type = mock.MagicMock()
+        context = mock.MagicMock()
+        transport_key = mock.MagicMock()
+        secret_dto = sstore.SecretDTO(sstore.SecretType.SYMMETRIC,
+                                      payload,
+                                      key_spec,
+                                      content_type,
+                                      transport_key)
+        self.plugin.store_secret(secret_dto, context)
+        self.keyclient_mock.archive_pki_options.assert_called_once_with(
             mock.ANY,
             "passPhrase",
             payload,

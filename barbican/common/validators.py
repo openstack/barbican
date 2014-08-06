@@ -129,6 +129,7 @@ class NewSecretValidator(ValidatorBase):
                     "type": "string",
                     "enum": ["true", "false"]
                 },
+                "transport_key_id": {"type": "string"},
             },
         }
 

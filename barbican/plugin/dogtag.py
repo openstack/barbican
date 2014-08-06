@@ -128,10 +128,14 @@ class DogtagPlugin(sstore.SecretStoreBase):
     def store_secret(self, secret_dto, context):
         """Store a secret in the DRM
 
-        This will likely require another parameter which includes the wrapped
-        session key to be passed.  Until that is added, we will call
-        archive_key() which relies on the DRM python client to create the
-        session keys.
+        If secret_dto.transport_key is not None, then we expect
+        secret_dto.secret to include a base64 encoded PKIArchiveOptions
+        structure as defined in section 6.4 of RFC 2511. This package contains
+        a transport key wrapped session key, the session key wrapped secret
+        and parameters to specify the symmetric key wrapping.
+
+        Otherwise, the data is unencrypted and we use a call to archive_key()
+        to have the Dogtag DRM client generate the relevant session keys.
 
         The secret_dto contains additional information on the type of secret
         that is being stored.  We will use that shortly.  For, now, lets just
@@ -142,11 +146,23 @@ class DogtagPlugin(sstore.SecretStoreBase):
         """
         data_type = key.KeyClient.PASS_PHRASE_TYPE
         client_key_id = uuid.uuid4().hex
-        response = self.keyclient.archive_key(client_key_id,
-                                              data_type,
-                                              secret_dto.secret,
-                                              key_algorithm=None,
-                                              key_size=None)
+        if secret_dto.transport_key is not None:
+            # TODO(alee-3) send the transport key with the archival request
+            # once the Dogtag Client API changes.
+            response = self.keyclient.archive_pki_options(
+                client_key_id,
+                data_type,
+                secret_dto.secret,
+                key_algorithm=None,
+                key_size=None)
+        else:
+            response = self.keyclient.archive_key(
+                client_key_id,
+                data_type,
+                secret_dto.secret,
+                key_algorithm=None,
+                key_size=None)
+
         return {DogtagPlugin.SECRET_TYPE: secret_dto.type,
                 DogtagPlugin.SECRET_KEYSPEC: secret_dto.key_spec,
                 DogtagPlugin.KEY_ID: response.get_key_id()}
@@ -176,10 +192,12 @@ class DogtagPlugin(sstore.SecretStoreBase):
 
         # TODO(alee) remove final field when content_type is removed
         # from secret_dto
-        ret = sstore.SecretDTO(secret_metadata[DogtagPlugin.SECRET_TYPE],
-                               recovered_key,
-                               secret_metadata[DogtagPlugin.SECRET_KEYSPEC],
-                               None)
+        ret = sstore.SecretDTO(
+            type=secret_metadata[DogtagPlugin.SECRET_TYPE],
+            secret=recovered_key,
+            key_spec=secret_metadata[DogtagPlugin.SECRET_KEYSPEC],
+            content_type=None,
+            transport_key=None)
 
         return ret
 
