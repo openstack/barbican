@@ -292,7 +292,7 @@ class CryptoPluginBase(object):
                to be decrypted.
         :param kek_meta_dto: Key encryption key metadata to use for decryption
         :param kek_meta_extended: Optional per-secret KEK metadata to use for
-        decryption.
+            decryption.
         :param keystone_id: keystone_id associated with the encrypted datum.
         :returns: str -- unencrypted byte data
 
@@ -331,9 +331,9 @@ class CryptoPluginBase(object):
         :param kek_meta_dto: Key encryption key metadata to use for decryption
         :param keystone_id: keystone_id associated with the data.
         :returns: An object of type ResponseDTO containing encrypted data and
-        kek_meta_extended, the former the resultant cypher text, the latter
-        being optional per-secret metadata needed to decrypt (over and above
-        the per-tenant metadata managed outside of the plugins)
+            kek_meta_extended, the former the resultant cypher text, the latter
+            being optional per-secret metadata needed to decrypt (over and
+            above the per-tenant metadata managed outside of the plugins)
         """
         raise NotImplementedError  # pragma: no cover
 
@@ -349,11 +349,12 @@ class CryptoPluginBase(object):
         :param kek_meta_dto: Key encryption key metadata to use for decryption
         :param keystone_id: keystone_id associated with the data.
         :returns: A tuple containing  objects for private_key, public_key and
-        optionally one for passphrase. The objects will be of type ResponseDTO.
-        Each object containing encrypted data and kek_meta_extended, the former
-        the resultant cypher text, the latter being optional per-secret
-        metadata needed to decrypt (over and above the per-tenant metadata
-        managed outside of the plugins)
+            optionally one for passphrase. The objects will be of type
+            ResponseDTO.
+            Each object containing encrypted data and kek_meta_extended, the
+            former the resultant cypher text, the latter being optional
+            per-secret metadata needed to decrypt (over and above the
+            per-tenant metadata managed outside of the plugins)
         """
         raise NotImplementedError  # pragma: no cover
 
