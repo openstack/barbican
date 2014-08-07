@@ -150,8 +150,6 @@ class WhenTestingDogtagPlugin(testtools.TestCase):
         self.keyclient_mock.retrieve_key.assert_called_once_with('key1', None)
 
     def test_get_secret_with_twsk(self):
-        if not imports_ok:
-            self.skipTest("Dogtag imports not available")
         key_spec = mock.MagicMock()
         context = mock.MagicMock()
         twsk = mock.MagicMock()
