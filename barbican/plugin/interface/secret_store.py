@@ -163,6 +163,8 @@ class KeyAlgorithm(object):
     RSA = "rsa"
     """Constant for the Elliptic Curve algorithm."""
     EC = "ec"
+    """List of asymmetric algorithms"""
+    ASYMMETRIC_ALGORITHMS = [DIFFIE_HELLMAN, DSA, RSA, EC]
 
     """Constant for the AES algorithm."""
     AES = "aes"
@@ -170,6 +172,14 @@ class KeyAlgorithm(object):
     DES = "des"
     """Constant for the DESede (triple-DES) algorithm."""
     DESEDE = "desede"
+    """List of symmetric algorithms"""
+    SYMMETRIC_ALGORITHMS = [AES, DES, DESEDE]
+
+    def get_secret_type(self, alg):
+        if alg in self.SYMMETRIC_ALGORITHMS:
+            return SecretType.SYMMETRIC
+        else:  # TODO(kaitlin-farr) add asymmetric once it's supported
+            return None
 
 
 class KeySpec(object):
@@ -345,6 +355,20 @@ class SecretStoreBase(object):
         """
         raise NotImplementedError  # pragma: no cover
 
+    @abc.abstractmethod
+    def store_secret_supports(self, key_spec):
+        """Returns a boolean indicating if the secret can be stored.
+
+        Checks if the secret store can store the secret, give the attributes
+        of the secret in the KeySpec. For example, some plugins may need to
+        know the attributes in order to store the secret, but other plugins
+        may be able to store the secret as a blob if no attributes are given.
+
+        :param key_spec: KeySpec for the secret
+        :returns: a boolean indicating if the secret can be stored
+        """
+        raise NotImplementedError  # pragma: no cover
+
     def get_transport_key(self):
         """Gets a transport key.
 
@@ -382,9 +406,11 @@ class SecretStorePluginManager(named.NamedExtensionManager):
             invoke_kwds=invoke_kwargs
         )
 
-    def get_plugin_store(self, plugin_name=None, transport_key_needed=False):
+    def get_plugin_store(self, key_spec, plugin_name=None,
+                         transport_key_needed=False):
         """Gets a secret store plugin.
         :param: plugin_name: set to plugin_name to get specific plugin
+        :param: key_spec: KeySpec of key that will be stored
         :param: transport_key_needed: set to True if a transport
         key is required.
         :returns: SecretStoreBase plugin implementation
@@ -400,10 +426,14 @@ class SecretStorePluginManager(named.NamedExtensionManager):
             raise SecretStoreSupportedPluginNotFound()
 
         if not transport_key_needed:
-            return self.extensions[0].obj
+            for ext in self.extensions:
+                if ext.obj.store_secret_supports(key_spec):
+                    return ext.obj
 
-        for ext in self.extensions:
-            if ext.obj.get_transport_key() is not None:
+        else:
+            for ext in self.extensions:
+                if ext.obj.get_transport_key() is not None and\
+                        ext.obj.store_secret_supports(key_spec):
                     return ext.obj
 
         raise SecretStoreSupportedPluginNotFound()

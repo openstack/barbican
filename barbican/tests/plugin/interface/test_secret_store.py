@@ -22,9 +22,9 @@ from barbican.plugin.interface import secret_store as str
 class TestSecretStore(str.SecretStoreBase):
     """Secret store plugin for testing support."""
 
-    def __init__(self, generate_supports_response):
+    def __init__(self, supported_alg_list):
         super(TestSecretStore, self).__init__()
-        self.generate_supports_response = generate_supports_response
+        self.alg_list = supported_alg_list
 
     def generate_symmetric_key(self, key_spec):
         raise NotImplementedError  # pragma: no cover
@@ -39,10 +39,13 @@ class TestSecretStore(str.SecretStoreBase):
         raise NotImplementedError  # pragma: no cover
 
     def generate_supports(self, key_spec):
-        return self.generate_supports_response
+        return key_spec.alg in self.alg_list
 
     def delete_secret(self, secret_metadata):
         raise NotImplementedError  # pragma: no cover
+
+    def store_secret_supports(self, key_spec):
+        return key_spec.alg in self.alg_list
 
 
 class TestSecretStoreWithTransportKey(str.SecretStoreBase):
@@ -51,9 +54,9 @@ class TestSecretStoreWithTransportKey(str.SecretStoreBase):
     This plugin will override the relevant methods for key wrapping.
     """
 
-    def __init__(self, generate_supports_response):
+    def __init__(self, supported_alg_list):
         super(TestSecretStoreWithTransportKey, self).__init__()
-        self.generate_supports_response = generate_supports_response
+        self.alg_list = supported_alg_list
 
     def generate_symmetric_key(self, key_spec):
         raise NotImplementedError  # pragma: no cover
@@ -68,10 +71,13 @@ class TestSecretStoreWithTransportKey(str.SecretStoreBase):
         raise NotImplementedError  # pragma: no cover
 
     def generate_supports(self, key_spec):
-        return self.generate_supports_response
+        return key_spec.alg in self.alg_list
 
     def delete_secret(self, secret_metadata):
         raise NotImplementedError  # pragma: no cover
+
+    def store_secret_supports(self, key_spec):
+        return key_spec.alg in self.alg_list
 
     def get_transport_key(self):
         return "transport key"
@@ -87,65 +93,107 @@ class WhenTestingSecretStorePluginManager(testtools.TestCase):
         self.manager = str.SecretStorePluginManager()
 
     def test_get_store_supported_plugin(self):
-        plugin = TestSecretStore(True)
+        plugin = TestSecretStore([str.KeyAlgorithm.AES])
         plugin_mock = mock.MagicMock(obj=plugin)
         self.manager.extensions = [plugin_mock]
+        keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
 
         self.assertEqual(plugin,
-                         self.manager.get_plugin_store())
+                         self.manager.get_plugin_store(keySpec))
 
     def test_get_generate_supported_plugin(self):
-        plugin = TestSecretStore(True)
+        plugin = TestSecretStore([str.KeyAlgorithm.AES])
         plugin_mock = mock.MagicMock(obj=plugin)
         self.manager.extensions = [plugin_mock]
-        keySpec = str.KeySpec('AES', 128)
+        keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
 
         self.assertEqual(plugin,
                          self.manager.get_plugin_generate(keySpec))
 
     def test_get_store_no_plugin_found(self):
         self.manager.extensions = []
+        keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
         self.assertRaises(
             str.SecretStorePluginNotFound,
             self.manager.get_plugin_store,
+            keySpec,
         )
 
     def test_get_generate_no_plugin_found(self):
         self.manager.extensions = []
-        keySpec = str.KeySpec('AES', 128)
+        keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
         self.assertRaises(
             str.SecretStorePluginNotFound,
             self.manager.get_plugin_generate,
             keySpec,
         )
 
-    def test_get_generate_no_supported_plugin(self):
-        plugin = TestSecretStore(False)
+    def test_get_store_no_supported_plugin(self):
+        plugin = TestSecretStore([])
         plugin_mock = mock.MagicMock(obj=plugin)
         self.manager.extensions = [plugin_mock]
-        keySpec = str.KeySpec('AES', 128)
+        keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
+        self.assertRaises(
+            str.SecretStoreSupportedPluginNotFound,
+            self.manager.get_plugin_store,
+            keySpec,
+        )
+
+    def test_get_generate_no_supported_plugin(self):
+        plugin = TestSecretStore([])
+        plugin_mock = mock.MagicMock(obj=plugin)
+        self.manager.extensions = [plugin_mock]
+        keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
         self.assertRaises(
             str.SecretStoreSupportedPluginNotFound,
             self.manager.get_plugin_generate,
             keySpec,
         )
 
-    def test_get_store_no_plugin_with_tkey(self):
-        plugin = TestSecretStore(False)
+    def test_get_store_no_plugin_with_tkey_and_no_supports_storage(self):
+        plugin = TestSecretStore([])
         plugin_mock = mock.MagicMock(obj=plugin)
         self.manager.extensions = [plugin_mock]
+        keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
         self.assertRaises(
             str.SecretStoreSupportedPluginNotFound,
             self.manager.get_plugin_store,
+            key_spec=keySpec,
             transport_key_needed=True,
         )
 
-    def test_get_store_with_tkey(self):
-        plugin1 = TestSecretStore(False)
+    def test_get_store_plugin_with_tkey_and_no_supports_storage(self):
+        plugin = TestSecretStoreWithTransportKey([])
+        plugin_mock = mock.MagicMock(obj=plugin)
+        self.manager.extensions = [plugin_mock]
+        keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
+        self.assertRaises(
+            str.SecretStoreSupportedPluginNotFound,
+            self.manager.get_plugin_store,
+            key_spec=keySpec,
+            transport_key_needed=True,
+        )
+
+    def test_get_store_plugin_with_no_tkey_and_supports_storage(self):
+        plugin = TestSecretStore([str.KeyAlgorithm.AES])
+        plugin_mock = mock.MagicMock(obj=plugin)
+        self.manager.extensions = [plugin_mock]
+        keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
+        self.assertRaises(
+            str.SecretStoreSupportedPluginNotFound,
+            self.manager.get_plugin_store,
+            key_spec=keySpec,
+            transport_key_needed=True,
+        )
+
+    def test_get_store_plugin_with_tkey_and_supports_storage(self):
+        plugin1 = TestSecretStore([str.KeyAlgorithm.AES])
         plugin1_mock = mock.MagicMock(obj=plugin1)
-        plugin2 = TestSecretStoreWithTransportKey(False)
+        plugin2 = TestSecretStoreWithTransportKey([str.KeyAlgorithm.AES])
         plugin2_mock = mock.MagicMock(obj=plugin2)
         self.manager.extensions = [plugin1_mock, plugin2_mock]
-        self.assertEqual(
-            plugin2,
-            self.manager.get_plugin_store(transport_key_needed=True))
+        keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
+        self.assertEqual(plugin2,
+                         self.manager.get_plugin_store(
+                             key_spec=keySpec,
+                             transport_key_needed=True))

@@ -172,6 +172,14 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
         """
         return key_spec and sstore.KeyAlgorithm.AES == key_spec.alg.lower()
 
+    def store_secret_supports(self, key_spec):
+        """Key storage supported?
+
+        Specifies whether the plugin supports storage of the secret given
+        the attributes included in the KeySpec
+        """
+        return True
+
     def _find_or_create_kek_objects(self, plugin_inst, tenant_model, kek_repo):
         # Find or create a key encryption key.
         full_plugin_name = utils.generate_fullname_for(plugin_inst)

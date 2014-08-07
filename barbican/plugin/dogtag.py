@@ -259,6 +259,14 @@ class DogtagPlugin(sstore.SecretStoreBase):
         """
         return self._map_algorithm(key_spec.alg) is not None
 
+    def store_secret_supports(self, key_spec):
+        """Key storage supported?
+
+        Specifies whether the plugin supports storage of the secret given
+        the attributes included in the KeySpec
+        """
+        return True
+
     @staticmethod
     def _map_algorithm(algorithm):
         """Map Barbican algorithms to Dogtag plugin algorithms.
