@@ -206,7 +206,8 @@ class SecretDTO(object):
 
     #TODO(john-wood-w) Remove 'content_type' once secret normalization work is
     #  completed.
-    def __init__(self, type, secret, key_spec, content_type, transport_key):
+    def __init__(self, type, secret, key_spec, content_type,
+                 transport_key=None):
         """Creates a new SecretDTO.
 
         The secret is stored in the secret parameter. In the future this
