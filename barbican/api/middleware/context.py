@@ -49,10 +49,6 @@ CONF = cfg.CONF
 CONF.register_opts(context_opts)
 
 
-# TODO(jwood): I'd like to get the utils.getLogger(...) working instead:
-#  LOG = logging.getLogger(__name__)
-
-
 class BaseContextMiddleware(mw.Middleware):
     def process_response(self, resp):
         try:
