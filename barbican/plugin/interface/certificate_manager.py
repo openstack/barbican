@@ -55,7 +55,7 @@ RETRY_MSEC = 3600000
 
 class CertificatePluginNotFound(exception.BarbicanException):
     """Raised when no plugins are installed."""
-    message = u._("Certficiate plugin not found.")
+    message = u._("Certificate plugin not found.")
 
 
 class CertificateStatusNotSupported(exception.BarbicanException):
