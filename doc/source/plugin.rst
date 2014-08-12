@@ -1,4 +1,4 @@
-.. module:: barbican.crypto.plugin
+.. module:: barbican.plugin.crypto.crypto
 
 ========================================
 Cryptographic Backend Plugin Development
