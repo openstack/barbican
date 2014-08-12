@@ -46,7 +46,13 @@ CONF.register_opts(store_opts, group=store_opt_group)
 
 class SecretStorePluginNotFound(exception.BarbicanException):
     """Raised when no plugins are installed."""
-    message = u._("Secret store plugin not found.")
+    def __init__(self, plugin_name=None):
+        if plugin_name:
+            message = u._("Secret store plugin \"{0}\""
+                          " not found.").format(plugin_name)
+        else:
+            message = u._("Secret store plugin not found.")
+        super(SecretStorePluginNotFound, self).__init__(message)
 
 
 class SecretStoreSupportedPluginNotFound(exception.BarbicanException):
@@ -135,6 +141,14 @@ class SecretAlgorithmNotSupportedException(exception.BarbicanException):
                 algorithm)
         )
         self.algorithm = algorithm
+
+
+class SecretStorePluginsNotConfigured(exception.BarbicanException):
+    """Raised when there are no secret store plugins configured."""
+    def __init__(self):
+        super(SecretStorePluginsNotConfigured, self).__init__(
+            u._('No secret store plugins have been configured')
+        )
 
 
 class SecretType(object):
@@ -396,6 +410,14 @@ class SecretStoreBase(object):
         return False
 
 
+def _enforce_extensions_configured(plugin_related_function):
+    def _check_plugins_configured(self, *args, **kwargs):
+        if len(self.extensions) < 1:
+            raise SecretStorePluginsNotConfigured()
+        return plugin_related_function(self, *args, **kwargs)
+    return _check_plugins_configured
+
+
 class SecretStorePluginManager(named.NamedExtensionManager):
     def __init__(self, conf=CONF, invoke_on_load=True,
                  invoke_args=(), invoke_kwargs={}):
@@ -407,6 +429,7 @@ class SecretStorePluginManager(named.NamedExtensionManager):
             invoke_kwds=invoke_kwargs
         )
 
+    @_enforce_extensions_configured
     def get_plugin_store(self, key_spec, plugin_name=None,
                          transport_key_needed=False):
         """Gets a secret store plugin.
@@ -417,14 +440,11 @@ class SecretStorePluginManager(named.NamedExtensionManager):
         :returns: SecretStoreBase plugin implementation
         """
 
-        if len(self.extensions) < 1:
-            raise SecretStorePluginNotFound()
-
         if plugin_name is not None:
             for ext in self.extensions:
                 if utils.generate_fullname_for(ext.obj) == plugin_name:
                     return ext.obj
-            raise SecretStoreSupportedPluginNotFound()
+            raise SecretStorePluginNotFound(plugin_name)
 
         if not transport_key_needed:
             for ext in self.extensions:
@@ -439,24 +459,19 @@ class SecretStorePluginManager(named.NamedExtensionManager):
 
         raise SecretStoreSupportedPluginNotFound()
 
+    @_enforce_extensions_configured
     def get_plugin_retrieve_delete(self, plugin_name):
         """Gets a secret retrieve/delete plugin.
 
         :returns: SecretStoreBase plugin implementation
         """
 
-        if len(self.extensions) < 1:
-            raise SecretStorePluginNotFound()
-
         for ext in self.extensions:
             if utils.generate_fullname_for(ext.obj) == plugin_name:
-                retrieve_delete_plugin = ext.obj
-                break
-        else:
-            raise SecretStoreSupportedPluginNotFound()
+                return ext.obj
+        raise SecretStorePluginNotFound(plugin_name)
 
-        return retrieve_delete_plugin
-
+    @_enforce_extensions_configured
     def get_plugin_generate(self, key_spec):
         """Gets a secret generate plugin.
 
@@ -465,14 +480,7 @@ class SecretStorePluginManager(named.NamedExtensionManager):
         :returns: SecretStoreBase plugin implementation
         """
 
-        if len(self.extensions) < 1:
-            raise SecretStorePluginNotFound()
-
         for ext in self.extensions:
             if ext.obj.generate_supports(key_spec):
-                generate_plugin = ext.obj
-                break
-        else:
-            raise SecretStoreSupportedPluginNotFound()
-
-        return generate_plugin
+                return ext.obj
+        raise SecretStoreSupportedPluginNotFound()
