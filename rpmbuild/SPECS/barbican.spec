@@ -18,7 +18,7 @@ Requires(pre): shadow-utils
 #TODO(dmend): add python-cryptography once it's available
 Requires: python-alembic, python-babel, python-crypto
 Requires: python-eventlet, python-iso8601, python-jsonschema
-Requires: keystonemiddleware, python-kombu, python-netaddr
+Requires: python-keystonemiddleware, python-kombu, python-netaddr
 Requires: python-oslo-config, python-oslo-messaging
 Requires: python-paste, python-paste-deploy, python-pbr, python-pecan
 Requires: python-six, python-sqlalchemy, python-stevedore
