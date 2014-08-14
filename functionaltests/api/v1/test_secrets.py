@@ -51,9 +51,8 @@ class SecretsTestCase(base.TestCase):
         create the secret, including payload, is provided in a single POST.
         """
         json_data = json.dumps(one_phase_create_data)
-        project_id = self.client.project_id
         resp, body = self.client.post(
-            '{0}/secrets'.format(project_id), json_data, headers={
+            '/secrets', json_data, headers={
                 'content-type': 'application/json'})
         self.assertEqual(resp.status, 201)
 
@@ -68,9 +67,8 @@ class SecretsTestCase(base.TestCase):
         """
         # phase 1 - POST secret without payload
         json_data = json.dumps(two_phase_create_data)
-        project_id = self.client.project_id
         resp, body = self.client.post(
-            '{0}/secrets'.format(project_id), json_data, headers={
+            '/secrets', json_data, headers={
                 'content-type': 'application/json'})
         self.assertEqual(resp.status, 201)
 
@@ -84,7 +82,7 @@ class SecretsTestCase(base.TestCase):
         # phase 2 - provide (PUT) the secret payload
         json_data = json.dumps(two_phase_payload_data)
         resp, body = self.client.post(
-            '{0}/secrets/{1}'.format(project_id, secret_id), json_data,
+            '/secrets/{0}'.format(secret_id), json_data,
             headers={'content-type': 'application/json'})
         self.assertEqual(resp.status, 200)
 

@@ -38,22 +38,16 @@ class WhenTestingHostnameForRefsGetter(testtools.TestCase):
         utils.CONF.host_href = self._old_host
         utils.API_VERSION = self._old_version
 
-    def test_hostname_for_refs_no_keystone_id(self):
+    def test_hostname_for_refs(self):
         uri = utils.hostname_for_refs(resource=self.resource)
-        self.assertEqual(uri, "{0}/{1}".format(self.host, self.version))
-
-    def test_hostname_for_refs_no_resource(self):
-        uri = utils.hostname_for_refs(keystone_id=self.keystone_id)
         self.assertEqual(uri, "{0}/{1}/{2}".format(self.host,
                                                    self.version,
-                                                   self.keystone_id))
+                                                   self.resource))
 
-    def test_hostname_for_refs_with_resource_and_keystone_id(self):
-        uri = utils.hostname_for_refs(keystone_id=self.keystone_id,
-                                      resource=self.resource)
-        self.assertEqual(uri, "{0}/{1}/{2}/{3}".format(self.host, self.version,
-                                                       self.keystone_id,
-                                                       self.resource))
+    def test_hostname_for_refs_no_resource(self):
+        uri = utils.hostname_for_refs()
+        self.assertEqual(uri, "{0}/{1}".format(self.host,
+                                               self.version))
 
 
 class WhenTestingAcceptEncodingGetter(testtools.TestCase):

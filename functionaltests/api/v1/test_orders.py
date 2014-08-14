@@ -35,9 +35,8 @@ class OrdersTestCase(base.TestCase):
         create the order is provided in a single POST.
         """
         json_data = json.dumps(create_order_data)
-        project_id = self.client.project_id
         resp, body = self.client.post(
-            '{0}/orders'.format(project_id), json_data, headers={
+            '/orders', json_data, headers={
                 'content-type': 'application/json'})
         self.assertEqual(resp.status, 202)
 

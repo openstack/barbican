@@ -26,7 +26,24 @@ import webtest
 from barbican.api import app
 from barbican.api import controllers
 from barbican.common import exception as excep
+import barbican.context
 from barbican.model import models
+
+
+def get_barbican_env(keystone_id):
+    class NoopPolicyEnforcer(object):
+        def enforce(self, *args, **kwargs):
+            return
+
+    kwargs = {'roles': None,
+              'user': None,
+              'tenant': keystone_id,
+              'is_admin': True,
+              'policy_enforcer': NoopPolicyEnforcer()}
+    barbican_env = {'barbican.context':
+                    barbican.context.RequestContext(**kwargs)}
+    return barbican_env
+
 
 SAMPLE_TRANSPORT_KEY = """
     -----BEGIN CERTIFICATE-----
@@ -86,6 +103,7 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
             WhenGettingTransKeysListUsingTransportKeysResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.keystone_id)
 
     @property
     def root(self):
@@ -125,8 +143,8 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
         }
 
     def test_should_get_list_transport_keys(self):
-        resp = self.app.get('/%s/transport_keys/' %
-                            self.keystone_id, self.params)
+        resp = self.app.get('/transport_keys/',
+                            self.params)
 
         self.repo.get_by_create_date \
             .assert_called_once_with(plugin_name=None,
@@ -150,8 +168,8 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
                         (self.num_keys + 2))
 
     def test_response_should_include_total(self):
-        resp = self.app.get('/%s/transport_keys/' %
-                            self.keystone_id, self.params)
+        resp = self.app.get('/transport_keys/',
+                            self.params)
         self.assertIn('total', resp.namespace)
         self.assertEqual(resp.namespace['total'], self.total)
 
@@ -159,8 +177,8 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
 
         del self.tkeys[:]
 
-        resp = self.app.get('/%s/transport_keys/' %
-                            self.keystone_id, self.params)
+        resp = self.app.get('/transport_keys/',
+                            self.params)
 
         self.repo.get_by_create_date \
             .assert_called_once_with(plugin_name=None,
@@ -175,10 +193,10 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
         if limit_arg:
             offset = int(offset_arg)
             limit = int(limit_arg)
-            return '/{0}/transport_keys?limit={1}&offset={2}'.format(
-                keystone_id, limit, offset)
+            return '/transport_keys?limit={0}&offset={1}'.format(
+                limit, offset)
         else:
-            return '/{0}/transport_keys'.format(self.keystone_id)
+            return '/transport_keys'
 
 
 class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
@@ -187,6 +205,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
             WhenCreatingTransKeysListUsingTransportKeysResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.keystone_id)
 
     @property
     def root(self):
@@ -210,7 +229,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
 
     def test_should_add_new_transport_key(self):
         resp = self.app.post_json(
-            '/%s/transport_keys/' % self.keystone_id,
+            '/transport_keys/',
             self.transport_key_req
         )
         self.assertEqual(resp.status_int, 201)
@@ -221,7 +240,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
 
     def test_should_raise_add_new_transport_key_no_secret(self):
         resp = self.app.post_json(
-            '/%s/transport_keys/' % self.keystone_id,
+            '/transport_keys/',
             {},
             expect_errors=True
         )
@@ -229,7 +248,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
 
     def test_should_raise_add_new_transport_key_bad_json(self):
         resp = self.app.post(
-            '/%s/transport_keys/' % self.keystone_id,
+            '/transport_keys/',
             '',
             expect_errors=True,
             content_type='application/json'
@@ -238,7 +257,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
 
     def test_should_raise_add_new_transport_key_no_content_type_header(self):
         resp = self.app.post(
-            '/%s/transport_keys/' % self.keystone_id,
+            '/transport_keys/',
             self.transport_key_req,
             expect_errors=True,
         )
@@ -252,6 +271,7 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
             WhenGettingOrDeletingTransKeyUsingTransportKeyResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
 
     @property
     def root(self):
@@ -277,22 +297,20 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
         self.repo.get.return_value = self.tkey
 
     def test_should_get_transport_key(self):
-        self.app.get('/%s/transport_keys/%s/' % (self.tenant_keystone_id,
-                                                 self.tkey.id))
+        self.app.get('/transport_keys/{0}/'.format(self.tkey.id))
 
         self.repo.get.assert_called_once_with(entity_id=self.tkey.id)
 
     def test_should_throw_exception_for_get_when_trans_key_not_found(self):
         self.repo.get.return_value = None
         resp = self.app.get(
-            '/%s/transport_keys/%s/' % (self.tenant_keystone_id, self.tkey.id),
+            '/transport_keys/{0}/'.format(self.tkey.id),
             expect_errors=True
         )
         self.assertEqual(resp.status_int, 404)
 
     def test_should_delete_transport_key(self):
-        self.app.delete('/%s/transport_keys/%s/' % (self.tenant_keystone_id,
-                                                    self.tkey.id))
+        self.app.delete('/transport_keys/{0}/'.format(self.tkey.id))
         self.repo.delete_entity_by_id \
             .assert_called_once_with(entity_id=self.tkey.id,
                                      keystone_id=self.tenant_keystone_id)
@@ -301,7 +319,7 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
         self.repo.delete_entity_by_id.side_effect = excep.NotFound(
             "Test not found exception")
         resp = self.app.delete(
-            '/%s/transport_keys/%s/' % (self.tenant_keystone_id, self.tkey.id),
+            '/transport_keys/{0}/'.format(self.tkey.id),
             expect_errors=True
         )
         self.assertEqual(resp.status_int, 404)

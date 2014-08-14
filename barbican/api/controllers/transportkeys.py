@@ -105,11 +105,11 @@ class TransportKeysController(object):
                                            'total': total}
         else:
             transport_keys_resp = [
-                hrefs.convert_transport_key_to_href(keystone_id, s.id)
+                hrefs.convert_transport_key_to_href(s.id)
                 for s in transport_keys
             ]
             transport_keys_resp_overall = hrefs.add_nav_hrefs(
-                'transport_keys', keystone_id, offset, limit, total,
+                'transport_keys', offset, limit, total,
                 {'transport_keys': transport_keys_resp}
             )
             transport_keys_resp_overall.update({'total': total})
@@ -135,9 +135,9 @@ class TransportKeysController(object):
         self.repo.create_from(new_key)
 
         pecan.response.status = 201
-        pecan.response.headers['Location'] = '/{0}/transport_keys/{1}'.format(
-            keystone_id, new_key.id
+        pecan.response.headers['Location'] = '/transport_keys/{0}'.format(
+            new_key.id
         )
-        url = hrefs.convert_transport_key_to_href(keystone_id, new_key.id)
+        url = hrefs.convert_transport_key_to_href(new_key.id)
         LOG.debug('URI to transport key is {0}'.format(url))
         return {'transport_key_ref': url}

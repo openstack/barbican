@@ -27,7 +27,6 @@ class VersionController(object):
 
     @pecan.expose('json')
     @controllers.handle_exceptions(u._('Version retrieval'))
-    @controllers.enforce_rbac('version:get')
     def index(self):
         return {
             'v1': 'current',

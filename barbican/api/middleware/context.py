@@ -136,13 +136,27 @@ class ContextMiddleware(BaseContextMiddleware):
 
 
 class UnauthenticatedContextMiddleware(BaseContextMiddleware):
+    def _get_project_id_from_header(self, req):
+        project_id = req.headers.get('X-Project-Id')
+        if not project_id:
+            accept_header = req.headers.get('Accept')
+            if not accept_header:
+                req.headers['Accept'] = 'text/plain'
+            raise webob.exc.HTTPBadRequest(detail=u._('Missing X-Project-Id'))
+
+        return project_id
+
     def process_request(self, req):
         """Create a context without an authorized user."""
+        project_id = self._get_project_id_from_header(req)
+
         kwargs = {
             'user': None,
-            'tenant': None,
+            'tenant': project_id,
             'roles': [],
-            'is_admin': True,
+            'is_admin': True
         }
 
-        req.context = barbican.context.RequestContext(**kwargs)
+        context = barbican.context.RequestContext(**kwargs)
+        context.policy_enforcer = None
+        req.environ['barbican.context'] = context
