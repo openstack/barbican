@@ -18,6 +18,7 @@ from oslo.config import cfg
 from barbican.common import utils
 from barbican.model import models
 from barbican.plugin.crypto import crypto
+from barbican.plugin.crypto import manager
 from barbican.plugin.interface import secret_store as sstore
 
 CONF = cfg.CONF
@@ -44,10 +45,9 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
         """
 
         # Find HSM-style 'crypto' plugin.
-        encrypting_plugin = crypto.CryptoPluginManager()\
-            .get_plugin_store_generate(
-                crypto.PluginSupportTypes.ENCRYPT_DECRYPT
-            )
+        encrypting_plugin = manager.PLUGIN_MANAGER.get_plugin_store_generate(
+            crypto.PluginSupportTypes.ENCRYPT_DECRYPT
+        )
 
         # Find or create a key encryption key metadata.
         kek_datum_model, kek_meta_dto = self._find_or_create_kek_objects(
@@ -85,7 +85,7 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
         datum_model = context.secret_model.encrypted_data[0]
 
         # Find HSM-style 'crypto' plugin.
-        decrypting_plugin = crypto.CryptoPluginManager().get_plugin_retrieve(
+        decrypting_plugin = manager.PLUGIN_MANAGER.get_plugin_retrieve(
             datum_model.kek_meta_tenant.plugin_name)
 
         # wrap the KEKDatum instance in our DTO
@@ -123,11 +123,11 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
         plugin_type = self._determine_generation_type(key_spec.alg)
         if crypto.PluginSupportTypes.SYMMETRIC_KEY_GENERATION != plugin_type:
             raise sstore.SecretAlgorithmNotSupportedException(key_spec.alg)
-        generating_plugin = crypto.CryptoPluginManager()\
-            .get_plugin_store_generate(plugin_type,
-                                       key_spec.alg,
-                                       key_spec.bit_length,
-                                       key_spec.mode)
+        generating_plugin = manager.PLUGIN_MANAGER.get_plugin_store_generate(
+            plugin_type,
+            key_spec.alg,
+            key_spec.bit_length,
+            key_spec.mode)
 
         # Find or create a key encryption key metadata.
         kek_datum_model, kek_meta_dto = self._find_or_create_kek_objects(

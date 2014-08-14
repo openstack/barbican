@@ -14,14 +14,12 @@
 import abc
 
 from oslo.config import cfg
-from stevedore import named
 
 import six
 
 from barbican.common import exception
 from barbican.common import utils
 from barbican.openstack.common import gettextutils as u
-from barbican.plugin.interface import secret_store
 
 LOG = utils.getLogger(__name__)
 
@@ -367,57 +365,3 @@ class CryptoPluginBase(object):
         :param algorithm: String algorithm name if needed
         """
         raise NotImplementedError  # pragma: no cover
-
-
-class CryptoPluginManager(named.NamedExtensionManager):
-    def __init__(self, conf=CONF, invoke_on_load=True,
-                 invoke_args=(), invoke_kwargs={}):
-        super(CryptoPluginManager, self).__init__(
-            conf.crypto.namespace,
-            conf.crypto.enabled_crypto_plugins,
-            invoke_on_load=invoke_on_load,
-            invoke_args=invoke_args,
-            invoke_kwds=invoke_kwargs
-        )
-
-    def get_plugin_store_generate(self, type_needed, algorithm=None,
-                                  bit_length=None, mode=None):
-        """Gets a secret store or generate plugin that supports provided type.
-
-        :param type_needed: PluginSupportTypes that contains details on the
-        type of plugin required
-        :returns: CryptoPluginBase plugin implementation
-        """
-
-        if len(self.extensions) < 1:
-            raise CryptoPluginNotFound()
-
-        for ext in self.extensions:
-            if ext.obj.supports(type_needed, algorithm, bit_length, mode):
-                plugin = ext.obj
-                break
-        else:
-            raise secret_store.SecretStorePluginNotFound()
-
-        return plugin
-
-    def get_plugin_retrieve(self, plugin_name_for_store):
-        """Gets a secret retrieve plugin that supports the provided type.
-
-        :param type_needed: PluginSupportTypes that contains details on the
-        type of plugin required
-        :returns: CryptoPluginBase plugin implementation
-        """
-
-        if len(self.extensions) < 1:
-            raise CryptoPluginNotFound()
-
-        for ext in self.extensions:
-            decrypting_plugin = ext.obj
-            plugin_name = utils.generate_fullname_for(decrypting_plugin)
-            if plugin_name == plugin_name_for_store:
-                break
-        else:
-            raise secret_store.SecretStorePluginNotFound()
-
-        return decrypting_plugin
