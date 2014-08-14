@@ -33,7 +33,7 @@ from barbican.openstack.common import gettextutils as u
 CONF = cfg.CONF
 DEFAULT_PLUGIN_NAMESPACE = 'barbican.certificate.plugin'
 #TODO(chellygel): Create a default 'dummy' plugin for certificates.
-DEFAULT_PLUGINS = ['symantec']
+DEFAULT_PLUGINS = []
 
 cert_opt_group = cfg.OptGroup(name='certificate',
                               title='Certificate Plugin Options')
