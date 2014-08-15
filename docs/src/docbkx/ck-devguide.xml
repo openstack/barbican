@@ -22,6 +22,16 @@
           </itemizedlist>
         </revdescription>
       </revision>
+      <revision>
+        <date>2014-08-14</date>
+        <revdescription>
+          <itemizedlist spacing="compact">
+            <listitem>
+              <para>Updated draft with new concepts</para>
+            </listitem>
+          </itemizedlist>
+        </revdescription>
+      </revision>
     </revhistory>
     <!--
        The values in raxm:metadata are used to control where the content appears on the landing page in docs.rackspace.com.
@@ -46,18 +56,34 @@
       length. </para>
     <section xml:id="section_eow_tmw_ad">
       <title>Intended Audience</title>
-      <para>This document is intended for software developers
-        interested in developing applications using the Barbican
-        Application Programming Interface (<abbrev>API</abbrev>). </para>
+      <para>This guide assists software developers who want to develop
+      applications using Barbican.  To use this information, you should have
+      access to an active OpenStack deployment and be familiar with the
+      following concepts:
+      <itemizedlist>
+            <listitem>
+              <para>Barbican key manager service</para>
+            </listitem>
+            <listitem>
+              <para>RESTful web services</para>
+            </listitem>
+            <listitem>
+              <para>HTTP/1.1</para>
+            </listitem>
+            <listitem>
+              <para>JSON data serialization format</para>
+            </listitem>
+          </itemizedlist>
+      </para>
     </section>
     <section xml:id="Additional_Resources">
-      <title>Additional resources</title>
+      <title>Additional Resources</title>
       <para>You can find additional information about Barbican at
         https://github.com/openstack/barbican. For information about
         OpenStack, refer to http://docs.openstack.org/. </para>
     </section>
     <section xml:id="change_history">
-      <title>Document change history</title>
+      <title>Document Change History</title>
       <para>This version of the Developer Guide replaces and obsoletes
         all previous versions. The most recent changes are described
         in the table above.</para>
@@ -66,561 +92,55 @@
       </para>
     </section>
   </chapter>
-  <chapter xml:id="Barbican_Core_Concepts">
-    <title>Barbican core concepts</title>
-    <para> </para>
-    <section xml:id="the-xml-id-attribute">
-      <title>Barbican architecture</title>
-      <para>The following diagram provides a visual overview of the
-        Barbican API Architecture:</para>
-      <para>
-        <figure>
-          <title>Barbican API Architecture</title>
-          <mediaobject>
-            <imageobject>
-              <imagedata
-                fileref="images/Barbican architecture drawing.png"
-                contentwidth="4in" align="left"/>
-            </imageobject>
-          </mediaobject>
-        </figure>
-      </para>
-      <para>The Barbican API architecture consists of several API
-        nodes, which handle incoming REST requests to Barbican. These
-        nodes can interact with the database directly if the request
-        can be completed synchronously, like in the case of
-          <command>GET</command> requests. Otherwise, the queue
-        supports asynchronous processing by worker nodes. </para>
-      <para>Asynchronous processing can include interactions with
-        third parties such as certificate authorities. Barbican
-        supports multiple API and worker nodes being added to or
-        removed from the network to support advanced features such as
-        auto scaling. </para>
-    </section>
-    <section xml:id="Secrets">
-      <title>Secrets resource</title>
-      <para>The secrets resource is the heart of the Barbican service.
-        It provides access to the secret and keying data that is stored
-        in the system. </para>
-      <para>The secret scheme represents the actual secret or key that
-      is presented to the application. Secrets can be of any
-        format, but additional functionality may be available for
-        known types of symmetric or asymmetric keys. The following
-        shows an example of a secret:</para>
-      <para>
-        <programlisting>{
-  "uuid": "e2b633c7-fda5-4be8-b42c-9a2c9280284d",
-  "name": "AES key",
-  "expiration": "2014-02-28T19:14:44.180394",
-  "secret": "b7990b786ee9659b43e6b1cd6136de07d9c5…",
-  "secret_type": "application/aes-256-cbc",
-}</programlisting>
-      </para>
-      <para>A secret consists of the following elements:</para>
-      <para>
-        <table rules="all">
-          <caption>Elements of a secret</caption>
-          <col width="15%"/>
-          <col width="85%"/>
-          <thead>
-            <tr>
-              <th>Element</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>uuid</td>
-              <td>Unique identifier for the secret. This value is
-                assigned by the API.</td>
-            </tr>
-            <tr>
-              <td>name</td>
-              <td>Human readable name for the secret.</td>
-            </tr>
-            <tr>
-              <td>expiration</td>
-              <td>The expiration date for the secret in ISO-8601
-                format. Once the secret has expired, it will no longer
-                be returned by the API or agent.</td>
-            </tr>
-            <tr>
-              <td>secret</td>
-              <td>The base64-encoded value of the secret.</td>
-            </tr>
-            <tr>
-              <td>secret_type</td>
-              <td>An indication of the type of the file presenting the
-                secret.</td>
-            </tr>
-          </tbody>
-        </table>
-      </para>
-      <para>You can use one of the following methods to store a
-        secret:</para>
-      <para>
-        <itemizedlist>
-          <listitem>
-            <para>Submit a <command>POST</command> request against the
-              secrets resource and include the secret metadata in the
-                <parameter>payload</parameter> parameter.</para>
-          </listitem>
-          <listitem>
-            <para>Submit a <command>POST</command> request without a
-                <parameter>payload</parameter> parameter against the
-              secrets resource and then include the payload in a
-              subsequent <command>PUT</command> request. This mode
-              enables you to upload a binary file to the Barbican
-              database directly for encrypted storage.</para>
-          </listitem>
-        </itemizedlist>
-      </para>
-      <para>
-        <note>
-          <para>Submitting a <command>POST</command> request creates
-            secret <emphasis role="italic">metadata</emphasis>. If the
-            payload is provided with the <command>POST</command>
-            request, then it is encrypted and stored, and then linked
-            with this metadata. If no payload is included with the
-              <command>POST</command> request, it must be provided
-            with a subsequent <command>PUT</command> request. The
-            secret resource encrypts and stores client-provided secret
-            information and metadata. In contrast, the orders resource
-            generats actual secret information on behalf of
-            clients.</para>
-        </note>
-      </para>
-      <section xml:id="Examples_of_Secrets">
-        <title>Examples of secret combinations</title>
-        <para>This section outlines the different request sequences
-          you can adhere to when storing secrets. Each sequence uses
-          different combinations for the <emphasis role="italic"
-            >content type</emphasis> and <emphasis role="italic"
-            >content encoding</emphasis> fields. The content type and
-          content encoding information is specified either in the
-            <parameter>payload_content_type</parameter> and
-            <parameter>payload_content_encoding</parameter> parameters
-          of a POST request or in the <parameter>Accept</parameter>
-          and <parameter>Content-type</parameter> headers of a GET
-          request.</para>
-        <para>The following request combinations are possible:</para>
-        <para>
-          <itemizedlist>
-            <listitem>
-              <para>One-step sequence to create and retrieve a secret
-                using UTF-8/ASCII format</para>
-            </listitem>
-            <listitem>
-              <para>One-step sequence to create and retrieve a secret
-                using binary format</para>
-            </listitem>
-            <listitem>
-              <para>Two-step sequence to create and retrieve a secret
-                using binary format</para>
-            </listitem>
-            <listitem>
-              <para>One-step sequence to create and retrieve a secret
-                using plain text format</para>
-            </listitem>
-          </itemizedlist>
-        </para>
-        <section xml:id="One_step_secret_using_UTF">
-          <title>One-step sequence for secrets using
-            UTF-8/ASCII</title>
-          <para>The following table shows the sequence for creating and
-            retrieving a secret using UTF-8/ASCII format. When you
-            submit a <command>POST</command> request with the
-              <parameter>payload_content_type</parameter> parameter set to
-              <code>text/plain</code> and do not specify the
-              <parameter>payload_content_encoding</parameter>
-            parameter, the payload sent with the <command>POST</command> request
-            will be encrypted and you should receive a response
-             with a secret reference URL.</para>
-          <para>
-            <table rules="all">
-              <caption>One-Step UTF-8/ASCII Secret
-                Create/Retrieve</caption>
-              <col width="21%"/>
-              <col width="20%"/>
-              <col width="25%"/>
-              <col width="34%"/>
-              <thead>
-                <tr>
-                  <th>Method</th>
-                  <th>Content Type</th>
-                  <th>Content Encoding</th>
-                  <th>Result</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><command>POST</command> secrets</td>
-                  <td><code>text/plain</code></td>
-                  <td>Must be omitted</td>
-                  <td>The supplied payload is encrypted</td>
-                </tr>
-                <tr>
-                  <td><command>GET</command> secrets</td>
-                  <td><code>application/json</code> for
-                      <code>Accept</code> header</td>
-                  <td>Not required/ignored</td>
-                  <td>Returns JSON metadata, with
-                      <parameter>content-types</parameter> field set
-                    to <code>"default": "text/plain"</code>.</td>
-                </tr>
-                <tr>
-                  <td><command>GET</command> secrets</td>
-                  <td><code>text/plain</code> for <code>Accept</code>
-                    header</td>
-                  <td>Not required/ignored</td>
-                  <td>Returns the decrypted payload from the previous
-                    request.</td>
-                </tr>
-              </tbody>
-            </table>
-          </para>
-        </section>
-        <section xml:id="One_Step_Binary_Secret">
-          <title>One-step sequence for binary secrets</title>
-          <para>The following table shows the one-step sequence for
-            creating and retrieving a secret using binary format. When
-            you submit a <command>POST</command> request with the
-              <parameter>payload_content_type</parameter> parameter set to
-              <code>application/octet-stream</code> and the
-              <parameter>payload_content_encoding</parameter>
-            parameter set to <code>base64</code>, the payload
-            will be converted from base64 to binary format and encrypted.
-             You should also receive a response
-             with a secret reference URL.</para>
+  <chapter xml:id="other-features">
+    <title>General API Information</title>
+    <section xml:id="Core-Concepts">
+      <title>Barbican Core Concepts</title>
+      <para>Barbican Core Concepts</para>
           <table rules="all">
-            <caption>One-Step Binary Secret Create/Retrieve</caption>
+          <caption>Barbican Core Concepts</caption>
+            <col width="11%"/>
+            <col width="11%"/>
             <col width="16%"/>
-            <col width="21%"/>
-            <col width="19%"/>
-            <col width="44%"/>
+            <col width="16%"/>
+            <col width="16%"/>
+            <col width="16%"/>
+            <col width="16%"/>
             <thead>
-              <tr>
-                <th>Method</th>
-                <th>Content Type</th>
-                <th>Content Encoding</th>
-                <th>Result</th>
+              <tr align="center">
+                <td colspan="2">Concept</td>
+                <td colspan="5">Description</td>
               </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><command>POST</command> secrets</td>
-                <td><code>application/octet-stream</code></td>
-                <td><code>base64</code></td>
-                <td>Supplied payload is converted from base64 to
-                  binary, and then encrypted.</td>
+            </thead><tbody>
+              <tr align="left">
+                <td colspan="2">Secret</td>
+                <td colspan="5"
+                    >A secret can be any data that requires security conscious
+                    storage.  This may be reflected as a key, credentials, config
+                    file, etc.
+                </td>
               </tr>
-              <tr>
-                <td><command>GET</command> secrets</td>
-                <td><code>application/json</code> for
-                    <code>Accept</code> header</td>
-                <td>Not required/ignored</td>
-                <td>JSON metadata, with the
-                    <parameter>content-types</parameter> field set to
-                    <code>"default":
-                  "application/octet-stream"</code></td>
+              <tr align="left">
+                <td colspan="2">Order</td>
+                <td colspan="5"
+                    >An order is a request to Barbican to create a secret of a
+                    particular type.  This may include specifying an encryption
+                    algorithm or bit length, for example.
+                </td>
               </tr>
-              <tr>
-                <td><command>GET</command> secrets</td>
-                <td><code>application/octet-stream</code> for
-                    <code>Accept</code> header</td>
-                <td>Not specified</td>
-                <td>Previous payload is decrypted and returned as raw
-                  binary, even if the <command>POST</command> request
-                  provided data in <code>base64</code> format.</td>
+              <tr align="left">
+                <td colspan="2">Container</td>
+                <td colspan="5">
+                  A container is a way to logically group secrets that may be of
+                  a similar type; for example, grouping a private key,
+                  certificate, and bundle for an SSL certificate in a single
+                  container.
+                </td>
               </tr>
             </tbody>
           </table>
-        </section>
-        <section xml:id="Two_Step_Binary_Secret">
-          <title>Two-step sequence for binary secrets</title>
-          <para>The following table shows the two-step sequence for
-            creating and retrieving a secret using binary format. First
-            submit a <command>POST</command> request without specifying
-             a payload, <code>payload_content_type</code>, or <code>payload_content_encoding</code>.
-            Submitting a <command>POST</command> request without this
-            information creates metadata for the secret. To add payload 
-            information, submit a <command>PUT</command> request with the 
-            secret id that was returned from the <command>POST</command>
-            request, and set the content type to <code>application/octet</code>
-            stream and the content encoding to <code>base64</code>. This will convert
-            the payload from <code>base64</code> to binary format and then encrypt
-            it.</para>
-          <para>
-            <table rules="all">
-              <caption>Two-Step Binary Secret
-                Create/Retrieve</caption>
-              <col width="14%"/>
-              <col width="23%"/>
-              <col width="18%"/>
-              <col width="45%"/>
-              <thead>
-                <tr>
-                  <th>Method</th>
-                  <th>Content Type</th>
-                  <th>Content Encoding</th>
-                  <th>Result</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><command>POST</command> secrets</td>
-                  <td>Not required/ignored</td>
-                  <td>Not required/ignored</td>
-                  <td>Only metadata is created. If the
-                      <parameter>payload_content_type</parameter> or
-                      <parameter>payload_content_encoding</parameter>
-                    parameters were provided, they are not used or
-                    saved with the metadata. The
-                      subsequent<command>PUT</command> request
-                    determines the secret's content type.</td>
-                </tr>
-                <tr>
-                  <td><command>PUT</command> secrets, first option
-                    with content encoding set to base64</td>
-                  <td><code>Content-Type</code> header set to
-                      <code>application/octet-stream</code></td>
-                  <td><code>Content-Encoding</code> header set to
-                      <code>base64</code></td>
-                  <td>Supplied request body is converted from
-                      <code>base64</code> to binary, then
-                    encrypted.</td>
-                </tr>
-                <tr>
-                  <td><command>PUT</command> secrets, second option
-                    as binary</td>
-                  <td><code>Content-Type</code> header set to
-                      <code>application/octet-stream</code></td>
-                  <td>Not specified</td>
-                  <td>Supplied request body is encrypted as is.</td>
-                </tr>
-                <tr>
-                  <td><command>GET</command> secrets (metadata)</td>
-                  <td><code>Accept</code> header set to
-                      <code>application/json</code></td>
-                  <td>Not required/ignored</td>
-                  <td>Returns JSON metadata, with
-                      <parameter>content-types</parameter> field set
-                    to <code>"default":
-                      "application/octet-stream"</code></td>
-                </tr>
-                <tr>
-                  <td><command>GET</command> secrets (decrypted)</td>
-                  <td><code>Accept</code> header set to
-                      <code>application/octet-stream</code></td>
-                  <td>Not required/ignored</td>
-                  <td>The previous request is decrypted and returned
-                    as raw binary.</td>
-                </tr>
-              </tbody>
-            </table>
-          </para>
-        </section>
-        <section xml:id="Two_Step_Plain_Text_Secret">
-          <title>Two-step sequence for plain text secrets</title>
-          <para>The following table shows the two-step sequence for
-            creating and retrieving a secret using binary format. First
-            submit a <command>POST</command> request without
-            specifying a payload, <code>payload_content_type</code>, or
-            <code>payload_content_encoding</code>. Submitting a <command>POST</command>
-            request without payload creates metadata for the secret.
-            To add payload information, submit a
-              <command>PUT</command> request with the secret id that
-            was returned from the <command>POST</command> request, and
-            set the content type to <code>text/plain</code> which will
-            store the payload as is.</para>
-          <para>
-            <table rules="all">
-              <caption>Two-Step Plain-Text Secret
-                Create/Retrieve</caption>
-              <col width="16%"/>
-              <col width="16%"/>
-              <col width="26%"/>
-              <col width="42%"/>
-              <thead>
-                <tr>
-                  <th>Action</th>
-                  <th>Content Type</th>
-                  <th>Content Encoding</th>
-                  <th>Result</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><command>POST</command></td>
-                  <td>Not required/ignored</td>
-                  <td>Not required/ignored</td>
-                  <td>Only metadata is created. If the
-                      <parameter>payload_content_type</parameter> or
-                      <parameter>payload_content_encoding</parameter>
-                    parameters were provided, they are not used or
-                    saved with the metadata. The subsequent
-                      <command>PUT</command> request specifies the
-                    content format for the secret.</td>
-                </tr>
-                <tr>
-                  <td><command>PUT </command></td>
-                  <td><code>Content-Type</code> header is set to
-                      <code>text/plain</code>.</td>
-                  <td>Not required/ignored</td>
-                  <td>Supplied request body is encrypted as is.</td>
-                </tr>
-                <tr>
-                  <td><command>GET</command></td>
-                  <td><code>Accept</code> header is  set to
-                      <code>application/json</code>.</td>
-                  <td>Not required/ignored</td>
-                  <td>Returns JSON metadata, with the
-                      <parameter>content-types</parameter> field set
-                    to <code>"default": "text/plain"</code></td>
-                </tr>
-                <tr>
-                  <td><command>GET</command></td>
-                  <td><code>Accept</code> header is set to
-                      <code>text/plain</code>.</td>
-                  <td>Not specified</td>
-                  <td>The previous request is decrypted and returned
-                    as UTF-8 text.</td>
-                </tr>
-              </tbody>
-            </table>
-          </para>
-        </section>
-      </section>
     </section>
-    <section xml:id="Orders">
-      <title>Orders</title>
-      <para>The orders resource allows for the generation of secret
-        material by Barbican. The ordering object encapsulates the
-        workflow and history for the creation of a secret. This
-        interface is implemented as an asynchronous process since the
-        time to generate a secret can vary depending on the type of
-        secret. </para>
-      <para>The following shows an example of an order:</para>
-      <para>
-        <programlisting>{
-    "status": "ACTIVE",
-    "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/12345/secrets/0b759c30-8ed2-4c3e-ab7d-6320f9655e60",
-    "updated": "2014-05-02T18:02:44.381024",
-    "created": "2014-05-02T18:02:44.297474",
-    "secret": {
-        "name": "secretname",
-        "algorithm": "aes",
-        "payload_content_type": "application/octet-stream",
-        "expiration": null,
-        "bit_length": 256,
-        "mode": "cbc"
-    },
-    "order_ref": "https://<replaceable>endpointURL</replaceable>/v1/12345/orders/18e3f713-ddf0-4c49-99c4-76794e65c870"
-}</programlisting>
-      </para>
-      <para>An order consists of the following elements:</para>
-      <para>
-        <table rules="all">
-          <caption>Elements of an order</caption>
-          <col width="15%"/>
-          <col width="85%"/>
-          <thead>
-            <tr>
-              <th>Element</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>secret</td>
-              <td>Lists all the secret parameters provided in the
-                original order request. </td>
-            </tr>
-            <tr>
-              <td>order_ref</td>
-              <td>Specifies the URI pointing to the order.</td>
-            </tr>
-            <tr>
-              <td>status</td>
-              <td>Specifis the status of the order. Can be
-                  <code>PENDING</code>, <code>ACTIVE</code> or
-                  <code>ERROR</code>. </td>
-            </tr>
-            <tr>
-              <td>secret_ref</td>
-              <td>Specifies the URI to the secret <emphasis
-                  role="italic">once it is generated</emphasis>. This
-                field is not available unless the status is
-                  <code>ACTIVE</code>.</td>
-            </tr>
-            <tr>
-              <td>error_status_code</td>
-              <td>Optional. Specifies the HTTP-style status code of
-                the root cause error condition, only if the status is
-                  <code>ERROR</code>.</td>
-            </tr>
-            <tr>
-              <td>error_reason</td>
-              <td>Optional. Provides details of the root cause of the
-                error, only if the status is <code>ERROR</code>.</td>
-            </tr>
-          </tbody>
-        </table>
-      </para>
-      <section xml:id="Generating_Order">
-        <title>Generating an order</title>
-        <para>This section describes how to generate an order through
-          the Barbican API.</para>
-        <para>
-          <orderedlist>
-            <listitem>
-              <para>Upload a plain-text order by submitting a
-                  <command>POST</command> request at a command-line
-                interface, as shown in the following example:</para>
-              <para>
-                <example>
-                  <title>Uploading an Order JSON Request
-                    Example</title>
-                  <programlisting language="json"><xi:include href="./samples/reqCreateOrder.json" parse="text"/></programlisting>
-                </example>
-              </para>
-              <para>Make sure to have a payload specified, as well as
-                a corresponding content type and content
-                encoding.</para>
-              <para>If the call is successful, you will receive a
-                response like the following one:</para>
-              <para>
-                <programlisting>{
-   "order_ref": "https://<replaceable>endpointURL</replaceable>/v1/123456/orders/62d57f53-ecfe-4ae4-87bd-fab2f24e29bc"
-} </programlisting>
-              </para>
-            </listitem>
-            <listitem>
-              <para>Record the order ID that is returned in the
-                response (in the example,
-                62d57f53-ecfe-4ae4-87bd-fab2f24e29bc). You will use
-                this ID for the next request.</para>
-            </listitem>
-            <listitem>
-              <para>Retrieve the order by typing the following
-                command:</para>
-              <para>
-                <programlisting>curl -H 'Accept: text/plain' &lt;http://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/orders/<replaceable>orderID</replaceable></programlisting>
-              </para>
-              <para>If the call is successful, it will return a
-                response like the following one:</para>
-              <para>
-                <programlisting language="json"><xi:include href="./samples/resCreateSecret.json" parse="text"/></programlisting>
-              </para>
-            </listitem>
-          </orderedlist>
-        </para>
-      </section>
-    </section>
-  </chapter>
-  <chapter xml:id="other-features">
-    <title>General API information</title>
-    <section xml:id="Authentication-d1e647"
+      <section xml:id="Authentication-d1e647"
       xmlns:m="http://www.w3.org/1998/Math/MathML"
       xmlns:html="http://www.w3.org/1999/xhtml">
       <title>Authentication</title>
@@ -644,7 +164,7 @@
         For example, if the roles for a user change, existing tokens
         for that user are invalid.</para>
       <section xml:id="Retrieving_Auth_Token">
-        <title>Retrieving the authentication token</title>
+        <title>Retrieving the Authentication Token</title>
         <para>The authenticate operation provides users with an
           authentication token and a list of regional cloud endpoints.
           The sample requests and responses in this section illustrate
@@ -713,80 +233,9 @@
               from a service endpoint. </para>
           </callout>
         </calloutlist>
-        <para>For more information about authentication in OpenStack, see the Authenticate section in the OpenStack API QuickStart guide.</para>
+        <para>For more information about authentication in OpenStack, see the
+        Authenticate section in the OpenStack API QuickStart guide.</para>
       </section>
-    </section>
-    <section xml:id="serviceEndpoints"
-      xmlns:m="http://www.w3.org/1998/Math/MathML"
-      xmlns:html="http://www.w3.org/1999/xhtml">
-      <title>Service Access Endpoints</title>
-      <para>Barbican is a regionalized service. The user of the service
-        is therefore responsible for appropriate replication, caching,
-        and overall maintenance of Barbican data across regional
-        boundaries to other Barbian servers.</para>
-      <para>The following table lists the service access endpoints for
-        Barbican.</para>
-      <?rax-fo keep-with-next?>
-      <para>
-        <table rules="all">
-          <caption>Regionalized Service Endpoints</caption>
-          <col width="11%"/>
-          <col width="11%"/>
-          <col width="16%"/>
-          <col width="16%"/>
-          <col width="16%"/>
-          <col width="16%"/>
-          <col width="16%"/>
-          <thead>
-            <tr align="center">
-              <td colspan="2">Region</td>
-              <td colspan="5">Endpoint</td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr align="left">
-              <td colspan="2">Chicago (ORD)</td>
-              <td colspan="5"
-                  ><code>https://&lt;endpoint&gt;/v1.0/</code><parameter>1234</parameter>/
-              </td>
-            </tr>
-            <tr align="left">
-              <td colspan="2">Dallas/Ft. Worth (DFW)</td>
-              <td colspan="5"
-                  ><code>https://&lt;endpoint&gt;/v1.0/</code><parameter>1234</parameter>/
-              </td>
-            </tr>
-            <tr align="left">
-              <td colspan="2">London (LON)</td>
-              <td colspan="5">
-                <code>https://&lt;endpoint&gt;/v1.0/</code><parameter>1234</parameter>/
-              </td>
-            </tr>
-            <tr align="left">
-              <td colspan="2">Sydney (SYD)</td>
-              <td colspan="5">
-                <code>https://&lt;endpoint&gt;/v1.0/</code><parameter>1234</parameter>/
-              </td>
-            </tr>
-            <tr align="left">
-              <td colspan="2">Hong Kong (HKG)</td>
-              <td colspan="5"
-                  ><code>https://&lt;endpoint&gt;/v1.0/</code><parameter>1234</parameter>/
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </para>
-      <para>Replace the Tenant ID, <parameter>1234</parameter>, with
-        your actual Tenant ID.</para>
-      <para>You will find your tenant Id after the final '/' in the
-          <code>publicURL</code> field returned by the authentication
-        response. For example, in Example 2,
-          "Authentication Response for US Endpoint: JSON" the
-          <code>publicURL</code> field for <code>secrets</code>
-          ("https://&lt;endpoint&gt;/v1.0/<emphasis
-          role="bold">1100111</emphasis>") shows that the tenant Id is
-        1100111. </para>
     </section>
     <section xml:id="contractVersion"
       xmlns:m="http://www.w3.org/1998/Math/MathML"
@@ -810,7 +259,7 @@
     <section xml:id="Request_Response_Types-d1e903"
       xmlns:m="http://www.w3.org/1998/Math/MathML"
       xmlns:html="http://www.w3.org/1999/xhtml">
-      <title>Request and response types</title>
+      <title>Request and Response Types</title>
       <para>The Barbican API supports JSON data serialization formats.
         You specify the request format by using the
           <code>Content-Type</code> header. The request format is
@@ -838,15 +287,545 @@
         </tbody>
       </table>
     </section>
+    <section xml:id="Limits">
+      <title>Limits</title>
+      <para>The secret datum must be less than 10,000 bytes.  The total request
+      size for a secret must be less than 1,000,000 bytes.</para>
+    </section>
     <?hard-pagebreak?>
   </chapter>
   <chapter xml:id="volume" xmlns="http://docbook.org/ns/docbook"
     role="api-reference">
-    <title>API operations</title>
+    <title>API Operations</title>
     <para>This chapter describes each of the operations. The following
       table summarizes all of the operations that are
       available:</para>
-    <wadl:resources href="../wadl/Barbican.wadl"
+      <wadl:resources href="../wadl/Barbican.wadl"
       xmlns:wadl="http://wadl.dev.java.net/2009/02"/>
+      <section xml:id="Examples">
+        <title>Examples of Barbican Call Sequences</title>
+        <section xml:id="Secrets_Info">
+        <title>Secrets Examples</title>
+        <para>The secrets resource provides access to the secret and keying data
+        that is stored in the system. </para>
+        <para>The secret schema represents the actual secret or key that
+        is presented to the application. Currently secrets can be in any format,
+        but additional functionality may become available in the future for known
+        types of symmetric or asymmetric keys, like SSL certificates. The
+        following shows an example of a secret:</para>
+        <para>
+          <programlisting>{
+    "uuid": "e2b633c7-fda5-4be8-b42c-9a2c9280284d",
+    "name": "AES key",
+    "expiration": "2014-02-28T19:14:44.180394",
+    "secret": "b7990b786ee9659b43e6b1cd6136de07d9c5…",
+    "secret_type": "application/aes-256-cbc",
+  }</programlisting>
+        </para>
+        <para>A secret consists of the following elements:</para>
+        <para>
+          <table rules="all">
+            <caption>Elements of a Secret</caption>
+            <col width="15%"/>
+            <col width="85%"/>
+            <thead>
+              <tr>
+                <th>Element</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>uuid</td>
+                <td>Unique identifier for the secret. This value is
+                  assigned by the API.</td>
+              </tr>
+              <tr>
+                <td>name</td>
+                <td>Human readable name for the secret.</td>
+              </tr>
+              <tr>
+                <td>expiration</td>
+                <td>The expiration date for the secret in ISO-8601
+                  format. Once the secret has expired, it will no longer
+                  be returned by the API or agent.</td>
+              </tr>
+              <tr>
+                <td>secret</td>
+                <td>The base64-encoded value of the secret.</td>
+              </tr>
+              <tr>
+                <td>secret_type</td>
+                <td>An indication of the type of the file presenting the
+                  secret.</td>
+              </tr>
+            </tbody>
+          </table>
+        </para>
+        <para>You can use one of the following methods to store a
+          secret:</para>
+        <para>
+          <itemizedlist>
+            <listitem>
+              <para>Submit a <command>POST</command> request against the
+                secrets resource and include the secret metadata in the
+                  <parameter>payload</parameter> parameter.</para>
+            </listitem>
+            <listitem>
+              <para>Submit a <command>POST</command> request without a
+                  <parameter>payload</parameter> parameter against the
+                secrets resource and then include the payload in a
+                subsequent <command>PUT</command> request. This mode
+                enables you to upload a binary file to the Barbican
+                database directly for encrypted storage.</para>
+            </listitem>
+          </itemizedlist>
+        </para>
+        <para>
+          <note>
+            <para>Submitting a <command>POST</command> request creates
+              secret <emphasis role="italic">metadata</emphasis>. If the
+              payload is provided with the <command>POST</command>
+              request, then it is encrypted and stored, and then linked
+              with this metadata. If no payload is included with the
+                <command>POST</command> request, it must be provided
+              with a subsequent <command>PUT</command> request. The
+              secret resource encrypts and stores client-provided secret
+              information and metadata. In contrast, the orders resource
+              generats actual secret information on behalf of
+              clients.</para>
+          </note>
+        </para>
+        <section xml:id="Examples_of_Secrets">
+          <title>Examples of Secret Combinations</title>
+          <para>This section outlines the different request sequences
+            you can adhere to when storing secrets. Each sequence uses
+            different combinations for the <emphasis role="italic"
+              >content type</emphasis> and <emphasis role="italic"
+              >content encoding</emphasis> fields. The content type and
+            content encoding information is specified either in the
+              <parameter>payload_content_type</parameter> and
+              <parameter>payload_content_encoding</parameter> parameters
+            of a POST request or in the <parameter>Accept</parameter>
+            and <parameter>Content-type</parameter> headers of a GET
+            request.</para>
+          <para>The following request combinations are possible:</para>
+          <para>
+            <itemizedlist>
+              <listitem>
+                <para>One-step sequence to create and retrieve a secret
+                  using UTF-8/ASCII format</para>
+              </listitem>
+              <listitem>
+                <para>One-step sequence to create and retrieve a secret
+                  using binary format</para>
+              </listitem>
+              <listitem>
+                <para>Two-step sequence to create and retrieve a secret
+                  using binary format</para>
+              </listitem>
+              <listitem>
+                <para>One-step sequence to create and retrieve a secret
+                  using plain text format</para>
+              </listitem>
+            </itemizedlist>
+          </para>
+          <section xml:id="One_step_secret_using_UTF">
+            <title>One-Step Sequence for Secrets Using
+              UTF-8/ASCII</title>
+            <para>The following table shows the sequence for creating and
+              retrieving a secret using UTF-8/ASCII format. When you
+              submit a <command>POST</command> request with the
+                <parameter>payload_content_type</parameter> parameter set to
+                <code>text/plain</code> and do not specify the
+                <parameter>payload_content_encoding</parameter>
+              parameter, the payload sent with the <command>POST</command> request
+              will be encrypted and you should receive a response
+               with a secret reference URL.</para>
+            <para>
+              <table rules="all">
+                <caption>One-Step UTF-8/ASCII Secret
+                  Create/Retrieve</caption>
+                <col width="21%"/>
+                <col width="20%"/>
+                <col width="25%"/>
+                <col width="34%"/>
+                <thead>
+                  <tr>
+                    <th>Method</th>
+                    <th>Content Type</th>
+                    <th>Content Encoding</th>
+                    <th>Result</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><command>POST</command> secrets</td>
+                    <td><code>text/plain</code></td>
+                    <td>Must be omitted</td>
+                    <td>The supplied payload is encrypted</td>
+                  </tr>
+                  <tr>
+                    <td><command>GET</command> secrets</td>
+                    <td><code>application/json</code> for
+                        <code>Accept</code> header</td>
+                    <td>Not required/ignored</td>
+                    <td>Returns JSON metadata, with
+                        <parameter>content-types</parameter> field set
+                      to <code>"default": "text/plain"</code>.</td>
+                  </tr>
+                  <tr>
+                    <td><command>GET</command> secrets</td>
+                    <td><code>text/plain</code> for <code>Accept</code>
+                      header</td>
+                    <td>Not required/ignored</td>
+                    <td>Returns the decrypted payload from the previous
+                      request.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </para>
+          </section>
+          <section xml:id="One_Step_Binary_Secret">
+            <title>One-Step Sequence for Binary Secrets</title>
+            <para>The following table shows the one-step sequence for
+              creating and retrieving a secret using binary format. When
+              you submit a <command>POST</command> request with the
+                <parameter>payload_content_type</parameter> parameter set to
+                <code>application/octet-stream</code> and the
+                <parameter>payload_content_encoding</parameter>
+              parameter set to <code>base64</code>, the payload
+              will be converted from base64 to binary format and encrypted.
+               You should also receive a response
+               with a secret reference URL.</para>
+            <table rules="all">
+              <caption>One-Step Binary Secret Create/Retrieve</caption>
+              <col width="16%"/>
+              <col width="21%"/>
+              <col width="19%"/>
+              <col width="44%"/>
+              <thead>
+                <tr>
+                  <th>Method</th>
+                  <th>Content Type</th>
+                  <th>Content Encoding</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><command>POST</command> secrets</td>
+                  <td><code>application/octet-stream</code></td>
+                  <td><code>base64</code></td>
+                  <td>Supplied payload is converted from base64 to
+                    binary, and then encrypted.</td>
+                </tr>
+                <tr>
+                  <td><command>GET</command> secrets</td>
+                  <td><code>application/json</code> for
+                      <code>Accept</code> header</td>
+                  <td>Not required/ignored</td>
+                  <td>JSON metadata, with the
+                      <parameter>content-types</parameter> field set to
+                      <code>"default":
+                    "application/octet-stream"</code></td>
+                </tr>
+                <tr>
+                  <td><command>GET</command> secrets</td>
+                  <td><code>application/octet-stream</code> for
+                      <code>Accept</code> header</td>
+                  <td>Not specified</td>
+                  <td>Previous payload is decrypted and returned as raw
+                    binary, even if the <command>POST</command> request
+                    provided data in <code>base64</code> format.</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+          <section xml:id="Two_Step_Binary_Secret">
+            <title>Two-Step Sequence for Binary Secrets</title>
+            <para>The following table shows the two-step sequence for
+              creating and retrieving a secret using binary format. First
+              submit a <command>POST</command> request without specifying
+              a payload, <code>payload_content_type</code>, or <code>payload_content_encoding</code>.
+              Submitting a <command>POST</command> request without this
+              information creates metadata for the secret. To add payload
+              information, submit a <command>PUT</command> request with the
+              secret id that was returned from the <command>POST</command>
+              request, and set the content type to <code>application/octet</code>
+              stream and the content encoding to <code>base64</code>. This will convert
+              the payload from <code>base64</code> to binary format and then encrypt
+              it.</para>
+            <para>
+              <table rules="all">
+                <caption>Two-Step Binary Secret
+                  Create/Retrieve</caption>
+                <col width="14%"/>
+                <col width="23%"/>
+                <col width="18%"/>
+                <col width="45%"/>
+                <thead>
+                  <tr>
+                    <th>Method</th>
+                    <th>Content Type</th>
+                    <th>Content Encoding</th>
+                    <th>Result</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><command>POST</command> secrets</td>
+                    <td>Not required/ignored</td>
+                    <td>Not required/ignored</td>
+                    <td>Only metadata is created. If the
+                        <parameter>payload_content_type</parameter> or
+                        <parameter>payload_content_encoding</parameter>
+                      parameters were provided, they are not used or
+                      saved with the metadata. The
+                        subsequent<command>PUT</command> request
+                      determines the secret's content type.</td>
+                  </tr>
+                  <tr>
+                    <td><command>PUT</command> secrets, first option
+                      with content encoding set to base64</td>
+                    <td><code>Content-Type</code> header set to
+                        <code>application/octet-stream</code></td>
+                    <td><code>Content-Encoding</code> header set to
+                        <code>base64</code></td>
+                    <td>Supplied request body is converted from
+                        <code>base64</code> to binary, then
+                      encrypted.</td>
+                  </tr>
+                  <tr>
+                    <td><command>PUT</command> secrets, second option
+                      as binary</td>
+                    <td><code>Content-Type</code> header set to
+                        <code>application/octet-stream</code></td>
+                    <td>Not specified</td>
+                    <td>Supplied request body is encrypted as is.</td>
+                  </tr>
+                  <tr>
+                    <td><command>GET</command> secrets (metadata)</td>
+                    <td><code>Accept</code> header set to
+                        <code>application/json</code></td>
+                    <td>Not required/ignored</td>
+                    <td>Returns JSON metadata, with
+                        <parameter>content-types</parameter> field set
+                      to <code>"default":
+                        "application/octet-stream"</code></td>
+                  </tr>
+                  <tr>
+                    <td><command>GET</command> secrets (decrypted)</td>
+                    <td><code>Accept</code> header set to
+                        <code>application/octet-stream</code></td>
+                    <td>Not required/ignored</td>
+                    <td>The previous request is decrypted and returned
+                      as raw binary.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </para>
+          </section>
+          <section xml:id="Two_Step_Plain_Text_Secret">
+            <title>Two-Step Sequence for Plain Text Secrets</title>
+            <para>The following table shows the two-step sequence for
+              creating and retrieving a secret using binary format. First
+              submit a <command>POST</command> request without
+              specifying a payload, <code>payload_content_type</code>, or
+              <code>payload_content_encoding</code>. Submitting a <command>POST</command>
+              request without payload creates metadata for the secret.
+              To add payload information, submit a
+                <command>PUT</command> request with the secret id that
+              was returned from the <command>POST</command> request, and
+              set the content type to <code>text/plain</code> which will
+              store the payload as is.</para>
+            <para>
+              <table rules="all">
+                <caption>Two-Step Plain-Text Secret
+                  Create/Retrieve</caption>
+                <col width="16%"/>
+                <col width="16%"/>
+                <col width="26%"/>
+                <col width="42%"/>
+                <thead>
+                  <tr>
+                    <th>Action</th>
+                    <th>Content Type</th>
+                    <th>Content Encoding</th>
+                    <th>Result</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><command>POST</command></td>
+                    <td>Not required/ignored</td>
+                    <td>Not required/ignored</td>
+                    <td>Only metadata is created. If the
+                        <parameter>payload_content_type</parameter> or
+                        <parameter>payload_content_encoding</parameter>
+                      parameters were provided, they are not used or
+                      saved with the metadata. The subsequent
+                        <command>PUT</command> request specifies the
+                      content format for the secret.</td>
+                  </tr>
+                  <tr>
+                    <td><command>PUT </command></td>
+                    <td><code>Content-Type</code> header is set to
+                        <code>text/plain</code>.</td>
+                    <td>Not required/ignored</td>
+                    <td>Supplied request body is encrypted as is.</td>
+                  </tr>
+                  <tr>
+                    <td><command>GET</command></td>
+                    <td><code>Accept</code> header is  set to
+                        <code>application/json</code>.</td>
+                    <td>Not required/ignored</td>
+                    <td>Returns JSON metadata, with the
+                        <parameter>content-types</parameter> field set
+                      to <code>"default": "text/plain"</code></td>
+                  </tr>
+                  <tr>
+                    <td><command>GET</command></td>
+                    <td><code>Accept</code> header is set to
+                        <code>text/plain</code>.</td>
+                    <td>Not specified</td>
+                    <td>The previous request is decrypted and returned
+                      as UTF-8 text.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </para>
+          </section>
+        </section>
+      </section>
+        <section xml:id="Orders_Info">
+        <title>Orders Examples</title>
+        <para>The orders resource allows for the generation of secret
+          material by Barbican. The ordering object encapsulates the
+          workflow and history for the creation of a secret. This
+          interface is implemented as an asynchronous process since the
+          time to generate a secret can vary depending on the type of
+          secret. </para>
+        <para>The following shows an example of an order:</para>
+        <para>
+          <programlisting>{
+      "status": "ACTIVE",
+      "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/secrets/0b759c30-8ed2-4c3e-ab7d-6320f9655e60",
+      "updated": "2014-05-02T18:02:44.381024",
+      "created": "2014-05-02T18:02:44.297474",
+      "secret": {
+          "name": "secretname",
+          "algorithm": "aes",
+          "payload_content_type": "application/octet-stream",
+          "expiration": null,
+          "bit_length": 256,
+          "mode": "cbc"
+      },
+      "order_ref": "https://<replaceable>endpointURL</replaceable>/v1/orders/18e3f713-ddf0-4c49-99c4-76794e65c870"
+  }</programlisting>
+        </para>
+        <para>An order consists of the following elements:</para>
+        <para>
+          <table rules="all">
+            <caption>Elements of an order</caption>
+            <col width="15%"/>
+            <col width="85%"/>
+            <thead>
+              <tr>
+                <th>Element</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>secret</td>
+                <td>Lists all the secret parameters provided in the
+                  original order request. </td>
+              </tr>
+              <tr>
+                <td>order_ref</td>
+                <td>Specifies the URI pointing to the order.</td>
+              </tr>
+              <tr>
+                <td>status</td>
+                <td>Specifis the status of the order. Can be
+                    <code>PENDING</code>, <code>ACTIVE</code> or
+                    <code>ERROR</code>. </td>
+              </tr>
+              <tr>
+                <td>secret_ref</td>
+                <td>Specifies the URI to the secret <emphasis
+                    role="italic">once it is generated</emphasis>. This
+                  field is not available unless the status is
+                    <code>ACTIVE</code>.</td>
+              </tr>
+              <tr>
+                <td>error_status_code</td>
+                <td>Optional. Specifies the HTTP-style status code of
+                  the root cause error condition, only if the status is
+                    <code>ERROR</code>.</td>
+              </tr>
+              <tr>
+                <td>error_reason</td>
+                <td>Optional. Provides details of the root cause of the
+                  error, only if the status is <code>ERROR</code>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </para>
+        <section xml:id="Generating_Order">
+          <title>Generating an order</title>
+          <para>This section describes how to generate an order through
+            the Barbican API.</para>
+          <para>
+            <orderedlist>
+              <listitem>
+                <para>Upload a plain-text order by submitting a
+                    <command>POST</command> request at a command-line
+                  interface, as shown in the following example:</para>
+                <para>
+                  <example>
+                    <title>Uploading an Order JSON Request
+                      Example</title>
+                    <programlisting language="json">
+                      <xi:include href="./samples/reqCreateOrder.json" parse="text"/>
+                    </programlisting>
+                  </example>
+                </para>
+                <para>Make sure to have a payload specified, as well as
+                  a corresponding content type and content
+                  encoding.</para>
+                <para>If the call is successful, you will receive a
+                  response like the following one:</para>
+                <para>
+                  <programlisting>{
+     "order_ref": "https://<replaceable>endpointURL</replaceable>/v1/orders/62d57f53-ecfe-4ae4-87bd-fab2f24e29bc"
+  } </programlisting>
+                </para>
+              </listitem>
+              <listitem>
+                <para>Record the order ID that is returned in the
+                  response (in the example,
+                  62d57f53-ecfe-4ae4-87bd-fab2f24e29bc). You will use
+                  this ID for the next request.</para>
+              </listitem>
+              <listitem>
+                <para>Retrieve the order by typing the following
+                  command:</para>
+                <para>
+                  <programlisting>curl -H 'Content-Type: application/json'
+                    'Accept: text/plain' &lt;http://<replaceable>endpointURL</replaceable>/v1/orders/<replaceable>orderID</replaceable></programlisting>
+                </para>
+                <para>If the call is successful, it will return a
+                  response like the following one:</para>
+                <para>
+                  <programlisting language="json"><xi:include href="./samples/resCreateSecret.json" parse="text"/></programlisting>
+                </para>
+              </listitem>
+            </orderedlist>
+          </para>
+        </section>
+      </section>
+    </section>
   </chapter>
 </book>
