@@ -66,6 +66,16 @@ class CertificateStatusNotSupported(exception.BarbicanException):
         self.status = status
 
 
+class CertificateGeneralException(exception.BarbicanException):
+    """Raised when a system fault has occurred."""
+    def __init__(self, reason=u._('Unknown')):
+        super(CertificateGeneralException, self).__init__(
+            u._('Problem seen during certificate processing - '
+                'Reason: {0}').format(reason)
+        )
+        self.reason = reason
+
+
 @six.add_metaclass(abc.ABCMeta)
 class CertificatePluginBase(object):
     """Base class for certificate plugins.

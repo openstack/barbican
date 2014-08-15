@@ -877,11 +877,11 @@ msgid "Password to unlock PEM file"
 msgstr ""
 
 #: barbican/plugin/dogtag.py:42
-msgid "Hostname for the DRM"
+msgid "Hostname for the KRA"
 msgstr ""
 
 #: barbican/plugin/dogtag.py:45
-msgid "Port for the DRM"
+msgid "Port for the KRA"
 msgstr ""
 
 #: barbican/plugin/dogtag.py:47
