@@ -143,16 +143,19 @@ def _ca_create_order(self, order_meta, plugin_meta):
     All required order parameters must be stored as a dict in
     order_meta.
     Required fields are:
-    partnerCode, productCode, partnerOrderId, organizationName,
-    addressLine1, city, region, postalCode, country, organizationPhone
-    validityPeriod, serverCount, webServerType, adminContactFirstName,
-    adminContactLastName, adminContactPhone, adminContactEmail,
-    adminContactTitle, adminContactAddressLine1, adminContactCity,
-    adminContactRegion, adminContactPostalCode, adminContactCountry, bill
-    and tech contact info, and csr.
+    PartnerCode, ProductCode, PartnerOrderId, OrganizationName,
+    AddressLine1, City, Region, PostalCode, Country, OrganizationPhone
+    ValidityPeriod, ServerCount, WebServerType, AdminContactFirstName,
+    AdminContactLastName, AdminContactPhone, AdminContactEmail,
+    AdminContactTitle, AdminContactAddressLine1, AdminContactCity,
+    AdminContactRegion, AdminContactPostalCode, AdminContactCountry,
+    BillingContact*,  TechContact*, and CSR.
 
-    Optional Parameters: techSameAsAdmin, billSameAsAdmin, more options can be
-    found in Symantec's API docs.
+    *The Billing and Tech contact information follows the same convention
+    as the AdminContact fields.
+
+    Optional Parameters: TechSameAsAdmin, BillSameAsAdmin, more options can be
+    found in Symantec's API docs. Contact Symantec for the API document.
 
     :returns: tuple with success, error message, and can retry
     """
@@ -180,7 +183,7 @@ def _ca_get_order_status(self, plugin_meta):
     """Sends a request to the Symantec CA for details on an order.
 
     Parameters needed for GetOrderByPartnerOrderID:
-    plugin_meta parameters: partnerOrderId, partnerCode
+    plugin_meta parameters: PartnerOrderId, PartnerCode
 
     If the order is complete, the Certificate is returned as a string.
     returns: tuple with success, error message, can retry,
@@ -189,11 +192,11 @@ def _ca_get_order_status(self, plugin_meta):
     api = Symantec(self.username, self.password, self.url)
 
     order_details = {
-        "partnerOrderId": plugin_meta["PartnerOrderID"],
-        "partnerCode": plugin_meta["PartnerCode"],
-        "returnCertificateInfo": "TRUE",
-        "returnFulfillment": "TRUE",
-        "returnCaCerts": "TRUE",
+        "PartnerOrderID": plugin_meta["PartnerOrderID"],
+        "PartnerCode": plugin_meta["PartnerCode"],
+        "ReturnCertificateInfo": "TRUE",
+        "ReturnFulfillment": "TRUE",
+        "ReturnCaCerts": "TRUE",
     }
 
     try:
@@ -210,10 +213,11 @@ def _ca_get_order_status(self, plugin_meta):
 
 def _ca_modify_order(self, order_meta, plugin_meta):
     """Sends a request to the Symantec CA to modify an order.
+
     Parameters needed for modifyOrder:
-        partnerorderid - Needed to specify order
-        partnercode - Needed to specify order
-        productcode - Needed to specify order
+        PartnerOrderID - Needed to specify order
+        PartnerCode - Needed to specify order
+        ProductCode - Needed to specify order
 
     Also need a dict, order_meta with the parameters/values to modify.
 
@@ -222,9 +226,9 @@ def _ca_modify_order(self, order_meta, plugin_meta):
     api = Symantec(self.username, self.password, self.url)
 
     order_details = {
-        "partnerOrderId": plugin_meta["PartnerOrderID"],
-        "partnerCode": plugin_meta["PartnerCode"],
-        "productCode": plugin_meta["ProductCode"],
+        "PartnerOrderID": plugin_meta["PartnerOrderID"],
+        "PartnerCode": plugin_meta["PartnerCode"],
+        "ProductCode": plugin_meta["ProductCode"],
     }
 
     order_details.update(order_meta)
@@ -240,20 +244,21 @@ def _ca_modify_order(self, order_meta, plugin_meta):
 
 def _ca_cancel_order(self, plugin_meta):
     """Sends a request to the Symantec CA to cancel an order.
+
     Parameters needed for modifyOrder:
-        partnerorderid - Needed to specify order
-        partnercode - Needed to specify order
-        productcode - Needed to specify order
+        PartnerOrderID - Needed to specify order
+        PartnerCode - Needed to specify order
+        ProductCode - Needed to specify order
 
     returns: tuple with success, error message, and can retry.
     """
     api = Symantec(self.username, self.password, self.url)
 
     order_details = {
-        "partnerOrderId": plugin_meta["PartnerOrderID"],
-        "partnerCode": plugin_meta["PartnerCode"],
-        "productCode": plugin_meta["ProductCode"],
-        "modifyOrderOperation": "CANCEL",
+        "PartnerOrderID": plugin_meta["PartnerOrderID"],
+        "PartnerCode": plugin_meta["PartnerCode"],
+        "ProductCode": plugin_meta["ProductCode"],
+        "ModifyOrderOperation": "CANCEL",
     }
 
     try:
