@@ -61,8 +61,8 @@ def convert_to_hrefs(fields):
         del fields['order_id']
 
     if 'container_id' in fields:
-        fields['container_ref'] = \
-            convert_container_to_href(fields['container_id'])
+        fields['container_ref'] = convert_container_to_href(
+            fields['container_id'])
         del fields['container_id']
 
     if 'transport_key_id' in fields:
