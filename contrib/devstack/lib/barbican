@@ -138,6 +138,10 @@ function init_barbican {
 
 # install_barbican - Collect source and prepare
 function install_barbican {
+    # Install package requirements
+    if is_fedora; then
+        install_package sqlite-devel
+    fi
     git_clone $BARBICAN_REPO $BARBICAN_DIR $BARBICAN_BRANCH
     setup_develop $BARBICAN_DIR
     pip_install 'uwsgi'
