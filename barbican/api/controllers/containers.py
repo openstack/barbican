@@ -16,6 +16,7 @@ from barbican import api
 from barbican.api import controllers
 from barbican.api.controllers import consumers
 from barbican.common import exception
+from barbican.common import hrefs
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
@@ -60,10 +61,10 @@ class ContainerController(object):
         dict_fields = container.to_dict_fields()
 
         for secret_ref in dict_fields['secret_refs']:
-            controllers.hrefs.convert_to_hrefs(secret_ref)
+            hrefs.convert_to_hrefs(secret_ref)
 
-        return controllers.hrefs.convert_to_hrefs(
-            controllers.hrefs.convert_to_hrefs(dict_fields)
+        return hrefs.convert_to_hrefs(
+            hrefs.convert_to_hrefs(dict_fields)
         )
 
     @index.when(method='DELETE', template='')
@@ -118,15 +119,15 @@ class ContainersController(object):
             resp_ctrs_overall = {'containers': [], 'total': total}
         else:
             resp_ctrs = [
-                controllers.hrefs.convert_to_hrefs(c.to_dict_fields())
+                hrefs.convert_to_hrefs(c.to_dict_fields())
                 for c in containers
             ]
 
             for ctr in resp_ctrs:
                 for secret_ref in ctr.get('secret_refs', []):
-                    controllers.hrefs.convert_to_hrefs(secret_ref)
+                    hrefs.convert_to_hrefs(secret_ref)
 
-            resp_ctrs_overall = controllers.hrefs.add_nav_hrefs(
+            resp_ctrs_overall = hrefs.add_nav_hrefs(
                 'containers',
                 offset,
                 limit,
@@ -168,5 +169,5 @@ class ContainersController(object):
         pecan.response.headers['Location'] = '/{0}/containers/{1}'.format(
             keystone_id, new_container.id
         )
-        url = controllers.hrefs.convert_container_to_href(new_container.id)
+        url = hrefs.convert_container_to_href(new_container.id)
         return {'container_ref': url}

@@ -14,8 +14,8 @@ import pecan
 
 from barbican import api
 from barbican.api import controllers
-from barbican.api.controllers import hrefs
 from barbican.common import exception
+from barbican.common import hrefs
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators

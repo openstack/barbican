@@ -32,9 +32,10 @@ from barbican.openstack.common import gettextutils as u
 
 
 CONF = cfg.CONF
+
+# Configuration for certificate processing plugins:
 DEFAULT_PLUGIN_NAMESPACE = 'barbican.certificate.plugin'
-#TODO(chellygel): Create a default 'dummy' plugin for certificates.
-DEFAULT_PLUGINS = []
+DEFAULT_PLUGINS = ['simple_certificate']
 
 cert_opt_group = cfg.OptGroup(name='certificate',
                               title='Certificate Plugin Options')
@@ -51,6 +52,27 @@ cert_opts = [
 CONF.register_group(cert_opt_group)
 CONF.register_opts(cert_opts, group=cert_opt_group)
 
+
+# Configuration for certificate eventing plugins:
+DEFAULT_EVENT_PLUGIN_NAMESPACE = 'barbican.certificate.event.plugin'
+DEFAULT_EVENT_PLUGINS = ['simple_certificate_event']
+
+cert_event_opt_group = cfg.OptGroup(name='certificate_event',
+                                    title='Certificate Event Plugin Options')
+cert_event_opts = [
+    cfg.StrOpt('namespace',
+               default=DEFAULT_EVENT_PLUGIN_NAMESPACE,
+               help=u._('Extension namespace to search for eventing plugins.')
+               ),
+    cfg.MultiStrOpt('enabled_certificate_event_plugins',
+                    default=DEFAULT_EVENT_PLUGINS,
+                    help=u._('List of certificate plugins to load.')
+                    )
+]
+CONF.register_group(cert_event_opt_group)
+CONF.register_opts(cert_event_opts, group=cert_event_opt_group)
+
+
 ERROR_RETRY_MSEC = 300000
 RETRY_MSEC = 3600000
 
@@ -63,8 +85,27 @@ CA_SUBJECT_KEY_IDENTIFIER = "ca_subject_key_identifier"
 
 
 class CertificatePluginNotFound(exception.BarbicanException):
-    """Raised when no plugins are installed."""
-    message = u._("Certificate plugin not found.")
+    """Raised when no certificate plugin supporting a request is available."""
+    def __init__(self, plugin_name=None):
+        if plugin_name:
+            message = u._(
+                "Certificate plugin \"{0}\""
+                " not found or configured.").format(plugin_name)
+        else:
+            message = u._("Certificate plugin not found or configured.")
+        super(CertificatePluginNotFound, self).__init__(message)
+
+
+class CertificateEventPluginNotFound(exception.BarbicanException):
+    """Raised with no certificate event plugin supporting request."""
+    def __init__(self, plugin_name=None):
+        if plugin_name:
+            message = u._(
+                "Certificate event plugin "
+                "\"{0}\" not found or configured.").format(plugin_name)
+        else:
+            message = u._("Certificate event plugin not found or configured.")
+        super(CertificateEventPluginNotFound, self).__init__(message)
 
 
 class CertificateStatusNotSupported(exception.BarbicanException):
@@ -103,6 +144,42 @@ class CertificateStatusInvalidOperation(exception.BarbicanException):
                 'Reason: {0}').format(reason)
         )
         self.reason = reason
+
+
+@six.add_metaclass(abc.ABCMeta)
+class CertificateEventPluginBase(object):
+    """Base class for certificate eventing plugins.
+
+    This class is the base plugin contract for issuing certificate related
+    events from Barbican.
+    """
+
+    @abc.abstractmethod
+    def notify_certificate_is_ready(
+            self, project_id, order_ref, container_ref):
+        """Notify that a certificate has been generated and is ready to use.
+
+        :param project_id: Project/tenant ID associated with this certificate
+        :param order_ref: HATEOS reference URI to the submitted Barbican Order
+        :param container_ref: HATEOS reference URI to the Container storing
+               the certificate
+        :returns: None
+        """
+        raise NotImplementedError  # pragma: no cover
+
+    @abc.abstractmethod
+    def notify_ca_is_unavailable(
+            self, project_id, order_ref, error_msg, retry_in_msec):
+        """Notify that the certificate authority (CA) isn't available.
+
+        :param project_id: Project/tenant ID associated with this order
+        :param order_ref: HATEOS reference URI to the submitted Barbican Order
+        :param error_msg: Error message if it is available
+        :param retry_in_msec: Delay before attempting to talk to the CA again.
+               If this is 0, then no attempt will be made.
+        :returns: None
+        """
+        raise NotImplementedError  # pragma: no cover
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -172,13 +249,13 @@ class CertificatePluginBase(object):
                             on their behalf
         :returns: A :class:`ResultDTO` instance containing the result
                   populated by the plugin implementation
+        :rtype: :class:`ResultDTO`
         """
         raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
     def supports(self, certificate_spec):
-        """Returns a boolean indicating if the plugin supports the
-        certificate type.
+        """Returns if the plugin supports the certificate type.
 
         :param certificate_spec: Contains details on the certificate to
                                  generate the certificate order
@@ -254,4 +331,62 @@ class CertificatePluginManager(named.NamedExtensionManager):
         for ext in self.extensions:
             if utils.generate_fullname_for(ext.obj) == plugin_name:
                 return ext.obj
-        raise CertificatePluginNotFound()
+        raise CertificatePluginNotFound(plugin_name)
+
+
+class _CertificateEventPluginManager(named.NamedExtensionManager,
+                                     CertificateEventPluginBase):
+    """Provides services for certificate event plugins.
+
+    This plugin manager differs from others in that it implements the same
+    contract as the plugins that it manages. This allows eventing operations
+    to occur on all installed plugins (with this class acting as a composite
+    plugin), rather than just eventing via an individual plugin.
+
+    Each time this class is initialized it will load a new instance
+    of each enabled plugin. This is undesirable, so rather than initializing a
+    new instance of this class use the EVENT_PLUGIN_MANAGER at the module
+    level.
+    """
+    def __init__(self, conf=CONF, invoke_on_load=True,
+                 invoke_args=(), invoke_kwargs={}):
+        super(_CertificateEventPluginManager, self).__init__(
+            conf.certificate_event.namespace,
+            conf.certificate_event.enabled_certificate_event_plugins,
+            invoke_on_load=invoke_on_load,
+            invoke_args=invoke_args,
+            invoke_kwds=invoke_kwargs
+        )
+
+    def get_plugin_by_name(self, plugin_name):
+        """Gets a supporting certificate event plugin.
+
+        :returns: CertficiateEventPluginBase plugin implementation
+        """
+        for ext in self.extensions:
+            if utils.generate_fullname_for(ext.obj) == plugin_name:
+                return ext.obj
+        raise CertificateEventPluginNotFound(plugin_name)
+
+    def notify_certificate_is_ready(
+            self, project_id, order_ref, container_ref):
+        self._invoke_certificate_plugins(
+            'notify_certificate_is_ready',
+            project_id, order_ref, container_ref)
+
+    def notify_ca_is_unavailable(
+            self, project_id, order_ref, error_msg, retry_in_msec):
+        self._invoke_certificate_plugins(
+            'notify_ca_is_unavailable',
+            project_id, order_ref, error_msg, retry_in_msec)
+
+    def _invoke_certificate_plugins(self, method, *args, **kwargs):
+        """Invoke same function on plugins as calling function."""
+        if len(self.extensions) < 1:
+            raise CertificateEventPluginNotFound()
+
+        for ext in self.extensions:
+            getattr(ext.obj, method)(*args, **kwargs)
+
+
+EVENT_PLUGIN_MANAGER = _CertificateEventPluginManager()
