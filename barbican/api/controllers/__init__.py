@@ -26,8 +26,9 @@ def is_json_request_accept(req):
     :param req: HTTP request
     :return: True if need to return JSON response.
     """
-    return not req.accept or req.accept.header_value == 'application/json' \
-        or req.accept.header_value == '*/*'
+    return (not req.accept
+            or req.accept.header_value == 'application/json'
+            or req.accept.header_value == '*/*')
 
 
 def _get_barbican_context(req):
@@ -112,8 +113,8 @@ def _do_enforce_content_types(pecan_req, valid_content_types):
     types passed in by our caller.
     """
     if pecan_req.content_type not in valid_content_types:
-        m = "Unexpected content type: {0}.  Expected content types are: {1}"\
-            .format(pecan_req.content_type, valid_content_types)
+        m = ("Unexpected content type: {0}.  Expected content types "
+             "are: {1}").format(pecan_req.content_type, valid_content_types)
         pecan.abort(415, m)
 
 

@@ -97,8 +97,8 @@ class SecretController(object):
             pecan.override_template('json', 'application/json')
             secret_fields = putil.mime_types.augment_fields_with_content_types(
                 secret)
-            transport_key_needed = \
-                kwargs.get('transport_key_needed', 'false').lower() == 'true'
+            transport_key_needed = kwargs.get('transport_key_needed',
+                                              'false').lower() == 'true'
             if transport_key_needed:
                 transport_key_id = plugin.get_transport_key_id_for_retrieval(
                     secret)
@@ -134,8 +134,8 @@ class SecretController(object):
                                        'text/plain'])
     def on_put(self, keystone_id, **kwargs):
 
-        if not pecan.request.content_type or \
-                pecan.request.content_type == 'application/json':
+        if (not pecan.request.content_type or
+                pecan.request.content_type == 'application/json'):
             pecan.abort(
                 415,
                 u._("Content-Type of '{0}' is not supported for PUT.").format(
@@ -271,8 +271,8 @@ class SecretsController(object):
         data = api.load_body(pecan.request, validator=self.validator)
         tenant = res.get_or_create_tenant(keystone_id, self.repos.tenant_repo)
 
-        transport_key_needed = \
-            data.get('transport_key_needed', 'false').lower() == 'true'
+        transport_key_needed = data.get('transport_key_needed',
+                                        'false').lower() == 'true'
 
         new_secret, transport_key_model = plugin.store_secret(
             data.get('payload'),
