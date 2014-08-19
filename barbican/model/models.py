@@ -67,18 +67,13 @@ class JsonBlob(sql_types.TypeDecorator):
     """JsonBlob is custom type for fields
         which need to store JSON text
     """
-
     impl = sa.Text
 
     def process_bind_param(self, value, dialect):
-        if value is not None:
-            value = json.dumps(value)
-        return value
+        return json.dumps(value) if value is not None else value
 
     def process_result_value(self, value, dialect):
-        if value is not None:
-            value = json.loads(value)
-        return value
+        return json.loads(value) if value is not None else value
 
 
 class ModelBase(object):
@@ -124,7 +119,7 @@ class ModelBase(object):
 
     def update(self, values):
         """dict.update() behaviour."""
-        for k, v in values.iteritems():
+        for k, v in six.iteritems(values):
             self[k] = v
 
     def __setitem__(self, key, value):
@@ -154,16 +149,20 @@ class ModelBase(object):
         return self.__dict__.copy()
 
     def to_dict_fields(self):
-        created_at = self.created_at.isoformat() if self.created_at \
-            else self.created_at
-
-        updated_at = self.updated_at.isoformat() if self.updated_at \
-            else self.updated_at
-
         """Returns a dictionary of just the db fields of this entity."""
-        dict_fields = {'created': created_at,
-                       'updated': updated_at,
-                       'status': self.status}
+
+        created_at = (self.created_at.isoformat()
+                      if self.created_at else self.created_at)
+
+        updated_at = (self.updated_at.isoformat()
+                      if self.updated_at else self.updated_at)
+
+        dict_fields = {
+            'created': created_at,
+            'updated': updated_at,
+            'status': self.status
+        }
+
         if self.deleted_at:
             dict_fields['deleted'] = self.deleted_at.isoformat()
         if self.deleted:
@@ -189,15 +188,15 @@ class TenantSecret(BASE, ModelBase):
 
     __tablename__ = 'tenant_secret'
 
-    tenant_id = sa.Column(sa.String(36), sa.ForeignKey('tenants.id'),
-                          primary_key=True)
-    secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
-                          primary_key=True)
     role = sa.Column(sa.String(255))
     secret = orm.relationship("Secret", backref="tenant_assocs")
+    tenant_id = sa.Column(
+        sa.String(36), sa.ForeignKey('tenants.id'), primary_key=True)
+    secret_id = sa.Column(
+        sa.String(36), sa.ForeignKey('secrets.id'), primary_key=True)
 
-    __table_args__ = (sa.UniqueConstraint('tenant_id', 'secret_id',
-                                          name='_tenant_secret_uc'),)
+    __table_args__ = (sa.UniqueConstraint(
+        'tenant_id', 'secret_id', name='_tenant_secret_uc'),)
 
 
 class ContainerSecret(BASE):
@@ -205,18 +204,17 @@ class ContainerSecret(BASE):
 
     __tablename__ = 'container_secret'
 
-    container_id = sa.Column(sa.String(36), sa.ForeignKey('containers.id'),
-                             primary_key=True)
-    secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
-                          primary_key=True)
     name = sa.Column(sa.String(255), nullable=True)
+    container_id = sa.Column(
+        sa.String(36), sa.ForeignKey('containers.id'), primary_key=True)
+    secret_id = sa.Column(
+        sa.String(36), sa.ForeignKey('secrets.id'), primary_key=True)
 
     # Eager load this relationship via 'lazy=False'.
-    container = orm.relationship('Container',
-                                 backref=orm.backref('container_secrets',
-                                                     lazy=False))
-    secrets = orm.relationship('Secret',
-                               backref=orm.backref('container_secrets'))
+    container = orm.relationship(
+        'Container', backref=orm.backref('container_secrets', lazy=False))
+    secrets = orm.relationship(
+        'Secret', backref=orm.backref('container_secrets'))
 
     __table_args__ = (sa.UniqueConstraint('container_id', 'secret_id', 'name',
                                           name='_container_secret_name_uc'),)
@@ -268,11 +266,11 @@ class Secret(BASE, ModelBase):
     # Eager load this relationship via 'lazy=False'.
     encrypted_data = orm.relationship("EncryptedDatum", lazy=False)
 
-    secret_store_metadata = orm.\
-        relationship("SecretStoreMetadatum",
-                     collection_class=col.attribute_mapped_collection('key'),
-                     backref="secret",
-                     cascade="all, delete-orphan")
+    secret_store_metadata = orm.relationship(
+        "SecretStoreMetadatum",
+        collection_class=col.attribute_mapped_collection('key'),
+        backref="secret",
+        cascade="all, delete-orphan")
 
     def __init__(self, parsed_request=None):
         """Creates secret from a dict."""
@@ -302,13 +300,17 @@ class Secret(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        return {'secret_id': self.id,
-                'name': self.name or self.id,
-                'expiration': self.expiration.isoformat() if self.expiration
-                else self.expiration,
-                'algorithm': self.algorithm,
-                'bit_length': self.bit_length,
-                'mode': self.mode}
+        expiration = (self.expiration.isoformat()
+                      if self.expiration else self.expiration)
+
+        return {
+            'secret_id': self.id,
+            'name': self.name or self.id,
+            'expiration': expiration,
+            'algorithm': self.algorithm,
+            'bit_length': self.bit_length,
+            'mode': self.mode
+        }
 
 
 class SecretStoreMetadatum(BASE, ModelBase):
@@ -316,10 +318,10 @@ class SecretStoreMetadatum(BASE, ModelBase):
 
     __tablename__ = "secret_store_metadata"
 
-    secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
-                          nullable=False)
     key = sa.Column(sa.String(255), nullable=False)
     value = sa.Column(sa.String(255), nullable=False)
+    secret_id = sa.Column(
+        sa.String(36), sa.ForeignKey('secrets.id'), nullable=False)
 
     def __init__(self, key, value):
         super(SecretStoreMetadatum, self).__init__()
@@ -337,8 +339,10 @@ class SecretStoreMetadatum(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        return {'key': self.key,
-                'value': self.value}
+        return {
+            'key': self.key,
+            'value': self.value
+        }
 
 
 class EncryptedDatum(BASE, ModelBase):
@@ -346,15 +350,14 @@ class EncryptedDatum(BASE, ModelBase):
 
     __tablename__ = 'encrypted_data'
 
-    secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
-                          nullable=False)
-    kek_id = sa.Column(sa.String(36), sa.ForeignKey('kek_data.id'),
-                       nullable=False)
     content_type = sa.Column(sa.String(255))
+    secret_id = sa.Column(
+        sa.String(36), sa.ForeignKey('secrets.id'), nullable=False)
+    kek_id = sa.Column(
+        sa.String(36), sa.ForeignKey('kek_data.id'), nullable=False)
 
     # TODO(jwood) Why LargeBinary on Postgres (BYTEA) not work correctly?
     cypher_text = sa.Column(sa.Text)
-
     kek_meta_extended = sa.Column(sa.Text)
 
     # Eager load this relationship via 'lazy=False'.
@@ -407,8 +410,8 @@ class KEKDatum(BASE, ModelBase):
     plugin_name = sa.Column(sa.String(255), nullable=False)
     kek_label = sa.Column(sa.String(255))
 
-    tenant_id = sa.Column(sa.String(36), sa.ForeignKey('tenants.id'),
-                          nullable=False)
+    tenant_id = sa.Column(
+        sa.String(36), sa.ForeignKey('tenants.id'), nullable=False)
 
     active = sa.Column(sa.Boolean, nullable=False, default=True)
     bind_completed = sa.Column(sa.Boolean, nullable=False, default=False)
@@ -604,14 +607,13 @@ class TransportKey(BASE, ModelBase):
 
         if plugin_name is None:
             raise exception.MissingArgumentError(msg.format("plugin_name"))
-        else:
-            self.plugin_name = plugin_name
+
+        self.plugin_name = plugin_name
 
         if transport_key is None:
             raise exception.MissingArgumentError(msg.format("transport_key"))
-        else:
-            self.transport_key = transport_key
 
+        self.transport_key = transport_key
         self.status = States.ACTIVE
 
     def _do_extra_dict_fields(self):

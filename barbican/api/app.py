@@ -71,10 +71,11 @@ class PecanAPI(pecan.Pecan):
         # resource name or the ID of the performance controller
         # example: /secrets
         parts = path.split('/')
+
+        first_path = None
         if len(parts) > 1:
             first_path = parts[1]
-        else:
-            first_path = None
+
         # Route to the special performance controller
         if first_path == self.performance_uri:
             return self.performance_controller.index, []

@@ -40,7 +40,7 @@ API_VERSION = 'v1'
 
 def hostname_for_refs(resource=None):
     """Return the HATEOS-style return URI reference for this service."""
-    ref = ['{0}/{1}'.format(CONF.host_href, API_VERSION)]
+    ref = ['{base}/{version}'.format(base=CONF.host_href, version=API_VERSION)]
     if resource:
         ref.append('/' + resource)
     return ''.join(ref)
@@ -112,10 +112,12 @@ def generate_fullname_for(instance):
     if not instance:
         raise ValueError(u._("Cannot generate a fullname for a null instance"))
 
-    module = instance.__class__.__module__
+    module = type(instance).__module__
+    class_name = type(instance).__name__
+
     if module is None or module == "__builtin__":
-        return instance.__class__.__name__
-    return module + '.' + instance.__class__.__name__
+        return class_name
+    return "{module}.{class_name}".format(module=module, class_name=class_name)
 
 
 class TimeKeeper(object):

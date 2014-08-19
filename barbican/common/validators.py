@@ -167,15 +167,13 @@ class NewSecretValidator(ValidatorBase):
 
     def _extract_name(self, json_data):
         """Extracts and returns the name from the JSON data."""
-        name = json_data.get('name', '').strip()
-        if not name:
-            return None
-        return name
+        name = json_data.get('name')
+        return name.strip() if name else None
 
     def _extract_expiration(self, json_data, schema_name):
         """Extracts and returns the expiration date from the JSON data."""
         expiration = None
-        expiration_raw = json_data.get('expiration', None)
+        expiration_raw = json_data.get('expiration')
         if expiration_raw and expiration_raw.strip():
             try:
                 expiration_tz = timeutils.parse_isotime(expiration_raw.strip())
@@ -240,7 +238,7 @@ class NewSecretValidator(ValidatorBase):
 
         :raises: LimitExceeded if the payload is too big
         """
-        payload = json_data['payload']
+        payload = json_data.get('payload', '')
         if secret_too_big(payload):
             raise exception.LimitExceeded()
 
