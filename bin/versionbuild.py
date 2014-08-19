@@ -29,11 +29,10 @@ This process may not be required if a bug in the 'pbr' library is fixed:
 https://bugs.launchpad.net/pbr/+bug/1206730
 """
 import os
+import re
 
 from datetime import datetime
 from time import mktime
-
-import pbr.version
 
 
 # Determine version of this application.
@@ -58,70 +57,28 @@ def get_patch():
 def update_versionfile(patch):
     """Update the version information in setup.cfg per the provided patch.
 
-    PBR will generate a version stamp per the docstring of _get_pbr_version()
-    below, which then stamps the version on source tarballs used for
-    packaging. This version stamp is not packaging friendly as it is not
-    monotonically increasing alphabetically. If a 'version' attribute is added
-    to setup.cfg, PBR will override the output major, minor and build
-    versions of the stamped version. By injecting a patch into this version
-    structure per this function, the desired monotonic version number can
-    be created.
+    PBR will generate a version stamp based on the version attribute in the
+    setup.cfg file, appending information such as git SHA code to it. To make
+    this generated version friendly to packaging systems such as YUM, this
+    function appends the provided patch to the base version. This function
+    assumes the base version in setup.cfg is of the form 'xx.yy' such as
+    '2014.2'. It will replace a third element found after this base with the
+    provided patch.
     """
+    version_regex = re.compile(r'(^\s*version\s*=\s*\w*\.\w*)(.*)')
     temp_name = VERSIONFILE + '~'
     with open(VERSIONFILE, 'r') as file_old:
         with open(temp_name, 'w') as file_new:
             for line in file_old:
-                if line.startswith('[metadata]'):
-                    file_new.write(line)
-
-                    # Add a 'version =' line to override the version info.
-                    base, extension = _get_pbr_version()
-                    if extension:
-                        file_new.write('version = '
-                                       '{0}.{1}.{2}\n'.format(base, patch,
-                                                              extension))
-                    else:
-                        file_new.write('version = {0}.{1}\n'.format(base, patch))
-
-                elif line.startswith('version'):
-                    raise ValueError("The file 'setup.cfg' must not already "
-                                     "contain a 'version =' line.")
+                match = version_regex.match(line)
+                if match:
+                    file_new.write(''.join(
+                        [match.group(1).strip(), '.', str(patch), '\n']))
                 else:
                     file_new.write(line)
 
     # Replace the original setup.cfg with the modified one.
     os.rename(temp_name, VERSIONFILE)
-
-
-def _get_pbr_version():
-    """Returns the version stamp from PBR.
-
-    PBR versions are either of the form yyyy.s.bm.devx.gitsha (for milestone
-    releases) or yyyy.s.devx.gitsha for series releases. This function returns
-    the base part (yyyy.s) and the optional extension without the devx.gitsha
-    portions (so either None or bm). The devx.gitsha portion should not be
-    returned, as it will be supplied by PBR as part of its version generation
-    process when 'python setup.py sdist' is later invoked.
-    """
-    version_info = pbr.version.VersionInfo('barbican')
-    base = version_info.version_string()
-    full = version_info.release_string()
-    if base != full:
-        extension = _trim_base_from_version(full, base)
-        if _is_milestone_release(extension):
-            return base, extension.split('.')[0]
-
-    return base, None
-
-
-def _trim_base_from_version(full_version, base_version):
-    """Removes the base version information from the full version."""
-    return full_version[len(base_version) + 1:]
-
-
-def _is_milestone_release(extension):
-    """Tests if extension corresponds to an OpenStack milestone release."""
-    return extension.startswith('b')
 
 
 if __name__ == '__main__':
