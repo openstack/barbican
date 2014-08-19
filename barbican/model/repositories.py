@@ -75,7 +75,7 @@ def setup_db_env():
     _MAX_RETRIES = CONF.sql_max_retries
     _RETRY_INTERVAL = CONF.sql_retry_interval
     _CONNECTION = CONF.sql_connection
-    LOG.debug("Sql connection = {0}".format(_CONNECTION))
+    LOG.debug("Sql connection = %s", _CONNECTION)
     sa_logger = logging.getLogger('sqlalchemy.engine')
     if CONF.debug:
         sa_logger.setLevel(logging.DEBUG)
@@ -118,8 +118,7 @@ def get_engine():
             'convert_unicode': True}
 
         try:
-            LOG.debug("Sql connection: {0}; Args: {1}".format(_CONNECTION,
-                                                              engine_args))
+            LOG.debug("Sql connection: %s; Args: %s", _CONNECTION, engine_args)
             _ENGINE = sqlalchemy.create_engine(_CONNECTION, **engine_args)
 
         #TODO(jfwood): if 'mysql' in connection_dict.drivername:
@@ -232,9 +231,9 @@ def clean_paging_values(offset_arg=0, limit_arg=CONF.default_limit_paging):
     except ValueError:
         limit = CONF.default_limit_paging
 
-    LOG.debug("Clean paging values limit={0}, offset={1}".format(
-        limit, offset
-    ))
+    LOG.debug("Clean paging values limit=%s, offset=%s",
+              limit, offset
+              )
 
     return offset, limit
 
@@ -303,7 +302,7 @@ class BaseRepo(object):
             entity = query.one()
 
         except sa_orm.exc.NoResultFound:
-            LOG.exception("Not found for {0}".format(entity_id))
+            LOG.exception("Not found for %s", entity_id)
             entity = None
             if not suppress_exception:
                 raise exception.NotFound("No %s found with ID %s"
@@ -343,7 +342,7 @@ class BaseRepo(object):
                 raise exception.Duplicate("Entity ID {0} already exists!"
                                           .format(values_id))
         LOG.debug('Elapsed repo '
-                  'create secret:{0}'.format(time.time() - start))  # DEBUG
+                  'create secret:%s', (time.time() - start))  # DEBUG
 
         return entity
 
@@ -510,7 +509,7 @@ class TenantRepo(BaseRepo):
         except sa_orm.exc.NoResultFound:
             entity = None
             if not suppress_exception:
-                LOG.exception("Problem getting Tenant {0}".format(keystone_id))
+                LOG.exception("Problem getting Tenant %s", keystone_id)
                 raise exception.NotFound("No %s found with keystone-ID %s"
                                          % (self._do_entity_name(),
                                             keystone_id))
@@ -559,12 +558,12 @@ class SecretRepo(BaseRepo):
 
             start = offset
             end = offset + limit
-            LOG.debug('Retrieving from {0} to {1}'.format(start, end))
+            LOG.debug('Retrieving from %s to %s', start, end)
             total = query.count()
             entities = query[start:end]
-            LOG.debug('Number entities retrieved: {0} out of {1}'.format(
-                len(entities), total
-            ))
+            LOG.debug('Number entities retrieved: %s out of %s',
+                      len(entities), total
+                      )
 
         except sa_orm.exc.NoResultFound:
             entities = None
@@ -768,12 +767,12 @@ class OrderRepo(BaseRepo):
 
             start = offset
             end = offset + limit
-            LOG.debug('Retrieving from {0} to {1}'.format(start, end))
+            LOG.debug('Retrieving from %s to %s', start, end)
             total = query.count()
             entities = query[start:end]
-            LOG.debug('Number entities retrieved: {0} out of {1}'.format(
-                len(entities), total
-            ))
+            LOG.debug('Number entities retrieved: %s out of %s',
+                      len(entities), total
+                      )
 
         except sa_orm.exc.NoResultFound:
             entities = None
@@ -827,12 +826,12 @@ class ContainerRepo(BaseRepo):
 
             start = offset
             end = offset + limit
-            LOG.debug('Retrieving from {0} to {1}'.format(start, end))
+            LOG.debug('Retrieving from %s to %s', start, end)
             total = query.count()
             entities = query[start:end]
-            LOG.debug('Number entities retrieved: {0} out of {1}'.format(
-                len(entities), total
-            ))
+            LOG.debug('Number entities retrieved: %s out of %s',
+                      len(entities), total
+                      )
 
         except sa_orm.exc.NoResultFound:
             entities = None
@@ -886,12 +885,12 @@ class ContainerConsumerRepo(BaseRepo):
                                  == container_id)
             start = offset
             end = offset + limit
-            LOG.debug('Retrieving from {0} to {1}'.format(start, end))
+            LOG.debug('Retrieving from %s to %s', start, end)
             total = query.count()
             entities = query[start:end]
-            LOG.debug('Number entities retrieved: {0} out of {1}'.format(
-                len(entities), total
-            ))
+            LOG.debug('Number entities retrieved: %s out of %s',
+                      len(entities), total
+                      )
 
         except sa_orm.exc.NoResultFound:
             entities = None
@@ -928,10 +927,9 @@ class ContainerConsumerRepo(BaseRepo):
             super(ContainerConsumerRepo, self).create_from(new_consumer)
         except exception.Duplicate:
             #This operation is idempotent, so log this and move on
-            LOG.debug("Consumer {0} already exists for container {1},"
-                      " continuing..."
-                      .format((new_consumer.name, new_consumer.URL),
-                              new_consumer.container_id))
+            LOG.debug("Consumer %s already exists for container %s,"
+                      " continuing...", (new_consumer.name, new_consumer.URL),
+                      new_consumer.container_id)
             #Get the existing entry and reuse it by clearing the deleted flags
             existing_consumer = self.get_by_values(
                 new_consumer.container_id, new_consumer.name, new_consumer.URL,
@@ -992,11 +990,11 @@ class TransportKeyRepo(BaseRepo):
 
             start = offset
             end = offset + limit
-            LOG.debug('Retrieving from {0} to {1}'.format(start, end))
+            LOG.debug('Retrieving from %s to %s', start, end)
             total = query.count()
             entities = query[start:end]
-            LOG.debug('Number of entities retrieved: {0} out of {1}'.format(
-                len(entities), total))
+            LOG.debug('Number of entities retrieved: %s out of %s',
+                      len(entities), total)
 
         except sa_orm.exc.NoResultFound:
             entities = None

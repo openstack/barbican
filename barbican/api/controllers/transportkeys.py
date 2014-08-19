@@ -46,7 +46,7 @@ class TransportKeyController(object):
     @controllers.handle_exceptions(u._('Transport Key retrieval'))
     @controllers.enforce_rbac('transport_key:get')
     def index(self, keystone_id):
-        LOG.debug("== Getting transport key for %s" % keystone_id)
+        LOG.debug("== Getting transport key for %s", keystone_id)
         transport_key = self.repo.get(entity_id=self.transport_key_id)
         if not transport_key:
             _transport_key_not_found()
@@ -139,5 +139,5 @@ class TransportKeysController(object):
             new_key.id
         )
         url = hrefs.convert_transport_key_to_href(new_key.id)
-        LOG.debug('URI to transport key is {0}'.format(url))
+        LOG.debug('URI to transport key is %s', url)
         return {'transport_key_ref': url}

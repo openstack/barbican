@@ -74,13 +74,13 @@ class Debug(Middleware):
     def __call__(self, req):
         LOG.debug(("*" * 40) + " REQUEST ENVIRON")
         for key, value in req.environ.items():
-            LOG.debug('{0}={1}'.format(key, value))
+            LOG.debug('%s=%s', key, value)
         LOG.debug(' ')
         resp = req.get_response(self.application)
 
         LOG.debug(("*" * 40) + " RESPONSE HEADERS")
         for (key, value) in resp.headers.iteritems():
-            LOG.debug('{0}={1}'.format(key, value))
+            LOG.debug('%s=%s', key, value)
         LOG.debug(' ')
 
         resp.app_iter = self.print_generator(resp.app_iter)

@@ -627,7 +627,7 @@ MODELS = [TenantSecret, Tenant, Secret, EncryptedDatum, Order, Container,
 
 def register_models(engine):
     """Creates database tables for all models with the given engine."""
-    LOG.debug("Models: {0}".format(repr(MODELS)))
+    LOG.debug("Models: %s", repr(MODELS))
     for model in MODELS:
         model.metadata.create_all(engine)
 

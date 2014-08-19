@@ -103,7 +103,7 @@ class OrdersController(object):
     @controllers.enforce_rbac('orders:get')
     def index(self, keystone_id, **kw):
         LOG.debug('Start orders on_get '
-                  'for tenant-ID {0}:'.format(keystone_id))
+                  'for tenant-ID %s:', keystone_id)
 
         result = self.order_repo \
             .get_by_create_date(keystone_id,
@@ -151,9 +151,9 @@ class OrdersController(object):
         if order_type:
             body = api.load_body(pecan.request,
                                  validator=self.type_order_validator)
-            LOG.debug('Start on_post...{0}'.format(body))
+            LOG.debug('Start on_post...%s', body)
             name = body.get('meta').get('name')
-            LOG.debug('Order to create is {0}'.format(name))
+            LOG.debug('Order to create is %s', name)
             new_order = models.Order(body)
             #TODO(atiwari): we need to make another round of model
             # change to address.  payload_content_type can not be None
@@ -162,13 +162,13 @@ class OrdersController(object):
                 'payload_content_type')
         else:
             body = api.load_body(pecan.request, validator=self.validator)
-            LOG.debug('Start on_post...{0}'.format(body))
+            LOG.debug('Start on_post...%s', body)
 
             if 'secret' not in body:
                 _secret_not_in_order()
             secret_info = body['secret']
             name = secret_info.get('name')
-            LOG.debug('Secret to create is {0}'.format(name))
+            LOG.debug('Secret to create is %s', name)
 
             new_order = models.Order()
             new_order.secret_name = secret_info.get('name')

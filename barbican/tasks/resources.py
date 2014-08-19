@@ -60,7 +60,7 @@ class BaseTask(object):
         except Exception as e:
             # Serious error!
             LOG.exception(u._("Could not retrieve information needed to "
-                              "process task '{0}'.").format(name))
+                              "process task '%s'."), name)
             raise e
 
         # Process the target entity.
@@ -68,7 +68,7 @@ class BaseTask(object):
             self.handle_processing(entity, *args, **kwargs)
         except Exception as e_orig:
             LOG.exception(u._("Could not perform processing for "
-                              "task '{0}'.").format(name))
+                              "task '%s'."), name)
 
             # Handle failure to process entity.
             try:
@@ -77,9 +77,9 @@ class BaseTask(object):
                 self.handle_error(entity, status, message, e_orig,
                                   *args, **kwargs)
             except Exception:
-                LOG.exception(u._("Problem handling an error for task '{0}', "
+                LOG.exception(u._("Problem handling an error for task '%s', "
                                   "raising original "
-                                  "exception.").format(name))
+                                  "exception."), name)
             raise e_orig
 
         # Handle successful conclusion of processing.
@@ -87,7 +87,7 @@ class BaseTask(object):
             self.handle_success(entity, *args, **kwargs)
         except Exception as e:
             LOG.exception(u._("Could not process after successfully executing"
-                              " task '{0}'.").format(name))
+                              " task '%s'."), name)
             raise e
 
     @abc.abstractmethod

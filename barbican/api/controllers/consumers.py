@@ -78,7 +78,7 @@ class ContainerConsumersController(object):
     @controllers.enforce_rbac('consumers:get')
     def index(self, keystone_id, **kw):
         LOG.debug('Start consumers on_get '
-                  'for container-ID {0}:'.format(self.container_id))
+                  'for container-ID %s:', self.container_id)
 
         try:
             self.container_repo.get(self.container_id, keystone_id)
@@ -120,7 +120,7 @@ class ContainerConsumersController(object):
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
         data = api.load_body(pecan.request, validator=self.validator)
-        LOG.debug('Start on_post...{0}'.format(data))
+        LOG.debug('Start on_post...%s', data)
 
         try:
             self.container_repo.get(self.container_id, keystone_id)
@@ -152,7 +152,7 @@ class ContainerConsumersController(object):
         )
         if not consumer:
             _consumer_not_found()
-        LOG.debug("Found consumer: {0}".format(consumer))
+        LOG.debug("Found consumer: %s", consumer)
 
         try:
             self.consumer_repo.delete_entity_by_id(consumer.id, keystone_id)

@@ -34,7 +34,7 @@ def get_or_create_tenant(keystone_id, tenant_repo):
     tenant = tenant_repo.find_by_keystone_id(keystone_id,
                                              suppress_exception=True)
     if not tenant:
-        LOG.debug('Creating tenant for {0}'.format(keystone_id))
+        LOG.debug('Creating tenant for %s', keystone_id)
         tenant = models.Tenant()
         tenant.keystone_id = keystone_id
         tenant.status = models.States.ACTIVE

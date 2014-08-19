@@ -103,7 +103,7 @@ class ContainersController(object):
     @controllers.enforce_rbac('containers:get')
     def index(self, keystone_id, **kw):
         LOG.debug('Start containers on_get '
-                  'for tenant-ID {0}:'.format(keystone_id))
+                  'for tenant-ID %s:', keystone_id)
 
         result = self.container_repo.get_by_create_date(
             keystone_id,
@@ -141,7 +141,7 @@ class ContainersController(object):
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
 
         data = api.load_body(pecan.request, validator=self.validator)
-        LOG.debug('Start on_post...{0}'.format(data))
+        LOG.debug('Start on_post...%s', data)
 
         new_container = models.Container(data)
         new_container.tenant_id = tenant.id

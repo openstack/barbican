@@ -216,7 +216,7 @@ class SecretsController(object):
     @controllers.enforce_rbac('secrets:get')
     def index(self, keystone_id, **kw):
         LOG.debug('Start secrets on_get '
-                  'for tenant-ID {0}:'.format(keystone_id))
+                  'for tenant-ID %s:', keystone_id)
 
         name = kw.get('name', '')
         if name:
@@ -266,7 +266,7 @@ class SecretsController(object):
     @controllers.enforce_rbac('secrets:post')
     @controllers.enforce_content_types(['application/json'])
     def on_post(self, keystone_id, **kwargs):
-        LOG.debug('Start on_post for tenant-ID {0}:...'.format(keystone_id))
+        LOG.debug('Start on_post for tenant-ID %s:...', keystone_id)
 
         data = api.load_body(pecan.request, validator=self.validator)
         tenant = res.get_or_create_tenant(keystone_id, self.repos.tenant_repo)
@@ -289,7 +289,7 @@ class SecretsController(object):
             new_secret.id
         )
         url = hrefs.convert_secret_to_href(new_secret.id)
-        LOG.debug('URI to secret is {0}'.format(url))
+        LOG.debug('URI to secret is %s', url)
         if transport_key_model is not None:
             tkey_url = hrefs.convert_transport_key_to_href(
                 transport_key_model.id)

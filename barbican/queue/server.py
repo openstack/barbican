@@ -42,7 +42,7 @@ class Tasks(object):
     """
     def process_order(self, context, order_id, keystone_id):
         """Process Order."""
-        LOG.debug('Order id is {0}'.format(order_id))
+        LOG.debug('Order id is %s', order_id)
         task = resources.BeginOrder()
         try:
             task.process(order_id, keystone_id)
