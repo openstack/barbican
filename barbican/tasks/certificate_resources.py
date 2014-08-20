@@ -22,7 +22,7 @@ def issue_certificate_request(order_model, repos):
     plugin_meta = _get_plugin_meta(order_model)
 
     # Locate a suitable plugin to issue a certificate.
-    cert_plugin = cert.CertificatePluginManager().get_plugin()
+    cert_plugin = cert.CertificatePluginManager().get_plugin(order_model.meta)
 
     result = cert_plugin.issue_certificate_request(order_model.id,
                                                    order_model.meta,
@@ -61,7 +61,6 @@ def _get_plugin_meta(order_model):
 
 def _save_plugin_metadata(order_model, plugin_meta, repos):
     """Add plugin metadata to an order."""
-
     if not isinstance(plugin_meta, dict):
         plugin_meta = dict()
 

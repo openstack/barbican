@@ -26,6 +26,7 @@ from barbican.model import models
 from barbican.model import repositories as rep
 from barbican.openstack.common import gettextutils as u
 from barbican.plugin import resources as plugin
+from barbican.tasks import certificate_resources as cert
 
 
 LOG = utils.getLogger(__name__)
@@ -255,8 +256,8 @@ class BeginTypeOrder(BaseTask):
         :param order: Order to process.
         """
         order_info = order.to_dict_fields()
-        order_type = order_info['type']
-        secret_info = order_info['meta']
+        order_type = order_info.get('type')
+        meta_info = order_info.get('meta')
 
         # Retrieve the tenant.
         tenant = self.repos.tenant_repo.get(order.tenant_id)
@@ -264,18 +265,22 @@ class BeginTypeOrder(BaseTask):
         if order_type == models.OrderType.KEY:
             # Create Secret
             new_secret = plugin.\
-                generate_secret(secret_info,
-                                secret_info.get('payload_content_type',
-                                                'application/octet-stream'),
+                generate_secret(meta_info,
+                                meta_info.get('payload_content_type',
+                                              'application/octet-stream'),
                                 tenant, self.repos)
             order.secret_id = new_secret.id
             LOG.debug("...done creating keys order's secret.")
         elif order_type == models.OrderType.ASYMMETRIC:
             # Create asymmetric Secret
             new_container = plugin.generate_asymmetric_secret(
-                secret_info,
-                secret_info.get('payload_content_type',
-                                'application/octet-stream'),
+                meta_info,
+                meta_info.get('payload_content_type',
+                              'application/octet-stream'),
                 tenant, self.repos)
             order.container_id = new_container.id
             LOG.debug("...done creating asymmetric order's secret.")
+        elif order_type == models.OrderType.CERTIFICATE:
+            # Request a certificate
+            cert.issue_certificate_request(order, self.repos)
+            LOG.debug("...done requesting a certificate.")

@@ -1023,6 +1023,29 @@ class WhenTestingTypeOrderValidator(testtools.TestCase):
 
         self.validator = validators.TypeOrderValidator()
 
+    def test_should_pass_with_certificate_type_in_order_refs(self):
+        self.order_req['type'] = 'certificate'
+        result = self.validator.validate(self.order_req)
+        self.assertEqual('certificate', result['type'])
+
+    def test_should_pass_good_bit_meta_in_order_refs(self):
+        self.order_req['meta']['algorithm'] = 'AES'
+        self.order_req['meta']['bit_length'] = 256
+        result = self.validator.validate(self.order_req)
+        self.assertTrue(result['meta']['expiration'] is None)
+
+    def test_should_pass_good_exp_meta_in_order_refs(self):
+        self.order_req['meta']['algorithm'] = 'AES'
+        ony_year_factor = datetime.timedelta(days=1 * 365)
+        date_after_year = datetime.datetime.now() + ony_year_factor
+        date_after_year_str = date_after_year.strftime('%Y-%m-%d %H:%M:%S')
+        self.order_req['meta']['expiration'] = date_after_year_str
+        result = self.validator.validate(self.order_req)
+
+        self.assertTrue('expiration' in result['meta'])
+        self.assertTrue(isinstance(result['meta']['expiration'],
+                                   datetime.datetime))
+
     def test_should_raise_with_no_type_in_order_refs(self):
         del self.order_req['type']
 
@@ -1039,14 +1062,6 @@ class WhenTestingTypeOrderValidator(testtools.TestCase):
                                       self.order_req)
         self.assertEqual('type', exception.invalid_property)
 
-    def test_should_raise_with_certificate_type_in_order_refs(self):
-        self.order_req['type'] = 'certificate'
-
-        exception = self.assertRaises(excep.FeatureNotImplemented,
-                                      self.validator.validate,
-                                      self.order_req)
-        self.assertEqual('type', exception.invalid_field)
-
     def test_should_raise_with_no_meta_in_order_refs(self):
         del self.order_req['meta']
 
@@ -1054,12 +1069,6 @@ class WhenTestingTypeOrderValidator(testtools.TestCase):
                                       self.validator.validate,
                                       self.order_req)
         self.assertEqual('meta', exception.invalid_property)
-
-    def test_should_pass_good_bit_meta_in_order_refs(self):
-        self.order_req['meta']['algorithm'] = 'AES'
-        self.order_req['meta']['bit_length'] = 256
-        result = self.validator.validate(self.order_req)
-        self.assertTrue(result['meta']['expiration'] is None)
 
     def test_should_raise_with_wrong_exp_meta_in_order_refs(self):
         self.order_req['meta']['algorithm'] = 'AES'
@@ -1069,18 +1078,6 @@ class WhenTestingTypeOrderValidator(testtools.TestCase):
                                       self.validator.validate,
                                       self.order_req)
         self.assertEqual('expiration', exception.invalid_property)
-
-    def test_should_pass_good_exp_meta_in_order_refs(self):
-        self.order_req['meta']['algorithm'] = 'AES'
-        ony_year_factor = datetime.timedelta(days=1 * 365)
-        date_after_year = datetime.datetime.now() + ony_year_factor
-        date_after_year_str = date_after_year.strftime('%Y-%m-%d %H:%M:%S')
-        self.order_req['meta']['expiration'] = date_after_year_str
-        result = self.validator.validate(self.order_req)
-
-        self.assertTrue('expiration' in result['meta'])
-        self.assertTrue(isinstance(result['meta']['expiration'],
-                                   datetime.datetime))
 
 if __name__ == '__main__':
     unittest.main()
