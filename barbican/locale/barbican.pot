@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2014.2.dev47.g9f6b20a\n"
+"Project-Id-Version: barbican 2014.2.dev56.g8688728\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-08-18 06:08+0000\n"
+"POT-Creation-Date: 2014-08-20 06:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -67,7 +67,7 @@ msgstr ""
 msgid "{0} issue seen - {1}."
 msgstr ""
 
-#: barbican/api/controllers/__init__.py:88
+#: barbican/api/controllers/__init__.py:89
 msgid "System"
 msgstr ""
 
@@ -115,35 +115,35 @@ msgstr ""
 msgid "Secret provided for '{0}' doesn't exist."
 msgstr ""
 
-#: barbican/api/controllers/orders.py:32
+#: barbican/api/controllers/orders.py:33
 msgid "Not Found. Sorry but your order is in another castle."
 msgstr ""
 
-#: barbican/api/controllers/orders.py:38
+#: barbican/api/controllers/orders.py:39
 msgid "Secret metadata expected but not received."
 msgstr ""
 
-#: barbican/api/controllers/orders.py:43
+#: barbican/api/controllers/orders.py:44
 msgid "Order update is not supported."
 msgstr ""
 
-#: barbican/api/controllers/orders.py:55
+#: barbican/api/controllers/orders.py:56
 msgid "Order retrieval"
 msgstr ""
 
-#: barbican/api/controllers/orders.py:66 barbican/api/controllers/orders.py:129
+#: barbican/api/controllers/orders.py:67 barbican/api/controllers/orders.py:131
 msgid "Order update"
 msgstr ""
 
-#: barbican/api/controllers/orders.py:71
+#: barbican/api/controllers/orders.py:72
 msgid "Order deletion"
 msgstr ""
 
-#: barbican/api/controllers/orders.py:100
+#: barbican/api/controllers/orders.py:102
 msgid "Order(s) retrieval"
 msgstr ""
 
-#: barbican/api/controllers/orders.py:135
+#: barbican/api/controllers/orders.py:137
 msgid "Order creation"
 msgstr ""
 
@@ -485,16 +485,23 @@ msgstr ""
 
 #: barbican/common/exception.py:293
 #, python-format
+msgid ""
+"Feature not implemented for value set on field '%(field)s' on schema "
+"'%(schema)s': %(reason)s"
+msgstr ""
+
+#: barbican/common/exception.py:302
+#, python-format
 msgid "Provided header feature is unsupported: %(feature)s"
 msgstr ""
 
-#: barbican/common/exception.py:297
+#: barbican/common/exception.py:306
 msgid ""
 "The image cannot be deleted because it is in use through the backend "
 "store outside of Barbican."
 msgstr ""
 
-#: barbican/common/exception.py:302
+#: barbican/common/exception.py:311
 msgid "The provided image is too large."
 msgstr ""
 
@@ -502,105 +509,126 @@ msgstr ""
 msgid "Cannot generate a fullname for a null instance"
 msgstr ""
 
-#: barbican/common/validators.py:77
+#: barbican/common/validators.py:78
 msgid "{0}' within '{1}"
 msgstr ""
 
-#: barbican/common/validators.py:155
+#: barbican/common/validators.py:156
 msgid "If 'payload' specified, must be non empty"
 msgstr ""
 
-#: barbican/common/validators.py:161
+#: barbican/common/validators.py:162
 msgid "payload must be provided when payload_content_type is specified"
 msgstr ""
 
-#: barbican/common/validators.py:186
+#: barbican/common/validators.py:187 barbican/common/validators.py:358
 msgid "Invalid date for 'expiration'"
 msgstr ""
 
-#: barbican/common/validators.py:199
+#: barbican/common/validators.py:200
 msgid "'expiration' is before current time"
 msgstr ""
 
-#: barbican/common/validators.py:210
+#: barbican/common/validators.py:211
 msgid "If 'payload' is supplied, 'payload_content_type' must also be supplied."
 msgstr ""
 
-#: barbican/common/validators.py:217
+#: barbican/common/validators.py:218
 msgid "payload_content_type is not one of {0}"
 msgstr ""
 
-#: barbican/common/validators.py:225
+#: barbican/common/validators.py:226
 msgid ""
 "payload_content_encoding must be specified when payload_content_type is "
 "application/octet-stream."
 msgstr ""
 
-#: barbican/common/validators.py:233
+#: barbican/common/validators.py:234
 msgid ""
 "payload_content_encoding must not be specified when payload_content_type "
 "is text/plain"
 msgstr ""
 
-#: barbican/common/validators.py:269
-msgid "'secret' attributes are required"
+#: barbican/common/validators.py:299 barbican/common/validators.py:337
+#: barbican/common/validators.py:344
+msgid "'meta' attributes is required"
 msgstr ""
 
-#: barbican/common/validators.py:276
-msgid "'payload' not allowed for secret generation"
+#: barbican/common/validators.py:305
+msgid "'payload' not allowed for key type order"
 msgstr ""
 
-#: barbican/common/validators.py:286
-msgid "Only 'application/oc tet-stream' supported"
+#: barbican/common/validators.py:315
+msgid "Only 'application/octet-stream' supported"
 msgstr ""
 
-#: barbican/common/validators.py:293
+#: barbican/common/validators.py:322 barbican/common/validators.py:437
 msgid "Only 'cbc' supported"
 msgstr ""
 
-#: barbican/common/validators.py:299
+#: barbican/common/validators.py:328 barbican/common/validators.py:443
 msgid "Only 'aes' supported"
 msgstr ""
 
-#: barbican/common/validators.py:307
+#: barbican/common/validators.py:370
+msgid "Must have non-zero positive bit_length to generate secret"
+msgstr ""
+
+#: barbican/common/validators.py:378 barbican/common/validators.py:451
 msgid "Must be a positive integer that is a multiple of 8"
 msgstr ""
 
-#: barbican/common/validators.py:381
+#: barbican/common/validators.py:386
+msgid "Feature not implemented for '{0}' order type"
+msgstr ""
+
+#: barbican/common/validators.py:413
+msgid "'secret' attributes are required"
+msgstr ""
+
+#: barbican/common/validators.py:420
+msgid "'payload' not allowed for secret generation"
+msgstr ""
+
+#: barbican/common/validators.py:430
+msgid "Only 'application/oc tet-stream' supported"
+msgstr ""
+
+#: barbican/common/validators.py:525
 msgid "Duplicate reference names are not allowed"
 msgstr ""
 
-#: barbican/common/validators.py:393
+#: barbican/common/validators.py:537
 msgid "Duplicate secret ids are not allowed"
 msgstr ""
 
-#: barbican/common/validators.py:411
+#: barbican/common/validators.py:555
 msgid ""
 "only 'private_key', 'public_key' and 'private_key_passphrase' reference "
 "names are allowed for RSA type"
 msgstr ""
 
-#: barbican/common/validators.py:419
+#: barbican/common/validators.py:563
 msgid ""
 "The minimum required reference names are 'public_key' and'private_key' "
 "for RSA type"
 msgstr ""
 
-#: barbican/common/validators.py:432
+#: barbican/common/validators.py:576
 msgid ""
 "only 'private_key', 'certificate' , 'private_key_passphrase',  or "
 "'intermediates' reference names are allowed for Certificate type"
 msgstr ""
 
-#: barbican/common/validators.py:440
+#: barbican/common/validators.py:584
 msgid "The minimum required reference name is 'certificate' for Certificate type"
 msgstr ""
 
-#: barbican/common/validators.py:486
+#: barbican/common/validators.py:630
 msgid "plugin_name must be provided"
 msgstr ""
 
-#: barbican/common/validators.py:493
+#: barbican/common/validators.py:637
 msgid "transport_key must be provided"
 msgstr ""
 
@@ -880,6 +908,22 @@ msgstr ""
 msgid "nss_password is required"
 msgstr ""
 
+#: barbican/plugin/kmip_secret_store.py:44
+msgid "The default username for authenticating with KMIP"
+msgstr ""
+
+#: barbican/plugin/kmip_secret_store.py:48
+msgid "The default password for authenticating with KMIP"
+msgstr ""
+
+#: barbican/plugin/kmip_secret_store.py:52
+msgid "Address of the KMIP server"
+msgstr ""
+
+#: barbican/plugin/kmip_secret_store.py:56
+msgid "Port for the KMIP server"
+msgstr ""
+
 #: barbican/plugin/symantec.py:35
 msgid "Symantec username for authentication"
 msgstr ""
@@ -1055,7 +1099,16 @@ msgstr ""
 msgid "Create Secret"
 msgstr ""
 
+#: barbican/tasks/resources.py:209
+msgid "Process TypeOrder"
+msgstr ""
+
 #: barbican/tests/tasks/test_resources.py:134
 msgid "Create Secret failure seen - please contact site administrator."
+msgstr ""
+
+#: barbican/tests/tasks/test_resources.py:290
+#: barbican/tests/tasks/test_resources.py:442
+msgid "Process TypeOrder failure seen - please contact site administrator."
 msgstr ""
 
