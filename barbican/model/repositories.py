@@ -264,6 +264,8 @@ class Repositories(object):
             self._set_repo('secret_meta_repo', SecretStoreMetadatumRepo,
                            kwargs)
             self._set_repo('order_repo', OrderRepo, kwargs)
+            self._set_repo('order_plugin_meta_repo', OrderPluginMetadatumRepo,
+                           kwargs)
             self._set_repo('transport_key_repo', TransportKeyRepo, kwargs)
 
     def _set_repo(self, repo_name, repo_cls, specs):
@@ -797,6 +799,42 @@ class OrderRepo(BaseRepo):
                       .filter_by(deleted=False) \
                       .join(models.Tenant, models.Order.tenant) \
                       .filter(models.Tenant.keystone_id == keystone_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
+class OrderPluginMetadatumRepo(BaseRepo):
+    """Repository for the OrderPluginMetadatum entity (that stores key/value
+    plugin information on behalf of a Order).
+    """
+
+    def save(self, metadata, order_model):
+        """Saves the the specified metadata for the order.
+
+        :raises NotFound if entity does not exist.
+        """
+        now = timeutils.utcnow()
+        session = get_session()
+        with session.begin():
+            for k, v in metadata.items():
+                meta_model = models.OrderPluginMetadatum(k, v)
+                meta_model.updated_at = now
+                meta_model.order = order_model
+                meta_model.save(session=session)
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "OrderPluginMetadatum"
+
+    def _do_create_instance(self):
+        return models.OrderPluginMetadatum()
+
+    def _do_build_get_query(self, entity_id, keystone_id, session):
+        """Sub-class hook: build a retrieve query."""
+        query = session.query(models.OrderPluginMetadatum)
+        return query.filter_by(id=entity_id)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""

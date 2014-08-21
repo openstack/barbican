@@ -268,11 +268,11 @@ class Secret(BASE, ModelBase):
     # Eager load this relationship via 'lazy=False'.
     encrypted_data = orm.relationship("EncryptedDatum", lazy=False)
 
-    secret_store_metadata = orm.\
-        relationship("SecretStoreMetadatum",
-                     collection_class=col.attribute_mapped_collection('key'),
-                     backref="secret",
-                     cascade="all, delete-orphan")
+    secret_store_metadata = orm.relationship(
+        "SecretStoreMetadatum",
+        collection_class=col.attribute_mapped_collection('key'),
+        backref="secret",
+        cascade="all, delete-orphan")
 
     def __init__(self, parsed_request=None):
         """Creates secret from a dict."""
@@ -453,6 +453,17 @@ class Order(BASE, ModelBase):
     container_id = sa.Column(sa.String(36), sa.ForeignKey('containers.id'),
                              nullable=True)
 
+    order_plugin_metadata = orm.relationship(
+        "OrderPluginMetadatum",
+        collection_class=col.attribute_mapped_collection('key'),
+        backref="order",
+        cascade="all, delete-orphan")
+
+    def _do_delete_children(self, session):
+        """Sub-class hook: delete children relationships."""
+        for k, v in self.order_plugin_metadata.items():
+            v.delete(session)
+
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
         ret = {'secret': {'name': self.secret_name or self.secret_id,
@@ -476,6 +487,40 @@ class Order(BASE, ModelBase):
         if self.error_reason:
             ret['error_reason'] = self.error_reason
         return ret
+
+
+class OrderPluginMetadatum(BASE, ModelBase):
+    """Represents Order plugin metadatum for a single key-value pair.
+
+    This entity is used to store plugin-specific metadata on behalf of an
+    Order instance.
+    """
+
+    __tablename__ = "order_plugin_metadata"
+
+    order_id = sa.Column(sa.String(36), sa.ForeignKey('orders.id'),
+                         nullable=False)
+    key = sa.Column(sa.String(255), nullable=False)
+    value = sa.Column(sa.String(255), nullable=False)
+
+    def __init__(self, key, value):
+        super(OrderPluginMetadatum, self).__init__()
+
+        msg = ("Must supply non-None {0} argument "
+               "for OrderPluginMetadatum entry.")
+
+        if key is None:
+            raise exception.MissingArgumentError(msg.format("key"))
+        self.key = key
+
+        if value is None:
+            raise exception.MissingArgumentError(msg.format("value"))
+        self.value = value
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {'key': self.key,
+                'value': self.value}
 
 
 class Container(BASE, ModelBase):
@@ -622,7 +667,7 @@ class TransportKey(BASE, ModelBase):
 # Keep this tuple synchronized with the models in the file
 MODELS = [TenantSecret, Tenant, Secret, EncryptedDatum, Order, Container,
           ContainerConsumerMetadatum, ContainerSecret, TransportKey,
-          SecretStoreMetadatum, KEKDatum]
+          SecretStoreMetadatum, OrderPluginMetadatum, KEKDatum]
 
 
 def register_models(engine):
