@@ -276,37 +276,11 @@ class AsymmetricKeyMetadataDTO(object):
         self.passphrase_meta = passphrase_meta
 
 
-# TODO(john-wood-w) Remove this class once repository factory work is
-#  completed.
-class SecretStoreContext(object):
-    """Context for secret store plugins.
-
-    Some plugins implementations (such as the crypto implementation) might
-    require access to core Barbican resources such as datastore repositories.
-    This object provides access to such storage.
-    """
-    def __init__(self, **kwargs):
-        if kwargs:
-            for k, v in kwargs.items():
-                setattr(self, k, v)
-
-
 @six.add_metaclass(abc.ABCMeta)
 class SecretStoreBase(object):
 
-    # TODO(john-wood-w) Remove 'context' once repository factory and secret
-    #  normalization work is completed.
-    # TODO(john-wood-w) Combine generate_symmetric_key() and
-    #  generate_asymmetric_key() into one method: generate_key(), that will
-    #  return a dict with this structure:
-    #    { SecretType.xxxxx: {secret-meta dict}
-    #  So for symmetric keys, this would look like:
-    #    { SecretType.SYMMETRIC: {secret-meta dict}
-    #  And for asymmetric keys:
-    #    { SecretType.PUBLIC: {secret-meta for public},
-    #      SecretType.PRIVATE: {secret-meta for private}}
     @abc.abstractmethod
-    def generate_symmetric_key(self, key_spec, context):
+    def generate_symmetric_key(self, key_spec):
         """Generate a new symmetric key and store it.
 
         Generates a new symmetric key and stores it in the secret store.
@@ -319,13 +293,12 @@ class SecretStoreBase(object):
 
         :param key_spec: KeySpec that contains details on the type of key to
         generate
-        :param context: SecretStoreContext for secret
-        :returns: a dictionary that contains metadata about the key
+        :returns: an optional dictionary containing metadata about the key
         """
         raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
-    def generate_asymmetric_key(self, key_spec, context):
+    def generate_asymmetric_key(self, key_spec):
         """Generate a new asymmetric key pair and store it.
 
         Generates a new asymmetric key pair and stores it in the secret
@@ -338,14 +311,13 @@ class SecretStoreBase(object):
 
         :param key_spec: KeySpec that contains details on the type of key to
         generate
-        :param context: SecretStoreContext for secret
         :returns: An object of type AsymmetricKeyMetadataDTO containing
         metadata about the key pair.
         """
         raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
-    def store_secret(self, secret_dto, context):
+    def store_secret(self, secret_dto):
         """Stores a key.
 
         The SecretDTO contains the bytes of the secret and properties of the
@@ -356,13 +328,12 @@ class SecretStoreBase(object):
         dictionary may be empty if the SecretStore does not require it.
 
         :param secret_dto: SecretDTO for secret
-        :param context: SecretStoreContext for secret
-        :returns: a dictionary that contains metadata about the secret
+        :returns: an optional dictionary containing metadata about the secret
         """
         raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
-    def get_secret(self, secret_metadata, context):
+    def get_secret(self, secret_metadata):
         """Retrieves a secret from the secret store.
 
         Retrieves a secret from the secret store and returns a SecretDTO that
@@ -373,7 +344,6 @@ class SecretStoreBase(object):
         the key.
 
         :param secret_metadata: secret metadata
-        :param context: SecretStoreContext for secret
         :returns: SecretDTO that contains secret
         """
         raise NotImplementedError  # pragma: no cover
