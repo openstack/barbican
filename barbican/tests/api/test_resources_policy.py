@@ -177,8 +177,6 @@ class BaseTestCase(testtools.TestCase):
                                           method_under_test)
             self._assert_post_rbac_exception(exception, role)
 
-            self.setUp()  # Need to re-setup
-
     def _assert_fail_rbac(self, roles, method_under_test, accept=None,
                           content_type=None):
         """Assert that RBAC rules failed for one of the specified roles.
@@ -195,8 +193,6 @@ class BaseTestCase(testtools.TestCase):
 
             exception = self.assertRaises(exc.HTTPForbidden, method_under_test)
             self.assertEqual(403, exception.status_int)
-
-            self.setUp()  # Need to re-setup
 
 
 class WhenTestingVersionResource(BaseTestCase):
@@ -215,7 +211,6 @@ class WhenTestingVersionResource(BaseTestCase):
         for role in ['admin', 'observer', 'creator', 'audit']:
             self.req = self._generate_req(roles=[role] if role else [])
             self._invoke_on_get()
-            self.setUp()  # Need to re-setup
 
     def test_should_pass_get_version_with_bad_roles(self):
         self.req = self._generate_req(roles=[None, 'bunkrolehere'])
