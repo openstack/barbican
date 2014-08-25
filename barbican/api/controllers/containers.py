@@ -121,6 +121,11 @@ class ContainersController(object):
                 controllers.hrefs.convert_to_hrefs(c.to_dict_fields())
                 for c in containers
             ]
+
+            for ctr in resp_ctrs:
+                for secret_ref in ctr.get('secret_refs', []):
+                    controllers.hrefs.convert_to_hrefs(secret_ref)
+
             resp_ctrs_overall = controllers.hrefs.add_nav_hrefs(
                 'containers',
                 offset,
