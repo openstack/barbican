@@ -190,7 +190,7 @@ class KeyAlgorithm(object):
     SYMMETRIC_ALGORITHMS = [AES, DES, DESEDE]
 
     def get_secret_type(self, alg):
-        if alg in self.SYMMETRIC_ALGORITHMS:
+        if str(alg).lower() in self.SYMMETRIC_ALGORITHMS:
             return SecretType.SYMMETRIC
         else:  # TODO(kaitlin-farr) add asymmetric once it's supported
             return None

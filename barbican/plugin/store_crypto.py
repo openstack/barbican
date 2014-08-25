@@ -167,7 +167,8 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
         Specifies whether the plugin supports key generation with the
         given key_spec.
         """
-        return key_spec and sstore.KeyAlgorithm.supports(key_spec.alg.lower())
+        return (key_spec and
+                sstore.KeyAlgorithm().get_secret_type(key_spec.alg))
 
     def store_secret_supports(self, key_spec):
         """Key storage supported?
