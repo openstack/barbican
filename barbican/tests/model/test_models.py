@@ -136,3 +136,17 @@ class WhenCreatingNewConsumer(testtools.TestCase):
             different_container, self.parsed_consumer)
         self.assertEqual(consumer_one.data_hash, consumer_two.data_hash)
         self.assertNotEqual(consumer_one.data_hash, consumer_three.data_hash)
+
+
+class WhenProcessingJsonBlob(testtools.TestCase):
+    def setUp(self):
+        super(WhenProcessingJsonBlob, self).setUp()
+        self.json_blob = models.JsonBlob()
+
+    def test_process_bind_param_w_dict(self):
+        res = self.json_blob.process_bind_param({'test': True}, None)
+        self.assertEqual(res, '{"test": true}')
+
+    def test_process_result_value_w_json_str(self):
+        res = self.json_blob.process_result_value('{"test": true}', None)
+        self.assertTrue(res.get('test'))
