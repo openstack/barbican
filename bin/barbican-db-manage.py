@@ -97,8 +97,11 @@ def main():
     LOG = log.getLogger(__name__)
     LOG.debug("Performing database schema migration...")
 
-    dm = DatabaseManager()
-    dm.execute()
+    try:
+        dm = DatabaseManager()
+        dm.execute()
+    except:
+        LOG.exception('Problem trying to execute Alembic commands')
 
 
 if __name__ == '__main__':

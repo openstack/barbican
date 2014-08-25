@@ -53,7 +53,7 @@ def issue_certificate_request(order_model, repos):
 def _get_plugin_meta(order_model):
     if order_model:
         meta_dict = dict((k, v.value) for (k, v) in
-                         order_model.order_plugin_meta.items())
+                         order_model.order_plugin_metadata.items())
         return meta_dict
     else:
         return dict()
