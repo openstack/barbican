@@ -26,7 +26,6 @@ import urllib
 
 import mock
 import pecan
-import testtools
 import webtest
 
 from barbican import api
@@ -38,6 +37,7 @@ from barbican.common import validators
 import barbican.context
 from barbican.model import models
 from barbican.openstack.common import timeutils
+from barbican.tests import utils
 
 
 LOG = logging.getLogger(__name__)
@@ -119,7 +119,7 @@ def create_consumer(container_id, id_ref):
     return consumer
 
 
-class SecretAllowAllMimeTypesDecoratorTest(testtools.TestCase):
+class SecretAllowAllMimeTypesDecoratorTest(utils.BaseTestCase):
 
     def setUp(self):
         super(SecretAllowAllMimeTypesDecoratorTest, self).setUp()
@@ -150,7 +150,7 @@ class SecretAllowAllMimeTypesDecoratorTest(testtools.TestCase):
                           self._empty_function)
 
 
-class FunctionalTest(testtools.TestCase):
+class FunctionalTest(utils.BaseTestCase):
 
     def setUp(self):
         super(FunctionalTest, self).setUp()
@@ -1716,8 +1716,8 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         self.queue_resource = mock.MagicMock()
         self.queue_resource.process_type_order.return_value = None
 
-    @testtools.skip("atiwari: remove skip once CR 111412 merged")
     def test_should_add_new_order(self):
+        self.skipTest("atiwari: remove skip once CR 111412 merged")
         resp = self.app.post_json(
             '/orders/', self.order_req
         )
@@ -1745,7 +1745,7 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         self.assertEqual(resp.status_int, 415)
 
 
-class WhenAddingNavigationHrefs(testtools.TestCase):
+class WhenAddingNavigationHrefs(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenAddingNavigationHrefs, self).setUp()
@@ -1786,7 +1786,7 @@ class WhenAddingNavigationHrefs(testtools.TestCase):
         self.assertNotIn('next', data_with_hrefs)
 
 
-class TestingJsonSanitization(testtools.TestCase):
+class TestingJsonSanitization(utils.BaseTestCase):
 
     def test_json_sanitization_without_array(self):
         json_without_array = {"name": "name", "algorithm": "AES",

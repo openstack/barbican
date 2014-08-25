@@ -13,13 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import testtools
-
 from barbican.model import models
 from barbican.plugin.util import mime_types
+from barbican.tests import utils
 
 
-class WhenTestingIsBase64ProcessingNeeded(testtools.TestCase):
+class WhenTestingIsBase64ProcessingNeeded(utils.BaseTestCase):
 
     def test_is_base64_needed(self):
         r = mime_types.is_base64_processing_needed('application/octet-stream',
@@ -48,7 +47,7 @@ class WhenTestingIsBase64ProcessingNeeded(testtools.TestCase):
         self.assertFalse(r)
 
 
-class WhenTestingIsBase64ProcessingSupported(testtools.TestCase):
+class WhenTestingIsBase64ProcessingSupported(utils.BaseTestCase):
 
     def test_is_base64_supported_application_octet_stream(self):
         r = mime_types.is_base64_encoding_supported('application/octet-stream')
@@ -62,7 +61,7 @@ class WhenTestingIsBase64ProcessingSupported(testtools.TestCase):
             self.assertFalse(r)
 
 
-class WhenTestingAugmentFieldsWithContentTypes(testtools.TestCase):
+class WhenTestingAugmentFieldsWithContentTypes(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingAugmentFieldsWithContentTypes, self).setUp()
@@ -113,7 +112,7 @@ class WhenTestingAugmentFieldsWithContentTypes(testtools.TestCase):
         self.assertEqual(self.datum.content_type, content_types['default'])
 
 
-class WhenTestingNormalizationOfMIMETypes(testtools.TestCase):
+class WhenTestingNormalizationOfMIMETypes(utils.BaseTestCase):
 
     def test_plain_text_normalization(self):
         mimes = ['text/plain',

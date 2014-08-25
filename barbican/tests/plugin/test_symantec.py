@@ -23,9 +23,11 @@ except ImportError:
     # Symantec imports probably not available
     imports_ok = False
 
+from barbican.tests import utils
+
 
 @testtools.skipIf(not imports_ok, "Symantec imports not available")
-class WhenTestingSymantecPlugin(testtools.TestCase):
+class WhenTestingSymantecPlugin(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingSymantecPlugin, self).setUp()

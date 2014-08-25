@@ -12,10 +12,10 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import testtools
+import oslotest.base as oslotest
 
 
-class BaseTestCase(testtools.TestCase):
+class BaseTestCase(oslotest.BaseTestCase):
     def setUp(self):
         super(BaseTestCase, self).setUp()
         self.order_id = 'order1234'

@@ -21,11 +21,11 @@ from Crypto.Util import asn1
 from cryptography import fernet
 import mock
 import six
-import testtools
 
 from barbican.model import models
 from barbican.plugin.crypto import crypto as plugin
 from barbican.plugin.crypto import simple_crypto as simple
+from barbican.tests import utils
 
 
 class TestCryptoPlugin(plugin.CryptoPluginBase):
@@ -68,7 +68,7 @@ class TestCryptoPlugin(plugin.CryptoPluginBase):
             return False
 
 
-class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
+class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingSimpleCryptoPlugin, self).setUp()

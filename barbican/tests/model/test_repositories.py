@@ -14,13 +14,13 @@
 import mock
 from oslo.config import cfg
 import sqlalchemy.orm as sa_orm
-import testtools
 
 from barbican.common import exception
 from barbican.model import repositories
+from barbican.tests import utils
 
 
-class WhenCleaningRepositoryPagingParameters(testtools.TestCase):
+class WhenCleaningRepositoryPagingParameters(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenCleaningRepositoryPagingParameters, self).setUp()

@@ -15,12 +15,11 @@
 
 import datetime
 
-import testtools
-
 from barbican.model import models
+from barbican.tests import utils
 
 
-class WhenCreatingNewSecret(testtools.TestCase):
+class WhenCreatingNewSecret(utils.BaseTestCase):
     def setUp(self):
         super(WhenCreatingNewSecret, self).setUp()
         self.parsed_secret = {'name': 'name',
@@ -42,7 +41,7 @@ class WhenCreatingNewSecret(testtools.TestCase):
         self.assertIsInstance(secret.expiration, datetime.datetime)
 
 
-class WhenCreatingNewContainer(testtools.TestCase):
+class WhenCreatingNewContainer(utils.BaseTestCase):
     def setUp(self):
         super(WhenCreatingNewContainer, self).setUp()
         self.parsed_container = {'name': 'name',
@@ -113,7 +112,7 @@ class WhenCreatingNewContainer(testtools.TestCase):
         self.assertEqual(container.container_secrets[0].secret_id, '123456')
 
 
-class WhenCreatingNewConsumer(testtools.TestCase):
+class WhenCreatingNewConsumer(utils.BaseTestCase):
     def setUp(self):
         super(WhenCreatingNewConsumer, self).setUp()
         self.parsed_consumer = {'name': 'name',
@@ -139,7 +138,7 @@ class WhenCreatingNewConsumer(testtools.TestCase):
         self.assertNotEqual(consumer_one.data_hash, consumer_three.data_hash)
 
 
-class WhenProcessingJsonBlob(testtools.TestCase):
+class WhenProcessingJsonBlob(utils.BaseTestCase):
     def setUp(self):
         super(WhenProcessingJsonBlob, self).setUp()
         self.json_blob = models.JsonBlob()

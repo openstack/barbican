@@ -14,14 +14,14 @@
 # limitations under the License.
 
 import mock
-import testtools
 
 from barbican.common import hrefs
 from barbican.plugin.interface import certificate_manager as cert_man
 from barbican.tasks import certificate_resources as cert_res
+from barbican.tests import utils
 
 
-class WhenPerformingPrivateOperations(testtools.TestCase):
+class WhenPerformingPrivateOperations(utils.BaseTestCase):
     """Tests private methods within certificate_resources.py."""
 
     def test_get_plugin_meta(self):
@@ -94,7 +94,7 @@ class WhenPerformingPrivateOperations(testtools.TestCase):
                           'between the expected and test dicts')
 
 
-class WhenIssuingCertificateRequests(testtools.TestCase):
+class WhenIssuingCertificateRequests(utils.BaseTestCase):
     """Tests the 'issue_certificate_request()' function."""
 
     def setUp(self):
