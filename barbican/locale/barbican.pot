@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2014.2.dev56.g8688728\n"
+"Project-Id-Version: barbican 2014.2.dev66.gc355525\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-08-20 06:10+0000\n"
+"POT-Creation-Date: 2014-08-25 06:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -632,31 +632,31 @@ msgstr ""
 msgid "transport_key must be provided"
 msgstr ""
 
-#: barbican/model/repositories.py:132
+#: barbican/model/repositories.py:131
 #, python-format
 msgid ""
 "Error configuring registry database with supplied sql_connection. Got "
 "error: %s"
 msgstr ""
 
-#: barbican/model/repositories.py:147
+#: barbican/model/repositories.py:146
 msgid "Updating schema to latest version"
 msgstr ""
 
-#: barbican/model/repositories.py:151
+#: barbican/model/repositories.py:150
 msgid "Auto-creating barbican registry DB"
 msgstr ""
 
-#: barbican/model/repositories.py:158
+#: barbican/model/repositories.py:157
 msgid "not auto-creating barbican registry DB"
 msgstr ""
 
-#: barbican/model/repositories.py:197
+#: barbican/model/repositories.py:196
 #, python-format
 msgid "SQL connection failed. %d attempts left."
 msgstr ""
 
-#: barbican/model/repositories.py:673
+#: barbican/model/repositories.py:672
 msgid "Tried to register crypto plugin with null or empty name."
 msgstr ""
 
@@ -868,44 +868,36 @@ msgstr ""
 msgid "Length of %(given)d is too long, max = %(maximum)d"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:37
+#: barbican/plugin/dogtag.py:40
 msgid "Path to PEM file for authentication"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:39
-msgid "Password to unlock PEM file"
+#: barbican/plugin/dogtag.py:43
+msgid "Hostname for the Dogtag instance"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:42
-msgid "Hostname for the KRA"
+#: barbican/plugin/dogtag.py:46
+msgid "Port for the Dogtag instance"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:45
-msgid "Port for the KRA"
-msgstr ""
-
-#: barbican/plugin/dogtag.py:47
+#: barbican/plugin/dogtag.py:48
 msgid "Path to the NSS certificate database"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:49
+#: barbican/plugin/dogtag.py:50
 msgid "Password for NSS certificate database"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:57
-msgid "Invalid algorithm passed in"
+#: barbican/plugin/dogtag.py:64
+msgid "nss_password is required"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:74
+#: barbican/plugin/dogtag.py:79
 msgid "pem_path is required"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:78
-msgid "pem_password is required"
-msgstr ""
-
-#: barbican/plugin/dogtag.py:87
-msgid "nss_password is required"
+#: barbican/plugin/dogtag.py:90
+msgid "Invalid algorithm passed in"
 msgstr ""
 
 #: barbican/plugin/kmip_secret_store.py:44
@@ -948,30 +940,31 @@ msgstr ""
 msgid "url is required"
 msgstr ""
 
-#: barbican/plugin/crypto/crypto.py:38
+#: barbican/plugin/crypto/crypto.py:36
 #: barbican/plugin/interface/certificate_manager.py:43
 #: barbican/plugin/interface/secret_store.py:36
 msgid "Extension namespace to search for plugins."
 msgstr ""
 
-#: barbican/plugin/crypto/crypto.py:42
+#: barbican/plugin/crypto/crypto.py:40
 msgid "List of crypto plugins to load."
 msgstr ""
 
-#: barbican/plugin/crypto/crypto.py:51
+#: barbican/plugin/crypto/crypto.py:49
 msgid "Crypto plugin not found."
 msgstr ""
 
-#: barbican/plugin/crypto/crypto.py:56
+#: barbican/plugin/crypto/crypto.py:54
+#: barbican/plugin/interface/certificate_manager.py:71
 #: barbican/plugin/interface/secret_store.py:103
 msgid "Unknown"
 msgstr ""
 
-#: barbican/plugin/crypto/crypto.py:58
+#: barbican/plugin/crypto/crypto.py:56
 msgid "Failed to bind kek metadata for plugin: {0}"
 msgstr ""
 
-#: barbican/plugin/crypto/crypto.py:68
+#: barbican/plugin/crypto/crypto.py:66
 msgid "Could not generate private key"
 msgstr ""
 
@@ -1009,6 +1002,10 @@ msgstr ""
 
 #: barbican/plugin/interface/certificate_manager.py:65
 msgid "Certificate status of '{0}' not supported"
+msgstr ""
+
+#: barbican/plugin/interface/certificate_manager.py:73
+msgid "Problem seen during certificate processing - Reason: {0}"
 msgstr ""
 
 #: barbican/plugin/interface/secret_store.py:40
@@ -1080,19 +1077,23 @@ msgid "Server name for RPC task processing server"
 msgstr ""
 
 #: barbican/tasks/resources.py:62
-msgid "Could not retrieve information needed to process task '{0}'."
+#, python-format
+msgid "Could not retrieve information needed to process task '%s'."
 msgstr ""
 
 #: barbican/tasks/resources.py:70
-msgid "Could not perform processing for task '{0}'."
+#, python-format
+msgid "Could not perform processing for task '%s'."
 msgstr ""
 
 #: barbican/tasks/resources.py:80
-msgid "Problem handling an error for task '{0}', raising original exception."
+#, python-format
+msgid "Problem handling an error for task '%s', raising original exception."
 msgstr ""
 
 #: barbican/tasks/resources.py:89
-msgid "Could not process after successfully executing task '{0}'."
+#, python-format
+msgid "Could not process after successfully executing task '%s'."
 msgstr ""
 
 #: barbican/tasks/resources.py:146
