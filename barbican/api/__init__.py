@@ -25,6 +25,7 @@ from barbican.common import utils
 from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import jsonutils as json
 from barbican.openstack.common import policy
+from barbican.plugin.interface import certificate_manager as cert_manager
 from barbican.plugin.interface import secret_store as s
 
 
@@ -137,6 +138,14 @@ def generate_safe_exception_message(operation_name, excep):
         status = 404
     except s.SecretAlgorithmNotSupportedException:
         reason = u._("Requested algorithm is not supported")
+        status = 400
+
+    except cert_manager.CertificateStatusClientDataIssue as cdi:
+        reason = cdi.reason
+        status = 400
+
+    except cert_manager.CertificateStatusInvalidOperation as cio:
+        reason = cio.reason
         status = 400
 
     except exception.NoDataToProcess:

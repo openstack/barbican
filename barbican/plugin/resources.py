@@ -73,9 +73,11 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
         raise ValueError('Secret already has encrypted data stored for it.')
 
     # Create a KeySpec to find a plugin that will support storing the secret
-    key_spec = secret_store.KeySpec(alg=spec.get('algorithm'),
-                                    bit_length=spec.get('bit_length'),
-                                    mode=spec.get('mode'))
+    key_spec = None
+    if spec:
+        key_spec = secret_store.KeySpec(alg=spec.get('algorithm'),
+                                        bit_length=spec.get('bit_length'),
+                                        mode=spec.get('mode'))
 
     # If there is no secret data to store, then just create Secret entity and
     #   leave. A subsequent call to this method should provide both the Secret

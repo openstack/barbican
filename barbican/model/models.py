@@ -58,6 +58,12 @@ class OrderType(object):
         return order_type in cls.__dict__
 
 
+class OrderStatus(object):
+    def __init__(self, id, message):
+        self.id = id
+        self.message = message
+
+
 @compiler.compiles(sa.BigInteger, 'sqlite')
 def compile_big_int_sqlite(type_, compiler, **kw):
     return 'INTEGER'

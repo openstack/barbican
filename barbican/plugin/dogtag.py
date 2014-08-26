@@ -526,4 +526,11 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
                 status_message=e.message)
 
     def supports(self, certificate_spec):
+        if cm.CA_TYPE in certificate_spec:
+            return certificate_spec[cm.CA_TYPE] == cm.CA_PLUGIN_TYPE_DOGTAG
+
+        if cm.CA_PLUGIN_TYPE_SYMANTEC in certificate_spec:
+            # TODO(alee-3) Handle case where SKI is provided
+            pass
+
         return True

@@ -27,6 +27,7 @@ import six
 from stevedore import named
 
 from barbican.common import exception
+import barbican.common.utils as utils
 from barbican.openstack.common import gettextutils as u
 
 
@@ -50,7 +51,15 @@ cert_opts = [
 CONF.register_group(cert_opt_group)
 CONF.register_opts(cert_opts, group=cert_opt_group)
 
+ERROR_RETRY_MSEC = 300000
 RETRY_MSEC = 3600000
+
+CA_PLUGIN_TYPE_DOGTAG = "dogtag"
+CA_PLUGIN_TYPE_SYMANTEC = "symantec"
+
+# fields to distinguish CA types and subject key identifiers
+CA_TYPE = "ca_type"
+CA_SUBJECT_KEY_IDENTIFIER = "ca_subject_key_identifier"
 
 
 class CertificatePluginNotFound(exception.BarbicanException):
@@ -71,6 +80,26 @@ class CertificateGeneralException(exception.BarbicanException):
     def __init__(self, reason=u._('Unknown')):
         super(CertificateGeneralException, self).__init__(
             u._('Problem seen during certificate processing - '
+                'Reason: {0}').format(reason)
+        )
+        self.reason = reason
+
+
+class CertificateStatusClientDataIssue(exception.BarbicanException):
+    """Raised when the CA has encountered an issue with request data."""
+    def __init__(self, reason=u._('Unknown')):
+        super(CertificateStatusClientDataIssue, self).__init__(
+            u._('Problem with data in certificate request - '
+                'Reason: {0}').format(reason)
+        )
+        self.reason = reason
+
+
+class CertificateStatusInvalidOperation(exception.BarbicanException):
+    """Raised when the CA has encountered an issue with request data."""
+    def __init__(self, reason=u._('Unknown')):
+        super(CertificateStatusInvalidOperation, self).__init__(
+            u._('Invalid operation requested - '
                 'Reason: {0}').format(reason)
         )
         self.reason = reason
@@ -189,7 +218,7 @@ class ResultDTO(object):
         self.status_message = status_message
         self.certificate = certificate
         self.intermediates = intermediates
-        self.retry_msec = retry_msec
+        self.retry_msec = int(retry_msec)
         self.retry_method = retry_method
 
 
@@ -209,9 +238,20 @@ class CertificatePluginManager(named.NamedExtensionManager):
 
         :param certificate_spec: Contains details on the certificate to
                                  generate the certificate order
-        :returns: CertficiatePluginBase plugin implementation
+        :returns: CertificatePluginBase plugin implementation
         """
         for ext in self.extensions:
             if ext.obj.supports(certificate_spec):
+                return ext.obj
+        raise CertificatePluginNotFound()
+
+    def get_plugin_by_name(self, plugin_name):
+        """Gets a supporting certificate plugin.
+
+        :param plugin_name: Name of the plugin to invoke
+        :returns: CertificatePluginBase plugin implementation
+        """
+        for ext in self.extensions:
+            if utils.generate_fullname_for(ext.obj) == plugin_name:
                 return ext.obj
         raise CertificatePluginNotFound()

@@ -36,6 +36,7 @@ class WhenIssuingCertificateRequests(testtools.TestCase):
         self.order_model.id = self.order_id
         self.order_model.meta = self.order_meta
         self.repos = mock.MagicMock()
+        self.tenant_model = mock.MagicMock()
 
         # Setting up mock data for the plugin manager.
         cert_plugin_config = {
@@ -73,29 +74,39 @@ class WhenIssuingCertificateRequests(testtools.TestCase):
     def test_should_return_waiting_for_ca(self):
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
 
-        cert_res.issue_certificate_request(self.order_model, self.repos)
+        cert_res.issue_certificate_request(self.order_model,
+                                           self.tenant_model,
+                                           self.repos)
 
         self._verify_issue_certificate_plugins_called()
 
     def test_should_return_certificate_generated(self):
         self.result.status = cert_man.CertificateStatus.CERTIFICATE_GENERATED
 
-        cert_res.issue_certificate_request(self.order_model, self.repos)
+        cert_res.issue_certificate_request(self.order_model,
+                                           self.tenant_model,
+                                           self.repos)
 
         self._verify_issue_certificate_plugins_called()
 
-    def test_should_return_client_data_issue_seen(self):
+    def test_should_raise_client_data_issue_seen(self):
         self.result.status = cert_man.CertificateStatus.CLIENT_DATA_ISSUE_SEEN
 
-        cert_res.issue_certificate_request(self.order_model, self.repos)
-
-        self._verify_issue_certificate_plugins_called()
+        self.assertRaises(
+            cert_man.CertificateStatusClientDataIssue,
+            cert_res.issue_certificate_request,
+            self.order_model,
+            self.tenant_model,
+            self.repos
+        )
 
     def test_should_return_ca_unavailable_for_request(self):
         self.result.status = cert_man.CertificateStatus.\
             CA_UNAVAILABLE_FOR_REQUEST
 
-        cert_res.issue_certificate_request(self.order_model, self.repos)
+        cert_res.issue_certificate_request(self.order_model,
+                                           self.tenant_model,
+                                           self.repos)
 
         self._verify_issue_certificate_plugins_called()
 
@@ -106,6 +117,7 @@ class WhenIssuingCertificateRequests(testtools.TestCase):
             cert_man.CertificateStatusNotSupported,
             cert_res.issue_certificate_request,
             self.order_model,
+            self.tenant_model,
             self.repos
         )
 

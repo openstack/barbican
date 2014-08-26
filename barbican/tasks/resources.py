@@ -184,6 +184,7 @@ class BeginOrder(BaseTask):
         generation.
 
         :param order: Order to process on behalf of.
+        :return SUCCESS_STATUS, PENDING_STATUS
         """
         order_info = order.to_dict_fields()
         secret_info = order_info['secret']
@@ -241,7 +242,14 @@ class BeginTypeOrder(BaseTask):
         self.repos.order_repo.save(order)
 
     def handle_success(self, order, *args, **kwargs):
-        order.status = models.States.ACTIVE
+        if models.OrderType.CERTIFICATE != order.type:
+            order.status = models.States.ACTIVE
+        else:
+            # TODO(alee-3): enable the code below when sub status is added
+            # if cert.ORDER_STATUS_CERT_GENERATED.id == order.sub_status:
+            #    order.status = models.States.ACTIVE
+            order.status = models.States.ACTIVE
+
         self.repos.order_repo.save(order)
 
     def handle_order(self, order):
@@ -282,5 +290,8 @@ class BeginTypeOrder(BaseTask):
             LOG.debug("...done creating asymmetric order's secret.")
         elif order_type == models.OrderType.CERTIFICATE:
             # Request a certificate
-            cert.issue_certificate_request(order, self.repos)
+            new_container = cert.issue_certificate_request(
+                order, tenant, self.repos)
+            if new_container:
+                order.container_id = new_container.id
             LOG.debug("...done requesting a certificate.")
