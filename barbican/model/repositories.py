@@ -318,7 +318,7 @@ class BaseRepo(object):
 
         return entity
 
-    def create_from(self, entity):
+    def create_from(self, entity, session=None):
         """Sub-class hook: create from entity."""
         start = time.time()  # DEBUG
         if not entity:
@@ -331,7 +331,7 @@ class BaseRepo(object):
             raise exception.Invalid(msg)
 
         LOG.debug("Begin create from...")
-        session = get_session()
+        session = get_session(session)
         with session.begin():
 
             # Validate the attributes before we go any further. From my

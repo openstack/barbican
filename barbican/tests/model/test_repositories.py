@@ -11,13 +11,224 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import fixtures
 import mock
 from oslo.config import cfg
 import sqlalchemy.orm as sa_orm
 
 from barbican.common import exception
+from barbican.model import models
 from barbican.model import repositories
 from barbican.tests import utils
+
+
+class Database(fixtures.Fixture):
+
+    def __init__(self):
+        super(Database, self).__init__()
+        repositories.CONF.set_override("sql_connection", "sqlite:///:memory:")
+
+    def setUp(self):
+        super(Database, self).setUp()
+        repositories.configure_db()
+        engine = repositories.get_engine()
+        models.register_models(engine)
+        self.addCleanup(lambda: models.unregister_models(engine))
+
+
+class RepositoryTestCase(utils.BaseTestCase):
+
+    def setUp(self):
+        super(RepositoryTestCase, self).setUp()
+        self.useFixture(Database())
+
+
+class TestSecretRepository(RepositoryTestCase):
+
+    def setUp(self):
+        super(TestSecretRepository, self).setUp()
+        self.repo = repositories.SecretRepo()
+
+    def test_get_by_create_date(self):
+        session = self.repo.get_session()
+
+        secret = self.repo.create_from(models.Secret(), session=session)
+        tenant = models.Tenant(keystone_id="my keystone id")
+        tenant.save(session=session)
+        tenant_secret = models.TenantSecret(
+            secret_id=secret.id,
+            tenant_id=tenant.id,
+        )
+        tenant_secret.save(session=session)
+
+        secrets, offset, limit, total = self.repo.get_by_create_date(
+            "my keystone id",
+            session=session,
+        )
+
+        self.assertEqual([s.id for s in secrets], [secret.id])
+        self.assertEqual(offset, 0)
+        self.assertEqual(limit, 10)
+        self.assertEqual(total, 1)
+
+    def test_get_by_create_date_with_name(self):
+        session = self.repo.get_session()
+
+        secret1 = self.repo.create_from(
+            models.Secret(dict(name="name1")),
+            session=session,
+        )
+        secret2 = self.repo.create_from(
+            models.Secret(dict(name="name2")),
+            session=session,
+        )
+        tenant = models.Tenant(keystone_id="my keystone id")
+        tenant.save(session=session)
+        tenant_secret1 = models.TenantSecret(
+            secret_id=secret1.id,
+            tenant_id=tenant.id,
+        )
+        tenant_secret1.save(session=session)
+        tenant_secret2 = models.TenantSecret(
+            secret_id=secret2.id,
+            tenant_id=tenant.id,
+        )
+        tenant_secret2.save(session=session)
+
+        secrets, offset, limit, total = self.repo.get_by_create_date(
+            "my keystone id",
+            name="name1",
+            session=session,
+        )
+
+        self.assertEqual([s.id for s in secrets], [secret1.id])
+        self.assertEqual(offset, 0)
+        self.assertEqual(limit, 10)
+        self.assertEqual(total, 1)
+
+    def test_get_by_create_date_with_alg(self):
+        session = self.repo.get_session()
+
+        secret1 = self.repo.create_from(
+            models.Secret(dict(algorithm="algorithm1")),
+            session=session,
+        )
+        secret2 = self.repo.create_from(
+            models.Secret(dict(algorithm="algorithm2")),
+            session=session,
+        )
+        tenant = models.Tenant(keystone_id="my keystone id")
+        tenant.save(session=session)
+        tenant_secret1 = models.TenantSecret(
+            secret_id=secret1.id,
+            tenant_id=tenant.id,
+        )
+        tenant_secret1.save(session=session)
+        tenant_secret2 = models.TenantSecret(
+            secret_id=secret2.id,
+            tenant_id=tenant.id,
+        )
+        tenant_secret2.save(session=session)
+
+        secrets, offset, limit, total = self.repo.get_by_create_date(
+            "my keystone id",
+            alg="algorithm1",
+            session=session,
+        )
+
+        self.assertEqual([s.id for s in secrets], [secret1.id])
+        self.assertEqual(offset, 0)
+        self.assertEqual(limit, 10)
+        self.assertEqual(total, 1)
+
+    def test_get_by_create_date_with_mode(self):
+        session = self.repo.get_session()
+
+        secret1 = self.repo.create_from(
+            models.Secret(dict(mode="mode1")),
+            session=session,
+        )
+        secret2 = self.repo.create_from(
+            models.Secret(dict(mode="mode2")),
+            session=session,
+        )
+        tenant = models.Tenant(keystone_id="my keystone id")
+        tenant.save(session=session)
+        tenant_secret1 = models.TenantSecret(
+            secret_id=secret1.id,
+            tenant_id=tenant.id,
+        )
+        tenant_secret1.save(session=session)
+        tenant_secret2 = models.TenantSecret(
+            secret_id=secret2.id,
+            tenant_id=tenant.id,
+        )
+        tenant_secret2.save(session=session)
+
+        secrets, offset, limit, total = self.repo.get_by_create_date(
+            "my keystone id",
+            mode="mode1",
+            session=session,
+        )
+
+        self.assertEqual([s.id for s in secrets], [secret1.id])
+        self.assertEqual(offset, 0)
+        self.assertEqual(limit, 10)
+        self.assertEqual(total, 1)
+
+    def test_get_by_create_date_with_bits(self):
+        session = self.repo.get_session()
+
+        secret1 = self.repo.create_from(
+            models.Secret(dict(bit_length=1024)),
+            session=session,
+        )
+        secret2 = self.repo.create_from(
+            models.Secret(dict(bit_length=2048)),
+            session=session,
+        )
+        tenant = models.Tenant(keystone_id="my keystone id")
+        tenant.save(session=session)
+        tenant_secret1 = models.TenantSecret(
+            secret_id=secret1.id,
+            tenant_id=tenant.id,
+        )
+        tenant_secret1.save(session=session)
+        tenant_secret2 = models.TenantSecret(
+            secret_id=secret2.id,
+            tenant_id=tenant.id,
+        )
+        tenant_secret2.save(session=session)
+
+        secrets, offset, limit, total = self.repo.get_by_create_date(
+            "my keystone id",
+            bits=1024,
+            session=session,
+        )
+
+        self.assertEqual([s.id for s in secrets], [secret1.id])
+        self.assertEqual(offset, 0)
+        self.assertEqual(limit, 10)
+        self.assertEqual(total, 1)
+
+    def test_get_by_create_date_nothing(self):
+        session = self.repo.get_session()
+        secrets, offset, limit, total = self.repo.get_by_create_date(
+            "my keystone id",
+            bits=1024,
+            session=session,
+        )
+
+        self.assertEqual(secrets, [])
+        self.assertEqual(offset, 0)
+        self.assertEqual(limit, 10)
+        self.assertEqual(total, 0)
+
+    def test_do_entity_name(self):
+        self.assertEqual(self.repo._do_entity_name(), "Secret")
+
+    def test_do_create_instance(self):
+        self.assertIsInstance(self.repo._do_create_instance(), models.Secret)
 
 
 class WhenCleaningRepositoryPagingParameters(utils.BaseTestCase):
