@@ -80,7 +80,7 @@ def issue_certificate_request(order_model, tenant_model, repos):
 
     # Handle result
     if cert.CertificateStatus.WAITING_FOR_CA == result.status:
-        #TODO(alee-3): Add code to set sub status of "waiting for CA"
+        # TODO(alee-3): Add code to set sub status of "waiting for CA"
         _update_order_status(ORDER_STATUS_REQUEST_PENDING)
         _schedule_check_cert_request(cert_plugin, order_model, plugin_meta,
                                      repos, result, tenant_model,
@@ -92,7 +92,7 @@ def issue_certificate_request(order_model, tenant_model, repos):
         _update_order_status(ORDER_STATUS_DATA_INVALID)
         raise cert.CertificateStatusClientDataIssue(result.status_message)
     elif cert.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST == result.status:
-        #TODO(alee-3): set retry counter and error out if retries are exceeded
+        # TODO(alee-3): set retry counter and error out if retries are exceeded
         _update_order_status(ORDER_STATUS_CA_UNAVAIL_FOR_ISSUE)
 
         _schedule_issue_cert_request(cert_plugin, order_model, plugin_meta,
@@ -144,7 +144,7 @@ def check_certificate_request(order_model, tenant_model, plugin_name, repos):
         _update_order_status(cert.ORDER_STATUS_DATA_INVALID)
         raise cert.CertificateStatusClientDataIssue(result.status_message)
     elif cert.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST == result.status:
-        #TODO(alee-3): decide what to do about retries here
+        # TODO(alee-3): decide what to do about retries here
         _update_order_status(ORDER_STATUS_CA_UNAVAIL_FOR_CHECK)
         _schedule_check_cert_request(cert_plugin, order_model, plugin_meta,
                                      repos, result, tenant_model,

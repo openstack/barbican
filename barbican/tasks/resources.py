@@ -38,7 +38,9 @@ class BaseTask(object):
 
     @abc.abstractmethod
     def get_name(self):
-        """A hook method to return a short localized name for this task.
+        """Localized task name
+
+        A hook method to return a short localized name for this task.
         The returned name in the form 'u.('Verb Noun')'. For example:
             u._('Create Secret')
         """
@@ -73,8 +75,8 @@ class BaseTask(object):
 
             # Handle failure to process entity.
             try:
-                status, message = api \
-                    .generate_safe_exception_message(name, e_orig)
+                status, message = api.generate_safe_exception_message(name,
+                                                                      e_orig)
                 self.handle_error(entity, status, message, e_orig,
                                   *args, **kwargs)
             except Exception:
@@ -141,7 +143,7 @@ class BaseTask(object):
 
 
 class BeginOrder(BaseTask):
-    """Handles beginning processing an Order"""
+    """Handles beginning processing an Order."""
 
     def get_name(self):
         return u._('Create Secret')
@@ -193,11 +195,13 @@ class BeginOrder(BaseTask):
         tenant = self.repos.tenant_repo.get(order.tenant_id)
 
         # Create Secret
-        new_secret = plugin.\
-            generate_secret(secret_info,
-                            secret_info.get('payload_content_type',
-                                            'application/octet-stream'),
-                            tenant, self.repos)
+        new_secret = plugin.generate_secret(
+            secret_info,
+            secret_info.get('payload_content_type',
+                            'application/octet-stream'),
+            tenant,
+            self.repos
+        )
 
         order.secret_id = new_secret.id
 
@@ -205,7 +209,7 @@ class BeginOrder(BaseTask):
 
 
 class BeginTypeOrder(BaseTask):
-    """Handles beginning processing of a TypeOrder"""
+    """Handles beginning processing of a TypeOrder."""
 
     def get_name(self):
         return u._('Process TypeOrder')
@@ -215,17 +219,16 @@ class BeginTypeOrder(BaseTask):
                  kek_repo=None, container_repo=None,
                  container_secret_repo=None, secret_meta_repo=None):
             LOG.debug('Creating BeginTypeOrder task processor')
-            self.repos = rep.Repositories(tenant_repo=tenant_repo,
-                                          tenant_secret_repo=
-                                          tenant_secret_repo,
-                                          secret_repo=secret_repo,
-                                          datum_repo=datum_repo,
-                                          kek_repo=kek_repo,
-                                          secret_meta_repo=secret_meta_repo,
-                                          order_repo=order_repo,
-                                          container_repo=container_repo,
-                                          container_secret_repo=
-                                          container_secret_repo)
+            self.repos = rep.Repositories(
+                tenant_repo=tenant_repo,
+                tenant_secret_repo=tenant_secret_repo,
+                secret_repo=secret_repo,
+                datum_repo=datum_repo,
+                kek_repo=kek_repo,
+                secret_meta_repo=secret_meta_repo,
+                order_repo=order_repo,
+                container_repo=container_repo,
+                container_secret_repo=container_secret_repo)
 
     def retrieve_entity(self, order_id, keystone_id):
         return self.repos.order_repo.get(entity_id=order_id,
@@ -254,6 +257,7 @@ class BeginTypeOrder(BaseTask):
 
     def handle_order(self, order):
         """Handle secret creation using meta info.
+
         If type is key
             create secret
         if type is asymmetric
@@ -272,11 +276,13 @@ class BeginTypeOrder(BaseTask):
 
         if order_type == models.OrderType.KEY:
             # Create Secret
-            new_secret = plugin.\
-                generate_secret(meta_info,
-                                meta_info.get('payload_content_type',
-                                              'application/octet-stream'),
-                                tenant, self.repos)
+            new_secret = plugin.generate_secret(
+                meta_info,
+                meta_info.get('payload_content_type',
+                              'application/octet-stream'),
+                tenant,
+                self.repos
+            )
             order.secret_id = new_secret.id
             LOG.debug("...done creating keys order's secret.")
         elif order_type == models.OrderType.ASYMMETRIC:

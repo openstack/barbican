@@ -17,8 +17,8 @@
 Defines database models for Barbican
 """
 import hashlib
-import six
 
+import six
 import sqlalchemy as sa
 from sqlalchemy.ext import compiler
 from sqlalchemy.ext import declarative
@@ -70,9 +70,7 @@ def compile_big_int_sqlite(type_, compiler, **kw):
 
 
 class JsonBlob(sql_types.TypeDecorator):
-    """JsonBlob is custom type for fields
-        which need to store JSON text
-    """
+    """JsonBlob is custom type for fields which need to store JSON text."""
     impl = sa.Text
 
     def process_bind_param(self, value, dialect):
@@ -320,7 +318,7 @@ class Secret(BASE, ModelBase):
 
 
 class SecretStoreMetadatum(BASE, ModelBase):
-    """Represents Secret Store metadatum for a single key-value pair"""
+    """Represents Secret Store metadatum for a single key-value pair."""
 
     __tablename__ = "secret_store_metadata"
 
@@ -573,9 +571,9 @@ class Container(BASE, ModelBase):
                 for secret_ref in parsed_request.get('secret_refs'):
                     container_secret = ContainerSecret()
                     container_secret.name = secret_ref.get('name')
-                    #TODO(hgedikli) move this into a common location
-                    #TODO(hgedikli) validate provided url
-                    #TODO(hgedikli) parse out secret_id with regex
+                    # TODO(hgedikli) move this into a common location
+                    # TODO(hgedikli) validate provided url
+                    # TODO(hgedikli) parse out secret_id with regex
                     secret_id = secret_ref.get('secret_ref')
                     if secret_id.endswith('/'):
                         secret_id = secret_id.rsplit('/', 2)[1]
@@ -632,7 +630,7 @@ class ContainerConsumerMetadatum(BASE, ModelBase):
     )
 
     def __init__(self, container_id, parsed_request=None):
-        """Registers a Consumer to a Container"""
+        """Registers a Consumer to a Container."""
         super(ContainerConsumerMetadatum, self).__init__()
 
         if parsed_request:
@@ -650,7 +648,9 @@ class ContainerConsumerMetadatum(BASE, ModelBase):
 
 
 class TransportKey(BASE, ModelBase):
-    """Represents the transport key used for wrapping secrets in transit
+    """Transport Key model for wrapping secrets in transit
+
+    Represents the transport key used for wrapping secrets in transit
     to/from clients when storing/retrieving secrets.
     """
 
