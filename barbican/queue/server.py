@@ -60,6 +60,15 @@ class Tasks(object):
             LOG.exception(">>>>> Task exception seen, details reported "
                           "on the Orders entity.")
 
+    def update_order(self, context, order_id, keystone_id, updated_meta):
+        """Update Order."""
+        task = resources.UpdateOrder()
+        try:
+            task.process(order_id, keystone_id, updated_meta)
+        except Exception:
+            LOG.exception(">>>>> Task exception seen, details reported "
+                          "on the Orders entity.")
+
 
 class TaskServer(Tasks, service.Service):
     """Server to process asynchronous tasking from Barbican API nodes.

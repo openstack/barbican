@@ -36,6 +36,18 @@ class WhenUsingBeginOrderTask(utils.BaseTestCase):
         mock_begin_order.return_value.process.assert_called_with(
             self.order_id, self.keystone_id)
 
+    @mock.patch('barbican.tasks.resources.UpdateOrder')
+    def test_should_update_order(self, mock_update_order):
+        mock_update_order.return_value.process.return_value = None
+        updated_meta = {}
+        self.tasks.update_order(context=None,
+                                order_id=self.order_id,
+                                keystone_id=self.keystone_id,
+                                updated_meta=updated_meta)
+        mock_update_order.return_value.process.assert_called_with(
+            self.order_id, self.keystone_id, updated_meta
+        )
+
 
 class WhenUsingTaskServer(utils.BaseTestCase):
     """Test using the asynchronous task client."""

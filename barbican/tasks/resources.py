@@ -301,3 +301,68 @@ class BeginTypeOrder(BaseTask):
             if new_container:
                 order.container_id = new_container.id
             LOG.debug("...done requesting a certificate.")
+        else:
+            raise NotImplementedError(
+                'Order type "{0}" not implemented.'.format(order_type))
+
+
+class UpdateOrder(BaseTask):
+    """Handles updating an order"""
+    def get_name(self):
+        return u._('Update Order')
+
+    def __init__(self, tenant_repo=None, order_repo=None,
+                 secret_repo=None, tenant_secret_repo=None, datum_repo=None,
+                 kek_repo=None, container_repo=None,
+                 container_secret_repo=None, secret_meta_repo=None):
+            LOG.debug('Creating UpdateOrder task processor')
+            self.repos = rep.Repositories(
+                tenant_repo=tenant_repo,
+                order_repo=order_repo,
+                secret_repo=secret_repo,
+                tenant_secret_repo=tenant_secret_repo,
+                datum_repo=datum_repo,
+                kek_repo=kek_repo,
+                container_repo=container_repo,
+                container_secret_repo=container_secret_repo,
+                secret_meta_repo=secret_meta_repo
+            )
+
+    def retrieve_entity(self, order_id, keystone_id):
+        return self.repos.order_repo.get(entity_id=order_id,
+                                         keystone_id=keystone_id)
+
+    def handle_processing(self, order, updated_meta):
+        self.handle_order(order, updated_meta)
+
+    def handle_error(self, order, status, message, exception,
+                     *args, **kwargs):
+        order.status = models.States.ERROR
+        order.error_status_code = status
+        order.error_reason = message
+        LOG.exception(u._("An error has occurred updating the order."))
+        self.repos.order_repo.save(order)
+
+    def handle_success(self, order, *args, **kwargs):
+        # TODO(chellygel): Handle sub-status on a pending order.
+        order.status = models.States.ACTIVE
+        self.repos.order_repo.save(order)
+
+    def handle_order(self, order, updated_meta):
+        """Handle Order Update
+
+        :param order: Order to update.
+        """
+
+        order_info = order.to_dict_fields()
+        order_type = order_info.get('type')
+
+        if order_type == models.OrderType.CERTIFICATE:
+            # Update a certificate request
+            cert.modify_certificate_request(order, updated_meta, self.repos)
+            LOG.debug("...done updating a certificate order.")
+        else:
+            raise NotImplementedError(
+                'Order type "{0}" not implemented.'.format(order_type))
+
+        LOG.debug("...done updating order.")

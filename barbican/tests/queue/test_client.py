@@ -40,6 +40,17 @@ class WhenUsingAsyncTaskClient(utils.BaseTestCase):
                                                  order_id=self.order_id,
                                                  keystone_id=self.keystone_id)
 
+    def test_should_update_order(self):
+        updated_meta = {}
+        self.client.update_order(order_id=self.order_id,
+                                 keystone_id=self.keystone_id,
+                                 updated_meta=updated_meta)
+        queue.get_client.assert_called_with()
+        self.mock_client.cast.assert_called_with({}, 'update_order',
+                                                 order_id=self.order_id,
+                                                 keystone_id=self.keystone_id,
+                                                 updated_meta=updated_meta)
+
 
 class WhenCreatingDirectTaskClient(utils.BaseTestCase):
     """Test using the synchronous task client (i.e. standalone mode)."""

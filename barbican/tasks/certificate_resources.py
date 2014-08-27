@@ -16,9 +16,11 @@
 from barbican.common import hrefs
 import barbican.common.utils as utils
 from barbican.model import models
+
 from barbican.plugin.interface import certificate_manager as cert
 from barbican.plugin import resources as plugin
 
+LOG = utils.getLogger(__name__)
 
 # Order sub-status definitions
 ORDER_STATUS_REQUEST_PENDING = models.OrderStatus(
@@ -161,6 +163,13 @@ def check_certificate_request(order_model, tenant_model, plugin_name, repos):
         raise cert.CertificateStatusNotSupported(result.status)
 
     return container_model
+
+
+def modify_certificate_request(order_model, updated_meta, repos):
+    """Update the order with CA."""
+    # TODO(chellygel): Add the modify certificate request logic.
+    LOG.debug('in modify_certificate_request')
+    raise NotImplementedError  # pragma: no cover
 
 
 def _schedule_cert_retry_task(cert_result_dto, cert_plugin, order_model,

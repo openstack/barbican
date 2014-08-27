@@ -89,6 +89,17 @@ def create_order(id_ref="id",
     return order
 
 
+def create_order_with_meta(id_ref="id", order_type="certificate", meta={},
+                           status='PENDING'):
+    """Generate an Order entity instance with Metadata."""
+    order = models.Order()
+    order.id = id_ref
+    order.type = order_type
+    order.meta = meta
+    order.status = status
+    return order
+
+
 def validate_datum(test, datum):
     test.assertIsNone(datum.kek_meta_extended)
     test.assertIsNotNone(datum.kek_meta_tenant)
@@ -1632,6 +1643,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
 
         self.order_repo = mock.MagicMock()
         self.order_repo.get.return_value = self.order
+        self.order_repo.save.return_value = None
         self.order_repo.delete_entity_by_id.return_value = None
 
         self.tenant_repo = mock.MagicMock()
@@ -1668,6 +1680,99 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         self.assertEqual(resp.status_int, 404)
         # Error response should have json content type
         self.assertEqual(resp.content_type, "application/json")
+
+
+class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
+    def setUp(self):
+        super(
+            WhenPuttingOrderWithMetadataUsingOrderResource, self
+        ).setUp()
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
+
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            orders = controllers.orders.OrdersController(self.tenant_repo,
+                                                         self.order_repo,
+                                                         self.queue_resource)
+
+        return RootController()
+
+    def _init(self):
+        self.tenant_keystone_id = 'keystoneid1234'
+        self.requestor = 'requestor1234'
+
+        self.order = create_order_with_meta(
+            id_ref='id1',
+            order_type='certificate',
+            meta={'email': 'email@email.com'},
+            status="PENDING"
+        )
+
+        self.order_repo = mock.MagicMock()
+        self.order_repo.get.return_value = self.order
+        self.order_repo.save.return_value = None
+        self.order_repo.delete_entity_by_id.return_value = None
+
+        self.type = 'certificate'
+        self.meta = {'email': 'newemail@email.com'}
+
+        self.params = {'type': self.type, 'meta': self.meta}
+
+        self.tenant_repo = mock.MagicMock()
+        self.queue_resource = mock.MagicMock()
+
+    def test_should_put_order(self):
+        resp = self.app.put_json(
+            '/orders/{0}/'.format(self.order.id),
+            self.params,
+            headers={
+                'Content-Type': 'application/json'
+            }
+        )
+
+        self.assertEqual(resp.status_int, 204)
+        self.order_repo.get.assert_called_once_with(
+            entity_id=self.order.id,
+            keystone_id=self.tenant_keystone_id,
+            suppress_exception=True)
+
+    def test_should_fail_bad_type(self):
+        self.order['type'] = 'secret'
+        resp = self.app.put_json(
+            '/orders/{0}/'.format(self.order.id),
+            self.params,
+            headers={
+                'Content-Type': 'application/json'
+            },
+            expect_errors=True
+        )
+
+        self.assertEqual(resp.status_int, 400)
+        self.order_repo.get.assert_called_once_with(
+            entity_id=self.order.id,
+            keystone_id=self.tenant_keystone_id,
+            suppress_exception=True)
+
+    def test_should_fail_bad_status(self):
+        self.order['status'] = 'DONE'
+        resp = self.app.put_json(
+            '/orders/{0}/'.format(self.order.id),
+            self.params,
+            headers={
+                'Content-Type': 'application/json'
+            },
+            expect_errors=True
+        )
+
+        self.assertEqual(resp.status_int, 400)
+        self.order_repo.get.assert_called_once_with(
+            entity_id=self.order.id,
+            keystone_id=self.tenant_keystone_id,
+            suppress_exception=True)
 
 
 class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):

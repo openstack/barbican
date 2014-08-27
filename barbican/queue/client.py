@@ -49,6 +49,14 @@ class TaskClient(object):
         self._cast('process_type_order', order_id=order_id,
                    keystone_id=keystone_id)
 
+    def update_order(self, order_id, keystone_id, updated_meta):
+        """Update Order."""
+
+        self._cast('update_order',
+                   order_id=order_id,
+                   keystone_id=keystone_id,
+                   updated_meta=updated_meta)
+
     def _cast(self, name, **kwargs):
         """Asynchronous call handler. Barbican probably only needs casts.
 
