@@ -22,8 +22,9 @@ def get_transport_key_model(key_spec, repos, transport_key_needed):
     if transport_key_needed:
         # get_plugin_store() will throw an exception if no suitable
         # plugin with transport key is found
-        store_plugin = secret_store.SecretStorePluginManager(). \
-            get_plugin_store(key_spec=key_spec, transport_key_needed=True)
+        plugin_manager = secret_store.SecretStorePluginManager()
+        store_plugin = plugin_manager.get_plugin_store(
+            key_spec=key_spec, transport_key_needed=True)
         plugin_name = utils.generate_fullname_for(store_plugin)
 
         key_repo = repos.transport_key_repo
@@ -94,18 +95,19 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
         repos, transport_key_id)
 
     # Locate a suitable plugin to store the secret.
-    store_plugin = secret_store.SecretStorePluginManager().\
-        get_plugin_store(key_spec=key_spec, plugin_name=plugin_name)
+    plugin_manager = secret_store.SecretStorePluginManager()
+    store_plugin = plugin_manager.get_plugin_store(
+        key_spec=key_spec, plugin_name=plugin_name)
 
     # Normalize inputs prior to storage.
-    #TODO(john-wood-w) Normalize all secrets to base64, so we don't have to
+    # TODO(john-wood-w) Normalize all secrets to base64, so we don't have to
     #  pass in 'content' type to the store_secret() call below.
     unencrypted, content_type = tr.normalize_before_encryption(
         unencrypted_raw, content_type_raw, content_encoding,
         enforce_text_only=True)
 
     # Store the secret securely.
-    #TODO(john-wood-w) Remove the SecretStoreContext once repository factory
+    # TODO(john-wood-w) Remove the SecretStoreContext once repository factory
     #  and unit test patch work is completed.
     context = secret_store.SecretStoreContext(secret_model=secret_model,
                                               tenant_model=tenant_model,
@@ -140,11 +142,12 @@ def get_secret(requesting_content_type, secret_model, tenant_model,
         secret_metadata['transport_key'] = transport_key
 
     # Locate a suitable plugin to store the secret.
-    retrieve_plugin = secret_store.SecretStorePluginManager()\
-        .get_plugin_retrieve_delete(secret_metadata.get('plugin_name'))
+    plugin_manager = secret_store.SecretStorePluginManager()
+    retrieve_plugin = plugin_manager.get_plugin_retrieve_delete(
+        secret_metadata.get('plugin_name'))
 
     # Retrieve the secret.
-    #TODO(john-wood-w) Remove the SecretStoreContext once repository factory
+    # TODO(john-wood-w) Remove the SecretStoreContext once repository factory
     #  and unit test patch work is completed.
     context = secret_store.SecretStoreContext(secret_model=secret_model,
                                               tenant_model=tenant_model)
@@ -165,8 +168,9 @@ def get_transport_key_id_for_retrieval(secret_model):
     secret_metadata = dict((k, v.value) for (k, v) in
                            secret_model.secret_store_metadata.items())
 
-    retrieve_plugin = secret_store.SecretStorePluginManager()\
-        .get_plugin_retrieve_delete(secret_metadata.get('plugin_name'))
+    plugin_manager = secret_store.SecretStorePluginManager()
+    retrieve_plugin = plugin_manager.get_plugin_retrieve_delete(
+        secret_metadata.get('plugin_name'))
 
     transport_key_id = retrieve_plugin.get_transport_key()
     return transport_key_id
@@ -180,24 +184,24 @@ def generate_secret(spec, content_type,
     key_spec = secret_store.KeySpec(alg=spec.get('algorithm'),
                                     bit_length=spec.get('bit_length'),
                                     mode=spec.get('mode'))
-    generate_plugin = secret_store.SecretStorePluginManager()\
-        .get_plugin_generate(key_spec)
+
+    plugin_manager = secret_store.SecretStorePluginManager()
+    generate_plugin = plugin_manager.get_plugin_generate(key_spec)
 
     # Create secret model to eventually save metadata to.
     secret_model = models.Secret(spec)
 
     # Generate the secret.
-    #TODO(john-wood-w) Remove the SecretStoreContext once repository factory
+    # TODO(john-wood-w) Remove the SecretStoreContext once repository factory
     #  and unit test patch work is completed.
     context = secret_store.SecretStoreContext(content_type=content_type,
                                               secret_model=secret_model,
                                               tenant_model=tenant_model,
                                               repos=repos)
 
-    #TODO(john-wood-w) Replace with single 'generate_key()' call once
+    # TODO(john-wood-w) Replace with single 'generate_key()' call once
     #  asymmetric and symmetric generation is combined.
-    secret_metadata = generate_plugin.\
-        generate_symmetric_key(key_spec, context)
+    secret_metadata = generate_plugin.generate_symmetric_key(key_spec, context)
 
     # Save secret and metadata.
     _save_secret(secret_model, tenant_model, repos)
@@ -209,36 +213,35 @@ def generate_secret(spec, content_type,
 
 def generate_asymmetric_secret(spec, content_type,
                                tenant_model, repos):
-    """Generate an asymmetric secret and store
-        into a secure backend.
-    """
+    """Generate an asymmetric secret and store into a secure backend."""
     # Locate a suitable plugin to store the secret.
     key_spec = secret_store.KeySpec(alg=spec.get('algorithm'),
                                     bit_length=spec.get('bit_length'),
                                     passphrase=spec.get('passphrase'))
 
-    generate_plugin = secret_store.SecretStorePluginManager()\
-        .get_plugin_generate(key_spec)
+    plugin_manager = secret_store.SecretStorePluginManager()
+    generate_plugin = plugin_manager.get_plugin_generate(key_spec)
 
     # Create secret models to eventually save metadata to.
     private_secret_model = models.Secret(spec)
     public_secret_model = models.Secret(spec)
-    passphrase_secret_model = models.Secret(spec)\
-        if spec.get('passphrase') else None
+    passphrase_secret_model = (models.Secret(spec)
+                               if spec.get('passphrase') else None)
 
     # Generate the secret.
     # TODO(john-wood-w) Remove the SecretStoreContext once repository factory
     #  and unit test patch work is completed.
-    context = secret_store.\
-        SecretStoreContext(content_type=content_type,
-                           private_secret_model=private_secret_model,
-                           public_secret_model=public_secret_model,
-                           passphrase_secret_model=passphrase_secret_model,
-                           tenant_model=tenant_model,
-                           repos=repos)
+    context = secret_store.SecretStoreContext(
+        content_type=content_type,
+        private_secret_model=private_secret_model,
+        public_secret_model=public_secret_model,
+        passphrase_secret_model=passphrase_secret_model,
+        tenant_model=tenant_model,
+        repos=repos)
 
-    asymmetric_meta_dto = generate_plugin.\
-        generate_asymmetric_key(key_spec, context)
+    asymmetric_meta_dto = generate_plugin.generate_asymmetric_key(
+        key_spec, context
+    )
 
     # Save secret and metadata.
     _save_secret(private_secret_model, tenant_model, repos)
@@ -278,8 +281,9 @@ def delete_secret(secret_model, project_id, repos):
                            secret_model.secret_store_metadata.items())
 
     # Locate a suitable plugin to delete the secret from.
-    delete_plugin = secret_store.SecretStorePluginManager()\
-        .get_plugin_retrieve_delete(secret_metadata.get('plugin_name'))
+    plugin_manager = secret_store.SecretStorePluginManager()
+    delete_plugin = plugin_manager.get_plugin_retrieve_delete(
+        secret_metadata.get('plugin_name'))
 
     # Delete the secret from plugin storage.
     delete_plugin.delete_secret(secret_metadata)
@@ -296,8 +300,7 @@ def _save_secret_metadata(secret_model, secret_metadata,
     if not secret_metadata:
         secret_metadata = dict()
 
-    secret_metadata['plugin_name'] = utils\
-        .generate_fullname_for(store_plugin)
+    secret_metadata['plugin_name'] = utils.generate_fullname_for(store_plugin)
 
     secret_metadata['content_type'] = content_type
 

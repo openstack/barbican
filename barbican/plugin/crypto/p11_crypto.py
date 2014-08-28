@@ -21,10 +21,9 @@ import base64
 from oslo.config import cfg
 
 from barbican.common import exception
-from barbican.plugin.crypto import crypto as plugin
-
 from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import jsonutils as json
+from barbican.plugin.crypto import crypto as plugin
 
 
 CONF = cfg.CONF
@@ -51,6 +50,7 @@ class P11CryptoPluginException(exception.BarbicanException):
 
 class P11CryptoPlugin(plugin.CryptoPluginBase):
     """PKCS11 supporting implementation of the crypto plugin.
+
     Generates a key per tenant and encrypts using AES-256-GCM.
     This implementation currently relies on an unreleased fork of PyKCS11.
     """

@@ -121,7 +121,7 @@ class ProtectedImageDelete(Forbidden):
     message = u._("Image %(image_id)s is protected and cannot be deleted.")
 
 
-#NOTE(bcwaldon): here for backwards-compatibility, need to deprecate.
+# NOTE(bcwaldon): here for backwards-compatibility, need to deprecate.
 class NotAuthorized(Forbidden):
     message = u._("You are not authorized to complete this action.")
 

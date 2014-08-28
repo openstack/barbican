@@ -89,8 +89,7 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
         return cert.ResultDTO(cert.CertificateStatus.WAITING_FOR_CA)
 
     def supports(self, certificate_spec):
-        """Returns a boolean indicating if the plugin supports the
-        certificate type.
+        """Indicates whether the plugin supports the certificate type.
 
         :param certificate_spec: Contains details on the certificate to
                                  generate the certificate order

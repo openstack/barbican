@@ -121,7 +121,9 @@ def generate_fullname_for(instance):
 
 
 class TimeKeeper(object):
-    """Keeps track of elapsed times and then allows for dumping a summary to
+    """TimeKeeper object
+
+    Keeps track of elapsed times and then allows for dumping a summary to
     logs. This class can be used to profile a method as a fine grain level.
     """
 
@@ -133,9 +135,9 @@ class TimeKeeper(object):
         self.elapsed = []
 
     def mark(self, note=None):
-        """Mark a moment in time, with an optional note as to what is
-        occurring at the time.
-        :param note: Optional note
+        """Mark a moment in time, with an optional note
+
+        :param note: Optional note about what is occurring at this time
         """
         time_curr = time.time()
         self.elapsed.append((time_curr, time_curr - self.time_last, note))

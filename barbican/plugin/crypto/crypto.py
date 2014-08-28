@@ -10,11 +10,9 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import abc
 
 from oslo.config import cfg
-
 import six
 
 from barbican.common import exception
@@ -67,7 +65,7 @@ class CryptoPrivateKeyFailureException(exception.BarbicanException):
         )
 
 
-#TODO(john-wood-w) Need to harmonize these lower-level constants with the
+# TODO(john-wood-w) Need to harmonize these lower-level constants with the
 #  higher level constants in secret_store.py.
 class PluginSupportTypes(object):
     """Class to hold the type enumeration that plugins may support."""
@@ -84,7 +82,9 @@ class PluginSupportTypes(object):
 
 
 class KEKMetaDTO(object):
-    """Key Encryption Keys (KEKs) in Barbican are intended to represent a
+    """Key Encryption Key Meta DTO
+
+    Key Encryption Keys (KEKs) in Barbican are intended to represent a
     distinct key that is used to perform encryption on secrets for a particular
     project (tenant).
 
@@ -140,9 +140,9 @@ class KEKMetaDTO(object):
    """
 
     def __init__(self, kek_datum):
-        """kek_datum is typically a barbican.model.models.EncryptedDatum
-        instance.  Plugins should never have to create their own instance of
-        this class.
+        """Plugins should not have to create their own instance of this class.
+
+        kek_datum is typically a barbican.model.models.EncryptedDatum instance.
         """
         self.kek_label = kek_datum.kek_label
         self.plugin_name = kek_datum.plugin_name
@@ -153,7 +153,9 @@ class KEKMetaDTO(object):
 
 
 class GenerateDTO(object):
-    """Data Transfer Object used to pass all the necessary data for the plugin
+    """Secret Generation DTO
+
+    Data Transfer Object used to pass all the necessary data for the plugin
     to generate a secret on behalf of the user.
 
     .. attribute:: generation_type
@@ -195,7 +197,9 @@ class ResponseDTO(object):
 
 
 class DecryptDTO(object):
-    """Data Transfer Object used to pass all the necessary data for the plugin
+    """Secret Decryption DTO
+
+    Data Transfer Object used to pass all the necessary data for the plugin
     to perform decryption of a secret.
 
     Currently, this DTO only contains the data produced by the plugin during
@@ -216,7 +220,9 @@ class DecryptDTO(object):
 
 
 class EncryptDTO(object):
-    """Data Transfer Object used to pass all the necessary data for the plugin
+    """Secret Encryption DTO
+
+    Data Transfer Object used to pass all the necessary data for the plugin
     to perform encryption of a secret.
 
     Currently, this DTO only contains the raw bytes to be encrypted by the
@@ -233,9 +239,10 @@ class EncryptDTO(object):
 
 @six.add_metaclass(abc.ABCMeta)
 class CryptoPluginBase(object):
-    """Base class for all Crypto plugins.  Implementations of this abstract
-    base class will be used by Barbican to perform cryptographic operations on
-    secrets.
+    """Base class for all Crypto plugins.
+
+    Implementations of this abstract base class will be used by Barbican to
+    perform cryptographic operations on secrets.
 
     Barbican requests operations by invoking the methods on an instance of the
     implementing class.  Barbican's plugin manager handles the life-cycle of
@@ -243,10 +250,12 @@ class CryptoPluginBase(object):
     persist the data that is assigned to these DTOs by the plugin.
     """
 
-    #TODO(atiwari): fix 1331815
+    # TODO(atiwari): fix 1331815
     @abc.abstractmethod
     def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
-        """This method will be called by Barbican when requesting an encryption
+        """Encryption handler function
+
+        This method will be called by Barbican when requesting an encryption
         operation on a secret on behalf of a project (tenant).
 
         :param encrypt_dto: :class:`EncryptDTO` instance containing the raw
@@ -300,7 +309,9 @@ class CryptoPluginBase(object):
 
     @abc.abstractmethod
     def bind_kek_metadata(self, kek_meta_dto):
-        """Bind a key encryption key (KEK) metadata to the sub-system
+        """Key Encryption Key Metadata binding function
+
+        Bind a key encryption key (KEK) metadata to the sub-system
         handling encryption/decryption, updating information about the
         key encryption key (KEK) metadata in the supplied 'kek_metadata'
         data-transfer-object instance, and then returning this instance.
@@ -357,7 +368,7 @@ class CryptoPluginBase(object):
         """
         raise NotImplementedError  # pragma: no cover
 
-    #TODO(atiwari): fix 1331815
+    # TODO(atiwari): fix 1331815
     @abc.abstractmethod
     def supports(self, type_enum, algorithm=None, bit_length=None,
                  mode=None):

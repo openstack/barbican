@@ -105,7 +105,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         crypto, create_nss_db = setup_nss_db(conf)
         connection = create_connection(conf, 'kra')
 
-        #create kraclient
+        # create kraclient
         kraclient = pki.kra.KRAClient(connection, crypto)
         self.keyclient = kraclient.keys
         self.systemcert_client = kraclient.system_certs
@@ -270,6 +270,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
     @staticmethod
     def _map_algorithm(algorithm):
         """Map Barbican algorithms to Dogtag plugin algorithms.
+
         Note that only algorithms supported by Dogtag will be mapped.
         """
         if algorithm == sstore.KeyAlgorithm.AES:
@@ -288,7 +289,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
             # asymmetric keys not yet supported
             return None
         elif algorithm == sstore.KeyAlgorithm.RSA:
-            #asymmetric keys not yet supported
+            # asymmetric keys not yet supported
             return None
         else:
             return None
@@ -346,6 +347,7 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
 
     def check_certificate_status(self, order_id, order_meta, plugin_meta):
         """Check the status of a certificate request.
+
         :param order_id: ID of the order associated with this request
         :param order_meta: order_metadata associated with this order
         :param plugin_meta: data populated by previous calls for this order,
@@ -431,7 +433,7 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
                 raise cm.CertificateGeneralException(
                     "No request returned in enrollment_results")
 
-            #store the request_id in the plugin metadata
+            # store the request_id in the plugin metadata
             plugin_meta[self.REQUEST_ID] = request.request_id
 
             cert = enrollment_result.cert

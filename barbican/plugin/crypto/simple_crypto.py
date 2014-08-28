@@ -10,16 +10,13 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import os
 
 from Crypto.PublicKey import DSA
 from Crypto.PublicKey import RSA
 from Crypto.Util import asn1
 from cryptography import fernet
-
 from oslo.config import cfg
-
 import six
 
 from barbican.openstack.common import gettextutils as u
@@ -94,7 +91,8 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
                             keystone_id)
 
     def generate_asymmetric(self, generate_dto, kek_meta_dto, keystone_id):
-        """Generate asymmetric keys based on below rule
+        """Generate asymmetric keys based on below rules:
+
         - RSA, with passphrase (supported)
         - RSA, without passphrase (supported)
         - DSA, without passphrase (supported)
@@ -108,8 +106,8 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         DSA keys and DER formated keys, later we need to pick better
         crypto lib.
         """
-        if generate_dto.algorithm is None\
-                or generate_dto.algorithm.lower() == 'rsa':
+        if(generate_dto.algorithm is None or generate_dto
+                .algorithm.lower() == 'rsa'):
             private_key = RSA.generate(
                 generate_dto.bit_length, None, None, 65537)
         elif generate_dto.algorithm.lower() == 'dsa':
@@ -139,8 +137,8 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         passphrase_dto = None
         if generate_dto.passphrase:
             if isinstance(generate_dto.passphrase, six.text_type):
-                generate_dto.passphrase = \
-                    generate_dto.passphrase.encode('utf-8')
+                generate_dto.passphrase = generate_dto.passphrase.encode(
+                    'utf-8')
 
             passphrase_dto = self.encrypt(c.EncryptDTO(generate_dto.
                                                        passphrase),
@@ -179,14 +177,16 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         pub_seq = asn1.DerSequence()
         pub_seq[:] = [0, public_key.p, public_key.q,
                       public_key.g, public_key.y]
-        public_key = "-----BEGIN DSA PUBLIC KEY-----\n%s"\
-            "-----END DSA PUBLIC KEY-----" % pub_seq.encode().encode("base64")
+        public_key = ("-----BEGIN DSA PUBLIC KEY-----\n{0}"
+                      "-----END DSA PUBLIC KEY-----"
+                      .format(pub_seq.encode().encode("base64")))
 
         prv_seq = asn1.DerSequence()
         prv_seq[:] = [0, private_key.p, private_key.q,
                       private_key.g, private_key.y, private_key.x]
-        private_key = "-----BEGIN DSA PRIVATE KEY-----\n%s"\
-            "-----END DSA PRIVATE KEY-----" % prv_seq.encode().encode("base64")
+        private_key = ("-----BEGIN DSA PRIVATE KEY-----\n{0}"
+                       "-----END DSA PRIVATE KEY-----"
+                       .format(prv_seq.encode().encode("base64")))
 
         return public_key, private_key
 
@@ -195,11 +195,12 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         if algorithm is None or bit_length is None:
             return False
 
-        if algorithm.lower() in c.PluginSupportTypes.SYMMETRIC_ALGORITHMS \
-                and bit_length in c.PluginSupportTypes.SYMMETRIC_KEY_LENGTHS:
+        if (algorithm.lower() in
+                c.PluginSupportTypes.SYMMETRIC_ALGORITHMS and bit_length in
+                c.PluginSupportTypes.SYMMETRIC_KEY_LENGTHS):
             return True
-        elif algorithm.lower() in c.PluginSupportTypes.ASYMMETRIC_ALGORITHMS \
-                and bit_length in c.PluginSupportTypes.ASYMMETRIC_KEY_LENGTHS:
+        elif (algorithm.lower() in c.PluginSupportTypes.ASYMMETRIC_ALGORITHMS
+              and bit_length in c.PluginSupportTypes.ASYMMETRIC_KEY_LENGTHS):
             return True
         else:
             return False

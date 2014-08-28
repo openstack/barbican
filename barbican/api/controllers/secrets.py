@@ -71,7 +71,7 @@ class SecretController(object):
         LOG.debug('=== Creating SecretController ===')
         self.secret_id = secret_id
 
-        #TODO(john-wood-w) Remove passed-in repositories in favor of
+        # TODO(john-wood-w) Remove passed-in repositories in favor of
         #  repository factories and patches in unit tests.
         self.repos = repo.Repositories(tenant_repo=tenant_repo,
                                        secret_repo=secret_repo,
@@ -215,6 +215,9 @@ class SecretsController(object):
     @controllers.handle_exceptions(u._('Secret(s) retrieval'))
     @controllers.enforce_rbac('secrets:get')
     def index(self, keystone_id, **kw):
+        def secret_fields(field):
+            return putil.mime_types.augment_fields_with_content_types(field)
+
         LOG.debug('Start secrets on_get '
                   'for tenant-ID %s:', keystone_id)
 
@@ -247,8 +250,6 @@ class SecretsController(object):
             secrets_resp_overall = {'secrets': [],
                                     'total': total}
         else:
-            secret_fields = lambda sf: putil.mime_types\
-                .augment_fields_with_content_types(sf)
             secrets_resp = [
                 hrefs.convert_to_hrefs(secret_fields(s))
                 for s in secrets
