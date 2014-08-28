@@ -151,15 +151,19 @@ class OrdersController(object):
         if order_type:
             body = api.load_body(pecan.request,
                                  validator=self.type_order_validator)
-            LOG.debug('Start on_post...%s', body)
-            name = body.get('meta').get('name')
-            LOG.debug('Order to create is %s', name)
-            new_order = models.Order(body)
-            #TODO(atiwari): we need to make another round of model
-            # change to address.  payload_content_type can not be None
-            # Setting up this value to satisfy this DB rule (bug1335171)
-            new_order.secret_payload_content_type = new_order.meta.get(
-                'payload_content_type')
+            LOG.debug('Processing order type %s', order_type)
+            new_order = models.Order()
+            new_order.meta = body.get('meta')
+            new_order.type = order_type
+
+            #TODO(john-wood-w) These are required attributes currently, but
+            #   will eventually be removed once we drop the legacy orders
+            #   request.
+            new_order.secret_name = 'N/A'
+            new_order.secret_algorithm = 'N/A'
+            new_order.secret_bit_length = 0
+            new_order.secret_mode = 'N/A'
+            new_order.secret_payload_content_type = 'N/A'
         else:
             body = api.load_body(pecan.request, validator=self.validator)
             LOG.debug('Start on_post...%s', body)

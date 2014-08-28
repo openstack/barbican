@@ -340,7 +340,6 @@ class TypeOrderValidator(ValidatorBase):
         self._assert_validity(certificate_meta is not None,
                               schema_name,
                               u._("'meta' attributes is required"), "meta")
-        self._raise_feature_not_implemented('certificate', schema_name)
 
     def _extract_expiration(self, json_data, schema_name):
         """Extracts and returns the expiration date from the JSON data."""

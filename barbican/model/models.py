@@ -469,18 +469,27 @@ class Order(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        ret = {'secret': {'name': self.secret_name or self.secret_id,
-                          'algorithm': self.secret_algorithm,
-                          'bit_length': self.secret_bit_length,
-                          'mode': self.secret_mode,
-                          'expiration': self.secret_expiration.isoformat()
-                          if self.secret_expiration
-                          else self.secret_expiration,
-                          'payload_content_type':
-                          self.secret_payload_content_type},
-               'type': self.type,
-               'meta': self.meta,
-               'order_id': self.id}
+        if not self.meta:
+            expiration = (
+                self.secret_expiration.isoformat()
+                if self.secret_expiration else self.secret_expiration)
+            ret = {
+                'secret': {
+                    'name': self.secret_name or self.secret_id,
+                    'algorithm': self.secret_algorithm,
+                    'bit_length': self.secret_bit_length,
+                    'mode': self.secret_mode,
+                    'expiration': expiration,
+                    'payload_content_type': self.secret_payload_content_type
+                },
+                'order_id': self.id
+            }
+        else:
+            ret = {
+                'type': self.type,
+                'meta': self.meta,
+                'order_id': self.id
+            }
         if self.secret_id:
             ret['secret_id'] = self.secret_id
         if self.container_id:
