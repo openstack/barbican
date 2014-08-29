@@ -335,7 +335,6 @@ class TypeOrderValidator(ValidatorBase):
         self._assert_validity(asymmetric_meta is not None,
                               schema_name,
                               u._("'meta' attributes is required"), "meta")
-        self._raise_feature_not_implemented('asymmetric', schema_name)
 
     def _validate_certificate_meta(self, certificate_meta, schema_name):
         """Validation specific to meta for certificate type order."""
