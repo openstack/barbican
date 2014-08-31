@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2014.2.dev66.gc355525\n"
+"Project-Id-Version: barbican 2014.2.dev84.gb075737\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-08-25 06:09+0000\n"
+"POT-Creation-Date: 2014-08-31 06:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,53 +17,53 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
 
-#: barbican/api/__init__.py:110
+#: barbican/api/__init__.py:111
 msgid "{0} attempt not allowed - please review your user/tenant privileges"
 msgstr ""
 
-#: barbican/api/__init__.py:116
+#: barbican/api/__init__.py:117
 msgid "content-type of '{0}' not supported"
 msgstr ""
 
-#: barbican/api/__init__.py:120
+#: barbican/api/__init__.py:121
 msgid "content-encoding of '{0}' not supported"
 msgstr ""
 
-#: barbican/api/__init__.py:124
+#: barbican/api/__init__.py:125
 msgid "No plugin was found that could support your request"
 msgstr ""
 
-#: barbican/api/__init__.py:128 barbican/plugin/interface/secret_store.py:115
+#: barbican/api/__init__.py:129 barbican/plugin/interface/secret_store.py:115
 msgid "Problem decoding payload"
 msgstr ""
 
-#: barbican/api/__init__.py:131
+#: barbican/api/__init__.py:132
 msgid ""
 "Text-based binary secret payloads must specify a content-encoding of "
 "'base64'"
 msgstr ""
 
-#: barbican/api/__init__.py:135
+#: barbican/api/__init__.py:136
 msgid "Not Found.  Sorry but your secret is in another castle"
 msgstr ""
 
-#: barbican/api/__init__.py:139
+#: barbican/api/__init__.py:140
 msgid "Requested algorithm is not supported"
 msgstr ""
 
-#: barbican/api/__init__.py:143
+#: barbican/api/__init__.py:152
 msgid "No information provided to process"
 msgstr ""
 
-#: barbican/api/__init__.py:146
+#: barbican/api/__init__.py:155
 msgid "Provided information too large to process"
 msgstr ""
 
-#: barbican/api/__init__.py:151
+#: barbican/api/__init__.py:160
 msgid "{0} failure seen - please contact site administrator."
 msgstr ""
 
-#: barbican/api/__init__.py:155
+#: barbican/api/__init__.py:164
 msgid "{0} issue seen - {1}."
 msgstr ""
 
@@ -107,11 +107,11 @@ msgstr ""
 msgid "Containers(s) retrieval"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:136
+#: barbican/api/controllers/containers.py:141
 msgid "Container creation"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:157
+#: barbican/api/controllers/containers.py:162
 msgid "Secret provided for '{0}' doesn't exist."
 msgstr ""
 
@@ -521,114 +521,114 @@ msgstr ""
 msgid "payload must be provided when payload_content_type is specified"
 msgstr ""
 
-#: barbican/common/validators.py:187 barbican/common/validators.py:358
+#: barbican/common/validators.py:185 barbican/common/validators.py:355
 msgid "Invalid date for 'expiration'"
 msgstr ""
 
-#: barbican/common/validators.py:200
+#: barbican/common/validators.py:198
 msgid "'expiration' is before current time"
 msgstr ""
 
-#: barbican/common/validators.py:211
+#: barbican/common/validators.py:209
 msgid "If 'payload' is supplied, 'payload_content_type' must also be supplied."
 msgstr ""
 
-#: barbican/common/validators.py:218
+#: barbican/common/validators.py:216
 msgid "payload_content_type is not one of {0}"
 msgstr ""
 
-#: barbican/common/validators.py:226
+#: barbican/common/validators.py:224
 msgid ""
 "payload_content_encoding must be specified when payload_content_type is "
 "application/octet-stream."
 msgstr ""
 
-#: barbican/common/validators.py:234
+#: barbican/common/validators.py:232
 msgid ""
 "payload_content_encoding must not be specified when payload_content_type "
 "is text/plain"
 msgstr ""
 
-#: barbican/common/validators.py:299 barbican/common/validators.py:337
-#: barbican/common/validators.py:344
+#: barbican/common/validators.py:297 barbican/common/validators.py:335
+#: barbican/common/validators.py:342
 msgid "'meta' attributes is required"
 msgstr ""
 
-#: barbican/common/validators.py:305
+#: barbican/common/validators.py:303
 msgid "'payload' not allowed for key type order"
 msgstr ""
 
-#: barbican/common/validators.py:315
+#: barbican/common/validators.py:313
 msgid "Only 'application/octet-stream' supported"
 msgstr ""
 
-#: barbican/common/validators.py:322 barbican/common/validators.py:437
+#: barbican/common/validators.py:320 barbican/common/validators.py:434
 msgid "Only 'cbc' supported"
 msgstr ""
 
-#: barbican/common/validators.py:328 barbican/common/validators.py:443
+#: barbican/common/validators.py:326 barbican/common/validators.py:440
 msgid "Only 'aes' supported"
 msgstr ""
 
-#: barbican/common/validators.py:370
+#: barbican/common/validators.py:367
 msgid "Must have non-zero positive bit_length to generate secret"
 msgstr ""
 
-#: barbican/common/validators.py:378 barbican/common/validators.py:451
+#: barbican/common/validators.py:375 barbican/common/validators.py:448
 msgid "Must be a positive integer that is a multiple of 8"
 msgstr ""
 
-#: barbican/common/validators.py:386
+#: barbican/common/validators.py:383
 msgid "Feature not implemented for '{0}' order type"
 msgstr ""
 
-#: barbican/common/validators.py:413
+#: barbican/common/validators.py:410
 msgid "'secret' attributes are required"
 msgstr ""
 
-#: barbican/common/validators.py:420
+#: barbican/common/validators.py:417
 msgid "'payload' not allowed for secret generation"
 msgstr ""
 
-#: barbican/common/validators.py:430
+#: barbican/common/validators.py:427
 msgid "Only 'application/oc tet-stream' supported"
 msgstr ""
 
-#: barbican/common/validators.py:525
+#: barbican/common/validators.py:522
 msgid "Duplicate reference names are not allowed"
 msgstr ""
 
-#: barbican/common/validators.py:537
+#: barbican/common/validators.py:534
 msgid "Duplicate secret ids are not allowed"
 msgstr ""
 
-#: barbican/common/validators.py:555
+#: barbican/common/validators.py:552
 msgid ""
 "only 'private_key', 'public_key' and 'private_key_passphrase' reference "
 "names are allowed for RSA type"
 msgstr ""
 
-#: barbican/common/validators.py:563
+#: barbican/common/validators.py:560
 msgid ""
 "The minimum required reference names are 'public_key' and'private_key' "
 "for RSA type"
 msgstr ""
 
-#: barbican/common/validators.py:576
+#: barbican/common/validators.py:573
 msgid ""
 "only 'private_key', 'certificate' , 'private_key_passphrase',  or "
 "'intermediates' reference names are allowed for Certificate type"
 msgstr ""
 
-#: barbican/common/validators.py:584
+#: barbican/common/validators.py:581
 msgid "The minimum required reference name is 'certificate' for Certificate type"
 msgstr ""
 
-#: barbican/common/validators.py:630
+#: barbican/common/validators.py:627
 msgid "plugin_name must be provided"
 msgstr ""
 
-#: barbican/common/validators.py:637
+#: barbican/common/validators.py:634
 msgid "transport_key must be provided"
 msgstr ""
 
@@ -656,7 +656,7 @@ msgstr ""
 msgid "SQL connection failed. %d attempts left."
 msgstr ""
 
-#: barbican/model/repositories.py:672
+#: barbican/model/repositories.py:674
 msgid "Tried to register crypto plugin with null or empty name."
 msgstr ""
 
@@ -941,7 +941,7 @@ msgid "url is required"
 msgstr ""
 
 #: barbican/plugin/crypto/crypto.py:36
-#: barbican/plugin/interface/certificate_manager.py:43
+#: barbican/plugin/interface/certificate_manager.py:44
 #: barbican/plugin/interface/secret_store.py:36
 msgid "Extension namespace to search for plugins."
 msgstr ""
@@ -955,7 +955,9 @@ msgid "Crypto plugin not found."
 msgstr ""
 
 #: barbican/plugin/crypto/crypto.py:54
-#: barbican/plugin/interface/certificate_manager.py:71
+#: barbican/plugin/interface/certificate_manager.py:80
+#: barbican/plugin/interface/certificate_manager.py:90
+#: barbican/plugin/interface/certificate_manager.py:100
 #: barbican/plugin/interface/secret_store.py:103
 msgid "Unknown"
 msgstr ""
@@ -992,20 +994,28 @@ msgstr ""
 msgid "Key encryption key to be used by Simple Crypto Plugin"
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:47
+#: barbican/plugin/interface/certificate_manager.py:48
 msgid "List of certificate plugins to load."
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:58
+#: barbican/plugin/interface/certificate_manager.py:67
 msgid "Certificate plugin not found."
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:65
+#: barbican/plugin/interface/certificate_manager.py:74
 msgid "Certificate status of '{0}' not supported"
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:73
+#: barbican/plugin/interface/certificate_manager.py:82
 msgid "Problem seen during certificate processing - Reason: {0}"
+msgstr ""
+
+#: barbican/plugin/interface/certificate_manager.py:92
+msgid "Problem with data in certificate request - Reason: {0}"
+msgstr ""
+
+#: barbican/plugin/interface/certificate_manager.py:102
+msgid "Invalid operation requested - Reason: {0}"
 msgstr ""
 
 #: barbican/plugin/interface/secret_store.py:40
@@ -1076,31 +1086,31 @@ msgstr ""
 msgid "Server name for RPC task processing server"
 msgstr ""
 
-#: barbican/tasks/resources.py:62
+#: barbican/tasks/resources.py:63
 #, python-format
 msgid "Could not retrieve information needed to process task '%s'."
 msgstr ""
 
-#: barbican/tasks/resources.py:70
+#: barbican/tasks/resources.py:71
 #, python-format
 msgid "Could not perform processing for task '%s'."
 msgstr ""
 
-#: barbican/tasks/resources.py:80
+#: barbican/tasks/resources.py:81
 #, python-format
 msgid "Problem handling an error for task '%s', raising original exception."
 msgstr ""
 
-#: barbican/tasks/resources.py:89
+#: barbican/tasks/resources.py:90
 #, python-format
 msgid "Could not process after successfully executing task '%s'."
 msgstr ""
 
-#: barbican/tasks/resources.py:146
+#: barbican/tasks/resources.py:147
 msgid "Create Secret"
 msgstr ""
 
-#: barbican/tasks/resources.py:209
+#: barbican/tasks/resources.py:211
 msgid "Process TypeOrder"
 msgstr ""
 
