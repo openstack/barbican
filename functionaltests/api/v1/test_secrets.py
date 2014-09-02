@@ -47,8 +47,10 @@ two_phase_payload_data = {
 class SecretsTestCase(base.TestCase):
 
     def test_create_secret_single_phase(self):
-        """Covers single phase secret creation.  All of the data needed to
-        create the secret, including payload, is provided in a single POST.
+        """Covers single phase secret creation.
+
+        All of the data needed to create the secret, including payload,
+        is provided in a single POST.
         """
         json_data = json.dumps(one_phase_create_data)
         resp, body = self.client.post(
@@ -61,9 +63,11 @@ class SecretsTestCase(base.TestCase):
         self.assertIsNotNone(secret_ref)
 
     def test_create_secret_two_phase(self):
-        """Covers two phase secret creation.  The first call, a POST, provides
-        the metadata about the secret - everything except the payload.  A
-        subsequent call (PUT) provides the payload.
+        """Covers two phase secret creation.
+
+        The first call, a POST, provides the metadata about the
+        secret - everything except the payload. A subsequent call (PUT)
+        provides the payload.
         """
         # phase 1 - POST secret without payload
         json_data = json.dumps(two_phase_create_data)

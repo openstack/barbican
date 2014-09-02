@@ -21,9 +21,9 @@ resource classes. For RBAC tests of these classes, see the
 
 import base64
 import logging
+import mimetypes
 import urllib
 
-import mimetypes
 import mock
 import pecan
 import testtools
@@ -44,9 +44,9 @@ LOG = logging.getLogger(__name__)
 
 
 def get_barbican_env(keystone_id):
-    """Create and return a barbican.context for use with
-       the RBAC decorator by injecting the provided
-       keystone_id
+    """Create and return a barbican.context for use with the RBAC decorator
+
+    Injects the provided keystone_id.
     """
     kwargs = {'roles': None,
               'user': None,
@@ -221,8 +221,8 @@ class BaseSecretsResource(FunctionalTest):
         if payload_content_type:
             self.secret_req['payload_content_type'] = payload_content_type
         if payload_content_encoding:
-            self.secret_req['payload_content_encoding'] = \
-                payload_content_encoding
+            self.secret_req['payload_content_encoding'] = (
+                payload_content_encoding)
 
         self.keystone_id = 'keystone1234'
         self.tenant_entity_id = 'tid1234'
@@ -283,16 +283,18 @@ class BaseSecretsResource(FunctionalTest):
         expiration_raw = expiration_raw[:-6].replace('12', '17', 1)
         expiration_tz = timeutils.parse_isotime(expiration_raw.strip())
         expected['expiration'] = timeutils.normalize_time(expiration_tz)
-        mock_store_secret\
-            .assert_called_once_with(
-                self.secret_req.get('payload'),
-                self.secret_req.get('payload_content_type',
-                                    'application/octet-stream'),
-                self.secret_req.get('payload_content_encoding'),
-                expected, None, self.tenant, mock.ANY,
-                transport_key_needed=False,
-                transport_key_id=None
-            )
+        mock_store_secret.assert_called_once_with(
+            self.secret_req.get('payload'),
+            self.secret_req.get('payload_content_type',
+                                'application/octet-stream'),
+            self.secret_req.get('payload_content_encoding'),
+            expected,
+            None,
+            self.tenant,
+            mock.ANY,
+            transport_key_needed=False,
+            transport_key_id=None
+        )
 
     @mock.patch('barbican.plugin.resources.store_secret')
     def _test_should_add_new_secret_one_step(self, mock_store_secret,
@@ -312,18 +314,18 @@ class BaseSecretsResource(FunctionalTest):
 
         expected = dict(self.secret_req)
         expected['expiration'] = None
-        mock_store_secret\
-            .assert_called_once_with(
-                self.secret_req.get('payload'),
-                self.secret_req.get('payload_content_type',
-                                    'application/octet-stream'),
-                self.secret_req.get('payload_content_encoding'),
-                expected, None,
-                self.tenant if check_tenant_id else mock.ANY,
-                mock.ANY,
-                transport_key_needed=False,
-                transport_key_id=None
-            )
+        mock_store_secret.assert_called_once_with(
+            self.secret_req.get('payload'),
+            self.secret_req.get('payload_content_type',
+                                'application/octet-stream'),
+            self.secret_req.get('payload_content_encoding'),
+            expected,
+            None,
+            self.tenant if check_tenant_id else mock.ANY,
+            mock.ANY,
+            transport_key_needed=False,
+            transport_key_id=None
+        )
 
     @mock.patch('barbican.plugin.resources.store_secret')
     def _test_should_add_new_secret_one_step_with_tkey_id(
@@ -341,18 +343,18 @@ class BaseSecretsResource(FunctionalTest):
 
         expected = dict(self.secret_req)
         expected['expiration'] = None
-        mock_store_secret\
-            .assert_called_once_with(
-                self.secret_req.get('payload'),
-                self.secret_req.get('payload_content_type',
-                                    'application/octet-stream'),
-                self.secret_req.get('payload_content_encoding'),
-                expected, None,
-                self.tenant if check_tenant_id else mock.ANY,
-                mock.ANY,
-                transport_key_needed=False,
-                transport_key_id=self.transport_key_id
-            )
+        mock_store_secret.assert_called_once_with(
+            self.secret_req.get('payload'),
+            self.secret_req.get('payload_content_type',
+                                'application/octet-stream'),
+            self.secret_req.get('payload_content_encoding'),
+            expected,
+            None,
+            self.tenant if check_tenant_id else mock.ANY,
+            mock.ANY,
+            transport_key_needed=False,
+            transport_key_id=self.transport_key_id
+        )
 
     def _test_should_add_new_secret_if_tenant_does_not_exist(self):
         self.tenant_repo.get.return_value = None
@@ -418,9 +420,10 @@ class BaseSecretsResource(FunctionalTest):
                            'mode': self.secret_mode,
                            'payload': big_text,
                            'payload_content_type': self.payload_content_type}
-        if self.payload_content_encoding:
-            self.secret_req['payload_content_encoding'] = \
-                self.payload_content_encoding
+
+        payload_encoding = self.payload_content_encoding
+        if payload_encoding:
+            self.secret_req['payload_content_encoding'] = payload_encoding
         self.app.post_json('/secrets/', self.secret_req)
 
     def _test_should_raise_due_to_payload_too_large(self):
@@ -434,9 +437,10 @@ class BaseSecretsResource(FunctionalTest):
                            'mode': self.secret_mode,
                            'payload': big_text,
                            'payload_content_type': self.payload_content_type}
-        if self.payload_content_encoding:
-            self.secret_req['payload_content_encoding'] = \
-                self.payload_content_encoding
+
+        payload_encoding = self.payload_content_encoding
+        if payload_encoding:
+            self.secret_req['payload_content_encoding'] = payload_encoding
 
         resp = self.app.post_json(
             '/secrets/',
@@ -451,11 +455,13 @@ class BaseSecretsResource(FunctionalTest):
                            'bit_length': self.secret_bit_length,
                            'mode': self.secret_mode,
                            'payload': ''}
-        if self.payload_content_type:
-            self.secret_req['payload_content_type'] = self.payload_content_type
-        if self.payload_content_encoding:
-            self.secret_req['payload_content_encoding'] = \
-                self.payload_content_encoding
+
+        payload_type = self.payload_content_type
+        payload_encoding = self.payload_content_encoding
+        if payload_type:
+            self.secret_req['payload_content_type'] = payload_type
+        if payload_encoding:
+            self.secret_req['payload_content_encoding'] = payload_encoding
 
         resp = self.app.post_json(
             '/secrets/',
@@ -509,7 +515,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
         )
         self.assertEqual(resp.status_int, 400)
 
-#TODO(jwood) These tests are integration-style unit tests of the REST -> Pecan
+# TODO(jwood) These tests are integration-style unit tests of the REST -> Pecan
 #   resources, which are more painful to test now that we have a two-tier
 #   plugin lookup framework. These tests should instead be re-located to
 #   unit tests of the secret_store.py and store_crypto.py modules. A separate
@@ -779,14 +785,16 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
         )
         # Verify that the name is unquoted correctly in the
         # secrets.on_get function prior to searching the repo.
-        self.secret_repo.get_by_create_date \
-            .assert_called_once_with(self.keystone_id,
-                                     offset_arg=u'{0}'.format(self.offset),
-                                     limit_arg=u'{0}'.format(self.limit),
-                                     suppress_exception=True,
-                                     name=self.name,
-                                     alg=None, mode=None,
-                                     bits=0)
+        self.secret_repo.get_by_create_date.assert_called_once_with(
+            self.keystone_id,
+            offset_arg=u'{0}'.format(self.offset),
+            limit_arg=u'{0}'.format(self.limit),
+            suppress_exception=True,
+            name=self.name,
+            alg=None,
+            mode=None,
+            bits=0
+        )
 
         self.assertIn('secrets', resp.namespace)
         secrets = resp.namespace['secrets']
@@ -799,13 +807,16 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
             dict((k, v) for k, v in self.params.items() if v is not None)
         )
 
-        self.secret_repo.get_by_create_date \
-            .assert_called_once_with(self.keystone_id,
-                                     offset_arg=u'{0}'.format(self.offset),
-                                     limit_arg=u'{0}'.format(self.limit),
-                                     suppress_exception=True,
-                                     name='', alg=None, mode=None,
-                                     bits=0)
+        self.secret_repo.get_by_create_date.assert_called_once_with(
+            self.keystone_id,
+            offset_arg=u'{0}'.format(self.offset),
+            limit_arg=u'{0}'.format(self.limit),
+            suppress_exception=True,
+            name='',
+            alg=None,
+            mode=None,
+            bits=0
+        )
 
         self.assertTrue('previous' in resp.namespace)
         self.assertTrue('next' in resp.namespace)
@@ -840,13 +851,16 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
             dict((k, v) for k, v in self.params.items() if v is not None)
         )
 
-        self.secret_repo.get_by_create_date \
-            .assert_called_once_with(self.keystone_id,
-                                     offset_arg=u'{0}'.format(self.offset),
-                                     limit_arg=u'{0}'.format(self.limit),
-                                     suppress_exception=True,
-                                     name='', alg=None, mode=None,
-                                     bits=0)
+        self.secret_repo.get_by_create_date.assert_called_once_with(
+            self.keystone_id,
+            offset_arg=u'{0}'.format(self.offset),
+            limit_arg=u'{0}'.format(self.limit),
+            suppress_exception=True,
+            name='',
+            alg=None,
+            mode=None,
+            bits=0
+        )
 
         self.assertFalse('previous' in resp.namespace)
         self.assertFalse('next' in resp.namespace)
@@ -949,10 +963,10 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             '/secrets/{0}/'.format(self.secret.id),
             headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'}
         )
-        self.secret_repo \
-            .get.assert_called_once_with(entity_id=self.secret.id,
-                                         keystone_id=self.keystone_id,
-                                         suppress_exception=True)
+        self.secret_repo.get.assert_called_once_with(
+            entity_id=self.secret.id,
+            keystone_id=self.keystone_id,
+            suppress_exception=True)
         self.assertEqual(resp.status_int, 200)
 
         self.assertNotIn('content_encodings', resp.namespace)
@@ -971,19 +985,20 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             headers={'Accept': 'text/plain'}
         )
 
-        self.secret_repo \
-            .get.assert_called_once_with(entity_id=self.secret.id,
-                                         keystone_id=self.keystone_id,
-                                         suppress_exception=True)
+        self.secret_repo.get.assert_called_once_with(
+            entity_id=self.secret.id,
+            keystone_id=self.keystone_id,
+            suppress_exception=True)
         self.assertEqual(resp.status_int, 200)
 
         self.assertEqual(resp.body, data)
-        mock_get_secret\
-            .assert_called_once_with('text/plain',
-                                     self.secret,
-                                     self.tenant,
-                                     None,
-                                     None)
+        mock_get_secret.assert_called_once_with(
+            'text/plain',
+            self.secret,
+            self.tenant,
+            None,
+            None
+        )
 
     @mock.patch('barbican.plugin.resources.get_secret')
     def test_should_get_secret_as_plain_with_twsk(self, mock_get_secret):
@@ -997,19 +1012,20 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             headers={'Accept': 'text/plain'}
         )
 
-        self.secret_repo \
-            .get.assert_called_once_with(entity_id=self.secret.id,
-                                         keystone_id=self.keystone_id,
-                                         suppress_exception=True)
+        self.secret_repo.get.assert_called_once_with(
+            entity_id=self.secret.id,
+            keystone_id=self.keystone_id,
+            suppress_exception=True)
         self.assertEqual(resp.status_int, 200)
 
         self.assertEqual(resp.body, data)
-        mock_get_secret\
-            .assert_called_once_with('text/plain',
-                                     self.secret,
-                                     self.tenant,
-                                     twsk,
-                                     self.transport_key_model.transport_key)
+        mock_get_secret.assert_called_once_with(
+            'text/plain',
+            self.secret,
+            self.tenant,
+            twsk,
+            self.transport_key_model.transport_key
+        )
 
     @mock.patch('barbican.plugin.resources.get_secret')
     def test_should_throw_exception_for_get_when_twsk_but_no_tkey_id(
@@ -1025,10 +1041,10 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             expect_errors=True
         )
 
-        self.secret_repo \
-            .get.assert_called_once_with(entity_id=self.secret.id,
-                                         keystone_id=self.keystone_id,
-                                         suppress_exception=True)
+        self.secret_repo.get.assert_called_once_with(
+            entity_id=self.secret.id,
+            keystone_id=self.keystone_id,
+            suppress_exception=True)
         self.assertEqual(resp.status_int, 400)
 
     @mock.patch('barbican.plugin.resources.get_transport_key_id_for_retrieval')
@@ -1042,10 +1058,10 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'}
         )
 
-        self.secret_repo \
-            .get.assert_called_once_with(entity_id=self.secret.id,
-                                         keystone_id=self.keystone_id,
-                                         suppress_exception=True)
+        self.secret_repo.get.assert_called_once_with(
+            entity_id=self.secret.id,
+            keystone_id=self.keystone_id,
+            suppress_exception=True)
 
         self.assertEqual(resp.status_int, 200)
 
@@ -1067,10 +1083,10 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'}
         )
 
-        self.secret_repo \
-            .get.assert_called_once_with(entity_id=self.secret.id,
-                                         keystone_id=self.keystone_id,
-                                         suppress_exception=True)
+        self.secret_repo.get.assert_called_once_with(
+            entity_id=self.secret.id,
+            keystone_id=self.keystone_id,
+            suppress_exception=True)
 
         self.assertEqual(resp.status_int, 200)
 
@@ -1103,12 +1119,13 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.assertEqual(resp.body, data)
 
-        mock_get_secret\
-            .assert_called_once_with('application/octet-stream',
-                                     self.secret,
-                                     self.tenant,
-                                     None,
-                                     None)
+        mock_get_secret.assert_called_once_with(
+            'application/octet-stream',
+            self.secret,
+            self.tenant,
+            None,
+            None
+        )
 
     def test_should_throw_exception_for_get_when_secret_not_found(self):
         self.secret_repo.get.return_value = None
@@ -1140,11 +1157,15 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.assertEqual(resp.status_int, 204)
 
-        mock_store_secret\
-            .assert_called_once_with('plain text', 'text/plain', None,
-                                     self.secret.to_dict_fields(),
-                                     self.secret, self.tenant, mock.ANY,
-                                     transport_key_id=None)
+        mock_store_secret.assert_called_once_with(
+            'plain text',
+            'text/plain', None,
+            self.secret.to_dict_fields(),
+            self.secret,
+            self.tenant,
+            mock.ANY,
+            transport_key_id=None
+        )
 
     @mock.patch('barbican.plugin.resources.store_secret')
     def test_should_put_secret_as_plain_with_tkey_id(self, mock_store_secret):
@@ -1159,11 +1180,15 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.assertEqual(resp.status_int, 204)
 
-        mock_store_secret\
-            .assert_called_once_with('plain text', 'text/plain', None,
-                                     self.secret.to_dict_fields(),
-                                     self.secret, self.tenant, mock.ANY,
-                                     transport_key_id=self.transport_key_id)
+        mock_store_secret.assert_called_once_with(
+            'plain text',
+            'text/plain', None,
+            self.secret.to_dict_fields(),
+            self.secret,
+            self.tenant,
+            mock.ANY,
+            transport_key_id=self.transport_key_id
+        )
 
     @mock.patch('barbican.plugin.resources.store_secret')
     def test_should_put_secret_as_binary(self, mock_store_secret):
@@ -1180,12 +1205,16 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.assertEqual(resp.status_int, 204)
 
-        mock_store_secret\
-            .assert_called_once_with('plain text', 'application/octet-stream',
-                                     None,
-                                     self.secret.to_dict_fields(),
-                                     self.secret, self.tenant, mock.ANY,
-                                     transport_key_id=None)
+        mock_store_secret.assert_called_once_with(
+            'plain text',
+            'application/octet-stream',
+            None,
+            self.secret.to_dict_fields(),
+            self.secret,
+            self.tenant,
+            mock.ANY,
+            transport_key_id=None
+        )
 
     @mock.patch('barbican.plugin.resources.store_secret')
     def test_should_put_secret_as_binary_with_tkey_id(self, mock_store_secret):
@@ -1203,12 +1232,16 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.assertEqual(resp.status_int, 204)
 
-        mock_store_secret\
-            .assert_called_once_with('plain text', 'application/octet-stream',
-                                     None,
-                                     self.secret.to_dict_fields(),
-                                     self.secret, self.tenant, mock.ANY,
-                                     transport_key_id=self.transport_key_id)
+        mock_store_secret.assert_called_once_with(
+            'plain text',
+            'application/octet-stream',
+            None,
+            self.secret.to_dict_fields(),
+            self.secret,
+            self.tenant,
+            mock.ANY,
+            transport_key_id=self.transport_key_id
+        )
 
     @mock.patch('barbican.plugin.resources.store_secret')
     def test_should_put_encoded_secret_as_binary(self, mock_store_secret):
@@ -1226,11 +1259,15 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.assertEqual(resp.status_int, 204)
 
-        mock_store_secret\
-            .assert_called_once_with(payload, 'application/octet-stream',
-                                     'base64', self.secret.to_dict_fields(),
-                                     self.secret, self.tenant, mock.ANY,
-                                     transport_key_id=None)
+        mock_store_secret.assert_called_once_with(
+            payload,
+            'application/octet-stream',
+            'base64', self.secret.to_dict_fields(),
+            self.secret,
+            self.tenant,
+            mock.ANY,
+            transport_key_id=None
+        )
 
     def test_should_raise_to_put_secret_with_unsupported_encoding(self):
         self.secret.encrypted_data = []
@@ -1329,8 +1366,9 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             '/secrets/{0}/'.format(self.secret.id)
         )
 
-        mock_delete_secret\
-            .assert_called_once_with(self.secret, self.keystone_id, mock.ANY)
+        mock_delete_secret.assert_called_once_with(self.secret,
+                                                   self.keystone_id,
+                                                   mock.ANY)
 
     def test_should_throw_exception_for_delete_when_secret_not_found(self):
         self.secret_repo.get.return_value = None
@@ -1340,7 +1378,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             expect_errors=True
         )
         self.assertEqual(resp.status_int, 404)
-        #Error response should have json content type
+        # Error response should have json content type
         self.assertEqual(resp.content_type, "application/json")
 
 
@@ -1389,8 +1427,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         self.order_req = {
             'secret': {
                 'name': self.secret_name,
-                'payload_content_type':
-                self.secret_payload_content_type,
+                'payload_content_type': self.secret_payload_content_type,
                 'algorithm': self.secret_algorithm,
                 'bit_length': self.secret_bit_length,
                 'mode': self.secret_mode
@@ -1404,9 +1441,8 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         )
         self.assertEqual(resp.status_int, 202)
 
-        self.queue_resource.process_order \
-            .assert_called_once_with(order_id=None,
-                                     keystone_id=self.tenant_keystone_id)
+        self.queue_resource.process_order.assert_called_once_with(
+            order_id=None, keystone_id=self.tenant_keystone_id)
 
         args, kwargs = self.order_repo.create_from.call_args
         order = args[0]
@@ -1434,8 +1470,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         self.unsupported_req = {
             'secret': {
                 'name': self.secret_name,
-                'payload_content_type':
-                self.secret_payload_content_type,
+                'payload_content_type': self.secret_payload_content_type,
                 'algorithm': "not supported",
                 'bit_length': self.secret_bit_length,
                 'mode': self.secret_mode
@@ -1517,11 +1552,12 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
     def test_should_get_list_orders(self):
         resp = self.app.get('/orders/', self.params)
 
-        self.order_repo.get_by_create_date \
-            .assert_called_once_with(self.keystone_id,
-                                     offset_arg=u'{0}'.format(self.offset),
-                                     limit_arg=u'{0}'.format(self.limit),
-                                     suppress_exception=True)
+        self.order_repo.get_by_create_date.assert_called_once_with(
+            self.keystone_id,
+            offset_arg=u'{0}'.format(self.offset),
+            limit_arg=u'{0}'.format(self.limit),
+            suppress_exception=True
+        )
 
         self.assertTrue('previous' in resp.namespace)
         self.assertTrue('next' in resp.namespace)
@@ -1549,11 +1585,12 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
 
         resp = self.app.get('/orders/', self.params)
 
-        self.order_repo.get_by_create_date \
-            .assert_called_once_with(self.keystone_id,
-                                     offset_arg=u'{0}'.format(self.offset),
-                                     limit_arg=u'{0}'.format(self.limit),
-                                     suppress_exception=True)
+        self.order_repo.get_by_create_date.assert_called_once_with(
+            self.keystone_id,
+            offset_arg=u'{0}'.format(self.offset),
+            limit_arg=u'{0}'.format(self.limit),
+            suppress_exception=True
+        )
 
         self.assertFalse('previous' in resp.namespace)
         self.assertFalse('next' in resp.namespace)
@@ -1603,16 +1640,15 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
     def test_should_get_order(self):
         self.app.get('/orders/{0}/'.format(self.order.id))
 
-        self.order_repo.get \
-            .assert_called_once_with(entity_id=self.order.id,
-                                     keystone_id=self.tenant_keystone_id,
-                                     suppress_exception=True)
+        self.order_repo.get.assert_called_once_with(
+            entity_id=self.order.id,
+            keystone_id=self.tenant_keystone_id,
+            suppress_exception=True)
 
     def test_should_delete_order(self):
         self.app.delete('/orders/{0}/'.format(self.order.id))
-        self.order_repo.delete_entity_by_id \
-            .assert_called_once_with(entity_id=self.order.id,
-                                     keystone_id=self.tenant_keystone_id)
+        self.order_repo.delete_entity_by_id.assert_called_once_with(
+            entity_id=self.order.id, keystone_id=self.tenant_keystone_id)
 
     def test_should_throw_exception_for_get_when_order_not_found(self):
         self.order_repo.get.return_value = None
@@ -1630,7 +1666,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
             expect_errors=True
         )
         self.assertEqual(resp.status_int, 404)
-        #Error response should have json content type
+        # Error response should have json content type
         self.assertEqual(resp.content_type, "application/json")
 
 
@@ -1687,9 +1723,8 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         )
         self.assertEqual(resp.status_int, 202)
 
-        self.queue_resource.process_type_order \
-            .assert_called_once_with(order_id=None,
-                                     keystone_id=self.tenant_keystone_id)
+        self.queue_resource.process_type_order.assert_called_once_with(
+            order_id=None, keystone_id=self.tenant_keystone_id)
 
         args, kwargs = self.order_repo.create_from.call_args
         order = args[0]
@@ -1940,19 +1975,18 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
             self.container.id
         ))
 
-        self.container_repo.get \
-            .assert_called_once_with(entity_id=self.container.id,
-                                     keystone_id=self.tenant_keystone_id,
-                                     suppress_exception=True)
+        self.container_repo.get.assert_called_once_with(
+            entity_id=self.container.id,
+            keystone_id=self.tenant_keystone_id,
+            suppress_exception=True)
 
     def test_should_delete_container(self):
         self.app.delete('/containers/{0}/'.format(
             self.container.id
         ))
 
-        self.container_repo.delete_entity_by_id \
-            .assert_called_once_with(entity_id=self.container.id,
-                                     keystone_id=self.tenant_keystone_id)
+        self.container_repo.delete_entity_by_id.assert_called_once_with(
+            entity_id=self.container.id, keystone_id=self.tenant_keystone_id)
 
     def test_should_throw_exception_for_get_when_container_not_found(self):
         self.container_repo.get.return_value = None
@@ -1969,7 +2003,7 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
             self.container.id
         ), expect_errors=True)
         self.assertEqual(resp.status_int, 404)
-        #Error response should have json content type
+        # Error response should have json content type
         self.assertEqual(resp.content_type, "application/json")
 
 
@@ -2127,17 +2161,20 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         self.secret_repo = mock.MagicMock()
 
     def test_should_get_consumer(self):
-        self.consumer_repo.get_by_container_id.return_value = \
-            ([self.consumer], 0, 0, 1)
+        ret_val = ([self.consumer], 0, 0, 1)
+        self.consumer_repo.get_by_container_id.return_value = ret_val
+
         resp = self.app.get('/containers/{0}/consumers/'.format(
             self.container.id
         ))
         self.assertEqual(resp.status_int, 200)
 
-        self.consumer_repo.get_by_container_id \
-            .assert_called_once_with(self.container.id,
-                                     limit_arg=None, offset_arg=0,
-                                     suppress_exception=True)
+        self.consumer_repo.get_by_container_id.assert_called_once_with(
+            self.container.id,
+            limit_arg=None,
+            offset_arg=0,
+            suppress_exception=True
+        )
 
         self.assertEqual(self.consumer.name, resp.json['consumers'][0]['name'])
         self.assertEqual(self.consumer.URL, resp.json['consumers'][0]['URL'])
@@ -2165,8 +2202,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         self.assertEqual(resp.status_int, 404)
 
     def test_should_get_no_consumers(self):
-        self.consumer_repo.get_by_container_id.return_value = \
-            ([], 0, 0, 0)
+        self.consumer_repo.get_by_container_id.return_value = ([], 0, 0, 0)
         resp = self.app.get('/containers/{0}/consumers/'.format(
             self.container.id
         ))
@@ -2177,9 +2213,8 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
             self.container.id
         ), self.consumer_ref)
 
-        self.consumer_repo.delete_entity_by_id \
-            .assert_called_once_with(self.consumer.id,
-                                     self.tenant_keystone_id)
+        self.consumer_repo.delete_entity_by_id.assert_called_once_with(
+            self.consumer.id, self.tenant_keystone_id)
 
     def test_should_fail_deleting_consumer_bad_json(self):
         resp = self.app.delete(
@@ -2197,7 +2232,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         ), self.consumer_ref, expect_errors=True)
         self.consumer_repo.get_by_values.return_value = old_return
         self.assertEqual(resp.status_int, 404)
-        #Error response should have json content type
+        # Error response should have json content type
         self.assertEqual(resp.content_type, "application/json")
 
     def test_should_404_on_delete_when_consumer_not_found_later(self):
@@ -2207,7 +2242,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         ), self.consumer_ref, expect_errors=True)
         self.consumer_repo.delete_entity_by_id.side_effect = None
         self.assertEqual(resp.status_int, 404)
-        #Error response should have json content type
+        # Error response should have json content type
         self.assertEqual(resp.content_type, "application/json")
 
 
@@ -2262,11 +2297,12 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
             self.params
         )
 
-        self.container_repo.get_by_create_date \
-            .assert_called_once_with(self.keystone_id,
-                                     offset_arg=u'{0}'.format(self.offset),
-                                     limit_arg=u'{0}'.format(self.limit),
-                                     suppress_exception=True)
+        self.container_repo.get_by_create_date.assert_called_once_with(
+            self.keystone_id,
+            offset_arg=u'{0}'.format(self.offset),
+            limit_arg=u'{0}'.format(self.limit),
+            suppress_exception=True
+        )
 
         self.assertTrue('previous' in resp.namespace)
         self.assertTrue('next' in resp.namespace)
@@ -2300,11 +2336,12 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
             self.params
         )
 
-        self.container_repo.get_by_create_date \
-            .assert_called_once_with(self.keystone_id,
-                                     offset_arg=u'{0}'.format(self.offset),
-                                     limit_arg=u'{0}'.format(self.limit),
-                                     suppress_exception=True)
+        self.container_repo.get_by_create_date.assert_called_once_with(
+            self.keystone_id,
+            offset_arg=u'{0}'.format(self.offset),
+            limit_arg=u'{0}'.format(self.limit),
+            suppress_exception=True
+        )
 
         self.assertFalse('previous' in resp.namespace)
         self.assertFalse('next' in resp.namespace)
@@ -2313,7 +2350,6 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
         if limit_arg:
             offset = int(offset_arg)
             limit = int(limit_arg)
-            return '/containers' \
-                   '?limit={0}&offset={1}'.format(limit, offset)
+            return '/containers?limit={0}&offset={1}'.format(limit, offset)
         else:
             return '/containers'

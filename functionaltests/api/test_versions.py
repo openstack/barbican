@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import json
+
 import testtools
 
 from functionaltests.api import base
@@ -22,8 +23,7 @@ class VersionDiscoveryTestCase(base.TestCase):
 
     @testtools.skipIf(True, 'Skip until blueprint fix-version-api is complete')
     def test_get_root_discovers_v1(self):
-        """Covers retrieving version data for Barbican.
-        """
+        """Covers retrieving version data for Barbican."""
         resp, body = self.client.get(' ')
         body = json.loads(body)
 

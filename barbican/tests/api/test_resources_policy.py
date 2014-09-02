@@ -21,10 +21,9 @@ For typical-flow business logic tests of these classes, see the
 
 import os
 
-import testtools
-
 import mock
 from oslo.config import cfg
+import testtools
 from webob import exc
 
 from barbican.api.controllers import consumers
