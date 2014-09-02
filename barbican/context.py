@@ -21,7 +21,9 @@ from barbican.openstack.common import policy
 
 
 class RequestContext(object):
-    """Stores information about the security context under which the user
+    """User security context object
+
+    Stores information about the security context under which the user
     accesses the system, as well as additional request information.
     """
 
@@ -44,8 +46,7 @@ class RequestContext(object):
         self.is_admin = is_admin
         # TODO(jwood): Is this needed?
         #        if not self.is_admin:
-        #            self.is_admin = \
-        #                self.policy_enforcer.check_is_admin(self)
+        #            self.is_admin = self.policy_enforcer.check_is_admin(self)
 
         if not hasattr(local.store, 'context'):
             self.update_store()
@@ -56,11 +57,11 @@ class RequestContext(object):
         return {
             'request_id': self.request_id,
 
-            #NOTE(bcwaldon): openstack-common logging expects 'user'
+            # NOTE(bcwaldon): openstack-common logging expects 'user'
             'user': self.user,
             'user_id': self.user,
 
-            #NOTE(bcwaldon): openstack-common logging expects 'tenant'
+            # NOTE(bcwaldon): openstack-common logging expects 'tenant'
             'tenant': self.tenant,
             'tenant_id': self.tenant,
             'project_id': self.tenant,

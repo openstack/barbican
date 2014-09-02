@@ -26,7 +26,6 @@ import time
 import uuid
 
 from oslo.config import cfg
-
 import sqlalchemy
 from sqlalchemy import or_
 import sqlalchemy.orm as sa_orm
@@ -82,7 +81,9 @@ def setup_db_env():
 
 
 def configure_db():
-    """Establish the database, create an engine if needed, and
+    """Wrapper method for setting up and configuring the database
+
+    Establishes the database, create an engine if needed, and
     register the models.
     """
     setup_db_env()
@@ -103,14 +104,15 @@ def get_session(autocommit=True, expire_on_commit=False):
 def get_engine():
     """Return a SQLAlchemy engine."""
     """May assign _ENGINE if not already assigned"""
-    global _ENGINE, sa_logger, _CONNECTION, _IDLE_TIMEOUT, _MAX_RETRIES, \
-        _RETRY_INTERVAL
+    global _ENGINE, sa_logger, _CONNECTION, _IDLE_TIMEOUT, _MAX_RETRIES
+    global _RETRY_INTERVAL
 
     if not _ENGINE:
         if not _CONNECTION:
             raise exception.BarbicanException('No _CONNECTION configured')
 
-    #TODO(jfwood) connection_dict = sqlalchemy.engine.url.make_url(_CONNECTION)
+    # TODO(jfwood):
+    # connection_dict = sqlalchemy.engine.url.make_url(_CONNECTION)
 
         engine_args = {
             'pool_recycle': _IDLE_TIMEOUT,
@@ -121,9 +123,9 @@ def get_engine():
             LOG.debug("Sql connection: %s; Args: %s", _CONNECTION, engine_args)
             _ENGINE = sqlalchemy.create_engine(_CONNECTION, **engine_args)
 
-        #TODO(jfwood): if 'mysql' in connection_dict.drivername:
-        #TODO(jfwood): sqlalchemy.event.listen(_ENGINE, 'checkout',
-        #TODO(jfwood):                         ping_listener)
+        # TODO(jfwood): if 'mysql' in connection_dict.drivername:
+        # TODO(jfwood): sqlalchemy.event.listen(_ENGINE, 'checkout',
+        # TODO(jfwood):                         ping_listener)
 
             _ENGINE.connect = wrap_db_error(_ENGINE.connect)
             _ENGINE.connect()
@@ -399,8 +401,7 @@ class BaseRepo(object):
         return "Entity"
 
     def _do_create_instance(self):
-        """Sub-class hook: return new entity instance (in Python, not in db).
-        """
+        """Sub-class hook: return new entity (in Python, not in db)."""
         return None
 
     def _do_build_get_query(self, entity_id, keystone_id, session):
@@ -408,8 +409,9 @@ class BaseRepo(object):
         return None
 
     def _do_convert_values(self, values):
-        """Sub-class hook: convert text-based values to target types for the
-        database.
+        """Sub-class hook: convert text-based values to target types
+
+        This is specifically for database values.
         """
         pass
 
@@ -423,7 +425,7 @@ class BaseRepo(object):
         """
         status = values.get('status', None)
         if not status:
-            #TODO(jfwood): I18n this!
+            # TODO(jfwood): I18n this!
             msg = "{0} status is required.".format(self._do_entity_name())
             raise exception.Invalid(msg)
 
@@ -503,8 +505,8 @@ class TenantRepo(BaseRepo):
         session = self.get_session(session)
 
         try:
-            query = session.query(models.Tenant).filter_by(keystone_id=
-                                                           keystone_id)
+            query = session.query(models.Tenant)
+            query = query.filter_by(keystone_id=keystone_id)
 
             entity = query.one()
 
@@ -525,7 +527,9 @@ class SecretRepo(BaseRepo):
     def get_by_create_date(self, keystone_id, offset_arg=None, limit_arg=None,
                            name=None, alg=None, mode=None, bits=0,
                            suppress_exception=False, session=None):
-        """Returns a list of secrets, ordered by the date they were created at
+        """Returns a list of secrets
+
+        The returned secrets are ordered by the date they were created at
         and paged based on the offset and limit fields. The keystone_id is
         external-to-Barbican value assigned to the tenant by Keystone.
         """
@@ -536,9 +540,9 @@ class SecretRepo(BaseRepo):
         utcnow = timeutils.utcnow()
 
         try:
-            query = session.query(models.Secret) \
-                           .order_by(models.Secret.created_at) \
-                           .filter_by(deleted=False)
+            query = session.query(models.Secret)
+            query = query.order_by(models.Secret.created_at)
+            query = query.filter_by(deleted=False)
 
             # Note: Must use '== None' below, not 'is None'.
             query = query.filter(or_(models.Secret.expiration == None,
@@ -554,9 +558,9 @@ class SecretRepo(BaseRepo):
                 query = query.filter(models.Secret.bit_length == bits)
 
             query = query.join(models.TenantSecret,
-                               models.Secret.tenant_assocs) \
-                         .join(models.Tenant, models.TenantSecret.tenants) \
-                         .filter(models.Tenant.keystone_id == keystone_id)
+                               models.Secret.tenant_assocs)
+            query = query.join(models.Tenant, models.TenantSecret.tenants)
+            query = query.filter(models.Tenant.keystone_id == keystone_id)
 
             start = offset
             end = offset + limit
@@ -589,13 +593,17 @@ class SecretRepo(BaseRepo):
 
         # Note: Must use '== None' below, not 'is None'.
         # TODO(jfwood): Performance? Is the many-to-many join needed?
-        return session.query(models.Secret).filter_by(id=entity_id) \
-                      .filter_by(deleted=False) \
-                      .filter(or_(models.Secret.expiration == None,
-                                  models.Secret.expiration > utcnow)) \
-                      .join(models.TenantSecret, models.Secret.tenant_assocs)\
-                      .join(models.Tenant, models.TenantSecret.tenants) \
-                      .filter(models.Tenant.keystone_id == keystone_id)
+        expiration_filter = or_(models.Secret.expiration == None,
+                                models.Secret.expiration > utcnow)
+
+        query = session.query(models.Secret)
+        query = query.filter_by(id=entity_id, deleted=False)
+        query = query.filter(expiration_filter)
+        query = query.join(models.TenantSecret, models.Secret.tenant_assocs)
+        query = query.join(models.Tenant, models.TenantSecret.tenants)
+        query = query.filter(models.Tenant.keystone_id == keystone_id)
+
+        return query
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
@@ -603,8 +611,9 @@ class SecretRepo(BaseRepo):
 
 
 class EncryptedDatumRepo(BaseRepo):
-    """Repository for the EncryptedDatum entity (that stores encrypted
-    information on behalf of a Secret).
+    """Repository for the EncryptedDatum entity
+
+    Stores encrypted information on behalf of a Secret.
     """
 
     def _do_entity_name(self):
@@ -624,8 +633,9 @@ class EncryptedDatumRepo(BaseRepo):
 
 
 class SecretStoreMetadatumRepo(BaseRepo):
-    """Repository for the SecretStoreMetadatum entity (that stores key/value
-    information on behalf of a Secret).
+    """Repository for the SecretStoreMetadatum entity
+
+    Stores key/value information on behalf of a Secret.
     """
 
     def save(self, metadata, secret_model):
@@ -651,8 +661,8 @@ class SecretStoreMetadatumRepo(BaseRepo):
 
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
-        return session.query(models.SecretStoreMetadatum).\
-            filter_by(id=entity_id)
+        query = session.query(models.SecretStoreMetadatum)
+        return query.filter_by(id=entity_id)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
@@ -660,8 +670,10 @@ class SecretStoreMetadatumRepo(BaseRepo):
 
 
 class KEKDatumRepo(BaseRepo):
-    """Repository for the KEKDatum entity (that stores key encryption key (KEK)
-    metadata used by crypto plugins to encrypt/decrypt secrets).
+    """Repository for the KEKDatum entity
+
+    Stores key encryption key (KEK) metadata used by crypto plugins to
+    encrypt/decrypt secrets.
     """
 
     def find_or_create_kek_datum(self, tenant,
@@ -680,11 +692,11 @@ class KEKDatumRepo(BaseRepo):
 
         # TODO(jfwood): Reverse this...attempt insert first, then get on fail.
         try:
-            query = session.query(models.KEKDatum) \
-                           .filter_by(tenant_id=tenant.id) \
-                           .filter_by(plugin_name=plugin_name) \
-                           .filter_by(active=True) \
-                           .filter_by(deleted=False)
+            query = session.query(models.KEKDatum)
+            query = query.filter_by(tenant_id=tenant.id,
+                                    plugin_name=plugin_name,
+                                    active=True,
+                                    deleted=False)
 
             kek_datum = query.one()
 
@@ -742,8 +754,10 @@ class OrderRepo(BaseRepo):
 
     def get_by_create_date(self, keystone_id, offset_arg=None, limit_arg=None,
                            suppress_exception=False, session=None):
-        """Returns a list of orders, ordered by the date they were created at
-        and paged based on the offset and limit fields.
+        """Returns a list of orders
+
+        The list is ordered by the date they were created at and paged
+        based on the offset and limit fields.
 
         :param keystone_id: The keystone id for the tenant.
         :param offset_arg: The entity number where the query result should
@@ -761,11 +775,11 @@ class OrderRepo(BaseRepo):
         session = self.get_session(session)
 
         try:
-            query = session.query(models.Order) \
-                           .order_by(models.Order.created_at)
-            query = query.filter_by(deleted=False) \
-                         .join(models.Tenant, models.Order.tenant) \
-                         .filter(models.Tenant.keystone_id == keystone_id)
+            query = session.query(models.Order)
+            query = query.order_by(models.Order.created_at)
+            query = query.filter_by(deleted=False)
+            query = query.join(models.Tenant, models.Order.tenant)
+            query = query.filter(models.Tenant.keystone_id == keystone_id)
 
             start = offset
             end = offset + limit
@@ -794,10 +808,11 @@ class OrderRepo(BaseRepo):
 
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
-        return session.query(models.Order).filter_by(id=entity_id) \
-                      .filter_by(deleted=False) \
-                      .join(models.Tenant, models.Order.tenant) \
-                      .filter(models.Tenant.keystone_id == keystone_id)
+        query = session.query(models.Order)
+        query = query.filter_by(id=entity_id, deleted=False)
+        query = query.join(models.Tenant, models.Order.tenant)
+        query = query.filter(models.Tenant.keystone_id == keystone_id)
+        return query
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
@@ -805,8 +820,9 @@ class OrderRepo(BaseRepo):
 
 
 class OrderPluginMetadatumRepo(BaseRepo):
-    """Repository for the OrderPluginMetadatum entity (that stores key/value
-    plugin information on behalf of a Order).
+    """Repository for the OrderPluginMetadatum entity
+
+    Stores key/value plugin information on behalf of a Order.
     """
 
     def save(self, metadata, order_model):
@@ -845,10 +861,11 @@ class ContainerRepo(BaseRepo):
 
     def get_by_create_date(self, keystone_id, offset_arg=None, limit_arg=None,
                            suppress_exception=False, session=None):
-        """Returns a list of containers, ordered by the date they were
-        created at and paged based on the offset and limit fields. The
-        keystone_id is external-to-Barbican value assigned to the tenant
-        by Keystone.
+        """Returns a list of containers
+
+        The list is ordered by the date they were created at and paged
+        based on the offset and limit fields. The keystone_id is
+        external-to-Barbican value assigned to the tenant by Keystone.
         """
 
         offset, limit = clean_paging_values(offset_arg, limit_arg)
@@ -856,11 +873,11 @@ class ContainerRepo(BaseRepo):
         session = self.get_session(session)
 
         try:
-            query = session.query(models.Container) \
-                           .order_by(models.Container.created_at)
-            query = query.filter_by(deleted=False) \
-                         .join(models.Tenant, models.Container.tenant) \
-                         .filter(models.Tenant.keystone_id == keystone_id)
+            query = session.query(models.Container)
+            query = query.order_by(models.Container.created_at)
+            query = query.filter_by(deleted=False)
+            query = query.join(models.Tenant, models.Container.tenant)
+            query = query.filter(models.Tenant.keystone_id == keystone_id)
 
             start = offset
             end = offset + limit
@@ -889,10 +906,11 @@ class ContainerRepo(BaseRepo):
 
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
-        return session.query(models.Container).filter_by(id=entity_id)\
-            .filter_by(deleted=False)\
-            .join(models.Tenant, models.Container.tenant)\
-            .filter(models.Tenant.keystone_id == keystone_id)
+        query = session.query(models.Container)
+        query = query.filter_by(id=entity_id, deleted=False)
+        query = query.join(models.Tenant, models.Container.tenant)
+        query = query.filter(models.Tenant.keystone_id == keystone_id)
+        return query
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
@@ -905,10 +923,11 @@ class ContainerConsumerRepo(BaseRepo):
     def get_by_container_id(self, container_id,
                             offset_arg=None, limit_arg=None,
                             suppress_exception=False, session=None):
-        """Returns a list of Consumers, ordered by the date they were
-        created at and paged based on the offset and limit fields. The
-        keystone_id is external-to-Barbican value assigned to the tenant
-        by Keystone.
+        """Returns a list of Consumers
+
+        The list is ordered by the date they were created at and paged
+        based on the offset and limit fields. The keystone_id is
+        external-to-Barbican value assigned to the tenant by Keystone.
         """
 
         offset, limit = clean_paging_values(offset_arg, limit_arg)
@@ -916,11 +935,13 @@ class ContainerConsumerRepo(BaseRepo):
         session = self.get_session(session)
 
         try:
-            query = session.query(models.ContainerConsumerMetadatum) \
-                           .order_by(models.ContainerConsumerMetadatum.name)
-            query = query.filter_by(deleted=False) \
-                         .filter(models.ContainerConsumerMetadatum.container_id
-                                 == container_id)
+            query = session.query(models.ContainerConsumerMetadatum)
+            query = query.order_by(models.ContainerConsumerMetadatum.name)
+            query = query.filter_by(deleted=False)
+            query = query.filter(
+                models.ContainerConsumerMetadatum.container_id == container_id
+            )
+
             start = offset
             end = offset + limit
             LOG.debug('Retrieving from %s to %s', start, end)
@@ -944,9 +965,12 @@ class ContainerConsumerRepo(BaseRepo):
         session = self.get_session(session)
 
         try:
-            query = session.query(models.ContainerConsumerMetadatum) \
-                .filter_by(container_id=container_id) \
-                .filter_by(name=name).filter_by(URL=URL)
+            query = session.query(models.ContainerConsumerMetadatum)
+            query = query.filter_by(
+                container_id=container_id,
+                name=name,
+                URL=URL)
+
             if not show_deleted:
                 query.filter_by(deleted=False)
             consumer = query.one()
@@ -964,17 +988,17 @@ class ContainerConsumerRepo(BaseRepo):
         try:
             super(ContainerConsumerRepo, self).create_from(new_consumer)
         except exception.Duplicate:
-            #This operation is idempotent, so log this and move on
+            # This operation is idempotent, so log this and move on
             LOG.debug("Consumer %s already exists for container %s,"
                       " continuing...", (new_consumer.name, new_consumer.URL),
                       new_consumer.container_id)
-            #Get the existing entry and reuse it by clearing the deleted flags
+            # Get the existing entry and reuse it by clearing the deleted flags
             existing_consumer = self.get_by_values(
                 new_consumer.container_id, new_consumer.name, new_consumer.URL,
                 show_deleted=True)
             existing_consumer.deleted = False
             existing_consumer.deleted_at = None
-            #We are not concerned about timing here -- set only, no reads
+            # We are not concerned about timing here -- set only, no reads
             existing_consumer.save()
 
     def _do_entity_name(self):
@@ -986,8 +1010,8 @@ class ContainerConsumerRepo(BaseRepo):
 
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
-        return session.query(models.ContainerConsumerMetadatum) \
-            .filter_by(id=entity_id).filter_by(deleted=False)
+        query = session.query(models.ContainerConsumerMetadatum)
+        return query.filter_by(id=entity_id, deleted=False)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
@@ -995,8 +1019,10 @@ class ContainerConsumerRepo(BaseRepo):
 
 
 class TransportKeyRepo(BaseRepo):
-    """Repository for the TransportKey entity (that stores transport keys
-    for wrapping the secret data to/from a barbican client).
+    """Repository for the TransportKey entity
+
+    Stores transport keys for wrapping the secret data to/from a
+    barbican client.
     """
 
     def _do_entity_name(self):
@@ -1009,8 +1035,10 @@ class TransportKeyRepo(BaseRepo):
     def get_by_create_date(self, plugin_name=None,
                            offset_arg=None, limit_arg=None,
                            suppress_exception=False, session=None):
-        """Returns a list of transport keys, ordered from latest created first.
-        The search accepts plugin_id as an optional parameter for the search.
+        """Returns a list of transport keys
+
+        The list is ordered from latest created first. The search accepts
+        plugin_id as an optional parameter for the search.
         """
 
         offset, limit = clean_paging_values(offset_arg, limit_arg)
@@ -1018,11 +1046,11 @@ class TransportKeyRepo(BaseRepo):
         session = self.get_session(session)
 
         try:
-            query = session.query(models.TransportKey) \
-                           .order_by(models.TransportKey.created_at)
+            query = session.query(models.TransportKey)
+            query = query.order_by(models.TransportKey.created_at)
             if plugin_name is not None:
-                query = session.query(models.TransportKey).\
-                    filter_by(deleted=False, plugin_name=plugin_name)
+                query = session.query(models.TransportKey)
+                query = query.filter_by(deleted=False, plugin_name=plugin_name)
             else:
                 query = query.filter_by(deleted=False)
 
@@ -1045,8 +1073,7 @@ class TransportKeyRepo(BaseRepo):
 
     def get_latest_transport_key(self, plugin_name, suppress_exception=False,
                                  session=None):
-        """Returns the latest transport key for a given plugin
-        """
+        """Returns the latest transport key for a given plugin."""
         entity, offset, limit, total = self.get_by_create_date(
             plugin_name, offset_arg=0, limit_arg=1,
             suppress_exception=suppress_exception, session=session)
