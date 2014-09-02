@@ -15,8 +15,9 @@
 import json
 import re
 
-from functionaltests.api import base
 from tempest import exceptions
+
+from functionaltests.api import base
 
 create_secret_data = {
     "name": "AES key",
@@ -48,8 +49,10 @@ class ContainersTestCase(base.TestCase):
     def _create_a_secret(self):
         secret_json_data = json.dumps(create_secret_data)
         resp, body = self.client.post(
-            '/secrets', secret_json_data, headers={
-            'content-type': 'application/json'})
+            '/secrets',
+            secret_json_data,
+            headers={'content-type': 'application/json'}
+        )
         self.assertEqual(resp.status, 201)
 
         returned_data = json.loads(body)
@@ -113,15 +116,19 @@ class ContainersTestCase(base.TestCase):
         self.secret_id_2 = secret_ref_2.split('/')[-1]
 
     def test_create_container(self):
-        """Covers container creation.  All of the data needed to
-        create the container is provided in a single POST.
+        """Covers container creation.
+
+        All of the data needed to create the container is provided in a
+        single POST.
         """
         container_ref = self._create_a_container()
         self.assertIsNotNone(container_ref)
 
     def test_delete_container(self):
-        """Covers container deletion.  A container is first created, and then
-        the container is deleted and verified to no longer exist.
+        """Covers container deletion.
+
+        A container is first created, and then the container is deleted
+        and verified to no longer exist.
         """
         # Create the container
         container_ref = self._create_a_container()
@@ -142,8 +149,9 @@ class ContainersTestCase(base.TestCase):
         self._get_a_secret(self.secret_id_2)
 
     def test_get_container(self):
-        """Covers container retrieval.  A container is first created, and then
-        the container is retrieved.
+        """Covers container retrieval.
+
+        A container is first created, and then the container is retrieved.
         """
         # Create a container
         container_ref = self._create_a_container()
@@ -153,7 +161,9 @@ class ContainersTestCase(base.TestCase):
         self._get_a_container(container_id)
 
     def test_list_containers(self):
-        """Covers listing containers.  A container is first created, and then
+        """Covers listing containers.
+
+        A container is first created, and then
         we check the container list to make sure it has a non-zero total and
         has a `containers` element.
         """
@@ -166,7 +176,9 @@ class ContainersTestCase(base.TestCase):
         self.assertIsNotNone(list_data.get('containers'))
 
     def test_containers_secret_refs_correctly_formatted(self):
-        """Create a container (so we are guaranteed to have at least one), then
+        """Correctly formated secret refs in a container
+
+        Create a container (so we are guaranteed to have at least one), then
         retrieve that container and check the secret_ref formatting to make
         sure "secret_ref" attributes contain proper HATEOAS URIs. Then do a
         container list and verify the same for each container in the list.

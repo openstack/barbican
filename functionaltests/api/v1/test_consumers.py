@@ -68,16 +68,20 @@ class ConsumersTestCase(base.TestCase):
         # Set up two secrets
         secret_json_data = json.dumps(create_secret_data)
         resp, body = self.client.post(
-            '/secrets', secret_json_data, headers={
-            'content-type': 'application/json'})
+            '/secrets',
+            secret_json_data,
+            headers={'content-type': 'application/json'}
+        )
         self.assertEqual(resp.status, 201)
 
         returned_data = json.loads(body)
         secret_ref_1 = returned_data['secret_ref']
         self.assertIsNotNone(secret_ref_1)
         resp, body = self.client.post(
-            '/secrets', secret_json_data, headers={
-            'content-type': 'application/json'})
+            '/secrets',
+            secret_json_data,
+            headers={'content-type': 'application/json'}
+        )
         self.assertEqual(resp.status, 201)
 
         returned_data = json.loads(body)
@@ -99,8 +103,10 @@ class ConsumersTestCase(base.TestCase):
         self.container_id = container_ref.split('/')[-1]
 
     def test_create_consumer(self):
-        """Covers consumer creation.  All of the data needed to
-        create the consumer is provided in a single POST.
+        """Covers consumer creation.
+
+        All of the data needed to create the consumer is provided in a
+        single POST.
         """
         json_data = json.dumps(create_consumer_data)
         resp, body = self.client.post(
@@ -114,12 +120,14 @@ class ConsumersTestCase(base.TestCase):
         self.assertIn(create_consumer_data, consumer_data)
 
     def test_delete_consumer(self):
-        """Covers consumer deletion.  A consumer is first created, and then
-        the consumer is deleted and verified to no longer exist.
+        """Covers consumer deletion.
+
+        A consumer is first created, and then the consumer is deleted and
+        verified to no longer exist.
         """
         json_data = json.dumps(create_consumer_data_for_delete)
 
-        #Register the consumer once
+        # Register the consumer once
         resp, body = self.client.post(
             '/containers/{0}/consumers'.format(self.container_id),
             json_data, headers={'content-type': 'application/json'})
@@ -130,7 +138,7 @@ class ConsumersTestCase(base.TestCase):
         self.assertIsNotNone(consumer_data)
         self.assertIn(create_consumer_data_for_delete, consumer_data)
 
-        #Delete the consumer
+        # Delete the consumer
         resp, body = self.client.delete(
             '/containers/{0}/consumers'.format(self.container_id),
             body=json_data, headers={'content-type': 'application/json'})
@@ -142,12 +150,10 @@ class ConsumersTestCase(base.TestCase):
         self.assertNotIn(create_consumer_data_for_delete, consumer_data)
 
     def test_recreate_consumer(self):
-        """Covers consumer deletion.  A consumer is first created, and then
-        the consumer is deleted and verified to no longer exist.
-        """
+        """Covers consumer recreation."""
         json_data = json.dumps(create_consumer_data_for_recreate)
 
-        #Register the consumer once
+        # Register the consumer once
         resp, body = self.client.post(
             '/containers/{0}/consumers'.format(self.container_id),
             json_data, headers={'content-type': 'application/json'})
@@ -158,7 +164,7 @@ class ConsumersTestCase(base.TestCase):
         self.assertIsNotNone(consumer_data)
         self.assertIn(create_consumer_data_for_recreate, consumer_data)
 
-        #Delete the consumer
+        # Delete the consumer
         resp, body = self.client.delete(
             '/containers/{0}/consumers'.format(self.container_id),
             body=json_data, headers={'content-type': 'application/json'})
@@ -169,7 +175,7 @@ class ConsumersTestCase(base.TestCase):
         self.assertIsNotNone(consumer_data)
         self.assertNotIn(create_consumer_data_for_recreate, consumer_data)
 
-        #Register the consumer again
+        # Register the consumer again
         resp, body = self.client.post(
             '/containers/{0}/consumers'.format(self.container_id),
             json_data, headers={'content-type': 'application/json'})
@@ -181,12 +187,10 @@ class ConsumersTestCase(base.TestCase):
         self.assertIn(create_consumer_data_for_recreate, consumer_data)
 
     def test_create_consumer_is_idempotent(self):
-        """Covers consumer deletion.  A consumer is first created, and then
-        the consumer is deleted and verified to no longer exist.
-        """
+        """Covers checking that create consumer is idempotent."""
         json_data = json.dumps(create_consumer_data_for_idempotency)
 
-        #Register the consumer once
+        # Register the consumer once
         resp, body = self.client.post(
             '/containers/{0}/consumers'.format(self.container_id),
             json_data, headers={'content-type': 'application/json'})
@@ -197,7 +201,7 @@ class ConsumersTestCase(base.TestCase):
         self.assertIsNotNone(consumer_data)
         self.assertIn(create_consumer_data_for_idempotency, consumer_data)
 
-        #Register the consumer again, without deleting it first
+        # Register the consumer again, without deleting it first
         resp, body = self.client.post(
             '/containers/{0}/consumers'.format(self.container_id),
             json_data, headers={'content-type': 'application/json'})

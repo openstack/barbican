@@ -110,8 +110,8 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            transport_keys = controllers.transportkeys.\
-                TransportKeysController(self.repo)
+            transport_keys = controllers.transportkeys.TransportKeysController(
+                self.repo)
 
         return RootController()
 
@@ -146,11 +146,12 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
         resp = self.app.get('/transport_keys/',
                             self.params)
 
-        self.repo.get_by_create_date \
-            .assert_called_once_with(plugin_name=None,
-                                     offset_arg=u'{0}'.format(self.offset),
-                                     limit_arg=u'{0}'.format(self.limit),
-                                     suppress_exception=True)
+        self.repo.get_by_create_date.assert_called_once_with(
+            plugin_name=None,
+            offset_arg=u'{0}'.format(self.offset),
+            limit_arg=u'{0}'.format(self.limit),
+            suppress_exception=True
+        )
 
         self.assertTrue('previous' in resp.namespace)
         self.assertTrue('next' in resp.namespace)
@@ -180,11 +181,12 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
         resp = self.app.get('/transport_keys/',
                             self.params)
 
-        self.repo.get_by_create_date \
-            .assert_called_once_with(plugin_name=None,
-                                     offset_arg=u'{0}'.format(self.offset),
-                                     limit_arg=u'{0}'.format(self.limit),
-                                     suppress_exception=True)
+        self.repo.get_by_create_date.assert_called_once_with(
+            plugin_name=None,
+            offset_arg=u'{0}'.format(self.offset),
+            limit_arg=u'{0}'.format(self.limit),
+            suppress_exception=True
+        )
 
         self.assertFalse('previous' in resp.namespace)
         self.assertFalse('next' in resp.namespace)
@@ -212,8 +214,8 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            transport_keys = controllers.transportkeys.\
-                TransportKeysController(self.repo)
+            transport_keys = controllers.transportkeys.TransportKeysController(
+                self.repo)
 
         return RootController()
 
@@ -278,8 +280,8 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            transport_keys = controllers.transportkeys.\
-                TransportKeysController(self.repo)
+            transport_keys = controllers.transportkeys.TransportKeysController(
+                self.repo)
 
         return RootController()
 
@@ -311,9 +313,8 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
 
     def test_should_delete_transport_key(self):
         self.app.delete('/transport_keys/{0}/'.format(self.tkey.id))
-        self.repo.delete_entity_by_id \
-            .assert_called_once_with(entity_id=self.tkey.id,
-                                     keystone_id=self.tenant_keystone_id)
+        self.repo.delete_entity_by_id.assert_called_once_with(
+            entity_id=self.tkey.id, keystone_id=self.tenant_keystone_id)
 
     def test_should_throw_exception_for_delete_when_trans_key_not_found(self):
         self.repo.delete_entity_by_id.side_effect = excep.NotFound(

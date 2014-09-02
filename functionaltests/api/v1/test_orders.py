@@ -31,8 +31,10 @@ create_order_data = {
 class OrdersTestCase(base.TestCase):
 
     def test_create_order(self):
-        """Covers order creation.  All of the data needed to
-        create the order is provided in a single POST.
+        """Covers order creation.
+
+        All of the data needed to create the order is provided in a
+        single POST.
         """
         json_data = json.dumps(create_order_data)
         resp, body = self.client.post(
