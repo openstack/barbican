@@ -16,9 +16,8 @@
 """
 Barbican certificate processing plugins and support.
 """
-from requests import exceptions as request_exceptions
-
 from oslo.config import cfg
+from requests import exceptions as request_exceptions
 from symantecssl.core import Symantec
 from symantecssl import exceptions as symantec_exceptions
 
@@ -121,24 +120,24 @@ class SymantecCertificatePlugin(cert.CertificatePluginBase):
         raise NotImplementedError  # pragma: no cover
 
     def supports(self, certificate_spec):
-        """Returns a boolean indicating if the plugin supports the
-        certificate type.
+        """Indicates if the plugin supports the certificate type.
 
         :param certificate_spec: Contains details on the certificate to
                                  generate the certificate order
         :returns: boolean indicating if the plugin supports the certificate
                   type
         """
-        #TODO(chellygel): Research what certificate types are supported by
+        # TODO(chellygel): Research what certificate types are supported by
         # symantec. Returning True for testing purposes
         return True
 
 
 def _ca_create_order(self, order_meta, plugin_meta):
-    """Creates an order with the Symantec CA. The PartnerOrderId
-    and GeoTrustOrderId are returned and stored in plugin_meta.
-    PartnerCode and ProductCode are also stored in plugin_meta for
-    future use.
+    """Creates an order with the Symantec CA.
+
+    The PartnerOrderId and GeoTrustOrderId are returned and stored in
+    plugin_meta. PartnerCode and ProductCode are also stored in plugin_meta
+    for future use.
 
     All required order parameters must be stored as a dict in
     order_meta.

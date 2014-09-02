@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mock
 import os
 import tempfile
-import testtools
 
+import mock
 from requests import exceptions as request_exceptions
+import testtools
 
 try:
     import barbican.plugin.dogtag as dogtag_import
@@ -206,7 +206,7 @@ class WhenTestingDogtagCAPlugin(testtools.TestCase):
         self.order_id = mock.MagicMock()
         self.profile_id = mock.MagicMock()
 
-        #request generated
+        # request generated
         self.request = mock.MagicMock()
         self.request_id_mock = mock.MagicMock()
         self.request.request_id = self.request_id_mock
@@ -214,7 +214,7 @@ class WhenTestingDogtagCAPlugin(testtools.TestCase):
         self.cert_id_mock = mock.MagicMock()
         self.request.cert_id = self.cert_id_mock
 
-        #cert generated
+        # cert generated
         self.cert = mock.MagicMock()
         self.cert_encoded_mock = mock.MagicMock()
         self.cert.encoded = self.cert_encoded_mock
@@ -228,8 +228,8 @@ class WhenTestingDogtagCAPlugin(testtools.TestCase):
         self.modified_request = mock.MagicMock()
         self.modified_request_id_mock = mock.MagicMock()
         self.modified_request.request_id = self.modified_request_id_mock
-        self.modified_request.request_status = \
-            dogtag_cert.CertRequestStatus.COMPLETE
+        self.modified_request.request_status = (
+            dogtag_cert.CertRequestStatus.COMPLETE)
         self.modified_request.cert_id = self.cert_id_mock
 
     def tearDown(self):
@@ -409,8 +409,8 @@ class WhenTestingDogtagCAPlugin(testtools.TestCase):
         order_meta = {dogtag_import.DogtagCAPlugin.PROFILE_ID: self.profile_id}
         plugin_meta = {}
 
-        self.certclient_mock.enroll_cert.side_effect = \
-            pki.BadRequestException("bad request")
+        self.certclient_mock.enroll_cert.side_effect = (
+            pki.BadRequestException("bad request"))
 
         result_dto = self.plugin.issue_certificate_request(
             self.order_id, order_meta, plugin_meta)
@@ -427,8 +427,8 @@ class WhenTestingDogtagCAPlugin(testtools.TestCase):
         order_meta = {dogtag_import.DogtagCAPlugin.PROFILE_ID: self.profile_id}
         plugin_meta = {}
 
-        self.certclient_mock.enroll_cert.side_effect = \
-            pki.PKIException("generic enrollment error")
+        self.certclient_mock.enroll_cert.side_effect = (
+            pki.PKIException("generic enrollment error"))
 
         self.assertRaises(
             cm.CertificateGeneralException,
@@ -442,8 +442,8 @@ class WhenTestingDogtagCAPlugin(testtools.TestCase):
         order_meta = {dogtag_import.DogtagCAPlugin.PROFILE_ID: self.profile_id}
         plugin_meta = {}
 
-        self.certclient_mock.enroll_cert.side_effect = \
-            request_exceptions.RequestException()
+        self.certclient_mock.enroll_cert.side_effect = (
+            request_exceptions.RequestException())
 
         result_dto = self.plugin.issue_certificate_request(
             self.order_id, order_meta, plugin_meta)
@@ -478,8 +478,8 @@ class WhenTestingDogtagCAPlugin(testtools.TestCase):
         order_meta = mock.ANY
         plugin_meta = {dogtag_import.DogtagCAPlugin.REQUEST_ID:
                        self.request_id_mock}
-        self.certclient_mock.review_request.side_effect = \
-            pki.RequestNotFoundException("request_not_found")
+        self.certclient_mock.review_request.side_effect = (
+            pki.RequestNotFoundException("request_not_found"))
 
         result_dto = self.plugin.cancel_certificate_request(
             self.order_id, order_meta, plugin_meta)
@@ -496,8 +496,8 @@ class WhenTestingDogtagCAPlugin(testtools.TestCase):
         plugin_meta = {dogtag_import.DogtagCAPlugin.REQUEST_ID:
                        self.request_id_mock}
         self.certclient_mock.review_request.return_value = self.review_response
-        self.certclient_mock.cancel_request.side_effect = \
-            pki.ConflictingOperationException("conflicting_operation")
+        self.certclient_mock.cancel_request.side_effect = (
+            pki.ConflictingOperationException("conflicting_operation"))
 
         result_dto = self.plugin.cancel_certificate_request(
             self.order_id, order_meta, plugin_meta)
@@ -514,8 +514,8 @@ class WhenTestingDogtagCAPlugin(testtools.TestCase):
         order_meta = mock.ANY
         plugin_meta = {dogtag_import.DogtagCAPlugin.REQUEST_ID:
                        self.request_id_mock}
-        self.certclient_mock.review_request.side_effect = \
-            request_exceptions.RequestException("request_exception")
+        self.certclient_mock.review_request.side_effect = (
+            request_exceptions.RequestException("request_exception"))
 
         result_dto = self.plugin.cancel_certificate_request(
             self.order_id, order_meta, plugin_meta)
@@ -689,8 +689,8 @@ class WhenTestingDogtagCAPlugin(testtools.TestCase):
         order_meta = mock.ANY
         plugin_meta = {dogtag_import.DogtagCAPlugin.REQUEST_ID:
                        self.request_id_mock}
-        self.certclient_mock.review_request.side_effect = \
-            pki.RequestNotFoundException("request_not_found")
+        self.certclient_mock.review_request.side_effect = (
+            pki.RequestNotFoundException("request_not_found"))
 
         result_dto = self.plugin.modify_certificate_request(
             self.order_id, order_meta, plugin_meta)
@@ -707,8 +707,8 @@ class WhenTestingDogtagCAPlugin(testtools.TestCase):
         plugin_meta = {dogtag_import.DogtagCAPlugin.REQUEST_ID:
                        self.request_id_mock}
         self.certclient_mock.review_request.return_value = self.review_response
-        self.certclient_mock.cancel_request.side_effect = \
-            pki.ConflictingOperationException("conflicting_operation")
+        self.certclient_mock.cancel_request.side_effect = (
+            pki.ConflictingOperationException("conflicting_operation"))
 
         result_dto = self.plugin.modify_certificate_request(
             self.order_id, order_meta, plugin_meta)
@@ -725,8 +725,8 @@ class WhenTestingDogtagCAPlugin(testtools.TestCase):
         order_meta = mock.ANY
         plugin_meta = {dogtag_import.DogtagCAPlugin.REQUEST_ID:
                        self.request_id_mock}
-        self.certclient_mock.review_request.side_effect = \
-            request_exceptions.RequestException("request_exception")
+        self.certclient_mock.review_request.side_effect = (
+            request_exceptions.RequestException("request_exception"))
 
         result_dto = self.plugin.modify_certificate_request(
             self.order_id, order_meta, plugin_meta)

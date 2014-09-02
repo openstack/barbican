@@ -19,7 +19,6 @@ from Crypto.PublicKey import DSA
 from Crypto.PublicKey import RSA
 from Crypto.Util import asn1
 from cryptography import fernet
-
 import mock
 import six
 import testtools
@@ -94,6 +93,7 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
 
     def test_encrypt_with_unicode_kek_must_pass(self):
         """Test plan:
+
                 Generate a kek
                 Encrypt with master kek
                 Convert to unicode
@@ -335,10 +335,11 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
         generate_dto = plugin.GenerateDTO('rsa', 1024, None, 'changeme')
         kek_meta_dto = self._get_mocked_kek_meta_dto()
 
-        private_dto, public_dto, passwd_dto = \
-            self.plugin.generate_asymmetric(generate_dto,
-                                            kek_meta_dto,
-                                            mock.MagicMock())
+        private_dto, public_dto, passwd_dto = self.plugin.generate_asymmetric(
+            generate_dto,
+            kek_meta_dto,
+            mock.MagicMock()
+        )
         decrypt_dto = plugin.DecryptDTO(private_dto.cypher_text)
         private_dto = self.plugin.decrypt(decrypt_dto,
                                           kek_meta_dto,
@@ -352,10 +353,11 @@ class WhenTestingSimpleCryptoPlugin(testtools.TestCase):
         generate_dto = plugin.GenerateDTO('dsa', 1024, None, None)
         kek_meta_dto = self._get_mocked_kek_meta_dto()
 
-        private_dto, public_dto, passwd_dto = \
-            self.plugin.generate_asymmetric(generate_dto,
-                                            kek_meta_dto,
-                                            mock.MagicMock())
+        private_dto, public_dto, passwd_dto = self.plugin.generate_asymmetric(
+            generate_dto,
+            kek_meta_dto,
+            mock.MagicMock()
+        )
 
         decrypt_dto = plugin.DecryptDTO(private_dto.cypher_text)
         private_dto = self.plugin.decrypt(decrypt_dto,

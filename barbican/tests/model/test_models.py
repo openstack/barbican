@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import datetime
+
 import testtools
 
 from barbican.model import models
@@ -101,13 +102,13 @@ class WhenCreatingNewContainer(testtools.TestCase):
                          self.parsed_container['secret_refs'][2]['secret_ref'])
 
     def test_parse_secret_ref_uri(self):
-        self.parsed_container['secret_refs'][0]['secret_ref'] =\
-            'http://localhost:9110/123/secrets/123456'
+        self.parsed_container['secret_refs'][0]['secret_ref'] = (
+            'http://localhost:9110/123/secrets/123456')
         container = models.Container(self.parsed_container)
         self.assertEqual(container.container_secrets[0].secret_id, '123456')
 
-        self.parsed_container['secret_refs'][0]['secret_ref'] =\
-            'http://localhost:9110/123/secrets/123456/'
+        self.parsed_container['secret_refs'][0]['secret_ref'] = (
+            'http://localhost:9110/123/secrets/123456/')
         container = models.Container(self.parsed_container)
         self.assertEqual(container.container_secrets[0].secret_id, '123456')
 

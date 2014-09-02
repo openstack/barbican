@@ -33,8 +33,8 @@ class WhenUsingBeginOrderTask(utils.BaseTestCase):
         self.tasks.process_order(context=None,
                                  order_id=self.order_id,
                                  keystone_id=self.keystone_id)
-        mock_begin_order.return_value.process\
-            .assert_called_with(self.order_id, self.keystone_id)
+        mock_begin_order.return_value.process.assert_called_with(
+            self.order_id, self.keystone_id)
 
 
 class WhenUsingTaskServer(utils.BaseTestCase):

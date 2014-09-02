@@ -101,8 +101,8 @@ class WhenIssuingCertificateRequests(testtools.TestCase):
         )
 
     def test_should_return_ca_unavailable_for_request(self):
-        self.result.status = cert_man.CertificateStatus.\
-            CA_UNAVAILABLE_FOR_REQUEST
+        self.result.status = (
+            cert_man.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST)
 
         cert_res.issue_certificate_request(self.order_model,
                                            self.tenant_model,

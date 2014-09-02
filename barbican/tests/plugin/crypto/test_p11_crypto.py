@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import mock
-
 import testtools
 
 from barbican.model import models
@@ -130,8 +129,8 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
                                                     14, 15, 16]
         iv = self.plugin._generate_iv()
         self.assertEqual(len(iv), self.plugin.block_size)
-        self.session.generateRandom.\
-            assert_called_once_with(self.plugin.block_size)
+        self.session.generateRandom.assert_called_once_with(
+            self.plugin.block_size)
 
     def test_generate_iv_with_invalid_response_size(self):
         self.session.generateRandom.return_value = [1, 2, 3, 4, 5, 6, 7]
