@@ -265,11 +265,7 @@ class TypeOrderValidator(ValidatorBase):
     def validate(self, json_data, parent_schema=None):
         schema_name = self._full_name(parent_schema)
 
-        try:
-            schema.validate(json_data, self.schema)
-        except schema.ValidationError as e:
-            raise exception.InvalidObject(schema=schema_name, reason=e.message,
-                                          property=get_invalid_property(e))
+        self._assert_schema_is_valid(json_data, schema_name)
 
         order_type = json_data.get('type').lower()
         #Note(atiwari): No support for certificate so far
