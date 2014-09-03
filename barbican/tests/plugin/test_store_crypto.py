@@ -12,10 +12,10 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import testtools
 
 from barbican.plugin.interface import secret_store
 from barbican.plugin import store_crypto
-import testtools
 
 
 class WhenStoreCryptoAdapterPlugin(testtools.TestCase):

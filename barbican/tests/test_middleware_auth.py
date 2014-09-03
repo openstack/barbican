@@ -33,14 +33,14 @@ expected_response = {"v1": "current", "build": "0.1.34dev"}
 # uuid tokens are smaller and easier to test with
 # assume there is a "demo" user with only member role
 
-# curl -XPOST -d '{"auth":{"passwordCredentials":{"username": "demo", \
-# "password": "secret"}, "tenantName": "demo"}}' \
+# curl -XPOST -d '{"auth":{"passwordCredentials":{"username": "demo",
+# "password": "secret"}, "tenantName": "demo"}}'
 # -H "Content-type: application/json" http://localhost:35357/v2.0/tokens
 #
 # pull out the token_id from above and use in ping_barbican
 #
 
-#TODO(malini) flesh this out
+# TODO(malini) flesh this out
 def get_demo_token(password):
     pass
 

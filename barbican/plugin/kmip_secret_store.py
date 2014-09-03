@@ -69,9 +69,11 @@ class KMIPSecretStore(ss.SecretStoreBase):
     KMIP_ALGORITHM_ENUM = "kmip_algorithm_enum"
 
     def __init__(self, conf=CONF):
-        """Initializes KMIPSecretStore by creating a dictionary of mappings
-        between SecretStore enum values and pyKMIP enum values. Initializes
-        the KMIP client with credentials needed to connect to the KMIP server.
+        """Initializes KMIPSecretStore
+
+        Creates a dictionary of mappings between SecretStore enum values
+        and pyKMIP enum values. Initializes the KMIP client with credentials
+        needed to connect to the KMIP server.
         """
         super(KMIPSecretStore, self).__init__()
         self.valid_alg_dict = {
@@ -180,14 +182,14 @@ class KMIPSecretStore(ss.SecretStoreBase):
         template_attribute = kmip_objects.TemplateAttribute(
             attributes=attribute_list)
 
-        secret_features = {}
-
-        secret_features['key_format_type'] = enums.KeyFormatType.RAW
-        secret_features['key_value'] =\
-            {'bytes': self._convert_base64_to_byte_array(secret_dto.secret)}
-        secret_features['cryptographic_algorithm'] = algorithm_value
-        secret_features['cryptographic_length'] =\
-            secret_dto.key_spec.bit_length
+        secret_features = {
+            'key_format_type': enums.KeyFormatType.RAW,
+            'key_value': {
+                'bytes': self._convert_base64_to_byte_array(secret_dto.secret)
+            },
+            'cryptographic_algorithm': algorithm_value,
+            'cryptographic_length': secret_dto.key_spec.bit_length
+        }
 
         secret = secrets.SecretFactory().create_secret(object_type,
                                                        secret_features)
@@ -242,14 +244,16 @@ class KMIPSecretStore(ss.SecretStoreBase):
 
                 secret_type = self._map_type_kmip_to_ss(
                     result.object_type.enum)
-                if type(secret_block.key_value.key_value) == \
-                        kmip_objects.KeyValueStruct:
+
+                key_value_type = type(secret_block.key_value.key_value)
+                if key_value_type == kmip_objects.KeyValueStruct:
                     secret_value = self._convert_byte_array_to_base64(
                         secret_block.key_value.key_value.key_material.value)
-                elif type(secret_block.key_value.key_value) == \
-                        kmip_objects.KeyValueString:
+
+                elif key_value_type == kmip_objects.KeyValueString:
                     secret_value = self._convert_byte_array_to_base64(
                         secret_block.key_value.key_value.value)
+
                 secret_alg = self._map_algorithm_kmip_to_ss(
                     secret_block.cryptographic_algorithm.value)
                 secret_bit_length = secret_block.cryptographic_length.value
@@ -259,7 +263,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                     ss.KeySpec(secret_alg, secret_bit_length),
                     'content_type',
                     transport_key=None)
-                    # TODO(kaitlin-farr) remove 'content-type'
+                # TODO(kaitlin-farr) remove 'content-type'
                 LOG.debug("SUCCESS: Key retrieved with uuid: %s",
                           uuid)
                 return ret_secret_dto
@@ -282,15 +286,15 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :returns: boolean indicating if secret can be generated
         """
         alg_dict_entry = self.valid_alg_dict.get(key_spec.alg.lower())
-        if alg_dict_entry and key_spec.bit_length in\
-                alg_dict_entry.get(KMIPSecretStore.VALID_BIT_LENGTHS):
+        if (alg_dict_entry and key_spec.bit_length in
+                alg_dict_entry.get(KMIPSecretStore.VALID_BIT_LENGTHS)):
             return True
         return False
 
     def delete_secret(self, secret_metadata):
         """Deletes the secret whose metadata is included in the dictionary.
-        Returns nothing if successful, raises an exception if an error occurs
 
+        Returns nothing if successful, raises an exception if an error occurs
         :param secret_metadata: Dictionary of key metadata, requires:
         {'key_uuid': <uuid of key>}
         :raises: SecretGeneralException
@@ -330,26 +334,30 @@ class KMIPSecretStore(ss.SecretStoreBase):
         return self.generate_supports(key_spec)
 
     def _convert_base64_to_byte_array(self, base64_secret):
-        """Converts a base64 string to a byte array. KMIP transports secret
-        values as byte arrays, so the key values must be converted to a byte
-        array for storage.
+        """Converts a base64 string to a byte array.
+
+        KMIP transports secret values as byte arrays, so the key values
+        must be converted to a byte array for storage.
         :param base64_secret: base64 value of key
         :returns: bytearray of secret
         """
         return bytearray(base64.b64decode(base64_secret))
 
     def _convert_byte_array_to_base64(self, byte_array):
-        """Converts a byte array to a base64 string. KMIP transports secret
-        values as byte arrays, so the key values must be converted to base64
-        strings upon getting a stored secret.
+        """Converts a byte array to a base64 string.
+
+        KMIP transports secret values as byte arrays, so the key values
+        must be converted to base64 strings upon getting a stored secret.
         :param byte_array: bytearray of key value
         :returns: base64 string
         """
         return base64.b64encode(byte_array)
 
     def _create_cryptographic_algorithm_attribute(self, alg):
-        """Creates a KMIP Cryptographic Algorithm attribute. This attribute
-        is used when telling the KMIP server what kind of key to generate.
+        """Creates a KMIP Cryptographic Algorithm attribute.
+
+        This attribute is used when telling the KMIP server what kind of
+        key to generate.
         :param algorithm: A SecretStore KeyAlgorithm enum value
         :returns: A KMIP Cryptographic Algorithm attribute
         """
@@ -364,10 +372,11 @@ class KMIPSecretStore(ss.SecretStoreBase):
         return algorithm
 
     def _create_usage_mask_attribute(self):
-        """Creates a KMIP Usage Mask attribute. For now, we assume the key
-        will only be used for encryption and decryption. This attribute is
-        used when telling the KMIP server what kind of key to generate or
-        store.
+        """Creates a KMIP Usage Mask attribute.
+
+        For now, we assume the key will only be used for encryption and
+        decryption. This attribute is used when telling the KMIP server
+        what kind of key to generate or store.
         :returns: A KMIP Usage Mask attribute with values ENCRYPT and DECRYPT
         """
         attribute_type = enums.AttributeType.CRYPTOGRAPHIC_USAGE_MASK
@@ -382,8 +391,10 @@ class KMIPSecretStore(ss.SecretStoreBase):
         return usage_mask
 
     def _create_cryptographic_length_attribute(self, bit_length):
-        """Creates a KMIP Cryptographic Length attribute. This attribute is
-        used when telling the KMIP server what kind of key to generate.
+        """Creates a KMIP Cryptographic Length attribute.
+
+        This attribute is used when telling the KMIP server what kind of
+        key to generate.
         :param bit_length: Bit length of the secret's algorithm
         :returns: KMIP Cryptographic Length attribute
         """
@@ -397,8 +408,10 @@ class KMIPSecretStore(ss.SecretStoreBase):
         return length
 
     def _map_type_ss_to_kmip(self, object_type):
-        """Map SecretType to KMIP type enum. Returns None if the type is not
-        supported. The KMIP plugin only supports symmetric keys for now.
+        """Map SecretType to KMIP type enum
+
+        Returns None if the type is not supported. The KMIP plugin only
+        supports symmetric keys for now.
         :param object_type: SecretType enum value
         :returns: KMIP type enum if supported, None if not supported
         """
@@ -408,9 +421,10 @@ class KMIPSecretStore(ss.SecretStoreBase):
             return None
 
     def _map_type_kmip_to_ss(self, object_type):
-        """Map KMIP type enum to SecretType enum. Returns None if the
-        type is not supported. The KMIP plugin only supports symmetric keys
-        for now.
+        """Map KMIP type enum to SecretType enum
+
+        Returns None if the type is not supported. The KMIP plugin only
+        supports symmetric keys for now.
         :param object_type: KMIP type enum
         :returns: SecretType enum if type is supported, None if not supported
         """
@@ -420,8 +434,9 @@ class KMIPSecretStore(ss.SecretStoreBase):
             return None
 
     def _map_algorithm_ss_to_kmip(self, algorithm):
-        """Map SecretStore enum value to the KMIP algorithm enum. Returns None
-        if the algorithm is not supported.
+        """Map SecretStore enum value to the KMIP algorithm enum
+
+        Returns None if the algorithm is not supported.
         :param algorithm: SecretStore algorithm enum value
         :returns: KMIP algorithm enum value if supported, None if not
         supported
@@ -433,8 +448,9 @@ class KMIPSecretStore(ss.SecretStoreBase):
             return None
 
     def _map_algorithm_kmip_to_ss(self, algorithm):
-        """Map KMIP algorithm enum to SecretStore algorithm enum. Returns None
-        if the algorithm is not supported.
+        """Map KMIP algorithm enum to SecretStore algorithm enum
+
+        Returns None if the algorithm is not supported.
         :param algorithm: KMIP algorithm enum
         :returns: SecretStore algorithm enum value if supported, None if not
         supported

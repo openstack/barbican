@@ -805,8 +805,8 @@ class WhenTestingRSAContainerValidator(testtools.TestCase):
         self.assertEqual('secret_refs', exception.invalid_property)
 
     def test_should_raise_duplicate_secret_id_in_secret_refs(self):
-        self.container_req['secret_refs'][0]['secret_ref'] = \
-            self.container_req['secret_refs'][2]['secret_ref']
+        self.container_req['secret_refs'][0]['secret_ref'] = (
+            self.container_req['secret_refs'][2]['secret_ref'])
 
         exception = self.assertRaises(
             excep.InvalidObject,

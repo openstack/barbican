@@ -54,8 +54,8 @@ class WhenBeginningOrder(testtools.TestCase):
         self.order.secret_bit_length = self.secret_bit_length
         self.order.secret_mode = self.secret_mode
         self.order.secret_expiration = self.secret_expiration
-        self.order.secret_payload_content_type = self\
-            .secret_payload_content_type
+        self.order.secret_payload_content_type = (
+            self.secret_payload_content_type)
 
         self.order_repo = mock.MagicMock()
         self.order_repo.get.return_value = self.order
@@ -88,19 +88,18 @@ class WhenBeginningOrder(testtools.TestCase):
 
         self.resource.process(self.order.id, self.keystone_id)
 
-        self.order_repo.get \
-            .assert_called_once_with(entity_id=self.order.id,
-                                     keystone_id=self.keystone_id)
+        self.order_repo.get.assert_called_once_with(
+            entity_id=self.order.id, keystone_id=self.keystone_id)
         self.assertEqual(self.order.status, models.States.ACTIVE)
 
         secret_info = self.order.to_dict_fields()['secret']
-        mock_generate_secret\
-            .assert_called_once_with(
-                secret_info,
-                secret_info.get('payload_content_type',
-                                'application/octet-stream'),
-                self.tenant, mock.ANY
-            )
+        mock_generate_secret.assert_called_once_with(
+            secret_info,
+            secret_info.get('payload_content_type',
+                            'application/octet-stream'),
+            self.tenant,
+            mock.ANY
+        )
 
     def test_should_raise_during_retrieval(self):
         # Force an error during the order retrieval phase.
@@ -244,19 +243,18 @@ class WhenBeginningKeyTypeOrder(testtools.TestCase):
         mock_generate_secret.return_value = self.secret
         self.resource.process(self.order.id, self.keystone_id)
 
-        self.order_repo.get \
-            .assert_called_once_with(entity_id=self.order.id,
-                                     keystone_id=self.keystone_id)
+        self.order_repo.get.assert_called_once_with(
+            entity_id=self.order.id, keystone_id=self.keystone_id)
         self.assertEqual(self.order.status, models.States.ACTIVE)
 
         secret_info = self.order.to_dict_fields()['meta']
-        mock_generate_secret\
-            .assert_called_once_with(
-                secret_info,
-                secret_info.get('payload_content_type',
-                                'application/octet-stream'),
-                self.tenant, mock.ANY
-            )
+        mock_generate_secret.assert_called_once_with(
+            secret_info,
+            secret_info.get('payload_content_type',
+                            'application/octet-stream'),
+            self.tenant,
+            mock.ANY
+        )
 
     def test_should_fail_during_retrieval(self):
         # Force an error during the order retrieval phase.
@@ -396,19 +394,18 @@ class WhenBeginningAsymmetricTypeOrder(testtools.TestCase):
         mock_generate_asymmetric_secret.return_value = self.container
         self.resource.process(self.order.id, self.keystone_id)
 
-        self.order_repo.get \
-            .assert_called_once_with(entity_id=self.order.id,
-                                     keystone_id=self.keystone_id)
+        self.order_repo.get.assert_called_once_with(
+            entity_id=self.order.id, keystone_id=self.keystone_id)
         self.assertEqual(self.order.status, models.States.ACTIVE)
 
         secret_info = self.order.to_dict_fields()['meta']
-        mock_generate_asymmetric_secret\
-            .assert_called_once_with(
-                secret_info,
-                secret_info.get('payload_content_type',
-                                'application/octet-stream'),
-                self.tenant, mock.ANY
-            )
+        mock_generate_asymmetric_secret.assert_called_once_with(
+            secret_info,
+            secret_info.get('payload_content_type',
+                            'application/octet-stream'),
+            self.tenant,
+            mock.ANY
+        )
 
     def test_should_fail_during_retrieval(self):
         # Force an error during the order retrieval phase.
