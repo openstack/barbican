@@ -220,7 +220,8 @@ def clean_paging_values(offset_arg=0, limit_arg=CONF.default_limit_paging):
 
     try:
         offset = int(offset_arg)
-        offset = offset if offset >= 0 else 0
+        if offset < 0:
+            offset = 0
     except ValueError:
         offset = 0
 
@@ -342,7 +343,10 @@ class BaseRepo(object):
                 entity.save(session=session)
             except sqlalchemy.exc.IntegrityError:
                 LOG.exception('Problem saving entity for create')
-                values_id = values['id'] if values else None
+                if values:
+                    values_id = values['id']
+                else:
+                    values_id = None
                 raise exception.Duplicate("Entity ID {0} already exists!"
                                           .format(values_id))
         LOG.debug('Elapsed repo '

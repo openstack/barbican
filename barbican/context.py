@@ -82,7 +82,9 @@ class RequestContext(object):
     @property
     def owner(self):
         """Return the owner to correlate with key."""
-        return self.tenant if self.owner_is_tenant else self.user
+        if self.owner_is_tenant:
+            return self.tenant
+        return self.user
 
 # TODO(jwood):
 #    @property

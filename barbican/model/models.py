@@ -74,10 +74,14 @@ class JsonBlob(sql_types.TypeDecorator):
     impl = sa.Text
 
     def process_bind_param(self, value, dialect):
-        return json.dumps(value) if value is not None else value
+        if value is not None:
+            return json.dumps(value)
+        return value
 
     def process_result_value(self, value, dialect):
-        return json.loads(value) if value is not None else value
+        if value is not None:
+            return json.loads(value)
+        return value
 
 
 class ModelBase(object):
@@ -155,11 +159,15 @@ class ModelBase(object):
     def to_dict_fields(self):
         """Returns a dictionary of just the db fields of this entity."""
 
-        created_at = (self.created_at.isoformat()
-                      if self.created_at else self.created_at)
+        if self.created_at:
+            created_at = self.created_at.isoformat()
+        else:
+            created_at = self.created_at
 
-        updated_at = (self.updated_at.isoformat()
-                      if self.updated_at else self.updated_at)
+        if self.updated_at:
+            updated_at = self.updated_at.isoformat()
+        else:
+            updated_at = self.updated_at
 
         dict_fields = {
             'created': created_at,
@@ -304,8 +312,10 @@ class Secret(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        expiration = (self.expiration.isoformat()
-                      if self.expiration else self.expiration)
+        if self.expiration:
+            expiration = self.expiration.isoformat()
+        else:
+            expiration = self.expiration
 
         return {
             'secret_id': self.id,
@@ -474,9 +484,10 @@ class Order(BASE, ModelBase):
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
         if not self.meta:
-            expiration = (
-                self.secret_expiration.isoformat()
-                if self.secret_expiration else self.secret_expiration)
+            if self.secret_expiration:
+                expiration = self.secret_expiration.isoformat()
+            else:
+                expiration = self.secret_expiration
             ret = {
                 'secret': {
                     'name': self.secret_name or self.secret_id,
