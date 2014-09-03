@@ -1434,7 +1434,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         self.queue_resource = mock.MagicMock()
         self.queue_resource.process_order.return_value = None
 
-        self.order_req = {
+        self.key_order_req = {
             'secret': {
                 'name': self.secret_name,
                 'payload_content_type': self.secret_payload_content_type,
@@ -1447,7 +1447,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
     def test_should_add_new_order(self):
         resp = self.app.post_json(
             '/orders/',
-            self.order_req
+            self.key_order_req
         )
         self.assertEqual(resp.status_int, 202)
 
@@ -1499,7 +1499,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
     def test_should_raise_add_new_order_no_content_type_header(self):
         resp = self.app.post(
             '/orders/',
-            self.order_req,
+            self.key_order_req,
             expect_errors=True,
         )
         self.assertEqual(resp.status_int, 415)
@@ -1803,8 +1803,8 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
                      'payload_content_type':
                      'application/octet-stream'}
 
-        self.order_req = {'type': self.type,
-                          'meta': self.meta}
+        self.key_order_req = {'type': self.type,
+                              'meta': self.meta}
 
         self.tenant_internal_id = 'tenantid1234'
         self.tenant_keystone_id = 'keystoneid1234'
@@ -1825,7 +1825,7 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
     def test_should_add_new_order(self):
         self.skipTest("atiwari: remove skip once CR 111412 merged")
         resp = self.app.post_json(
-            '/orders/', self.order_req
+            '/orders/', self.key_order_req
         )
         self.assertEqual(resp.status_int, 202)
 

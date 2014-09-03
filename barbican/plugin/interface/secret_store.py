@@ -198,7 +198,8 @@ class KeyAlgorithm(object):
 
     def get_secret_type(self, alg):
         if alg and isinstance(alg, six.string_types):
-            if alg.lower() in self.SYMMETRIC_ALGORITHMS:
+            alg = alg.lower()
+            if alg in self.SYMMETRIC_ALGORITHMS:
                 return SecretType.SYMMETRIC
             else:
                 return None

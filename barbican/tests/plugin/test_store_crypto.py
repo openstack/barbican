@@ -292,12 +292,12 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         key_spec = secret_store.KeySpec(alg='aes', bit_length=64, mode='CBC')
         self.assertTrue(self.plugin_to_test.generate_supports(key_spec))
 
-        # RSA KeySpec should not be supported.
+        # RSA KeySpec should be supported.
         key_spec = secret_store.KeySpec(alg='RSA', bit_length=2048)
-        self.assertFalse(self.plugin_to_test.generate_supports(key_spec))
-        key_spec = secret_store.KeySpec(alg='rsa', bit_length=2048)
-        self.assertFalse(self.plugin_to_test.generate_supports(key_spec))
-
+        self.assertTrue(self.plugin_to_test.generate_supports(key_spec))
+        # Camellia KeySpec should not be supported.
+        self.key_spec = secret_store.KeySpec('Camellia', 64)
+        self.assertFalse(self.plugin_to_test.generate_supports(self.key_spec))
         # Bogus KeySpec should not be supported.
         key_spec = secret_store.KeySpec(alg='bogus', bit_length=2048)
         self.assertFalse(self.plugin_to_test.generate_supports(key_spec))

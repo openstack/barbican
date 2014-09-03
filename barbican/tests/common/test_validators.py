@@ -16,6 +16,8 @@
 import datetime
 import unittest
 
+import testtools
+
 from barbican.common import exception as excep
 from barbican.common import validators
 from barbican.tests import utils
@@ -325,28 +327,28 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
                            'mode': self.secret_mode,
                            'payload_content_type':
                            self.secret_payload_content_type}
-        self.order_req = {'secret': self.secret_req}
+        self.key_order_req = {'secret': self.secret_req}
 
         self.validator = validators.NewOrderValidator()
 
     def test_should_validate_all_fields(self):
-        self.validator.validate(self.order_req)
+        self.validator.validate(self.key_order_req)
 
     def test_should_validate_no_name(self):
         del self.secret_req['name']
-        result = self.validator.validate(self.order_req)
+        result = self.validator.validate(self.key_order_req)
 
         self.assertTrue('secret' in result)
 
     def test_should_validate_empty_name(self):
         self.secret_req['name'] = '    '
-        result = self.validator.validate(self.order_req)
+        result = self.validator.validate(self.key_order_req)
 
         self.assertTrue('secret' in result)
 
     def test_should_validate_future_expiration(self):
         self.secret_req['expiration'] = '2114-02-28T19:14:44.180394'
-        result = self.validator.validate(self.order_req)
+        result = self.validator.validate(self.key_order_req)
 
         self.assertTrue('secret' in result)
         result = result['secret']
@@ -355,7 +357,7 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
 
     def test_should_validate_empty_expiration(self):
         self.secret_req['expiration'] = '  '
-        result = self.validator.validate(self.order_req)
+        result = self.validator.validate(self.key_order_req)
 
         self.assertTrue('secret' in result)
         result = result['secret']
@@ -366,7 +368,7 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         # TODO(john-wood-w) Allow until plugin validation is added.
         self.secret_req['mode'] = 'badmode'
 
-        result = self.validator.validate(self.order_req)
+        result = self.validator.validate(self.key_order_req)
 
         self.assertTrue('secret' in result)
 
@@ -374,7 +376,7 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         # TODO(john-wood-w) Allow until plugin validation is added.
         self.secret_req['bit_length'] = 129
 
-        result = self.validator.validate(self.order_req)
+        result = self.validator.validate(self.key_order_req)
 
         self.assertTrue('secret' in result)
 
@@ -382,7 +384,7 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         # TODO(john-wood-w) Allow until plugin validation is added.
         del self.secret_req['mode']
 
-        result = self.validator.validate(self.order_req)
+        result = self.validator.validate(self.key_order_req)
 
         self.assertTrue('secret' in result)
 
@@ -390,7 +392,7 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         # TODO(john-wood-w) Allow until plugin validation is added.
         del self.secret_req['algorithm']
 
-        result = self.validator.validate(self.order_req)
+        result = self.validator.validate(self.key_order_req)
 
         self.assertTrue('secret' in result)
 
@@ -400,7 +402,7 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         exception = self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
-            self.order_req,
+            self.key_order_req,
         )
 
         self.assertEqual('name', exception.invalid_property)
@@ -411,7 +413,7 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         exception = self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
-            self.order_req,
+            self.key_order_req,
         )
 
         self.assertEqual('bit_length', exception.invalid_property)
@@ -422,7 +424,7 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         exception = self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
-            self.order_req,
+            self.key_order_req,
         )
 
         self.assertEqual('bit_length', exception.invalid_property)
@@ -442,7 +444,7 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         exception = self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
-            self.order_req,
+            self.key_order_req,
         )
 
         self.assertTrue('payload' in exception.invalid_property)
@@ -453,7 +455,7 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         exception = self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
-            self.order_req,
+            self.key_order_req,
         )
 
         self.assertEqual('expiration', exception.invalid_property)
@@ -464,7 +466,7 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         exception = self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
-            self.order_req,
+            self.key_order_req,
         )
 
         self.assertEqual('expiration', exception.invalid_property)
@@ -474,12 +476,12 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
                            'algorithm': None,
                            'bit_length': None,
                            'mode': None}
-        self.order_req = {'secret': self.secret_req}
+        self.key_order_req = {'secret': self.secret_req}
 
         self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
-            self.order_req,
+            self.key_order_req,
         )
 
     def test_should_raise_all_empties(self):
@@ -487,12 +489,12 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
                            'algorithm': '',
                            'bit_length': '',
                            'mode': ''}
-        self.order_req = {'secret': self.secret_req}
+        self.key_order_req = {'secret': self.secret_req}
 
         self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
-            self.order_req,
+            self.key_order_req,
         )
 
     def test_should_raise_no_payload_content_type(self):
@@ -501,7 +503,7 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         self.assertRaises(
             excep.UnsupportedField,
             self.validator.validate,
-            self.order_req,
+            self.key_order_req,
         )
 
     def test_should_raise_unsupported_payload_content_type(self):
@@ -510,7 +512,7 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         self.assertRaises(
             excep.UnsupportedField,
             self.validator.validate,
-            self.order_req,
+            self.key_order_req,
         )
 
     def test_should_raise_invalid_json_data_type(self):
@@ -521,13 +523,13 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         )
 
     def test_should_raise_payload_in_secret(self):
-        self.order_req['secret']['payload'] = "YWJjZGVmZw=="
-        self.order_req['secret']['payload_content_encoding'] = 'base64'
+        self.key_order_req['secret']['payload'] = "YWJjZGVmZw=="
+        self.key_order_req['secret']['payload_content_encoding'] = 'base64'
 
         self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
-            self.order_req
+            self.key_order_req
         )
 
 
@@ -993,10 +995,10 @@ class WhenTestingConsumerValidator(utils.BaseTestCase):
         self.validator.validate(self.consumer_req)
 
 
-class WhenTestingTypeOrderValidator(utils.BaseTestCase):
+class WhenTestingKeyTypeOrderValidator(utils.BaseTestCase):
 
     def setUp(self):
-        super(WhenTestingTypeOrderValidator, self).setUp()
+        super(WhenTestingKeyTypeOrderValidator, self).setUp()
         self.type = 'key'
         self.meta = {"name": "secretname",
                      "algorithm": "AES",
@@ -1005,66 +1007,118 @@ class WhenTestingTypeOrderValidator(utils.BaseTestCase):
                      'payload_content_type':
                      'application/octet-stream'}
 
-        self.order_req = {'type': self.type,
-                          'meta': self.meta}
+        self.key_order_req = {'type': self.type,
+                              'meta': self.meta}
 
         self.validator = validators.TypeOrderValidator()
 
     def test_should_pass_with_certificate_type_in_order_refs(self):
-        self.order_req['type'] = 'certificate'
-        result = self.validator.validate(self.order_req)
+        self.key_order_req['type'] = 'certificate'
+        result = self.validator.validate(self.key_order_req)
         self.assertEqual('certificate', result['type'])
 
     def test_should_pass_good_bit_meta_in_order_refs(self):
-        self.order_req['meta']['algorithm'] = 'AES'
-        self.order_req['meta']['bit_length'] = 256
-        result = self.validator.validate(self.order_req)
+        self.key_order_req['meta']['algorithm'] = 'AES'
+        self.key_order_req['meta']['bit_length'] = 256
+        result = self.validator.validate(self.key_order_req)
         self.assertTrue(result['meta']['expiration'] is None)
 
     def test_should_pass_good_exp_meta_in_order_refs(self):
-        self.order_req['meta']['algorithm'] = 'AES'
+        self.key_order_req['meta']['algorithm'] = 'AES'
         ony_year_factor = datetime.timedelta(days=1 * 365)
         date_after_year = datetime.datetime.now() + ony_year_factor
         date_after_year_str = date_after_year.strftime('%Y-%m-%d %H:%M:%S')
-        self.order_req['meta']['expiration'] = date_after_year_str
-        result = self.validator.validate(self.order_req)
+        self.key_order_req['meta']['expiration'] = date_after_year_str
+        result = self.validator.validate(self.key_order_req)
 
         self.assertTrue('expiration' in result['meta'])
         self.assertTrue(isinstance(result['meta']['expiration'],
                                    datetime.datetime))
 
     def test_should_raise_with_no_type_in_order_refs(self):
-        del self.order_req['type']
+        del self.key_order_req['type']
 
         exception = self.assertRaises(excep.InvalidObject,
                                       self.validator.validate,
-                                      self.order_req)
+                                      self.key_order_req)
         self.assertEqual('type', exception.invalid_property)
 
     def test_should_raise_with_bad_type_in_order_refs(self):
-        self.order_req['type'] = 'badType'
+        self.key_order_req['type'] = 'badType'
 
         exception = self.assertRaises(excep.InvalidObject,
                                       self.validator.validate,
-                                      self.order_req)
+                                      self.key_order_req)
         self.assertEqual('type', exception.invalid_property)
 
     def test_should_raise_with_no_meta_in_order_refs(self):
-        del self.order_req['meta']
+        del self.key_order_req['meta']
 
         exception = self.assertRaises(excep.InvalidObject,
                                       self.validator.validate,
-                                      self.order_req)
+                                      self.key_order_req)
         self.assertEqual('meta', exception.invalid_property)
 
     def test_should_raise_with_wrong_exp_meta_in_order_refs(self):
-        self.order_req['meta']['algorithm'] = 'AES'
-        self.order_req['meta']['expiration'] = '2014-02-28T19:14:44.180394'
+        self.key_order_req['meta']['algorithm'] = 'AES'
+        self.key_order_req['meta']['expiration'] = '2014-02-28T19:14:44.180394'
 
         exception = self.assertRaises(excep.InvalidObject,
                                       self.validator.validate,
-                                      self.order_req)
+                                      self.key_order_req)
         self.assertEqual('expiration', exception.invalid_property)
+
+    @testtools.skip("due to bug#1365131")
+    def test_should_not_raise_correct_hmac_order_refs(self):
+        self.key_order_req['meta']['algorithm'] = 'hmacsha1'
+        del self.key_order_req['meta']['mode']
+
+        result = self.validator.validate(self.key_order_req)
+        self.assertTrue(result is not None)
+        self.assertTrue(result['meta']['algorithm'] == 'hmacsha1')
+
+
+class WhenTestingAsymmetricTypeOrderValidator(utils.BaseTestCase):
+
+    def setUp(self):
+        super(WhenTestingAsymmetricTypeOrderValidator, self).setUp()
+        self.type = 'asymmetric'
+        self.meta = {"name": "secretname",
+                     "algorithm": "RSA",
+                     "bit_length": 256,
+                     'payload_content_type':
+                     'application/octet-stream'}
+
+        self.asymmetric_order_req = {'type': self.type,
+                                     'meta': self.meta}
+
+        self.validator = validators.TypeOrderValidator()
+
+    def test_should_pass_good_meta_in_order_refs(self):
+        result = self.validator.validate(self.asymmetric_order_req)
+        self.assertIsNone(result['meta']['expiration'])
+
+    def test_should_raise_with_no_algorithm_in_order_refs(self):
+        del self.asymmetric_order_req['meta']['algorithm']
+
+        self.assertRaises(excep.InvalidObject,
+                          self.validator.validate,
+                          self.asymmetric_order_req)
+
+    def test_should_raise_with_wrong_payload_content_type_in_order_refs(self):
+        self.asymmetric_order_req['meta'
+                                  ]['payload_content_type'] = 'plain/text'
+        self.assertRaises(excep.UnsupportedField,
+                          self.validator.validate,
+                          self.asymmetric_order_req)
+
+    def test_should_pass_with_wrong_algorithm_in_asymmetric_order_refs(self):
+        # Note (atiwari): because validator should not check
+        # algorithm but that should checked at crypto_plugin
+        # supports method.
+        self.asymmetric_order_req['meta']['algorithm'] = 'aes'
+        result = self.validator.validate(self.asymmetric_order_req)
+        self.assertIsNone(result['meta']['expiration'])
 
 if __name__ == '__main__':
     unittest.main()
