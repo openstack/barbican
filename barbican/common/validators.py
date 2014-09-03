@@ -168,7 +168,9 @@ class NewSecretValidator(ValidatorBase):
     def _extract_name(self, json_data):
         """Extracts and returns the name from the JSON data."""
         name = json_data.get('name')
-        return name.strip() if name else None
+        if name:
+            return name.strip()
+        return None
 
     def _extract_expiration(self, json_data, schema_name):
         """Extracts and returns the expiration date from the JSON data."""
@@ -512,8 +514,7 @@ class ContainerValidator(ValidatorBase):
         if not secret_refs:
             return json_data
 
-        secret_refs_names = set(secret_ref['name']
-                                if 'name' in secret_ref else ''
+        secret_refs_names = set(secret_ref.get('name', '')
                                 for secret_ref in secret_refs)
 
         self._assert_validity(
