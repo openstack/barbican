@@ -32,8 +32,8 @@ import webtest
 from barbican import api
 from barbican.api import app
 from barbican.api import controllers
-from barbican.api.controllers import hrefs
 from barbican.common import exception as excep
+from barbican.common import hrefs
 from barbican.common import validators
 import barbican.context
 from barbican.model import models
@@ -1759,10 +1759,8 @@ class WhenAddingNavigationHrefs(testtools.TestCase):
         offset = 0
         limit = 10
 
-        data_with_hrefs = controllers.hrefs.add_nav_hrefs(self.resource_name,
-                                                          offset, limit,
-                                                          self.num_elements,
-                                                          self.data)
+        data_with_hrefs = hrefs.add_nav_hrefs(
+            self.resource_name, offset, limit, self.num_elements, self.data)
 
         self.assertNotIn('previous', data_with_hrefs)
         self.assertIn('next', data_with_hrefs)
@@ -1771,10 +1769,8 @@ class WhenAddingNavigationHrefs(testtools.TestCase):
         offset = 10
         limit = 10
 
-        data_with_hrefs = controllers.hrefs.add_nav_hrefs(self.resource_name,
-                                                          offset, limit,
-                                                          self.num_elements,
-                                                          self.data)
+        data_with_hrefs = hrefs.add_nav_hrefs(
+            self.resource_name, offset, limit, self.num_elements, self.data)
 
         self.assertIn('previous', data_with_hrefs)
         self.assertIn('next', data_with_hrefs)
@@ -1783,10 +1779,8 @@ class WhenAddingNavigationHrefs(testtools.TestCase):
         offset = 90
         limit = 10
 
-        data_with_hrefs = controllers.hrefs.add_nav_hrefs(self.resource_name,
-                                                          offset, limit,
-                                                          self.num_elements,
-                                                          self.data)
+        data_with_hrefs = hrefs.add_nav_hrefs(
+            self.resource_name, offset, limit, self.num_elements, self.data)
 
         self.assertIn('previous', data_with_hrefs)
         self.assertNotIn('next', data_with_hrefs)

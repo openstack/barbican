@@ -15,6 +15,7 @@ import pecan
 from barbican import api
 from barbican.api import controllers
 from barbican.common import exception
+from barbican.common import hrefs
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
@@ -52,8 +53,8 @@ class ContainerConsumerController(object):
 
         dict_fields = consumer.to_dict_fields()
 
-        return controllers.hrefs.convert_to_hrefs(
-            controllers.hrefs.convert_to_hrefs(dict_fields)
+        return hrefs.convert_to_hrefs(
+            hrefs.convert_to_hrefs(dict_fields)
         )
 
 
@@ -98,10 +99,10 @@ class ContainerConsumersController(object):
             resp_ctrs_overall = {'consumers': [], 'total': total}
         else:
             resp_ctrs = [
-                controllers.hrefs.convert_to_hrefs(c.to_dict_fields())
+                hrefs.convert_to_hrefs(c.to_dict_fields())
                 for c in consumers
             ]
-            resp_ctrs_overall = controllers.hrefs.add_nav_hrefs(
+            resp_ctrs_overall = hrefs.add_nav_hrefs(
                 'consumers',
                 offset,
                 limit,
@@ -169,8 +170,9 @@ class ContainerConsumersController(object):
             controllers.containers.container_not_found()
 
         for secret_ref in dict_fields['secret_refs']:
-            controllers.hrefs.convert_to_hrefs(secret_ref)
+            hrefs.convert_to_hrefs(secret_ref)
 
-        return controllers.hrefs.convert_to_hrefs(
-            controllers.hrefs.convert_to_hrefs(dict_fields)
+        # TODO(john-wood-w) Why two calls to convert_to_hrefs()?
+        return hrefs.convert_to_hrefs(
+            hrefs.convert_to_hrefs(dict_fields)
         )

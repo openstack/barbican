@@ -13,10 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from barbican.common import hrefs
 import barbican.common.utils as utils
 from barbican.model import models
 from barbican.plugin.interface import certificate_manager as cert
 from barbican.plugin import resources as plugin
+
 
 # Order sub-status definitions
 ORDER_STATUS_REQUEST_PENDING = models.OrderStatus(
@@ -61,7 +63,7 @@ def issue_certificate_request(order_model, tenant_model, repos):
 
     :param: order_model - order associated with this cert request
     :param: tenant_model - tenant associated with this request
-    :param; repos - repos (to be removed)
+    :param: repos - repos (to be removed)
     :returns: container_model - container with the relevant cert if
         the request has been completed.  None otherwise
     """
@@ -98,6 +100,7 @@ def issue_certificate_request(order_model, tenant_model, repos):
         _schedule_issue_cert_request(cert_plugin, order_model, plugin_meta,
                                      repos, result, tenant_model,
                                      cert.ERROR_RETRY_MSEC)
+        _notify_ca_unavailable(order_model, result)
     elif cert.CertificateStatus.INVALID_OPERATION == result.status:
         _update_order_status(ORDER_STATUS_INVALID_OPERATION)
 
@@ -222,6 +225,15 @@ def _get_plugin_meta(order_model):
         return meta_dict
     else:
         return dict()
+
+
+def _notify_ca_unavailable(order_model, result):
+    """Notify observer(s) that the CA was unavailable at this time."""
+    cert.EVENT_PLUGIN_MANAGER.notify_ca_is_unavailable(
+        order_model.tenant_id,
+        hrefs.convert_order_to_href(order_model.id),
+        result.status_message,
+        result.retry_msec)
 
 
 def _save_plugin_metadata(order_model, plugin_meta, repos):
