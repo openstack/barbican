@@ -70,7 +70,9 @@ class ValidatorBase(object):
         """
 
     def _full_name(self, parent_schema=None):
-        """Returns the full schema name for this validator,
+        """Validator schema name accessor
+
+        Returns the full schema name for this validator,
         including parent name.
         """
         schema_name = self.name
@@ -80,8 +82,7 @@ class ValidatorBase(object):
         return schema_name
 
     def _assert_schema_is_valid(self, json_data, schema_name):
-        """Assert that the JSON structure is valid according to the given
-        schema.
+        """Assert that the JSON structure is valid for the given schema.
 
         :raises: InvalidObject exception if the data is not schema compliant.
         """
@@ -190,8 +191,9 @@ class NewSecretValidator(ValidatorBase):
         return expiration
 
     def _assert_expiration_is_valid(self, expiration, schema_name):
-        """Asserts that the given expiration date is valid. Which means that
-        it should not be in the past.
+        """Asserts that the given expiration date is valid.
+
+        Expiration dates must be in the future, not the past.
         """
         if expiration:
             # Verify not already expired.
@@ -202,7 +204,9 @@ class NewSecretValidator(ValidatorBase):
 
     def _validate_content_parameters(self, content_type, content_encoding,
                                      schema_name):
-        """Check that the content_type, content_encoding and the parameters
+        """Content parameter validator.
+
+        Check that the content_type, content_encoding and the parameters
         that they affect are valid.
         """
         self._assert_validity(
@@ -247,7 +251,7 @@ class NewSecretValidator(ValidatorBase):
         return payload.strip()
 
 
-#TODO(atiwari) - Split this validator module and unit tests
+# TODO(atiwari) - Split this validator module and unit tests
 # into smaller modules
 class TypeOrderValidator(ValidatorBase):
     """Validate a new typed order."""
@@ -270,7 +274,7 @@ class TypeOrderValidator(ValidatorBase):
         self._assert_schema_is_valid(json_data, schema_name)
 
         order_type = json_data.get('type').lower()
-        #Note(atiwari): No support for certificate so far
+        # Note(atiwari): No support for certificate so far
         if order_type == models.OrderType.CERTIFICATE:
             certificate_meta = json_data.get('meta')
             self._validate_certificate_meta(certificate_meta, schema_name)
@@ -288,7 +292,7 @@ class TypeOrderValidator(ValidatorBase):
         return json_data
 
     def _validate_key_meta(self, key_meta, schema_name):
-        """validation specific to meta for key type order"""
+        """Validation specific to meta for key type order."""
 
         self._assert_validity(key_meta is not None,
                               schema_name,
@@ -304,8 +308,8 @@ class TypeOrderValidator(ValidatorBase):
         # Validation secret generation related fields.
         # TODO(jfwood): Invoke the crypto plugin for this purpose
 
-        if key_meta.get('payload_content_type', '').lower() !=\
-                'application/octet-stream':
+        if (key_meta.get('payload_content_type', '').lower() !=
+                'application/octet-stream'):
             raise exception.UnsupportedField(field='payload_content_type',
                                              schema=schema_name,
                                              reason=u._("Only 'application/oc"
@@ -327,14 +331,14 @@ class TypeOrderValidator(ValidatorBase):
         self._validate_bit_length(key_meta, schema_name)
 
     def _validate_asymmetric_meta(self, asymmetric_meta, schema_name):
-        """validation specific to meta for asymmetric type order"""
+        """Validation specific to meta for asymmetric type order."""
         self._assert_validity(asymmetric_meta is not None,
                               schema_name,
                               u._("'meta' attributes is required"), "meta")
         self._raise_feature_not_implemented('asymmetric', schema_name)
 
     def _validate_certificate_meta(self, certificate_meta, schema_name):
-        """validation specific to meta for certificate type order"""
+        """Validation specific to meta for certificate type order."""
         self._assert_validity(certificate_meta is not None,
                               schema_name,
                               u._("'meta' attributes is required"), "meta")
@@ -384,7 +388,7 @@ class TypeOrderValidator(ValidatorBase):
                                                     .format(order_type))
 
 
-#TODO(atiwari) - Remove this Validator for bug 1335171
+# TODO(atiwari) - Remove this Validator for bug 1335171
 class NewOrderValidator(ValidatorBase):
     """Validate a new order."""
 
@@ -451,7 +455,7 @@ class NewOrderValidator(ValidatorBase):
 
 
 class ContainerConsumerValidator(ValidatorBase):
-    """ Validate a Consumer"""
+    """Validate a Consumer."""
 
     def __init__(self):
         self.name = 'Consumer'
@@ -472,7 +476,7 @@ class ContainerConsumerValidator(ValidatorBase):
 
 
 class ContainerValidator(ValidatorBase):
-    """ Validator for all types of Container"""
+    """Validator for all types of Container."""
 
     def __init__(self):
         self.name = 'Container'
@@ -482,7 +486,7 @@ class ContainerValidator(ValidatorBase):
                 "name": {"type": "string"},
                 "type": {
                     "type": "string",
-                    # TODO: (hgedikli) move this to a common location
+                    # TODO(hgedikli): move this to a common location
                     "enum": ["generic", "rsa", "certificate"]
                 },
                 "secret_refs": {

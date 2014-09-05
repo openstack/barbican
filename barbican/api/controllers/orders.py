@@ -174,11 +174,9 @@ class OrdersController(object):
         LOG.debug('Start orders on_get '
                   'for tenant-ID %s:', keystone_id)
 
-        result = self.order_repo \
-            .get_by_create_date(keystone_id,
-                                offset_arg=kw.get('offset', 0),
-                                limit_arg=kw.get('limit', None),
-                                suppress_exception=True)
+        result = self.order_repo.get_by_create_date(
+            keystone_id, offset_arg=kw.get('offset', 0),
+            limit_arg=kw.get('limit', None), suppress_exception=True)
         orders, offset, limit, total = result
 
         if not orders:
@@ -210,8 +208,8 @@ class OrdersController(object):
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
 
-        #Note(atiwari): trying to preserve backward compatibility
-        #This will be removed as part of bug1335171
+        # Note(atiwari): trying to preserve backward compatibility
+        # This will be removed as part of bug1335171
         raw_body = pecan.request.body
         order_type = None
         if raw_body:
@@ -225,7 +223,7 @@ class OrdersController(object):
             new_order.meta = body.get('meta')
             new_order.type = order_type
 
-            #TODO(john-wood-w) These are required attributes currently, but
+            # TODO(john-wood-w) These are required attributes currently, but
             #   will eventually be removed once we drop the legacy orders
             #   request.
             new_order.secret_name = 'N/A'
@@ -257,7 +255,7 @@ class OrdersController(object):
         self.order_repo.create_from(new_order)
 
         # Send to workers to process.
-        #TODO(atiwari) - bug 1335171
+        # TODO(atiwari) - bug 1335171
         if order_type:
             self.queue.process_type_order(order_id=new_order.id,
                                           keystone_id=keystone_id)

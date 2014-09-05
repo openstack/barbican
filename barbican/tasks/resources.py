@@ -307,7 +307,7 @@ class BeginTypeOrder(BaseTask):
 
 
 class UpdateOrder(BaseTask):
-    """Handles updating an order"""
+    """Handles updating an order."""
     def get_name(self):
         return u._('Update Order')
 

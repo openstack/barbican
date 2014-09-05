@@ -14,9 +14,9 @@
 # limitations under the License.
 
 import abc
-import six
 
 from oslo.config import cfg
+import six
 from stevedore import named
 
 from barbican.common import exception
@@ -56,9 +56,7 @@ class SecretStorePluginNotFound(exception.BarbicanException):
 
 
 class SecretStoreSupportedPluginNotFound(exception.BarbicanException):
-    """Raised when no plugins are found that support the requested
-    operation.
-    """
+    """Raised if no plugins are found that support the requested operation."""
     message = "Secret store plugin not found for requested operation."
 
 
@@ -153,8 +151,9 @@ class SecretStorePluginsNotConfigured(exception.BarbicanException):
 
 class SecretType(object):
 
-    """Constant to define the symmetric key type. Used by getSecret to retrieve
-    a symmetric key.
+    """Constant to define the symmetric key type.
+
+    Used by getSecret to retrieve a symmetric key.
     """
     SYMMETRIC = "symmetric"
     """Constant to define the public key type. Used by getSecret to retrieve a
@@ -225,13 +224,14 @@ class KeySpec(object):
 
 
 class SecretDTO(object):
-    """This object is a secret data transfer object (DTO). This object
-    encapsulates a key and attributes about the key. The attributes include a
-    KeySpec that contains the algorithm and bit length. The attributes also
-    include information on the encoding of the key.
+    """This object is a secret data transfer object (DTO).
+
+    This object encapsulates a key and attributes about the key. The attributes
+    include a KeySpec that contains the algorithm and bit length. The
+    attributes also include information on the encoding of the key.
     """
 
-    #TODO(john-wood-w) Remove 'content_type' once secret normalization work is
+    # TODO(john-wood-w) Remove 'content_type' once secret normalization work is
     #  completed.
     def __init__(self, type, secret, key_spec, content_type,
                  transport_key=None):
@@ -257,9 +257,9 @@ class SecretDTO(object):
 
 
 class AsymmetricKeyMetadataDTO(object):
-    """This DTO encapsulates metadata(s) for asymmetric key
-    components. These components are private_key_meta,
-    public_key_meta and passphrase_meta.
+    """This DTO encapsulates metadata(s) for asymmetric key components.
+
+    These components are private_key_meta, public_key_meta and passphrase_meta.
     """
 
     def __init__(self, private_key_meta=None,
@@ -276,7 +276,7 @@ class AsymmetricKeyMetadataDTO(object):
         self.passphrase_meta = passphrase_meta
 
 
-#TODO(john-wood-w) Remove this class once repository factory work is
+# TODO(john-wood-w) Remove this class once repository factory work is
 #  completed.
 class SecretStoreContext(object):
     """Context for secret store plugins.
@@ -294,9 +294,9 @@ class SecretStoreContext(object):
 @six.add_metaclass(abc.ABCMeta)
 class SecretStoreBase(object):
 
-    #TODO(john-wood-w) Remove 'context' once repository factory and secret
+    # TODO(john-wood-w) Remove 'context' once repository factory and secret
     #  normalization work is completed.
-    #TODO(john-wood-w) Combine generate_symmetric_key() and
+    # TODO(john-wood-w) Combine generate_symmetric_key() and
     #  generate_asymmetric_key() into one method: generate_key(), that will
     #  return a dict with this structure:
     #    { SecretType.xxxxx: {secret-meta dict}
@@ -467,6 +467,7 @@ class SecretStorePluginManager(named.NamedExtensionManager):
     def get_plugin_store(self, key_spec, plugin_name=None,
                          transport_key_needed=False):
         """Gets a secret store plugin.
+
         :param: plugin_name: set to plugin_name to get specific plugin
         :param: key_spec: KeySpec of key that will be stored
         :param: transport_key_needed: set to True if a transport
@@ -487,8 +488,8 @@ class SecretStorePluginManager(named.NamedExtensionManager):
 
         else:
             for ext in self.extensions:
-                if ext.obj.get_transport_key() is not None and\
-                        ext.obj.store_secret_supports(key_spec):
+                if (ext.obj.get_transport_key() is not None and
+                        ext.obj.store_secret_supports(key_spec)):
                     return ext.obj
 
         raise SecretStoreSupportedPluginNotFound()

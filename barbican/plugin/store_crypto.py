@@ -65,7 +65,7 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
             encrypt_dto, kek_meta_dto, context.tenant_model.keystone_id
         )
         # Convert binary data into a text-based format.
-        #TODO(jwood) Figure out by storing binary (BYTEA) data in Postgres
+        # TODO(jwood) Figure out by storing binary (BYTEA) data in Postgres
         #  isn't working.
         self._store_secret_and_datum(context,
                                      context.secret_model,
@@ -76,11 +76,11 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
 
     def get_secret(self, secret_metadata, context):
         """Retrieve a secret."""
-        if not context.secret_model \
-                or not context.secret_model.encrypted_data:
+        if (not context.secret_model or
+                not context.secret_model.encrypted_data):
             raise sstore.SecretNotFoundException()
 
-        #TODO(john-wood-w) Need to revisit 1 to many datum relationship.
+        # TODO(john-wood-w) Need to revisit 1 to many datum relationship.
         datum_model = context.secret_model.encrypted_data[0]
 
         # Find HSM-style 'crypto' plugin.
@@ -91,7 +91,7 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
         kek_meta_dto = crypto.KEKMetaDTO(datum_model.kek_meta_tenant)
 
         # Convert from text-based storage format to binary.
-        #TODO(jwood) Figure out by storing binary (BYTEA) data in
+        # TODO(jwood) Figure out by storing binary (BYTEA) data in
         #  Postgres isn't working.
         encrypted = base64.b64decode(datum_model.cypher_text)
         decrypt_dto = crypto.DecryptDTO(encrypted)
@@ -137,9 +137,8 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
                                           key_spec.bit_length,
                                           key_spec.mode, None)
         # Create the encrypted meta.
-        response_dto = generating_plugin.\
-            generate_symmetric(generate_dto, kek_meta_dto,
-                               context.tenant_model.keystone_id)
+        response_dto = generating_plugin.generate_symmetric(
+            generate_dto, kek_meta_dto, context.tenant_model.keystone_id)
 
         # Convert binary data into a text-based format.
         # TODO(jwood) Figure out by storing binary (BYTEA) data in Postgres
@@ -164,11 +163,8 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
         if crypto.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION != plugin_type:
             raise sstore.SecretAlgorithmNotSupportedException(key_spec.alg)
 
-        generating_plugin = manager.PLUGIN_MANAGER\
-            .get_plugin_store_generate(plugin_type,
-                                       key_spec.alg,
-                                       key_spec.bit_length,
-                                       None)
+        generating_plugin = manager.PLUGIN_MANAGER.get_plugin_store_generate(
+            plugin_type, key_spec.alg, key_spec.bit_length, None)
 
         # Find or create a key encryption key metadata.
         kek_datum_model, kek_meta_dto = self._find_or_create_kek_objects(
@@ -179,9 +175,11 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
                                           None, key_spec.passphrase)
 
         # Create the encrypted meta.
-        private_key_dto, public_key_dto, passwd_dto = generating_plugin.\
-            generate_asymmetric(generate_dto, kek_meta_dto,
-                                context.tenant_model.keystone_id)
+        private_key_dto, public_key_dto, passwd_dto = (
+            generating_plugin.generate_asymmetric(
+                generate_dto, kek_meta_dto, context.tenant_model.keystone_id
+            )
+        )
 
         self._store_secret_and_datum(context,
                                      context.private_secret_model,
@@ -281,10 +279,11 @@ class StoreCryptoAdapterPlugin(sstore.SecretStoreBase):
         kek_datum.mode = kek_meta_dto.mode
         kek_datum.plugin_meta = kek_meta_dto.plugin_meta
 
-    #TODO(john-wood-w) Move this to the more generic secret_store.py?
+    # TODO(john-wood-w) Move this to the more generic secret_store.py?
     def _determine_generation_type(self, algorithm):
-        """Determines the type (symmetric and asymmetric for now)
-        based on algorithm
+        """Determines the type based on the given algorithm.
+
+        For now this is either symmetric or asymmetric.
         """
         symmetric_algs = crypto.PluginSupportTypes.SYMMETRIC_ALGORITHMS
         asymmetric_algs = crypto.PluginSupportTypes.ASYMMETRIC_ALGORITHMS

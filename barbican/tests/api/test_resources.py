@@ -18,7 +18,6 @@ This test module focuses on typical-flow business logic tests with the API
 resource classes. For RBAC tests of these classes, see the
 'resources_policy_test.py' module.
 """
-
 import base64
 import logging
 import mimetypes
@@ -1996,6 +1995,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
             self.container_req
         )
         self.assertEqual(resp.status_int, 201)
+        self.assertNotIn(self.tenant_keystone_id, resp.headers['Location'])
 
         args, kwargs = self.container_repo.create_from.call_args
         container = args[0]
@@ -2179,6 +2179,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
             self.consumer_ref
         )
         self.assertEqual(resp.status_int, 200)
+        self.assertNotIn(self.tenant_keystone_id, resp.headers['Location'])
 
         args, kwargs = self.consumer_repo.create_from.call_args
         consumer = args[0]

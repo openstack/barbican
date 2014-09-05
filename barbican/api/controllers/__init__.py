@@ -109,7 +109,9 @@ def handle_exceptions(operation_name=u._('System')):
 
 
 def _do_enforce_content_types(pecan_req, valid_content_types):
-    """Check to see that content type in the request is one of the valid
+    """Content type enforcement
+
+    Check to see that content type in the request is one of the valid
     types passed in by our caller.
     """
     if pecan_req.content_type not in valid_content_types:

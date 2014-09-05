@@ -24,7 +24,9 @@ CONF = cfg.CONF
 class _CryptoPluginManager(named.NamedExtensionManager):
     def __init__(self, conf=CONF, invoke_on_load=True,
                  invoke_args=(), invoke_kwargs={}):
-        """Each time this class is initialized it will load a new instance
+        """Crypto Plugin Manager
+
+        Each time this class is initialized it will load a new instance
         of each enabled crypto plugin. This is undesirable, so rather than
         initializing a new instance of this class use the PLUGIN_MANAGER
         at the module level.

@@ -38,7 +38,7 @@ class ContainerController(object):
 
     def __init__(self, container_id, tenant_repo=None, container_repo=None,
                  consumer_repo=None):
-        #TODO(rm_work): refactor this to use repo-factory method
+        # TODO(rm_work): refactor this to use repo-factory method
         self.container_id = container_id
         self.tenant_repo = tenant_repo or repo.TenantRepo()
         self.container_repo = container_repo or repo.ContainerRepo()
@@ -86,7 +86,7 @@ class ContainersController(object):
 
     def __init__(self, tenant_repo=None, container_repo=None,
                  secret_repo=None, consumer_repo=None):
-        #TODO(rm_work): refactor this to use repo-factory method
+        # TODO(rm_work): refactor this to use repo-factory method
         self.tenant_repo = tenant_repo or repo.TenantRepo()
         self.container_repo = container_repo or repo.ContainerRepo()
         self.secret_repo = secret_repo or repo.SecretRepo()
@@ -152,7 +152,7 @@ class ContainersController(object):
         new_container = models.Container(data)
         new_container.tenant_id = tenant.id
 
-        #TODO(hgedikli): performance optimizations
+        # TODO(hgedikli): performance optimizations
         for secret_ref in new_container.container_secrets:
             secret = self.secret_repo.get(entity_id=secret_ref.secret_id,
                                           keystone_id=keystone_id,
@@ -166,8 +166,8 @@ class ContainersController(object):
         self.container_repo.create_from(new_container)
 
         pecan.response.status = 201
-        pecan.response.headers['Location'] = '/{0}/containers/{1}'.format(
-            keystone_id, new_container.id
+        pecan.response.headers['Location'] = '/containers/{0}'.format(
+            new_container.id
         )
         url = hrefs.convert_container_to_href(new_container.id)
         return {'container_ref': url}

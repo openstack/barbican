@@ -133,8 +133,9 @@ class ContainerConsumersController(object):
         new_consumer.tenant_id = tenant.id
         self.consumer_repo.create_from(new_consumer)
 
-        pecan.response.headers['Location'] = '/{0}/containers/{1}/consumers' \
-            .format(keystone_id, new_consumer.container_id)
+        pecan.response.headers['Location'] = (
+            '/containers/{0}/consumers'.format(new_consumer.container_id)
+        )
 
         return self._return_container_data(self.container_id, keystone_id)
 

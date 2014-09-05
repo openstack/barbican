@@ -16,9 +16,10 @@
 """
 API handler for Cloudkeep's Barbican
 """
+import pkgutil
+
 from oslo.config import cfg
 import pecan
-import pkgutil
 
 from barbican.common import exception
 from barbican.common import utils
@@ -47,6 +48,7 @@ class ApiResource(object):
 
 def load_body(req, resp=None, validator=None):
     """Helper function for loading an HTTP request body from JSON.
+
     This body is placed into into a Python dictionary.
 
     :param req: The HTTP request instance to load the body from.
@@ -61,7 +63,7 @@ def load_body(req, resp=None, validator=None):
         pecan.abort(500, 'Read Error')
 
     try:
-        #TODO(jwood): Investigate how to get UTF8 format via openstack
+        # TODO(jwood): Investigate how to get UTF8 format via openstack
         # jsonutils:
         #     parsed_body = json.loads(raw_json, 'utf-8')
         parsed_body = json.loads(body)
@@ -169,9 +171,9 @@ def generate_safe_exception_message(operation_name, excep):
 
 @pkgutil.simplegeneric
 def get_items(obj):
-    """This is used to get items from either
-       a list or a dictionary. While false
-       generator is need to process scalar object
+    """This is used to get items from either a list or a dictionary.
+
+    While false generator is need to process scalar object
     """
 
     while False:
@@ -189,9 +191,7 @@ def _json_array(obj):
 
 
 def strip_whitespace(json_data):
-    """This function will recursively trim values from the
-       object passed in using the get_items
-    """
+    """Recursively trim values from the object passed in using get_items()."""
 
     for key, value in get_items(json_data):
         if hasattr(value, 'strip'):
