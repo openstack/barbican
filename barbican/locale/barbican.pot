@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2014.2.dev84.gb075737\n"
+"Project-Id-Version: barbican 2014.2.dev3.gab5fdcf\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-08-31 06:09+0000\n"
+"POT-Creation-Date: 2014-09-05 06:08+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -71,47 +71,47 @@ msgstr ""
 msgid "System"
 msgstr ""
 
-#: barbican/api/controllers/consumers.py:30
+#: barbican/api/controllers/consumers.py:31
 msgid "Not Found. Sorry but your consumer is in another castle."
 msgstr ""
 
-#: barbican/api/controllers/consumers.py:44
+#: barbican/api/controllers/consumers.py:45
 msgid "ContainerConsumer retrieval"
 msgstr ""
 
-#: barbican/api/controllers/consumers.py:77
+#: barbican/api/controllers/consumers.py:78
 msgid "ContainerConsumers(s) retrieval"
 msgstr ""
 
-#: barbican/api/controllers/consumers.py:116
+#: barbican/api/controllers/consumers.py:117
 msgid "ContainerConsumer creation"
 msgstr ""
 
-#: barbican/api/controllers/consumers.py:141
+#: barbican/api/controllers/consumers.py:142
 msgid "ContainerConsumer deletion"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:31
+#: barbican/api/controllers/containers.py:32
 msgid "Not Found. Sorry but your container is in another castle."
 msgstr ""
 
-#: barbican/api/controllers/containers.py:51
+#: barbican/api/controllers/containers.py:52
 msgid "Container retrieval"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:70
+#: barbican/api/controllers/containers.py:71
 msgid "Container deletion"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:102
+#: barbican/api/controllers/containers.py:103
 msgid "Containers(s) retrieval"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:141
+#: barbican/api/controllers/containers.py:142
 msgid "Container creation"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:162
+#: barbican/api/controllers/containers.py:163
 msgid "Secret provided for '{0}' doesn't exist."
 msgstr ""
 
@@ -127,23 +127,43 @@ msgstr ""
 msgid "Order update is not supported."
 msgstr ""
 
-#: barbican/api/controllers/orders.py:56
+#: barbican/api/controllers/orders.py:49
+msgid "Order type is expected but not received."
+msgstr ""
+
+#: barbican/api/controllers/orders.py:54
+msgid "Order meta is expected for order updates."
+msgstr ""
+
+#: barbican/api/controllers/orders.py:59
+msgid "Updates are not supported for order type {0}."
+msgstr ""
+
+#: barbican/api/controllers/orders.py:65
+msgid "Only PENDING orders can be updated. Order is in the{0} state."
+msgstr ""
+
+#: barbican/api/controllers/orders.py:71
+msgid "Cannot modify order type."
+msgstr ""
+
+#: barbican/api/controllers/orders.py:86
 msgid "Order retrieval"
 msgstr ""
 
-#: barbican/api/controllers/orders.py:67 barbican/api/controllers/orders.py:131
+#: barbican/api/controllers/orders.py:98 barbican/api/controllers/orders.py:200
 msgid "Order update"
 msgstr ""
 
-#: barbican/api/controllers/orders.py:72
+#: barbican/api/controllers/orders.py:141
 msgid "Order deletion"
 msgstr ""
 
-#: barbican/api/controllers/orders.py:102
+#: barbican/api/controllers/orders.py:171
 msgid "Order(s) retrieval"
 msgstr ""
 
-#: barbican/api/controllers/orders.py:137
+#: barbican/api/controllers/orders.py:206
 msgid "Order creation"
 msgstr ""
 
@@ -521,142 +541,142 @@ msgstr ""
 msgid "payload must be provided when payload_content_type is specified"
 msgstr ""
 
-#: barbican/common/validators.py:185 barbican/common/validators.py:355
+#: barbican/common/validators.py:187 barbican/common/validators.py:353
 msgid "Invalid date for 'expiration'"
 msgstr ""
 
-#: barbican/common/validators.py:198
+#: barbican/common/validators.py:200
 msgid "'expiration' is before current time"
 msgstr ""
 
-#: barbican/common/validators.py:209
+#: barbican/common/validators.py:211
 msgid "If 'payload' is supplied, 'payload_content_type' must also be supplied."
 msgstr ""
 
-#: barbican/common/validators.py:216
+#: barbican/common/validators.py:218
 msgid "payload_content_type is not one of {0}"
 msgstr ""
 
-#: barbican/common/validators.py:224
+#: barbican/common/validators.py:226
 msgid ""
 "payload_content_encoding must be specified when payload_content_type is "
 "application/octet-stream."
 msgstr ""
 
-#: barbican/common/validators.py:232
+#: barbican/common/validators.py:234
 msgid ""
 "payload_content_encoding must not be specified when payload_content_type "
 "is text/plain"
 msgstr ""
 
-#: barbican/common/validators.py:297 barbican/common/validators.py:335
-#: barbican/common/validators.py:342
+#: barbican/common/validators.py:295 barbican/common/validators.py:333
+#: barbican/common/validators.py:340
 msgid "'meta' attributes is required"
 msgstr ""
 
-#: barbican/common/validators.py:303
+#: barbican/common/validators.py:301
 msgid "'payload' not allowed for key type order"
 msgstr ""
 
-#: barbican/common/validators.py:313
+#: barbican/common/validators.py:311
 msgid "Only 'application/octet-stream' supported"
 msgstr ""
 
-#: barbican/common/validators.py:320 barbican/common/validators.py:434
+#: barbican/common/validators.py:318 barbican/common/validators.py:432
 msgid "Only 'cbc' supported"
 msgstr ""
 
-#: barbican/common/validators.py:326 barbican/common/validators.py:440
+#: barbican/common/validators.py:324 barbican/common/validators.py:438
 msgid "Only 'aes' supported"
 msgstr ""
 
-#: barbican/common/validators.py:367
+#: barbican/common/validators.py:365
 msgid "Must have non-zero positive bit_length to generate secret"
 msgstr ""
 
-#: barbican/common/validators.py:375 barbican/common/validators.py:448
+#: barbican/common/validators.py:373 barbican/common/validators.py:446
 msgid "Must be a positive integer that is a multiple of 8"
 msgstr ""
 
-#: barbican/common/validators.py:383
+#: barbican/common/validators.py:381
 msgid "Feature not implemented for '{0}' order type"
 msgstr ""
 
-#: barbican/common/validators.py:410
+#: barbican/common/validators.py:408
 msgid "'secret' attributes are required"
 msgstr ""
 
-#: barbican/common/validators.py:417
+#: barbican/common/validators.py:415
 msgid "'payload' not allowed for secret generation"
 msgstr ""
 
-#: barbican/common/validators.py:427
+#: barbican/common/validators.py:425
 msgid "Only 'application/oc tet-stream' supported"
 msgstr ""
 
-#: barbican/common/validators.py:522
+#: barbican/common/validators.py:519
 msgid "Duplicate reference names are not allowed"
 msgstr ""
 
-#: barbican/common/validators.py:534
+#: barbican/common/validators.py:531
 msgid "Duplicate secret ids are not allowed"
 msgstr ""
 
-#: barbican/common/validators.py:552
+#: barbican/common/validators.py:549
 msgid ""
 "only 'private_key', 'public_key' and 'private_key_passphrase' reference "
 "names are allowed for RSA type"
 msgstr ""
 
-#: barbican/common/validators.py:560
+#: barbican/common/validators.py:557
 msgid ""
 "The minimum required reference names are 'public_key' and'private_key' "
 "for RSA type"
 msgstr ""
 
-#: barbican/common/validators.py:573
+#: barbican/common/validators.py:570
 msgid ""
 "only 'private_key', 'certificate' , 'private_key_passphrase',  or "
 "'intermediates' reference names are allowed for Certificate type"
 msgstr ""
 
-#: barbican/common/validators.py:581
+#: barbican/common/validators.py:578
 msgid "The minimum required reference name is 'certificate' for Certificate type"
 msgstr ""
 
-#: barbican/common/validators.py:627
+#: barbican/common/validators.py:624
 msgid "plugin_name must be provided"
 msgstr ""
 
-#: barbican/common/validators.py:634
+#: barbican/common/validators.py:631
 msgid "transport_key must be provided"
 msgstr ""
 
-#: barbican/model/repositories.py:131
+#: barbican/model/repositories.py:133
 #, python-format
 msgid ""
 "Error configuring registry database with supplied sql_connection. Got "
 "error: %s"
 msgstr ""
 
-#: barbican/model/repositories.py:146
+#: barbican/model/repositories.py:148
 msgid "Updating schema to latest version"
 msgstr ""
 
-#: barbican/model/repositories.py:150
+#: barbican/model/repositories.py:152
 msgid "Auto-creating barbican registry DB"
 msgstr ""
 
-#: barbican/model/repositories.py:157
+#: barbican/model/repositories.py:159
 msgid "not auto-creating barbican registry DB"
 msgstr ""
 
-#: barbican/model/repositories.py:196
+#: barbican/model/repositories.py:198
 #, python-format
 msgid "SQL connection failed. %d attempts left."
 msgstr ""
 
-#: barbican/model/repositories.py:674
+#: barbican/model/repositories.py:693
 msgid "Tried to register crypto plugin with null or empty name."
 msgstr ""
 
@@ -916,32 +936,56 @@ msgstr ""
 msgid "Port for the KMIP server"
 msgstr ""
 
-#: barbican/plugin/symantec.py:35
+#: barbican/plugin/simple_certificate_manager.py:40
+msgid "Invoking issue_certificate_request()"
+msgstr ""
+
+#: barbican/plugin/simple_certificate_manager.py:56
+msgid "Invoking modify_certificate_request()"
+msgstr ""
+
+#: barbican/plugin/simple_certificate_manager.py:72
+msgid "Invoking cancel_certificate_request()"
+msgstr ""
+
+#: barbican/plugin/simple_certificate_manager.py:88
+msgid "Invoking check_certificate_status()"
+msgstr ""
+
+#: barbican/plugin/simple_certificate_manager.py:116
+msgid "Invoking notify_certificate_is_ready()"
+msgstr ""
+
+#: barbican/plugin/simple_certificate_manager.py:129
+msgid "Invoking notify_ca_is_unavailable()"
+msgstr ""
+
+#: barbican/plugin/symantec.py:34
 msgid "Symantec username for authentication"
 msgstr ""
 
-#: barbican/plugin/symantec.py:37
+#: barbican/plugin/symantec.py:36
 msgid "Symantec password for authentication"
 msgstr ""
 
-#: barbican/plugin/symantec.py:39
+#: barbican/plugin/symantec.py:38
 msgid "Domain of Symantec API"
 msgstr ""
 
-#: barbican/plugin/symantec.py:52
+#: barbican/plugin/symantec.py:51
 msgid "username is required"
 msgstr ""
 
-#: barbican/plugin/symantec.py:56
+#: barbican/plugin/symantec.py:55
 msgid "password is required"
 msgstr ""
 
-#: barbican/plugin/symantec.py:60
+#: barbican/plugin/symantec.py:59
 msgid "url is required"
 msgstr ""
 
 #: barbican/plugin/crypto/crypto.py:36
-#: barbican/plugin/interface/certificate_manager.py:44
+#: barbican/plugin/interface/certificate_manager.py:45
 #: barbican/plugin/interface/secret_store.py:36
 msgid "Extension namespace to search for plugins."
 msgstr ""
@@ -955,9 +999,9 @@ msgid "Crypto plugin not found."
 msgstr ""
 
 #: barbican/plugin/crypto/crypto.py:54
-#: barbican/plugin/interface/certificate_manager.py:80
-#: barbican/plugin/interface/certificate_manager.py:90
-#: barbican/plugin/interface/certificate_manager.py:100
+#: barbican/plugin/interface/certificate_manager.py:121
+#: barbican/plugin/interface/certificate_manager.py:131
+#: barbican/plugin/interface/certificate_manager.py:141
 #: barbican/plugin/interface/secret_store.py:103
 msgid "Unknown"
 msgstr ""
@@ -994,27 +1038,44 @@ msgstr ""
 msgid "Key encryption key to be used by Simple Crypto Plugin"
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:48
+#: barbican/plugin/interface/certificate_manager.py:49
+#: barbican/plugin/interface/certificate_manager.py:69
 msgid "List of certificate plugins to load."
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:67
-msgid "Certificate plugin not found."
+#: barbican/plugin/interface/certificate_manager.py:65
+msgid "Extension namespace to search for eventing plugins."
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:74
+#: barbican/plugin/interface/certificate_manager.py:91
+msgid "Certificate plugin \"{0}\" not found or configured."
+msgstr ""
+
+#: barbican/plugin/interface/certificate_manager.py:95
+msgid "Certificate plugin not found or configured."
+msgstr ""
+
+#: barbican/plugin/interface/certificate_manager.py:103
+msgid "Certificate event plugin \"{0}\" not found or configured."
+msgstr ""
+
+#: barbican/plugin/interface/certificate_manager.py:107
+msgid "Certificate event plugin not found or configured."
+msgstr ""
+
+#: barbican/plugin/interface/certificate_manager.py:115
 msgid "Certificate status of '{0}' not supported"
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:82
+#: barbican/plugin/interface/certificate_manager.py:123
 msgid "Problem seen during certificate processing - Reason: {0}"
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:92
+#: barbican/plugin/interface/certificate_manager.py:133
 msgid "Problem with data in certificate request - Reason: {0}"
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:102
+#: barbican/plugin/interface/certificate_manager.py:143
 msgid "Invalid operation requested - Reason: {0}"
 msgstr ""
 
@@ -1086,40 +1147,48 @@ msgstr ""
 msgid "Server name for RPC task processing server"
 msgstr ""
 
-#: barbican/tasks/resources.py:63
+#: barbican/tasks/resources.py:65
 #, python-format
 msgid "Could not retrieve information needed to process task '%s'."
 msgstr ""
 
-#: barbican/tasks/resources.py:71
+#: barbican/tasks/resources.py:73
 #, python-format
 msgid "Could not perform processing for task '%s'."
 msgstr ""
 
-#: barbican/tasks/resources.py:81
+#: barbican/tasks/resources.py:83
 #, python-format
 msgid "Problem handling an error for task '%s', raising original exception."
 msgstr ""
 
-#: barbican/tasks/resources.py:90
+#: barbican/tasks/resources.py:92
 #, python-format
 msgid "Could not process after successfully executing task '%s'."
 msgstr ""
 
-#: barbican/tasks/resources.py:147
+#: barbican/tasks/resources.py:149
 msgid "Create Secret"
 msgstr ""
 
-#: barbican/tasks/resources.py:211
+#: barbican/tasks/resources.py:215
 msgid "Process TypeOrder"
 msgstr ""
 
-#: barbican/tests/tasks/test_resources.py:134
+#: barbican/tasks/resources.py:312
+msgid "Update Order"
+msgstr ""
+
+#: barbican/tasks/resources.py:343
+msgid "An error has occurred updating the order."
+msgstr ""
+
+#: barbican/tests/tasks/test_resources.py:133
 msgid "Create Secret failure seen - please contact site administrator."
 msgstr ""
 
-#: barbican/tests/tasks/test_resources.py:290
-#: barbican/tests/tasks/test_resources.py:442
+#: barbican/tests/tasks/test_resources.py:288
+#: barbican/tests/tasks/test_resources.py:439
 msgid "Process TypeOrder failure seen - please contact site administrator."
 msgstr ""
 
