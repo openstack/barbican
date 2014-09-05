@@ -48,6 +48,27 @@ class WhenUsingBeginOrderTask(utils.BaseTestCase):
             self.order_id, self.keystone_id, updated_meta
         )
 
+    @mock.patch('barbican.tasks.resources.BeginOrder')
+    def test_process_order_catch_exception(self, mock_begin_order):
+        """Test process_order() handles all exceptions."""
+        mock_begin_order.return_value.process.side_effect = Exception()
+        self.tasks.process_order(None, self.order_id, self.keystone_id)
+
+
+class WhenUsingBeginTypeOrderTask(utils.BaseTestCase):
+    """Test using the Tasks class for 'type order' task."""
+
+    def setUp(self):
+        super(WhenUsingBeginTypeOrderTask, self).setUp()
+
+        self.tasks = server.Tasks()
+
+    @mock.patch('barbican.tasks.resources.BeginTypeOrder')
+    def test_process_type_order_catch_exception(self, mock_begin_type_order):
+        """Test process_type_order() method handles all exceptions."""
+        mock_begin_type_order.return_value.process.side_effect = Exception()
+        self.tasks.process_type_order(None, self.order_id, self.keystone_id)
+
 
 class WhenUsingTaskServer(utils.BaseTestCase):
     """Test using the asynchronous task client."""
