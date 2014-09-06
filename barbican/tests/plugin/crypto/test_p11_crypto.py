@@ -34,6 +34,7 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         self.pkcs11 = self.p11_mock.PyKCS11Lib()
         self.p11_mock.PyKCS11Error.return_value = Exception()
         self.pkcs11.lib.C_Initialize.return_value = self.p11_mock.CKR_OK
+        self.pkcs11.lib.C_GenerateKey.return_value = self.p11_mock.CKR_OK
         self.cfg_mock = mock.MagicMock(name='config mock')
         self.plugin = p11_crypto.P11CryptoPlugin(self.cfg_mock)
         self.session = self.pkcs11.openSession()
@@ -43,22 +44,25 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         self.patcher.stop()
 
     def test_generate_calls_generate_random(self):
-        self.session.generateRandom.return_value = [1, 2, 3, 4, 5, 6, 7,
-                                                    8, 9, 10, 11, 12, 13,
-                                                    14, 15, 16]
-        secret = models.Secret()
-        secret.bit_length = 128
-        secret.algorithm = "AES"
-        generate_dto = plugin_import.GenerateDTO(
-            secret.algorithm,
-            secret.bit_length,
-            None, None)
-        self.plugin.generate_symmetric(
-            generate_dto,
-            mock.MagicMock(),
-            mock.MagicMock()
-        )
-        self.session.generateRandom.assert_called_twice_with(16)
+        with mock.patch.object(self.plugin, 'encrypt') as encrypt_mock:
+            # patch out the encrypt call since it is irrelevant in this test
+            encrypt_mock.return_value = None
+            self.session.generateRandom.return_value = [1, 2, 3, 4, 5, 6, 7,
+                                                        8, 9, 10, 11, 12, 13,
+                                                        14, 15, 16]
+            secret = models.Secret()
+            secret.bit_length = 128
+            secret.algorithm = "AES"
+            generate_dto = plugin_import.GenerateDTO(
+                secret.algorithm,
+                secret.bit_length,
+                None, None)
+            self.plugin.generate_symmetric(
+                generate_dto,
+                mock.MagicMock(),
+                mock.MagicMock()
+            )
+            self.session.generateRandom.assert_called_twice_with(16)
 
     def test_generate_errors_when_rand_length_is_not_as_requested(self):
         self.session.generateRandom.return_value = [1, 2, 3, 4, 5, 6, 7]
@@ -91,7 +95,6 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         self.pkcs11.lib.C_Initialize.return_value = 12345
         m.p11_crypto_plugin = mock.MagicMock(library_path="/dev/null")
 
-        # TODO(reaperhulk): Really raises PyKCS11.PyKCS11Error
         pykcs11error = Exception
         self.assertRaises(
             pykcs11error,
@@ -99,28 +102,23 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
             m,
         )
 
-    def test_init_builds_sessions_and_login(self):
-        self.pkcs11.openSession.assert_any_call(1)
-        self.pkcs11.openSession.assert_any_call(1, 'RW')
-        self.assertTrue(self.session.login.called)
-
-    def test_get_key_by_label_with_two_keys(self):
+    def test_get_key_handle_with_two_keys(self):
         self.session.findObjects.return_value = ['key1', 'key2']
         self.assertRaises(
             p11_crypto.P11CryptoPluginKeyException,
-            self.plugin._get_key_by_label,
+            self.plugin._get_key_handle,
             'mylabel',
         )
 
-    def test_get_key_by_label_with_one_key(self):
+    def test_get_key_handle_with_one_key(self):
         key = 'key1'
         self.session.findObjects.return_value = [key]
-        key_label = self.plugin._get_key_by_label('mylabel')
+        key_label = self.plugin._get_key_handle('mylabel')
         self.assertEqual(key, key_label)
 
-    def test_get_key_by_label_with_no_keys(self):
+    def test_get_key_handle_with_no_keys(self):
         self.session.findObjects.return_value = []
-        result = self.plugin._get_key_by_label('mylabel')
+        result = self.plugin._get_key_handle('mylabel')
         self.assertIsNone(result)
 
     def test_generate_iv_calls_generate_random(self):
@@ -140,14 +138,14 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         )
 
     def test_build_gcm_params(self):
-        class GCM_Mock(object):
+        class GCMMock(object):
             def __init__(self):
                 self.pIv = None
                 self.ulIvLen = None
                 self.ulIvBits = None
                 self.ulTagBits = None
 
-        self.p11_mock.LowLevel.CK_AES_GCM_PARAMS.return_value = GCM_Mock()
+        self.p11_mock.LowLevel.CK_AES_GCM_PARAMS.return_value = GCMMock()
         iv = b'sixteen_byte_iv_'
         gcm = self.plugin._build_gcm_params(iv)
         self.assertEqual(iv, gcm.pIv)
@@ -156,9 +154,7 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         self.assertEqual(128, gcm.ulIvBits)
 
     def test_encrypt(self):
-        key = 'key1'
         payload = 'encrypt me!!'
-        self.session.findObjects.return_value = [key]
         self.session.generateRandom.return_value = [1, 2, 3, 4, 5, 6, 7,
                                                     8, 9, 10, 11, 12, 13,
                                                     14, 15, 16]
@@ -166,35 +162,37 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
         self.p11_mock.Mechanism.return_value = mech
         self.session.encrypt.return_value = [1, 2, 3, 4, 5]
         encrypt_dto = plugin_import.EncryptDTO(payload)
-        response_dto = self.plugin.encrypt(encrypt_dto,
-                                           mock.MagicMock(),
-                                           mock.MagicMock())
+        with mock.patch.object(self.plugin, '_unwrap_key') as unwrap_key_mock:
+            unwrap_key_mock.return_value = 'unwrapped_key'
+            response_dto = self.plugin.encrypt(encrypt_dto,
+                                               mock.MagicMock(),
+                                               mock.MagicMock())
 
-        self.session.encrypt.assert_called_once_with(key,
-                                                     payload,
-                                                     mech)
-        self.assertEqual(b'\x01\x02\x03\x04\x05', response_dto.cypher_text)
-        self.assertEqual('{"iv": "AQIDBAUGBwgJCgsMDQ4PEA=="}',
-                         response_dto.kek_meta_extended)
+            self.session.encrypt.assert_called_once_with('unwrapped_key',
+                                                         payload,
+                                                         mech)
+            self.assertEqual(b'\x01\x02\x03\x04\x05', response_dto.cypher_text)
+            self.assertEqual('{"iv": "AQIDBAUGBwgJCgsMDQ4PEA=="}',
+                             response_dto.kek_meta_extended)
 
     def test_decrypt(self):
-        key = 'key1'
         ct = mock.MagicMock()
-        self.session.findObjects.return_value = [key]
         self.session.decrypt.return_value = [100, 101, 102, 103]
         mech = mock.MagicMock()
         self.p11_mock.Mechanism.return_value = mech
         kek_meta_extended = '{"iv": "AQIDBAUGBwgJCgsMDQ4PEA=="}'
         decrypt_dto = plugin_import.DecryptDTO(ct)
-        payload = self.plugin.decrypt(decrypt_dto,
-                                      mock.MagicMock(),
-                                      kek_meta_extended,
-                                      mock.MagicMock())
-        self.assertTrue(self.p11_mock.Mechanism.called)
-        self.session.decrypt.assert_called_once_with(key,
-                                                     ct,
-                                                     mech)
-        self.assertEqual(b'defg', payload)
+        with mock.patch.object(self.plugin, '_unwrap_key') as unwrap_key_mock:
+            unwrap_key_mock.return_value = 'unwrapped_key'
+            payload = self.plugin.decrypt(decrypt_dto,
+                                          mock.MagicMock(),
+                                          kek_meta_extended,
+                                          mock.MagicMock())
+            self.assertTrue(self.p11_mock.Mechanism.called)
+            self.session.decrypt.assert_called_once_with('unwrapped_key',
+                                                         ct,
+                                                         mech)
+            self.assertEqual(b'defg', payload)
 
     def test_bind_kek_metadata_without_existing_key(self):
         self.session.findObjects.return_value = []  # no existing key
@@ -208,15 +206,8 @@ class WhenTestingP11CryptoPlugin(testtools.TestCase):
     def test_bind_kek_metadata_with_existing_key(self):
         self.session.findObjects.return_value = ['key1']  # one key
 
-        self.plugin.bind_kek_metadata(mock.MagicMock())
-
-        gk = self.pkcs11.lib.C_Generate_Key
-        # this is a way to test to make sure methods are NOT called
-        self.assertEqual([], gk.call_args_list)
-        t = self.session._template2ckattrlist
-        self.assertEqual([], t.call_args_list)
-        m = self.p11_mock.LowLevel.CK_MECHANISM
-        self.assertEqual([], m.call_args_list)
+        dto_mock = mock.MagicMock()
+        self.assertEqual(self.plugin.bind_kek_metadata(dto_mock), dto_mock)
 
     def test_generate_asymmetric_raises_error(self):
         self.assertRaises(NotImplementedError,
