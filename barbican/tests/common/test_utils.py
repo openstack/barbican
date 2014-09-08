@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import mock
-import testtools
 
 from barbican.common import utils
+from barbican.tests import utils as test_utils
 
 
-class WhenTestingHostnameForRefsGetter(testtools.TestCase):
+class WhenTestingHostnameForRefsGetter(test_utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingHostnameForRefsGetter, self).setUp()
@@ -50,7 +50,7 @@ class WhenTestingHostnameForRefsGetter(testtools.TestCase):
                                                self.version))
 
 
-class WhenTestingAcceptEncodingGetter(testtools.TestCase):
+class WhenTestingAcceptEncodingGetter(test_utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingAcceptEncodingGetter, self).setUp()
@@ -109,7 +109,7 @@ class WhenTestingAcceptEncodingGetter(testtools.TestCase):
         self.assertEqual("mock.Mock", fullname)
 
 
-class WhenTestingGenerateFullClassnameForInstance(testtools.TestCase):
+class WhenTestingGenerateFullClassnameForInstance(test_utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingGenerateFullClassnameForInstance, self).setUp()

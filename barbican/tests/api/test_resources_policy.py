@@ -23,7 +23,6 @@ import os
 
 import mock
 from oslo.config import cfg
-import testtools
 from webob import exc
 
 from barbican.api.controllers import consumers
@@ -32,6 +31,7 @@ from barbican.api.controllers import secrets
 from barbican.api.controllers import versions
 from barbican import context
 from barbican.openstack.common import policy
+from barbican.tests import utils
 
 
 CONF = cfg.CONF
@@ -97,7 +97,7 @@ class ConsumerResource(TestableResource):
     controller_cls = consumers.ContainerConsumerController
 
 
-class BaseTestCase(testtools.TestCase):
+class BaseTestCase(utils.BaseTestCase):
 
     def setUp(self):
         super(BaseTestCase, self).setUp()

@@ -14,15 +14,15 @@
 # limitations under the License.
 
 import mock
-import testtools
 
 from barbican.model import models
 from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import timeutils
 from barbican.tasks import resources
+from barbican.tests import utils
 
 
-class WhenBeginningOrder(testtools.TestCase):
+class WhenBeginningOrder(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenBeginningOrder, self).setUp()
@@ -171,7 +171,7 @@ class WhenBeginningOrder(testtools.TestCase):
         )
 
 
-class WhenBeginningKeyTypeOrder(testtools.TestCase):
+class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenBeginningKeyTypeOrder, self).setUp()
@@ -325,7 +325,7 @@ class WhenBeginningKeyTypeOrder(testtools.TestCase):
         )
 
 
-class WhenBeginningAsymmetricTypeOrder(testtools.TestCase):
+class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenBeginningAsymmetricTypeOrder, self).setUp()

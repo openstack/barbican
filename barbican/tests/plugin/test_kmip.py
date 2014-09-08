@@ -17,6 +17,7 @@ import mock
 import testtools
 
 from barbican.plugin.interface import secret_store
+from barbican.tests import utils
 
 try:
     from kmip.core import attributes as attr
@@ -36,7 +37,7 @@ except ImportError:
 
 
 @testtools.skipIf(not kmip_available, "KMIP imports not available")
-class WhenTestingKMIPSecretStore(testtools.TestCase):
+class WhenTestingKMIPSecretStore(utils.BaseTestCase):
     """Test using the KMIP server backend for SecretStore."""
 
     def setUp(self):

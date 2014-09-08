@@ -12,15 +12,16 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import testtools
+
+import mock
 
 import barbican.model.repositories as repo
 from barbican.plugin.interface import secret_store
 from barbican.plugin import store_crypto
-import mock
+from barbican.tests import utils
 
 
-class WhenStoreCryptoAdapterPlugin(testtools.TestCase):
+class WhenStoreCryptoAdapterPlugin(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenStoreCryptoAdapterPlugin, self).setUp()
@@ -41,7 +42,7 @@ class WhenStoreCryptoAdapterPlugin(testtools.TestCase):
                          self.store_crypto.generate_supports(self.key_spec))
 
 
-class WhenTestingStoreCrypto(testtools.TestCase):
+class WhenTestingStoreCrypto(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingStoreCrypto, self).setUp()

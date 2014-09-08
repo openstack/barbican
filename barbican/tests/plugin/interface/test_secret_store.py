@@ -14,9 +14,9 @@
 # limitations under the License.
 
 import mock
-import testtools
 
 from barbican.plugin.interface import secret_store as str
+from barbican.tests import utils
 
 
 class TestSecretStore(str.SecretStoreBase):
@@ -86,7 +86,7 @@ class TestSecretStoreWithTransportKey(str.SecretStoreBase):
         return True
 
 
-class WhenTestingSecretStorePluginManager(testtools.TestCase):
+class WhenTestingSecretStorePluginManager(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingSecretStorePluginManager, self).setUp()

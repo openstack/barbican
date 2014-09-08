@@ -20,7 +20,6 @@ transport key resource classes.
 
 import mock
 import pecan
-import testtools
 import webtest
 
 from barbican.api import app
@@ -28,6 +27,7 @@ from barbican.api import controllers
 from barbican.common import exception as excep
 import barbican.context
 from barbican.model import models
+from barbican.tests import utils
 
 
 def get_barbican_env(keystone_id):
@@ -79,7 +79,7 @@ def create_transport_key(id_ref="id",
     return tkey
 
 
-class FunctionalTest(testtools.TestCase):
+class FunctionalTest(utils.BaseTestCase):
 
     def setUp(self):
         super(FunctionalTest, self).setUp()

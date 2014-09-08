@@ -16,10 +16,9 @@
 import datetime
 import unittest
 
-import testtools
-
 from barbican.common import exception as excep
 from barbican.common import validators
+from barbican.tests import utils
 
 
 def suite():
@@ -30,7 +29,7 @@ def suite():
     return suite
 
 
-class WhenTestingValidatorsFunctions(testtools.TestCase):
+class WhenTestingValidatorsFunctions(utils.BaseTestCase):
 
     def test_secret_too_big_is_false_for_small_secrets(self):
         data = b'\xb0'
@@ -57,7 +56,7 @@ class WhenTestingValidatorsFunctions(testtools.TestCase):
         self.assertTrue(is_too_big)
 
 
-class WhenTestingSecretValidator(testtools.TestCase):
+class WhenTestingSecretValidator(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingSecretValidator, self).setUp()
@@ -309,7 +308,7 @@ class WhenTestingSecretValidator(testtools.TestCase):
         self.validator.validate(self.secret_req)
 
 
-class WhenTestingOrderValidator(testtools.TestCase):
+class WhenTestingOrderValidator(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingOrderValidator, self).setUp()
@@ -544,7 +543,7 @@ class WhenTestingOrderValidator(testtools.TestCase):
         )
 
 
-class WhenTestingContainerValidator(testtools.TestCase):
+class WhenTestingContainerValidator(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingContainerValidator, self).setUp()
@@ -740,7 +739,7 @@ class WhenTestingContainerValidator(testtools.TestCase):
         self.assertEqual('secret_refs', exception.invalid_property)
 
 
-class WhenTestingRSAContainerValidator(testtools.TestCase):
+class WhenTestingRSAContainerValidator(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingRSAContainerValidator, self).setUp()
@@ -853,7 +852,7 @@ class WhenTestingRSAContainerValidator(testtools.TestCase):
         self.assertEqual('secret_refs', exception.invalid_property)
 
 
-class WhenTestingCertificateContainerValidator(testtools.TestCase):
+class WhenTestingCertificateContainerValidator(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingCertificateContainerValidator, self).setUp()
@@ -932,7 +931,7 @@ class WhenTestingCertificateContainerValidator(testtools.TestCase):
         self.assertEqual('secret_refs', exception.invalid_property)
 
 
-class WhenTestingTransportKeyValidator(testtools.TestCase):
+class WhenTestingTransportKeyValidator(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingTransportKeyValidator, self).setUp()
@@ -963,7 +962,7 @@ class WhenTestingTransportKeyValidator(testtools.TestCase):
         self.assertEqual('transport_key', exception.invalid_property)
 
 
-class WhenTestingConsumerValidator(testtools.TestCase):
+class WhenTestingConsumerValidator(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingConsumerValidator, self).setUp()
@@ -1006,7 +1005,7 @@ class WhenTestingConsumerValidator(testtools.TestCase):
         self.validator.validate(self.consumer_req)
 
 
-class WhenTestingTypeOrderValidator(testtools.TestCase):
+class WhenTestingTypeOrderValidator(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingTypeOrderValidator, self).setUp()

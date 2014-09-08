@@ -14,14 +14,14 @@
 # limitations under the License.
 
 import mock
-import testtools
 
 from barbican.model import models
 from barbican.plugin.crypto import crypto as plugin_import
 from barbican.plugin.crypto import p11_crypto
+from barbican.tests import utils
 
 
-class WhenTestingP11CryptoPlugin(testtools.TestCase):
+class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingP11CryptoPlugin, self).setUp()

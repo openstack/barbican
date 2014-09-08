@@ -20,6 +20,8 @@ import mock
 from requests import exceptions as request_exceptions
 import testtools
 
+from barbican.tests import utils
+
 try:
     import barbican.plugin.dogtag as dogtag_import
     import barbican.plugin.interface.certificate_manager as cm
@@ -34,7 +36,7 @@ except ImportError:
 
 
 @testtools.skipIf(not imports_ok, "Dogtag imports not available")
-class WhenTestingDogtagKRAPlugin(testtools.TestCase):
+class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingDogtagKRAPlugin, self).setUp()
@@ -187,7 +189,7 @@ class WhenTestingDogtagKRAPlugin(testtools.TestCase):
 
 
 @testtools.skipIf(not imports_ok, "Dogtag imports not available")
-class WhenTestingDogtagCAPlugin(testtools.TestCase):
+class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingDogtagCAPlugin, self).setUp()

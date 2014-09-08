@@ -13,11 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import oslotest.base as oslotest
+
 from tempest import auth
 from tempest import clients
 from tempest.common import rest_client
 from tempest import config
-import testtools
+
 
 CONF = config.CONF
 
@@ -36,7 +38,7 @@ class BarbicanClient(rest_client.RestClient):
         self.endpoint_url = 'publicURL'
 
 
-class TestCase(testtools.TestCase):
+class TestCase(oslotest.BaseTestCase):
 
     def setUp(self):
         super(TestCase, self).setUp()
