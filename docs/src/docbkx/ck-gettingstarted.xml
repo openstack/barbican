@@ -346,11 +346,9 @@
             Identity to acquire an authentication token. To request an
             authentication token, you must supply a payload of
             credentials in the authentication request.</para>
-        <para>Credentials are usually a combination of your user name
-            and password, and optionally, the name or ID of the tenant
-            in which your cloud runs. Ask your cloud administrator for
-            your user name, password, and tenant so that you can
-            generate authentication tokens. </para>
+        <para>Credentials are usually a combination of your user name and password, and optionally,
+            the name or ID of the tenant in which your cloud runs. Ask your cloud administrator for
+            your user name, password, and tenant so that you can generate authentication tokens. </para>
         <para>When you send API requests, you include the token in the
             X-Auth-Token header. If you access multiple OpenStack
             services, you must get a token for each service. A token
@@ -460,7 +458,7 @@
                             one:</para>
                         <para>
                             <programlisting> {"order_ref":
-      "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/orders/62d57f53-ecfe-4ae4-87bd-fab2f24e29bc"} </programlisting>
+      "https://<replaceable>endpointURL</replaceable>/v1/orders/62d57f53-ecfe-4ae4-87bd-fab2f24e29bc"} </programlisting>
                         </para>
                     </listitem>
                     <listitem>
@@ -474,7 +472,7 @@
                         <para>Retrieve the order by typing the
                             following command:</para>
                         <para>
-                            <programlisting>curl -H 'Accept: text/plain' &lt;http://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/orders/<replaceable>orderID</replaceable></programlisting>
+                            <programlisting>curl -H 'Accept: text/plain' -H 'X-Project-Id:12345' &lt;http://<replaceable>endpointURL</replaceable>/v1/orders/<replaceable>orderID</replaceable></programlisting>
                         </para>
                         <para>If the call is successful, it will
                             return a response like the following
@@ -493,20 +491,19 @@
             </para>
         </section>
         <section xml:id="Retrieve_Order_Status">
-            <title>Retrieve order status</title>
+            <title>Retrieving order status</title>
             <para>You can submit a <command>GET</command> request to
                 retrieve the status of an order. An order can have one
                 of the following statuses: ACTIVE, PENDING, or ERROR. </para>
             <para>To retrieve the order status, type the following
                 command:</para>
             <para>
-                <programlisting>curl -H 'Accept: application/json' https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/orders/<replaceable>orderID</replaceable></programlisting>
+                <programlisting>curl -H 'Accept: application/json' -H 'X-Project-Id:12345' https://<replaceable>endpointURL</replaceable>/v1/orders/<replaceable>orderID</replaceable></programlisting>
             </para>
-            <para>The following example shows an order with an ACTIVE
-                status:
+            <para>The following example shows an order with an ACTIVE status:
                 <programlisting>{
     "status": "ACTIVE",
-    "secret_ref": "<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/secrets/8a78d5e4-524a-4e81-96cc-c7d16ed85515",
+    "secret_ref": "<replaceable>endpointURL</replaceable>/v1/secrets/8a78d5e4-524a-4e81-96cc-c7d16ed85515",
     "updated": "2014-04-02T14:52:26.987458",
     "created": "2014-04-02T14:52:26.921043",
     "secret": {
@@ -517,15 +514,14 @@
         "bit_length": 256,
         "mode": "cbc"
          },
-    "order_ref": "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/orders/b63d2c05-5d53-4db6-af06-4e388044deb8"
+    "order_ref": "https://<replaceable>endpointURL</replaceable>/v1/orders/b63d2c05-5d53-4db6-af06-4e388044deb8"
 }</programlisting>The
-                following example shows an order with the status set
-                to PENDING. Note that a secret ID is not returned, but
-                in its place is a series of question marks.</para>
+                following example shows an order with the status set to PENDING. Note that a secret
+                ID is not returned, but in its place is a series of question marks.</para>
             <para>
                 <programlisting>{
      "status": "PENDING",
-     "secret_ref": "<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/secrets/????",
+     "secret_ref": "<replaceable>endpointURL</replaceable>/v1/secrets/????",
      "updated": "2014-03-19T22:40:06.720872",
      "created": "2014-03-19T22:40:06.720860",
      "secret": {
@@ -536,7 +532,7 @@
             "bit_length": 256,
             "mode": "cbc"
              },
-            "order_ref": "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/orders/94ade532-9657-41e1-87ae-c8cbdfa836e0"
+            "order_ref": "https://<replaceable>endpointURL</replaceable>/v1/orders/94ade532-9657-41e1-87ae-c8cbdfa836e0"
  }</programlisting>
             </para>
         </section>
@@ -590,10 +586,9 @@
             <para>
                 <programlisting language="json"><xi:include href="./samples/reqCreateSecret.json" parse="text"/></programlisting>
             </para>
-            <para>If the request is successful, you will receive a
-                response like the following:
+            <para>If the request is successful, you will receive a response like the following:
                 <programlisting>
-    "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/secrets/a8957047-16c6-4b05-ac57-8621edd0e9ee"
+    "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/secrets/a8957047-16c6-4b05-ac57-8621edd0e9ee"
 </programlisting></para>
             <para>The example above shows the <emphasis role="italic"
                     >secretId</emphasis>, which will be returned in a
@@ -616,16 +611,12 @@
         </section>
         <section xml:id="Retrieve_Secret">
             <title>Retrieving a secret</title>
-            <para>After you have created and stored a secret, you can
-                submit a <command>GET</command> request to retrieve
-                either the secret metadata or the actual decrypted
-                secret, depending on the <code>Accept</code> header
-                that is provided in the <command>GET</command>
-                request. For more information on different possilities
-                and combinations for setting the <code>Accept</code>
-                header, read <olink targetdoc="ck-devguide"
-                    targetptr="Examples_of_Secrets">Examples of secret
-                    combinations</olink>.</para>
+            <para>After you have stored a secret, you can submit a <command>GET</command> request to
+                retrieve either the secret metadata or the actual decrypted secret, depending on the
+                    <code>Accept</code> header that is provided in the <command>GET</command>
+                request. For more information on different possibilities and combinations for
+                setting the <code>Accept</code> header, read <olink targetdoc="ck-devguide"
+                    targetptr="Examples_of_Secrets">Examples of secret combinations</olink>.</para>
             <para>The following example shows how to retrieve secret
                 metadata by submitting a <command>GET</command>
                 request against the endpoint URL with the <emphasis
@@ -634,7 +625,7 @@
                 specified and the <code>Accept</code> header set to
                     <code>application/json</code>.</para>
             <para>
-                <programlisting>curl -H 'Accept: application/json' https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/secrets/<replaceable>secretID</replaceable></programlisting>
+                <programlisting>curl -H 'Accept: application/json' -H 'X-Project-Id:12345' https://<replaceable>endpointURL</replaceable>/v1/secrets/<replaceable>secretID</replaceable></programlisting>
             </para>
             <para>If the call is successful, you receive a response
                 like the following: <programlisting language="json"><xi:include href="./samples/reqCreateSecretwithoutPayload.json" parse="text"/></programlisting>
@@ -653,15 +644,14 @@
                 associated with a given tenant by typing the following
                 command:</para>
             <para>
-                <programlisting>curl -H 'Accept: application/json' https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/secrets</programlisting>
+                <programlisting>curl -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'X-Project-Id:12345' https://<replaceable>endpointURL</replaceable>/v1/secrets</programlisting>
             </para>
-            <para>If the call is successful, you receive a response
-                like the following
+            <para>If the call is successful, you receive a response like the following
                 one:<programlisting>{
     "secrets": [
         {
             "status": "ACTIVE",
-            "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/secrets/9150d09b-7791-4c2a-90cc-1592e2ff67ac",
+            "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/secrets/9150d09b-7791-4c2a-90cc-1592e2ff67ac",
             "updated": "2014-03-19T22:39:55.136579",
             "name": "aes_key",
             "algorithm": "aes",
@@ -675,7 +665,7 @@
         },
         {
             "status": "ACTIVE",
-            "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/secrets/2e21bffa-2b81-432a-9bcb-2533593bcd34",
+            "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/secrets/2e21bffa-2b81-432a-9bcb-2533593bcd34",
             "updated": "2014-03-19T22:39:56.018075",
             "name": "aes_key",
             "algorithm": "aes",
@@ -689,7 +679,7 @@
         }, 
         {
             "status": "ACTIVE",
-            "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/secrets/54bf3411-0765-467c-ba76-ba96c527e990",
+            "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/secrets/54bf3411-0765-467c-ba76-ba96c527e990",
             "updated": "2014-03-19T22:40:17.100402",
             "name": "secretname",
             "algorithm": "aes",
@@ -703,7 +693,7 @@
         }
     ],
     "total": 84,
-    "next": "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/secrets?limit=10&amp;offset=10"
+    "next": "https://<replaceable>endpointURL</replaceable>/v1/secrets?limit=10&amp;offset=10"
 }</programlisting>
             </para>
         </section>
@@ -713,16 +703,15 @@
                 to retrieve metadata for multiple orders for a given
                 tenant. To do so, type the following command:</para>
             <para>
-                <programlisting>curl -H 'Accept: application/json' https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/orders        </programlisting>
+                <programlisting>curl -H 'Accept: application/json' -H 'X-Project-Id:12345' https://<replaceable>endpointURL</replaceable>/v1/orders        </programlisting>
             </para>
-            <para>If the call is successful, you receive a response
-                like the following
+            <para>If the call is successful, you receive a response like the following
                 one:<programlisting>{
     "total": 15,
     "orders": [
         {
             "status": "PENDING",
-            "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/secrets/????",
+            "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/secrets/????",
             "updated": "2014-03-19T22:40:06.720872",
             "created": "2014-03-19T22:40:06.720860",
             "secret": {
@@ -733,11 +722,11 @@
                 "bit_length": 256,
                 "mode": "cbc"
             },
-            "order_ref": "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/orders/94ade532-9657-41e1-87ae-c8cbdfa836e0"
+            "order_ref": "https://<replaceable>endpointURL</replaceable>/v1/orders/94ade532-9657-41e1-87ae-c8cbdfa836e0"
         },
         {
             "status": "PENDING",
-            "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/secrets/????",
+            "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/secrets/????",
             "updated": "2014-03-19T22:41:18.930095",
             "created": "2014-03-19T22:41:18.930081",
             "secret": {
@@ -748,11 +737,11 @@
                 "bit_length": 256,
                 "mode": "cbc"
             },
-            "order_ref": "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/orders/50212509-9c87-4a71-be3e-9ad59c290ede"
+            "order_ref": "https://<replaceable>endpointURL</replaceable>/v1/orders/50212509-9c87-4a71-be3e-9ad59c290ede"
         },
         {
             "status": "ACTIVE",
-            "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/secrets/6e0bfe9f-8a59-4e29-81af-ea57eec96f28",
+            "secret_ref": "https://<replaceable>endpointURL</replaceable>/v1/secrets/6e0bfe9f-8a59-4e29-81af-ea57eec96f28",
             "updated": "2014-03-25T16:42:20.584453",
             "created": "2014-03-25T16:42:20.430822",
             "secret": {
@@ -763,10 +752,10 @@
                 "bit_length": 256,
                 "mode": "cbc"
             },
-            "order_ref": "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/orders/488cd596-f1a6-4abe-8cb0-16608f5b0359"
+            "order_ref": "https://<replaceable>endpointURL</replaceable>/v1/orders/488cd596-f1a6-4abe-8cb0-16608f5b0359"
         }
     ],
-    "next": "https://<replaceable>endpointURL</replaceable>/v1/<replaceable>tenantID</replaceable>/orders?limit=10&amp;offset=10"
+    "next": "https://<replaceable>endpointURL</replaceable>/v1/orders?limit=10&amp;offset=10"
 }</programlisting>
             </para>
         </section>
@@ -776,25 +765,23 @@
             <para>
                 <orderedlist>
                     <listitem>
-                        <para>To follow the two-step process, first
-                            create the secret metadata in Barbican by
-                            sending a <command>POST</command> request
-                            as shown in the following example:</para>
+                        <para>To follow the two-step process, first create the secret metadata in
+                            Barbican by sending a <command>POST</command> request as shown in the
+                            following example:</para>
                         <para>
-                            <programlisting>curl -i -H 'Content-Type: application/json' -d '{"name": "Binary Key File"}' http://<replaceable>endpointURL</replaceable>/v1/12345/secrets</programlisting>
+                            <programlisting>curl -i -H 'Content-Type: application/json' -H 'X-Project-Id:12345' -d '{"name": "Binary Key File"}' http://<replaceable>endpointURL</replaceable>/v1/secrets</programlisting>
                         </para>
-                        <para>If the call is successful, you receive
-                            a <code>200 OK</code> response as shown in
-                            the following example:</para>
+                        <para>If the call is successful, you receive a <code>201 Created</code>
+                            response as shown in the following example:</para>
                         <para>
                             <programlisting>HTTP/1.1 201 Created                                                               
 Content-Length: 93                                                                 
 Content-Type: application/json; charset=utf-8                                      
-Location: http://<replaceable>endpointURL</replaceable>/12345/secrets/a83018d1-e657-4957-9ddd-42a479753e6b
+Location: http://<replaceable>endpointURL</replaceable>/secrets/a83018d1-e657-4957-9ddd-42a479753e6b
 x-openstack-request-id: req-ea090bd4-5bfc-47ae-a388-746485d947f1
                                                                                    
 {
-  "secret_ref": "http://<replaceable>endpointURL/</replaceable>v1/12345/secrets/a83018d1-e657-4957-9ddd-42a479753e6b"
+  "secret_ref": "http://<replaceable>endpointURL/</replaceable>v1/secrets/a83018d1-e657-4957-9ddd-42a479753e6b"
 }
 </programlisting>
                         </para>
@@ -817,8 +804,8 @@ x-openstack-request-id: req-ea090bd4-5bfc-47ae-a388-746485d947f1
                             secret key file you just created as sghown
                             in the following example:</para>
             <para>
-                <programlisting>curl -i -X PUT -H 'Content-Type: application/octet-stream' \
-     -T ./secret_key_file http://<replaceable>endpointURL</replaceable>/v1/12345/secrets/a83018d1-e657-4957-9ddd-42a479753e6b
+                <programlisting>curl -i -X PUT -H 'Content-Type: application/octet-stream' -H 'X-Project-Id:12345' \
+     -T ./secret_key_file http://<replaceable>endpointURL</replaceable>/v1/secrets/a83018d1-e657-4957-9ddd-42a479753e6b
 </programlisting>
             </para></listitem>
             <listitem><para>Barbican encrypts and stores the secret key file, associates it
