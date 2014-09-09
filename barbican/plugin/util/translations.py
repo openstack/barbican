@@ -42,6 +42,9 @@ def normalize_before_encryption(unencrypted, content_type, content_encoding,
                 unencrypted = base64.b64decode(unencrypted)
             except TypeError:
                 raise s.SecretPayloadDecodingError()
+        elif mime_types.use_binary_content_as_is(content_type,
+                                                 content_encoding):
+            unencrypted = unencrypted
         elif enforce_text_only:
             # For text-based protocols (such as the one-step secret POST),
             #   only 'base64' encoding is possible/supported.

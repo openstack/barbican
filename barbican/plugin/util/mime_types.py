@@ -52,7 +52,7 @@ ENCODINGS = ['base64']
 
 # Maps normalized content-types to supported encoding(s)
 CTYPES_TO_ENCODINGS = {'text/plain': None,
-                       'application/octet-stream': ['base64'],
+                       'application/octet-stream': ['base64', 'binary'],
                        'application/aes': None}
 
 
@@ -94,6 +94,20 @@ def is_base64_processing_needed(content_type, content_encoding):
             encodings = CTYPES_TO_ENCODINGS[INTERNAL_CTYPES[content_type]]
             return encodings and 'base64' in encodings
     return False
+
+
+def use_binary_content_as_is(content_type, content_encoding):
+    """Checks if content-type and content-encoding header (if present) is valid
+    to allow binary content as-is.
+    """
+    content_encodings = utils.get_accepted_encodings_direct(content_encoding)
+    if content_encodings:
+        if 'binary' not in content_encodings:
+            return False
+        if is_supported(content_type):
+            encodings = CTYPES_TO_ENCODINGS[INTERNAL_CTYPES.get(content_type)]
+            return encodings and 'binary' in encodings
+    return INTERNAL_CTYPES.get(content_type) in BINARY
 
 
 def augment_fields_with_content_types(secret):
