@@ -32,11 +32,11 @@ class WhenUsingAsyncTaskClient(utils.BaseTestCase):
 
         self.client = client.TaskClient()
 
-    def test_should_process_order(self):
-        self.client.process_order(order_id=self.order_id,
-                                  keystone_id=self.keystone_id)
+    def test_should_process_type_order(self):
+        self.client.process_type_order(order_id=self.order_id,
+                                       keystone_id=self.keystone_id)
         queue.get_client.assert_called_with()
-        self.mock_client.cast.assert_called_with({}, 'process_order',
+        self.mock_client.cast.assert_called_with({}, 'process_type_order',
                                                  order_id=self.order_id,
                                                  keystone_id=self.keystone_id)
 

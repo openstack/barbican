@@ -387,51 +387,6 @@ class TypeOrderValidator(ValidatorBase):
                                                     .format(order_type))
 
 
-# TODO(atiwari) - Remove this Validator for bug 1335171
-class NewOrderValidator(ValidatorBase):
-    """Validate a new order."""
-
-    def __init__(self):
-        self.name = 'Order'
-        self.schema = {
-            "type": "object",
-            "properties": {
-            },
-        }
-        self.secret_validator = NewSecretValidator()
-
-    def validate(self, json_data, parent_schema=None):
-        schema_name = self._full_name(parent_schema)
-
-        self._assert_schema_is_valid(json_data, schema_name)
-
-        secret = json_data.get('secret')
-        self._assert_validity(secret is not None,
-                              schema_name,
-                              u._("'secret' attributes are required"),
-                              "secret")
-
-        # If secret group is provided, validate it now.
-        self.secret_validator.validate(secret, parent_schema=self.name)
-        self._assert_validity('payload' not in secret,
-                              schema_name,
-                              u._("'payload' not allowed for secret "
-                                  "generation"),
-                              "secret")
-
-        # Validation secret generation related fields.
-        # TODO(jfwood): Invoke the crypto plugin for this purpose
-
-        if secret.get('payload_content_type') != 'application/octet-stream':
-            raise exception.UnsupportedField(field='payload_content_type',
-                                             schema=schema_name,
-                                             reason=u._("Only 'application/oc "
-                                                        "tet-stream' "
-                                                        "supported"))
-
-        return json_data
-
-
 class ContainerConsumerValidator(ValidatorBase):
     """Validate a Consumer."""
 

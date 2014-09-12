@@ -40,15 +40,6 @@ class Tasks(object):
     server utilizing Oslo messaging's RPC server. This RPC server can invoke
     methods on itself, which include the methods in this class.
     """
-    def process_order(self, context, order_id, keystone_id):
-        """Process Order."""
-        LOG.debug('Order id is %s', order_id)
-        task = resources.BeginOrder()
-        try:
-            task.process(order_id, keystone_id)
-        except Exception:
-            LOG.exception(">>>>> Task exception seen, details reported "
-                          "on the Orders entity.")
 
     def process_type_order(self, context, order_id, keystone_id):
         """Process TypeOrder."""

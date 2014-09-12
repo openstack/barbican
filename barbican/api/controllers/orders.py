@@ -160,7 +160,6 @@ class OrdersController(object):
         self.tenant_repo = tenant_repo or repo.TenantRepo()
         self.order_repo = order_repo or repo.OrderRepo()
         self.queue = queue_resource or async_client.TaskClient()
-        self.validator = validators.NewOrderValidator()
         self.type_order_validator = validators.TypeOrderValidator()
 
     @pecan.expose()
@@ -208,61 +207,19 @@ class OrdersController(object):
 
         tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
 
-        # Note(atiwari): trying to preserve backward compatibility
-        # This will be removed as part of bug1335171
-        raw_body = pecan.request.body
-        order_type = None
-        if raw_body:
-            order_type = json.loads(raw_body).get('type')
-
-        if order_type:
-            body = api.load_body(pecan.request,
-                                 validator=self.type_order_validator)
-            LOG.debug('Processing order type %s', order_type)
-            new_order = models.Order()
-            new_order.meta = body.get('meta')
-            new_order.type = order_type
-
-            # TODO(john-wood-w) These are required attributes currently, but
-            #   will eventually be removed once we drop the legacy orders
-            #   request.
-            new_order.secret_name = 'N/A'
-            new_order.secret_algorithm = 'N/A'
-            new_order.secret_bit_length = 0
-            new_order.secret_mode = 'N/A'
-            new_order.secret_payload_content_type = 'N/A'
-        else:
-            body = api.load_body(pecan.request, validator=self.validator)
-            LOG.debug('Start on_post...%s', body)
-
-            if 'secret' not in body:
-                _secret_not_in_order()
-            secret_info = body['secret']
-            name = secret_info.get('name')
-            LOG.debug('Secret to create is %s', name)
-
-            new_order = models.Order()
-            new_order.secret_name = secret_info.get('name')
-            new_order.secret_algorithm = secret_info.get('algorithm')
-            new_order.secret_bit_length = secret_info.get('bit_length', 0)
-            new_order.secret_mode = secret_info.get('mode')
-            new_order.secret_payload_content_type = secret_info.get(
-                'payload_content_type')
-
-            new_order.secret_expiration = secret_info.get('expiration')
+        body = api.load_body(pecan.request,
+                             validator=self.type_order_validator)
+        order_type = body.get('type')
+        LOG.debug('Processing order type %s', order_type)
+        new_order = models.Order()
+        new_order.meta = body.get('meta')
+        new_order.type = order_type
 
         new_order.tenant_id = tenant.id
         self.order_repo.create_from(new_order)
 
-        # Send to workers to process.
-        # TODO(atiwari) - bug 1335171
-        if order_type:
-            self.queue.process_type_order(order_id=new_order.id,
-                                          keystone_id=keystone_id)
-        else:
-            self.queue.process_order(order_id=new_order.id,
-                                     keystone_id=keystone_id)
-
+        self.queue.process_type_order(order_id=new_order.id,
+                                      keystone_id=keystone_id)
         pecan.response.status = 202
         pecan.response.headers['Location'] = '/{0}/orders/{1}'.format(
             keystone_id, new_order.id

@@ -20,13 +20,14 @@ from functionaltests.api.v1.models.secret_models import SecretModel
 class OrderModel(BaseModel):
 
     def __init__(self, status=None, secret_ref=None, updated=None,
-                 created=None, secret=None, order_ref=None):
+                 created=None, type=None, meta=None, order_ref=None):
         super(OrderModel, self).__init__()
         self.status = status
         self.secret_ref = secret_ref
         self.updated = updated
         self.created = created
-        self.secret = secret
+        self.type = type
+        self.meta = meta
         self.order_ref = order_ref
 
     @classmethod

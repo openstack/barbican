@@ -457,12 +457,6 @@ class Order(BASE, ModelBase):
     error_status_code = sa.Column(sa.String(16))
     error_reason = sa.Column(sa.String(255))
 
-    secret_name = sa.Column(sa.String(255))
-    secret_algorithm = sa.Column(sa.String(255))
-    secret_bit_length = sa.Column(sa.Integer)
-    secret_mode = sa.Column(sa.String(255))
-    secret_payload_content_type = sa.Column(sa.String(255), nullable=False)
-    secret_expiration = sa.Column(sa.DateTime, default=None)
     meta = sa.Column(JsonBlob(), nullable=True)
 
     secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
@@ -496,28 +490,11 @@ class Order(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        if not self.meta:
-            if self.secret_expiration:
-                expiration = self.secret_expiration.isoformat()
-            else:
-                expiration = self.secret_expiration
-            ret = {
-                'secret': {
-                    'name': self.secret_name or self.secret_id,
-                    'algorithm': self.secret_algorithm,
-                    'bit_length': self.secret_bit_length,
-                    'mode': self.secret_mode,
-                    'expiration': expiration,
-                    'payload_content_type': self.secret_payload_content_type
-                },
-                'order_id': self.id
-            }
-        else:
-            ret = {
-                'type': self.type,
-                'meta': self.meta,
-                'order_id': self.id
-            }
+        ret = {
+            'type': self.type,
+            'meta': self.meta,
+            'order_id': self.id
+        }
         if self.secret_id:
             ret['secret_id'] = self.secret_id
         if self.container_id:

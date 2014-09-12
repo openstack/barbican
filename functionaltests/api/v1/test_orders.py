@@ -17,7 +17,8 @@ from functionaltests.api.v1.models import order_models
 
 
 create_order_data = {
-    "secret": {
+    'type': 'key',
+    "meta": {
         "name": "secretname",
         "algorithm": "AES",
         "bit_length": 256,

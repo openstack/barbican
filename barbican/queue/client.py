@@ -37,12 +37,6 @@ class TaskClient(object):
         #   standalone single-node mode for Barbican.
         self._client = queue.get_client() or _DirectTaskInvokerClient()
 
-    def process_order(self, order_id, keystone_id):
-        """Process Order."""
-
-        self._cast('process_order', order_id=order_id,
-                   keystone_id=keystone_id)
-
     def process_type_order(self, order_id, keystone_id):
         """Process TypeOrder."""
 

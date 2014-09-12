@@ -73,21 +73,6 @@ def create_secret(id_ref="id", name="name",
     return secret
 
 
-def create_order(id_ref="id",
-                 name="name",
-                 algorithm=None,
-                 bit_length=None,
-                 mode=None):
-    """Generate an Order entity instance."""
-    order = models.Order()
-    order.id = id_ref
-    order.secret_name = name
-    order.secret_algorithm = algorithm
-    order.secret_bit_length = bit_length
-    order.secret_mode = mode
-    return order
-
-
 def create_order_with_meta(id_ref="id", order_type="certificate", meta={},
                            status='PENDING'):
     """Generate an Order entity instance with Metadata."""
@@ -1483,15 +1468,16 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         self.queue_resource = mock.MagicMock()
         self.queue_resource.process_order.return_value = None
 
-        self.key_order_req = {
-            'secret': {
-                'name': self.secret_name,
-                'payload_content_type': self.secret_payload_content_type,
-                'algorithm': self.secret_algorithm,
-                'bit_length': self.secret_bit_length,
-                'mode': self.secret_mode
-            }
-        }
+        self.type = 'key'
+        self.meta = {"name": "secretname",
+                     "algorithm": "AES",
+                     "bit_length": 256,
+                     "mode": "cbc",
+                     'payload_content_type':
+                     'application/octet-stream'}
+
+        self.key_order_req = {'type': self.type,
+                              'meta': self.meta}
 
     def test_should_add_new_order(self):
         resp = self.app.post_json(
@@ -1500,7 +1486,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         )
         self.assertEqual(resp.status_int, 202)
 
-        self.queue_resource.process_order.assert_called_once_with(
+        self.queue_resource.process_type_order.assert_called_once_with(
             order_id=None, keystone_id=self.tenant_keystone_id)
 
         args, kwargs = self.order_repo.create_from.call_args
@@ -1512,7 +1498,8 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
 
         # Using unsupported algorithm field for this test
         self.unsupported_req = {
-            'secret': {
+            'type': 'key',
+            'meta': {
                 'name': self.secret_name,
                 'payload_content_type': self.secret_payload_content_type,
                 'algorithm': "not supported",
@@ -1587,12 +1574,14 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
         self.offset = 2
         self.limit = 2
 
-        order_params = {'name': self.name,
-                        'algorithm': self.secret_algorithm,
-                        'bit_length': self.secret_bit_length,
-                        'mode': self.secret_mode}
+        order_meta = {'name': self.name,
+                      'algorithm': self.secret_algorithm,
+                      'bit_length': self.secret_bit_length,
+                      'mode': self.secret_mode}
 
-        self.orders = [create_order(id_ref='id' + str(id), **order_params) for
+        self.orders = [create_order_with_meta(id_ref='id' + str(id),
+                                              order_type='key',
+                                              meta=order_meta) for
                        id in xrange(self.num_orders)]
         self.total = len(self.orders)
         self.order_repo = mock.MagicMock()
@@ -1689,7 +1678,9 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         self.tenant_keystone_id = 'keystoneid1234'
         self.requestor = 'requestor1234'
 
-        self.order = create_order(id_ref="id1", name="name")
+        self.order = create_order_with_meta(id_ref="id1",
+                                            order_type='key',
+                                            meta='{"name":"just_test"}')
 
         self.order_repo = mock.MagicMock()
         self.order_repo.get.return_value = self.order
