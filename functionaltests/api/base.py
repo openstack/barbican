@@ -13,29 +13,21 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import oslotest.base as oslotest
+import os
 
+import oslotest.base as oslotest
 from tempest import auth
-from tempest import clients
-from tempest.common import rest_client
+from tempest import clients as tempest_clients
 from tempest import config
 
+from functionaltests.common import client
 
 CONF = config.CONF
 
-
-class BarbicanClient(rest_client.RestClient):
-
-    def __init__(self, auth_provider):
-        super(BarbicanClient, self).__init__(auth_provider)
-
-        # get the project id (aka tenant id) which we need in the API tests
-        # to build the correct URI.
-        credentials = auth_provider.fill_credentials()
-        self.project_id = credentials.tenant_id
-
-        self.service = 'keystore'
-        self.endpoint_url = 'publicURL'
+# Use local tempest conf if one is available.
+# This usually means we're running tests outside of devstack
+if os.path.exists('./etc/dev_tempest.conf'):
+    CONF.set_config_path('./etc/dev_tempest.conf')
 
 
 class TestCase(oslotest.BaseTestCase):
@@ -45,9 +37,9 @@ class TestCase(oslotest.BaseTestCase):
 
         credentials = BarbicanCredentials()
 
-        mgr = clients.Manager(credentials=credentials)
+        mgr = tempest_clients.Manager(credentials=credentials)
         auth_provider = mgr.get_auth_provider(credentials)
-        self.client = BarbicanClient(auth_provider)
+        self.client = client.BarbicanClient(auth_provider)
 
 
 class BarbicanCredentials(auth.KeystoneV2Credentials):

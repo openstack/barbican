@@ -12,9 +12,8 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
-
 from functionaltests.api import base
+from functionaltests.api.v1.models import order_models
 
 
 create_order_data = {
@@ -36,12 +35,9 @@ class OrdersTestCase(base.TestCase):
         All of the data needed to create the order is provided in a
         single POST.
         """
-        json_data = json.dumps(create_order_data)
-        resp, body = self.client.post(
-            '/orders', json_data, headers={
-                'content-type': 'application/json'})
-        self.assertEqual(resp.status, 202)
+        model = order_models.OrderModel(**create_order_data)
+        resp = self.client.post('orders/', request_model=model)
+        self.assertEqual(resp.status_code, 202)
 
-        returned_data = json.loads(body)
-        order_ref = returned_data['order_ref']
-        self.assertIsNotNone(order_ref)
+        body = resp.json()
+        self.assertIsNotNone(body.get('order_ref'))

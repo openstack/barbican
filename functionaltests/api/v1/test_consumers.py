@@ -15,6 +15,8 @@
 import json
 
 from functionaltests.api import base
+from functionaltests.api.v1.behaviors import secret_behaviors
+from functionaltests.api.v1.models import secret_models
 
 create_secret_data = {
     "name": "AES key",
@@ -63,44 +65,38 @@ create_container_data = {
 
 class ConsumersTestCase(base.TestCase):
 
+    def _create_a_secret(self):
+        secret_model = secret_models.SecretModel(**create_secret_data)
+        resp, secret_ref = self.secret_behaviors.create_secret(secret_model)
+        self.assertEqual(resp.status_code, 201)
+        self.assertIsNotNone(secret_ref)
+
+        return secret_ref
+
     def setUp(self):
         super(ConsumersTestCase, self).setUp()
+        self.secret_behaviors = secret_behaviors.SecretBehaviors(self.client)
+
         # Set up two secrets
-        secret_json_data = json.dumps(create_secret_data)
-        resp, body = self.client.post(
-            '/secrets',
-            secret_json_data,
-            headers={'content-type': 'application/json'}
-        )
-        self.assertEqual(resp.status, 201)
-
-        returned_data = json.loads(body)
-        secret_ref_1 = returned_data['secret_ref']
-        self.assertIsNotNone(secret_ref_1)
-        resp, body = self.client.post(
-            '/secrets',
-            secret_json_data,
-            headers={'content-type': 'application/json'}
-        )
-        self.assertEqual(resp.status, 201)
-
-        returned_data = json.loads(body)
-        secret_ref_2 = returned_data['secret_ref']
-        self.assertIsNotNone(secret_ref_2)
+        secret_ref_1 = self._create_a_secret()
+        secret_ref_2 = self._create_a_secret()
 
         # Create a container with our secrets
         create_container_data['secret_refs'][0]['secret_ref'] = secret_ref_1
         create_container_data['secret_refs'][1]['secret_ref'] = secret_ref_2
         container_json_data = json.dumps(create_container_data)
-        resp, body = self.client.post(
-            '/containers', container_json_data,
-            headers={'content-type': 'application/json'})
-        self.assertEqual(resp.status, 201)
+        resp = self.client.post(
+            'containers', container_json_data)
+        self.assertEqual(resp.status_code, 201)
 
-        returned_data = json.loads(body)
+        returned_data = resp.json()
         container_ref = returned_data['container_ref']
         self.assertIsNotNone(container_ref)
         self.container_id = container_ref.split('/')[-1]
+
+    def tearDown(self):
+        self.secret_behaviors.delete_all_created_secrets()
+        super(ConsumersTestCase, self).tearDown()
 
     def test_create_consumer(self):
         """Covers consumer creation.
@@ -109,12 +105,12 @@ class ConsumersTestCase(base.TestCase):
         single POST.
         """
         json_data = json.dumps(create_consumer_data)
-        resp, body = self.client.post(
-            '/containers/{0}/consumers'.format(self.container_id),
-            json_data, headers={'content-type': 'application/json'})
-        self.assertEqual(resp.status, 200)
+        resp = self.client.post(
+            'containers/{0}/consumers'.format(self.container_id),
+            json_data)
+        self.assertEqual(resp.status_code, 200)
 
-        returned_data = json.loads(body)
+        returned_data = resp.json()
         consumer_data = returned_data['consumers']
         self.assertIsNotNone(consumer_data)
         self.assertIn(create_consumer_data, consumer_data)
@@ -128,23 +124,23 @@ class ConsumersTestCase(base.TestCase):
         json_data = json.dumps(create_consumer_data_for_delete)
 
         # Register the consumer once
-        resp, body = self.client.post(
-            '/containers/{0}/consumers'.format(self.container_id),
-            json_data, headers={'content-type': 'application/json'})
-        self.assertEqual(resp.status, 200)
+        resp = self.client.post(
+            'containers/{0}/consumers'.format(self.container_id),
+            json_data)
+        self.assertEqual(resp.status_code, 200)
 
-        returned_data = json.loads(body)
+        returned_data = resp.json()
         consumer_data = returned_data['consumers']
         self.assertIsNotNone(consumer_data)
         self.assertIn(create_consumer_data_for_delete, consumer_data)
 
         # Delete the consumer
-        resp, body = self.client.delete(
-            '/containers/{0}/consumers'.format(self.container_id),
-            body=json_data, headers={'content-type': 'application/json'})
-        self.assertEqual(resp.status, 200)
+        resp = self.client.delete(
+            'containers/{0}/consumers'.format(self.container_id),
+            json_data)
+        self.assertEqual(resp.status_code, 200)
 
-        returned_data = json.loads(body)
+        returned_data = resp.json()
         consumer_data = returned_data['consumers']
         self.assertIsNotNone(consumer_data)
         self.assertNotIn(create_consumer_data_for_delete, consumer_data)
@@ -154,34 +150,34 @@ class ConsumersTestCase(base.TestCase):
         json_data = json.dumps(create_consumer_data_for_recreate)
 
         # Register the consumer once
-        resp, body = self.client.post(
-            '/containers/{0}/consumers'.format(self.container_id),
-            json_data, headers={'content-type': 'application/json'})
-        self.assertEqual(resp.status, 200)
+        resp = self.client.post(
+            'containers/{0}/consumers'.format(self.container_id),
+            json_data)
+        self.assertEqual(resp.status_code, 200)
 
-        returned_data = json.loads(body)
+        returned_data = resp.json()
         consumer_data = returned_data['consumers']
         self.assertIsNotNone(consumer_data)
         self.assertIn(create_consumer_data_for_recreate, consumer_data)
 
         # Delete the consumer
-        resp, body = self.client.delete(
-            '/containers/{0}/consumers'.format(self.container_id),
-            body=json_data, headers={'content-type': 'application/json'})
-        self.assertEqual(resp.status, 200)
+        resp = self.client.delete(
+            'containers/{0}/consumers'.format(self.container_id),
+            json_data)
+        self.assertEqual(resp.status_code, 200)
 
-        returned_data = json.loads(body)
+        returned_data = resp.json()
         consumer_data = returned_data['consumers']
         self.assertIsNotNone(consumer_data)
         self.assertNotIn(create_consumer_data_for_recreate, consumer_data)
 
         # Register the consumer again
-        resp, body = self.client.post(
-            '/containers/{0}/consumers'.format(self.container_id),
-            json_data, headers={'content-type': 'application/json'})
-        self.assertEqual(resp.status, 200)
+        resp = self.client.post(
+            'containers/{0}/consumers'.format(self.container_id),
+            json_data)
+        self.assertEqual(resp.status_code, 200)
 
-        returned_data = json.loads(body)
+        returned_data = resp.json()
         consumer_data = returned_data['consumers']
         self.assertIsNotNone(consumer_data)
         self.assertIn(create_consumer_data_for_recreate, consumer_data)
@@ -191,23 +187,23 @@ class ConsumersTestCase(base.TestCase):
         json_data = json.dumps(create_consumer_data_for_idempotency)
 
         # Register the consumer once
-        resp, body = self.client.post(
-            '/containers/{0}/consumers'.format(self.container_id),
-            json_data, headers={'content-type': 'application/json'})
-        self.assertEqual(resp.status, 200)
+        resp = self.client.post(
+            'containers/{0}/consumers'.format(self.container_id),
+            json_data)
+        self.assertEqual(resp.status_code, 200)
 
-        returned_data = json.loads(body)
+        returned_data = resp.json()
         consumer_data = returned_data['consumers']
         self.assertIsNotNone(consumer_data)
         self.assertIn(create_consumer_data_for_idempotency, consumer_data)
 
         # Register the consumer again, without deleting it first
-        resp, body = self.client.post(
-            '/containers/{0}/consumers'.format(self.container_id),
-            json_data, headers={'content-type': 'application/json'})
-        self.assertEqual(resp.status, 200)
+        resp = self.client.post(
+            'containers/{0}/consumers'.format(self.container_id),
+            json_data)
+        self.assertEqual(resp.status_code, 200)
 
-        returned_data = json.loads(body)
+        returned_data = resp.json()
         consumer_data = returned_data['consumers']
         self.assertIsNotNone(consumer_data)
         self.assertIn(create_consumer_data_for_idempotency, consumer_data)
