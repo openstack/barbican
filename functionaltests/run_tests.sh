@@ -32,7 +32,7 @@ echo "Successfully contacted the Barbican (admin) API"
 # Where tempest code lives
 TEMPEST_DIR=${TEMPEST_DIR:-/opt/stack/new/tempest}
 
-# Add tempest source tree to PYTHONPATH
-export PYTHONPATH=$PYTHONPATH:$TEMPEST_DIR
+# Install tempest
+pip install -e $TEMPEST_DIR
 
 nosetests -v .
