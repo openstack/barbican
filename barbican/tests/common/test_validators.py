@@ -362,6 +362,38 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         self.assertTrue('expiration' in result)
         self.assertTrue(not result['expiration'])
 
+    def test_should_allow_bad_mode(self):
+        # TODO(john-wood-w) Allow until plugin validation is added.
+        self.secret_req['mode'] = 'badmode'
+
+        result = self.validator.validate(self.order_req)
+
+        self.assertTrue('secret' in result)
+
+    def test_should_allow_non_multiple_eight_bit_length(self):
+        # TODO(john-wood-w) Allow until plugin validation is added.
+        self.secret_req['bit_length'] = 129
+
+        result = self.validator.validate(self.order_req)
+
+        self.assertTrue('secret' in result)
+
+    def test_should_allow_empty_mode(self):
+        # TODO(john-wood-w) Allow until plugin validation is added.
+        del self.secret_req['mode']
+
+        result = self.validator.validate(self.order_req)
+
+        self.assertTrue('secret' in result)
+
+    def test_should_allow_empty_algorithm(self):
+        # TODO(john-wood-w) Allow until plugin validation is added.
+        del self.secret_req['algorithm']
+
+        result = self.validator.validate(self.order_req)
+
+        self.assertTrue('secret' in result)
+
     def test_should_raise_numeric_name(self):
         self.secret_req['name'] = 123
 
@@ -372,17 +404,6 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         )
 
         self.assertEqual('name', exception.invalid_property)
-
-    def test_should_raise_bad_mode(self):
-        self.secret_req['mode'] = 'badmode'
-
-        exception = self.assertRaises(
-            excep.UnsupportedField,
-            self.validator.validate,
-            self.order_req,
-        )
-
-        self.assertEqual('mode', exception.invalid_field)
 
     def test_should_raise_negative_bit_length(self):
         self.secret_req['bit_length'] = -23
@@ -405,17 +426,6 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
         )
 
         self.assertEqual('bit_length', exception.invalid_property)
-
-    def test_should_raise_non_multiple_eight_bit_length(self):
-        self.secret_req['bit_length'] = 129
-
-        exception = self.assertRaises(
-            excep.UnsupportedField,
-            self.validator.validate,
-            self.order_req,
-        )
-
-        self.assertEqual('bit_length', exception.invalid_field)
 
     def test_should_raise_secret_not_order_schema_provided(self):
         exception = self.assertRaises(
@@ -502,28 +512,6 @@ class WhenTestingOrderValidator(utils.BaseTestCase):
             self.validator.validate,
             self.order_req,
         )
-
-    def test_should_raise_empty_mode(self):
-        del self.secret_req['mode']
-
-        exception = self.assertRaises(
-            excep.UnsupportedField,
-            self.validator.validate,
-            self.order_req,
-        )
-
-        self.assertEqual('mode', exception.invalid_field)
-
-    def test_should_raise_empty_algorithm(self):
-        del self.secret_req['algorithm']
-
-        exception = self.assertRaises(
-            excep.UnsupportedField,
-            self.validator.validate,
-            self.order_req,
-        )
-
-        self.assertEqual('algorithm', exception.invalid_field)
 
     def test_should_raise_invalid_json_data_type(self):
         self.assertRaises(

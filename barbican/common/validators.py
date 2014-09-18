@@ -308,26 +308,6 @@ class TypeOrderValidator(ValidatorBase):
         # Validation secret generation related fields.
         # TODO(jfwood): Invoke the crypto plugin for this purpose
 
-        if (key_meta.get('payload_content_type', '').lower() !=
-                'application/octet-stream'):
-            raise exception.UnsupportedField(field='payload_content_type',
-                                             schema=schema_name,
-                                             reason=u._("Only 'application/oc"
-                                                        "tet-stream' "
-                                                        "supported"))
-
-        if key_meta.get('mode', '').lower() != 'cbc':
-                raise exception.UnsupportedField(field="mode",
-                                                 schema=schema_name,
-                                                 reason=u._("Only 'cbc' "
-                                                            "supported"))
-
-        if key_meta.get('algorithm', '').lower() != 'aes':
-                    raise exception.UnsupportedField(field="algorithm",
-                                                     schema=schema_name,
-                                                     reason=u._("Only 'aes' "
-                                                                "supported"))
-
         self._validate_bit_length(key_meta, schema_name)
 
     def _validate_asymmetric_meta(self, asymmetric_meta, schema_name):
@@ -429,27 +409,6 @@ class NewOrderValidator(ValidatorBase):
                                              reason=u._("Only 'application/oc "
                                                         "tet-stream' "
                                                         "supported"))
-
-        if secret.get('mode', '').lower() != 'cbc':
-            raise exception.UnsupportedField(field="mode",
-                                             schema=schema_name,
-                                             reason=u._("Only 'cbc' "
-                                                        "supported"))
-
-        if secret.get('algorithm', '').lower() != 'aes':
-            raise exception.UnsupportedField(field="algorithm",
-                                             schema=schema_name,
-                                             reason=u._("Only 'aes' "
-                                                        "supported"))
-
-        # TODO(reaperhulk): Future API change will move from bit to byte_length
-        bit_length = int(secret.get('bit_length', 1))
-        if bit_length % 8 != 0:
-            raise exception.UnsupportedField(field="bit_length",
-                                             schema=schema_name,
-                                             reason=u._("Must be a positive "
-                                                        "integer that is a "
-                                                        "multiple of 8"))
 
         return json_data
 
