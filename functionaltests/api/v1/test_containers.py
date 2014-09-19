@@ -176,7 +176,7 @@ class ContainersTestCase(base.TestCase):
         self.assertIsNotNone(list_data.get('containers'))
 
     def test_containers_secret_refs_correctly_formatted(self):
-        """Correctly formated secret refs in a container
+        """Correctly formatted secret refs in a container
 
         Create a container (so we are guaranteed to have at least one), then
         retrieve that container and check the secret_ref formatting to make

@@ -34,7 +34,7 @@ LOG = utils.getLogger(__name__)
 
 @six.add_metaclass(abc.ABCMeta)
 class BaseTask(object):
-    """Base asychronous task."""
+    """Base asynchronous task."""
 
     @abc.abstractmethod
     def get_name(self):
