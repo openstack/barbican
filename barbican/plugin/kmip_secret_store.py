@@ -17,7 +17,7 @@
 An implementation of the SecretStore that uses the KMIP backend.
 """
 
-from kmip.services.kmip_client import KMIPProxy
+from kmip.services import kmip_client
 
 import base64
 
@@ -54,6 +54,15 @@ kmip_opts = [
     cfg.StrOpt('port',
                default='9090',
                help=u._('Port for the KMIP server'),
+               ),
+    cfg.StrOpt('ssl_version',
+               default='PROTOCOL_SSLv23',
+               help=u._('SSL version, maps to the module ssl\'s constants'),
+               ),
+    cfg.StrOpt('ca_certs',
+               default=None,
+               help=u._('File path to concatenated "certification authority" '
+                        'certificates'),
                )
 ]
 CONF.register_group(kmip_opt_group)
@@ -98,8 +107,11 @@ class KMIPSecretStore(ss.SecretStoreBase):
         self.credential = credentials.CredentialFactory().create_credential(
             credential_type,
             credential_value)
-        self.client = KMIPProxy(conf.kmip_plugin.host,
-                                int(conf.kmip_plugin.port))
+        self.client = kmip_client.KMIPProxy(
+            host=conf.kmip_plugin.host,
+            port=int(conf.kmip_plugin.port),
+            ssl_version=conf.kmip_plugin.ssl_version,
+            ca_certs=conf.kmip_plugin.ca_certs)
 
     def generate_symmetric_key(self, key_spec, context=None):
         """Generate a symmetric key.
@@ -228,7 +240,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :raises: SecretGeneralException
         """
         LOG.debug("Starting secret retrieval with KMIP plugin")
-        uuid = secret_metadata[KMIPSecretStore.KEY_UUID]
+        uuid = str(secret_metadata[KMIPSecretStore.KEY_UUID])
 
         try:
             self.client.open()
@@ -253,6 +265,16 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 elif key_value_type == kmip_objects.KeyValueString:
                     secret_value = self._convert_byte_array_to_base64(
                         secret_block.key_value.key_value.value)
+
+                else:
+                    msg = ("Unknown key value type received from KMIP " +
+                           "server, expected {0} or {1}, " +
+                           "received: {2}").format(
+                               kmip_objects.KeyValueStruct,
+                               kmip_objects.KeyValueString,
+                               key_value_type)
+                    LOG.exception(msg)
+                    raise ss.SecretGeneralException(msg)
 
                 secret_alg = self._map_algorithm_kmip_to_ss(
                     secret_block.cryptographic_algorithm.value)
@@ -300,7 +322,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :raises: SecretGeneralException
         """
         LOG.debug("Starting secret deletion with KMIP plugin")
-        uuid = secret_metadata[KMIPSecretStore.KEY_UUID]
+        uuid = str(secret_metadata[KMIPSecretStore.KEY_UUID])
 
         try:
             self.client.open()
@@ -351,7 +373,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :param byte_array: bytearray of key value
         :returns: base64 string
         """
-        return base64.b64encode(byte_array)
+        return base64.b64encode(str(byte_array))
 
     def _create_cryptographic_algorithm_attribute(self, alg):
         """Creates a KMIP Cryptographic Algorithm attribute.
@@ -401,7 +423,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         attribute_type = enums.AttributeType.CRYPTOGRAPHIC_LENGTH
         length = attributes.AttributeFactory().create_attribute(
             attribute_type,
-            bit_length)
+            int(bit_length))
         LOG.debug(attribute_debug_msg,
                   attribute_type.value,
                   bit_length)
@@ -455,7 +477,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :returns: SecretStore algorithm enum value if supported, None if not
         supported
         """
-        for ss_alg, ss_dict in self.ss_to_kmip_dict.iteritems():
+        for ss_alg, ss_dict in self.valid_alg_dict.iteritems():
             if ss_dict.get(KMIPSecretStore.KMIP_ALGORITHM_ENUM) == algorithm:
                 return ss_alg
         return None
