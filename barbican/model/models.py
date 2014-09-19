@@ -469,6 +469,8 @@ class Order(BASE, ModelBase):
                           nullable=True)
     container_id = sa.Column(sa.String(36), sa.ForeignKey('containers.id'),
                              nullable=True)
+    sub_status = sa.Column(sa.String(36), nullable=True)
+    sub_status_message = sa.Column(sa.String(255), nullable=True)
 
     order_plugin_metadata = orm.relationship(
         "OrderPluginMetadatum",
@@ -483,6 +485,9 @@ class Order(BASE, ModelBase):
                 self.type = parsed_request.get('type')
                 self.meta = parsed_request.get('meta')
                 self.status = States.ACTIVE
+                self.sub_status = parsed_request.get('sub_status')
+                self.sub_status_message = parsed_request.get(
+                    'sub_status_message')
 
     def _do_delete_children(self, session):
         """Sub-class hook: delete children relationships."""
@@ -521,6 +526,10 @@ class Order(BASE, ModelBase):
             ret['error_status_code'] = self.error_status_code
         if self.error_reason:
             ret['error_reason'] = self.error_reason
+        if self.sub_status:
+            ret['sub_status'] = self.sub_status
+        if self.sub_status_message:
+            ret['sub_status_message'] = self.sub_status_message
         return ret
 
 

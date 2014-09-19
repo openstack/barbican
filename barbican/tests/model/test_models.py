@@ -41,6 +41,30 @@ class WhenCreatingNewSecret(utils.BaseTestCase):
         self.assertIsInstance(secret.expiration, datetime.datetime)
 
 
+class WhenCreatingNewOrder(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenCreatingNewOrder, self).setUp()
+        self.parsed_order = {
+            'type': 'certificate',
+            'meta': {
+                'email': 'email@email.com'
+            },
+            'sub_status': 'Pending',
+            'sub_status_message': 'Waiting for instructions...'
+        }
+
+    def test_new_order_is_created(self):
+        order = models.Order(self.parsed_order)
+
+        self.assertEqual(order.type, self.parsed_order['type'])
+        self.assertEqual(order.meta, self.parsed_order['meta'])
+        self.assertEqual(order.sub_status, self.parsed_order['sub_status'])
+        self.assertEqual(
+            order.sub_status_message,
+            self.parsed_order['sub_status_message']
+        )
+
+
 class WhenCreatingNewContainer(utils.BaseTestCase):
     def setUp(self):
         super(WhenCreatingNewContainer, self).setUp()
