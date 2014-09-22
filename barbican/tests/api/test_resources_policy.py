@@ -154,7 +154,7 @@ class BaseTestCase(utils.BaseTestCase):
         """
         # The 'Read Error' clause needs to match that asserted in
         #    _assert_post_rbac_exception() above.
-        return exc.HTTPInternalServerError(message='Read Error')
+        return exc.HTTPServerError(message='Read Error')
 
     def _assert_pass_rbac(self, roles, method_under_test, accept=None,
                           content_type=None):
@@ -172,7 +172,7 @@ class BaseTestCase(utils.BaseTestCase):
 
             # Force an exception early past the RBAC passing.
             self.req.body_file = self._generate_stream_for_exit()
-            exception = self.assertRaises(exc.HTTPInternalServerError,
+            exception = self.assertRaises(exc.HTTPServerError,
                                           method_under_test)
             self._assert_post_rbac_exception(exception, role)
 
