@@ -47,6 +47,13 @@ _RETRY_INTERVAL = None
 BASE = models.BASE
 sa_logger = None
 
+# Singleton repository references, instantiated via get_xxxx_repository()
+#   functions below.
+_SECRET_REPOSITORY = None
+_TENANT_SECRET_REPOSITORY = None
+_ENCRYPTED_DATUM_REPOSITORY = None
+_KEK_DATUM_REPOSITORY = None
+
 
 db_opts = [
     cfg.IntOpt('sql_idle_timeout', default=3600),
@@ -282,7 +289,9 @@ class BaseRepo(object):
     """Base repository for the barbican entities.
 
     This class provides template methods that allow sub-classes to hook
-    specific functionality as needed.
+    specific functionality as needed. Clients access instances of this class
+    via singletons, therefore implementations should be stateless aside from
+    configuration.
     """
 
     def __init__(self):
@@ -1112,3 +1121,33 @@ class TransportKeyRepo(BaseRepo):
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
+
+
+def get_secret_repository():
+    """Returns a singleton Secret repository instance."""
+    global _SECRET_REPOSITORY
+    return _get_repository(_SECRET_REPOSITORY, SecretRepo)
+
+
+def get_tenant_secret_repository():
+    """Returns a singleton TenantSecret repository instance."""
+    global _TENANT_SECRET_REPOSITORY
+    return _get_repository(_TENANT_SECRET_REPOSITORY, TenantSecretRepo)
+
+
+def get_encrypted_datum_repository():
+    """Returns a singleton Encrypted Datum repository instance."""
+    global _ENCRYPTED_DATUM_REPOSITORY
+    return _get_repository(_ENCRYPTED_DATUM_REPOSITORY, EncryptedDatumRepo)
+
+
+def get_kek_datum_repository():
+    """Returns a singleton KEK Datum repository instance."""
+    global _KEK_DATUM_REPOSITORY
+    return _get_repository(_KEK_DATUM_REPOSITORY, KEKDatumRepo)
+
+
+def _get_repository(global_ref, repo_class):
+    if not global_ref:
+        global_ref = repo_class()
+    return global_ref

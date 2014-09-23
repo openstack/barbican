@@ -101,7 +101,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         self.client = KMIPProxy(conf.kmip_plugin.host,
                                 int(conf.kmip_plugin.port))
 
-    def generate_symmetric_key(self, key_spec, context=None):
+    def generate_symmetric_key(self, key_spec):
         """Generate a symmetric key.
 
         Creates KMIP attribute objects based on the given KeySpec to send to
@@ -152,17 +152,16 @@ class KMIPSecretStore(ss.SecretStoreBase):
             LOG.debug("Closed connection to KMIP client for secret " +
                       "generation")
 
-    def generate_asymmetric_key(self, key_spec, context=None):
+    def generate_asymmetric_key(self, key_spec):
         raise NotImplementedError(
             "Feature not yet implemented by KMIP Secret Store plugin")
 
-    def store_secret(self, secret_dto, context=None):
+    def store_secret(self, secret_dto):
         """Stores a secret
 
         To store a secret in KMIP, the attributes must be known.
 
         :param secret_dto: SecretDTO of the secret to be stored
-        :param context: SecretStoreContext for secret
         :returns: Dictionary holding the key_uuid assigned by KMIP
         :raises: SecretGeneralException, SecretAlgorithmNotSupportedException
         """
@@ -219,7 +218,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
             self.client.close()
             LOG.debug("Closed connection to KMIP client for secret storage")
 
-    def get_secret(self, secret_metadata, context=None):
+    def get_secret(self, secret_metadata):
         """Gets a secret
 
         :param secret_metadata: Dictionary of key metadata, requires:

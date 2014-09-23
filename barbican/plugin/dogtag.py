@@ -125,7 +125,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
                            transport_cert,
                            "u,u,u")
 
-    def store_secret(self, secret_dto, context):
+    def store_secret(self, secret_dto):
         """Store a secret in the KRA
 
         If secret_dto.transport_key is not None, then we expect
@@ -167,7 +167,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
                 DogtagKRAPlugin.SECRET_KEYSPEC: secret_dto.key_spec,
                 DogtagKRAPlugin.KEY_ID: response.get_key_id()}
 
-    def get_secret(self, secret_metadata, context):
+    def get_secret(self, secret_metadata):
         """Retrieve a secret from the KRA
 
         The secret_metadata is simply the dict returned by a store_secret() or
@@ -214,7 +214,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         """
         pass
 
-    def generate_symmetric_key(self, key_spec, context):
+    def generate_symmetric_key(self, key_spec):
         """Generate a symmetric key
 
         This calls generate_symmetric_key() on the KRA passing in the
@@ -242,7 +242,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
                 DogtagKRAPlugin.SECRET_TYPE: sstore.SecretType.SYMMETRIC,
                 DogtagKRAPlugin.KEY_ID: response.get_key_id()}
 
-    def generate_asymmetric_key(self, key_spec, context):
+    def generate_asymmetric_key(self, key_spec):
         """Generate an asymmetric key."""
         raise NotImplementedError(
             "Feature not yet implemented by dogtag plugin")

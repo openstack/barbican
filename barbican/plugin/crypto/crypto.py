@@ -10,9 +10,11 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import abc
 
 from oslo.config import cfg
+
 import six
 
 from barbican.common import exception
@@ -142,7 +144,7 @@ class KEKMetaDTO(object):
     def __init__(self, kek_datum):
         """Plugins should not have to create their own instance of this class.
 
-        kek_datum is typically a barbican.model.models.EncryptedDatum instance.
+        kek_datum is typically a barbican.model.models.KEKDatum instance.
         """
         self.kek_label = kek_datum.kek_label
         self.plugin_name = kek_datum.plugin_name
@@ -189,8 +191,25 @@ class GenerateDTO(object):
 
 
 class ResponseDTO(object):
-    """Data transfer object for secret generation response."""
+    """Data transfer object for secret generation response.
 
+    Barbican guarantees that both the ``cypher_text`` and
+    ``kek_metadata_extended`` will be persisted and then given back to
+    the plugin when requesting a decryption operation.
+
+    ``kek_metadata_extended`` takes the idea of Key Encryption Key
+    (KEK) metadata further by giving plugins the option to store
+    secret-level KEK metadata.  One example of using secret-level KEK
+    metadata would be plugins that want to use a unique KEK for every
+    secret that is encrypted.  Such a plugin could use
+    ``kek_metadata_extended`` to store the Key ID for the KEK used to
+    encrypt this particular secret.
+
+    :param cypher_text: Byte data resulting from the encryption of the
+        secret data.
+    :param kek_meta_extended: Optional String object to be persisted alongside
+        the cyphertext.
+    """
     def __init__(self, cypher_text, kek_meta_extended=None):
         self.cypher_text = cypher_text
         self.kek_meta_extended = kek_meta_extended
@@ -241,9 +260,6 @@ class EncryptDTO(object):
 class CryptoPluginBase(object):
     """Base class for all Crypto plugins.
 
-    Implementations of this abstract base class will be used by Barbican to
-    perform cryptographic operations on secrets.
-
     Barbican requests operations by invoking the methods on an instance of the
     implementing class.  Barbican's plugin manager handles the life-cycle of
     the Data Transfer Objects (DTOs) that are passed into these methods, and
@@ -269,25 +285,8 @@ class CryptoPluginBase(object):
         :type kek_meta_dto: :class:`KEKMetaDTO`
         :param keystone_id: Project (tenant) ID associated with the unencrypted
             data.
-        :return: A tuple containing two items ``(ciphertext,
-            kek_metadata_extended)``.  In a typical plugin implementation, the
-            first item in the tuple should be the ciphertext byte data
-            resulting from the encryption of the secret data.  The second item
-            is an optional String object to be persisted alongside the
-            ciphertext.
-
-            Barbican guarantees that both the ``ciphertext`` and
-            ``kek_metadata_extended`` will be persisted and then given back to
-            the plugin when requesting a decryption operation.
-
-            ``kek_metadata_extended`` takes the idea of Key Encryption Key
-            (KEK) metadata further by giving plugins the option to store
-            secret-level KEK metadata.  One example of using secret-level KEK
-            metadata would be plugins that want to use a unique KEK for every
-            secret that is encrypted.  Such a plugin could use
-            ``kek_metadata_extended`` to store the Key ID for the KEK used to
-            encrypt this particular secret.
-        :rtype: tuple
+        :return: A response DTO containing the cyphertext and KEK information.
+        :rtype: :class:`ResponseDTO`
         """
         raise NotImplementedError  # pragma: no cover
 

@@ -14,6 +14,7 @@
 from barbican.common import utils
 from barbican.model import models
 from barbican.plugin.interface import secret_store
+from barbican.plugin import store_crypto
 from barbican.plugin.util import translations as tr
 
 
@@ -109,16 +110,14 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
     # Store the secret securely.
     # TODO(john-wood-w) Remove the SecretStoreContext once repository factory
     #  and unit test patch work is completed.
-    context = secret_store.SecretStoreContext(secret_model=secret_model,
-                                              tenant_model=tenant_model,
-                                              repos=repos)
     secret_type = secret_store.KeyAlgorithm().get_secret_type(key_spec.alg)
     secret_dto = secret_store.SecretDTO(type=secret_type,
                                         secret=unencrypted,
                                         key_spec=key_spec,
                                         content_type=content_type,
                                         transport_key=transport_key)
-    secret_metadata = store_plugin.store_secret(secret_dto, context)
+    secret_metadata = _store_secret(
+        store_plugin, secret_dto, secret_model, tenant_model)
 
     # Save secret and metadata.
     _save_secret(secret_model, tenant_model, repos)
@@ -147,11 +146,8 @@ def get_secret(requesting_content_type, secret_model, tenant_model,
         secret_metadata.get('plugin_name'))
 
     # Retrieve the secret.
-    # TODO(john-wood-w) Remove the SecretStoreContext once repository factory
-    #  and unit test patch work is completed.
-    context = secret_store.SecretStoreContext(secret_model=secret_model,
-                                              tenant_model=tenant_model)
-    secret_dto = retrieve_plugin.get_secret(secret_metadata, context)
+    secret_dto = _get_secret(
+        retrieve_plugin, secret_metadata, secret_model, tenant_model)
 
     if twsk is not None:
         del secret_metadata['transport_key']
@@ -192,16 +188,8 @@ def generate_secret(spec, content_type,
     secret_model = models.Secret(spec)
 
     # Generate the secret.
-    # TODO(john-wood-w) Remove the SecretStoreContext once repository factory
-    #  and unit test patch work is completed.
-    context = secret_store.SecretStoreContext(content_type=content_type,
-                                              secret_model=secret_model,
-                                              tenant_model=tenant_model,
-                                              repos=repos)
-
-    # TODO(john-wood-w) Replace with single 'generate_key()' call once
-    #  asymmetric and symmetric generation is combined.
-    secret_metadata = generate_plugin.generate_symmetric_key(key_spec, context)
+    secret_metadata = _generate_symmetric_key(
+        generate_plugin, key_spec, secret_model, tenant_model, content_type)
 
     # Save secret and metadata.
     _save_secret(secret_model, tenant_model, repos)
@@ -225,22 +213,17 @@ def generate_asymmetric_secret(spec, content_type,
     # Create secret models to eventually save metadata to.
     private_secret_model = models.Secret(spec)
     public_secret_model = models.Secret(spec)
-    passphrase_secret_model = (models.Secret(spec)
-                               if spec.get('passphrase') else None)
+    passphrase_secret_model = models.Secret(spec)\
+        if spec.get('passphrase') else None
 
     # Generate the secret.
-    # TODO(john-wood-w) Remove the SecretStoreContext once repository factory
-    #  and unit test patch work is completed.
-    context = secret_store.SecretStoreContext(
-        content_type=content_type,
-        private_secret_model=private_secret_model,
-        public_secret_model=public_secret_model,
-        passphrase_secret_model=passphrase_secret_model,
-        tenant_model=tenant_model,
-        repos=repos)
-
-    asymmetric_meta_dto = generate_plugin.generate_asymmetric_key(
-        key_spec, context
+    asymmetric_meta_dto = _generate_asymmetric_key(
+        generate_plugin,
+        key_spec,
+        private_secret_model,
+        public_secret_model,
+        passphrase_secret_model,
+        tenant_model
     )
 
     # Save secret and metadata.
@@ -291,6 +274,63 @@ def delete_secret(secret_model, project_id, repos):
     # Delete the secret from data model.
     repos.secret_repo.delete_entity_by_id(entity_id=secret_model.id,
                                           keystone_id=project_id)
+
+
+def _store_secret(store_plugin, secret_dto, secret_model, tenant_model):
+    if isinstance(store_plugin, store_crypto.StoreCryptoAdapterPlugin):
+        context = store_crypto.StoreCryptoContext(
+            tenant_model,
+            secret_model=secret_model)
+        secret_metadata = store_plugin.store_secret(secret_dto, context)
+    else:
+        secret_metadata = store_plugin.store_secret(secret_dto)
+    return secret_metadata
+
+
+def _generate_symmetric_key(
+        generate_plugin, key_spec, secret_model, tenant_model, content_type):
+    if isinstance(generate_plugin, store_crypto.StoreCryptoAdapterPlugin):
+        context = store_crypto.StoreCryptoContext(
+            tenant_model,
+            secret_model=secret_model,
+            content_type=content_type)
+        secret_metadata = generate_plugin.generate_symmetric_key(
+            key_spec, context)
+    else:
+        secret_metadata = generate_plugin.generate_symmetric_key(key_spec)
+    return secret_metadata
+
+
+def _generate_asymmetric_key(
+        generate_plugin,
+        key_spec,
+        private_secret_model,
+        public_secret_model,
+        passphrase_secret_model,
+        tenant_model):
+    if isinstance(generate_plugin, store_crypto.StoreCryptoAdapterPlugin):
+        context = store_crypto.StoreCryptoContext(
+            tenant_model,
+            private_secret_model=private_secret_model,
+            public_secret_model=public_secret_model,
+            passphrase_secret_model=passphrase_secret_model)
+        asymmetric_meta_dto = generate_plugin.generate_asymmetric_key(
+            key_spec, context)
+    else:
+        asymmetric_meta_dto = generate_plugin.generate_asymmetric_key(key_spec)
+    return asymmetric_meta_dto
+
+
+def _get_secret(
+        retrieve_plugin, secret_metadata, secret_model, tenant_model):
+    if isinstance(retrieve_plugin, store_crypto.StoreCryptoAdapterPlugin):
+        context = store_crypto.StoreCryptoContext(
+            tenant_model,
+            secret_model=secret_model)
+        secret_dto = retrieve_plugin.get_secret(secret_metadata, context)
+    else:
+        secret_dto = retrieve_plugin.get_secret(secret_metadata)
+    return secret_dto
 
 
 def _save_secret_metadata(secret_model, secret_metadata,
