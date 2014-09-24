@@ -217,7 +217,8 @@ class BeginTypeOrder(BaseTask):
     def __init__(self, tenant_repo=None, order_repo=None,
                  secret_repo=None, tenant_secret_repo=None, datum_repo=None,
                  kek_repo=None, container_repo=None,
-                 container_secret_repo=None, secret_meta_repo=None):
+                 container_secret_repo=None, secret_meta_repo=None,
+                 order_plugin_meta_repo=None):
             LOG.debug('Creating BeginTypeOrder task processor')
             self.repos = rep.Repositories(
                 tenant_repo=tenant_repo,
@@ -227,6 +228,7 @@ class BeginTypeOrder(BaseTask):
                 kek_repo=kek_repo,
                 secret_meta_repo=secret_meta_repo,
                 order_repo=order_repo,
+                order_plugin_meta_repo=order_plugin_meta_repo,
                 container_repo=container_repo,
                 container_secret_repo=container_secret_repo)
 

@@ -855,6 +855,26 @@ class OrderPluginMetadatumRepo(BaseRepo):
                 meta_model.order = order_model
                 meta_model.save(session=session)
 
+    def get_metadata_for_order(self, order_id):
+        """Returns a dict of OrderPluginMetadatum instances."""
+
+        session = get_session()
+        with session.begin():
+            try:
+                query = session.query(models.OrderPluginMetadatum)
+                query = query.filter_by(deleted=False)
+
+                # Note: Must use '== None' below, not 'is None'.
+                query = query.filter(
+                    models.OrderPluginMetadatum.order_id == order_id)
+
+                metadata = query.all()
+
+            except sa_orm.exc.NoResultFound:
+                metadata = dict()
+
+        return dict((m.key, m.value) for m in metadata)
+
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
         return "OrderPluginMetadatum"
