@@ -16,6 +16,7 @@
 import os
 import tempfile
 
+from Crypto.PublicKey import RSA
 import mock
 from requests import exceptions as request_exceptions
 import testtools
@@ -29,6 +30,7 @@ try:
 
     import pki
     import pki.cert as dogtag_cert
+    import pki.key as dogtag_key
     imports_ok = True
 except ImportError:
     # dogtag imports probably not available
@@ -58,10 +60,9 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
         self.patcher.stop()
         os.rmdir(self.nss_dir)
 
-    def test_generate(self):
+    def test_generate_symmetric_key(self):
         key_spec = sstore.KeySpec(sstore.KeyAlgorithm.AES, 128)
-        context = mock.MagicMock()
-        self.plugin.generate_symmetric_key(key_spec, context)
+        self.plugin.generate_symmetric_key(key_spec)
 
         self.keyclient_mock.generate_symmetric_key.assert_called_once_with(
             mock.ANY,
@@ -69,14 +70,22 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
             128,
             mock.ANY)
 
+    def test_generate_asymmetric_key(self):
+        key_spec = sstore.KeySpec(sstore.KeyAlgorithm.RSA, 2048)
+        self.plugin.generate_asymmetric_key(key_spec)
+
+        self.keyclient_mock.generate_asymmetric_key.assert_called_once_with(
+            mock.ANY,
+            sstore.KeyAlgorithm.RSA.upper(),
+            2048,
+            mock.ANY)
+
     def test_generate_non_supported_algorithm(self):
         key_spec = sstore.KeySpec(sstore.KeyAlgorithm.EC, 192)
-        context = mock.MagicMock()
         self.assertRaises(
             dogtag_import.DogtagPluginAlgorithmException,
             self.plugin.generate_symmetric_key,
-            key_spec,
-            context
+            key_spec
         )
 
     def test_raises_error_with_no_pem_path(self):
@@ -101,14 +110,13 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
         payload = 'encrypt me!!'
         key_spec = mock.MagicMock()
         content_type = mock.MagicMock()
-        context = mock.MagicMock()
         transport_key = None
         secret_dto = sstore.SecretDTO(sstore.SecretType.SYMMETRIC,
                                       payload,
                                       key_spec,
                                       content_type,
                                       transport_key)
-        self.plugin.store_secret(secret_dto, context)
+        self.plugin.store_secret(secret_dto)
         self.keyclient_mock.archive_key.assert_called_once_with(
             mock.ANY,
             "passPhrase",
@@ -120,14 +128,13 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
         payload = 'data wrapped in PKIArchiveOptions object'
         key_spec = mock.MagicMock()
         content_type = mock.MagicMock()
-        context = mock.MagicMock()
         transport_key = mock.MagicMock()
         secret_dto = sstore.SecretDTO(sstore.SecretType.SYMMETRIC,
                                       payload,
                                       key_spec,
                                       content_type,
                                       transport_key)
-        self.plugin.store_secret(secret_dto, context)
+        self.plugin.store_secret(secret_dto)
         self.keyclient_mock.archive_pki_options.assert_called_once_with(
             mock.ANY,
             "passPhrase",
@@ -136,35 +143,98 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
             key_size=None)
 
     def test_get_secret(self):
-        key_spec = mock.MagicMock()
-        context = mock.MagicMock()
         secret_metadata = {
             dogtag_import.DogtagKRAPlugin.SECRET_TYPE:
             sstore.SecretType.SYMMETRIC,
-            dogtag_import.DogtagKRAPlugin.SECRET_KEYSPEC: key_spec,
+            dogtag_import.DogtagKRAPlugin.ALG: sstore.KeyAlgorithm.AES,
+            dogtag_import.DogtagKRAPlugin.BIT_LENGTH: 256,
             dogtag_import.DogtagKRAPlugin.KEY_ID: 'key1'
         }
-        self.plugin.get_secret(secret_metadata, context)
+        self.plugin.get_secret(secret_metadata)
 
         self.keyclient_mock.retrieve_key.assert_called_once_with('key1', None)
 
     def test_get_secret_with_twsk(self):
-        key_spec = mock.MagicMock()
-        context = mock.MagicMock()
         twsk = mock.MagicMock()
         secret_metadata = {
             dogtag_import.DogtagKRAPlugin.SECRET_TYPE:
             sstore.SecretType.SYMMETRIC,
-            dogtag_import.DogtagKRAPlugin.SECRET_KEYSPEC: key_spec,
+            dogtag_import.DogtagKRAPlugin.ALG: sstore.KeyAlgorithm.AES,
+            dogtag_import.DogtagKRAPlugin.BIT_LENGTH: 256,
             dogtag_import.DogtagKRAPlugin.KEY_ID: 'key1',
             'trans_wrapped_session_key': twsk
         }
-        self.plugin.get_secret(secret_metadata, context)
+        self.plugin.get_secret(secret_metadata)
 
         self.keyclient_mock.retrieve_key.assert_called_once_with('key1', twsk)
 
+    def test_get_private_key(self):
+        test_key = RSA.generate(2048)
+        key_data = dogtag_key.KeyData()
+        key_data.data = test_key.exportKey('DER')
+        self.keyclient_mock.retrieve_key.return_value = key_data
+        secret_metadata = {
+            dogtag_import.DogtagKRAPlugin.SECRET_TYPE:
+            sstore.SecretType.PRIVATE,
+            dogtag_import.DogtagKRAPlugin.ALG: sstore.KeyAlgorithm.RSA,
+            dogtag_import.DogtagKRAPlugin.BIT_LENGTH: 2048,
+            dogtag_import.DogtagKRAPlugin.KEY_ID: 'key1',
+            dogtag_import.DogtagKRAPlugin.CONVERT_TO_PEM: 'true'
+        }
+        result = self.plugin.get_secret(secret_metadata)
+
+        assert result.secret == test_key.exportKey('PEM').encode('utf-8')
+
+    def test_get_public_key(self):
+        test_public_key = RSA.generate(2048).publickey()
+        key_info = dogtag_key.KeyInfo()
+        key_info.public_key = test_public_key.exportKey('DER')
+        self.keyclient_mock.get_key_info.return_value = key_info
+        secret_metadata = {
+            dogtag_import.DogtagKRAPlugin.SECRET_TYPE:
+            sstore.SecretType.PUBLIC,
+            dogtag_import.DogtagKRAPlugin.ALG: sstore.KeyAlgorithm.RSA,
+            dogtag_import.DogtagKRAPlugin.BIT_LENGTH: 2048,
+            dogtag_import.DogtagKRAPlugin.KEY_ID: 'key1',
+            dogtag_import.DogtagKRAPlugin.CONVERT_TO_PEM: 'true'
+        }
+        result = self.plugin.get_secret(secret_metadata)
+
+        assert result.secret == (test_public_key.exportKey('PEM')
+                                 .encode('utf-8'))
+
+    def test_store_passphrase_for_using_in_private_key_retrieval(self):
+
+        key_spec = sstore.KeySpec(sstore.KeyAlgorithm.RSA, 2048,
+                                  passphrase="password123")
+
+        # Mock the response for passphrase archival
+        request_response = dogtag_key.KeyRequestResponse()
+        request_info = dogtag_key.KeyRequestInfo()
+        request_info.key_url = "https://example_url/1"
+        request_response.request_info = request_info
+        self.keyclient_mock.archive_key.return_value = request_response
+
+        asym_key_DTO = self.plugin.generate_asymmetric_key(key_spec)
+
+        assert asym_key_DTO.private_key_meta[
+            dogtag_import.DogtagKRAPlugin.PASSPHRASE_KEY_ID
+        ] == '1'
+
+        self.keyclient_mock.generate_asymmetric_key.assert_called_once_with(
+            mock.ANY,
+            sstore.KeyAlgorithm.RSA.upper(),
+            2048,
+            mock.ANY)
+
     def test_supports_symmetric_aes_key_generation(self):
         key_spec = sstore.KeySpec(sstore.KeyAlgorithm.AES, 256)
+        self.assertTrue(
+            self.plugin.generate_supports(key_spec)
+        )
+
+    def test_supports_asymmetric_rsa_key_generation(self):
+        key_spec = sstore.KeySpec(sstore.KeyAlgorithm.RSA, 2048)
         self.assertTrue(
             self.plugin.generate_supports(key_spec)
         )

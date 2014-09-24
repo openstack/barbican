@@ -16,7 +16,10 @@
 import os
 import uuid
 
+from Crypto.PublicKey import RSA
+from Crypto.Util import asn1
 from oslo.config import cfg
+
 import pki
 import pki.cert
 import pki.client
@@ -27,11 +30,13 @@ import pki.profile
 from requests import exceptions as request_exceptions
 
 from barbican.common import exception
+from barbican.common import utils
 from barbican.openstack.common import gettextutils as u
 import barbican.plugin.interface.certificate_manager as cm
 import barbican.plugin.interface.secret_store as sstore
 
 CONF = cfg.CONF
+LOG = utils.getLogger(__name__)
 
 dogtag_plugin_group = cfg.OptGroup(name='dogtag_plugin',
                                    title="Dogtag Plugin Options")
@@ -90,18 +95,41 @@ class DogtagPluginAlgorithmException(exception.BarbicanException):
     message = u._("Invalid algorithm passed in")
 
 
+class DogtagPluginNotSupportedException(exception.NotSupported):
+    message = u._("Operation not supported by Dogtag Plugin")
+
+    def __init__(self, msg=None):
+        if not msg:
+            message = self.message
+        else:
+            message = msg
+
+        super(DogtagPluginNotSupportedException, self).__init__(message)
+
+
 class DogtagKRAPlugin(sstore.SecretStoreBase):
     """Implementation of the secret store plugin with KRA as the backend."""
 
     TRANSPORT_NICK = "KRA transport cert"
 
     # metadata constants
+    ALG = "alg"
+    BIT_LENGTH = "bit_length"
     KEY_ID = "key_id"
     SECRET_TYPE = "secret_type"
-    SECRET_KEYSPEC = "secret_keyspec"
+    SECRET_MODE = "secret_mode"
+    PASSPHRASE_KEY_ID = "passphrase_key_id"
+    CONVERT_TO_PEM = "convert_to_pem"
+
+    # string constants
+    DSA_PRIVATE_KEY_HEADER = '-----BEGIN DSA PRIVATE KEY-----'
+    DSA_PRIVATE_KEY_FOOTER = '-----END DSA PRIVATE KEY-----'
+    DSA_PUBLIC_KEY_HEADER = '-----BEGIN DSA PUBLIC KEY-----'
+    DSA_PUBLIC_KEY_FOOTER = '-----END DSA PUBLIC KEY-----'
 
     def __init__(self, conf=CONF):
         """Constructor - create the keyclient."""
+        LOG.debug("starting DogtagKRAPlugin init")
         crypto, create_nss_db = setup_nss_db(conf)
         connection = create_connection(conf, 'kra')
 
@@ -117,6 +145,8 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
             crypto.initialize()
             self.keyclient.set_transport_cert(
                 DogtagKRAPlugin.TRANSPORT_NICK)
+
+        LOG.debug("completed DogtagKRAPlugin init")
 
     def import_transport_cert(self, crypto):
         # Get transport cert and insert in the certdb
@@ -163,9 +193,10 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
                 key_algorithm=None,
                 key_size=None)
 
-        return {DogtagKRAPlugin.SECRET_TYPE: secret_dto.type,
-                DogtagKRAPlugin.SECRET_KEYSPEC: secret_dto.key_spec,
-                DogtagKRAPlugin.KEY_ID: response.get_key_id()}
+        meta_dict = {DogtagKRAPlugin.KEY_ID: response.get_key_id()}
+
+        self._store_secret_attributes(meta_dict, secret_dto)
+        return meta_dict
 
     def get_secret(self, secret_metadata):
         """Retrieve a secret from the KRA
@@ -185,22 +216,111 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         on the barbican client.  That way only the client will be
         able to unwrap the secret.  This wrapping key is provided in the
         secret_metadata by Barbican core.
+
+        Format/Type of the secret returned in the SecretDTO object.
+        -----------------------------------------------------------
+        The type of the secret returned is always dependent on the way it is
+        stored using the store_secret method.
+
+        In case of strings - like passphrase/PEM strings, the return will be a
+        string.
+
+        In case of binary data - the return will be the actual binary data.
+
+        In case of retrieving an asymmetric key that is generated using the
+        dogtag plugin, then the binary representation of, the asymmetric key in
+        PEM format, is returned
         """
         key_id = secret_metadata[DogtagKRAPlugin.KEY_ID]
-        twsk = None
-        if 'trans_wrapped_session_key' in secret_metadata:
-            twsk = secret_metadata['trans_wrapped_session_key']
+        secret_type = secret_metadata.get(DogtagKRAPlugin.SECRET_TYPE, None)
 
-        # TODO(alee-3) send transport key as well when dogtag client API
-        # changes in case the transport key has changed.
-        recovered_key = self.keyclient.retrieve_key(key_id, twsk)
+        key_spec = sstore.KeySpec(
+            alg=secret_metadata.get(DogtagKRAPlugin.ALG, None),
+            bit_length=secret_metadata.get(DogtagKRAPlugin.BIT_LENGTH, None),
+            mode=secret_metadata.get(DogtagKRAPlugin.SECRET_MODE, None),
+            passphrase=None
+        )
+
+        passphrase = self._get_passphrase_for_a_private_key(
+            secret_metadata, key_spec)
+
+        recovered_key = None
+        twsk = DogtagKRAPlugin._get_trans_wrapped_session_key(secret_metadata)
+
+        if DogtagKRAPlugin.CONVERT_TO_PEM in secret_metadata:
+            # Case for returning the asymmetric keys generated in KRA.
+            # Asymmetric keys generated in KRA are not generated in PEM format.
+            # This marker DogtagKRAPlugin.CONVERT_TO_PEM is set in the
+            # secret_metadata for asymmetric keys generated in KRA to
+            # help convert the returned private/public keys to PEM format and
+            # eventually return the binary data of the keys in PEM format.
+
+            if secret_type == sstore.SecretType.PUBLIC:
+                # Public key should be retrieved using the get_key_info method
+                # as it is treated as an attribute of the asymmetric key pair
+                # stored in the KRA database.
+
+                if key_spec.alg is None:
+                    raise sstore.SecretAlgorithmNotSupportedException('None')
+
+                key_info = self.keyclient.get_key_info(key_id)
+                if key_spec.alg.upper() == key.KeyClient.RSA_ALGORITHM:
+                    recovered_key = (RSA.importKey(key_info.public_key)
+                                     .publickey()
+                                     .exportKey('PEM')).encode('utf-8')
+                elif key_spec.alg.upper() == key.KeyClient.DSA_ALGORITHM:
+                    pub_seq = asn1.DerSequence()
+                    pub_seq[:] = key_info.public_key
+                    recovered_key = (
+                        ("%s\n%s%s" %
+                        (DogtagKRAPlugin.DSA_PUBLIC_KEY_HEADER,
+                         pub_seq.encode().encode("base64"),
+                         DogtagKRAPlugin.DSA_PUBLIC_KEY_FOOTER)
+                         ).encode('utf-8')
+                    )
+                else:
+                    raise sstore.SecretAlgorithmNotSupportedException(
+                        key_spec.alg.upper()
+                    )
+
+            elif secret_type == sstore.SecretType.PRIVATE:
+                key_data = self.keyclient.retrieve_key(key_id)
+                if key_spec.alg.upper() == key.KeyClient.RSA_ALGORITHM:
+                    recovered_key = (
+                        (RSA.importKey(key_data.data)
+                         .exportKey('PEM', passphrase))
+                        .encode('utf-8')
+                    )
+                elif key_spec.alg.upper() == key.KeyClient.DSA_ALGORITHM:
+                    pub_seq = asn1.DerSequence()
+                    pub_seq[:] = key_data.data
+                    recovered_key = (
+                        ("%s\n%s%s" %
+                        (DogtagKRAPlugin.DSA_PRIVATE_KEY_HEADER,
+                         pub_seq.encode().encode("base64"),
+                         DogtagKRAPlugin.DSA_PRIVATE_KEY_FOOTER)
+                         ).encode('utf-8')
+                    )
+                else:
+                    raise sstore.SecretAlgorithmNotSupportedException(
+                        key_spec.alg.upper()
+                    )
+        else:
+            # TODO(alee-3) send transport key as well when dogtag client API
+            # changes in case the transport key has changed.
+            key_data = self.keyclient.retrieve_key(key_id, twsk)
+            if twsk:
+                # The data returned is a byte array.
+                recovered_key = key_data.encrypted_data
+            else:
+                recovered_key = key_data.data
 
         # TODO(alee) remove final field when content_type is removed
         # from secret_dto
         ret = sstore.SecretDTO(
-            type=secret_metadata[DogtagKRAPlugin.SECRET_TYPE],
+            type=secret_type,
             secret=recovered_key,
-            key_spec=secret_metadata[DogtagKRAPlugin.SECRET_KEYSPEC],
+            key_spec=key_spec,
             content_type=None,
             transport_key=None)
 
@@ -232,20 +352,84 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
 
         if algorithm is None:
             raise DogtagPluginAlgorithmException
+        passphrase = key_spec.passphrase
+        if passphrase:
+            raise DogtagPluginNotSupportedException(
+                "Passphrase encryption is not supported for symmetric"
+                " key generating algorithms.")
 
         response = self.keyclient.generate_symmetric_key(
             client_key_id,
             algorithm,
             key_spec.bit_length,
             usages)
-        return {DogtagKRAPlugin.SECRET_KEYSPEC: key_spec,
+        return {DogtagKRAPlugin.ALG: key_spec.alg,
+                DogtagKRAPlugin.BIT_LENGTH: key_spec.bit_length,
+                DogtagKRAPlugin.SECRET_MODE: key_spec.mode,
                 DogtagKRAPlugin.SECRET_TYPE: sstore.SecretType.SYMMETRIC,
                 DogtagKRAPlugin.KEY_ID: response.get_key_id()}
 
     def generate_asymmetric_key(self, key_spec):
         """Generate an asymmetric key."""
-        raise NotImplementedError(
-            "Feature not yet implemented by dogtag plugin")
+
+        usages = [key.AsymKeyGenerationRequest.DECRYPT_USAGE,
+                  key.AsymKeyGenerationRequest.ENCRYPT_USAGE]
+
+        client_key_id = uuid.uuid4().hex
+        algorithm = self._map_algorithm(key_spec.alg.lower())
+        passphrase = key_spec.passphrase
+
+        if algorithm is None:
+            raise DogtagPluginAlgorithmException
+
+        passphrase_key_id = None
+        passphrase_metadata = None
+        if passphrase:
+            if algorithm == key.KeyClient.DSA_ALGORITHM:
+                raise DogtagPluginNotSupportedException("Passphrase encryption"
+                                                        " is not supported for"
+                                                        " DSA algorithm")
+
+            stored_passphrase_info = self.keyclient.archive_key(
+                uuid.uuid4().hex,
+                self.keyclient.PASS_PHRASE_TYPE,
+                passphrase)
+
+            passphrase_key_id = stored_passphrase_info.get_key_id()
+            passphrase_metadata = {
+                DogtagKRAPlugin.KEY_ID: passphrase_key_id
+            }
+
+        response = self.keyclient.generate_asymmetric_key(
+            client_key_id,
+            algorithm,
+            key_spec.bit_length,
+            usages)
+
+        public_key_metadata = {
+            DogtagKRAPlugin.ALG: key_spec.alg,
+            DogtagKRAPlugin.BIT_LENGTH: key_spec.bit_length,
+            DogtagKRAPlugin.SECRET_TYPE: sstore.SecretType.PUBLIC,
+            DogtagKRAPlugin.KEY_ID: response.get_key_id(),
+            DogtagKRAPlugin.CONVERT_TO_PEM: "true"
+        }
+
+        private_key_metadata = {
+            DogtagKRAPlugin.ALG: key_spec.alg,
+            DogtagKRAPlugin.BIT_LENGTH: key_spec.bit_length,
+            DogtagKRAPlugin.SECRET_TYPE: sstore.SecretType.PRIVATE,
+            DogtagKRAPlugin.KEY_ID: response.get_key_id(),
+            DogtagKRAPlugin.CONVERT_TO_PEM: "true"
+        }
+
+        if passphrase_key_id:
+            private_key_metadata[DogtagKRAPlugin.PASSPHRASE_KEY_ID] = (
+                passphrase_key_id
+            )
+
+        return sstore.AsymmetricKeyMetadataDTO(private_key_metadata,
+                                               public_key_metadata,
+                                               passphrase_metadata)
 
     def generate_supports(self, key_spec):
         """Key generation supported?
@@ -279,20 +463,73 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
             return key.KeyClient.DES_ALGORITHM
         elif algorithm == sstore.KeyAlgorithm.DESEDE:
             return key.KeyClient.DES3_ALGORITHM
-        elif algorithm == sstore.KeyAlgorithm.DIFFIE_HELLMAN:
-            # may be supported, needs to be tested
-            return None
         elif algorithm == sstore.KeyAlgorithm.DSA:
+            return key.KeyClient.DSA_ALGORITHM
+        elif algorithm == sstore.KeyAlgorithm.RSA:
+            return key.KeyClient.RSA_ALGORITHM
+        elif algorithm == sstore.KeyAlgorithm.DIFFIE_HELLMAN:
             # may be supported, needs to be tested
             return None
         elif algorithm == sstore.KeyAlgorithm.EC:
             # asymmetric keys not yet supported
             return None
-        elif algorithm == sstore.KeyAlgorithm.RSA:
-            # asymmetric keys not yet supported
-            return None
         else:
             return None
+
+    @staticmethod
+    def _store_secret_attributes(meta_dict, secret_dto):
+        # store the following attributes for retrieval
+        key_spec = secret_dto.key_spec
+        if key_spec.alg is not None:
+            meta_dict[DogtagKRAPlugin.ALG] = key_spec.alg
+        if key_spec.bit_length is not None:
+            meta_dict[DogtagKRAPlugin.BIT_LENGTH] = key_spec.bit_length
+        if key_spec.mode is not None:
+            meta_dict[DogtagKRAPlugin.SECRET_MODE] = key_spec.mode
+        if secret_dto.type is not None:
+            meta_dict[DogtagKRAPlugin.SECRET_TYPE] = secret_dto, type
+
+    def _get_passphrase_for_a_private_key(self, secret_metadata, key_spec):
+        """Retrieve the passphrase for the private key which is stored
+        in the KRA.
+        """
+        secret_type = secret_metadata.get(DogtagKRAPlugin.SECRET_TYPE, None)
+        if secret_type is None:
+            return None
+        if key_spec.alg is None:
+            return None
+
+        passphrase = None
+        if DogtagKRAPlugin.PASSPHRASE_KEY_ID in secret_metadata:
+            if key_spec.alg.upper() == key.KeyClient.RSA_ALGORITHM:
+                passphrase = self.keyclient.retrieve_key(
+                    secret_metadata.get(DogtagKRAPlugin.PASSPHRASE_KEY_ID)
+                ).data
+            else:
+                if key_spec.alg.upper() == key.KeyClient.DSA_ALGORITHM:
+                    raise sstore.SecretGeneralException(
+                        "DSA keys should not have a passphrase in the"
+                        " database, for being used during retrieval."
+                    )
+                raise sstore.SecretGeneralException(
+                    "Secrets of type " + secret_type +
+                    " should not have a passphrase in the database, "
+                    "for being used during retrieval."
+                )
+        return passphrase
+
+    @staticmethod
+    def _get_trans_wrapped_session_key(secret_metadata):
+        twsk = secret_metadata.get('trans_wrapped_session_key', None)
+        secret_type = secret_metadata.get(DogtagKRAPlugin.SECRET_TYPE, None)
+        if secret_type in [sstore.SecretType.PUBLIC,
+                           sstore.SecretType.PRIVATE]:
+            if twsk:
+                raise DogtagPluginNotSupportedException(
+                    "Encryption using session key is not supported when "
+                    "retrieving a " + secret_type + " key.")
+
+        return twsk
 
 
 def _catch_request_exception(ca_related_function):
@@ -302,6 +539,7 @@ def _catch_request_exception(ca_related_function):
         except request_exceptions.RequestException:
             return cm.ResultDTO(
                 cm.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST)
+
     return _catch_ca_unavailable
 
 
