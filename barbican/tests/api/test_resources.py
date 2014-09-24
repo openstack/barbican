@@ -1458,24 +1458,9 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         order = args[0]
         self.assertIsInstance(order, models.Order)
 
-    def test_should_raise_add_new_order_no_secret(self):
-        resp = self.app.post_json(
-            '/orders/',
-            {},
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 400)
+    def test_should_allow_add_new_order_unsupported_algorithm(self):
+        # TODO(john-wood-w) Allow until plugin validation is added.
 
-    def test_should_raise_add_new_order_bad_json(self):
-        resp = self.app.post(
-            '/orders/',
-            '',
-            expect_errors=True,
-            headers={'Content-Type': 'application/json'},
-        )
-        self.assertEqual(resp.status_int, 400)
-
-    def test_should_raise_add_new_order_unsupported_field(self):
         # Using unsupported algorithm field for this test
         self.unsupported_req = {
             'secret': {
@@ -1492,6 +1477,23 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
             expect_errors=True
         )
 
+        self.assertEqual(resp.status_int, 202)
+
+    def test_should_raise_add_new_order_no_secret(self):
+        resp = self.app.post_json(
+            '/orders/',
+            {},
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 400)
+
+    def test_should_raise_add_new_order_bad_json(self):
+        resp = self.app.post(
+            '/orders/',
+            '',
+            expect_errors=True,
+            headers={'Content-Type': 'application/json'},
+        )
         self.assertEqual(resp.status_int, 400)
 
     def test_should_raise_add_new_order_no_content_type_header(self):
