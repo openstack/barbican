@@ -5,6 +5,7 @@ mock>=1.0
 oslotest>=1.1.0.0a1
 testrepository>=0.0.18
 testtools>=0.9.34
+fixtures>=0.3.14
 
 # Documentation build requirements
 sphinx>=1.1.2,<1.2
