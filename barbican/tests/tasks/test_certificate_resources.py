@@ -30,21 +30,26 @@ class WhenPerformingPrivateOperations(utils.BaseTestCase):
                 self.value = value
 
         class OrderModel(object):
+            id = mock.ANY
             order_plugin_metadata = {
                 "foo": Value(1),
                 "bar": Value(2),
             }
         order_model = OrderModel()
-        expected_dict = dict(
-            (k, v.value) for (k, v) in
-            order_model.order_plugin_metadata.items())
+        repos = mock.MagicMock()
+        meta_repo_mock = mock.MagicMock()
+        repos.order_plugin_meta_repo = meta_repo_mock
+        meta_repo_mock.get_metadata_for_order.return_value = (
+            order_model.order_plugin_metadata
+        )
 
-        result = cert_res._get_plugin_meta(order_model)
+        result = cert_res._get_plugin_meta(order_model, repos)
 
-        self._assert_dict_equal(expected_dict, result)
+        self._assert_dict_equal(order_model.order_plugin_metadata, result)
 
     def test_get_plugin_meta_with_empty_dict(self):
-        result = cert_res._get_plugin_meta(None)
+        repos = mock.MagicMock()
+        result = cert_res._get_plugin_meta(None, repos)
 
         self._assert_dict_equal({}, result)
 

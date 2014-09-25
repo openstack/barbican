@@ -70,7 +70,8 @@ def issue_certificate_request(order_model, tenant_model, repos):
         the request has been completed.  None otherwise
     """
     container_model = None
-    plugin_meta = _get_plugin_meta(order_model)
+
+    plugin_meta = _get_plugin_meta(order_model, repos)
 
     # Locate a suitable plugin to issue a certificate.
     cert_plugin = cert.CertificatePluginManager().get_plugin(order_model.meta)
@@ -125,7 +126,8 @@ def check_certificate_request(order_model, tenant_model, plugin_name, repos):
         request has been completed.  None otherwise.
     """
     container_model = None
-    plugin_meta = _get_plugin_meta(order_model)
+    plugin_meta = _get_plugin_meta(order_model, repos)
+
     cert_plugin = cert.CertificatePluginManager().get_plugin_by_name(
         plugin_name)
 
@@ -227,11 +229,10 @@ def _schedule_retry_task(retry_object, retry_method, retry_time, args):
     pass
 
 
-def _get_plugin_meta(order_model):
+def _get_plugin_meta(order_model, repos):
     if order_model:
-        meta_dict = dict((k, v.value) for (k, v) in
-                         order_model.order_plugin_metadata.items())
-        return meta_dict
+        return repos.order_plugin_meta_repo.get_metadata_for_order(
+            order_model.id)
     else:
         return dict()
 

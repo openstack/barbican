@@ -480,14 +480,15 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
     def _store_secret_attributes(meta_dict, secret_dto):
         # store the following attributes for retrieval
         key_spec = secret_dto.key_spec
-        if key_spec.alg is not None:
-            meta_dict[DogtagKRAPlugin.ALG] = key_spec.alg
-        if key_spec.bit_length is not None:
-            meta_dict[DogtagKRAPlugin.BIT_LENGTH] = key_spec.bit_length
-        if key_spec.mode is not None:
-            meta_dict[DogtagKRAPlugin.SECRET_MODE] = key_spec.mode
+        if key_spec is not None:
+            if key_spec.alg is not None:
+                meta_dict[DogtagKRAPlugin.ALG] = key_spec.alg
+            if key_spec.bit_length is not None:
+                meta_dict[DogtagKRAPlugin.BIT_LENGTH] = key_spec.bit_length
+            if key_spec.mode is not None:
+                meta_dict[DogtagKRAPlugin.SECRET_MODE] = key_spec.mode
         if secret_dto.type is not None:
-            meta_dict[DogtagKRAPlugin.SECRET_TYPE] = secret_dto, type
+            meta_dict[DogtagKRAPlugin.SECRET_TYPE] = secret_dto.type
 
     def _get_passphrase_for_a_private_key(self, secret_metadata, key_spec):
         """Retrieve the passphrase for the private key which is stored
