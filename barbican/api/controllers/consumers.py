@@ -124,14 +124,14 @@ class ContainerConsumersController(object):
         LOG.debug('Start on_post...%s', data)
 
         try:
-            self.container_repo.get(self.container_id, keystone_id)
+            container = self.container_repo.get(self.container_id, keystone_id)
         except exception.NotFound:
             controllers.containers.container_not_found()
 
         new_consumer = models.ContainerConsumerMetadatum(self.container_id,
                                                          data)
         new_consumer.tenant_id = tenant.id
-        self.consumer_repo.create_from(new_consumer)
+        self.consumer_repo.create_from(new_consumer, container)
 
         pecan.response.headers['Location'] = (
             '/containers/{0}/consumers'.format(new_consumer.container_id)

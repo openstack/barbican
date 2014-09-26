@@ -875,6 +875,27 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
         self.assertFalse('previous' in resp.namespace)
         self.assertFalse('next' in resp.namespace)
 
+    def test_should_list_secrets_normalize_bits_to_zero(self):
+        # Set bits to a bogus value, that the secrets controller should clean.
+        self.params['bits'] = 'bogus-bits'
+
+        self.app.get(
+            '/secrets/',
+            dict((k, v) for k, v in self.params.items() if v is not None)
+        )
+
+        # Verify that controller call above normalizes bits to zero!
+        self.secret_repo.get_by_create_date.assert_called_once_with(
+            self.keystone_id,
+            offset_arg=u'{0}'.format(self.offset),
+            limit_arg=u'{0}'.format(self.limit),
+            suppress_exception=True,
+            name='',
+            alg=None,
+            mode=None,
+            bits=0
+        )
+
     def _create_url(self, keystone_id, offset_arg=None, limit_arg=None):
         if limit_arg:
             offset = int(offset_arg)
@@ -959,6 +980,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.kek_repo = mock.MagicMock()
 
         self.secret_meta_repo = mock.MagicMock()
+        self.secret_meta_repo.get_metadata_for_secret.return_value = None
 
         self.transport_key_model = models.TransportKey(
             "default_plugin", "my transport key")
@@ -1006,6 +1028,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             'text/plain',
             self.secret,
             self.tenant,
+            mock.ANY,
             None,
             None
         )
@@ -1033,6 +1056,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             'text/plain',
             self.secret,
             self.tenant,
+            mock.ANY,
             twsk,
             self.transport_key_model.transport_key
         )
@@ -1133,6 +1157,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             'application/octet-stream',
             self.secret,
             self.tenant,
+            mock.ANY,
             None,
             None
         )
@@ -1302,6 +1327,20 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             headers={
                 'Accept': 'text/plain',
                 'Content-Type': 'application/json'
+            },
+            expect_errors=True
+        )
+
+        self.assertEqual(resp.status_int, 415)
+
+    def test_should_raise_put_secret_no_content_type(self):
+        self.secret.encrypted_data = []
+        resp = self.app.put(
+            '/secrets/{0}/'.format(self.secret.id),
+            'plain text',
+            headers={
+                'Accept': 'text/plain',
+                'Content-Type': ''
             },
             expect_errors=True
         )

@@ -123,6 +123,7 @@ class SecretController(object):
             return plugin.get_secret(pecan.request.accept.header_value,
                                      secret,
                                      tenant,
+                                     self.repos,
                                      twsk,
                                      transport_key)
 

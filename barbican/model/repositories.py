@@ -20,7 +20,6 @@ TODO: The top part of this file was 'borrowed' from Glance, but seems
 quite intense for sqlalchemy, and maybe could be simplified.
 """
 
-
 import logging
 import time
 import uuid
@@ -174,9 +173,12 @@ def get_maker(autocommit=True, expire_on_commit=False):
     global _MAKER, _ENGINE
     assert _ENGINE
     if not _MAKER:
-        _MAKER = sa_orm.sessionmaker(bind=_ENGINE,
-                                     autocommit=autocommit,
-                                     expire_on_commit=expire_on_commit)
+        # Utilize SQLAlchemy's scoped_session to ensure that we only have one
+        #   session instance per thread.
+        _MAKER = sqlalchemy.orm.scoped_session(
+            sa_orm.sessionmaker(bind=_ENGINE,
+                                autocommit=autocommit,
+                                expire_on_commit=expire_on_commit))
     return _MAKER
 
 
@@ -307,7 +309,6 @@ class BaseRepo(object):
             suppress_exception=False, session=None):
         """Get an entity or raise if it does not exist."""
         session = self.get_session(session)
-
         try:
             query = self._do_build_get_query(entity_id,
                                              keystone_id, session)
@@ -322,8 +323,9 @@ class BaseRepo(object):
             LOG.exception("Not found for %s", entity_id)
             entity = None
             if not suppress_exception:
-                raise exception.NotFound("No %s found with ID %s"
-                                         % (self._do_entity_name(), entity_id))
+                raise exception.NotFound(
+                    "No {0} found with ID {1}".format(
+                        self._do_entity_name(), entity_id))
 
         return entity
 
@@ -560,7 +562,8 @@ class SecretRepo(BaseRepo):
             query = query.order_by(models.Secret.created_at)
             query = query.filter_by(deleted=False)
 
-            # Note: Must use '== None' below, not 'is None'.
+            # Note(john-wood-w): SQLAlchemy requires '== None' below,
+            #   not 'is None'.
             query = query.filter(or_(models.Secret.expiration == None,
                                      models.Secret.expiration > utcnow))
 
@@ -607,7 +610,8 @@ class SecretRepo(BaseRepo):
         """Sub-class hook: build a retrieve query."""
         utcnow = timeutils.utcnow()
 
-        # Note: Must use '== None' below, not 'is None'.
+        # Note(john-wood-w): SQLAlchemy requires '== None' below,
+        #   not 'is None'.
         # TODO(jfwood): Performance? Is the many-to-many join needed?
         expiration_filter = or_(models.Secret.expiration == None,
                                 models.Secret.expiration > utcnow)
@@ -667,6 +671,25 @@ class SecretStoreMetadatumRepo(BaseRepo):
                 meta_model.updated_at = now
                 meta_model.secret = secret_model
                 meta_model.save(session=session)
+
+    def get_metadata_for_secret(self, secret_id):
+        """Returns a dict of SecretStoreMetadatum instances."""
+
+        session = get_session()
+        with session.begin():
+            try:
+                query = session.query(models.SecretStoreMetadatum)
+                query = query.filter_by(deleted=False)
+
+                query = query.filter(
+                    models.SecretStoreMetadatum.secret_id == secret_id)
+
+                metadata = query.all()
+
+            except sa_orm.exc.NoResultFound:
+                metadata = dict()
+
+        return dict((m.key, m.value) for m in metadata)
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
@@ -864,7 +887,6 @@ class OrderPluginMetadatumRepo(BaseRepo):
                 query = session.query(models.OrderPluginMetadatum)
                 query = query.filter_by(deleted=False)
 
-                # Note: Must use '== None' below, not 'is None'.
                 query = query.filter(
                     models.OrderPluginMetadatum.order_id == order_id)
 
@@ -1039,10 +1061,14 @@ class ContainerConsumerRepo(BaseRepo):
                                          % (self._do_entity_name()))
         return consumer
 
-    def create_from(self, new_consumer):
+    def create_from(self, new_consumer, container):
+        session = get_session()
         try:
-            super(ContainerConsumerRepo, self).create_from(new_consumer)
-        except exception.Duplicate:
+            with session.begin():
+                container.updated_at = timeutils.utcnow()
+                container.consumers.append(new_consumer)
+                container.save(session=session)
+        except sqlalchemy.exc.IntegrityError:
             # This operation is idempotent, so log this and move on
             LOG.debug("Consumer %s already exists for container %s,"
                       " continuing...", (new_consumer.name, new_consumer.URL),

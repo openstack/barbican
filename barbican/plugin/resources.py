@@ -129,14 +129,13 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
     return secret_model, None
 
 
-def get_secret(requesting_content_type, secret_model, tenant_model,
+def get_secret(requesting_content_type, secret_model, tenant_model, repos,
                twsk=None, transport_key=None):
     tr.analyze_before_decryption(requesting_content_type)
 
     # Construct metadata dict from data model.
     #   Note: Must use the dict/tuple format for py2.6 usage.
-    secret_metadata = dict((k, v.value) for (k, v) in
-                           secret_model.secret_store_metadata.items())
+    secret_metadata = _get_secret_meta(secret_model, repos)
 
     if twsk is not None:
         secret_metadata['trans_wrapped_session_key'] = twsk
@@ -160,11 +159,10 @@ def get_secret(requesting_content_type, secret_model, tenant_model,
                                            requesting_content_type)
 
 
-def get_transport_key_id_for_retrieval(secret_model):
+def get_transport_key_id_for_retrieval(secret_model, repos):
     """Return a transport key ID for retrieval if the plugin supports it."""
 
-    secret_metadata = dict((k, v.value) for (k, v) in
-                           secret_model.secret_store_metadata.items())
+    secret_metadata = _get_secret_meta(secret_model, repos)
 
     plugin_manager = secret_store.SecretStorePluginManager()
     retrieve_plugin = plugin_manager.get_plugin_retrieve_delete(
@@ -262,8 +260,7 @@ def delete_secret(secret_model, project_id, repos):
 
     # Construct metadata dict from data model.
     #   Note: Must use the dict/tuple format for py2.6 usage.
-    secret_metadata = dict((k, v.value) for (k, v) in
-                           secret_model.secret_store_metadata.items())
+    secret_metadata = _get_secret_meta(secret_model, repos)
 
     # Locate a suitable plugin to delete the secret from.
     plugin_manager = secret_store.SecretStorePluginManager()
@@ -333,6 +330,14 @@ def _get_secret(
     else:
         secret_dto = retrieve_plugin.get_secret(secret_metadata)
     return secret_dto
+
+
+def _get_secret_meta(secret_model, repos):
+    if secret_model:
+        return repos.secret_meta_repo.get_metadata_for_secret(
+            secret_model.id)
+    else:
+        return dict()
 
 
 def _save_secret_metadata(secret_model, secret_metadata,
