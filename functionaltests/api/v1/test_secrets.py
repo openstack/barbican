@@ -152,3 +152,15 @@ class SecretsTestCase(base.TestCase):
 
         resp, secret_ref = self.behaviors.create_secret(create_model)
         self.assertEqual(resp.status_code, 400)
+
+    def test_delete_secret_with_accept_application_json(self):
+        """Covers Launchpad Bug #1326481."""
+        create_model = self.one_phase_secret_model
+        resp, secret_ref = self.behaviors.create_secret(create_model)
+
+        self.assertEqual(resp.status_code, 201)
+
+        headers = {'Accept': 'application/json'}
+        resp = self.behaviors.delete_secret(secret_ref, extra_headers=headers)
+
+        self.assertEqual(resp.status_code, 204)
