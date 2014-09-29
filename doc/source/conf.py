@@ -57,6 +57,7 @@ pygments_style = 'sphinx'
 # html_theme_path = ["."]
 # html_theme = '_theme'
 # html_static_path = ['static']
+html_theme_options = {'incubating': True}
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = '%sdoc' % project
