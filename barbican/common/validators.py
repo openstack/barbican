@@ -316,6 +316,25 @@ class TypeOrderValidator(ValidatorBase):
                               schema_name,
                               u._("'meta' attributes is required"), "meta")
 
+        # Validate secret metadata.
+        secret_validator = NewSecretValidator()
+        secret_validator.validate(asymmetric_meta, parent_schema=self.name)
+
+        if (asymmetric_meta.get('payload_content_type', '').lower() !=
+                'application/octet-stream'):
+            raise exception.UnsupportedField(field='payload_content_type',
+                                             schema=schema_name,
+                                             reason=u._("Only 'application/oc"
+                                                        "tet-stream' "
+                                                        "supported"))
+
+        self._assert_validity(asymmetric_meta.get('algorithm') is not None,
+                              schema_name,
+                              u._("'algorithm' is required field "
+                                  "for asymmetric type order"), "meta")
+
+        self._validate_bit_length(asymmetric_meta, schema_name)
+
     def _validate_certificate_meta(self, certificate_meta, schema_name):
         """Validation specific to meta for certificate type order."""
         self._assert_validity(certificate_meta is not None,
@@ -339,9 +358,9 @@ class TypeOrderValidator(ValidatorBase):
 
         return expiration
 
-    def _validate_bit_length(self, key_meta, schema_name):
+    def _validate_bit_length(self, meta, schema_name):
 
-        bit_length = int(key_meta.get('bit_length', 0))
+        bit_length = int(meta.get('bit_length', 0))
         if bit_length <= 0:
             raise exception.UnsupportedField(field="bit_length",
                                              schema=schema_name,

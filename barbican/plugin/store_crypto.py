@@ -237,7 +237,10 @@ class StoreCryptoAdapterPlugin(object):
         given key_spec.
         """
         return (key_spec and
-                sstore.KeyAlgorithm().get_secret_type(key_spec.alg))
+                (key_spec.alg.lower() in
+                 sstore.KeyAlgorithm.ASYMMETRIC_ALGORITHMS
+                 or key_spec.alg.lower() in
+                 sstore.KeyAlgorithm.SYMMETRIC_ALGORITHMS))
 
     def store_secret_supports(self, key_spec):
         """Key storage supported?
