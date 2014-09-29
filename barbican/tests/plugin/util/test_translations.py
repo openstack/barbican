@@ -17,7 +17,42 @@ from barbican.plugin.util import translations
 from barbican.tests import utils
 
 
+@utils.parameterized_test_case
 class WhenNormalizingBeforeEncryption(utils.BaseTestCase):
+    dataset_for_raised_exceptions = {
+        'non_encrypted_content': {
+            'exception': s.SecretNoPayloadProvidedException,
+            'unencrypted': None,
+            'content_type': '',
+            'content_encoding': ''
+        },
+        'invalid_content_type': {
+            'exception': s.SecretContentTypeNotSupportedException,
+            'unencrypted': 'stuff',
+            'content_type': 'nope',
+            'content_encoding': ''
+        },
+        'invalid_base64_content': {
+            'exception': s.SecretPayloadDecodingError,
+            'unencrypted': 'stuff',
+            'content_type': 'application/octet-stream',
+            'content_encoding': 'base64'
+        },
+        'content_encoding_isnt_base64': {
+            'exception': s.SecretContentEncodingMustBeBase64,
+            'unencrypted': 'stuff',
+            'content_type': 'application/octet-stream',
+            'content_encoding': 'other_stuff',
+            'enforce_text_only': True
+        },
+        'unsupported_content_encoding': {
+            'exception': s.SecretContentEncodingNotSupportedException,
+            'unencrypted': 'stuff',
+            'content_type': 'application/octet-stream',
+            'content_encoding': 'other_stuff'
+        }
+    }
+
     def setUp(self):
         super(WhenNormalizingBeforeEncryption, self).setUp()
 
@@ -54,55 +89,8 @@ class WhenNormalizingBeforeEncryption(utils.BaseTestCase):
         self.assertEqual(unencrypted, 'bam')
         self.assertEqual(content_type, 'application/octet-stream')
 
-    def test_non_encrypted_content_raises_exception(self):
-        exception = s.SecretNoPayloadProvidedException
-        kwargs = {
-            'unencrypted': None,
-            'content_type': '',
-            'content_encoding': ''
-        }
-
-        self.assertRaises(exception, self.normalize, **kwargs)
-
-    def test_invalid_content_type_raises_exception(self):
-        exception = s.SecretContentTypeNotSupportedException
-        kwargs = {
-            'unencrypted': 'stuff',
-            'content_type': 'nope',
-            'content_encoding': ''
-        }
-
-        self.assertRaises(exception, self.normalize, **kwargs)
-
-    def test_invalid_base64_content_raises_exception(self):
-        exception = s.SecretPayloadDecodingError
-        kwargs = {
-            'unencrypted': 'stuff',
-            'content_type': 'application/octet-stream',
-            'content_encoding': 'base64'
-        }
-
-        self.assertRaises(exception, self.normalize, **kwargs)
-
-    def test_content_encoding_must_be_base64(self):
-        exception = s.SecretContentEncodingMustBeBase64
-        kwargs = {
-            'unencrypted': 'stuff',
-            'content_type': 'application/octet-stream',
-            'content_encoding': 'other_stuff',
-            'enforce_text_only': True
-        }
-
-        self.assertRaises(exception, self.normalize, **kwargs)
-
-    def test_unsupported_content_encoding_raises_exception(self):
-        exception = s.SecretContentEncodingNotSupportedException
-        kwargs = {
-            'unencrypted': 'stuff',
-            'content_type': 'application/octet-stream',
-            'content_encoding': 'other_stuff'
-        }
-
+    @utils.parameterized_dataset(dataset_for_raised_exceptions)
+    def test_normalize_raising_exceptions_with(self, exception, **kwargs):
         self.assertRaises(exception, self.normalize, **kwargs)
 
 
