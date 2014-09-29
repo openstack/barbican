@@ -61,6 +61,40 @@ class WhenTestingIsBase64ProcessingSupported(utils.BaseTestCase):
             self.assertFalse(r)
 
 
+class WhenTestingAllowBinaryContent(utils.BaseTestCase):
+
+    def test_binary_content_without_encoding(self):
+        r = mime_types.use_binary_content_as_is('application/octet-stream',
+                                                None)
+        self.assertTrue(r)
+
+    def test_binary_content_with_valid_encoding(self):
+        r = mime_types.use_binary_content_as_is('application/octet-stream',
+                                                'binary')
+        self.assertTrue(r)
+
+    def test_binary_content_with_encoding(self):
+        r = mime_types.use_binary_content_as_is('application/octet-stream',
+                                                'binary;q=0.5, '
+                                                'gzip;q=0.6, compress')
+        self.assertTrue(r)
+
+    def test_binary_content_with_base64_encoding(self):
+        r = mime_types.use_binary_content_as_is('application/octet-stream',
+                                                'base64')
+        self.assertFalse(r)
+
+    def test_not_allow_with_invalid_content_type(self):
+        r = mime_types.use_binary_content_as_is('invalid_conent_type',
+                                                'binary')
+        self.assertFalse(r)
+
+    def test_plain_content_with_base64_encoding(self):
+        r = mime_types.use_binary_content_as_is('text/plain',
+                                                'base64')
+        self.assertFalse(r)
+
+
 class WhenTestingAugmentFieldsWithContentTypes(utils.BaseTestCase):
 
     def setUp(self):
@@ -89,7 +123,9 @@ class WhenTestingAugmentFieldsWithContentTypes(utils.BaseTestCase):
 
         self.assertIn('application/octet-stream',
                       mime_types.CTYPES_TO_ENCODINGS)
-        self.assertEqual(['base64'], mime_types.CTYPES_TO_ENCODINGS[
+        self.assertIn('base64', mime_types.CTYPES_TO_ENCODINGS[
+            'application/octet-stream'])
+        self.assertIn('binary', mime_types.CTYPES_TO_ENCODINGS[
             'application/octet-stream'])
 
     def test_secret_with_matching_datum(self):
