@@ -172,6 +172,7 @@ class SecretController(object):
                             transport_key_id=transport_key_id)
 
     @index.when(method='DELETE')
+    @allow_all_content_types
     @controllers.handle_exceptions(u._('Secret deletion'))
     @controllers.enforce_rbac('secret:delete')
     def on_delete(self, keystone_id, **kwargs):

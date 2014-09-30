@@ -1419,6 +1419,16 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
                                                    self.keystone_id,
                                                    mock.ANY)
 
+    @mock.patch('barbican.plugin.resources.delete_secret')
+    def test_should_delete_with_accept_header_application_json(self, mocked):
+        """Covers Launchpad Bug: 1326481."""
+        self.app.delete(
+            '/secrets/{0}/'.format(self.secret.id),
+            headers={'Accept': 'application/json'}
+        )
+
+        mocked.assert_called_once_with(self.secret, self.keystone_id, mock.ANY)
+
     def test_should_throw_exception_for_delete_when_secret_not_found(self):
         self.secret_repo.get.return_value = None
 

@@ -52,13 +52,14 @@ class SecretBehaviors(BaseBehaviors):
         return self.client.get(
             secret_ref, response_model_type=secret_models.SecretModel)
 
-    def delete_secret(self, secret_ref):
+    def delete_secret(self, secret_ref, extra_headers=None):
         """Delete a secret.
 
         :param secret_ref: HATEOS ref of the secret to be deleted
+        :param extra_headers: Optional HTTP headers to add to the request
         :return: A request response object
         """
-        resp = self.client.delete(secret_ref)
+        resp = self.client.delete(secret_ref, extra_headers=extra_headers)
         self.created_entities.remove(secret_ref)
         return resp
 
