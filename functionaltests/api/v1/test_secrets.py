@@ -104,3 +104,51 @@ class SecretsTestCase(base.TestCase):
             secret_ref, 'YmFt', 'text/plain')
 
         self.assertEqual(update_resp.status_code, 204)
+
+    def test_create_secret_with_oversized_name_string(self):
+        """Covers negative case for an oversized name string."""
+        create_model = self.one_phase_secret_model
+        create_model.name = 'a' * 256
+
+        resp, secret_ref = self.behaviors.create_secret(create_model)
+        self.assertEqual(resp.status_code, 400)
+
+    def test_create_secret_with_oversized_algorithm_string(self):
+        """Covers negative case for an oversized algorithm string."""
+        create_model = self.one_phase_secret_model
+        create_model.algorithm = 'a' * 256
+
+        resp, secret_ref = self.behaviors.create_secret(create_model)
+        self.assertEqual(resp.status_code, 400)
+
+    def test_create_secret_with_oversized_mode_string(self):
+        """Covers negative case for an oversized mode string."""
+        create_model = self.one_phase_secret_model
+        create_model.mode = 'a' * 256
+
+        resp, secret_ref = self.behaviors.create_secret(create_model)
+        self.assertEqual(resp.status_code, 400)
+
+    def test_create_secret_with_oversized_expiration_string(self):
+        """Covers negative case for an oversized expiration string."""
+        create_model = self.one_phase_secret_model
+        create_model.expiration = 'a' * 256
+
+        resp, secret_ref = self.behaviors.create_secret(create_model)
+        self.assertEqual(resp.status_code, 400)
+
+    def test_create_secret_with_oversized_content_type_string(self):
+        """Covers negative case for an oversized content type string."""
+        create_model = self.one_phase_secret_model
+        create_model.payload_content_type = 'a' * 256
+
+        resp, secret_ref = self.behaviors.create_secret(create_model)
+        self.assertEqual(resp.status_code, 400)
+
+    def test_create_secret_with_oversized_content_encoding_string(self):
+        """Covers negative case for an oversized content encoding string."""
+        create_model = self.one_phase_secret_model
+        create_model.payload_content_encoding = 'a' * 256
+
+        resp, secret_ref = self.behaviors.create_secret(create_model)
+        self.assertEqual(resp.status_code, 400)

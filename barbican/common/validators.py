@@ -114,15 +114,16 @@ class NewSecretValidator(ValidatorBase):
         self.schema = {
             "type": "object",
             "properties": {
-                "name": {"type": "string"},
-                "algorithm": {"type": "string"},
-                "mode": {"type": "string"},
+                "name": {"type": "string", "maxLength": 255},
+                "algorithm": {"type": "string", "maxLength": 255},
+                "mode": {"type": "string", "maxLength": 255},
                 "bit_length": {"type": "integer", "minimum": 1},
-                "expiration": {"type": "string"},
+                "expiration": {"type": "string", "maxLength": 255},
                 "payload": {"type": "string"},
-                "payload_content_type": {"type": "string"},
+                "payload_content_type": {"type": "string", "maxLength": 255},
                 "payload_content_encoding": {
                     "type": "string",
+                    "maxLength": 255,
                     "enum": [
                         "base64"
                     ]
