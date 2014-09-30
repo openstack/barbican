@@ -15,9 +15,9 @@
 import json
 import re
 
-from tempest import exceptions
-
 from functionaltests.api import base
+from functionaltests.api.v1.behaviors import secret_behaviors
+from functionaltests.api.v1.models import secret_models
 
 create_secret_data = {
     "name": "AES key",
@@ -47,64 +47,47 @@ create_container_data = {
 class ContainersTestCase(base.TestCase):
 
     def _create_a_secret(self):
-        secret_json_data = json.dumps(create_secret_data)
-        resp, body = self.client.post(
-            '/secrets',
-            secret_json_data,
-            headers={'content-type': 'application/json'}
-        )
-        self.assertEqual(resp.status, 201)
-
-        returned_data = json.loads(body)
-        secret_ref = returned_data.get('secret_ref')
+        secret_model = secret_models.SecretModel(**create_secret_data)
+        resp, secret_ref = self.secret_behaviors.create_secret(secret_model)
+        self.assertEqual(resp.status_code, 201)
         self.assertIsNotNone(secret_ref)
+
         return secret_ref
 
     def _get_a_secret(self, secret_id):
-        resp, body = self.client.get(
-            '/secrets/{0}'.format(secret_id),
-            headers={'content-type': 'application/json'}
-        )
-        self.assertEqual(resp.status, 200)
-        return json.loads(body)
+        resp = self.client.get('secrets/{0}'.format(secret_id))
+        self.assertEqual(resp.status_code, 200)
+        return resp.json()
 
     def _create_a_container(self):
         json_data = json.dumps(create_container_data)
-        resp, body = self.client.post(
-            '/containers', json_data,
-            headers={'content-type': 'application/json'})
-        self.assertEqual(resp.status, 201)
+        resp = self.client.post('containers/', json_data)
+        self.assertEqual(resp.status_code, 201)
 
-        returned_data = json.loads(body)
-        container_ref = returned_data['container_ref']
+        body = resp.json()
+        container_ref = body.get('container_ref')
         self.assertIsNotNone(container_ref)
         return container_ref
 
     def _get_a_container(self, container_id):
-        resp, body = self.client.get(
-            '/containers/{0}'.format(container_id),
-            headers={'content-type': 'application/json'}
-        )
-        self.assertEqual(resp.status, 200)
-        self.assertIsNotNone(body)
-        return json.loads(body)
+        resp = self.client.get('containers/{0}'.format(container_id))
+        self.assertEqual(resp.status_code, 200)
+        self.assertIsNotNone(resp.content)
+        return resp.json()
 
     def _get_container_list(self):
-        resp, body = self.client.get(
-            '/containers/',
-            headers={'content-type': 'application/json'}
-        )
-        self.assertEqual(resp.status, 200)
-        return json.loads(body)
+        resp = self.client.get('containers/')
+        self.assertEqual(resp.status_code, 200)
+        return resp.json()
 
     def _delete_a_container(self, container_id):
-        resp, body = self.client.delete(
-            '/containers/{0}'.format(container_id), headers={}
-        )
-        self.assertEqual(resp.status, 204)
+        resp = self.client.delete('containers/{0}'.format(container_id))
+        self.assertEqual(resp.status_code, 204)
 
     def setUp(self):
         super(ContainersTestCase, self).setUp()
+        self.secret_behaviors = secret_behaviors.SecretBehaviors(self.client)
+
         # Set up two secrets
         secret_ref_1 = self._create_a_secret()
         secret_ref_2 = self._create_a_secret()
@@ -114,6 +97,10 @@ class ContainersTestCase(base.TestCase):
 
         self.secret_id_1 = secret_ref_1.split('/')[-1]
         self.secret_id_2 = secret_ref_2.split('/')[-1]
+
+    def tearDown(self):
+        self.secret_behaviors.delete_all_created_secrets()
+        super(ContainersTestCase, self).tearDown()
 
     def test_create_container(self):
         """Covers container creation.
@@ -138,11 +125,8 @@ class ContainersTestCase(base.TestCase):
         self._delete_a_container(container_id)
 
         # Verify container is gone
-        self.assertRaises(
-            exceptions.NotFound, self.client.get,
-            '/containers/{0}'.format(container_id),
-            headers={'content-type': 'application/json'}
-        )
+        resp = self.client.get(container_ref)
+        self.assertEqual(resp.status_code, 404)
 
         # Verify the Secrets from the container still exist
         self._get_a_secret(self.secret_id_1)
