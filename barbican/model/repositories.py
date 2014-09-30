@@ -569,9 +569,6 @@ class BaseRepo(object):
         :param session: existing db session reference.
         :returns: A query object for getting all project related entities
 
-        This query is used by `get_project_entities` and
-        `delete_project_entities` functions in BaseRepo class.
-
         This will filter deleted entities if there.
         """
         msg = u._("{0} is missing query build method for get project "
