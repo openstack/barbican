@@ -36,6 +36,7 @@ from barbican.api.controllers import secrets
 from barbican.api.controllers import transportkeys
 from barbican.api.controllers import versions
 from barbican.common import config
+from barbican.model import repositories
 from barbican.openstack.common import log
 from barbican import queue
 
@@ -63,7 +64,17 @@ class PecanAPI(pecan.Pecan):
     performance_controller = performance.PerformanceController()
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault('hooks', []).append(JSONErrorHook())
+        hooks = [JSONErrorHook()]
+        if kwargs.pop('is_transactional', None):
+            transaction_hook = pecan.hooks.TransactionHook(
+                repositories.start,
+                repositories.start_read_only,
+                repositories.commit,
+                repositories.rollback,
+                repositories.clear
+            )
+            hooks.append(transaction_hook)
+        kwargs['hooks'] = hooks
         super(PecanAPI, self).__init__(*args, **kwargs)
 
     def route(self, req, node, path):
@@ -95,7 +106,7 @@ def create_main_app(global_config, **local_conf):
 
     # Queuing initialization
     CONF = cfg.CONF
-    queue.init(CONF)
+    queue.init(CONF, is_server_side=False)
 
     class RootController(object):
         secrets = secrets.SecretsController()
@@ -103,7 +114,8 @@ def create_main_app(global_config, **local_conf):
         containers = containers.ContainersController()
         transport_keys = transportkeys.TransportKeysController()
 
-    wsgi_app = PecanAPI(RootController(), force_canonical=False)
+    wsgi_app = PecanAPI(
+        RootController(), is_transactional=True, force_canonical=False)
     if newrelic_loaded:
         wsgi_app = newrelic.agent.WSGIApplicationWrapper(wsgi_app)
     return wsgi_app

@@ -19,20 +19,129 @@ from barbican.queue import server
 from barbican.tests import utils
 
 
+class WhenUsingTransactionalDecorator(utils.BaseTestCase):
+    """Test using the 'transactional' decorator in server.py.
+
+    Note that only the 'I am a server' logic is tested here, as the alternate
+    mode is only used for direct invocation of Task methods in the standalone
+    server mode, which is also thoroughly tested in WhenUsingBeginTypeOrderTask
+    below.
+    """
+
+    def setUp(self):
+        super(WhenUsingTransactionalDecorator, self).setUp()
+
+        # Ensure we always thing we are in 'I am a server' mode.
+        is_server_side_config = {
+            'return_value': True
+        }
+        self.is_server_side_patcher = mock.patch(
+            'barbican.queue.is_server_side',
+            **is_server_side_config
+        )
+        self.is_server_side_patcher.start()
+
+        # Mock the various repository calls:
+        self.start_patcher = mock.patch(
+            'barbican.model.repositories.start'
+        )
+        self.start_mock = self.start_patcher.start()
+
+        self.commit_patcher = mock.patch(
+            'barbican.model.repositories.commit'
+        )
+        self.commit_mock = self.commit_patcher.start()
+
+        self.rollback_patcher = mock.patch(
+            'barbican.model.repositories.rollback'
+        )
+        self.rollback_mock = self.rollback_patcher.start()
+
+        self.clear_patcher = mock.patch(
+            'barbican.model.repositories.clear'
+        )
+        self.clear_mock = self.clear_patcher.start()
+
+        self.args = ('foo', 'bar')
+        self.kwargs = {'k_foo': 1, 'k_bar': 2}
+
+        # Class/decorator under test.
+        class TestClass(object):
+            my_args = None
+            my_kwargs = None
+            is_exception_needed = False
+
+            @server.transactional
+            def test_method(self, *args, **kwargs):
+                if self.is_exception_needed:
+                    raise ValueError()
+                self.my_args = args
+                self.my_kwargs = kwargs
+        self.test_object = TestClass()
+
+    def tearDown(self):
+        super(WhenUsingTransactionalDecorator, self).tearDown()
+        self.is_server_side_patcher.stop()
+        self.start_patcher.stop()
+        self.commit_patcher.stop()
+        self.rollback_patcher.stop()
+        self.clear_patcher.stop()
+
+    def test_should_commit(self):
+        self.test_object.test_method(*self.args, **self.kwargs)
+
+        self.assertEqual(self.args, self.test_object.my_args)
+        self.assertEqual(self.kwargs, self.test_object.my_kwargs)
+
+        self.assertEqual(self.start_mock.call_count, 1)
+        self.assertEqual(self.commit_mock.call_count, 1)
+        self.assertEqual(self.rollback_mock.call_count, 0)
+        self.assertEqual(self.clear_mock.call_count, 1)
+
+    def test_should_rollback(self):
+        self.test_object.is_exception_needed = True
+
+        self.test_object.test_method(*self.args, **self.kwargs)
+
+        self.assertEqual(self.start_mock.call_count, 1)
+        self.assertEqual(self.commit_mock.call_count, 0)
+        self.assertEqual(self.rollback_mock.call_count, 1)
+        self.assertEqual(self.clear_mock.call_count, 1)
+
+
 class WhenUsingBeginTypeOrderTask(utils.BaseTestCase):
     """Test using the Tasks class for 'type order' task."""
 
     def setUp(self):
         super(WhenUsingBeginTypeOrderTask, self).setUp()
 
+        # Mock the 'am I a server process?' flag used by the decorator around
+        #   all task methods. Since this test class focuses on testing task
+        #   method behaviors, this flag is set to false to allow for direct
+        #   testing of these tasks without database transactional interference.
+        is_server_side_config = {
+            'return_value': False
+        }
+        self.is_server_side_patcher = mock.patch(
+            'barbican.queue.is_server_side',
+            **is_server_side_config
+        )
+        self.is_server_side_patcher.start()
+
         self.tasks = server.Tasks()
+
+    def tearDown(self):
+        super(WhenUsingBeginTypeOrderTask, self).tearDown()
+        self.is_server_side_patcher.stop()
 
     @mock.patch('barbican.tasks.resources.BeginTypeOrder')
     def test_should_process_order(self, mock_begin_order):
         mock_begin_order.return_value.process.return_value = None
+
         self.tasks.process_type_order(context=None,
                                       order_id=self.order_id,
                                       keystone_id=self.keystone_id)
+
         mock_begin_order.return_value.process.assert_called_with(
             self.order_id, self.keystone_id)
 
@@ -40,6 +149,7 @@ class WhenUsingBeginTypeOrderTask(utils.BaseTestCase):
     def test_should_update_order(self, mock_update_order):
         mock_update_order.return_value.process.return_value = None
         updated_meta = {}
+
         self.tasks.update_order(context=None,
                                 order_id=self.order_id,
                                 keystone_id=self.keystone_id,
@@ -52,6 +162,7 @@ class WhenUsingBeginTypeOrderTask(utils.BaseTestCase):
     def test_process_order_catch_exception(self, mock_begin_order):
         """Test process_type_order() handles all exceptions."""
         mock_begin_order.return_value.process.side_effect = Exception()
+
         self.tasks.process_type_order(None, self.order_id, self.keystone_id)
 
 
