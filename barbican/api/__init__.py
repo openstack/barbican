@@ -58,6 +58,7 @@ def load_body(req, resp=None, validator=None):
     """
     try:
         body = req.body_file.read(CONF.max_allowed_request_size_in_bytes)
+        req.body_file.seek(0)
     except IOError:
         LOG.exception(u._LE("Problem reading request JSON stream."))
         pecan.abort(500, u._('Read Error'))
