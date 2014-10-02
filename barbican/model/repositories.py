@@ -72,6 +72,51 @@ _CONNECTION = None
 _IDLE_TIMEOUT = None
 
 
+def start():
+    """Start database and establish a read/write connection to it.
+
+    Typically performed at the start of a request cycle, say for POST or PUT
+    requests.
+    """
+    configure_db()
+    get_session()
+
+
+def start_read_only():
+    """Start database and establish a read-only connection to it.
+
+    Typically performed at the start of a request cycle, say for GET or HEAD
+    requests.
+    """
+    # TODO(john-wood-w) Add optional, separate engine/connection for reads.
+    start()
+
+
+def commit():
+    """Commit session state so far to the database.
+
+    Typically performed at the end of a request cycle.
+    """
+    get_session().commit()
+
+
+def rollback():
+    """Rollback session state so far.
+
+    Typically performed when the request cycle raises an Exception.
+    """
+    get_session().rollback()
+
+
+def clear():
+    """Dispose of this session, releases database resources.
+
+    Typically performed at the end of a request cycle, after a
+    commit() or rollback().
+    """
+    _MAKER.remove()
+
+
 def setup_db_env():
     """Setup configuration for database."""
     global sa_logger, _IDLE_TIMEOUT, _MAX_RETRIES, _RETRY_INTERVAL, _CONNECTION
@@ -96,12 +141,12 @@ def configure_db():
     get_engine()
 
 
-def get_session(autocommit=True, expire_on_commit=False):
+def get_session():
     """Helper method to grab session."""
     global _MAKER
     if not _MAKER:
         get_engine()
-        get_maker(autocommit, expire_on_commit)
+        get_maker()
         assert(_MAKER)
     session = _MAKER()
     return session
@@ -167,7 +212,7 @@ def get_engine():
     return _ENGINE
 
 
-def get_maker(autocommit=True, expire_on_commit=False):
+def get_maker():
     """Return a SQLAlchemy sessionmaker."""
     """May assign __MAKER if not already assigned"""
     global _MAKER, _ENGINE
@@ -176,9 +221,7 @@ def get_maker(autocommit=True, expire_on_commit=False):
         # Utilize SQLAlchemy's scoped_session to ensure that we only have one
         #   session instance per thread.
         _MAKER = sqlalchemy.orm.scoped_session(
-            sa_orm.sessionmaker(bind=_ENGINE,
-                                autocommit=autocommit,
-                                expire_on_commit=expire_on_commit))
+            sa_orm.sessionmaker(bind=_ENGINE))
     return _MAKER
 
 
@@ -296,10 +339,6 @@ class BaseRepo(object):
     configuration.
     """
 
-    def __init__(self):
-        LOG.debug("BaseRepo init...")
-        configure_db()
-
     def get_session(self, session=None):
         LOG.debug("Getting session...")
         return session or get_session()
@@ -309,6 +348,7 @@ class BaseRepo(object):
             suppress_exception=False, session=None):
         """Get an entity or raise if it does not exist."""
         session = self.get_session(session)
+
         try:
             query = self._do_build_get_query(entity_id,
                                              keystone_id, session)
@@ -342,27 +382,26 @@ class BaseRepo(object):
             raise exception.Invalid(msg)
 
         LOG.debug("Begin create from...")
-        session = get_session(session)
-        with session.begin():
 
-            # Validate the attributes before we go any further. From my
-            # (unknown Glance developer) investigation, the @validates
-            # decorator does not validate
-            # on new records, only on existing records, which is, well,
-            # idiotic.
-            values = self._do_validate(entity.to_dict())
+        # Validate the attributes before we go any further. From my
+        # (unknown Glance developer) investigation, the @validates
+        # decorator does not validate
+        # on new records, only on existing records, which is, well,
+        # idiotic.
+        values = self._do_validate(entity.to_dict())
 
-            try:
-                LOG.debug("Saving entity...")
-                entity.save(session=session)
-            except sqlalchemy.exc.IntegrityError:
-                LOG.exception('Problem saving entity for create')
-                if values:
-                    values_id = values['id']
-                else:
-                    values_id = None
-                raise exception.Duplicate("Entity ID {0} already exists!"
-                                          .format(values_id))
+        try:
+            LOG.debug("Saving entity...")
+            entity.save(session=session)
+        except sqlalchemy.exc.IntegrityError:
+            LOG.exception('Problem saving entity for create')
+            if values:
+                values_id = values['id']
+            else:
+                values_id = None
+            raise exception.Duplicate("Entity ID {0} already exists!"
+                                      .format(values_id))
+
         LOG.debug('Elapsed repo '
                   'create secret:%s', (time.time() - start))  # DEBUG
 
@@ -373,23 +412,21 @@ class BaseRepo(object):
 
         :raises NotFound if entity does not exist.
         """
-        session = get_session()
-        with session.begin():
-            entity.updated_at = timeutils.utcnow()
+        entity.updated_at = timeutils.utcnow()
 
-            # Validate the attributes before we go any further. From my
-            # (unknown Glance developer) investigation, the @validates
-            # decorator does not validate
-            # on new records, only on existing records, which is, well,
-            # idiotic.
-            self._do_validate(entity.to_dict())
+        # Validate the attributes before we go any further. From my
+        # (unknown Glance developer) investigation, the @validates
+        # decorator does not validate
+        # on new records, only on existing records, which is, well,
+        # idiotic.
+        self._do_validate(entity.to_dict())
 
-            try:
-                entity.save(session=session)
-            except sqlalchemy.exc.IntegrityError:
-                LOG.exception('Problem saving entity for update')
-                raise exception.NotFound("Entity ID %s not found"
-                                         % entity.id)
+        try:
+            entity.save()
+        except sqlalchemy.exc.IntegrityError:
+            LOG.exception('Problem saving entity for update')
+            raise exception.NotFound("Entity ID %s not found"
+                                     % entity.id)
 
     def update(self, entity_id, values, purge_props=False):
         """Set the given properties on an entity and update it.
@@ -402,17 +439,16 @@ class BaseRepo(object):
         """Remove the entity by its ID."""
 
         session = get_session()
-        with session.begin():
 
-            entity = self.get(entity_id=entity_id, keystone_id=keystone_id,
-                              session=session)
+        entity = self.get(entity_id=entity_id, keystone_id=keystone_id,
+                          session=session)
 
-            try:
-                entity.delete(session=session)
-            except sqlalchemy.exc.IntegrityError:
-                LOG.exception('Problem finding entity to delete')
-                raise exception.NotFound("Entity ID %s not found"
-                                         % entity_id)
+        try:
+            entity.delete(session=session)
+        except sqlalchemy.exc.IntegrityError:
+            LOG.exception('Problem finding entity to delete')
+            raise exception.NotFound("Entity ID %s not found"
+                                     % entity_id)
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
@@ -462,39 +498,38 @@ class BaseRepo(object):
                           find and update it
         """
         session = get_session()
-        with session.begin():
 
+        if entity_id:
+            entity_ref = self.get(entity_id, session=session)
+            values['updated_at'] = timeutils.utcnow()
+        else:
+            self._do_convert_values(values)
+            entity_ref = self._do_create_instance()
+
+        # Need to canonicalize ownership
+        if 'owner' in values and not values['owner']:
+            values['owner'] = None
+
+        entity_ref.update(values)
+
+        # Validate the attributes before we go any further. From my
+        # (unknown Glance developer) investigation, the @validates
+        # decorator does not validate
+        # on new records, only on existing records, which is, well,
+        # idiotic.
+        self._do_validate(entity_ref.to_dict())
+        self._update_values(entity_ref, values)
+
+        try:
+            entity_ref.save(session=session)
+        except sqlalchemy.exc.IntegrityError:
+            LOG.exception('Problem saving entity for _update')
             if entity_id:
-                entity_ref = self.get(entity_id, session=session)
-                values['updated_at'] = timeutils.utcnow()
+                raise exception.NotFound("Entity ID %s not found"
+                                         % entity_id)
             else:
-                self._do_convert_values(values)
-                entity_ref = self._do_create_instance()
-
-            # Need to canonicalize ownership
-            if 'owner' in values and not values['owner']:
-                values['owner'] = None
-
-            entity_ref.update(values)
-
-            # Validate the attributes before we go any further. From my
-            # (unknown Glance developer) investigation, the @validates
-            # decorator does not validate
-            # on new records, only on existing records, which is, well,
-            # idiotic.
-            self._do_validate(entity_ref.to_dict())
-            self._update_values(entity_ref, values)
-
-            try:
-                entity_ref.save(session=session)
-            except sqlalchemy.exc.IntegrityError:
-                LOG.exception('Problem saving entity for _update')
-                if entity_id:
-                    raise exception.NotFound("Entity ID %s not found"
-                                             % entity_id)
-                else:
-                    raise exception.Duplicate("Entity ID %s already exists!"
-                                              % values['id'])
+                raise exception.Duplicate("Entity ID %s already exists!"
+                                          % values['id'])
 
         return self.get(entity_ref.id)
 
@@ -664,30 +699,29 @@ class SecretStoreMetadatumRepo(BaseRepo):
         :raises NotFound if entity does not exist.
         """
         now = timeutils.utcnow()
-        session = get_session()
-        with session.begin():
-            for k, v in metadata.items():
-                meta_model = models.SecretStoreMetadatum(k, v)
-                meta_model.updated_at = now
-                meta_model.secret = secret_model
-                meta_model.save(session=session)
+
+        for k, v in metadata.items():
+            meta_model = models.SecretStoreMetadatum(k, v)
+            meta_model.updated_at = now
+            meta_model.secret = secret_model
+            meta_model.save()
 
     def get_metadata_for_secret(self, secret_id):
         """Returns a dict of SecretStoreMetadatum instances."""
 
         session = get_session()
-        with session.begin():
-            try:
-                query = session.query(models.SecretStoreMetadatum)
-                query = query.filter_by(deleted=False)
 
-                query = query.filter(
-                    models.SecretStoreMetadatum.secret_id == secret_id)
+        try:
+            query = session.query(models.SecretStoreMetadatum)
+            query = query.filter_by(deleted=False)
 
-                metadata = query.all()
+            query = query.filter(
+                models.SecretStoreMetadatum.secret_id == secret_id)
 
-            except sa_orm.exc.NoResultFound:
-                metadata = dict()
+            metadata = query.all()
+
+        except sa_orm.exc.NoResultFound:
+            metadata = dict()
 
         return dict((m.key, m.value) for m in metadata)
 
@@ -871,29 +905,29 @@ class OrderPluginMetadatumRepo(BaseRepo):
         """
         now = timeutils.utcnow()
         session = get_session()
-        with session.begin():
-            for k, v in metadata.items():
-                meta_model = models.OrderPluginMetadatum(k, v)
-                meta_model.updated_at = now
-                meta_model.order = order_model
-                meta_model.save(session=session)
+
+        for k, v in metadata.items():
+            meta_model = models.OrderPluginMetadatum(k, v)
+            meta_model.updated_at = now
+            meta_model.order = order_model
+            meta_model.save(session=session)
 
     def get_metadata_for_order(self, order_id):
         """Returns a dict of OrderPluginMetadatum instances."""
 
         session = get_session()
-        with session.begin():
-            try:
-                query = session.query(models.OrderPluginMetadatum)
-                query = query.filter_by(deleted=False)
 
-                query = query.filter(
-                    models.OrderPluginMetadatum.order_id == order_id)
+        try:
+            query = session.query(models.OrderPluginMetadatum)
+            query = query.filter_by(deleted=False)
 
-                metadata = query.all()
+            query = query.filter(
+                models.OrderPluginMetadatum.order_id == order_id)
 
-            except sa_orm.exc.NoResultFound:
-                metadata = dict()
+            metadata = query.all()
+
+        except sa_orm.exc.NoResultFound:
+            metadata = dict()
 
         return dict((m.key, m.value) for m in metadata)
 
@@ -1064,11 +1098,12 @@ class ContainerConsumerRepo(BaseRepo):
     def create_from(self, new_consumer, container):
         session = get_session()
         try:
-            with session.begin():
-                container.updated_at = timeutils.utcnow()
-                container.consumers.append(new_consumer)
-                container.save(session=session)
+            container.updated_at = timeutils.utcnow()
+            container.consumers.append(new_consumer)
+            container.save(session=session)
         except sqlalchemy.exc.IntegrityError:
+            session.rollback()  # We know consumer already exists.
+
             # This operation is idempotent, so log this and move on
             LOG.debug("Consumer %s already exists for container %s,"
                       " continuing...", (new_consumer.name, new_consumer.URL),

@@ -16,9 +16,12 @@
 """
 Server-side (i.e. worker side) classes and logic.
 """
+import functools
+
 from oslo.config import cfg
 
 from barbican.common import utils
+from barbican.model import repositories
 from barbican.openstack.common import service
 from barbican import queue
 from barbican.tasks import resources
@@ -27,6 +30,35 @@ from barbican.tasks import resources
 LOG = utils.getLogger(__name__)
 
 CONF = cfg.CONF
+
+
+def transactional(fn):
+    """Provides request-scoped database transaction support to tasks."""
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not queue.is_server_side():
+            fn(*args, **kwargs)  # Non-server mode directly invokes tasks.
+        else:
+            # Start the database session.
+            repositories.start()
+
+            # Manage session/transaction.
+            try:
+                fn(*args, **kwargs)
+                repositories.commit()
+            except Exception:
+                """NOTE: Wrapped functions must process with care!
+
+                Exceptions that reach here will revert the entire transaction,
+                including any updates made to entities such as setting error
+                codes and error messages.
+                """
+                repositories.rollback()
+            finally:
+                repositories.clear()
+
+    return wrapper
 
 
 class Tasks(object):
@@ -41,6 +73,7 @@ class Tasks(object):
     methods on itself, which include the methods in this class.
     """
 
+    @transactional
     def process_type_order(self, context, order_id, keystone_id):
         """Process TypeOrder."""
         LOG.debug('TypeOrder id is {0}'.format(order_id))
@@ -51,6 +84,7 @@ class Tasks(object):
             LOG.exception(">>>>> Task exception seen, details reported "
                           "on the Orders entity.")
 
+    @transactional
     def update_order(self, context, order_id, keystone_id, updated_meta):
         """Update Order."""
         task = resources.UpdateOrder()

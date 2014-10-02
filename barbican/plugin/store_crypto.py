@@ -296,6 +296,7 @@ def _find_or_create_kek_objects(plugin_inst, tenant_model):
 
 def _store_secret_and_datum(
         context, secret_model, kek_datum_model, generated_dto):
+
     # Create Secret entities in data store.
     if not secret_model.id:
         repositories.get_secret_repository().create_from(secret_model)

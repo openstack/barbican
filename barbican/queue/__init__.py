@@ -49,6 +49,7 @@ CONF.register_opts(queue_opts, group=queue_opt_group)
 
 
 TRANSPORT = None
+IS_SERVER_SIDE = True
 
 ALLOWED_EXMODS = [
     exception.__name__,
@@ -59,11 +60,16 @@ def get_allowed_exmods():
     return ALLOWED_EXMODS
 
 
-def init(conf):
-    global TRANSPORT
+def init(conf, is_server_side=True):
+    global TRANSPORT, IS_SERVER_SIDE
     exmods = get_allowed_exmods()
+    IS_SERVER_SIDE = is_server_side
     TRANSPORT = messaging.get_transport(conf,
                                         allowed_remote_exmods=exmods)
+
+
+def is_server_side():
+    return IS_SERVER_SIDE
 
 
 def cleanup():
