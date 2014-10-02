@@ -55,7 +55,7 @@
       behalf based on their requested encryption algorithm and bit
       length. </para>
     <section xml:id="section_eow_tmw_ad">
-      <title>Intended Audience</title>
+      <title>Intended audience</title>
       <para>This guide assists software developers who want to develop
       applications using Barbican.  To use this information, you should have
       access to an active OpenStack deployment and be familiar with the
@@ -77,13 +77,13 @@
       </para>
     </section>
     <section xml:id="Additional_Resources">
-      <title>Additional Resources</title>
+      <title>Additional resources</title>
       <para>You can find additional information about Barbican at
         https://github.com/openstack/barbican. For information about
         OpenStack, refer to http://docs.openstack.org/. </para>
     </section>
     <section xml:id="change_history">
-      <title>Document Change History</title>
+      <title>Document change history</title>
       <para>This version of the Developer Guide replaces and obsoletes
         all previous versions. The most recent changes are described
         in the table above.</para>
@@ -93,9 +93,9 @@
     </section>
   </chapter>
   <chapter xml:id="other-features">
-    <title>General API Information</title>
+    <title>General API information</title>
     <section xml:id="Core-Concepts">
-      <title>Barbican Core Concepts</title>
+      <title>Barbican core concepts</title>
       <para>Barbican Core Concepts</para>
           <table rules="all">
           <caption>Barbican Core Concepts</caption>
@@ -144,8 +144,6 @@
       xmlns:m="http://www.w3.org/1998/Math/MathML"
       xmlns:html="http://www.w3.org/1999/xhtml">
       <title>Authentication</title>
-      <para><link linkend="Retrieving_Auth_Token">Retrieving the
-          Authentication Token</link></para>
       <para>To authenticate access to OpenStack services, you must
         first issue an authentication request to OpenStack Identity to
         acquire an authentication token. To request an authentication
@@ -164,7 +162,7 @@
         For example, if the roles for a user change, existing tokens
         for that user are invalid.</para>
       <section xml:id="Retrieving_Auth_Token">
-        <title>Retrieving the Authentication Token</title>
+        <title>Retrieving the authentication token</title>
         <para>The authenticate operation provides users with an
           authentication token and a list of regional cloud endpoints.
           The sample requests and responses in this section illustrate
@@ -179,7 +177,7 @@
           authentication token and the examples that follow show the
           request and response in JSON format.</para>
         <table rules="all">
-          <caption>Request for Authentication Token</caption>
+          <caption>Request for authentication token</caption>
           <tbody>
             <tr>
               <td colspan="1">POST </td>
@@ -200,11 +198,11 @@
             (<errorcode>500</errorcode>), serviceUnavailable
             (<errorcode>503</errorcode>) </simpara>
         <example>
-          <title>Authentication Request for US Endpoint: JSON</title>
+          <title>Authentication request for US endpoint: JSON</title>
           <programlisting language="json"><xi:include href="./samples/reqAuthenticate.json" parse="text"/></programlisting>
         </example>
         <example xml:id="auth-response-example-json">
-          <title>Authentication Response for US Endpoint: JSON</title>
+          <title>Authentication response for US endpoint: JSON</title>
             <programlistingco>
               <areaspec>
               <area xml:id="response.json.token" units="linecolumn"
@@ -240,7 +238,7 @@
     <section xml:id="contractVersion"
       xmlns:m="http://www.w3.org/1998/Math/MathML"
       xmlns:html="http://www.w3.org/1999/xhtml">
-      <title>Contract Versions</title>
+      <title>Contract versions</title>
       <para> The version defines the contract and build information
         for the API. </para>
       <para>The contract version denotes the data model and behavior
@@ -249,7 +247,7 @@
         the API might be available at any given time and are not
         guaranteed to be compatible with one another. </para>
       <example>
-        <title>Sample Request URL for Contract Version 1.0</title>
+        <title>Sample request URL for contract version 1.0</title>
         <programlisting>https://&lt;endpoint&gt;/<emphasis role="strong">v1.0</emphasis>/1234</programlisting>
       </example>
       <note>
@@ -259,7 +257,7 @@
     <section xml:id="Request_Response_Types-d1e903"
       xmlns:m="http://www.w3.org/1998/Math/MathML"
       xmlns:html="http://www.w3.org/1999/xhtml">
-      <title>Request and Response Types</title>
+      <title>Request and response types</title>
       <para>The Barbican API supports JSON data serialization formats.
         You specify the request format by using the
           <code>Content-Type</code> header. The request format is
@@ -267,7 +265,7 @@
         have a request body. You can specify the response format in
         requests by using the <code>Accept</code> header.</para>
       <table rules="all">
-        <caption>Response Format</caption>
+        <caption>Response format</caption>
         <?dbfo keep-together="always"?>
         <thead>
           <tr align="center">
@@ -296,16 +294,16 @@
   </chapter>
   <chapter xml:id="volume" xmlns="http://docbook.org/ns/docbook"
     role="api-reference">
-    <title>API Operations</title>
+    <title>API operations</title>
     <para>This chapter describes each of the operations. The following
       table summarizes all of the operations that are
       available:</para>
       <wadl:resources href="../wadl/Barbican.wadl"
       xmlns:wadl="http://wadl.dev.java.net/2009/02"/>
       <section xml:id="Examples">
-        <title>Examples of Barbican Call Sequences</title>
+        <title>Examples of Barbican call sequences</title>
         <section xml:id="Secrets_Info">
-        <title>Secrets Examples</title>
+        <title>Secrets examples</title>
         <para>The secrets resource provides access to the secret and keying data
         that is stored in the system. </para>
         <para>The secret schema represents the actual secret or key that
@@ -325,7 +323,7 @@
         <para>A secret consists of the following elements:</para>
         <para>
           <table rules="all">
-            <caption>Elements of a Secret</caption>
+            <caption>Elements of a secret</caption>
             <col width="15%"/>
             <col width="85%"/>
             <thead>
@@ -397,309 +395,256 @@
           </note>
         </para>
         <section xml:id="Examples_of_Secrets">
-          <title>Examples of Secret Combinations</title>
-          <para>This section outlines the different request sequences
-            you can adhere to when storing secrets. Each sequence uses
-            different combinations for the <emphasis role="italic"
-              >content type</emphasis> and <emphasis role="italic"
-              >content encoding</emphasis> fields. The content type and
-            content encoding information is specified either in the
-              <parameter>payload_content_type</parameter> and
-              <parameter>payload_content_encoding</parameter> parameters
-            of a POST request or in the <parameter>Accept</parameter>
-            and <parameter>Content-type</parameter> headers of a GET
-            request.</para>
-          <para>The following request combinations are possible:</para>
-          <para>
-            <itemizedlist>
-              <listitem>
-                <para>One-step sequence to create and retrieve a secret
-                  using UTF-8/ASCII format</para>
-              </listitem>
-              <listitem>
-                <para>One-step sequence to create and retrieve a secret
-                  using binary format</para>
-              </listitem>
-              <listitem>
-                <para>Two-step sequence to create and retrieve a secret
-                  using binary format</para>
-              </listitem>
-              <listitem>
-                <para>One-step sequence to create and retrieve a secret
-                  using plain text format</para>
-              </listitem>
-            </itemizedlist>
-          </para>
-          <section xml:id="One_step_secret_using_UTF">
-            <title>One-Step Sequence for Secrets Using
-              UTF-8/ASCII</title>
-            <para>The following table shows the sequence for creating and
-              retrieving a secret using UTF-8/ASCII format. When you
-              submit a <command>POST</command> request with the
-                <parameter>payload_content_type</parameter> parameter set to
-                <code>text/plain</code> and do not specify the
-                <parameter>payload_content_encoding</parameter>
-              parameter, the payload sent with the <command>POST</command> request
-              will be encrypted and you should receive a response
-               with a secret reference URL.</para>
-            <para>
-              <table rules="all">
-                <caption>One-Step UTF-8/ASCII Secret
-                  Create/Retrieve</caption>
-                <col width="21%"/>
-                <col width="20%"/>
-                <col width="25%"/>
-                <col width="34%"/>
-                <thead>
-                  <tr>
-                    <th>Method</th>
-                    <th>Content Type</th>
-                    <th>Content Encoding</th>
-                    <th>Result</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><command>POST</command> secrets</td>
-                    <td><code>text/plain</code></td>
-                    <td>Must be omitted</td>
-                    <td>The supplied payload is encrypted</td>
-                  </tr>
-                  <tr>
-                    <td><command>GET</command> secrets</td>
-                    <td><code>application/json</code> for
-                        <code>Accept</code> header</td>
-                    <td>Not required/ignored</td>
-                    <td>Returns JSON metadata, with
-                        <parameter>content-types</parameter> field set
-                      to <code>"default": "text/plain"</code>.</td>
-                  </tr>
-                  <tr>
-                    <td><command>GET</command> secrets</td>
-                    <td><code>text/plain</code> for <code>Accept</code>
-                      header</td>
-                    <td>Not required/ignored</td>
-                    <td>Returns the decrypted payload from the previous
-                      request.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </para>
-          </section>
-          <section xml:id="One_Step_Binary_Secret">
-            <title>One-Step Sequence for Binary Secrets</title>
-            <para>The following table shows the one-step sequence for
-              creating and retrieving a secret using binary format. When
-              you submit a <command>POST</command> request with the
-                <parameter>payload_content_type</parameter> parameter set to
-                <code>application/octet-stream</code> and the
-                <parameter>payload_content_encoding</parameter>
-              parameter set to <code>base64</code>, the payload
-              will be converted from base64 to binary format and encrypted.
-               You should also receive a response
-               with a secret reference URL.</para>
-            <table rules="all">
-              <caption>One-Step Binary Secret Create/Retrieve</caption>
-              <col width="16%"/>
-              <col width="21%"/>
-              <col width="19%"/>
-              <col width="44%"/>
-              <thead>
-                <tr>
-                  <th>Method</th>
-                  <th>Content Type</th>
-                  <th>Content Encoding</th>
-                  <th>Result</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><command>POST</command> secrets</td>
-                  <td><code>application/octet-stream</code></td>
-                  <td><code>base64</code></td>
-                  <td>Supplied payload is converted from base64 to
-                    binary, and then encrypted.</td>
-                </tr>
-                <tr>
-                  <td><command>GET</command> secrets</td>
-                  <td><code>application/json</code> for
-                      <code>Accept</code> header</td>
-                  <td>Not required/ignored</td>
-                  <td>JSON metadata, with the
-                      <parameter>content-types</parameter> field set to
-                      <code>"default":
-                    "application/octet-stream"</code></td>
-                </tr>
-                <tr>
-                  <td><command>GET</command> secrets</td>
-                  <td><code>application/octet-stream</code> for
-                      <code>Accept</code> header</td>
-                  <td>Not specified</td>
-                  <td>Previous payload is decrypted and returned as raw
-                    binary, even if the <command>POST</command> request
-                    provided data in <code>base64</code> format.</td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
-          <section xml:id="Two_Step_Binary_Secret">
-            <title>Two-Step Sequence for Binary Secrets</title>
-            <para>The following table shows the two-step sequence for
-              creating and retrieving a secret using binary format. First
-              submit a <command>POST</command> request without specifying
-              a payload, <code>payload_content_type</code>, or <code>payload_content_encoding</code>.
-              Submitting a <command>POST</command> request without this
-              information creates metadata for the secret. To add payload
-              information, submit a <command>PUT</command> request with the
-              secret id that was returned from the <command>POST</command>
-              request, and set the content type to <code>application/octet</code>
-              stream and the content encoding to <code>base64</code>. This will convert
-              the payload from <code>base64</code> to binary format and then encrypt
-              it.</para>
-            <para>
-              <table rules="all">
-                <caption>Two-Step Binary Secret
-                  Create/Retrieve</caption>
-                <col width="14%"/>
-                <col width="23%"/>
-                <col width="18%"/>
-                <col width="45%"/>
-                <thead>
-                  <tr>
-                    <th>Method</th>
-                    <th>Content Type</th>
-                    <th>Content Encoding</th>
-                    <th>Result</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><command>POST</command> secrets</td>
-                    <td>Not required/ignored</td>
-                    <td>Not required/ignored</td>
-                    <td>Only metadata is created. If the
-                        <parameter>payload_content_type</parameter> or
-                        <parameter>payload_content_encoding</parameter>
-                      parameters were provided, they are not used or
-                      saved with the metadata. The
-                        subsequent<command>PUT</command> request
-                      determines the secret's content type.</td>
-                  </tr>
-                  <tr>
-                    <td><command>PUT</command> secrets, first option
-                      with content encoding set to base64</td>
-                    <td><code>Content-Type</code> header set to
-                        <code>application/octet-stream</code></td>
-                    <td><code>Content-Encoding</code> header set to
-                        <code>base64</code></td>
-                    <td>Supplied request body is converted from
-                        <code>base64</code> to binary, then
-                      encrypted.</td>
-                  </tr>
-                  <tr>
-                    <td><command>PUT</command> secrets, second option
-                      as binary</td>
-                    <td><code>Content-Type</code> header set to
-                        <code>application/octet-stream</code></td>
-                    <td>Not specified</td>
-                    <td>Supplied request body is encrypted as is.</td>
-                  </tr>
-                  <tr>
-                    <td><command>GET</command> secrets (metadata)</td>
-                    <td><code>Accept</code> header set to
-                        <code>application/json</code></td>
-                    <td>Not required/ignored</td>
-                    <td>Returns JSON metadata, with
-                        <parameter>content-types</parameter> field set
-                      to <code>"default":
-                        "application/octet-stream"</code></td>
-                  </tr>
-                  <tr>
-                    <td><command>GET</command> secrets (decrypted)</td>
-                    <td><code>Accept</code> header set to
-                        <code>application/octet-stream</code></td>
-                    <td>Not required/ignored</td>
-                    <td>The previous request is decrypted and returned
-                      as raw binary.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </para>
-          </section>
-          <section xml:id="Two_Step_Plain_Text_Secret">
-            <title>Two-Step Sequence for Plain Text Secrets</title>
-            <para>The following table shows the two-step sequence for
-              creating and retrieving a secret using binary format. First
-              submit a <command>POST</command> request without
-              specifying a payload, <code>payload_content_type</code>, or
-              <code>payload_content_encoding</code>. Submitting a <command>POST</command>
-              request without payload creates metadata for the secret.
-              To add payload information, submit a
-                <command>PUT</command> request with the secret id that
-              was returned from the <command>POST</command> request, and
-              set the content type to <code>text/plain</code> which will
-              store the payload as is.</para>
-            <para>
-              <table rules="all">
-                <caption>Two-Step Plain-Text Secret
-                  Create/Retrieve</caption>
-                <col width="16%"/>
-                <col width="16%"/>
-                <col width="26%"/>
-                <col width="42%"/>
-                <thead>
-                  <tr>
-                    <th>Action</th>
-                    <th>Content Type</th>
-                    <th>Content Encoding</th>
-                    <th>Result</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><command>POST</command></td>
-                    <td>Not required/ignored</td>
-                    <td>Not required/ignored</td>
-                    <td>Only metadata is created. If the
-                        <parameter>payload_content_type</parameter> or
-                        <parameter>payload_content_encoding</parameter>
-                      parameters were provided, they are not used or
-                      saved with the metadata. The subsequent
-                        <command>PUT</command> request specifies the
-                      content format for the secret.</td>
-                  </tr>
-                  <tr>
-                    <td><command>PUT </command></td>
-                    <td><code>Content-Type</code> header is set to
-                        <code>text/plain</code>.</td>
-                    <td>Not required/ignored</td>
-                    <td>Supplied request body is encrypted as is.</td>
-                  </tr>
-                  <tr>
-                    <td><command>GET</command></td>
-                    <td><code>Accept</code> header is  set to
-                        <code>application/json</code>.</td>
-                    <td>Not required/ignored</td>
-                    <td>Returns JSON metadata, with the
-                        <parameter>content-types</parameter> field set
-                      to <code>"default": "text/plain"</code></td>
-                  </tr>
-                  <tr>
-                    <td><command>GET</command></td>
-                    <td><code>Accept</code> header is set to
-                        <code>text/plain</code>.</td>
-                    <td>Not specified</td>
-                    <td>The previous request is decrypted and returned
-                      as UTF-8 text.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </para>
-          </section>
+          <title>Examples of secret combinations</title>
+              <para>The following request combinations are possible:</para>
+              <para>
+                <itemizedlist>
+                  <listitem>
+                    <para><link linkend="One_step_secret_using_UTF">One-step sequence to store and
+                        retrieve a plain-text secret</link>t</para>
+                  </listitem>
+                  <listitem>
+                    <para><link linkend="One_Step_Binary_Secret">One-step sequence to store and
+                        retrieve a binary secret</link></para>
+                  </listitem>
+                  <listitem>
+                    <para><link linkend="Two_Step_Binary_Secret">Two-step sequence to store and
+                        retrieve a binary secret</link></para>
+                  </listitem>
+                  <listitem>
+                    <para><link linkend="Two_Step_Plain_text_Secret">Two-step sequence to store and
+                        retrieve a plain-text secret</link></para>
+                  </listitem>
+                </itemizedlist>
+              </para>
+              <section xml:id="One_step_secret_using_UTF">
+                <title>One-step sequence for storing and retrieving a plain-text secret</title>
+                <para>The following table shows the sequence for storing and retrieving a plain-text
+                  secret. When you submit a <command>POST</command> request with the
+                    <parameter>payload_content_type</parameter> parameter set to
+                    <code>text/plain</code> and do not specify the
+                    <parameter>payload_content_encoding</parameter> parameter, the payload sent with
+                  the <command>POST</command> request is encrypted and stored, and then a response
+                  is sent with a reference URL to the secret.</para>
+                <para>
+                  <table rules="all" width="995">
+                    <caption>One-step plain-text secret store and retrieve</caption>
+                    <col width="13%"/>
+                    <col width="289pt"/>
+                    <col width="25%"/>
+                    <col width="34%"/>
+                    <thead>
+                      <tr>
+                        <th>Method</th>
+                        <th>Content type</th>
+                        <th>Content encoding</th>
+                        <th>Result</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><command>POST</command> secrets</td>
+                        <td><code>payload_content_type</code> is set to <code>text/plain</code></td>
+                        <td>Not required, is ignored if provided.</td>
+                        <td>The supplied payload is encrypted and stored.</td>
+                      </tr>
+                      <tr>
+                        <td><command>GET</command> secrets</td>
+                        <td><code>Accept</code> header is set to <code>application/json</code></td>
+                        <td>Not required, is ignored if provided </td>
+                        <td>Returns JSON metadata, with the <parameter>content-types</parameter>
+                          field set to <code>"default":"text/plain"</code>.</td>
+                      </tr>
+                      <tr>
+                        <td><command>GET</command> secrets</td>
+                        <td><code>Accept</code> header is set to <code>text/plain</code></td>
+                        <td>Not required, is ignored if provided </td>
+                        <td>Returns the decrypted plain-text payload from the previous request.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </para>
+              </section>
+              <section xml:id="One_Step_Binary_Secret">
+                <title>One-step sequence for storing and retrieving binary secrets</title>
+                <para>The following table shows the one-step sequence for storing and retrieving a
+                  binary secret. When you submit a <command>POST</command> request with the
+                    <parameter>payload_content_type</parameter> parameter set to
+                    <code>application/octet-stream</code> and the
+                    <parameter>payload_content_encoding</parameter> parameter set to
+                    <code>base64</code>, the payload is converted from base64 to binary format and
+                  encrypted and then stored. You should also receive a response with a reference URL
+                  to the secret.</para>
+                <table rules="all">
+                  <caption>One-step binary secret store and retrieve</caption>
+                  <col width="16%"/>
+                  <col width="21%"/>
+                  <col width="19%"/>
+                  <col width="44%"/>
+                  <thead>
+                    <tr>
+                      <th>Method</th>
+                      <th>Content type</th>
+                      <th>Content encoding</th>
+                      <th>Result</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><command>POST</command>
+                      </td>
+                      <td><code>Content-Type</code> header is set to
+                          <code>application/octet-stream</code></td>
+                      <td><code>base64</code></td>
+                      <td>Supplied payload is converted from base64 to binary, and then
+                        encrypted.</td>
+                    </tr>
+                    <tr>
+                      <td><command>GET</command>
+                      </td>
+                      <td><code>Accept</code> header is set to <code>application/json</code></td>
+                      <td>Not required, is ignored if provided </td>
+                      <td>Returns JSON metadata, with the <parameter>content-types</parameter> field
+                        set to <code>"default":"application/octet-stream"</code></td>
+                    </tr>
+                    <tr>
+                      <td><command>GET</command></td>
+                      <td><code>Accept</code> header is set to <code>application/octet-stream</code>
+                      </td>
+                      <td>Not specified</td>
+                      <td>Stored secret is decrypted and returned as raw binary, even if the
+                          <command>POST</command> request provided data in <code>base64</code>
+                        format.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <section xml:id="Two_Step_Plain_text_Secret">
+                <title>Two-step sequence for storing and retrieving plain-text secrets</title>
+                <para>The following table shows the two-step sequence for storing and retrieving a
+                  plain-text secret. First, you submit a <command>POST</command> request without
+                  specifying a payload, <code>payload_content_type</code>, or
+                    <code>payload_content_encoding</code>. Submitting a <command>POST</command>
+                  request without this information creates metadata for the secret. To upload,
+                  encrypt, and store the secret, submit a <command>PUT</command> request with the
+                  secret's reference URL that was returned from the <command>POST</command> request,
+                  and set the <code>Content-Type</code> header to <code>application/octet</code>
+                  stream.</para>
+                <para>
+                  <table rules="all">
+                    <caption>Two-step plain-text secret store and retrieve</caption>
+                    <col width="14%"/>
+                    <col width="23%"/>
+                    <col width="18%"/>
+                    <col width="45%"/>
+                    <thead>
+                      <tr>
+                        <th>Method</th>
+                        <th>Content type</th>
+                        <th>Content encoding</th>
+                        <th>Result</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><command>POST</command>
+                        </td>
+                        <td>Not required, is ignored if provided </td>
+                        <td>Not required, is ignored if provided </td>
+                        <td>Only metadata is created. If the
+                            <parameter>payload_content_type</parameter> or
+                            <parameter>payload_content_encoding</parameter> parameters are provided,
+                          they are not used or saved with the metadata. The
+                            subsequent<command>PUT</command> request determines the secret's content
+                          type.</td>
+                      </tr>
+                      <tr>
+                        <td><command>PUT</command> secrets with base64-format secret</td>
+                        <td><code>Content-Type</code> header is set to <code>text/plain</code></td>
+                        <td>Not required, is ignored if provided</td>
+                        <td>Supplied request body is encrypted as is.</td>
+                      </tr>
+                      <tr>
+                        <td><command>GET</command> secrets (metadata)</td>
+                        <td><code>Accept</code> header is set to <code>text/plain</code></td>
+                        <td>Not required, is ignored if provided </td>
+                        <td>Returns JSON metadata, with <parameter>content-types</parameter> field
+                          set to <code>"default": "application/octet-stream"</code>.</td>
+                      </tr>
+                      <tr>
+                        <td><command>GET</command> secrets (decrypted)</td>
+                        <td><code>Accept</code> header is set to
+                            <code>application/octet-stream</code></td>
+                        <td>Not required, is ignored if provided </td>
+                        <td>The previous request is decrypted and returned as raw binary.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </para>
+              </section>
+              <section xml:id="Two_Step_Binary_Secret">
+                <title>Two-step sequence for storing and retrieving binary secrets</title>
+                <para>The following table shows the two-step sequence for storing and retrieving a
+                  binary secret. First submit a <command>POST</command> request without specifying a
+                  payload, <code>payload_content_type</code>, or
+                    <code>payload_content_encoding</code>. Submitting a <command>POST</command>
+                  request without payload creates metadata for the secret. To upload base64-format
+                  secrets, set the <code>Content-Encoding</code> header to <code>base64</code>. To
+                  upload binary secrets, do not set the <code>Content-Encoding</code> header.</para>
+                <para>
+                  <table rules="all">
+                    <caption>Two-step binary secret store and retrieve</caption>
+                    <col width="16%"/>
+                    <col width="16%"/>
+                    <col width="26%"/>
+                    <col width="42%"/>
+                    <thead>
+                      <tr>
+                        <th>Action</th>
+                        <th>Content type</th>
+                        <th>Content encoding</th>
+                        <th>Result</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><command>POST</command></td>
+                        <td>Not required, is ignored if provided </td>
+                        <td>Not required, is ignored if provided </td>
+                        <td>Only metadata is created. If the
+                            <parameter>payload_content_type</parameter> or
+                            <parameter>payload_content_encoding</parameter> parameters are provided,
+                          they are not used or saved with the metadata. The subsequent
+                            <command>PUT</command> request specifies the content format for the
+                          secret.</td>
+                      </tr>
+                      <tr>
+                        <td><command>PUT </command></td>
+                        <td><code>Content-Type</code> header is set to <code>text/plain</code>.</td>
+                        <td>Not required, is ignored if provided </td>
+                        <td>Supplied request body is encrypted as is.</td>
+                      </tr>
+                      <tr>
+                        <td><command>GET</command></td>
+                        <td><code>Accept</code> header is set to <code>application/json</code>.</td>
+                        <td>Not required, is ignored if provided </td>
+                        <td>Returns JSON metadata, with the <parameter>content-types</parameter>
+                          field set to <code>"default": "text/plain"</code>.</td>
+                      </tr>
+                      <tr>
+                        <td><command>GET</command></td>
+                        <td><code>Accept</code> header is set to <code>text/plain</code>.</td>
+                        <td>Not required, is ignored if provided </td>
+                        <td>The previous request is decrypted and returned as UTF-8 text.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </para>
+              </section>
         </section>
       </section>
         <section xml:id="Orders_Info">
-        <title>Orders Examples</title>
+        <title>Orders examples</title>
         <para>The orders resource allows for the generation of secret
           material by Barbican. The ordering object encapsulates the
           workflow and history for the creation of a secret. This
@@ -784,13 +729,8 @@
                     <command>POST</command> request at a command-line
                   interface, as shown in the following example:</para>
                 <para>
-                  <example>
-                    <title>Uploading an Order JSON Request
-                      Example</title>
-                    <programlisting language="json">
-                      <xi:include href="./samples/reqCreateOrder.json" parse="text"/>
+                    <programlisting language="json"><xi:include href="./samples/reqCreateOrder.json" parse="text"/>
                     </programlisting>
-                  </example>
                 </para>
                 <para>Make sure to have a payload specified, as well as
                   a corresponding content type and content
