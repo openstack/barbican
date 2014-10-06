@@ -19,6 +19,7 @@ import oslotest.base as oslotest
 from tempest import auth
 from tempest import clients as tempest_clients
 from tempest import config
+from tempest.openstack.common import log as logging
 
 from functionaltests.common import client
 
@@ -32,14 +33,31 @@ if os.path.exists('./etc/dev_tempest.conf'):
 
 class TestCase(oslotest.BaseTestCase):
 
-    def setUp(self):
-        super(TestCase, self).setUp()
+    @classmethod
+    def setUpClass(cls):
+        cls.LOG = logging.getLogger(cls._get_full_case_name())
+        super(TestCase, cls).setUpClass()
 
+    def setUp(self):
+        self.LOG.info('Starting: %s', self._testMethodName)
+        super(TestCase, self).setUp()
         credentials = BarbicanCredentials()
 
         mgr = tempest_clients.Manager(credentials=credentials)
         auth_provider = mgr.get_auth_provider(credentials)
         self.client = client.BarbicanClient(auth_provider)
+
+    def tearDown(self):
+        super(TestCase, self).tearDown()
+        self.LOG.info('Finished: %s\n', self._testMethodName)
+
+    @classmethod
+    def _get_full_case_name(cls):
+        name = '{module}:{case_name}'.format(
+            module=cls.__module__,
+            case_name=cls.__name__
+        )
+        return name
 
 
 class BarbicanCredentials(auth.KeystoneV2Credentials):

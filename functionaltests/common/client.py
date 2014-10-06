@@ -64,7 +64,7 @@ class BarbicanClient(object):
         return ('{code} {method} {url}\n'
                 'Request Headers: {headers}\n'
                 'Request Body: {body}\n'
-                'Response: {response_body}\n').format(**format_kwargs)
+                'Response: {response_body}').format(**format_kwargs)
 
     def log_request(self, request_kwargs, response):
         test_name = misc_utils.find_test_caller()
