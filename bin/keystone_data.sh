@@ -10,8 +10,8 @@
 export OS_AUTH_URL="http://localhost:5000/v2.0"
 # your secret password
 export OS_PASSWORD="password"
-export OS_TENANT_NAME="service" 
-export OS_USERNAME="nova" 
+export OS_TENANT_NAME="service"
+export OS_USERNAME="nova"
 
 # --------------------------------
 # alternately service_token and endpoint
@@ -27,8 +27,8 @@ echo " OS_USERNAME="$OS_USERNAME
 echo " OS_PASSWORD="$OS_PASSWORD
 echo " OS_AUTH_URL="$OS_AUTH_URL
 
-#test with 
-keystone tenant-list 
+#test with
+keystone tenant-list
 
 function get_id () {
     echo `"$@" | awk '/ id / { print $4 }'`
@@ -65,7 +65,7 @@ if [[ "$ENABLED_SERVICES" =~ "barbican" ]]; then
     if [[ "$KEYSTONE_CATALOG_BACKEND" = 'sql' ]]; then
         BARBICAN_SERVICE=$(get_id keystone service-create \
             --name=barbican \
-            --type="keystore" \
+            --type="key-manager" \
             --description="Barbican Key Management Service")
         keystone endpoint-create \
             --region RegionOne \
