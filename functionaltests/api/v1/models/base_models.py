@@ -25,6 +25,10 @@ class BaseModel(object):
 
     To allow simple (de)serialization we will use __dict__ to create
     """
+    def override_values(self, **kwargs):
+        for attr_name, attr_value in kwargs.items():
+            if hasattr(self, attr_name):
+                setattr(self, attr_name, attr_value)
 
     def obj_to_json(self):
         """Convert this object to a JSON string.
@@ -56,7 +60,7 @@ class BaseModel(object):
         """
 
         # Dumping the keys to a list as we'll be changing the dict size
-        empty_keys = [k for k, v in dictionary.iteritems() if not v]
+        empty_keys = [k for k, v in dictionary.iteritems() if v is None]
         for k in empty_keys:
             del dictionary[k]
         return dictionary

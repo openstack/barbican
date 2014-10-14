@@ -12,8 +12,11 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import sys
+
 import testtools
 
+from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import secret_models
@@ -40,6 +43,7 @@ two_phase_create_data = {
 }
 
 
+@utils.parameterized_test_case
 class SecretsTestCase(base.TestCase):
 
     def setUp(self):
@@ -105,54 +109,6 @@ class SecretsTestCase(base.TestCase):
 
         self.assertEqual(update_resp.status_code, 204)
 
-    def test_create_secret_with_oversized_name_string(self):
-        """Covers negative case for an oversized name string."""
-        create_model = self.one_phase_secret_model
-        create_model.name = 'a' * 256
-
-        resp, secret_ref = self.behaviors.create_secret(create_model)
-        self.assertEqual(resp.status_code, 400)
-
-    def test_create_secret_with_oversized_algorithm_string(self):
-        """Covers negative case for an oversized algorithm string."""
-        create_model = self.one_phase_secret_model
-        create_model.algorithm = 'a' * 256
-
-        resp, secret_ref = self.behaviors.create_secret(create_model)
-        self.assertEqual(resp.status_code, 400)
-
-    def test_create_secret_with_oversized_mode_string(self):
-        """Covers negative case for an oversized mode string."""
-        create_model = self.one_phase_secret_model
-        create_model.mode = 'a' * 256
-
-        resp, secret_ref = self.behaviors.create_secret(create_model)
-        self.assertEqual(resp.status_code, 400)
-
-    def test_create_secret_with_oversized_expiration_string(self):
-        """Covers negative case for an oversized expiration string."""
-        create_model = self.one_phase_secret_model
-        create_model.expiration = 'a' * 256
-
-        resp, secret_ref = self.behaviors.create_secret(create_model)
-        self.assertEqual(resp.status_code, 400)
-
-    def test_create_secret_with_oversized_content_type_string(self):
-        """Covers negative case for an oversized content type string."""
-        create_model = self.one_phase_secret_model
-        create_model.payload_content_type = 'a' * 256
-
-        resp, secret_ref = self.behaviors.create_secret(create_model)
-        self.assertEqual(resp.status_code, 400)
-
-    def test_create_secret_with_oversized_content_encoding_string(self):
-        """Covers negative case for an oversized content encoding string."""
-        create_model = self.one_phase_secret_model
-        create_model.payload_content_encoding = 'a' * 256
-
-        resp, secret_ref = self.behaviors.create_secret(create_model)
-        self.assertEqual(resp.status_code, 400)
-
     def test_delete_secret_with_accept_application_json(self):
         """Covers Launchpad Bug #1326481."""
         create_model = self.one_phase_secret_model
@@ -164,3 +120,35 @@ class SecretsTestCase(base.TestCase):
         resp = self.behaviors.delete_secret(secret_ref, extra_headers=headers)
 
         self.assertEqual(resp.status_code, 204)
+
+    @utils.parameterized_dataset({
+        'str_type': ['not-an-int'],
+        'empty': [''],
+        'blank': [' '],
+        'negative_maxint': [-sys.maxint],
+        'negative_one': [-1],
+        'zero': [0]
+    })
+    def test_creating_secret_w_invalid_bit_length(self, bit_length):
+        """Covers cases of creating a secret with invalid bit lengths."""
+        create_model = self.one_phase_secret_model
+        create_model.override_values(bit_length=bit_length)
+
+        resp, secret_ref = self.behaviors.create_secret(create_model)
+        self.assertEqual(resp.status_code, 400)
+
+    @utils.parameterized_dataset({
+        'name': {'name': 'a' * 256},
+        'algorithm': {'algorithm': 'a' * 256},
+        'mode': {'mode': 'a' * 256},
+        'expiration': {'expiration': 'a' * 256},
+        'content_type': {'payload_content_type': 'a' * 256},
+        'content_encoding': {'payload_content_encoding': 'a' * 256}
+    })
+    def test_create_secret_with_oversized_string_in(self, **kwargs):
+        """Covers negative cases for an oversized string values."""
+        create_model = self.one_phase_secret_model
+        create_model.override_values(**kwargs)
+
+        resp, secret_ref = self.behaviors.create_secret(create_model)
+        self.assertEqual(resp.status_code, 400)
