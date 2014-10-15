@@ -56,7 +56,7 @@ kmip_opts = [
                help=u._('Port for the KMIP server'),
                ),
     cfg.StrOpt('ssl_version',
-               default='PROTOCOL_SSLv23',
+               default='PROTOCOL_TLSv1',
                help=u._('SSL version, maps to the module ssl\'s constants'),
                ),
     cfg.StrOpt('ca_certs',
