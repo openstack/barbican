@@ -5,7 +5,7 @@ alembic>=0.6.4
 argparse
 Babel>=1.3
 cryptography>=0.4 # Apache-2.0
-eventlet>=0.15.1
+eventlet>=0.15.2
 iso8601>=0.1.9
 jsonschema>=2.0.0,<3.0.0
 kombu>=2.5.0
@@ -15,18 +15,12 @@ oslo.messaging>=1.4.0
 Paste
 PasteDeploy>=1.5.0
 pbr>=0.6,!=0.7,<1.0
-
-# TODO(john-wood-w) Temporary pin of Pecan to < 0.7.0, pending bug fix release:
-#   https://bugs.launchpad.net/pecan/+bug/1373003
-pecan>=0.5.0,<0.7.0
-
+pecan>=0.5.0
 pycrypto>=2.6
 pysqlite
 keystonemiddleware>=1.0.0
 six>=1.7.0
 SQLAlchemy>=0.8.4,<=0.8.99,>=0.9.7,<=0.9.99
-stevedore>=1.0.0  # Apache-2.0
+stevedore>=1.1.0  # Apache-2.0
 WebOb>=1.2.3
 wsgiref>=0.1.2
-
-# TODO: Get this working again...PyKCS11>=1.2.4
