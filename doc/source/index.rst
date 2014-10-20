@@ -16,7 +16,7 @@ Getting Started
 .. toctree::
    :maxdepth: 1
 
-   setup
+   setup/index
    plugin/index
 
 
