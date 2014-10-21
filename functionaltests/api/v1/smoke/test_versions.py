@@ -17,10 +17,22 @@ from functionaltests.api import base
 
 class VersionDiscoveryTestCase(base.TestCase):
 
-    def test_get_root_discovers_v1(self):
-        """Covers retrieving version data for Barbican."""
+    def test_version_get_as_unauthenticated(self):
+        """Covers retrieving version as unauthenticated user"""
+        self._do_version_test(use_auth=False)
+
+    def test_version_get_as_authenticated(self):
+        """Covers retrieving version as authenticated user."""
+        self._do_version_test(use_auth=True)
+
+    def _do_version_test(self, use_auth=False):
+        """Get version string with or without authentication
+
+        :param use_auth: True to use authentication, False otherwise.  Default
+        is False
+        """
         url_without_version = self.client.get_base_url(include_version=False)
-        resp = self.client.get(url_without_version)
+        resp = self.client.get(url_without_version, use_auth=use_auth)
         body = resp.json()
 
         self.assertEqual(resp.status_code, 200)
