@@ -16,6 +16,7 @@ Getting Started
 .. toctree::
    :maxdepth: 1
 
+   contribute/getting_involved
    setup/index
    plugin/index
 
