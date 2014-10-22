@@ -17,6 +17,7 @@ Getting Started
    :maxdepth: 1
 
    setup/index
+   testing
    plugin/index
 
 

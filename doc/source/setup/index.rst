@@ -6,4 +6,5 @@ Setting up Barbican
 
    dev
    keystone
+   devstack
    troubleshooting
