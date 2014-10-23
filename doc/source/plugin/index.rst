@@ -27,4 +27,5 @@ Barbican, as well as configuration and deployment options.
 .. toctree::
    :maxdepth: 1
 
+   secret_store
    crypto
