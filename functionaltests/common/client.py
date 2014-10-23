@@ -105,7 +105,7 @@ class BarbicanClient(object):
                 prev_ref = item_list.get('previous')
             elif item in ('secrets', 'orders', 'containers'):
                 for entity in item_list.get(item):
-                    models.append(model_type(entity))
+                    models.append(model_type(**entity))
 
         return models, next_ref, prev_ref
 

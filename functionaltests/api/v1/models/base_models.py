@@ -46,7 +46,6 @@ class BaseModel(object):
 
         :return A dict representing this model
         """
-
         the_dict = self.__dict__
         retval = self._remove_empty_fields_from_dict(the_dict)
         return retval

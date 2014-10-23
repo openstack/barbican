@@ -12,8 +12,10 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import datetime
 import functools
 import types
+import urlparse
 
 import oslotest.base as oslotest
 import six
@@ -111,3 +113,35 @@ def parameterized_dataset(build_data):
         func.__dict__['build_data'] = build_data
         return func
     return decorator
+
+
+def create_timestamp_w_tz_and_offset(timezone=None, days=0, hours=0, minutes=0,
+                                     seconds=0):
+    """Creates a timestamp with a timezone and offset in days
+
+    :param timezone: Timezone used in creation of timestamp
+    :param days: The offset in days
+    :param hours: The offset in hours
+    :param minutes: The offset in minutes
+
+    :return a timestamp
+    """
+    if timezone is None:
+        timezone = datetime.datetime.strftime("%z")
+
+    timestamp = '{time}{timezone}'.format(
+        time=(datetime.datetime.today() + datetime.timedelta(days=days,
+                                                             hours=hours,
+                                                             minutes=minutes,
+                                                             seconds=seconds)),
+        timezone=timezone)
+
+    return timestamp
+
+
+def get_limit_and_offset_from_ref(ref):
+    matches = dict(urlparse.parse_qsl(urlparse.urlparse(ref).query))
+    ref_limit = matches['limit']
+    ref_offset = matches['offset']
+
+    return ref_limit, ref_offset
