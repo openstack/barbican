@@ -14,26 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from functionaltests.api.v1.models.base_models import BaseModel
-from functionaltests.api.v1.models.secret_models import SecretModel
 
 
 class OrderModel(BaseModel):
 
-    def __init__(self, status=None, secret_ref=None, updated=None,
-                 created=None, type=None, meta=None, order_ref=None):
+    def __init__(self, type=None, name=None, status=None, secret_ref=None,
+                 updated=None, created=None, meta=None, order_ref=None,
+                 error_status_code=None, error_reason=None):
         super(OrderModel, self).__init__()
+        self.type = type
+        self.name = name
         self.status = status
         self.secret_ref = secret_ref
         self.updated = updated
         self.created = created
-        self.type = type
         self.meta = meta
         self.order_ref = order_ref
-
-    @classmethod
-    def dict_to_obj(cls, input_dict):
-        secret_metadata = input_dict.get('secret')
-        if secret_metadata:
-            input_dict['secret'] = SecretModel.dict_to_obj(secret_metadata)
-
-        return super(OrderModel, cls).dict_to_obj(input_dict)
+        self.error_status_code = error_status_code
+        self.error_reason = error_reason
