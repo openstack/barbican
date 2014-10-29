@@ -17,7 +17,7 @@ Getting Started
    :maxdepth: 1
 
    setup
-   plugin
+   plugin/index
 
 
 Indices and tables
