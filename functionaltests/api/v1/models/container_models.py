@@ -25,7 +25,7 @@ class SecretRefModel(BaseModel):
 
 class ContainerModel(BaseModel):
 
-    def __init__(self, name=None, type=None, secret_refs=None,
+    def __init__(self, name=None, type=None, secret_refs=[],
                  container_ref=None, consumers=None, status=None,
                  updated=None, created=None):
         self.name = name
@@ -41,4 +41,5 @@ class ContainerModel(BaseModel):
     def dict_to_obj(cls, input_dict):
         secret_refs = [SecretRefModel(**secret_ref) for secret_ref in
                        input_dict.get('secret_refs', [])]
-        return cls(input_dict.get('name'), input_dict.get('type'), secret_refs)
+        return cls(input_dict.get('name'), input_dict.get('type'), secret_refs,
+                   container_ref=input_dict.get('container_ref'))
