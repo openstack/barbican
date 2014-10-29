@@ -87,8 +87,31 @@ class BarbicanClient(object):
 
         return self._auth_provider.base_url(filters)
 
+    def get_list_of_models(self, item_list, model_type):
+        """Takes a list of barbican objects and creates a list of models
+
+        :param item_list: the json returned from a barbican GET request for
+         a list of objects
+        :param model_type: The model used in the creation of the list of models
+        :return A list of models and the refs for next and previous lists.
+        """
+
+        models, next_ref, prev_ref = [], None, None
+
+        for item in item_list:
+            if 'next' == item:
+                next_ref = item_list.get('next')
+            elif 'previous' == item:
+                prev_ref = item_list.get('previous')
+            elif item in ('secrets', 'orders', 'containers'):
+                for entity in item_list.get(item):
+                    models.append(model_type(entity))
+
+        return models, next_ref, prev_ref
+
     def request(self, method, url, data=None, extra_headers=None,
-                use_auth=True, response_model_type=None, request_model=None):
+                use_auth=True, response_model_type=None, request_model=None,
+                params=None):
         """Prepares and sends http request through Requests."""
         if 'http' not in url:
             url = os.path.join(self.get_base_url(), url)
@@ -109,7 +132,8 @@ class BarbicanClient(object):
             'url': url,
             'headers': headers,
             'data': data,
-            'timeout': self.timeout
+            'timeout': self.timeout,
+            'params': params
         }
         if use_auth:
             call_kwargs['auth'] = self._auth
