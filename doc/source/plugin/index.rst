@@ -29,3 +29,4 @@ Barbican, as well as configuration and deployment options.
 
    secret_store
    crypto
+   certificate

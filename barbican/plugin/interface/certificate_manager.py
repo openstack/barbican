@@ -266,7 +266,22 @@ class CertificatePluginBase(object):
 
 
 class CertificateStatus(object):
-    """Defines statuses for certificate request process."""
+    """Defines statuses for certificate request process.
+
+    In particular:
+
+    CERTIFICATE_GENERATED - Indicates a certificate was created
+
+    WAITING_FOR_CA - Waiting for Certificate authority (CA) to complete order
+
+    CLIENT_DATA_ISSUE_SEEN - Problem was seen with client-provided data
+
+    CA_UNAVAILABLE_FOR_REQUEST - CA was not available, will try again later
+
+    REQUEST_CANCELED - The client or CA cancelled this order
+
+    INVALID_OPERATION - Unexpected error seen processing order
+    """
 
     CERTIFICATE_GENERATED = "certificate generated"
     WAITING_FOR_CA = "waiting for CA"
@@ -277,7 +292,12 @@ class CertificateStatus(object):
 
 
 class ResultDTO(object):
-    """This object is the result data transfer object (DTO)."""
+    """Result data transfer object (DTO).
+
+    An object of this type is returned by most certificate plugin methods, and
+    is used to guide follow on processing and to provide status feedback to
+    clients.
+    """
     def __init__(self, status, status_message=None, certificate=None,
                  intermediates=None, retry_msec=RETRY_MSEC, retry_method=None):
         """Creates a new ResultDTO.
