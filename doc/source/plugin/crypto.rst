@@ -1,21 +1,22 @@
 .. module:: barbican.plugin.crypto.crypto
 
-==================================
+================================
 Cryptographic Plugin Development
-==================================
+================================
 
 This guide describes how to develop a custom cryptographic plugin for use by
 Barbican.
 
-Barbican supports two storage modes for secrets. This document focuses on the
-mode that stores encrypted secrets in Barbican's data store, utilizing a
-cryptographic process or appliance (such as a hardware security module (HSM))
-to perform the encryption/decryption.
+Barbican supports two storage modes for secrets: a cryptographic mode (detailed
+on this page), and a :doc:`secret store mode </plugin/secret_store>`. The
+cryptograpic mode stores encrypted secrets in Barbican's data store, utilizing
+a cryptographic process or appliance (such as a hardware security module (HSM))
+to perform the encryption/decryption. Barbican includes a PKCS11-based
+interface to SafeNet HSMs.
 
-The other secret storage mode is detailed in the 'secret store' section. Note
-that cryptographic plugins are invoked from within the context of a 'secret
-store' plugin via an adapter class, further described in the 'secret store'
-section.
+Note that cryptographic plugins are not invoked directly from Barbican core,
+but rather via a :doc:`secret store mode </plugin/secret_store>` plugin adapter
+class, further described in :ref:`plugin-secret-store-crypto-adapter-label`.
 
 ``crypto`` Module
 =================
@@ -56,10 +57,12 @@ portion of this guide.
    :members:
 
 Barbican Core Plugin Sequence
-===============================
+=============================
 
-The sequence that Barbican invokes methods on ``CryptoPluginBase``
-depends on the requested action as detailed next.
+Barbican invokes a different sequence of methods on the ``CryptoPluginBase``
+plugin depending on the requested action. Note that these actions are invoked
+via the secret store adapter class ``StoreCryptoAdapterPlugin`` which is further
+described in :ref:`plugin-secret-store-crypto-adapter-label`.
 
 **For secret storage actions**, Barbican core calls the following methods:
 
@@ -82,8 +85,8 @@ depends on the requested action as detailed next.
 
 **For secret decryptions and retrievals**, Barbican core will select the same
 plugin as was used to store the secret, and then invoke its ``decrypt()``
-method, providing both the persisted encrypted secret data as well as the same
-project-ID KEK used to encrypt the secret above.
+method, providing it both the previously-persisted encrypted secret data as well
+as the project-ID KEK used to encrypt the secret.
 
 **For symmetric key generation**, Barbican core calls the following methods:
 
