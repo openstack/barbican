@@ -13,26 +13,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
+
 from functionaltests.api.v1.behaviors import base_behaviors
 from functionaltests.api.v1.models import secret_models
 
 
 class SecretBehaviors(base_behaviors.BaseBehaviors):
 
-    def create_secret(self, model):
+    def create_secret(self, model, headers=None):
         """Create a secret from the data in the model.
 
         :param model: The metadata used to create the secret
         :return: A tuple containing the response from the create
         and the href to the newly created secret
         """
-        resp = self.client.post('secrets', request_model=model)
+
+        resp = self.client.post('secrets', request_model=model,
+                                extra_headers=headers)
 
         returned_data = resp.json()
         secret_ref = returned_data.get('secret_ref')
         if secret_ref:
             self.created_entities.append(secret_ref)
-
         return resp, secret_ref
 
     def update_secret_payload(self, secret_ref, payload, payload_content_type,
@@ -78,18 +81,28 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
 
         return resp, secrets, next_ref, prev_ref
 
-    def delete_secret(self, secret_ref, extra_headers=None):
+    def delete_secret(self, secret_ref, extra_headers=None,
+                      expected_fail=False):
         """Delete a secret.
 
         :param secret_ref: HATEOS ref of the secret to be deleted
         :param extra_headers: Optional HTTP headers to add to the request
+        :param expected_fail: If test is expected to fail the deletion
         :return A request response object
         """
         resp = self.client.delete(secret_ref, extra_headers=extra_headers)
-        self.created_entities.remove(secret_ref)
+
+        if not expected_fail:
+            self.created_entities.remove(secret_ref)
+
         return resp
 
     def delete_all_created_secrets(self):
         """Delete all of the secrets that we have created."""
-        for secret_ref in self.created_entities:
+        slist = []
+
+        for entity in self.created_entities:
+            slist.append(entity)
+
+        for secret_ref in slist:
             self.delete_secret(secret_ref)
