@@ -36,7 +36,7 @@ TEMPEST_DIR=${TEMPEST_DIR:-/opt/stack/new/tempest}
 pip install -e $TEMPEST_DIR
 
 testr init
-testr run --parallel --subunit | $TEMPEST_DIR/tools/subunit-trace.py --no-failure-debug -f
+testr run --parallel --subunit | subunit-trace --no-failure-debug -f
 retval=$?
 testr slowest
 exit $retval
