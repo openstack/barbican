@@ -18,6 +18,7 @@ Getting Started
 
    contribute/getting_involved
    setup/index
+   testing
    plugin/index
 
 
