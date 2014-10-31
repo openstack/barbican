@@ -52,13 +52,13 @@ def construct_new_test_function(original_func, name, build_params):
     build_kwargs = build_params if isinstance(build_params, dict) else {}
 
     # Build a test wrapper to execute with our kwargs
-    def test_wrapper(func, new_name, test_args, test_kwargs):
+    def test_wrapper(func, test_args, test_kwargs):
         @functools.wraps(func)
         def wrapper(self):
             return func(self, *test_args, **test_kwargs)
         return wrapper
 
-    return test_wrapper(new_func, name, build_args, build_kwargs)
+    return test_wrapper(new_func, build_args, build_kwargs)
 
 
 def process_parameterized_function(name, func_obj, build_data):
