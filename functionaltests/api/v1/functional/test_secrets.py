@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
+import binascii
+import json
+
 from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import secret_behaviors
@@ -349,3 +353,309 @@ class SecretsTestCase(base.TestCase):
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 201)
+
+    @testcase.attr('negative')
+    def test_secret_create_emptystrings(self):
+        """Covers case of creating a secret with empty Strings for all
+        entries. Should return a 400.
+        """
+        test_model = secret_models.SecretModel(
+            **secret_create_emptystrings_data)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 400)
+
+    @testcase.attr('positive')
+    def test_secret_create_defaults_empty_name(self):
+        """When a test is created with an empty or null name attribute, the
+         system should return the secret's UUID on a get
+         - Reported in Barbican GitHub Issue #89
+        """
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {"name": ''}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        get_resp = self.behaviors.get_secret_metadata(secret_ref)
+        self.assertIn(get_resp.model.name, secret_ref)
+
+    @testcase.attr('negative')
+    def test_secret_create_defaults_invalid_content_type(self):
+        """Covers case of creating secret with an invalid content type in
+        HTTP header.  Should return 415.
+        """
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        headers = {"Content-Type": "crypto/boom"}
+
+        resp, secret_ref = self.behaviors.create_secret(test_model, headers)
+        self.assertEqual(resp.status_code, 415)
+
+    @testcase.attr('positive')
+    def test_secret_create_defaults_none_as_bit_length(self):
+        """When a test is created with None for the bit length attribute, the
+         system should successfully return the secret reference URI.
+        """
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {"bit_length": None}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+    @testcase.attr('positive')
+    def test_secret_get_defaults_none_as_bit_length(self):
+        """When a test is created with None for the bit length attribute, the
+         system should successfully return the secret reference URI.
+         A get on the secret should also return a None for bit length.
+        """
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {"bit_length": None}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        get_resp = self.behaviors.get_secret_metadata(secret_ref)
+        self.assertEqual(get_resp.status_code, 200)
+        self.assertEqual(get_resp.model.bit_length, None)
+
+    @testcase.attr('positive')
+    def test_secret_create_defaults_null_name(self):
+        """When a test is created with an empty or null name attribute, the
+         system should return the secret's UUID on a get
+         - Reported in Barbican GitHub Issue #89
+        """
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {"name": None}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        get_resp = self.behaviors.get_secret_metadata(secret_ref)
+        self.assertIn(get_resp.model.name, secret_ref)
+
+    @testcase.attr('negative')
+    def test_secret_create_defaults_oversized_payload(self):
+        """Covers creating a secret with a secret that is larger than
+        the max secret payload size. Should return a 413 if the secret
+        size is greater than the maximum allowed size.
+        """
+        oversized_payload = max_allowed_payload_in_bytes + 1
+        data = str(bytearray().zfill(oversized_payload))
+
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {"payload": data}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 413)
+
+    @testcase.attr('negative')
+    def test_secret_put_doesnt_exist(self):
+        """Covers case of putting secret information to a non-existent
+        secret. Should return 404.
+        """
+        resp = self.behaviors.update_secret_payload(
+            secret_ref='not_a_uuid',
+            payload_content_type='application/octet-stream',
+            payload_content_encoding='base64',
+            payload='testing putting to non-existent secret')
+
+        self.assertEqual(resp.status_code, 404)
+
+    @testcase.attr('negative')
+    def test_secret_put_defaults_data_already_exists(self):
+        """Covers case of putting secret information to a secret that already
+        has encrypted data associated with it. Should return 409.
+        """
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        resp = self.behaviors.update_secret_payload(
+            secret_ref=secret_ref,
+            payload_content_type='application/octet-stream',
+            payload_content_encoding='base64',
+            payload='testing putting data in secret that already has data')
+        self.assertEqual(resp.status_code, 409)
+
+    @testcase.attr('negative')
+    def test_secret_put_two_phase_empty_payload(self):
+        """Covers case of putting empty String to a secret.
+        Should return 400.
+        """
+        test_model = secret_models.SecretModel(**secret_create_two_phase_data)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        put_resp = self.behaviors.update_secret_payload(
+            secret_ref=secret_ref,
+            payload_content_type='application/octet-stream',
+            payload_content_encoding='base64',
+            payload='')
+        self.assertEqual(put_resp.status_code, 400)
+
+    @testcase.attr('negative')
+    def test_secret_put_two_phase_invalid_content_type(self):
+        """Covers case of putting secret information with an
+        invalid content type. Should return 415.
+        - Reported in Barbican Launchpad Bug #1208601
+        - Updated in Barbican blueprint barbican-enforce-content-type
+        """
+        test_model = secret_models.SecretModel(**secret_create_two_phase_data)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        put_resp = self.behaviors.update_secret_payload(
+            secret_ref=secret_ref,
+            payload_content_type='crypto/boom',
+            payload_content_encoding='base64',
+            payload='invalid content type')
+        self.assertEqual(put_resp.status_code, 415)
+
+    @testcase.attr('negative')
+    def test_secret_put_two_phase_no_payload(self):
+        """Covers case of putting null String to a secret.
+        Should return 400.
+        """
+        test_model = secret_models.SecretModel(**secret_create_two_phase_data)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        put_resp = self.behaviors.update_secret_payload(
+            secret_ref=secret_ref,
+            payload_content_type='application/octet-stream',
+            payload_content_encoding='base64',
+            payload=None)
+        self.assertEqual(put_resp.status_code, 400)
+
+    @testcase.attr('negative')
+    def test_secret_put_two_phase_w_oversized_binary_data_no_utf8(self):
+        """Covers case of putting an oversized string with binary data that
+        doesn't contain UTF-8 code points.  This tests bug 1315498.
+        """
+        data = bytearray().zfill(max_allowed_payload_in_bytes + 1)
+
+        # put a value in the middle of the data that does not have a UTF-8
+        # code point.  Using // to be python3-friendly.
+        data[max_allowed_payload_in_bytes // 2] = b'\xb0'
+
+        test_model = secret_models.SecretModel(**secret_create_two_phase_data)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        put_resp = self.behaviors.update_secret_payload(
+            secret_ref=secret_ref,
+            payload_content_type='application/octet-stream',
+            payload_content_encoding='base64',
+            payload=str(data))
+        self.assertEqual(put_resp.status_code, 413)
+
+    @testcase.attr('negative')
+    def test_secret_put_two_phase_oversized_payload(self):
+        """Covers case of putting secret data that is larger than the maximum
+        secret size allowed by Barbican. Beyond that it should return 413.
+        """
+        data = bytearray().zfill(max_allowed_payload_in_bytes + 1)
+
+        test_model = secret_models.SecretModel(**secret_create_two_phase_data)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        put_resp = self.behaviors.update_secret_payload(
+            secret_ref=secret_ref,
+            payload_content_type='application/octet-stream',
+            payload_content_encoding='base64',
+            payload=str(data))
+        self.assertEqual(put_resp.status_code, 413)
+
+    @testcase.attr('positive')
+    def test_secret_put_two_phase_valid_binary_data_no_utf8(self):
+        """Covers case of putting a string with binary data that doesn't
+        contain UTF-8 code points.  This tests bug 1315498.
+        """
+        # put a value in the data that does not have a UTF-8 code point.
+        data = b'\xb0'
+
+        test_model = secret_models.SecretModel(**secret_create_two_phase_data)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        put_resp = self.behaviors.update_secret_payload(
+            secret_ref=secret_ref,
+            payload_content_type='application/octet-stream',
+            payload_content_encoding='base64',
+            payload=str(data))
+        self.assertEqual(put_resp.status_code, 204)
+
+    @testcase.attr('positive')
+    def test_secret_put_two_phase_high_range_unicode_character(self):
+        """Ensure a two step secret creation succeeds with Content-Type
+        application/octet-stream and a high range unicode character.
+        Launchpad bug #1315498
+        """
+        data = u'\U0001F37A'
+        data = data.encode('utf-8')
+        test_model = secret_models.SecretModel(**secret_create_two_phase_data)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        put_resp = self.behaviors.update_secret_payload(
+            secret_ref=secret_ref,
+            payload_content_type='application/octet-stream',
+            payload_content_encoding='base64',
+            payload=data)
+        self.assertEqual(put_resp.status_code, 204)
+
+    def test_secret_get_nones_payload_with_a_octet_stream(self):
+        """Tests getting a secret with octet-stream."""
+        test_model = secret_models.SecretModel(**secret_create_two_phase_data)
+        overrides = {'payload_content_type': 'application/octet-stream',
+                     'payload_content_encoding': 'base64',
+                     'payload': base64.b64encode('abcdef')}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        get_resp = self.behaviors.get_secret(
+            secret_ref,
+            payload_content_type=test_model.payload_content_type,
+            payload_content_encoding=test_model.payload_content_encoding)
+        self.assertIn(test_model.payload,
+                      binascii.b2a_base64(get_resp.content))
+
+    def test_secret_create_defaults_bad_content_type_check_message(self):
+        """will create a secret with an "invalid" content type
+        (plain-text, rather than text/plain).  This will result in
+        an error, and we need to ensure that the error msg is
+        reasonable.
+        """
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {"payload_content_type": 'plain-text'}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+
+        # first, ensure that the return code is 400
+        self.assertEqual(resp.status_code, 400)
+
+        resp_dict = json.loads(resp.content)
+
+        self.assertIn(
+            "Provided object does not match schema 'Secret': "
+            "payload_content_type is not one of ['text/plain', "
+            "'text/plain;charset=utf-8', 'text/plain; charset=utf-8', "
+            "'application/octet-stream'", resp_dict['description'])
+        self.assertIn("Bad Request", resp_dict['title'])
