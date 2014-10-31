@@ -17,6 +17,7 @@ Getting Started
    :maxdepth: 1
 
    contribute/getting_involved
+   contribute/dependencies
    setup/index
    testing
    plugin/index
