@@ -19,6 +19,9 @@ Getting Started
    api/index
    contribute/getting_involved
    contribute/dependencies
+   contribute/architecture
+   contribute/dataflow
+   contribute/structure
    contribute/database_migrations
    setup/index
    testing
