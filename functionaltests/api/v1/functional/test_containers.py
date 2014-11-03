@@ -12,23 +12,15 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
-import re
+import copy
 
+from barbican.tests import utils
 from functionaltests.api import base
+from functionaltests.api.v1.behaviors import container_behaviors
 from functionaltests.api.v1.behaviors import secret_behaviors
+from functionaltests.api.v1.models import container_models
 from functionaltests.api.v1.models import secret_models
-
-create_secret_data = {
-    "name": "AES key",
-    "expiration": "2018-02-28T19:14:44.180394",
-    "algorithm": "aes",
-    "bit_length": 256,
-    "mode": "cbc",
-    "payload": "gF6+lLoF3ohA9aPRpt+6bQ==",
-    "payload_content_type": "application/octet-stream",
-    "payload_content_encoding": "base64",
-}
+from testtools import testcase
 
 create_container_data = {
     "name": "containername",
@@ -39,159 +31,237 @@ create_container_data = {
         },
         {
             "name": "secret2",
+        },
+        {
+            "name": "secret3"
         }
     ]
 }
 
+create_container_rsa_data = {
+    "name": "rsacontainer",
+    "type": "rsa",
+    "secret_refs": [
+        {
+            "name": "public_key",
+        },
+        {
+            "name": "private_key",
+        },
+        {
+            "name": "private_key_passphrase"
+        }
+    ]
+}
 
-class ContainersTestCase(base.TestCase):
+accepted_str_values = {
+    'alphanumeric': ['a2j3j6ll9'],
+    'punctuation': ['~!@#$%^&*()_+`-={}[]|:;<>,.?'],
+    'len_255': [str(bytearray().zfill(255))],
+    'uuid': ['54262d9d-4bc7-4821-8df0-dc2ca8e112bb'],
+    'empty': ['']
+}
+
+
+class BaseContainerTestCase(base.TestCase):
+    default_data_template = create_container_data
+
+    def setUp(self):
+        super(BaseContainerTestCase, self).setUp()
+        self.secret_behaviors = secret_behaviors.SecretBehaviors(self.client)
+        self.behaviors = container_behaviors.ContainerBehaviors(self.client)
+
+        # Setting up three secrets for building containers
+        self.secret_ref_1 = self._create_a_secret()
+        self.secret_ref_2 = self._create_a_secret()
+        self.secret_ref_3 = self._create_a_secret()
+
+        self.default_data = copy.deepcopy(self.default_data_template)
+
+        default_secret_refs = self.default_data['secret_refs']
+        default_secret_refs[0]['secret_ref'] = self.secret_ref_1
+        default_secret_refs[1]['secret_ref'] = self.secret_ref_2
+        default_secret_refs[2]['secret_ref'] = self.secret_ref_3
+
+    def tearDown(self):
+        self.secret_behaviors.delete_all_created_secrets()
+        super(BaseContainerTestCase, self).tearDown()
 
     def _create_a_secret(self):
-        secret_model = secret_models.SecretModel(**create_secret_data)
+        secret_defaults_data = {
+            "name": "AES key",
+            "expiration": "2018-02-28T19:14:44.180394",
+            "algorithm": "aes",
+            "bit_length": 256,
+            "mode": "cbc",
+            "payload": "gF6+lLoF3ohA9aPRpt+6bQ==",
+            "payload_content_type": "application/octet-stream",
+            "payload_content_encoding": "base64",
+        }
+
+        secret_model = secret_models.SecretModel(**secret_defaults_data)
         resp, secret_ref = self.secret_behaviors.create_secret(secret_model)
         self.assertEqual(resp.status_code, 201)
         self.assertIsNotNone(secret_ref)
 
         return secret_ref
 
-    def _get_a_secret(self, secret_id):
-        resp = self.client.get('secrets/{0}'.format(secret_id))
-        self.assertEqual(resp.status_code, 200)
-        return resp.json()
 
-    def _create_a_container(self):
-        json_data = json.dumps(create_container_data)
-        resp = self.client.post('containers/', json_data)
+@utils.parameterized_test_case
+class GenericContainersTestCase(BaseContainerTestCase):
+
+    @testcase.attr('positive')
+    def test_create_defaults_none_secret_name(self):
+        """Covers creating a container with None as a secret name."""
+        test_model = container_models.ContainerModel(**self.default_data)
+        test_model.name = None
+
+        resp, container_ref = self.behaviors.create_container(test_model)
         self.assertEqual(resp.status_code, 201)
 
-        body = resp.json()
-        container_ref = body.get('container_ref')
-        self.assertIsNotNone(container_ref)
-        return container_ref
+    @utils.parameterized_dataset({'0': [0], '1': [1], '50': [50]})
+    @testcase.attr('positive')
+    def test_create_defaults_size(self, num_secrets):
+        """Covers creating containers of various sizes."""
+        test_model = container_models.ContainerModel(**self.default_data)
+        for i in range(0, num_secrets):
+            secret_ref = self._create_a_secret()
+            test_model.secret_refs.append({
+                'name': 'other_secret{0}'.format(i),
+                'secret_ref': secret_ref
+            })
 
-    def _get_a_container(self, container_id):
-        resp = self.client.get('containers/{0}'.format(container_id))
-        self.assertEqual(resp.status_code, 200)
-        self.assertIsNotNone(resp.content)
-        return resp.json()
+        resp, container_ref = self.behaviors.create_container(test_model)
+        self.assertEqual(resp.status_code, 201)
 
-    def _get_container_list(self):
-        resp = self.client.get('containers/')
-        self.assertEqual(resp.status_code, 200)
-        return resp.json()
+    @utils.parameterized_dataset(accepted_str_values)
+    @testcase.attr('positive')
+    def test_create_defaults_name(self, name):
+        """Covers creating generic containers with various names."""
+        test_model = container_models.ContainerModel(**self.default_data)
+        test_model.name = name
 
-    def _delete_a_container(self, container_id):
-        resp = self.client.delete('containers/{0}'.format(container_id))
-        self.assertEqual(resp.status_code, 204)
+        resp, container_ref = self.behaviors.create_container(test_model)
+        self.assertEqual(resp.status_code, 201)
 
-    def setUp(self):
-        super(ContainersTestCase, self).setUp()
-        self.secret_behaviors = secret_behaviors.SecretBehaviors(self.client)
+    @utils.parameterized_dataset(accepted_str_values)
+    @testcase.attr('positive')
+    def test_create_defaults_secret_name(self, name=None):
+        """Covers creating containers with various secret ref names."""
+        test_model = container_models.ContainerModel(**self.default_data)
+        test_model.secret_refs = [{
+            'name': name,
+            'secret_ref': self.secret_ref_1
+        }]
 
-        # Set up two secrets
-        secret_ref_1 = self._create_a_secret()
-        secret_ref_2 = self._create_a_secret()
+        resp, container_ref = self.behaviors.create_container(test_model)
+        self.assertEqual(resp.status_code, 201)
 
-        create_container_data['secret_refs'][0]['secret_ref'] = secret_ref_1
-        create_container_data['secret_refs'][1]['secret_ref'] = secret_ref_2
+        get_resp = self.behaviors.get_container(container_ref)
+        self.assertEqual(get_resp.status_code, 200)
+        self.assertEqual(get_resp.model.secret_refs[0].name, name)
 
-        self.secret_id_1 = secret_ref_1.split('/')[-1]
-        self.secret_id_2 = secret_ref_2.split('/')[-1]
+    @testcase.attr('negative')
+    def test_create_defaults_invalid_type(self):
+        """Container creating should fail with an invalid container type."""
+        test_model = container_models.ContainerModel(**self.default_data)
+        test_model.type = 'bad_type'
 
-    def tearDown(self):
-        self.secret_behaviors.delete_all_created_secrets()
-        super(ContainersTestCase, self).tearDown()
+        resp, container_ref = self.behaviors.create_container(test_model)
+        self.assertEqual(resp.status_code, 400)
 
-    def test_create_container(self):
-        """Covers container creation.
+    @testcase.attr('negative')
+    def test_create_defaults_duplicate_secret_refs(self):
+        """Covers creating a container with a duplicated secret ref."""
+        test_model = container_models.ContainerModel(**self.default_data)
+        test_model.secret_refs[0]['secret_ref'] = self.secret_ref_1
+        test_model.secret_refs[1]['secret_ref'] = self.secret_ref_1
+        test_model.secret_refs[2]['secret_ref'] = self.secret_ref_1
 
-        All of the data needed to create the container is provided in a
-        single POST.
-        """
-        container_ref = self._create_a_container()
-        self.assertIsNotNone(container_ref)
+        resp, container_ref = self.behaviors.create_container(test_model)
+        self.assertEqual(resp.status_code, 400)
 
-    def test_delete_container(self):
-        """Covers container deletion.
-
-        A container is first created, and then the container is deleted
-        and verified to no longer exist.
-        """
-        # Create the container
-        container_ref = self._create_a_container()
-        container_id = container_ref.split('/')[-1]
-
-        # Delete the container
-        self._delete_a_container(container_id)
-
-        # Verify container is gone
-        resp = self.client.get(container_ref)
+    @testcase.attr('negative')
+    def test_get_non_existent_container(self):
+        """A get on a container that does not exist should return a 404."""
+        resp = self.behaviors.get_container("not_a_ref")
         self.assertEqual(resp.status_code, 404)
 
-        # Verify the Secrets from the container still exist
-        self._get_a_secret(self.secret_id_1)
-        self._get_a_secret(self.secret_id_2)
+    @testcase.attr('negative')
+    def test_delete_non_existent_container(self):
+        """A delete on a container that does not exist should return a 404."""
+        resp = self.behaviors.delete_container("not_a_ref", expected_fail=True)
+        self.assertEqual(resp.status_code, 404)
 
-    def test_get_container(self):
-        """Covers container retrieval.
 
-        A container is first created, and then the container is retrieved.
+@utils.parameterized_test_case
+class RSAContainersTestCase(BaseContainerTestCase):
+    default_data_template = create_container_rsa_data
+
+    @testcase.attr('positive')
+    def test_create_rsa_no_passphrase(self):
+        """Covers creating an rsa container without a passphrase."""
+        pub_key_ref = {'name': 'public_key', 'secret_ref': self.secret_ref_1}
+        priv_key_ref = {'name': 'private_key', 'secret_ref': self.secret_ref_2}
+
+        test_model = container_models.ContainerModel(**self.default_data)
+        test_model.secret_refs = [pub_key_ref, priv_key_ref]
+
+        resp, container_ref = self.behaviors.create_container(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+    @utils.parameterized_dataset(accepted_str_values)
+    @testcase.attr('positive')
+    def test_create_rsa_name(self, name):
+        """Covers creating rsa containers with various names."""
+        test_model = container_models.ContainerModel(**self.default_data)
+        test_model.name = name
+
+        resp, container_ref = self.behaviors.create_container(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+    @testcase.attr('negative')
+    def test_create_rsa_invalid_key_names(self):
+        """Covers creating an RSA container with incorrect names."""
+        test_model = container_models.ContainerModel(**self.default_data)
+        test_model.secret_refs = [
+            {
+                "name": "secret1",
+                "secret_ref": self.secret_ref_1
+            },
+            {
+                "name": "secret2",
+                "secret_ref": self.secret_ref_2
+            },
+            {
+                "name": "secret3",
+                "secret_ref": self.secret_ref_3
+            }
+        ]
+
+        resp, container_ref = self.behaviors.create_container(test_model)
+        self.assertEqual(resp.status_code, 400)
+
+    @testcase.attr('negative')
+    def test_create_rsa_no_public_key(self):
+        """Creating an rsa container without a public key should fail.
+
+        RSA containers must have at least a public key and private key.
         """
-        # Create a container
-        container_ref = self._create_a_container()
-        container_id = container_ref.split('/')[-1]
+        test_model = container_models.ContainerModel(**self.default_data)
+        test_model.secret_refs[0]['name'] = 'secret_1'
 
-        # Get the container
-        self._get_a_container(container_id)
+        resp, container_ref = self.behaviors.create_container(test_model)
+        self.assertEqual(resp.status_code, 400)
 
-    def test_list_containers(self):
-        """Covers listing containers.
+    @testcase.attr('negative')
+    def test_create_rsa_no_private_key(self):
+        """Creating an rsa container without a private key should fail.
 
-        A container is first created, and then
-        we check the container list to make sure it has a non-zero total and
-        has a `containers` element.
+        RSA containers must have at least a public key and private key.
         """
-        # Create a container
-        self._create_a_container()
+        test_model = container_models.ContainerModel(**self.default_data)
+        test_model.secret_refs[1]['name'] = 'secret_1'
 
-        # Get the container list
-        list_data = self._get_container_list()
-        self.assertGreaterEqual(list_data.get('total'), 1)
-        self.assertIsNotNone(list_data.get('containers'))
-
-    def test_containers_secret_refs_correctly_formatted(self):
-        """Correctly formatted secret refs in a container
-
-        Create a container (so we are guaranteed to have at least one), then
-        retrieve that container and check the secret_ref formatting to make
-        sure "secret_ref" attributes contain proper HATEOAS URIs. Then do a
-        container list and verify the same for each container in the list.
-        """
-        secret_ref_pattern = re.compile(
-            '(http[s]?://.*/secrets/)([a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-'
-            '[89aAbB][a-f0-9]{3}-[a-f0-9]{12})')
-        # Create a container
-        container_ref = self._create_a_container()
-        container_id = container_ref.split('/')[-1]
-
-        # Get the container
-        container_data = self._get_a_container(container_id)
-        secret_refs = container_data.get('secret_refs')
-        self.assertIsNotNone(secret_refs)
-
-        # Check the secret_refs
-        for ref in secret_refs:
-            self.assertIsNotNone(
-                secret_ref_pattern.match(str(ref.get('secret_ref')))
-            )
-
-        # Get the container list
-        containers = self._get_container_list().get('containers')
-
-        # Check the secret_refs for all containers in the list
-        for cont in containers:
-            secret_refs = cont.get('secret_refs')
-            for ref in secret_refs:
-                self.assertIsNotNone(
-                    secret_ref_pattern.match(str(ref.get('secret_ref')))
-                )
+        resp, container_ref = self.behaviors.create_container(test_model)
+        self.assertEqual(resp.status_code, 400)
