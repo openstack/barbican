@@ -60,11 +60,11 @@ ORDER_STATUS_CA_UNAVAIL_FOR_CHECK = models.OrderStatus(
 )
 
 
-def issue_certificate_request(order_model, tenant_model, repos):
+def issue_certificate_request(order_model, project_model, repos):
     """Create the initial order with CA.
 
     :param: order_model - order associated with this cert request
-    :param: tenant_model - tenant associated with this request
+    :param: project_model - project associated with this request
     :param: repos - repos (to be removed)
     :returns: container_model - container with the relevant cert if
         the request has been completed.  None otherwise
@@ -88,11 +88,11 @@ def issue_certificate_request(order_model, tenant_model, repos):
         # TODO(alee-3): Add code to set sub status of "waiting for CA"
         _update_order_status(ORDER_STATUS_REQUEST_PENDING)
         _schedule_check_cert_request(cert_plugin, order_model, plugin_meta,
-                                     repos, result, tenant_model,
+                                     repos, result, project_model,
                                      cert.RETRY_MSEC)
     elif cert.CertificateStatus.CERTIFICATE_GENERATED == result.status:
         _update_order_status(ORDER_STATUS_CERT_GENERATED)
-        container_model = _save_secrets(result, tenant_model, repos)
+        container_model = _save_secrets(result, project_model, repos)
     elif cert.CertificateStatus.CLIENT_DATA_ISSUE_SEEN == result.status:
         _update_order_status(ORDER_STATUS_DATA_INVALID)
         raise cert.CertificateStatusClientDataIssue(result.status_message)
@@ -101,7 +101,7 @@ def issue_certificate_request(order_model, tenant_model, repos):
         _update_order_status(ORDER_STATUS_CA_UNAVAIL_FOR_ISSUE)
 
         _schedule_issue_cert_request(cert_plugin, order_model, plugin_meta,
-                                     repos, result, tenant_model,
+                                     repos, result, project_model,
                                      cert.ERROR_RETRY_MSEC)
         _notify_ca_unavailable(order_model, result)
     elif cert.CertificateStatus.INVALID_OPERATION == result.status:
@@ -115,11 +115,11 @@ def issue_certificate_request(order_model, tenant_model, repos):
     return container_model
 
 
-def check_certificate_request(order_model, tenant_model, plugin_name, repos):
+def check_certificate_request(order_model, project_model, plugin_name, repos):
     """Check the status of a certificate request with the CA.
 
     :param: order_model - order associated with this cert request
-    :param: tenant_model - tenant associated with this request
+    :param: project_model - project associated with this request
     :param: plugin_name - plugin the issued the certificate request
     :param; repos - repos (to be removed)
     :returns: container_model - container with the relevant cert if the
@@ -142,11 +142,11 @@ def check_certificate_request(order_model, tenant_model, plugin_name, repos):
     if cert.CertificateStatus.WAITING_FOR_CA == result.status:
         _update_order_status(ORDER_STATUS_REQUEST_PENDING)
         _schedule_check_cert_request(cert_plugin, order_model, plugin_meta,
-                                     repos, result, tenant_model,
+                                     repos, result, project_model,
                                      cert.RETRY_MSEC)
     elif cert.CertificateStatus.CERTIFICATE_GENERATED == result.status:
         _update_order_status(ORDER_STATUS_CERT_GENERATED)
-        container_model = _save_secrets(result, tenant_model, repos)
+        container_model = _save_secrets(result, project_model, repos)
     elif cert.CertificateStatus.CLIENT_DATA_ISSUE_SEEN == result.status:
         _update_order_status(cert.ORDER_STATUS_DATA_INVALID)
         raise cert.CertificateStatusClientDataIssue(result.status_message)
@@ -154,7 +154,7 @@ def check_certificate_request(order_model, tenant_model, plugin_name, repos):
         # TODO(alee-3): decide what to do about retries here
         _update_order_status(ORDER_STATUS_CA_UNAVAIL_FOR_CHECK)
         _schedule_check_cert_request(cert_plugin, order_model, plugin_meta,
-                                     repos, result, tenant_model,
+                                     repos, result, project_model,
                                      cert.ERROR_RETRY_MSEC)
 
     elif cert.CertificateStatus.INVALID_OPERATION == result.status:
@@ -192,9 +192,9 @@ def _schedule_cert_retry_task(cert_result_dto, cert_plugin, order_model,
 
 
 def _schedule_issue_cert_request(cert_plugin, order_model, plugin_meta, repos,
-                                 cert_result_dto, tenant_model, retry_time):
+                                 cert_result_dto, project_model, retry_time):
     retry_args = [order_model,
-                  tenant_model,
+                  project_model,
                   repos]
     _schedule_cert_retry_task(
         cert_result_dto, cert_plugin, order_model, plugin_meta,
@@ -205,9 +205,9 @@ def _schedule_issue_cert_request(cert_plugin, order_model, plugin_meta, repos,
 
 
 def _schedule_check_cert_request(cert_plugin, order_model, plugin_meta, repos,
-                                 cert_result_dto, tenant_model, retry_time):
+                                 cert_result_dto, project_model, retry_time):
     retry_args = [order_model,
-                  tenant_model,
+                  project_model,
                   utils.generate_fullname_for(cert_plugin),
                   repos]
     _schedule_cert_retry_task(
@@ -255,14 +255,14 @@ def _save_plugin_metadata(order_model, plugin_meta, repos):
     repos.order_plugin_meta_repo.save(plugin_meta, order_model)
 
 
-def _save_secrets(result, tenant_model, repos):
+def _save_secrets(result, project_model, repos):
     cert_secret_model, transport_key_model = plugin.store_secret(
         unencrypted_raw=result.certificate,
         content_type_raw='text/plain',
         content_encoding='base64',
         spec={},
         secret_model=None,
-        tenant_model=tenant_model,
+        project_model=project_model,
         repos=repos)
 
     # save the certificate chain as a secret.
@@ -273,7 +273,7 @@ def _save_secrets(result, tenant_model, repos):
             content_encoding='base64',
             spec={},
             secret_model=None,
-            tenant_model=tenant_model,
+            project_model=project_model,
             repos=repos
         )
     else:
@@ -282,7 +282,7 @@ def _save_secrets(result, tenant_model, repos):
     container_model = models.Container()
     container_model.type = "certificate"
     container_model.status = models.States.ACTIVE
-    container_model.tenant_id = tenant_model.id
+    container_model.tenant_id = project_model.id
     repos.container_repo.create_from(container_model)
 
     # create container_secret for certificate

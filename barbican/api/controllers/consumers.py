@@ -35,9 +35,9 @@ def _consumer_not_found():
 class ContainerConsumerController(object):
     """Handles Consumer entity retrieval and deletion requests."""
 
-    def __init__(self, consumer_id, tenant_repo=None, consumer_repo=None):
+    def __init__(self, consumer_id, project_repo=None, consumer_repo=None):
         self.consumer_id = consumer_id
-        self.tenant_repo = tenant_repo or repo.TenantRepo()
+        self.project_repo = project_repo or repo.ProjectRepo()
         self.consumer_repo = consumer_repo or repo.ContainerConsumerRepo()
         self.validator = validators.ContainerConsumerValidator()
 
@@ -61,17 +61,17 @@ class ContainerConsumerController(object):
 class ContainerConsumersController(object):
     """Handles Consumer creation requests."""
 
-    def __init__(self, container_id, tenant_repo=None, consumer_repo=None,
+    def __init__(self, container_id, project_repo=None, consumer_repo=None,
                  container_repo=None):
         self.container_id = container_id
-        self.tenant_repo = tenant_repo or repo.TenantRepo()
+        self.project_repo = project_repo or repo.ProjectRepo()
         self.consumer_repo = consumer_repo or repo.ContainerConsumerRepo()
         self.container_repo = container_repo or repo.ContainerRepo()
         self.validator = validators.ContainerConsumerValidator()
 
     @pecan.expose()
     def _lookup(self, consumer_id, *remainder):
-        return ContainerConsumerController(consumer_id, self.tenant_repo,
+        return ContainerConsumerController(consumer_id, self.project_repo,
                                            self.consumer_repo), remainder
 
     @pecan.expose(generic=True, template='json')
@@ -119,7 +119,7 @@ class ContainerConsumersController(object):
     @controllers.enforce_content_types(['application/json'])
     def on_post(self, keystone_id, **kwargs):
 
-        tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
+        project = res.get_or_create_project(keystone_id, self.project_repo)
         data = api.load_body(pecan.request, validator=self.validator)
         LOG.debug('Start on_post...%s', data)
 
@@ -130,7 +130,7 @@ class ContainerConsumersController(object):
 
         new_consumer = models.ContainerConsumerMetadatum(self.container_id,
                                                          data)
-        new_consumer.tenant_id = tenant.id
+        new_consumer.tenant_id = project.id
         self.consumer_repo.create_from(new_consumer, container)
 
         pecan.response.headers['Location'] = (

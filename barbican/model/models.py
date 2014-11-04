@@ -196,7 +196,7 @@ class ModelBase(object):
 
 
 class TenantSecret(BASE, ModelBase):
-    """Represents an association between a Tenant and a Secret."""
+    """Represents an association between a Project and a Secret."""
 
     __tablename__ = 'tenant_secret'
 
@@ -233,9 +233,9 @@ class ContainerSecret(BASE, ModelBase):
 
 
 class Tenant(BASE, ModelBase):
-    """Represents a Tenant in the datastore.
+    """Represents a Project in the datastore.
 
-    Tenants are users that wish to store secret information within
+    Projects are users that wish to store secret information within
     Cloudkeep's Barbican.
     """
 
@@ -256,7 +256,7 @@ class Tenant(BASE, ModelBase):
 class Secret(BASE, ModelBase):
     """Represents a Secret in the datastore.
 
-    Secrets are any information Tenants wish to store within
+    Secrets are any information Projects wish to store within
     Cloudkeep's Barbican, though the actual encrypted data
     is stored in one or more EncryptedData entities on behalf
     of a Secret.
@@ -411,12 +411,12 @@ class KEKDatum(BASE, ModelBase):
     to encrypt/decrypt the secret information, so please do not place vendor-
     specific attributes here.
 
-    Note as well that each Tenant will have at most one 'active=True' KEKDatum
+    Note as well that each Project will have at most one 'active=True' KEKDatum
     instance at a time, representing the most recent KEK metadata instance
-    to use for encryption processes performed on behalf of the Tenant.
+    to use for encryption processes performed on behalf of the Project.
     KEKDatum instances that are 'active=False' are associated to previously
-    used encryption processes for the Tenant, that eventually should be
-    rotated and deleted with the Tenant's active KEKDatum.
+    used encryption processes for the Project, that eventually should be
+    rotated and deleted with the Project's active KEKDatum.
     """
 
     __tablename__ = 'kek_data'
@@ -547,7 +547,7 @@ class OrderPluginMetadatum(BASE, ModelBase):
 class Container(BASE, ModelBase):
     """Represents a Container for Secrets in the datastore.
 
-    Containers store secret references. Containers are owned by Tenants.
+    Containers store secret references. Containers are owned by Projects.
     Containers can be generic or have a predefined type. Predefined typed
     containers allow users to store structured key relationship
     inside Barbican.

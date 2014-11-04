@@ -148,15 +148,15 @@ class BeginTypeOrder(BaseTask):
     def get_name(self):
         return u._('Process TypeOrder')
 
-    def __init__(self, tenant_repo=None, order_repo=None,
-                 secret_repo=None, tenant_secret_repo=None, datum_repo=None,
+    def __init__(self, project_repo=None, order_repo=None,
+                 secret_repo=None, project_secret_repo=None, datum_repo=None,
                  kek_repo=None, container_repo=None,
                  container_secret_repo=None, secret_meta_repo=None,
                  order_plugin_meta_repo=None):
             LOG.debug('Creating BeginTypeOrder task processor')
             self.repos = rep.Repositories(
-                tenant_repo=tenant_repo,
-                tenant_secret_repo=tenant_secret_repo,
+                project_repo=project_repo,
+                project_secret_repo=project_secret_repo,
                 secret_repo=secret_repo,
                 datum_repo=datum_repo,
                 kek_repo=kek_repo,
@@ -207,8 +207,8 @@ class BeginTypeOrder(BaseTask):
         order_type = order_info.get('type')
         meta_info = order_info.get('meta')
 
-        # Retrieve the tenant.
-        tenant = self.repos.tenant_repo.get(order.tenant_id)
+        # Retrieve the project.
+        project = self.repos.project_repo.get(order.tenant_id)
 
         if order_type == models.OrderType.KEY:
             # Create Secret
@@ -216,7 +216,7 @@ class BeginTypeOrder(BaseTask):
                 meta_info,
                 meta_info.get('payload_content_type',
                               'application/octet-stream'),
-                tenant,
+                project,
                 self.repos
             )
             order.secret_id = new_secret.id
@@ -227,13 +227,13 @@ class BeginTypeOrder(BaseTask):
                 meta_info,
                 meta_info.get('payload_content_type',
                               'application/octet-stream'),
-                tenant, self.repos)
+                project, self.repos)
             order.container_id = new_container.id
             LOG.debug("...done creating asymmetric order's secret.")
         elif order_type == models.OrderType.CERTIFICATE:
             # Request a certificate
             new_container = cert.issue_certificate_request(
-                order, tenant, self.repos)
+                order, project, self.repos)
             if new_container:
                 order.container_id = new_container.id
             LOG.debug("...done requesting a certificate.")
@@ -247,16 +247,16 @@ class UpdateOrder(BaseTask):
     def get_name(self):
         return u._('Update Order')
 
-    def __init__(self, tenant_repo=None, order_repo=None,
-                 secret_repo=None, tenant_secret_repo=None, datum_repo=None,
+    def __init__(self, project_repo=None, order_repo=None,
+                 secret_repo=None, project_secret_repo=None, datum_repo=None,
                  kek_repo=None, container_repo=None,
                  container_secret_repo=None, secret_meta_repo=None):
             LOG.debug('Creating UpdateOrder task processor')
             self.repos = rep.Repositories(
-                tenant_repo=tenant_repo,
+                project_repo=project_repo,
                 order_repo=order_repo,
                 secret_repo=secret_repo,
-                tenant_secret_repo=tenant_secret_repo,
+                project_secret_repo=project_secret_repo,
                 datum_repo=datum_repo,
                 kek_repo=kek_repo,
                 container_repo=container_repo,

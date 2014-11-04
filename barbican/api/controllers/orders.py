@@ -153,11 +153,11 @@ class OrderController(object):
 class OrdersController(object):
     """Handles Order requests for Secret creation."""
 
-    def __init__(self, tenant_repo=None, order_repo=None,
+    def __init__(self, project_repo=None, order_repo=None,
                  queue_resource=None):
 
         LOG.debug('Creating OrdersController')
-        self.tenant_repo = tenant_repo or repo.TenantRepo()
+        self.project_repo = project_repo or repo.ProjectRepo()
         self.order_repo = order_repo or repo.OrderRepo()
         self.queue = queue_resource or async_client.TaskClient()
         self.type_order_validator = validators.TypeOrderValidator()
@@ -171,7 +171,7 @@ class OrdersController(object):
     @controllers.enforce_rbac('orders:get')
     def index(self, keystone_id, **kw):
         LOG.debug('Start orders on_get '
-                  'for tenant-ID %s:', keystone_id)
+                  'for project-ID %s:', keystone_id)
 
         result = self.order_repo.get_by_create_date(
             keystone_id, offset_arg=kw.get('offset', 0),
@@ -205,17 +205,18 @@ class OrdersController(object):
     @controllers.enforce_content_types(['application/json'])
     def on_post(self, keystone_id, **kwargs):
 
-        tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
+        project = res.get_or_create_project(keystone_id, self.project_repo)
 
         body = api.load_body(pecan.request,
                              validator=self.type_order_validator)
         order_type = body.get('type')
         LOG.debug('Processing order type %s', order_type)
+
         new_order = models.Order()
         new_order.meta = body.get('meta')
         new_order.type = order_type
+        new_order.tenant_id = project.id
 
-        new_order.tenant_id = tenant.id
         self.order_repo.create_from(new_order)
 
         self.queue.process_type_order(order_id=new_order.id,

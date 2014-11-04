@@ -53,13 +53,13 @@ class TestSecretRepository(RepositoryTestCase):
         session = self.repo.get_session()
 
         secret = self.repo.create_from(models.Secret(), session=session)
-        tenant = models.Tenant(keystone_id="my keystone id")
-        tenant.save(session=session)
-        tenant_secret = models.TenantSecret(
+        project = models.Tenant(keystone_id="my keystone id")
+        project.save(session=session)
+        project_secret = models.TenantSecret(
             secret_id=secret.id,
-            tenant_id=tenant.id,
+            tenant_id=project.id,
         )
-        tenant_secret.save(session=session)
+        project_secret.save(session=session)
 
         secrets, offset, limit, total = self.repo.get_by_create_date(
             "my keystone id",
@@ -82,18 +82,18 @@ class TestSecretRepository(RepositoryTestCase):
             models.Secret(dict(name="name2")),
             session=session,
         )
-        tenant = models.Tenant(keystone_id="my keystone id")
-        tenant.save(session=session)
-        tenant_secret1 = models.TenantSecret(
+        project = models.Tenant(keystone_id="my keystone id")
+        project.save(session=session)
+        project_secret1 = models.TenantSecret(
             secret_id=secret1.id,
-            tenant_id=tenant.id,
+            tenant_id=project.id,
         )
-        tenant_secret1.save(session=session)
-        tenant_secret2 = models.TenantSecret(
+        project_secret1.save(session=session)
+        project_secret2 = models.TenantSecret(
             secret_id=secret2.id,
-            tenant_id=tenant.id,
+            tenant_id=project.id,
         )
-        tenant_secret2.save(session=session)
+        project_secret2.save(session=session)
 
         secrets, offset, limit, total = self.repo.get_by_create_date(
             "my keystone id",
@@ -117,18 +117,18 @@ class TestSecretRepository(RepositoryTestCase):
             models.Secret(dict(algorithm="algorithm2")),
             session=session,
         )
-        tenant = models.Tenant(keystone_id="my keystone id")
-        tenant.save(session=session)
-        tenant_secret1 = models.TenantSecret(
+        project = models.Tenant(keystone_id="my keystone id")
+        project.save(session=session)
+        project_secret1 = models.TenantSecret(
             secret_id=secret1.id,
-            tenant_id=tenant.id,
+            tenant_id=project.id,
         )
-        tenant_secret1.save(session=session)
-        tenant_secret2 = models.TenantSecret(
+        project_secret1.save(session=session)
+        project_secret2 = models.TenantSecret(
             secret_id=secret2.id,
-            tenant_id=tenant.id,
+            tenant_id=project.id,
         )
-        tenant_secret2.save(session=session)
+        project_secret2.save(session=session)
 
         secrets, offset, limit, total = self.repo.get_by_create_date(
             "my keystone id",
@@ -152,18 +152,18 @@ class TestSecretRepository(RepositoryTestCase):
             models.Secret(dict(mode="mode2")),
             session=session,
         )
-        tenant = models.Tenant(keystone_id="my keystone id")
-        tenant.save(session=session)
-        tenant_secret1 = models.TenantSecret(
+        project = models.Tenant(keystone_id="my keystone id")
+        project.save(session=session)
+        project_secret1 = models.TenantSecret(
             secret_id=secret1.id,
-            tenant_id=tenant.id,
+            tenant_id=project.id,
         )
-        tenant_secret1.save(session=session)
-        tenant_secret2 = models.TenantSecret(
+        project_secret1.save(session=session)
+        project_secret2 = models.TenantSecret(
             secret_id=secret2.id,
-            tenant_id=tenant.id,
+            tenant_id=project.id,
         )
-        tenant_secret2.save(session=session)
+        project_secret2.save(session=session)
 
         secrets, offset, limit, total = self.repo.get_by_create_date(
             "my keystone id",
@@ -187,18 +187,18 @@ class TestSecretRepository(RepositoryTestCase):
             models.Secret(dict(bit_length=2048)),
             session=session,
         )
-        tenant = models.Tenant(keystone_id="my keystone id")
-        tenant.save(session=session)
-        tenant_secret1 = models.TenantSecret(
+        project = models.Tenant(keystone_id="my keystone id")
+        project.save(session=session)
+        project_secret1 = models.TenantSecret(
             secret_id=secret1.id,
-            tenant_id=tenant.id,
+            tenant_id=project.id,
         )
-        tenant_secret1.save(session=session)
-        tenant_secret2 = models.TenantSecret(
+        project_secret1.save(session=session)
+        project_secret2 = models.TenantSecret(
             secret_id=secret2.id,
-            tenant_id=tenant.id,
+            tenant_id=project.id,
         )
-        tenant_secret2.save(session=session)
+        project_secret2.save(session=session)
 
         secrets, offset, limit, total = self.repo.get_by_create_date(
             "my keystone id",
@@ -300,7 +300,7 @@ class WhenCleaningRepositoryPagingParameters(utils.BaseTestCase):
 
     def test_should_raise_exception_create_kek_datum_with_null_name(self):
         repositories._ENGINE = mock.MagicMock()
-        tenant = mock.MagicMock(id="1")
+        project = mock.MagicMock(id="1")
         plugin_name = None
         suppress_exception = False
         session = mock.MagicMock()
@@ -308,12 +308,12 @@ class WhenCleaningRepositoryPagingParameters(utils.BaseTestCase):
 
         kek_repo = repositories.KEKDatumRepo()
         self.assertRaises(exception.BarbicanException,
-                          kek_repo.find_or_create_kek_datum, tenant,
+                          kek_repo.find_or_create_kek_datum, project,
                           plugin_name, suppress_exception, session)
 
     def test_should_raise_exception_create_kek_datum_with_empty_name(self):
         repositories._ENGINE = mock.MagicMock()
-        tenant = mock.MagicMock(id="1")
+        project = mock.MagicMock(id="1")
         plugin_name = ""
         suppress_exception = False
         session = mock.MagicMock()
@@ -321,5 +321,5 @@ class WhenCleaningRepositoryPagingParameters(utils.BaseTestCase):
 
         kek_repo = repositories.KEKDatumRepo()
         self.assertRaises(exception.BarbicanException,
-                          kek_repo.find_or_create_kek_datum, tenant,
+                          kek_repo.find_or_create_kek_datum, project,
                           plugin_name, suppress_exception, session)

@@ -112,7 +112,7 @@ def generate_safe_exception_message(operation_name, excep):
     except policy.PolicyNotAuthorized:
         message = u._('{0} attempt not allowed - '
                       'please review your '
-                      'user/tenant privileges').format(operation_name)
+                      'user/project privileges').format(operation_name)
         status = 403
 
     except s.SecretContentTypeNotSupportedException as sctnse:

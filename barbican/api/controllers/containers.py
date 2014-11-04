@@ -36,16 +36,16 @@ def container_not_found():
 class ContainerController(object):
     """Handles Container entity retrieval and deletion requests."""
 
-    def __init__(self, container_id, tenant_repo=None, container_repo=None,
+    def __init__(self, container_id, project_repo=None, container_repo=None,
                  consumer_repo=None):
         # TODO(rm_work): refactor this to use repo-factory method
         self.container_id = container_id
-        self.tenant_repo = tenant_repo or repo.TenantRepo()
+        self.project_repo = project_repo or repo.ProjectRepo()
         self.container_repo = container_repo or repo.ContainerRepo()
         self.consumer_repo = consumer_repo or repo.ContainerConsumerRepo()
         self.validator = validators.ContainerValidator()
         self.consumers = consumers.ContainerConsumersController(
-            container_id, self.tenant_repo, self.consumer_repo,
+            container_id, self.project_repo, self.consumer_repo,
             self.container_repo)
 
     @pecan.expose(generic=True, template='json')
@@ -84,10 +84,10 @@ class ContainerController(object):
 class ContainersController(object):
     """Handles Container creation requests."""
 
-    def __init__(self, tenant_repo=None, container_repo=None,
+    def __init__(self, project_repo=None, container_repo=None,
                  secret_repo=None, consumer_repo=None):
         # TODO(rm_work): refactor this to use repo-factory method
-        self.tenant_repo = tenant_repo or repo.TenantRepo()
+        self.project_repo = project_repo or repo.ProjectRepo()
         self.container_repo = container_repo or repo.ContainerRepo()
         self.secret_repo = secret_repo or repo.SecretRepo()
         self.consumer_repo = consumer_repo or repo.ContainerConsumerRepo()
@@ -95,19 +95,18 @@ class ContainersController(object):
 
     @pecan.expose()
     def _lookup(self, container_id, *remainder):
-        return (ContainerController(container_id, self.tenant_repo,
+        return (ContainerController(container_id, self.project_repo,
                                     self.container_repo, self.consumer_repo),
                 remainder)
 
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Containers(s) retrieval'))
     @controllers.enforce_rbac('containers:get')
-    def index(self, keystone_id, **kw):
-        LOG.debug('Start containers on_get '
-                  'for tenant-ID %s:', keystone_id)
+    def index(self, project_id, **kw):
+        LOG.debug('Start containers on_get for project-ID %s:', project_id)
 
         result = self.container_repo.get_by_create_date(
-            keystone_id,
+            project_id,
             offset_arg=kw.get('offset', 0),
             limit_arg=kw.get('limit', None),
             suppress_exception=True
@@ -144,13 +143,13 @@ class ContainersController(object):
     @controllers.enforce_content_types(['application/json'])
     def on_post(self, keystone_id, **kwargs):
 
-        tenant = res.get_or_create_tenant(keystone_id, self.tenant_repo)
+        project = res.get_or_create_project(keystone_id, self.project_repo)
 
         data = api.load_body(pecan.request, validator=self.validator)
         LOG.debug('Start on_post...%s', data)
 
         new_container = models.Container(data)
-        new_container.tenant_id = tenant.id
+        new_container.tenant_id = project.id
 
         # TODO(hgedikli): performance optimizations
         for secret_ref in new_container.container_secrets:

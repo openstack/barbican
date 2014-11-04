@@ -49,7 +49,7 @@ def get_barbican_env(keystone_id):
     """
     kwargs = {'roles': None,
               'user': None,
-              'tenant': keystone_id,
+              'project': keystone_id,
               'is_admin': True}
     ctx = barbican.context.RequestContext(**kwargs)
     ctx.policy_enforcer = None
@@ -190,8 +190,8 @@ class BaseSecretsResource(FunctionalTest):
 
         class RootController(object):
             secrets = controllers.secrets.SecretsController(
-                self.tenant_repo, self.secret_repo,
-                self.tenant_secret_repo, self.datum_repo, self.kek_repo,
+                self.project_repo, self.secret_repo,
+                self.project_secret_repo, self.datum_repo, self.kek_repo,
                 self.secret_meta_repo, self.transport_key_repo
             )
 
@@ -220,20 +220,20 @@ class BaseSecretsResource(FunctionalTest):
                 payload_content_encoding)
 
         self.keystone_id = 'keystone1234'
-        self.tenant_entity_id = 'tid1234'
-        self.tenant = models.Tenant()
-        self.tenant.id = self.tenant_entity_id
-        self.tenant.keystone_id = self.keystone_id
-        self.tenant_repo = mock.MagicMock()
-        self.tenant_repo.find_by_keystone_id.return_value = self.tenant
+        self.project_entity_id = 'tid1234'
+        self.project = models.Tenant()
+        self.project.id = self.project_entity_id
+        self.project.keystone_id = self.keystone_id
+        self.project_repo = mock.MagicMock()
+        self.project_repo.find_by_keystone_id.return_value = self.project
 
         self.secret = models.Secret()
         self.secret.id = '123'
         self.secret_repo = mock.MagicMock()
         self.secret_repo.create_from.return_value = self.secret
 
-        self.tenant_secret_repo = mock.MagicMock()
-        self.tenant_secret_repo.create_from.return_value = None
+        self.project_secret_repo = mock.MagicMock()
+        self.project_secret_repo.create_from.return_value = None
 
         self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
@@ -285,7 +285,7 @@ class BaseSecretsResource(FunctionalTest):
             self.secret_req.get('payload_content_encoding'),
             expected,
             None,
-            self.tenant,
+            self.project,
             mock.ANY,
             transport_key_needed=False,
             transport_key_id=None
@@ -293,11 +293,12 @@ class BaseSecretsResource(FunctionalTest):
 
     @mock.patch('barbican.plugin.resources.store_secret')
     def _test_should_add_new_secret_one_step(self, mock_store_secret,
-                                             check_tenant_id=True):
+                                             check_project_id=True):
         """Test the one-step secret creation.
 
-        :param check_tenant_id: True if the retrieved Tenant id needs to be
-        verified, False to skip this check (necessary for new-Tenant flows).
+        :param check_project_id: True if the retrieved Project id needs to be
+                                 verified, False to skip this check (necessary
+                                 for new-Project flows).
         """
         mock_store_secret.return_value = self.secret, None
 
@@ -316,7 +317,7 @@ class BaseSecretsResource(FunctionalTest):
             self.secret_req.get('payload_content_encoding'),
             expected,
             None,
-            self.tenant if check_tenant_id else mock.ANY,
+            self.project if check_project_id else mock.ANY,
             mock.ANY,
             transport_key_needed=False,
             transport_key_id=None
@@ -324,11 +325,12 @@ class BaseSecretsResource(FunctionalTest):
 
     @mock.patch('barbican.plugin.resources.store_secret')
     def _test_should_add_new_secret_one_step_with_tkey_id(
-            self, mock_store_secret, check_tenant_id=True):
+            self, mock_store_secret, check_project_id=True):
         """Test the one-step secret creation with transport_key_id set
 
-        :param check_tenant_id: True if the retrieved Tenant id needs to be
-        verified, False to skip this check (necessary for new-Tenant flows).
+        :param check_project_id: True if the retrieved Project id needs to be
+                                 verified, False to skip this check (necessary
+                                 for new-Project flows).
         """
         mock_store_secret.return_value = self.secret, None
         self.secret_req['transport_key_id'] = self.transport_key_id
@@ -345,22 +347,22 @@ class BaseSecretsResource(FunctionalTest):
             self.secret_req.get('payload_content_encoding'),
             expected,
             None,
-            self.tenant if check_tenant_id else mock.ANY,
+            self.project if check_project_id else mock.ANY,
             mock.ANY,
             transport_key_needed=False,
             transport_key_id=self.transport_key_id
         )
 
-    def _test_should_add_new_secret_if_tenant_does_not_exist(self):
-        self.tenant_repo.get.return_value = None
-        self.tenant_repo.find_by_keystone_id.return_value = None
+    def _test_should_add_new_secret_if_project_does_not_exist(self):
+        self.project_repo.get.return_value = None
+        self.project_repo.find_by_keystone_id.return_value = None
 
-        self._test_should_add_new_secret_one_step(check_tenant_id=False)
+        self._test_should_add_new_secret_one_step(check_project_id=False)
 
-        args, kwargs = self.tenant_repo.create_from.call_args
-        tenant = args[0]
-        self.assertIsInstance(tenant, models.Tenant)
-        self.assertEqual(self.keystone_id, tenant.keystone_id)
+        args, kwargs = self.project_repo.create_from.call_args
+        project = args[0]
+        self.assertIsInstance(project, models.Tenant)
+        self.assertEqual(self.keystone_id, project.keystone_id)
 
     def _test_should_add_new_secret_metadata_without_payload(self):
         self.app.post_json(
@@ -373,11 +375,11 @@ class BaseSecretsResource(FunctionalTest):
         self.assertIsInstance(secret, models.Secret)
         self.assertEqual(secret.name, self.name)
 
-        args, kwargs = self.tenant_secret_repo.create_from.call_args
-        tenant_secret = args[0]
-        self.assertIsInstance(tenant_secret, models.TenantSecret)
-        self.assertEqual(tenant_secret.tenant_id, self.tenant_entity_id)
-        self.assertEqual(tenant_secret.secret_id, secret.id)
+        args, kwargs = self.project_secret_repo.create_from.call_args
+        project_secret = args[0]
+        self.assertIsInstance(project_secret, models.TenantSecret)
+        self.assertEqual(project_secret.tenant_id, self.project_entity_id)
+        self.assertEqual(project_secret.secret_id, secret.id)
 
         self.assertFalse(self.datum_repo.create_from.called)
 
@@ -477,8 +479,8 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
     def test_should_add_new_secret_with_expiration(self):
         self._test_should_add_new_secret_with_expiration()
 
-    def test_should_add_new_secret_if_tenant_does_not_exist(self):
-        self._test_should_add_new_secret_if_tenant_does_not_exist()
+    def test_should_add_new_secret_if_project_does_not_exist(self):
+        self._test_should_add_new_secret_if_project_does_not_exist()
 
     def test_should_add_new_secret_metadata_without_payload(self):
         self._test_should_add_new_secret_metadata_without_payload()
@@ -612,8 +614,8 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
     def test_should_add_new_secret_with_expiration(self):
         self._test_should_add_new_secret_with_expiration()
 
-    def test_should_add_new_secret_if_tenant_does_not_exist(self):
-        self._test_should_add_new_secret_if_tenant_does_not_exist()
+    def test_should_add_new_secret_if_project_does_not_exist(self):
+        self._test_should_add_new_secret_if_project_does_not_exist()
 
     def test_should_add_new_secret_metadata_without_payload(self):
         self._test_should_add_new_secret_metadata_without_payload()
@@ -713,15 +715,15 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
         class RootController(object):
             secrets = controllers.secrets.SecretsController(
-                self.tenant_repo, self.secret_repo,
-                self.tenant_secret_repo, self.datum_repo, self.kek_repo,
+                self.project_repo, self.secret_repo,
+                self.project_secret_repo, self.datum_repo, self.kek_repo,
                 self.secret_meta_repo, self.transport_key_repo
             )
 
         return RootController()
 
     def _init(self):
-        self.tenant_id = 'tenant1234'
+        self.project_id = 'project1234'
         self.keystone_id = 'keystone1234'
         self.name = 'name 1234 !@#$%^&*()_+=-{}[];:<>,./?'
         self.secret_algorithm = "AES"
@@ -749,10 +751,10 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
                                                             self.limit,
                                                             self.total)
 
-        self.tenant_repo = mock.MagicMock()
+        self.project_repo = mock.MagicMock()
 
-        self.tenant_secret_repo = mock.MagicMock()
-        self.tenant_secret_repo.create_from.return_value = None
+        self.project_secret_repo = mock.MagicMock()
+        self.project_secret_repo.create_from.return_value = None
 
         self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
@@ -905,15 +907,15 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         class RootController(object):
             secrets = controllers.secrets.SecretsController(
-                self.tenant_repo, self.secret_repo,
-                self.tenant_secret_repo, self.datum_repo, self.kek_repo,
+                self.project_repo, self.secret_repo,
+                self.project_secret_repo, self.datum_repo, self.kek_repo,
                 self.secret_meta_repo, self.transport_key_repo
             )
 
         return RootController()
 
     def _init(self):
-        self.tenant_id = 'tenantid1234'
+        self.project_id = 'projectid1234'
         self.keystone_id = 'keystone1234'
         self.name = 'name1234'
 
@@ -925,17 +927,17 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret_bit_length = 256
         self.secret_mode = "CBC"
 
-        self.kek_tenant = models.KEKDatum()
-        self.kek_tenant.id = kek_id
-        self.kek_tenant.active = True
-        self.kek_tenant.bind_completed = False
-        self.kek_tenant.kek_label = "kek_label"
+        self.kek_project = models.KEKDatum()
+        self.kek_project.id = kek_id
+        self.kek_project.active = True
+        self.kek_project.bind_completed = False
+        self.kek_project.kek_label = "kek_label"
 
         self.datum = models.EncryptedDatum()
         self.datum.id = datum_id
         self.datum.secret_id = secret_id
         self.datum.kek_id = kek_id
-        self.datum.kek_meta_tenant = self.kek_tenant
+        self.datum.kek_meta_project = self.kek_project
         self.datum.content_type = "text/plain"
         self.datum.cypher_text = "aaaa"  # base64 value.
 
@@ -946,18 +948,18 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
                                     mode=self.secret_mode,
                                     encrypted_datum=self.datum)
 
-        self.tenant = models.Tenant()
-        self.tenant.id = self.tenant_id
+        self.project = models.Tenant()
+        self.project.id = self.project_id
         self.keystone_id = self.keystone_id
-        self.tenant_repo = mock.MagicMock()
-        self.tenant_repo.get.return_value = self.tenant
-        self.tenant_repo.find_by_keystone_id.return_value = self.tenant
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
+        self.project_repo.find_by_keystone_id.return_value = self.project
 
         self.secret_repo = mock.MagicMock()
         self.secret_repo.get.return_value = self.secret
         self.secret_repo.delete_entity_by_id.return_value = None
 
-        self.tenant_secret_repo = mock.MagicMock()
+        self.project_secret_repo = mock.MagicMock()
 
         self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
@@ -1012,7 +1014,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         mock_get_secret.assert_called_once_with(
             'text/plain',
             self.secret,
-            self.tenant,
+            self.project,
             mock.ANY,
             None,
             None
@@ -1040,7 +1042,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         mock_get_secret.assert_called_once_with(
             'text/plain',
             self.secret,
-            self.tenant,
+            self.project,
             mock.ANY,
             twsk,
             self.transport_key_model.transport_key
@@ -1141,7 +1143,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         mock_get_secret.assert_called_once_with(
             'application/octet-stream',
             self.secret,
-            self.tenant,
+            self.project,
             mock.ANY,
             None,
             None
@@ -1182,7 +1184,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             'text/plain', None,
             self.secret.to_dict_fields(),
             self.secret,
-            self.tenant,
+            self.project,
             mock.ANY,
             transport_key_id=None
         )
@@ -1205,7 +1207,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             'text/plain', None,
             self.secret.to_dict_fields(),
             self.secret,
-            self.tenant,
+            self.project,
             mock.ANY,
             transport_key_id=self.transport_key_id
         )
@@ -1231,7 +1233,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             None,
             self.secret.to_dict_fields(),
             self.secret,
-            self.tenant,
+            self.project,
             mock.ANY,
             transport_key_id=None
         )
@@ -1258,7 +1260,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             None,
             self.secret.to_dict_fields(),
             self.secret,
-            self.tenant,
+            self.project,
             mock.ANY,
             transport_key_id=self.transport_key_id
         )
@@ -1284,7 +1286,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             'application/octet-stream',
             'base64', self.secret.to_dict_fields(),
             self.secret,
-            self.tenant,
+            self.project,
             mock.ANY,
             transport_key_id=None
         )
@@ -1432,14 +1434,14 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
             WhenCreatingOrdersUsingOrdersResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
 
     @property
     def root(self):
         self._init()
 
         class RootController(object):
-            orders = controllers.orders.OrdersController(self.tenant_repo,
+            orders = controllers.orders.OrdersController(self.project_repo,
                                                          self.order_repo,
                                                          self.queue_resource)
 
@@ -1452,15 +1454,15 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         self.secret_bit_length = 128
         self.secret_mode = "cbc"
 
-        self.tenant_internal_id = 'tenantid1234'
-        self.tenant_keystone_id = 'keystoneid1234'
+        self.project_internal_id = 'projectid1234'
+        self.project_keystone_id = 'keystoneid1234'
 
-        self.tenant = models.Tenant()
-        self.tenant.id = self.tenant_internal_id
-        self.tenant.keystone_id = self.tenant_keystone_id
+        self.project = models.Tenant()
+        self.project.id = self.project_internal_id
+        self.project.keystone_id = self.project_keystone_id
 
-        self.tenant_repo = mock.MagicMock()
-        self.tenant_repo.get.return_value = self.tenant
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
 
         self.order_repo = mock.MagicMock()
         self.order_repo.create_from.return_value = None
@@ -1487,7 +1489,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         self.assertEqual(resp.status_int, 202)
 
         self.queue_resource.process_type_order.assert_called_once_with(
-            order_id=None, keystone_id=self.tenant_keystone_id)
+            order_id=None, keystone_id=self.project_keystone_id)
 
         args, kwargs = self.order_repo.create_from.call_args
         order = args[0]
@@ -1554,14 +1556,14 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            orders = controllers.orders.OrdersController(self.tenant_repo,
+            orders = controllers.orders.OrdersController(self.project_repo,
                                                          self.order_repo,
                                                          self.queue_resource)
 
         return RootController()
 
     def _init(self):
-        self.tenant_id = 'tenant1234'
+        self.project_id = 'project1234'
         self.keystone_id = 'keystoneid1234'
         self.name = 'name1234'
         self.mime_type = 'text/plain'
@@ -1589,7 +1591,7 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
                                                            self.offset,
                                                            self.limit,
                                                            self.total)
-        self.tenant_repo = mock.MagicMock()
+        self.project_repo = mock.MagicMock()
 
         self.queue_resource = mock.MagicMock()
         self.queue_resource.process_order.return_value = None
@@ -1661,21 +1663,21 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
             WhenGettingOrDeletingOrderUsingOrderResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
 
     @property
     def root(self):
         self._init()
 
         class RootController(object):
-            orders = controllers.orders.OrdersController(self.tenant_repo,
+            orders = controllers.orders.OrdersController(self.project_repo,
                                                          self.order_repo,
                                                          self.queue_resource)
 
         return RootController()
 
     def _init(self):
-        self.tenant_keystone_id = 'keystoneid1234'
+        self.project_keystone_id = 'keystoneid1234'
         self.requestor = 'requestor1234'
 
         self.order = create_order_with_meta(id_ref="id1",
@@ -1687,7 +1689,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         self.order_repo.save.return_value = None
         self.order_repo.delete_entity_by_id.return_value = None
 
-        self.tenant_repo = mock.MagicMock()
+        self.project_repo = mock.MagicMock()
         self.queue_resource = mock.MagicMock()
 
     def test_should_get_order(self):
@@ -1695,13 +1697,13 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
 
         self.order_repo.get.assert_called_once_with(
             entity_id=self.order.id,
-            keystone_id=self.tenant_keystone_id,
+            keystone_id=self.project_keystone_id,
             suppress_exception=True)
 
     def test_should_delete_order(self):
         self.app.delete('/orders/{0}/'.format(self.order.id))
         self.order_repo.delete_entity_by_id.assert_called_once_with(
-            entity_id=self.order.id, keystone_id=self.tenant_keystone_id)
+            entity_id=self.order.id, keystone_id=self.project_keystone_id)
 
     def test_should_throw_exception_for_get_when_order_not_found(self):
         self.order_repo.get.return_value = None
@@ -1729,21 +1731,21 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
             WhenPuttingOrderWithMetadataUsingOrderResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
 
     @property
     def root(self):
         self._init()
 
         class RootController(object):
-            orders = controllers.orders.OrdersController(self.tenant_repo,
+            orders = controllers.orders.OrdersController(self.project_repo,
                                                          self.order_repo,
                                                          self.queue_resource)
 
         return RootController()
 
     def _init(self):
-        self.tenant_keystone_id = 'keystoneid1234'
+        self.project_keystone_id = 'keystoneid1234'
         self.requestor = 'requestor1234'
 
         self.order = create_order_with_meta(
@@ -1763,7 +1765,7 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
 
         self.params = {'type': self.type, 'meta': self.meta}
 
-        self.tenant_repo = mock.MagicMock()
+        self.project_repo = mock.MagicMock()
         self.queue_resource = mock.MagicMock()
 
     def test_should_put_order(self):
@@ -1778,7 +1780,7 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
         self.assertEqual(resp.status_int, 204)
         self.order_repo.get.assert_called_once_with(
             entity_id=self.order.id,
-            keystone_id=self.tenant_keystone_id,
+            keystone_id=self.project_keystone_id,
             suppress_exception=True)
 
     def test_should_fail_bad_type(self):
@@ -1795,7 +1797,7 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
         self.assertEqual(resp.status_int, 400)
         self.order_repo.get.assert_called_once_with(
             entity_id=self.order.id,
-            keystone_id=self.tenant_keystone_id,
+            keystone_id=self.project_keystone_id,
             suppress_exception=True)
 
     def test_should_fail_bad_status(self):
@@ -1812,7 +1814,7 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
         self.assertEqual(resp.status_int, 400)
         self.order_repo.get.assert_called_once_with(
             entity_id=self.order.id,
-            keystone_id=self.tenant_keystone_id,
+            keystone_id=self.project_keystone_id,
             suppress_exception=True)
 
 
@@ -1828,7 +1830,7 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            orders = controllers.orders.OrdersController(self.tenant_repo,
+            orders = controllers.orders.OrdersController(self.project_repo,
                                                          self.order_repo,
                                                          self.queue_resource)
 
@@ -1846,15 +1848,15 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         self.key_order_req = {'type': self.type,
                               'meta': self.meta}
 
-        self.tenant_internal_id = 'tenantid1234'
-        self.tenant_keystone_id = 'keystoneid1234'
+        self.project_internal_id = 'projectid1234'
+        self.project_keystone_id = 'keystoneid1234'
 
-        self.tenant = models.Tenant()
-        self.tenant.id = self.tenant_internal_id
-        self.tenant.keystone_id = self.tenant_keystone_id
+        self.project = models.Tenant()
+        self.project.id = self.project_internal_id
+        self.project.keystone_id = self.project_keystone_id
 
-        self.tenant_repo = mock.MagicMock()
-        self.tenant_repo.get.return_value = self.tenant
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
 
         self.order_repo = mock.MagicMock()
         self.order_repo.create_from.return_value = None
@@ -1870,7 +1872,7 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         self.assertEqual(resp.status_int, 202)
 
         self.queue_resource.process_type_order.assert_called_once_with(
-            order_id=None, keystone_id=self.tenant_keystone_id)
+            order_id=None, keystone_id=self.project_keystone_id)
 
         args, kwargs = self.order_repo.create_from.call_args
         order = args[0]
@@ -1976,7 +1978,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
             WhenCreatingContainersUsingContainersResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
 
     @property
     def root(self):
@@ -1984,7 +1986,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
 
         class RootController(object):
             containers = controllers.containers.ContainersController(
-                self.tenant_repo, self.container_repo, self.secret_repo,
+                self.project_repo, self.container_repo, self.secret_repo,
                 self.consumer_repo
             )
 
@@ -2008,15 +2010,15 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
             }
         ]
 
-        self.tenant_internal_id = 'tenantid1234'
-        self.tenant_keystone_id = 'keystoneid1234'
+        self.project_internal_id = 'projectid1234'
+        self.project_keystone_id = 'keystoneid1234'
 
-        self.tenant = models.Tenant()
-        self.tenant.id = self.tenant_internal_id
-        self.tenant.keystone_id = self.tenant_keystone_id
+        self.project = models.Tenant()
+        self.project.id = self.project_internal_id
+        self.project.keystone_id = self.project_keystone_id
 
-        self.tenant_repo = mock.MagicMock()
-        self.tenant_repo.get.return_value = self.tenant
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
 
         self.container_repo = mock.MagicMock()
         self.container_repo.create_from.return_value = None
@@ -2037,7 +2039,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
             self.container_req
         )
         self.assertEqual(resp.status_int, 201)
-        self.assertNotIn(self.tenant_keystone_id, resp.headers['Location'])
+        self.assertNotIn(self.project_keystone_id, resp.headers['Location'])
 
         args, kwargs = self.container_repo.create_from.call_args
         container = args[0]
@@ -2076,7 +2078,7 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
             WhenGettingOrDeletingContainerUsingContainerResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
 
     @property
     def root(self):
@@ -2084,22 +2086,22 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
 
         class RootController(object):
             containers = controllers.containers.ContainersController(
-                self.tenant_repo, self.container_repo, self.secret_repo,
+                self.project_repo, self.container_repo, self.secret_repo,
                 self.consumer_repo
             )
 
         return RootController()
 
     def _init(self):
-        self.tenant_keystone_id = 'keystoneid1234'
-        self.tenant_internal_id = 'tenantid1234'
+        self.project_keystone_id = 'keystoneid1234'
+        self.project_internal_id = 'projectid1234'
 
-        self.tenant = models.Tenant()
-        self.tenant.id = self.tenant_internal_id
-        self.tenant.keystone_id = self.tenant_keystone_id
+        self.project = models.Tenant()
+        self.project.id = self.project_internal_id
+        self.project.keystone_id = self.project_keystone_id
 
-        self.tenant_repo = mock.MagicMock()
-        self.tenant_repo.get.return_value = self.tenant
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
 
         self.container = create_container(id_ref='id1')
 
@@ -2118,7 +2120,7 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
 
         self.container_repo.get.assert_called_once_with(
             entity_id=self.container.id,
-            keystone_id=self.tenant_keystone_id,
+            keystone_id=self.project_keystone_id,
             suppress_exception=True)
 
     def test_should_delete_container(self):
@@ -2127,7 +2129,7 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
         ))
 
         self.container_repo.delete_entity_by_id.assert_called_once_with(
-            entity_id=self.container.id, keystone_id=self.tenant_keystone_id)
+            entity_id=self.container.id, keystone_id=self.project_keystone_id)
 
     def test_should_throw_exception_for_get_when_container_not_found(self):
         self.container_repo.get.return_value = None
@@ -2154,7 +2156,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
             WhenCreatingConsumersUsingConsumersResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
 
     @property
     def root(self):
@@ -2162,7 +2164,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
 
         class RootController(object):
             containers = controllers.containers.ContainersController(
-                self.tenant_repo, self.container_repo, self.secret_repo,
+                self.project_repo, self.container_repo, self.secret_repo,
                 self.consumer_repo
             )
 
@@ -2191,16 +2193,16 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
             'URL': 'http://consumer/1'
         }
 
-        self.tenant_internal_id = 'tenantid1234'
-        self.tenant_keystone_id = 'keystoneid1234'
+        self.project_internal_id = 'projectid1234'
+        self.project_keystone_id = 'keystoneid1234'
         self.container = create_container(id_ref='id1')
 
-        self.tenant = models.Tenant()
-        self.tenant.id = self.tenant_internal_id
-        self.tenant.keystone_id = self.tenant_keystone_id
+        self.project = models.Tenant()
+        self.project.id = self.project_internal_id
+        self.project.keystone_id = self.project_keystone_id
 
-        self.tenant_repo = mock.MagicMock()
-        self.tenant_repo.get.return_value = self.tenant
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
 
         self.container_repo = mock.MagicMock()
         self.container_repo.get.return_value = self.container
@@ -2221,7 +2223,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
             self.consumer_ref
         )
         self.assertEqual(resp.status_int, 200)
-        self.assertNotIn(self.tenant_keystone_id, resp.headers['Location'])
+        self.assertNotIn(self.project_keystone_id, resp.headers['Location'])
 
         args, kwargs = self.consumer_repo.create_from.call_args
         consumer = args[0]
@@ -2260,7 +2262,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
             WhenGettingOrDeletingConsumersUsingConsumerResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
 
     @property
     def root(self):
@@ -2268,22 +2270,22 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
 
         class RootController(object):
             containers = controllers.containers.ContainersController(
-                self.tenant_repo, self.container_repo, self.secret_repo,
+                self.project_repo, self.container_repo, self.secret_repo,
                 self.consumer_repo
             )
 
         return RootController()
 
     def _init(self):
-        self.tenant_keystone_id = 'keystoneid1234'
-        self.tenant_internal_id = 'tenantid1234'
+        self.project_keystone_id = 'keystoneid1234'
+        self.project_internal_id = 'projectid1234'
 
-        self.tenant = models.Tenant()
-        self.tenant.id = self.tenant_internal_id
-        self.tenant.keystone_id = self.tenant_keystone_id
+        self.project = models.Tenant()
+        self.project.id = self.project_internal_id
+        self.project.keystone_id = self.project_keystone_id
 
-        self.tenant_repo = mock.MagicMock()
-        self.tenant_repo.get.return_value = self.tenant
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
 
         self.consumer_repo = mock.MagicMock()
 
@@ -2356,7 +2358,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         ), self.consumer_ref)
 
         self.consumer_repo.delete_entity_by_id.assert_called_once_with(
-            self.consumer.id, self.tenant_keystone_id)
+            self.consumer.id, self.project_keystone_id)
 
     def test_should_fail_deleting_consumer_bad_json(self):
         resp = self.app.delete(
@@ -2402,14 +2404,14 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
 
         class RootController(object):
             containers = controllers.containers.ContainersController(
-                self.tenant_repo, self.container_repo, self.secret_repo,
+                self.project_repo, self.container_repo, self.secret_repo,
                 self.consumer_repo
             )
 
         return RootController()
 
     def _init(self):
-        self.tenant_id = 'tenant1234'
+        self.project_id = 'project1234'
         self.keystone_id = 'keystoneid1234'
 
         self.num_containers = 10
@@ -2424,7 +2426,7 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
                                                                self.offset,
                                                                self.limit,
                                                                self.total)
-        self.tenant_repo = mock.MagicMock()
+        self.project_repo = mock.MagicMock()
         self.secret_repo = mock.MagicMock()
         self.consumer_repo = mock.MagicMock()
 

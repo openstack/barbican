@@ -23,20 +23,20 @@ from barbican.model import models
 LOG = utils.getLogger(__name__)
 
 
-def get_or_create_tenant(keystone_id, tenant_repo):
-    """Returns tenant with matching keystone_id.
+def get_or_create_project(project_id, project_repo):
+    """Returns project with matching project_id.
 
     Creates it if it does not exist.
-    :param keystone_id: The external-to-Barbican ID for this tenant.
-    :param tenant_repo: Tenant repository.
-    :return: Tenant model instance
+    :param project_id: The external-to-Barbican ID for this project.
+    :param project_repo: Project repository.
+    :return: Project model instance
     """
-    tenant = tenant_repo.find_by_keystone_id(keystone_id,
-                                             suppress_exception=True)
-    if not tenant:
-        LOG.debug('Creating tenant for %s', keystone_id)
-        tenant = models.Tenant()
-        tenant.keystone_id = keystone_id
-        tenant.status = models.States.ACTIVE
-        tenant_repo.create_from(tenant)
-    return tenant
+    project = project_repo.find_by_keystone_id(project_id,
+                                               suppress_exception=True)
+    if not project:
+        LOG.debug('Creating project for %s', project_id)
+        project = models.Tenant()
+        project.keystone_id = project_id
+        project.status = models.States.ACTIVE
+        project_repo.create_from(project)
+    return project

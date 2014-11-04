@@ -25,19 +25,19 @@ class RequestContext(object):
     accesses the system, as well as additional request information.
     """
 
-    def __init__(self, auth_tok=None, user=None, tenant=None, roles=None,
+    def __init__(self, auth_tok=None, user=None, project=None, roles=None,
                  is_admin=False, read_only=False, show_deleted=False,
-                 owner_is_tenant=True, service_catalog=None,
+                 owner_is_project=True, service_catalog=None,
                  policy_enforcer=None):
         self.auth_tok = auth_tok
         self.user = user
-        self.tenant = tenant
+        self.project = project
         self.roles = roles or []
         self.read_only = read_only
         # TODO(jwood): self._show_deleted = show_deleted
         # (mkbhanda) possibly domain could be owner
         # brings us to the key scope question
-        self.owner_is_tenant = owner_is_tenant
+        self.owner_is_project = owner_is_project
         self.request_id = utils.generate_uuid()
         self.service_catalog = service_catalog
         self.policy_enforcer = policy_enforcer or policy.Enforcer()
@@ -59,10 +59,9 @@ class RequestContext(object):
             'user': self.user,
             'user_id': self.user,
 
-            # NOTE(bcwaldon): openstack-common logging expects 'tenant'
-            'tenant': self.tenant,
-            'tenant_id': self.tenant,
-            'project_id': self.tenant,
+            # NOTE(bcwaldon): openstack-common logging expects 'project'
+            'project': self.project,
+            'project_id': self.project,
             # TODO(jwood):            'is_admin': self.is_admin,
             # TODO(jwood):            'read_deleted': self.show_deleted,
             'roles': self.roles,
@@ -80,8 +79,8 @@ class RequestContext(object):
     @property
     def owner(self):
         """Return the owner to correlate with key."""
-        if self.owner_is_tenant:
-            return self.tenant
+        if self.owner_is_project:
+            return self.project
         return self.user
 
 # TODO(jwood):

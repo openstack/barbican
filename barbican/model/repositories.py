@@ -49,7 +49,7 @@ sa_logger = None
 # Singleton repository references, instantiated via get_xxxx_repository()
 #   functions below.
 _SECRET_REPOSITORY = None
-_TENANT_SECRET_REPOSITORY = None
+_PROJECT_SECRET_REPOSITORY = None
 _ENCRYPTED_DATUM_REPOSITORY = None
 _KEK_DATUM_REPOSITORY = None
 
@@ -293,7 +293,7 @@ def clean_paging_values(offset_arg=0, limit_arg=CONF.default_limit_paging):
     return offset, limit
 
 
-def delete_all_project_resources(tenant_id, repos):
+def delete_all_project_resources(project_id, repos):
     """Logic to cleanup all project resources.
 
     This cleanup uses same alchemy session to perform all db operations as a
@@ -303,17 +303,17 @@ def delete_all_project_resources(tenant_id, repos):
     session = get_session()
 
     repos.container_repo.delete_project_entities(
-        tenant_id, suppress_exception=False, session=session)
+        project_id, suppress_exception=False, session=session)
     # secret children SecretStoreMetadatum, EncryptedDatum
     # and container_secrets are deleted as part of secret delete
     repos.secret_repo.delete_project_entities(
-        tenant_id, suppress_exception=False, session=session)
+        project_id, suppress_exception=False, session=session)
     repos.kek_repo.delete_project_entities(
-        tenant_id, suppress_exception=False, session=session)
-    repos.tenant_secret_repo.delete_project_entities(
-        tenant_id, suppress_exception=False, session=session)
-    repos.tenant_repo.delete_project_entities(
-        tenant_id, suppress_exception=False, session=session)
+        project_id, suppress_exception=False, session=session)
+    repos.project_secret_repo.delete_project_entities(
+        project_id, suppress_exception=False, session=session)
+    repos.project_repo.delete_project_entities(
+        project_id, suppress_exception=False, session=session)
 
 
 class Repositories(object):
@@ -333,8 +333,8 @@ class Repositories(object):
                                           'and non-None repository instances')
 
             # Only set properties for specified repositories.
-            self._set_repo('tenant_repo', TenantRepo, kwargs)
-            self._set_repo('tenant_secret_repo', TenantSecretRepo, kwargs)
+            self._set_repo('project_repo', ProjectRepo, kwargs)
+            self._set_repo('project_secret_repo', ProjectSecretRepo, kwargs)
             self._set_repo('secret_repo', SecretRepo, kwargs)
             self._set_repo('datum_repo', EncryptedDatumRepo, kwargs)
             self._set_repo('kek_repo', KEKDatumRepo, kwargs)
@@ -561,11 +561,11 @@ class BaseRepo(object):
             if getattr(entity_ref, k) != values[k]:
                 setattr(entity_ref, k, values[k])
 
-    def _build_get_project_entities_query(self, tenant_id, session):
+    def _build_get_project_entities_query(self, project_id, session):
         """Sub-class hook: build a query to retrieve entities for a given
         project.
 
-        :param tenant_id: id of barbican tenant (project) entity
+        :param project_id: id of barbican project entity
         :param session: existing db session reference.
         :returns: A query object for getting all project related entities
 
@@ -575,10 +575,10 @@ class BaseRepo(object):
                   "entities.").format(self._do_entity_name())
         raise NotImplementedError(msg)
 
-    def get_project_entities(self, tenant_id, session=None):
+    def get_project_entities(self, project_id, session=None):
         """Gets entities associated with a given project.
 
-        :param tenant_id: id of barbican tenant (project) entity
+        :param project_id: id of barbican project entity
         :param session: existing db session reference. If None, gets session.
         :returns: list of matching entities found otherwise returns empty list
                   if no entity exists for a given project.
@@ -589,18 +589,18 @@ class BaseRepo(object):
         """
 
         session = self.get_session(session)
-        query = self._build_get_project_entities_query(tenant_id, session)
+        query = self._build_get_project_entities_query(project_id, session)
         if query:
             return query.all()
         else:
             return []
 
-    def delete_project_entities(self, tenant_id,
+    def delete_project_entities(self, project_id,
                                 suppress_exception=False,
                                 session=None):
         """Deletes entities for a given project.
 
-        :param tenant_id: id of barbican tenant (project) entity
+        :param project_id: id of barbican project entity
         :param suppress_exception: Pass True if want to suppress exception
         :param session: existing db session reference. If None, gets session.
 
@@ -609,7 +609,7 @@ class BaseRepo(object):
         on its usage.
         """
         session = self.get_session(session)
-        query = self._build_get_project_entities_query(tenant_id,
+        query = self._build_get_project_entities_query(project_id,
                                                        session=session)
         try:
             # query cannot be None as related repo class is expected to
@@ -621,12 +621,12 @@ class BaseRepo(object):
             LOG.exception('Problem finding project related entity to delete')
             if not suppress_exception:
                 raise exception.BarbicanException('Error deleting project '
-                                                  'entities for tenant_id=%s',
-                                                  tenant_id)
+                                                  'entities for project_id=%s',
+                                                  project_id)
 
 
-class TenantRepo(BaseRepo):
-    """Repository for the Tenant entity."""
+class ProjectRepo(BaseRepo):
+    """Repository for the Project entity."""
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
@@ -652,17 +652,17 @@ class TenantRepo(BaseRepo):
         except sa_orm.exc.NoResultFound:
             entity = None
             if not suppress_exception:
-                LOG.exception("Problem getting Tenant %s", keystone_id)
+                LOG.exception("Problem getting Project %s", keystone_id)
                 raise exception.NotFound("No %s found with keystone-ID %s"
                                          % (self._do_entity_name(),
                                             keystone_id))
 
         return entity
 
-    def _build_get_project_entities_query(self, tenant_id, session):
+    def _build_get_project_entities_query(self, project_id, session):
         """Builds query for retrieving project for given id.
         """
-        return session.query(models.Tenant).filter_by(id=tenant_id).filter_by(
+        return session.query(models.Tenant).filter_by(id=project_id).filter_by(
             deleted=False)
 
 
@@ -676,7 +676,7 @@ class SecretRepo(BaseRepo):
 
         The returned secrets are ordered by the date they were created at
         and paged based on the offset and limit fields. The keystone_id is
-        external-to-Barbican value assigned to the tenant by Keystone.
+        external-to-Barbican value assigned to the project by Keystone.
         """
 
         offset, limit = clean_paging_values(offset_arg, limit_arg)
@@ -756,16 +756,16 @@ class SecretRepo(BaseRepo):
         """Sub-class hook: validate values."""
         pass
 
-    def _build_get_project_entities_query(self, tenant_id, session):
+    def _build_get_project_entities_query(self, project_id, session):
         """Builds query for retrieving Secrets associated with a given
         project via TenantSecret association.
 
-        :param tenant_id: id of barbican tenant (project) entity
+        :param project_id: id of barbican project entity
         :param session: existing db session reference.
         """
         query = session.query(models.Secret).filter_by(deleted=False)
         query = query.join(models.TenantSecret, models.Secret.tenant_assocs)
-        query = query.filter(models.TenantSecret.tenant_id == tenant_id)
+        query = query.filter(models.TenantSecret.tenant_id == project_id)
         return query
 
 
@@ -853,7 +853,7 @@ class KEKDatumRepo(BaseRepo):
     encrypt/decrypt secrets.
     """
 
-    def find_or_create_kek_datum(self, tenant,
+    def find_or_create_kek_datum(self, project,
                                  plugin_name,
                                  suppress_exception=False,
                                  session=None):
@@ -870,7 +870,7 @@ class KEKDatumRepo(BaseRepo):
         # TODO(jfwood): Reverse this...attempt insert first, then get on fail.
         try:
             query = session.query(models.KEKDatum)
-            query = query.filter_by(tenant_id=tenant.id,
+            query = query.filter_by(tenant_id=project.id,
                                     plugin_name=plugin_name,
                                     active=True,
                                     deleted=False)
@@ -882,8 +882,8 @@ class KEKDatumRepo(BaseRepo):
             kek_datum = models.KEKDatum()
 
             kek_datum.kek_label = "tenant-{0}-key-{1}".format(
-                tenant.keystone_id, uuid.uuid4())
-            kek_datum.tenant_id = tenant.id
+                project.keystone_id, uuid.uuid4())
+            kek_datum.tenant_id = project.id
             kek_datum.plugin_name = plugin_name
             kek_datum.status = models.States.ACTIVE
 
@@ -906,19 +906,19 @@ class KEKDatumRepo(BaseRepo):
         """Sub-class hook: validate values."""
         pass
 
-    def _build_get_project_entities_query(self, tenant_id, session):
+    def _build_get_project_entities_query(self, project_id, session):
         """Builds query for retrieving KEK Datum instance(s) related to given
         project.
 
-        :param tenant_id: id of barbican tenant (project) entity
+        :param project_id: id of barbican project entity
         :param session: existing db session reference.
         """
         return session.query(models.KEKDatum).filter_by(
-            tenant_id=tenant_id).filter_by(deleted=False)
+            tenant_id=project_id).filter_by(deleted=False)
 
 
-class TenantSecretRepo(BaseRepo):
-    """Repository for the TenantSecret entity."""
+class ProjectSecretRepo(BaseRepo):
+    """Repository for the ProjectSecret entity."""
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
@@ -935,14 +935,14 @@ class TenantSecretRepo(BaseRepo):
         """Sub-class hook: validate values."""
         pass
 
-    def _build_get_project_entities_query(self, tenant_id, session):
+    def _build_get_project_entities_query(self, project_id, session):
         """Builds query for retrieving TenantSecret related to given project.
 
-        :param tenant_id: id of barbican tenant (project) entity
+        :param project_id: id of barbican project entity
         :param session: existing db session reference.
         """
         return session.query(models.TenantSecret).filter_by(
-            tenant_id=tenant_id).filter_by(deleted=False)
+            tenant_id=project_id).filter_by(deleted=False)
 
 
 class OrderRepo(BaseRepo):
@@ -955,7 +955,7 @@ class OrderRepo(BaseRepo):
         The list is ordered by the date they were created at and paged
         based on the offset and limit fields.
 
-        :param keystone_id: The keystone id for the tenant.
+        :param keystone_id: The keystone id for the project.
         :param offset_arg: The entity number where the query result should
                            start.
         :param limit_arg: The maximum amount of entities in the result set.
@@ -1014,14 +1014,14 @@ class OrderRepo(BaseRepo):
         """Sub-class hook: validate values."""
         pass
 
-    def _build_get_project_entities_query(self, tenant_id, session):
+    def _build_get_project_entities_query(self, project_id, session):
         """Builds query for retrieving orders related to given project.
 
-        :param tenant_id: id of barbican tenant (project) entity
+        :param project_id: id of barbican project entity
         :param session: existing db session reference.
         """
         return session.query(models.Order).filter_by(
-            tenant_id=tenant_id).filter_by(deleted=False)
+            tenant_id=project_id).filter_by(deleted=False)
 
 
 class OrderPluginMetadatumRepo(BaseRepo):
@@ -1089,7 +1089,7 @@ class ContainerRepo(BaseRepo):
 
         The list is ordered by the date they were created at and paged
         based on the offset and limit fields. The keystone_id is
-        external-to-Barbican value assigned to the tenant by Keystone.
+        external-to-Barbican value assigned to the project by Keystone.
         """
 
         offset, limit = clean_paging_values(offset_arg, limit_arg)
@@ -1140,14 +1140,14 @@ class ContainerRepo(BaseRepo):
         """Sub-class hook: validate values."""
         pass
 
-    def _build_get_project_entities_query(self, tenant_id, session):
+    def _build_get_project_entities_query(self, project_id, session):
         """Builds query for retrieving container related to given project.
 
-        :param tenant_id: id of barbican tenant (project) entity
+        :param project_id: id of barbican project entity
         :param session: existing db session reference.
         """
         return session.query(models.Container).filter_by(
-            deleted=False).filter_by(tenant_id=tenant_id)
+            deleted=False).filter_by(tenant_id=project_id)
 
 
 class ContainerSecretRepo(BaseRepo):
@@ -1179,7 +1179,7 @@ class ContainerConsumerRepo(BaseRepo):
 
         The list is ordered by the date they were created at and paged
         based on the offset and limit fields. The keystone_id is
-        external-to-Barbican value assigned to the tenant by Keystone.
+        external-to-Barbican value assigned to the project by Keystone.
         """
 
         offset, limit = clean_paging_values(offset_arg, limit_arg)
@@ -1351,10 +1351,10 @@ def get_secret_repository():
     return _get_repository(_SECRET_REPOSITORY, SecretRepo)
 
 
-def get_tenant_secret_repository():
-    """Returns a singleton TenantSecret repository instance."""
-    global _TENANT_SECRET_REPOSITORY
-    return _get_repository(_TENANT_SECRET_REPOSITORY, TenantSecretRepo)
+def get_project_secret_repository():
+    """Returns a singleton ProjectSecret repository instance."""
+    global _PROJECT_SECRET_REPOSITORY
+    return _get_repository(_PROJECT_SECRET_REPOSITORY, ProjectSecretRepo)
 
 
 def get_encrypted_datum_repository():

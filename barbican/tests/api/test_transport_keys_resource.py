@@ -37,7 +37,7 @@ def get_barbican_env(keystone_id):
 
     kwargs = {'roles': None,
               'user': None,
-              'tenant': keystone_id,
+              'project': keystone_id,
               'is_admin': True,
               'policy_enforcer': NoopPolicyEnforcer()}
     barbican_env = {'barbican.context':
@@ -273,7 +273,7 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
             WhenGettingOrDeletingTransKeyUsingTransportKeyResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.tenant_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
 
     @property
     def root(self):
@@ -286,7 +286,7 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
         return RootController()
 
     def _init(self):
-        self.tenant_keystone_id = 'keystoneid1234'
+        self.project_keystone_id = 'keystoneid1234'
         self.transport_key = SAMPLE_TRANSPORT_KEY
         self.tkey_id = "id1"
 
@@ -314,7 +314,7 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
     def test_should_delete_transport_key(self):
         self.app.delete('/transport_keys/{0}/'.format(self.tkey.id))
         self.repo.delete_entity_by_id.assert_called_once_with(
-            entity_id=self.tkey.id, keystone_id=self.tenant_keystone_id)
+            entity_id=self.tkey.id, keystone_id=self.project_keystone_id)
 
     def test_should_throw_exception_for_delete_when_trans_key_not_found(self):
         self.repo.delete_entity_by_id.side_effect = excep.NotFound(
