@@ -7,7 +7,7 @@ hacking>=0.8.0,<0.9
 mock>=1.0
 oslotest>=1.2.0  # Apache-2.0
 testrepository>=0.0.18
-testtools>=0.9.34
+testtools>=0.9.36
 fixtures>=0.3.14
 requests>=2.2.0,!=2.4.0
 
