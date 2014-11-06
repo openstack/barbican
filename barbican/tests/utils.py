@@ -14,6 +14,7 @@
 # limitations under the License.
 import datetime
 import functools
+from os import path
 import types
 import urlparse
 
@@ -145,3 +146,30 @@ def get_limit_and_offset_from_ref(ref):
     ref_offset = matches['offset']
 
     return ref_limit, ref_offset
+
+
+def get_tomorrow_timestamp():
+    tomorrow = (datetime.today() + datetime.timedelta(days=1))
+    return tomorrow.isoformat()
+
+
+def string_to_datetime(datetimestring, date_formats=None):
+    date_formats = date_formats or [
+        '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%dT%H:%M:%S.%fZ',
+        '%Y-%m-%dT%H:%M:%S.%f', "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S"]
+
+    for dateformat in date_formats:
+        try:
+            return datetime.datetime.strptime(datetimestring, dateformat)
+        except ValueError:
+            continue
+    else:
+        raise
+
+
+def get_id_from_ref(ref):
+    """Returns id from reference."""
+    ref_id = None
+    if ref is not None and len(ref) > 0:
+        ref_id = path.split(ref)[1]
+    return ref_id
