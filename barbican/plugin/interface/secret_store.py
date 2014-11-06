@@ -203,8 +203,6 @@ class KeyAlgorithm(object):
                 return SecretType.SYMMETRIC
             else:
                 return None
-        else:
-            None
 
 
 class KeySpec(object):
