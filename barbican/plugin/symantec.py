@@ -47,14 +47,15 @@ class SymantecCertificatePlugin(cert.CertificatePluginBase):
 
     def __init__(self, conf=CONF):
         self.username = conf.symantec_plugin.username
+        self.password = conf.symantec_plugin.password
+        self.url = conf.symantec_plugin.url
+
         if self.username == None:
             raise ValueError(u._("username is required"))
 
-        self.password = conf.symantec_plugin.password
         if self.password == None:
             raise ValueError(u._("password is required"))
 
-        self.url = conf.symantec_plugin.url
         if self.url == None:
             raise ValueError(u._("url is required"))
 
@@ -72,16 +73,16 @@ class SymantecCertificatePlugin(cert.CertificatePluginBase):
         successful, error_msg, can_retry = _ca_create_order(order_meta,
                                                             plugin_meta)
 
+        status = cert.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST
+        message = None
+
         if successful:
-            return cert.ResultDTO(cert.CertificateStatus.WAITING_FOR_CA)
+            status = cert.CertificateStatus.WAITING_FOR_CA
         elif can_retry:
-            return cert.ResultDTO(
-                cert.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
-                status_message=error_msg
-            )
-        else:
-            return cert.ResultDTO(cert.CertificateStatus.
-                                  CA_UNAVAILABLE_FOR_REQUEST)
+            status = cert.CertificateStatus.CLIENT_DATA_ISSUE_SEEN
+            message = error_msg
+
+        return cert.ResultDTO(status=status, status_message=message)
 
     def modify_certificate_request(self, order_id, order_meta, plugin_meta):
         """Update the order meta-data
