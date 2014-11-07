@@ -30,7 +30,7 @@ class WhenTestingPluginResource(testtools.TestCase):
                      'passphrase': 'changeit'
                      }
         self.content_type = 'application/octet-stream'
-        self.tenant_model = mock.MagicMock()
+        self.project_model = mock.MagicMock()
         asymmetric_meta_dto = secret_store.AsymmetricKeyMetadataDTO()
         # Mock plug-in
         self.generate_plugin = mock.MagicMock()
@@ -50,24 +50,24 @@ class WhenTestingPluginResource(testtools.TestCase):
         self.gen_plugin_patcher.start()
         self.addCleanup(self.gen_plugin_patcher.stop)
 
-        tenant_repo = mock.MagicMock()
+        project_repo = mock.MagicMock()
         secret_repo = mock.MagicMock()
         secret_repo.create_from.return_value = None
         container_repo = mock.MagicMock()
         container_repo.create_from.return_value = None
         container_secret_repo = mock.MagicMock()
         container_secret_repo.create_from.return_value = None
-        tenant_secret_repo = mock.MagicMock()
-        tenant_secret_repo.create_from.return_value = None
+        project_secret_repo = mock.MagicMock()
+        project_secret_repo.create_from.return_value = None
         secret_meta_repo = mock.MagicMock()
         secret_meta_repo.create_from.return_value = None
 
         self.repos = repo.Repositories(container_repo=container_repo,
                                        container_secret_repo=
                                        container_secret_repo,
-                                       tenant_repo=tenant_repo,
+                                       project_repo=project_repo,
                                        secret_repo=secret_repo,
-                                       tenant_secret_repo=tenant_secret_repo,
+                                       project_secret_repo=project_secret_repo,
                                        secret_meta_repo=secret_meta_repo)
 
     def tearDown(self):
@@ -79,7 +79,7 @@ class WhenTestingPluginResource(testtools.TestCase):
             self.plugin_resource.\
             generate_asymmetric_secret(self.spec,
                                        self.content_type,
-                                       self.tenant_model,
+                                       self.project_model,
                                        self.repos)
 
         self.assertEqual("rsa", secret_container.type)
@@ -98,7 +98,7 @@ class WhenTestingPluginResource(testtools.TestCase):
             self.plugin_resource.\
             generate_asymmetric_secret(self.spec,
                                        self.content_type,
-                                       self.tenant_model,
+                                       self.project_model,
                                        self.repos)
 
         self.assertEqual("rsa", secret_container.type)

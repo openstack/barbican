@@ -36,15 +36,15 @@ class RequestContext(object):
     accesses the system, as well as additional request information.
     """
 
-    user_idt_format = '{user} {tenant} {domain} {user_domain} {p_domain}'
+    user_idt_format = '{user} {project} {domain} {user_domain} {p_domain}'
 
-    def __init__(self, auth_token=None, user=None, tenant=None, domain=None,
+    def __init__(self, auth_token=None, user=None, project=None, domain=None,
                  user_domain=None, project_domain=None, is_admin=False,
                  read_only=False, show_deleted=False, request_id=None,
                  instance_uuid=None):
         self.auth_token = auth_token
         self.user = user
-        self.tenant = tenant
+        self.project = project
         self.domain = domain
         self.user_domain = user_domain
         self.project_domain = project_domain
@@ -59,13 +59,13 @@ class RequestContext(object):
     def to_dict(self):
         user_idt = (
             self.user_idt_format.format(user=self.user or '-',
-                                        tenant=self.tenant or '-',
+                                        project=self.project or '-',
                                         domain=self.domain or '-',
                                         user_domain=self.user_domain or '-',
                                         p_domain=self.project_domain or '-'))
 
         return {'user': self.user,
-                'tenant': self.tenant,
+                'project': self.project,
                 'domain': self.domain,
                 'user_domain': self.user_domain,
                 'project_domain': self.project_domain,
@@ -80,7 +80,7 @@ class RequestContext(object):
 
 def get_admin_context(show_deleted=False):
     context = RequestContext(None,
-                             tenant=None,
+                             project=None,
                              is_admin=True,
                              show_deleted=show_deleted)
     return context

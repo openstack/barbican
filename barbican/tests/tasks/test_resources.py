@@ -41,15 +41,15 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
         self.order.meta = self.meta
 
         self.keystone_id = 'keystone1234'
-        self.tenant_id = 'tenantid1234'
-        self.tenant = models.Tenant()
-        self.tenant.id = self.tenant_id
-        self.tenant.keystone_id = self.keystone_id
-        self.tenant_repo = mock.MagicMock()
-        self.tenant_repo.get.return_value = self.tenant
+        self.project_id = 'projectid1234'
+        self.project = models.Tenant()
+        self.project.id = self.project_id
+        self.project.keystone_id = self.keystone_id
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
 
         self.order.status = models.States.PENDING
-        self.order.tenant_id = self.tenant_id
+        self.order.project_id = self.project_id
         self.order_repo = mock.MagicMock()
         self.order_repo.get.return_value = self.order
 
@@ -63,8 +63,8 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
         self.secret_repo = mock.MagicMock()
         self.secret_repo.create_from.return_value = None
 
-        self.tenant_secret_repo = mock.MagicMock()
-        self.tenant_secret_repo.create_from.return_value = None
+        self.project_secret_repo = mock.MagicMock()
+        self.project_secret_repo.create_from.return_value = None
 
         self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
@@ -81,10 +81,10 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
 
         self.secret_meta_repo = mock.MagicMock()
 
-        self.resource = resources.BeginTypeOrder(self.tenant_repo,
+        self.resource = resources.BeginTypeOrder(self.project_repo,
                                                  self.order_repo,
                                                  self.secret_repo,
-                                                 self.tenant_secret_repo,
+                                                 self.project_secret_repo,
                                                  self.datum_repo,
                                                  self.kek_repo,
                                                  self.secret_meta_repo,
@@ -106,7 +106,7 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
             secret_info,
             secret_info.get('payload_content_type',
                             'application/octet-stream'),
-            self.tenant,
+            self.project,
             mock.ANY
         )
 
@@ -127,8 +127,8 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
 
     def test_should_fail_during_processing(self):
         # Force an error during the processing handler phase.
-        self.tenant_repo.get = mock.MagicMock(return_value=None,
-                                              side_effect=ValueError())
+        self.project_repo.get = mock.MagicMock(return_value=None,
+                                               side_effect=ValueError())
 
         self.assertRaises(
             ValueError,
@@ -162,8 +162,8 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
         # error in processing handler phase.
 
         # Force an error during the processing handler phase.
-        self.tenant_repo.get = mock.MagicMock(return_value=None,
-                                              side_effect=TypeError())
+        self.project_repo.get = mock.MagicMock(return_value=None,
+                                               side_effect=TypeError())
 
         # Force exception in the error-reporting phase.
         self.order_repo.save = mock.MagicMock(return_value=None,
@@ -197,15 +197,15 @@ class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
         self.order.meta = self.meta
 
         self.keystone_id = 'keystone1234'
-        self.tenant_id = 'tenantid1234'
-        self.tenant = models.Tenant()
-        self.tenant.id = self.tenant_id
-        self.tenant.keystone_id = self.keystone_id
-        self.tenant_repo = mock.MagicMock()
-        self.tenant_repo.get.return_value = self.tenant
+        self.project_id = 'projectid1234'
+        self.project = models.Tenant()
+        self.project.id = self.project_id
+        self.project.keystone_id = self.keystone_id
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
 
         self.order.status = models.States.PENDING
-        self.order.tenant_id = self.tenant_id
+        self.order.project_id = self.project_id
         self.order_repo = mock.MagicMock()
         self.order_repo.get.return_value = self.order
 
@@ -217,8 +217,8 @@ class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
         self.secret_repo = mock.MagicMock()
         self.secret_repo.create_from.return_value = None
 
-        self.tenant_secret_repo = mock.MagicMock()
-        self.tenant_secret_repo.create_from.return_value = None
+        self.project_secret_repo = mock.MagicMock()
+        self.project_secret_repo.create_from.return_value = None
 
         self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
@@ -234,10 +234,10 @@ class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
         self.container_secret_repo.create_from.return_value = None
         self.container = models.Container()
 
-        self.resource = resources.BeginTypeOrder(self.tenant_repo,
+        self.resource = resources.BeginTypeOrder(self.project_repo,
                                                  self.order_repo,
                                                  self.secret_repo,
-                                                 self.tenant_secret_repo,
+                                                 self.project_secret_repo,
                                                  self.datum_repo,
                                                  self.kek_repo,
                                                  self.secret_meta_repo,
@@ -260,7 +260,7 @@ class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
             secret_info,
             secret_info.get('payload_content_type',
                             'application/octet-stream'),
-            self.tenant,
+            self.project,
             mock.ANY
         )
 
@@ -281,8 +281,8 @@ class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
 
     def test_should_fail_during_processing(self):
         # Force an error during the processing handler phase.
-        self.tenant_repo.get = mock.MagicMock(return_value=None,
-                                              side_effect=ValueError())
+        self.project_repo.get = mock.MagicMock(return_value=None,
+                                               side_effect=ValueError())
 
         self.assertRaises(
             ValueError,
@@ -316,8 +316,8 @@ class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
         # error in processing handler phase.
 
         # Force an error during the processing handler phase.
-        self.tenant_repo.get = mock.MagicMock(return_value=None,
-                                              side_effect=TypeError())
+        self.project_repo.get = mock.MagicMock(return_value=None,
+                                               side_effect=TypeError())
 
         # Force exception in the error-reporting phase.
         self.order_repo.save = mock.MagicMock(return_value=None,

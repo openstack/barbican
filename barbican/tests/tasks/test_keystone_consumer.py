@@ -60,20 +60,20 @@ class WhenUsingKeystoneEventConsumer(listener_test.UtilMixin,
 
         rep.configure_db()
         self.repos = rep.Repositories(
-            tenant_repo=None, tenant_secret_repo=None, secret_repo=None,
+            project_repo=None, project_secret_repo=None, secret_repo=None,
             datum_repo=None, kek_repo=None, secret_meta_repo=None,
             order_repo=None, order_plugin_meta_repo=None,
             transport_key_repo=None, container_repo=None,
             container_secret_repo=None)
 
-        self.project1_data = c_resources.get_or_create_tenant(
-            self.project_id1, self.repos.tenant_repo)
+        self.project1_data = c_resources.get_or_create_project(
+            self.project_id1, self.repos.project_repo)
         self.assertIsNotNone(self.project1_data)
 
         self.engine = rep.get_engine()
 
-        self.project2_data = c_resources.get_or_create_tenant(
-            self.project_id2, self.repos.tenant_repo)
+        self.project2_data = c_resources.get_or_create_project(
+            self.project_id2, self.repos.project_repo)
         self.assertIsNotNone(self.project2_data)
 
     def _create_secret_for_project(self, project_data):
@@ -99,9 +99,9 @@ class WhenUsingKeystoneEventConsumer(listener_test.UtilMixin,
         self.assertEqual(1, len(db_secrets))
         self.assertEqual(secret.id, db_secrets[0].id)
 
-        db_tenant_secret = self.repos.tenant_secret_repo.get_project_entities(
-            project2_id)
-        self.assertEqual(1, len(db_tenant_secret))
+        db_project_secret = (
+            self.repos.project_secret_repo.get_project_entities(project2_id))
+        self.assertEqual(1, len(db_project_secret))
 
         db_kek = self.repos.kek_repo.get_project_entities(project2_id)
         self.assertEqual(1, len(db_kek))
@@ -145,9 +145,9 @@ class WhenUsingKeystoneEventConsumer(listener_test.UtilMixin,
             entity_id=secret_metadata_id)
         self.assertIsNotNone(db_secret_store_meta)
 
-        db_tenant_secret = self.repos.tenant_secret_repo.get_project_entities(
-            project1_id)
-        self.assertEqual(1, len(db_tenant_secret))
+        db_project_secret = (
+            self.repos.project_secret_repo.get_project_entities(project1_id))
+        self.assertEqual(1, len(db_project_secret))
 
         db_kek = self.repos.kek_repo.get_project_entities(project1_id)
         self.assertEqual(1, len(db_kek))
@@ -170,8 +170,8 @@ class WhenUsingKeystoneEventConsumer(listener_test.UtilMixin,
                                keystone_id=self.project_id1)
         self.assertIn(secret_id, str(ex))
 
-        # After project entities delete, make sure tenant_secret is not found
-        entities = self.repos.tenant_secret_repo.get_project_entities(
+        # After project entities delete, make sure project_secret is not found
+        entities = self.repos.project_secret_repo.get_project_entities(
             project1_id)
         self.assertEqual(0, len(entities))
 
@@ -179,8 +179,8 @@ class WhenUsingKeystoneEventConsumer(listener_test.UtilMixin,
         entities = self.repos.kek_repo.get_project_entities(project1_id)
         self.assertEqual(0, len(entities))
 
-        db_tenant = self.repos.tenant_repo.get_project_entities(project1_id)
-        self.assertEqual(0, len(db_tenant))
+        db_project = self.repos.project_repo.get_project_entities(project1_id)
+        self.assertEqual(0, len(db_project))
 
         # Should have deleted SecretStoreMetadatum via children delete
         ex = self.assertRaises(exception.NotFound,
@@ -216,7 +216,7 @@ class WhenUsingKeystoneEventConsumer(listener_test.UtilMixin,
 
         project1_id = self.project1_data.id
         # sqlalchemy error is suppressed here
-        no_error = self.repos.tenant_repo.delete_project_entities(
+        no_error = self.repos.project_repo.delete_project_entities(
             project1_id, suppress_exception=True)
         self.assertIsNone(no_error)
 
@@ -232,7 +232,7 @@ class WhenUsingKeystoneEventConsumer(listener_test.UtilMixin,
         project1_id = self.project1_data.id
         # sqlalchemy error is not suppressed here
         self.assertRaises(exception.BarbicanException,
-                          self.repos.tenant_repo.delete_project_entities,
+                          self.repos.project_repo.delete_project_entities,
                           project1_id, suppress_exception=False)
 
     def test_delete_project_entities_not_impl_error_suppress_exception_true(
@@ -262,7 +262,7 @@ class WhenUsingKeystoneEventConsumer(listener_test.UtilMixin,
                           project1_id, suppress_exception=False)
 
     @mock.patch.object(consumer.KeystoneEventConsumer, 'handle_error')
-    @mock.patch.object(rep.TenantRepo, 'delete_project_entities',
+    @mock.patch.object(rep.ProjectRepo, 'delete_project_entities',
                        side_effect=exception.BarbicanException)
     def test_rollback_with_error_during_project_cleanup(self, mock_delete,
                                                         mock_handle_error):
@@ -279,9 +279,9 @@ class WhenUsingKeystoneEventConsumer(listener_test.UtilMixin,
         self.assertEqual(1, len(db_secrets))
         self.assertEqual(secret.id, db_secrets[0].id)
 
-        db_tenant_secret = self.repos.tenant_secret_repo.get_project_entities(
-            project1_id)
-        self.assertEqual(1, len(db_tenant_secret))
+        db_project_secret = (
+            self.repos.project_secret_repo.get_project_entities(project1_id))
+        self.assertEqual(1, len(db_project_secret))
 
         db_kek = self.repos.kek_repo.get_project_entities(project1_id)
         self.assertEqual(1, len(db_kek))
@@ -307,12 +307,12 @@ class WhenUsingKeystoneEventConsumer(listener_test.UtilMixin,
         self.assertEqual(1, len(db_secrets))
         self.assertEqual(secret_id, db_secrets[0].id)
 
-        db_tenant_secret = self.repos.tenant_secret_repo.get_project_entities(
-            project1_id)
-        self.assertEqual(1, len(db_tenant_secret))
+        db_project_secret = (
+            self.repos.project_secret_repo.get_project_entities(project1_id))
+        self.assertEqual(1, len(db_project_secret))
 
         db_kek = self.repos.kek_repo.get_project_entities(project1_id)
         self.assertEqual(1, len(db_kek))
 
-        db_tenant = self.repos.tenant_repo.get_project_entities(project1_id)
-        self.assertEqual(1, len(db_tenant))
+        db_project = self.repos.project_repo.get_project_entities(project1_id)
+        self.assertEqual(1, len(db_project))

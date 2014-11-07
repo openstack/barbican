@@ -29,7 +29,7 @@ LOG = utils.getLogger(__name__)
 context_opts = [
     cfg.BoolOpt('owner_is_tenant', default=True,
                 help=u._('When true, this option sets the owner of an image '
-                         'to be the tenant. Otherwise, the owner of the '
+                         'to be the project. Otherwise, the owner of the '
                          ' image will be the authenticated user issuing the '
                          'request.')),
     cfg.StrOpt('admin_role', default='admin',
@@ -91,7 +91,7 @@ class ContextMiddleware(BaseContextMiddleware):
     def _get_anonymous_context(self):
         kwargs = {
             'user': None,
-            'tenant': None,
+            'project': None,
             'roles': [],
             'is_admin': False,
             'read_only': True,
@@ -120,11 +120,11 @@ class ContextMiddleware(BaseContextMiddleware):
 
         kwargs = {
             'user': req.headers.get('X-User-Id'),
-            'tenant': req.headers.get('X-Tenant-Id'),
+            'project': req.headers.get('X-Tenant-Id'),
             'roles': roles,
             'is_admin': CONF.admin_role.strip().lower() in roles,
             'auth_tok': req.headers.get('X-Auth-Token', deprecated_token),
-            'owner_is_tenant': CONF.owner_is_tenant,
+            'owner_is_project': CONF.owner_is_tenant,
             'service_catalog': service_catalog,
             'policy_enforcer': self.policy_enforcer,
         }
@@ -149,7 +149,7 @@ class UnauthenticatedContextMiddleware(BaseContextMiddleware):
 
         kwargs = {
             'user': None,
-            'tenant': project_id,
+            'project': project_id,
             'roles': [],
             'is_admin': True
         }

@@ -60,7 +60,7 @@ def get_plugin_name_and_transport_key(repos, transport_key_id):
 
 
 def store_secret(unencrypted_raw, content_type_raw, content_encoding,
-                 spec, secret_model, tenant_model, repos,
+                 spec, secret_model, project_model, repos,
                  transport_key_needed=False,
                  transport_key_id=None):
     """Store a provided secret into secure backend."""
@@ -89,7 +89,7 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
                                             repos,
                                             transport_key_needed)
 
-        _save_secret(secret_model, tenant_model, repos)
+        _save_secret(secret_model, project_model, repos)
         return secret_model, key_model
 
     plugin_name, transport_key = get_plugin_name_and_transport_key(
@@ -119,17 +119,17 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
                                         content_type=content_type,
                                         transport_key=transport_key)
     secret_metadata = _store_secret(
-        store_plugin, secret_dto, secret_model, tenant_model)
+        store_plugin, secret_dto, secret_model, project_model)
 
     # Save secret and metadata.
-    _save_secret(secret_model, tenant_model, repos)
+    _save_secret(secret_model, project_model, repos)
     _save_secret_metadata(secret_model, secret_metadata, store_plugin,
                           content_type, repos)
 
     return secret_model, None
 
 
-def get_secret(requesting_content_type, secret_model, tenant_model, repos,
+def get_secret(requesting_content_type, secret_model, project_model, repos,
                twsk=None, transport_key=None):
     tr.analyze_before_decryption(requesting_content_type)
 
@@ -148,7 +148,7 @@ def get_secret(requesting_content_type, secret_model, tenant_model, repos,
 
     # Retrieve the secret.
     secret_dto = _get_secret(
-        retrieve_plugin, secret_metadata, secret_model, tenant_model)
+        retrieve_plugin, secret_metadata, secret_model, project_model)
 
     if twsk is not None:
         del secret_metadata['transport_key']
@@ -173,7 +173,7 @@ def get_transport_key_id_for_retrieval(secret_model, repos):
 
 
 def generate_secret(spec, content_type,
-                    tenant_model, repos):
+                    project_model, repos):
     """Generate a secret and store into a secure backend."""
 
     # Locate a suitable plugin to store the secret.
@@ -189,10 +189,10 @@ def generate_secret(spec, content_type,
 
     # Generate the secret.
     secret_metadata = _generate_symmetric_key(
-        generate_plugin, key_spec, secret_model, tenant_model, content_type)
+        generate_plugin, key_spec, secret_model, project_model, content_type)
 
     # Save secret and metadata.
-    _save_secret(secret_model, tenant_model, repos)
+    _save_secret(secret_model, project_model, repos)
     _save_secret_metadata(secret_model, secret_metadata, generate_plugin,
                           content_type, repos)
 
@@ -200,7 +200,7 @@ def generate_secret(spec, content_type,
 
 
 def generate_asymmetric_secret(spec, content_type,
-                               tenant_model, repos):
+                               project_model, repos):
     """Generate an asymmetric secret and store into a secure backend."""
     # Locate a suitable plugin to store the secret.
     key_spec = secret_store.KeySpec(alg=spec.get('algorithm'),
@@ -223,31 +223,31 @@ def generate_asymmetric_secret(spec, content_type,
         private_secret_model,
         public_secret_model,
         passphrase_secret_model,
-        tenant_model
+        project_model
     )
 
     # Save secret and metadata.
-    _save_secret(private_secret_model, tenant_model, repos)
+    _save_secret(private_secret_model, project_model, repos)
     _save_secret_metadata(private_secret_model,
                           asymmetric_meta_dto.private_key_meta,
                           generate_plugin,
                           content_type, repos)
 
-    _save_secret(public_secret_model, tenant_model, repos)
+    _save_secret(public_secret_model, project_model, repos)
     _save_secret_metadata(public_secret_model,
                           asymmetric_meta_dto.public_key_meta,
                           generate_plugin,
                           content_type, repos)
 
     if spec.get('passphrase'):
-        _save_secret(passphrase_secret_model, tenant_model, repos)
+        _save_secret(passphrase_secret_model, project_model, repos)
         _save_secret_metadata(passphrase_secret_model,
                               asymmetric_meta_dto.passphrase_meta,
                               generate_plugin,
                               content_type, repos)
 
     # Now create container
-    container_model = _save_container(spec, tenant_model, repos,
+    container_model = _save_container(spec, project_model, repos,
                                       private_secret_model,
                                       public_secret_model,
                                       passphrase_secret_model)
@@ -275,10 +275,10 @@ def delete_secret(secret_model, project_id, repos):
                                           keystone_id=project_id)
 
 
-def _store_secret(store_plugin, secret_dto, secret_model, tenant_model):
+def _store_secret(store_plugin, secret_dto, secret_model, project_model):
     if isinstance(store_plugin, store_crypto.StoreCryptoAdapterPlugin):
         context = store_crypto.StoreCryptoContext(
-            tenant_model,
+            project_model,
             secret_model=secret_model)
         secret_metadata = store_plugin.store_secret(secret_dto, context)
     else:
@@ -287,10 +287,10 @@ def _store_secret(store_plugin, secret_dto, secret_model, tenant_model):
 
 
 def _generate_symmetric_key(
-        generate_plugin, key_spec, secret_model, tenant_model, content_type):
+        generate_plugin, key_spec, secret_model, project_model, content_type):
     if isinstance(generate_plugin, store_crypto.StoreCryptoAdapterPlugin):
         context = store_crypto.StoreCryptoContext(
-            tenant_model,
+            project_model,
             secret_model=secret_model,
             content_type=content_type)
         secret_metadata = generate_plugin.generate_symmetric_key(
@@ -306,10 +306,10 @@ def _generate_asymmetric_key(
         private_secret_model,
         public_secret_model,
         passphrase_secret_model,
-        tenant_model):
+        project_model):
     if isinstance(generate_plugin, store_crypto.StoreCryptoAdapterPlugin):
         context = store_crypto.StoreCryptoContext(
-            tenant_model,
+            project_model,
             private_secret_model=private_secret_model,
             public_secret_model=public_secret_model,
             passphrase_secret_model=passphrase_secret_model)
@@ -321,10 +321,10 @@ def _generate_asymmetric_key(
 
 
 def _get_secret(
-        retrieve_plugin, secret_metadata, secret_model, tenant_model):
+        retrieve_plugin, secret_metadata, secret_model, project_model):
     if isinstance(retrieve_plugin, store_crypto.StoreCryptoAdapterPlugin):
         context = store_crypto.StoreCryptoContext(
-            tenant_model,
+            project_model,
             secret_model=secret_model)
         secret_dto = retrieve_plugin.get_secret(secret_metadata, context)
     else:
@@ -354,18 +354,18 @@ def _save_secret_metadata(secret_model, secret_metadata,
     repos.secret_meta_repo.save(secret_metadata, secret_model)
 
 
-def _save_secret(secret_model, tenant_model, repos):
+def _save_secret(secret_model, project_model, repos):
     """Save a Secret entity."""
 
     # Create Secret entities in data store.
     if not secret_model.id:
         repos.secret_repo.create_from(secret_model)
         new_assoc = models.TenantSecret()
-        new_assoc.tenant_id = tenant_model.id
+        new_assoc.tenant_id = project_model.id
         new_assoc.secret_id = secret_model.id
         new_assoc.role = "admin"
         new_assoc.status = models.States.ACTIVE
-        repos.tenant_secret_repo.create_from(new_assoc)
+        repos.project_secret_repo.create_from(new_assoc)
     else:
         repos.secret_repo.save(secret_model)
 
@@ -376,13 +376,13 @@ def _secret_already_has_stored_data(secret_model):
     return secret_model.encrypted_data or secret_model.secret_store_metadata
 
 
-def _save_container(spec, tenant_model, repos, private_secret_model,
+def _save_container(spec, project_model, repos, private_secret_model,
                     public_secret_model, passphrase_secret_model):
     container_model = models.Container()
     container_model.name = spec.get('name')
     container_model.type = spec.get('algorithm', '').lower()
     container_model.status = models.States.ACTIVE
-    container_model.tenant_id = tenant_model.id
+    container_model.tenant_id = project_model.id
     repos.container_repo.create_from(container_model)
 
     # create container_secret for private_key

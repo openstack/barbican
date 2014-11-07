@@ -88,17 +88,16 @@ class KEKMetaDTO(object):
 
     Key Encryption Keys (KEKs) in Barbican are intended to represent a
     distinct key that is used to perform encryption on secrets for a particular
-    project (tenant).
+    project.
 
     ``KEKMetaDTO`` objects are provided to cryptographic backends by Barbican
-    to allow plugins to persist metadata related to the project's (tenant's)
-    KEK.
+    to allow plugins to persist metadata related to the project's KEK.
 
     For example, a plugin that interfaces with a Hardware Security Module (HSM)
-    may want to use a different encryption key for each tenant. Such a plugin
+    may want to use a different encryption key for each project. Such a plugin
     could use the ``KEKMetaDTO`` object to save the key ID used for that
-    tenant.  Barbican will persist the KEK metadata and ensure that it is
-    provided to the plugin every time a request from that same tenant is
+    project.  Barbican will persist the KEK metadata and ensure that it is
+    provided to the plugin every time a request from that same project is
     processed.
 
     .. attribute:: plugin_name
@@ -108,9 +107,9 @@ class KEKMetaDTO(object):
 
     .. attribute:: kek_label
 
-        String attribute used to label the project's (tenant's) KEK by the
-        plugin.  The value of this attribute should be meaningful to the
-        plugin.  Barbican does not use this value.
+        String attribute used to label the project's KEK by the plugin.
+        The value of this attribute should be meaningful to the plugin.
+        Barbican does not use this value.
 
     .. attribute:: algorithm
 
@@ -272,19 +271,18 @@ class CryptoPluginBase(object):
         """Encryption handler function
 
         This method will be called by Barbican when requesting an encryption
-        operation on a secret on behalf of a project (tenant).
+        operation on a secret on behalf of a project.
 
         :param encrypt_dto: :class:`EncryptDTO` instance containing the raw
             secret byte data to be encrypted.
         :type encrypt_dto: :class:`EncryptDTO`
         :param kek_meta_dto: :class:`KEKMetaDTO` instance containing
-            information about the project's (tenant's) Key Encryption Key (KEK)
-            to be used for encryption.  Plugins may assume that binding via
+            information about the project's Key Encryption Key (KEK) to be
+            used for encryption.  Plugins may assume that binding via
             :meth:`bind_kek_metadata` has already taken place before this
             instance is passed in.
         :type kek_meta_dto: :class:`KEKMetaDTO`
-        :param keystone_id: Project (tenant) ID associated with the unencrypted
-            data.
+        :param keystone_id: Project ID associated with the unencrypted data.
         :return: A response DTO containing the cyphertext and KEK information.
         :rtype: :class:`ResponseDTO`
         """
@@ -293,7 +291,7 @@ class CryptoPluginBase(object):
     @abc.abstractmethod
     def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
                 keystone_id):
-        """Decrypt encrypted_datum in the context of the provided tenant.
+        """Decrypt encrypted_datum in the context of the provided project.
 
         :param decrypt_dto: data transfer object containing the cyphertext
                to be decrypted.
@@ -342,7 +340,7 @@ class CryptoPluginBase(object):
         :returns: An object of type ResponseDTO containing encrypted data and
             kek_meta_extended, the former the resultant cypher text, the latter
             being optional per-secret metadata needed to decrypt (over and
-            above the per-tenant metadata managed outside of the plugins)
+            above the per-project metadata managed outside of the plugins)
         """
         raise NotImplementedError  # pragma: no cover
 
@@ -363,7 +361,7 @@ class CryptoPluginBase(object):
             Each object containing encrypted data and kek_meta_extended, the
             former the resultant cypher text, the latter being optional
             per-secret metadata needed to decrypt (over and above the
-            per-tenant metadata managed outside of the plugins)
+            per-project metadata managed outside of the plugins)
         """
         raise NotImplementedError  # pragma: no cover
 

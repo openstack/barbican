@@ -33,7 +33,7 @@ class StoreCryptoContext(object):
     """
     def __init__(
             self,
-            tenant_model,
+            project_model,
             secret_model=None,
             private_secret_model=None,
             public_secret_model=None,
@@ -43,7 +43,7 @@ class StoreCryptoContext(object):
         self.private_secret_model = private_secret_model
         self.public_secret_model = public_secret_model
         self.passphrase_secret_model = passphrase_secret_model
-        self.tenant_model = tenant_model
+        self.project_model = project_model
         self.content_type = content_type
 
 
@@ -79,7 +79,7 @@ class StoreCryptoAdapterPlugin(object):
 
         # Find or create a key encryption key metadata.
         kek_datum_model, kek_meta_dto = _find_or_create_kek_objects(
-            encrypting_plugin, context.tenant_model)
+            encrypting_plugin, context.project_model)
 
         encrypt_dto = crypto.EncryptDTO(secret_dto.secret)
 
@@ -90,7 +90,7 @@ class StoreCryptoAdapterPlugin(object):
 
         # Create an encrypted datum instance and add the encrypted cyphertext.
         response_dto = encrypting_plugin.encrypt(
-            encrypt_dto, kek_meta_dto, context.tenant_model.keystone_id
+            encrypt_dto, kek_meta_dto, context.project_model.keystone_id
         )
 
         # Convert binary data into a text-based format.
@@ -128,7 +128,7 @@ class StoreCryptoAdapterPlugin(object):
         secret = decrypting_plugin.decrypt(decrypt_dto,
                                            kek_meta_dto,
                                            datum_model.kek_meta_extended,
-                                           context.tenant_model.keystone_id)
+                                           context.project_model.keystone_id)
         key_spec = sstore.KeySpec(alg=context.secret_model.algorithm,
                                   bit_length=context.secret_model.bit_length,
                                   mode=context.secret_model.mode)
@@ -162,7 +162,7 @@ class StoreCryptoAdapterPlugin(object):
 
         # Find or create a key encryption key metadata.
         kek_datum_model, kek_meta_dto = _find_or_create_kek_objects(
-            generating_plugin, context.tenant_model)
+            generating_plugin, context.project_model)
 
         # Create an encrypted datum instance and add the created cypher text.
         generate_dto = crypto.GenerateDTO(key_spec.alg,
@@ -170,7 +170,7 @@ class StoreCryptoAdapterPlugin(object):
                                           key_spec.mode, None)
         # Create the encrypted meta.
         response_dto = generating_plugin.generate_symmetric(
-            generate_dto, kek_meta_dto, context.tenant_model.keystone_id)
+            generate_dto, kek_meta_dto, context.project_model.keystone_id)
 
         # Convert binary data into a text-based format.
         _store_secret_and_datum(
@@ -196,7 +196,7 @@ class StoreCryptoAdapterPlugin(object):
 
         # Find or create a key encryption key metadata.
         kek_datum_model, kek_meta_dto = _find_or_create_kek_objects(
-            generating_plugin, context.tenant_model)
+            generating_plugin, context.project_model)
 
         generate_dto = crypto.GenerateDTO(key_spec.alg,
                                           key_spec.bit_length,
@@ -205,7 +205,7 @@ class StoreCryptoAdapterPlugin(object):
         # Create the encrypted meta.
         private_key_dto, public_key_dto, passwd_dto = (
             generating_plugin.generate_asymmetric(
-                generate_dto, kek_meta_dto, context.tenant_model.keystone_id
+                generate_dto, kek_meta_dto, context.project_model.keystone_id
             )
         )
 
@@ -268,12 +268,12 @@ def _determine_generation_type(algorithm):
         raise sstore.SecretAlgorithmNotSupportedException(algorithm)
 
 
-def _find_or_create_kek_objects(plugin_inst, tenant_model):
+def _find_or_create_kek_objects(plugin_inst, project_model):
     kek_repo = repositories.get_kek_datum_repository()
 
     # Find or create a key encryption key.
     full_plugin_name = utils.generate_fullname_for(plugin_inst)
-    kek_datum_model = kek_repo.find_or_create_kek_datum(tenant_model,
+    kek_datum_model = kek_repo.find_or_create_kek_datum(project_model,
                                                         full_plugin_name)
 
     # Bind to the plugin's key management.
@@ -301,11 +301,11 @@ def _store_secret_and_datum(
     if not secret_model.id:
         repositories.get_secret_repository().create_from(secret_model)
         new_assoc = models.TenantSecret()
-        new_assoc.tenant_id = context.tenant_model.id
+        new_assoc.tenant_id = context.project_model.id
         new_assoc.secret_id = secret_model.id
         new_assoc.role = "admin"
         new_assoc.status = models.States.ACTIVE
-        repositories.get_tenant_secret_repository().create_from(new_assoc)
+        repositories.get_project_secret_repository().create_from(new_assoc)
 
     # setup and store encrypted datum
     datum_model = models.EncryptedDatum(secret_model, kek_datum_model)

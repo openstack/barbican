@@ -113,7 +113,7 @@ class BaseTestCase(utils.BaseTestCase):
 
         kwargs = {
             'user': None,
-            'tenant': None,
+            'project': None,
             'roles': roles or [],
             'policy_enforcer': self.policy_enforcer,
         }
@@ -243,10 +243,9 @@ class WhenTestingSecretsResource(BaseTestCase):
                                             ._generate_get_error())
         self.secret_repo.get_by_create_date = get_by_create_date
 
-        self.resource = SecretsResource(tenant_repo=mock.MagicMock(),
+        self.resource = SecretsResource(project_repo=mock.MagicMock(),
                                         secret_repo=self.secret_repo,
-                                        tenant_secret_repo=mock
-                                        .MagicMock(),
+                                        project_secret_repo=mock.MagicMock(),
                                         datum_repo=mock.MagicMock(),
                                         kek_repo=mock.MagicMock(),
                                         secret_meta_repo=mock.MagicMock(),
@@ -286,7 +285,7 @@ class WhenTestingSecretResource(BaseTestCase):
     def setUp(self):
         super(WhenTestingSecretResource, self).setUp()
 
-        self.keystone_id = '12345tenant'
+        self.keystone_id = '12345project'
         self.secret_id = '12345secret'
 
         # Force an error on GET and DELETE calls that pass RBAC,
@@ -298,7 +297,7 @@ class WhenTestingSecretResource(BaseTestCase):
         self.secret_repo.delete_entity_by_id = fail_method
 
         self.resource = SecretResource(self.secret_id,
-                                       tenant_repo=mock.MagicMock(),
+                                       project_repo=mock.MagicMock(),
                                        secret_repo=self.secret_repo,
                                        datum_repo=mock.MagicMock(),
                                        kek_repo=mock.MagicMock(),
@@ -371,7 +370,7 @@ class WhenTestingOrdersResource(BaseTestCase):
                                             ._generate_get_error())
         self.order_repo.get_by_create_date = get_by_create_date
 
-        self.resource = OrdersResource(tenant_repo=mock.MagicMock(),
+        self.resource = OrdersResource(project_repo=mock.MagicMock(),
                                        order_repo=self.order_repo,
                                        queue_resource=mock.MagicMock())
 
@@ -406,7 +405,7 @@ class WhenTestingOrderResource(BaseTestCase):
     def setUp(self):
         super(WhenTestingOrderResource, self).setUp()
 
-        self.keystone_id = '12345tenant'
+        self.keystone_id = '12345project'
         self.order_id = '12345order'
 
         # Force an error on GET and DELETE calls that pass RBAC,
@@ -450,7 +449,7 @@ class WhenTestingConsumersResource(BaseTestCase):
     def setUp(self):
         super(WhenTestingConsumersResource, self).setUp()
 
-        self.keystone_id = '12345tenant'
+        self.keystone_id = '12345project'
         self.container_id = '12345container'
 
         # Force an error on GET calls that pass RBAC, as we are not testing
@@ -462,7 +461,7 @@ class WhenTestingConsumersResource(BaseTestCase):
         self.consumer_repo.get_by_container_id = get_by_container_id
 
         self.resource = ConsumersResource(container_id=self.container_id,
-                                          tenant_repo=mock.MagicMock(),
+                                          project_repo=mock.MagicMock(),
                                           consumer_repo=self.consumer_repo,
                                           container_repo=mock.MagicMock())
 
@@ -511,7 +510,7 @@ class WhenTestingConsumerResource(BaseTestCase):
     def setUp(self):
         super(WhenTestingConsumerResource, self).setUp()
 
-        self.keystone_id = '12345tenant'
+        self.keystone_id = '12345project'
         self.consumer_id = '12345consumer'
 
         # Force an error on GET calls that pass RBAC, as we are not testing
@@ -522,7 +521,7 @@ class WhenTestingConsumerResource(BaseTestCase):
         self.consumer_repo.get = fail_method
 
         self.resource = ConsumerResource(consumer_id=self.consumer_id,
-                                         tenant_repo=mock.MagicMock(),
+                                         project_repo=mock.MagicMock(),
                                          consumer_repo=self.consumer_repo)
 
     def test_rules_should_be_loaded(self):

@@ -40,9 +40,9 @@ class TestSecretStoreBase(testtools.TestCase):
         self.spec_rsa = secret_store.KeySpec(
             'RSA', 1024, passphrase='changeit')
 
-        self.tenant_model = mock.MagicMock()
-        self.tenant_model.id = 'tenant-model-id'
-        self.tenant_model.keystone_id = self.project_id
+        self.project_model = mock.MagicMock()
+        self.project_model.id = 'project-model-id'
+        self.project_model.keystone_id = self.project_id
         self.secret_dto = secret_store.SecretDTO(
             secret_store.SecretType.SYMMETRIC,
             self.secret,
@@ -55,16 +55,17 @@ class TestSecretStoreBase(testtools.TestCase):
         self.public_key_dto = crypto.ResponseDTO(self.cypher_text)
         self.passphrase_dto = crypto.ResponseDTO(self.cypher_text)
 
-        self.kek_meta_tenant_model = models.KEKDatum()
-        self.kek_meta_tenant_model.plugin_name = 'plugin-name'
-        self.kek_meta_tenant_model.kek_label = 'kek-meta-label'
-        self.kek_meta_tenant_model.algorithm = 'kek-meta-algo'
-        self.kek_meta_tenant_model.bit_length = 1024
-        self.kek_meta_tenant_model.mode = 'kek=meta-mode'
-        self.kek_meta_tenant_model.plugin_meta = 'kek-meta-plugin-meta'
+        self.kek_meta_project_model = models.KEKDatum()
+        self.kek_meta_project_model.plugin_name = 'plugin-name'
+        self.kek_meta_project_model.kek_label = 'kek-meta-label'
+        self.kek_meta_project_model.algorithm = 'kek-meta-algo'
+        self.kek_meta_project_model.bit_length = 1024
+        self.kek_meta_project_model.mode = 'kek=meta-mode'
+        self.kek_meta_project_model.plugin_meta = 'kek-meta-plugin-meta'
 
         self.encrypted_datum_model = models.EncryptedDatum()
-        self.encrypted_datum_model.kek_meta_tenant = self.kek_meta_tenant_model
+        self.encrypted_datum_model.kek_meta_tenant = (
+            self.kek_meta_project_model)
         self.encrypted_datum_model.cypher_text = base64.b64encode(
             'cypher_text')
         self.encrypted_datum_model.content_type = 'content_type'
@@ -82,7 +83,7 @@ class TestSecretStoreBase(testtools.TestCase):
 
         self.context = store_crypto.StoreCryptoContext(
             secret_model=self.secret_model,
-            tenant_model=self.tenant_model,
+            project_model=self.project_model,
             content_type=self.content_type)
 
     def tearDown(self):
@@ -92,7 +93,7 @@ class TestSecretStoreBase(testtools.TestCase):
 
     def init_patchers(self):
         self._config_get_secret_repository()
-        self._config_get_tenant_secret_repository()
+        self._config_get_project_secret_repository()
         self._config_get_encrypted_datum_repository()
         self._config_get_kek_datum_repository()
 
@@ -115,19 +116,19 @@ class TestSecretStoreBase(testtools.TestCase):
         )
         self._start_patcher(self.get_secret_repository_patcher)
 
-    def _config_get_tenant_secret_repository(self):
-        """Mock the get_tenant_secret_repository() factory function."""
-        self.tenant_secret_repo = mock.MagicMock()
-        self.tenant_secret_repo.create_from.return_value = None
+    def _config_get_project_secret_repository(self):
+        """Mock the get_project_secret_repository() factory function."""
+        self.project_secret_repo = mock.MagicMock()
+        self.project_secret_repo.create_from.return_value = None
 
-        get_tenant_secret_repository_config = {
-            'return_value': self.tenant_secret_repo
+        get_project_secret_repository_config = {
+            'return_value': self.project_secret_repo
         }
-        self.get_tenant_secret_repository_patcher = mock.patch(
-            'barbican.model.repositories.get_tenant_secret_repository',
-            **get_tenant_secret_repository_config
+        self.get_project_secret_repository_patcher = mock.patch(
+            'barbican.model.repositories.get_project_secret_repository',
+            **get_project_secret_repository_config
         )
-        self._start_patcher(self.get_tenant_secret_repository_patcher)
+        self._start_patcher(self.get_project_secret_repository_patcher)
 
     def _config_get_encrypted_datum_repository(self):
         """Mock the get_encrypted_datum_repository() factory function."""
@@ -146,7 +147,7 @@ class TestSecretStoreBase(testtools.TestCase):
 
     def _config_get_kek_datum_repository(self):
         """Mock the get_kek_datum_repository() factory function."""
-        kek_model = self.kek_meta_tenant_model
+        kek_model = self.kek_meta_project_model
         self.kek_repo = mock.MagicMock()
         self.kek_repo.find_or_create_kek_datum.return_value = kek_model
 
@@ -238,7 +239,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
 
         self.assertIsInstance(test_kek_meta, crypto.KEKMetaDTO)
         self.assertEqual(
-            self.kek_meta_tenant_model.plugin_name, test_kek_meta.plugin_name)
+            self.kek_meta_project_model.plugin_name, test_kek_meta.plugin_name)
 
         self.assertEqual(
             self.encrypted_datum_model.kek_meta_extended,
@@ -440,7 +441,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         self.kek_meta_dto = mock.MagicMock()
         find_or_create_kek_objects_config = {
             'return_value': (
-                self.kek_meta_tenant_model, self.kek_meta_dto),
+                self.kek_meta_project_model, self.kek_meta_dto),
         }
         self.find_or_create_kek_objects_patcher = mock.patch(
             'barbican.plugin.store_crypto._find_or_create_kek_objects',
@@ -516,30 +517,30 @@ class WhenTestingStoreCryptoFindOrCreateKekObjects(TestSecretStoreBase):
         self._config_private_methods()
 
     def test_kek_bind_completed(self):
-        self.kek_meta_tenant_model.bind_completed = True
+        self.kek_meta_project_model.bind_completed = True
         plugin_inst = self
 
         kek_model, kek_meta_dto = store_crypto._find_or_create_kek_objects(
-            plugin_inst, self.tenant_model)
+            plugin_inst, self.project_model)
 
         # Verify returns.
-        self.assertEqual(self.kek_meta_tenant_model, kek_model)
+        self.assertEqual(self.kek_meta_project_model, kek_model)
         self.assertIsInstance(kek_meta_dto, crypto.KEKMetaDTO)
 
         # Verify the KEK repository interactions.
         self._verify_kek_repository_interactions(plugin_inst)
 
     def test_kek_bind_not_completed(self):
-        self.kek_meta_tenant_model.bind_completed = False
+        self.kek_meta_project_model.bind_completed = False
         test_kek_metadata = 'metadata'
         plugin_inst = mock.MagicMock()
         plugin_inst.bind_kek_metadata.return_value = test_kek_metadata
 
         kek_model, kek_meta_dto = store_crypto._find_or_create_kek_objects(
-            plugin_inst, self.tenant_model)
+            plugin_inst, self.project_model)
 
         # Verify returns.
-        self.assertEqual(self.kek_meta_tenant_model, kek_model)
+        self.assertEqual(self.kek_meta_project_model, kek_model)
         self.assertEqual(test_kek_metadata, kek_meta_dto)
 
         # Verify the KEK repository interactions.
@@ -554,10 +555,10 @@ class WhenTestingStoreCryptoFindOrCreateKekObjects(TestSecretStoreBase):
             self.kek_repo.save.call_count, 1)
         args, kwargs = self.kek_repo.save.call_args
         kek_model = args[0]
-        self.assertEqual(self.kek_meta_tenant_model, kek_model)
+        self.assertEqual(self.kek_meta_project_model, kek_model)
 
     def test_kek_raise_no_kek_bind_not_completed(self):
-        self.kek_meta_tenant_model.bind_completed = False
+        self.kek_meta_project_model.bind_completed = False
         plugin_inst = mock.MagicMock()
         plugin_inst.bind_kek_metadata.return_value = None
 
@@ -565,16 +566,16 @@ class WhenTestingStoreCryptoFindOrCreateKekObjects(TestSecretStoreBase):
             crypto.CryptoKEKBindingException,
             store_crypto._find_or_create_kek_objects,
             plugin_inst,
-            self.tenant_model)
+            self.project_model)
 
     def _verify_kek_repository_interactions(self, plugin_inst):
         """Verify the KEK repository interactions."""
         self.assertEqual(
             self.kek_repo.find_or_create_kek_datum.call_count, 1)
         args, kwargs = self.kek_repo.find_or_create_kek_datum.call_args
-        test_tenant_model = args[0]
+        test_project_model = args[0]
         test_full_plugin_name = args[1]
-        self.assertEqual(self.tenant_model, test_tenant_model)
+        self.assertEqual(self.project_model, test_project_model)
         plugin_name = utils.generate_fullname_for(plugin_inst)
         self.assertEqual(plugin_name, test_full_plugin_name)
 
@@ -607,19 +608,19 @@ class WhenTestingStoreCryptoStoreSecretAndDatum(TestSecretStoreBase):
         store_crypto._store_secret_and_datum(
             self.context,
             self.secret_model,
-            self.kek_meta_tenant_model,
+            self.kek_meta_project_model,
             self.response_dto)
 
         # Verify the repository interactions.
         self._verify_secret_repository_interactions()
-        self._verify_tenant_secret_repository_interactions()
+        self._verify_project_secret_repository_interactions()
         self._verify_encrypted_datum_repository_interactions()
 
     def test_with_existing_secret(self):
         store_crypto._store_secret_and_datum(
             self.context,
             self.secret_model,
-            self.kek_meta_tenant_model,
+            self.kek_meta_project_model,
             self.response_dto)
 
         # Verify the repository interactions.
@@ -629,7 +630,7 @@ class WhenTestingStoreCryptoStoreSecretAndDatum(TestSecretStoreBase):
         self.assertEqual(
             self.secret_repo.create_from.call_count, 0)
         self.assertEqual(
-            self.tenant_secret_repo.create_from.call_count, 0)
+            self.project_secret_repo.create_from.call_count, 0)
 
     def _verify_secret_repository_interactions(self):
         """Verify the secret repository interactions."""
@@ -639,17 +640,17 @@ class WhenTestingStoreCryptoStoreSecretAndDatum(TestSecretStoreBase):
         test_secret_model = args[0]
         self.assertEqual(self.secret_model, test_secret_model)
 
-    def _verify_tenant_secret_repository_interactions(self):
-        """Verify the tenant-secret repository interactions."""
+    def _verify_project_secret_repository_interactions(self):
+        """Verify the project-secret repository interactions."""
         self.assertEqual(
-            self.tenant_secret_repo.create_from.call_count, 1)
-        args, kwargs = self.tenant_secret_repo.create_from.call_args
-        test_tenant_secret_model = args[0]
-        self.assertIsInstance(test_tenant_secret_model, models.TenantSecret)
+            self.project_secret_repo.create_from.call_count, 1)
+        args, kwargs = self.project_secret_repo.create_from.call_args
+        test_project_secret_model = args[0]
+        self.assertIsInstance(test_project_secret_model, models.TenantSecret)
         self.assertEqual(
-            self.context.tenant_model.id, test_tenant_secret_model.tenant_id)
+            self.context.project_model.id, test_project_secret_model.tenant_id)
         self.assertEqual(
-            models.States.ACTIVE, test_tenant_secret_model.status)
+            models.States.ACTIVE, test_project_secret_model.status)
 
     def _verify_encrypted_datum_repository_interactions(self):
         """Verify the encrypted datum repository interactions."""
@@ -671,18 +672,18 @@ class WhenTestingStoreCryptoIndicateBindCompleted(TestSecretStoreBase):
     """Tests store_crypto.py's _indicate_bind_completed() function."""
 
     def test_bind_operation(self):
-        kek_meta_dto = crypto.KEKMetaDTO(self.kek_meta_tenant_model)
-        self.kek_meta_tenant_model.bind_completed = False
+        kek_meta_dto = crypto.KEKMetaDTO(self.kek_meta_project_model)
+        self.kek_meta_project_model.bind_completed = False
 
         store_crypto._indicate_bind_completed(
-            kek_meta_dto, self.kek_meta_tenant_model)
+            kek_meta_dto, self.kek_meta_project_model)
 
-        self.assertTrue(self.kek_meta_tenant_model.bind_completed)
+        self.assertTrue(self.kek_meta_project_model.bind_completed)
         self.assertEqual(
-            kek_meta_dto.algorithm, self.kek_meta_tenant_model.algorithm)
+            kek_meta_dto.algorithm, self.kek_meta_project_model.algorithm)
         self.assertEqual(
-            kek_meta_dto.bit_length, self.kek_meta_tenant_model.bit_length)
+            kek_meta_dto.bit_length, self.kek_meta_project_model.bit_length)
         self.assertEqual(
-            kek_meta_dto.mode, self.kek_meta_tenant_model.mode)
+            kek_meta_dto.mode, self.kek_meta_project_model.mode)
         self.assertEqual(
-            kek_meta_dto.plugin_meta, self.kek_meta_tenant_model.plugin_meta)
+            kek_meta_dto.plugin_meta, self.kek_meta_project_model.plugin_meta)

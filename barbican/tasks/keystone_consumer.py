@@ -36,15 +36,15 @@ class KeystoneEventConsumer(resources.BaseTask):
     def get_name(self):
         return u._('Project cleanup via Keystone notifications')
 
-    def __init__(self, tenant_repo=None, order_repo=None,
-                 secret_repo=None, tenant_secret_repo=None,
+    def __init__(self, project_repo=None, order_repo=None,
+                 secret_repo=None, project_secret_repo=None,
                  datum_repo=None, kek_repo=None, secret_meta_repo=None,
                  container_repo=None):
         LOG.debug('Creating KeystoneEventConsumer task processor')
-        self.repos = rep.Repositories(tenant_repo=tenant_repo,
+        self.repos = rep.Repositories(project_repo=project_repo,
                                       order_repo=order_repo,
                                       secret_repo=secret_repo,
-                                      tenant_secret_repo=tenant_secret_repo,
+                                      project_secret_repo=project_secret_repo,
                                       datum_repo=datum_repo,
                                       kek_repo=kek_repo,
                                       secret_meta_repo=secret_meta_repo,
@@ -67,9 +67,9 @@ class KeystoneEventConsumer(resources.BaseTask):
 
     def retrieve_entity(self, project_id, resource_type=None,
                         operation_type=None):
-        tenant_repo = self.repos.tenant_repo
-        return tenant_repo.find_by_keystone_id(keystone_id=project_id,
-                                               suppress_exception=True)
+        project_repo = self.repos.project_repo
+        return project_repo.find_by_keystone_id(keystone_id=project_id,
+                                                suppress_exception=True)
 
     def handle_processing(self, barbican_project, *args, **kwargs):
         self.handle_cleanup(barbican_project, *args, **kwargs)
@@ -78,7 +78,7 @@ class KeystoneEventConsumer(resources.BaseTask):
                      project_id=None, resource_type=None, operation_type=None):
         LOG.error('Error processing Keystone event, project_id={0}, event '
                   'resource={1}, event operation={2}, status={3}, error '
-                  'message={4}'.format(project.tenant_id, resource_type,
+                  'message={4}'.format(project.project_id, resource_type,
                                        operation_type, status, message))
 
     def handle_success(self, project, project_id=None, resource_type=None,
@@ -107,12 +107,12 @@ class KeystoneEventConsumer(resources.BaseTask):
                      'present for Keystone project_id={0}'.format(project_id))
             return
 
-        # barbican entities use tenants table 'id' field as foreign key. Delete
-        # apis are using that id to lookup related entities and not keystone
-        # project id which requires additional tenant table join.
-        tenant_id = project.id
+        # barbican entities use projects table 'id' field as foreign key.
+        # Delete apis are using that id to lookup related entities and not
+        # keystone project id which requires additional project table join.
+        project_id = project.id
 
-        rep.delete_all_project_resources(tenant_id, self.repos)
+        rep.delete_all_project_resources(project_id, self.repos)
 
         # reached here means there is no error so log the successful
         # cleanup log entry.

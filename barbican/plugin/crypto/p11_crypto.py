@@ -60,8 +60,8 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
     """PKCS11 supporting implementation of the crypto plugin.
 
     Generates a single master key and a single HMAC key that remain in the
-    HSM, then generates a key per tenant in the HSM, wraps the key, computes
-    an HMAC, and stores it in the DB. The tenant key is never unencrypted
+    HSM, then generates a key per project in the HSM, wraps the key, computes
+    an HMAC, and stores it in the DB. The project key is never unencrypted
     outside the HSM.
 
     This implementation currently relies on an unreleased fork of PyKCS11.

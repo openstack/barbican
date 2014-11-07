@@ -159,7 +159,7 @@ class CertificateEventPluginBase(object):
             self, project_id, order_ref, container_ref):
         """Notify that a certificate has been generated and is ready to use.
 
-        :param project_id: Project/tenant ID associated with this certificate
+        :param project_id: Project ID associated with this certificate
         :param order_ref: HATEOS reference URI to the submitted Barbican Order
         :param container_ref: HATEOS reference URI to the Container storing
                the certificate
@@ -172,7 +172,7 @@ class CertificateEventPluginBase(object):
             self, project_id, order_ref, error_msg, retry_in_msec):
         """Notify that the certificate authority (CA) isn't available.
 
-        :param project_id: Project/tenant ID associated with this order
+        :param project_id: Project ID associated with this order
         :param order_ref: HATEOS reference URI to the submitted Barbican Order
         :param error_msg: Error message if it is available
         :param retry_in_msec: Delay before attempting to talk to the CA again.

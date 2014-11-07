@@ -75,7 +75,7 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
         self.plugin = simple.SimpleCryptoPlugin()
 
     def _get_mocked_kek_meta_dto(self):
-        # For SimpleCryptoPlugin, per-tenant KEKs are stored in
+        # For SimpleCryptoPlugin, per-project KEKs are stored in
         # kek_meta_dto.plugin_meta. SimpleCryptoPlugin does a get-or-create
         # on the plugin_meta field, so plugin_meta should be None initially.
         kek_meta_dto = plugin.KEKMetaDTO(mock.MagicMock())
@@ -106,12 +106,12 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
                 decrypt response cypher_text
                 Compare with unencrypted
         """
-        tenant_kek = fernet.Fernet.generate_key()
+        project_kek = fernet.Fernet.generate_key()
         encryptor = fernet.Fernet(self.plugin.master_kek)
-        ENC_tenant_kek = encryptor.encrypt(tenant_kek)
-        UENC_tenant_kek = six.u(ENC_tenant_kek)
+        ENC_project_kek = encryptor.encrypt(project_kek)
+        UENC_project_kek = six.u(ENC_project_kek)
         kek_meta_dto = self._get_mocked_kek_meta_dto()
-        kek_meta_dto.plugin_meta = UENC_tenant_kek
+        kek_meta_dto.plugin_meta = UENC_project_kek
 
         unencrypted = 'PlainTextSecret'
         encrypt_dto = plugin.EncryptDTO(unencrypted)
@@ -119,8 +119,8 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
                                            kek_meta_dto,
                                            mock.MagicMock())
 
-        tenant_encryptor = fernet.Fernet(tenant_kek)
-        decrypted = tenant_encryptor.decrypt(response_dto.cypher_text)
+        project_encryptor = fernet.Fernet(project_kek)
+        decrypted = project_encryptor.decrypt(response_dto.cypher_text)
         self.assertEqual(unencrypted, decrypted)
 
     def test_decrypt_kek_not_created(self):

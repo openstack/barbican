@@ -46,7 +46,7 @@ def _do_enforce_rbac(req, action_name, ctx):
         credentials = {
             'roles': ctx.roles,
             'user': ctx.user,
-            'tenant': ctx.tenant
+            'project': ctx.project
         }
 
         # Enforce special case: secret GET decryption
@@ -70,7 +70,7 @@ def enforce_rbac(action_name='default'):
             # middleware
             ctx = _get_barbican_context(pecan.request)
             if ctx:
-                keystone_id = ctx.tenant
+                keystone_id = ctx.project
             else:
                 keystone_id = None
 

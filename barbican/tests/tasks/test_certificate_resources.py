@@ -120,7 +120,7 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
         self.order_model.meta = self.order_meta
         self.order_model.tenant_id = self.project_id
         self.repos = mock.MagicMock()
-        self.tenant_model = mock.MagicMock()
+        self.project_model = mock.MagicMock()
 
         self._config_cert_plugin()
         self._config_cert_event_plugin()
@@ -138,7 +138,7 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
 
         cert_res.issue_certificate_request(self.order_model,
-                                           self.tenant_model,
+                                           self.project_model,
                                            self.repos)
 
         self._verify_issue_certificate_plugins_called()
@@ -147,7 +147,7 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
         self.result.status = cert_man.CertificateStatus.CERTIFICATE_GENERATED
 
         cert_res.issue_certificate_request(self.order_model,
-                                           self.tenant_model,
+                                           self.project_model,
                                            self.repos)
 
         self._verify_issue_certificate_plugins_called()
@@ -159,7 +159,7 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
             cert_man.CertificateStatusClientDataIssue,
             cert_res.issue_certificate_request,
             self.order_model,
-            self.tenant_model,
+            self.project_model,
             self.repos
         )
 
@@ -170,7 +170,7 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
             cert_man.CertificateStatusInvalidOperation,
             cert_res.issue_certificate_request,
             self.order_model,
-            self.tenant_model,
+            self.project_model,
             self.repos
         )
 
@@ -184,7 +184,7 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
         order_ref = hrefs.convert_order_to_href(self.order_id)
 
         cert_res.issue_certificate_request(self.order_model,
-                                           self.tenant_model,
+                                           self.project_model,
                                            self.repos)
 
         self._verify_issue_certificate_plugins_called()
@@ -204,7 +204,7 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
             cert_man.CertificateStatusNotSupported,
             cert_res.issue_certificate_request,
             self.order_model,
-            self.tenant_model,
+            self.project_model,
             self.repos
         )
 
