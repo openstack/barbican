@@ -1,6 +1,7 @@
 [run]
 branch = True
-omit = etc/*,setup.py,*egg*,.tox/*,barbican/tests/*,*barbican/openstack/*,functionaltests/*,contrib/*
+omit = etc/*,setup.py,*egg*,.tox/*,barbican/tests/*,*barbican/openstack/*,
+       functionaltests/*,contrib/*, barbican/model/migration/alembic_migrations/versions/*
 
 [report]
 ignore_errors = True
