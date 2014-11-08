@@ -16,7 +16,6 @@
 from barbican.common import hrefs
 import barbican.common.utils as utils
 from barbican.model import models
-
 from barbican.plugin.interface import certificate_manager as cert
 from barbican.plugin import resources as plugin
 

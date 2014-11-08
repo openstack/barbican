@@ -562,8 +562,7 @@ class BaseRepo(object):
                 setattr(entity_ref, k, values[k])
 
     def _build_get_project_entities_query(self, project_id, session):
-        """Sub-class hook: build a query to retrieve entities for a given
-        project.
+        """Sub-class hook: build a query to retrieve entities for a project.
 
         :param project_id: id of barbican project entity
         :param session: existing db session reference.
@@ -660,8 +659,7 @@ class ProjectRepo(BaseRepo):
         return entity
 
     def _build_get_project_entities_query(self, project_id, session):
-        """Builds query for retrieving project for given id.
-        """
+        """Builds query for retrieving project for given id."""
         return session.query(models.Tenant).filter_by(id=project_id).filter_by(
             deleted=False)
 
@@ -757,8 +755,9 @@ class SecretRepo(BaseRepo):
         pass
 
     def _build_get_project_entities_query(self, project_id, session):
-        """Builds query for retrieving Secrets associated with a given
-        project via TenantSecret association.
+        """Builds query for retrieving Secrets associated with a given project
+
+        Discovery is done via a TenantSecret association.
 
         :param project_id: id of barbican project entity
         :param session: existing db session reference.
@@ -907,8 +906,9 @@ class KEKDatumRepo(BaseRepo):
         pass
 
     def _build_get_project_entities_query(self, project_id, session):
-        """Builds query for retrieving KEK Datum instance(s) related to given
-        project.
+        """Builds query for retrieving KEK Datum instance(s).
+
+        The returned KEK Datum instance(s) are related to a given project.
 
         :param project_id: id of barbican project entity
         :param session: existing db session reference.

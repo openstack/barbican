@@ -25,6 +25,7 @@ import urllib
 
 import mock
 import pecan
+from six import moves
 import webtest
 
 from barbican import api
@@ -408,8 +409,9 @@ class BaseSecretsResource(FunctionalTest):
                              '4 evenly, due to base64 encoding.')
 
         big_text = ''.join(['A' for x
-                            in xrange(validators.DEFAULT_MAX_SECRET_BYTES -
-                                      8)])
+                            in moves.range(
+                                validators.DEFAULT_MAX_SECRET_BYTES - 8)
+                            ])
 
         self.secret_req = {'name': self.name,
                            'algorithm': self.secret_algorithm,
@@ -425,8 +427,9 @@ class BaseSecretsResource(FunctionalTest):
 
     def _test_should_raise_due_to_payload_too_large(self):
         big_text = ''.join(['A' for x
-                            in xrange(validators.DEFAULT_MAX_SECRET_BYTES +
-                                      10)])
+                            in moves.range(
+                                validators.DEFAULT_MAX_SECRET_BYTES + 10)
+                            ])
 
         self.secret_req = {'name': self.name,
                            'algorithm': self.secret_algorithm,
@@ -742,7 +745,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
         self.secrets = [create_secret(id_ref='id' + str(id),
                                       **secret_params) for
-                        id in xrange(self.num_secrets)]
+                        id in moves.range(self.num_secrets)]
         self.total = len(self.secrets)
 
         self.secret_repo = mock.MagicMock()
@@ -1383,7 +1386,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.assertEqual(resp.status_int, 400)
 
     def test_should_raise_due_to_plain_text_too_large(self):
-        big_text = ''.join(['A' for x in xrange(
+        big_text = ''.join(['A' for x in moves.range(
             2 * validators.DEFAULT_MAX_SECRET_BYTES)])
 
         self.secret.encrypted_data = []
@@ -1584,7 +1587,7 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
         self.orders = [create_order_with_meta(id_ref='id' + str(id),
                                               order_type='key',
                                               meta=order_meta) for
-                       id in xrange(self.num_orders)]
+                       id in moves.range(self.num_orders)]
         self.total = len(self.orders)
         self.order_repo = mock.MagicMock()
         self.order_repo.get_by_create_date.return_value = (self.orders,
@@ -2419,7 +2422,7 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
         self.limit = 2
 
         self.containers = [create_container(id_ref='id' + str(id_ref)) for
-                           id_ref in xrange(self.num_containers)]
+                           id_ref in moves.range(self.num_containers)]
         self.total = len(self.containers)
         self.container_repo = mock.MagicMock()
         self.container_repo.get_by_create_date.return_value = (self.containers,

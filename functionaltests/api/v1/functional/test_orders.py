@@ -64,10 +64,7 @@ class OrdersTestCase(base.TestCase):
 
     @testcase.attr('positive')
     def test_create_order_defaults_wout_name(self):
-        """When you attempt to create an order without the name attribute the
-         request appears to fail without a status code.
-        - Reported in Barbican GitHub Issue #93
-        """
+        """Create an order without the name attribute."""
 
         # create order with no name
         test_model = order_models.OrderModel(**order_create_defaults_data)
@@ -81,10 +78,7 @@ class OrdersTestCase(base.TestCase):
 
     @testcase.attr('positive')
     def test_create_order_defaults_w_empty_name(self):
-        """When you attempt to create an order without the name attribute the
-         request appears to fail without a status code.
-        - Reported in Barbican GitHub Issue #93
-        """
+        """Create an order the name attribute an empty string."""
 
         # create order with empty name
         test_model = order_models.OrderModel(**order_create_defaults_data)
@@ -150,8 +144,9 @@ class OrdersTestCase(base.TestCase):
 
     @testcase.attr('positive')
     def test_create_order_defaults_check_empty_name(self):
-        """Covers order creation with empty name and ensures that the
-        resulting secret is named correctly.
+        """Create order with empty meta name.
+
+        The resulting secret name should be a UUID.
         """
 
         # first create an order with defaults

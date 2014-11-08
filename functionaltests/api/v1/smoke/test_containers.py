@@ -141,9 +141,7 @@ class ContainersTestCase(base.TestCase):
 
     @testcase.attr('positive')
     def test_container_create_rsa(self):
-        """Covers creating an rsa container with references to a public key,
-        a private key, and a passphrase.
-        """
+        """Create an RSA container with expected secret refs."""
         test_model = container_models.ContainerModel(
             **create_container_rsa_data)
 
@@ -166,7 +164,7 @@ class ContainersTestCase(base.TestCase):
 
         get_resp = self.behaviors.get_container(container_ref)
 
-       # Verify the response data
+        # Verify the response data
         self.assertEqual(get_resp.status_code, 200)
         self.assertEqual(get_resp.model.name, "containername")
         self.assertEqual(get_resp.model.container_ref, container_ref)
@@ -229,7 +227,7 @@ class ContainersTestCase(base.TestCase):
         self.assertIsNotNone(next_ref)
 
     def test_container_delete_defaults(self):
-        """Covers deleting a container"""
+        """Covers deleting a container."""
         test_model = container_models.ContainerModel(
             **create_container_defaults_data)
 

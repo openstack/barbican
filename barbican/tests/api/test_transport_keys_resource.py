@@ -20,6 +20,7 @@ transport key resource classes.
 
 import mock
 import pecan
+from six import moves
 import webtest
 
 from barbican.api import app
@@ -130,7 +131,7 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
 
         self.tkeys = [create_transport_key(
             id_ref='id' + str(tkid), **tk_params)
-            for tkid in xrange(self.num_keys)]
+            for tkid in moves.range(self.num_keys)]
         self.total = len(self.tkeys)
         self.repo = mock.MagicMock()
         self.repo.get_by_create_date.return_value = (self.tkeys,

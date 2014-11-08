@@ -12,9 +12,9 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import socket
 
 import mock
-import socket
 import testtools
 
 from barbican.plugin.interface import secret_store

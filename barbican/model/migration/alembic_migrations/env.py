@@ -33,7 +33,7 @@ except Exception:
 #   for the rest of this applicaton, so please do not use it!
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
-#fileConfig(config.config_file_name)
+# fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -48,8 +48,8 @@ target_metadata = models.BASE.metadata
 
 
 def get_sqlalchemy_url():
-    return config.barbican_sqlalchemy_url or config \
-                 .get_main_option("sqlalchemy.url")
+    return (config.barbican_sqlalchemy_url or
+            config.get_main_option("sqlalchemy.url"))
 
 
 def run_migrations_offline():

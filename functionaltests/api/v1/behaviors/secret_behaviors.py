@@ -40,7 +40,8 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
 
     def update_secret_payload(self, secret_ref, payload, payload_content_type,
                               payload_content_encoding):
-        """Updates a secret's payload data
+        """Updates a secret's payload data.
+
         :param secret_ref: HATEOS ref of the secret to be deleted
         :return: A request response object
         """
@@ -58,7 +59,8 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
         return self.client.get(secret_ref, extra_headers=headers)
 
     def get_secret_metadata(self, secret_ref):
-        """Retrieves a secret's metadata
+        """Retrieves a secret's metadata.
+
         :param secret_ref: HATEOS ref of the secret to be retrieved
         :return: A request response object
         """
@@ -66,7 +68,8 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
             secret_ref, response_model_type=secret_models.SecretModel)
 
     def get_secrets(self, limit=10, offset=0):
-        """Handles getting a list of secrets
+        """Handles getting a list of secrets.
+
         :param limit: limits number of returned secrets
         :param offset: represents how many records to skip before retrieving
                        the list

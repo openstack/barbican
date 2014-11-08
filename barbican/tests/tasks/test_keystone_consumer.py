@@ -12,11 +12,11 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import mock
-import sqlalchemy
 import uuid
 
+import mock
 from oslo.config import cfg
+import sqlalchemy
 
 from barbican.common import exception
 from barbican.common import resources as c_resources

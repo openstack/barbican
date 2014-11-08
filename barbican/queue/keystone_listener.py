@@ -28,8 +28,7 @@ LOG = utils.getLogger(__name__)
 
 
 class NotificationTask(object):
-    """Notification task which exposes the API for consuming priority based
-    notifications.
+    """Task which exposes the API for consuming priority based notifications.
 
     The Oslo notification framework delivers notifications based on priority to
     matching callback APIs as defined in its notification listener endpoint
@@ -97,8 +96,10 @@ class NotificationTask(object):
         return None  # in case event is not project delete
 
     def _parse_event_type(self, event_type):
-        """Parses event type provided as part of notification to identify what
-        operation is performed and on which Keystone resource.
+        """Parses event type provided as part of notification.
+
+        Parses to identify what operation is performed and on which Keystone
+        resource.
 
         A few event type sample values are provided below::
             identity.project.deleted
@@ -128,8 +129,10 @@ class NotificationTask(object):
 
 
 class MessageServer(NotificationTask, service.Service):
-    """Server to retrieve messages from queue used by Keystone to send public
-    notifications for openstack service consumption.
+    """Server to retrieve messages from queue used by Keystone.
+
+    This is used to send public notifications for openstack service
+    consumption.
 
     This server is an Oslo notification server that exposes set of standard
     APIs for events consumption based on event priority.

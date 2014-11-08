@@ -252,9 +252,7 @@ class StoreCryptoAdapterPlugin(object):
 
 
 def _determine_generation_type(algorithm):
-    """Determines the type (symmetric and asymmetric for now)
-    based on algorithm
-    """
+    """Determines the type based on algorithm."""
     if not algorithm:
         raise sstore.SecretAlgorithmNotSupportedException(algorithm)
 

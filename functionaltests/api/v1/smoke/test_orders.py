@@ -62,8 +62,7 @@ class OrdersTestCase(base.TestCase):
 
     @testcase.attr('positive')
     def test_create_order_defaults(self):
-        """Covers simple order creation.
-        """
+        """Covers simple order creation."""
 
         # first create an order
         test_model = order_models.OrderModel(**order_create_defaults_data)

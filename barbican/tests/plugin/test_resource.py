@@ -12,12 +12,12 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import mock
+import testtools
 
 import barbican.model.repositories as repo
 from barbican.plugin.interface import secret_store
 from barbican.plugin import resources
-import mock
-import testtools
 
 
 class WhenTestingPluginResource(testtools.TestCase):
@@ -34,8 +34,8 @@ class WhenTestingPluginResource(testtools.TestCase):
         asymmetric_meta_dto = secret_store.AsymmetricKeyMetadataDTO()
         # Mock plug-in
         self.generate_plugin = mock.MagicMock()
-        self.generate_plugin.generate_asymmetric_key.return_value =\
-            asymmetric_meta_dto
+        self.generate_plugin.generate_asymmetric_key.return_value = (
+            asymmetric_meta_dto)
 
         gen_plugin_config = {
             'return_value.get_plugin_generate.return_value':
@@ -62,25 +62,26 @@ class WhenTestingPluginResource(testtools.TestCase):
         secret_meta_repo = mock.MagicMock()
         secret_meta_repo.create_from.return_value = None
 
-        self.repos = repo.Repositories(container_repo=container_repo,
-                                       container_secret_repo=
-                                       container_secret_repo,
-                                       project_repo=project_repo,
-                                       secret_repo=secret_repo,
-                                       project_secret_repo=project_secret_repo,
-                                       secret_meta_repo=secret_meta_repo)
+        self.repos = repo.Repositories(
+            container_repo=container_repo,
+            container_secret_repo=container_secret_repo,
+            project_repo=project_repo,
+            secret_repo=secret_repo,
+            project_secret_repo=project_secret_repo,
+            secret_meta_repo=secret_meta_repo
+        )
 
     def tearDown(self):
         super(WhenTestingPluginResource, self).tearDown()
 
     def test_generate_asymmetric_with_passphrase(self):
         """test asymmetric secret generation with passphrase."""
-        secret_container = \
-            self.plugin_resource.\
-            generate_asymmetric_secret(self.spec,
-                                       self.content_type,
-                                       self.project_model,
-                                       self.repos)
+        secret_container = self.plugin_resource.generate_asymmetric_secret(
+            self.spec,
+            self.content_type,
+            self.project_model,
+            self.repos
+        )
 
         self.assertEqual("rsa", secret_container.type)
         self.assertEqual(self.generate_plugin.
@@ -94,12 +95,12 @@ class WhenTestingPluginResource(testtools.TestCase):
         """test asymmetric secret generation without passphrase."""
 
         del self.spec['passphrase']
-        secret_container =\
-            self.plugin_resource.\
-            generate_asymmetric_secret(self.spec,
-                                       self.content_type,
-                                       self.project_model,
-                                       self.repos)
+        secret_container = self.plugin_resource.generate_asymmetric_secret(
+            self.spec,
+            self.content_type,
+            self.project_model,
+            self.repos
+        )
 
         self.assertEqual("rsa", secret_container.type)
         self.assertEqual(self.generate_plugin.generate_asymmetric_key.

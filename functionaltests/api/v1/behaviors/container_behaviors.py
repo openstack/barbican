@@ -53,7 +53,8 @@ class ContainerBehaviors(base_behaviors.BaseBehaviors):
         return resp
 
     def get_containers(self, limit=10, offset=0, extra_headers=None):
-        """Handles getting a list of containers
+        """Handles getting a list of containers.
+
         :param limit: limits number of returned containers
         :param offset: represents how many records to skip before retrieving
             the list
@@ -75,7 +76,8 @@ class ContainerBehaviors(base_behaviors.BaseBehaviors):
 
     def delete_container(self, container_ref, extra_headers=None,
                          expected_fail=False):
-        """Handles deleting a containers
+        """Handles deleting a containers.
+
         :param container_ref: Reference of the container to be deleted
         :param extra_headers: Any additional headers needed.
         :param expected_fail: If there is a negative test, this should be

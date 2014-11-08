@@ -14,7 +14,6 @@
 import abc
 
 from oslo.config import cfg
-
 import six
 
 from barbican.common import exception

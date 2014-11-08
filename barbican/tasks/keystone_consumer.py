@@ -27,8 +27,7 @@ LOG = utils.getLogger(__name__)
 
 
 class KeystoneEventConsumer(resources.BaseTask):
-    """Keystone event consumer listening for notifications sent by Keystone
-    deployment.
+    """Event consumer listening for notifications sent by Keystone deployment.
 
     Currently this processes only Keystone project delete event.
     """
@@ -90,8 +89,7 @@ class KeystoneEventConsumer(resources.BaseTask):
 
     def handle_cleanup(self, project, project_id=None, resource_type=None,
                        operation_type=None):
-        """Handle Barbican resources cleanup needed as part of Keystone project
-        delete.
+        """Cleans up Barbican resources needed for Keystone project delete.
 
         :param project: Barbican project entity which is retrieved by project
         id available in Keystone notification.

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import binascii
+
 from testtools import testcase
 
 from functionaltests.api import base

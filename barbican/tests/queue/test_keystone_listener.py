@@ -12,12 +12,12 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import mock
-import six
 import uuid
 
+import mock
 from oslo.config import cfg
 from oslo import messaging
+import six
 
 from barbican.openstack.common import service
 from barbican import queue

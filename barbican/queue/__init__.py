@@ -156,10 +156,11 @@ def get_notification_target():
                             fanout=True)
 
 
-def get_notification_server(targets, endpoints,
-                            serializer=None):
-    """Notification server uses same transport configuration as used by other
-    barbican functionality like async order processing.
+def get_notification_server(targets, endpoints, serializer=None):
+    """Retrieve notification server
+
+    This Notification server uses same transport configuration as used by
+    other barbican functionality like async order processing.
 
     Assumption is that messaging infrastructure is going to be shared (same)
     among different barbican features.

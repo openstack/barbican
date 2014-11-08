@@ -19,7 +19,6 @@ import uuid
 from Crypto.PublicKey import RSA
 from Crypto.Util import asn1
 from oslo.config import cfg
-
 import pki
 import pki.cert
 import pki.client
@@ -273,9 +272,9 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
                     pub_seq[:] = key_info.public_key
                     recovered_key = (
                         ("%s\n%s%s" %
-                        (DogtagKRAPlugin.DSA_PUBLIC_KEY_HEADER,
-                         pub_seq.encode().encode("base64"),
-                         DogtagKRAPlugin.DSA_PUBLIC_KEY_FOOTER)
+                         (DogtagKRAPlugin.DSA_PUBLIC_KEY_HEADER,
+                          pub_seq.encode().encode("base64"),
+                          DogtagKRAPlugin.DSA_PUBLIC_KEY_FOOTER)
                          ).encode('utf-8')
                     )
                 else:
@@ -296,9 +295,9 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
                     pub_seq[:] = key_data.data
                     recovered_key = (
                         ("%s\n%s%s" %
-                        (DogtagKRAPlugin.DSA_PRIVATE_KEY_HEADER,
-                         pub_seq.encode().encode("base64"),
-                         DogtagKRAPlugin.DSA_PRIVATE_KEY_FOOTER)
+                         (DogtagKRAPlugin.DSA_PRIVATE_KEY_HEADER,
+                          pub_seq.encode().encode("base64"),
+                          DogtagKRAPlugin.DSA_PRIVATE_KEY_FOOTER)
                          ).encode('utf-8')
                     )
                 else:
@@ -491,9 +490,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
             meta_dict[DogtagKRAPlugin.SECRET_TYPE] = secret_dto.type
 
     def _get_passphrase_for_a_private_key(self, secret_metadata, key_spec):
-        """Retrieve the passphrase for the private key which is stored
-        in the KRA.
-        """
+        """Retrieve the passphrase for the private key stored in the KRA."""
         secret_type = secret_metadata.get(DogtagKRAPlugin.SECRET_TYPE, None)
         if secret_type is None:
             return None

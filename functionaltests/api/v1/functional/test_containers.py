@@ -14,13 +14,14 @@
 # limitations under the License.
 import copy
 
+from testtools import testcase
+
 from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import container_behaviors
 from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import container_models
 from functionaltests.api.v1.models import secret_models
-from testtools import testcase
 
 create_container_data = {
     "name": "containername",

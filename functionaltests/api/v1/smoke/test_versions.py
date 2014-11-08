@@ -18,7 +18,7 @@ from functionaltests.api import base
 class VersionDiscoveryTestCase(base.TestCase):
 
     def test_version_get_as_unauthenticated(self):
-        """Covers retrieving version as unauthenticated user"""
+        """Covers retrieving version as unauthenticated user."""
         self._do_version_test(use_auth=False)
 
     def test_version_get_as_authenticated(self):
@@ -26,7 +26,7 @@ class VersionDiscoveryTestCase(base.TestCase):
         self._do_version_test(use_auth=True)
 
     def _do_version_test(self, use_auth=False):
-        """Get version string with or without authentication
+        """Get version string with or without authentication.
 
         :param use_auth: True to use authentication, False otherwise.  Default
         is False

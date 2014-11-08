@@ -97,9 +97,7 @@ def is_base64_processing_needed(content_type, content_encoding):
 
 
 def use_binary_content_as_is(content_type, content_encoding):
-    """Checks if content-type and content-encoding header (if present) is valid
-    to allow binary content as-is.
-    """
+    """Checks if headers are valid to allow binary content as-is."""
     content_encodings = utils.get_accepted_encodings_direct(content_encoding)
     if content_encodings:
         if 'binary' not in content_encodings:

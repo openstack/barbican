@@ -213,8 +213,8 @@ def generate_asymmetric_secret(spec, content_type,
     # Create secret models to eventually save metadata to.
     private_secret_model = models.Secret(spec)
     public_secret_model = models.Secret(spec)
-    passphrase_secret_model = models.Secret(spec)\
-        if spec.get('passphrase') else None
+    passphrase_secret_model = (models.Secret(spec)
+                               if spec.get('passphrase') else None)
 
     # Generate the secret.
     asymmetric_meta_dto = _generate_asymmetric_key(
