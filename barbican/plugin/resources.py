@@ -112,7 +112,7 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
     #  and unit test patch work is completed.
     secret_type = None
     if key_spec is not None:
-        secret_store.KeyAlgorithm().get_secret_type(key_spec.alg)
+        secret_type = secret_store.KeyAlgorithm().get_secret_type(key_spec.alg)
     secret_dto = secret_store.SecretDTO(type=secret_type,
                                         secret=unencrypted,
                                         key_spec=key_spec,

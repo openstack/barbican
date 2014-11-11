@@ -12,6 +12,8 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import base64
+
 import mock
 import testtools
 
@@ -33,22 +35,25 @@ class WhenTestingPluginResource(testtools.TestCase):
         self.project_model = mock.MagicMock()
         asymmetric_meta_dto = secret_store.AsymmetricKeyMetadataDTO()
         # Mock plug-in
-        self.generate_plugin = mock.MagicMock()
-        self.generate_plugin.generate_asymmetric_key.return_value = (
+        self.moc_plugin = mock.MagicMock()
+        self.moc_plugin.generate_asymmetric_key.return_value = (
             asymmetric_meta_dto)
+        self.moc_plugin.store_secret.return_value = {}
 
-        gen_plugin_config = {
+        moc_plugin_config = {
             'return_value.get_plugin_generate.return_value':
-            self.generate_plugin
+            self.moc_plugin,
+            'return_value.get_plugin_store.return_value':
+            self.moc_plugin
         }
 
-        self.gen_plugin_patcher = mock.patch(
+        self.moc_plugin_patcher = mock.patch(
             'barbican.plugin.interface.secret_store'
             '.SecretStorePluginManager',
-            **gen_plugin_config
+            **moc_plugin_config
         )
-        self.gen_plugin_patcher.start()
-        self.addCleanup(self.gen_plugin_patcher.stop)
+        self.moc_plugin_patcher.start()
+        self.addCleanup(self.moc_plugin_patcher.stop)
 
         project_repo = mock.MagicMock()
         secret_repo = mock.MagicMock()
@@ -74,6 +79,26 @@ class WhenTestingPluginResource(testtools.TestCase):
     def tearDown(self):
         super(WhenTestingPluginResource, self).tearDown()
 
+    def test_store_secret_dto(self):
+        spec = {'algorithm': 'AES', 'bit_length': 256}
+        secret = base64.b64encode('ABCDEFABCDEFABCDEFABCDEF')
+
+        self.plugin_resource.store_secret(
+            secret,
+            self.content_type,
+            'base64',
+            spec,
+            None,
+            self.project_model,
+            self.repos)
+
+        dto = self.moc_plugin.store_secret.call_args_list[0][0][0]
+        self.assertEqual("symmetric", dto.type)
+        self.assertEqual('ABCDEFABCDEFABCDEFABCDEF', dto.secret)
+        self.assertEqual(spec['algorithm'], dto.key_spec.alg)
+        self.assertEqual(spec['bit_length'], dto.key_spec.bit_length)
+        self.assertEqual(self.content_type, dto.content_type)
+
     def test_generate_asymmetric_with_passphrase(self):
         """test asymmetric secret generation with passphrase."""
         secret_container = self.plugin_resource.generate_asymmetric_secret(
@@ -84,7 +109,7 @@ class WhenTestingPluginResource(testtools.TestCase):
         )
 
         self.assertEqual("rsa", secret_container.type)
-        self.assertEqual(self.generate_plugin.
+        self.assertEqual(self.moc_plugin.
                          generate_asymmetric_key.call_count, 1)
         self.assertEqual(self.repos.container_repo.
                          create_from.call_count, 1)
@@ -103,7 +128,7 @@ class WhenTestingPluginResource(testtools.TestCase):
         )
 
         self.assertEqual("rsa", secret_container.type)
-        self.assertEqual(self.generate_plugin.generate_asymmetric_key.
+        self.assertEqual(self.moc_plugin.generate_asymmetric_key.
                          call_count, 1)
         self.assertEqual(self.repos.container_repo.create_from.
                          call_count, 1)
