@@ -189,7 +189,7 @@ function create_barbican_accounts {
     if [[ "$KEYSTONE_CATALOG_BACKEND" = 'sql' ]]; then
         BARBICAN_SERVICE=$(keystone service-create \
             --name=barbican \
-            --type=keystore \
+            --type='key-manager' \
             --description="Barbican Service" \
             | grep " id " | get_field 2)
         keystone endpoint-create \

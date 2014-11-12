@@ -81,7 +81,7 @@ class BarbicanClient(object):
 
     def get_base_url(self, include_version=True):
         filters = {
-            'service': 'keystore',
+            'service': 'key-manager',
             'api_version': self.api_version if include_version else ''
         }
 
