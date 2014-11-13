@@ -15,6 +15,7 @@
 import datetime
 import functools
 from os import path
+import time
 import types
 import urlparse
 
@@ -128,7 +129,7 @@ def create_timestamp_w_tz_and_offset(timezone=None, days=0, hours=0, minutes=0,
     :return a timestamp
     """
     if timezone is None:
-        timezone = datetime.datetime.strftime("%z")
+        timezone = time.strftime("%z")
 
     timestamp = '{time}{timezone}'.format(
         time=(datetime.datetime.today() + datetime.timedelta(days=days,

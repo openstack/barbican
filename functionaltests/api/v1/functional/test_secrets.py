@@ -17,6 +17,7 @@ import base64
 import binascii
 import json
 import sys
+import time
 
 from testtools import testcase
 
@@ -606,6 +607,36 @@ class SecretsTestCase(base.TestCase):
             "'text/plain;charset=utf-8', 'text/plain; charset=utf-8', "
             "'application/octet-stream'", resp_dict['description'])
         self.assertIn("Bad Request", resp_dict['title'])
+
+    @testcase.attr('negative')
+    def test_secret_create_defaults_then_expire_then_check(self):
+        """Covers case where you try to retrieve a secret that is expired.
+
+        This test creates a secret that will soon expire.
+        After it expires, check it and verify that it is no longer
+        a valid secret.
+        """
+
+        # create a secret that expires in 5 seconds
+        timestamp = utils.create_timestamp_w_tz_and_offset(seconds=5)
+
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {"expiration": timestamp}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        # now get the secret - will be still valid
+        get_resp = self.behaviors.get_secret_metadata(secret_ref)
+        self.assertEqual(get_resp.status_code, 200)
+
+        # now wait 10 seconds
+        time.sleep(10)
+
+        # now get the secret - should be invalid (expired)
+        resp = self.behaviors.get_secret_metadata(secret_ref)
+        self.assertEqual(resp.status_code, 404)
 
     @utils.parameterized_dataset({
         'str_type': ['not-an-int'],
