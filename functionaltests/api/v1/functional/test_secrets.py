@@ -69,7 +69,8 @@ secret_create_two_phase_data = {
 }
 
 max_allowed_payload_in_bytes = 10000
-large_string = str(bytearray().zfill(10001))
+max_payload_string = str(bytearray().zfill(max_allowed_payload_in_bytes))
+oversized = bytearray().zfill(max_allowed_payload_in_bytes + 1)
 len_255_string = str(bytearray().zfill(255))
 
 
@@ -147,127 +148,7 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(resp.status_code, 406)
 
     @testcase.attr('negative')
-    def test_secret_create_default_int_as_mode(self):
-        """Create a secret with an integer as the cypher type.
-
-        Should return 400.
-        """
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"mode": 400}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
-
-    @testcase.attr('negative')
-    def test_secret_create_default_int_as_algorithm(self):
-        """Create a secret with an integer as the algorithm.
-
-        Should return 400.
-        """
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"algorithm": 400}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
-
-    @testcase.attr('positive')
-    def test_secret_create_defaults_w_charset(self):
-        """Create a secret with text/plain; charset=utf-8 as content type."""
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"payload_content_type": 'text/plain; charset=utf-8',
-                     "payload_content_encoding": None}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
-
-    @testcase.attr('negative')
-    def test_secret_create_defaults_bad_expiration_timezone(self):
-        """Create a expired secret with a malformed timezone."""
-        timestamp = utils.create_timestamp_w_tz_and_offset('-5:00', days=0)
-
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"expiration": timestamp}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
-
-    @testcase.attr('positive')
-    def test_secret_create_defaults_negative_hour_long_expiration(self):
-        """Create a secret with a malformed timezone (-05:00 hours)."""
-        timestamp = utils.create_timestamp_w_tz_and_offset('-05:00', days=5)
-
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"expiration": timestamp}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
-
-    @testcase.attr('positive')
-    def test_secret_create_defaults_positive_hour_long_expiration(self):
-        """Create a secret with a malformed timezone (+05:00 hours)."""
-        timestamp = utils.create_timestamp_w_tz_and_offset('+05:00', days=5)
-
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"expiration": timestamp}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
-
-    @testcase.attr('positive')
-    def test_secret_create_defaults_negative_hour_short_expiration(self):
-        """Create a secret with a malformed timezone (-01 hours)."""
-        timestamp = utils.create_timestamp_w_tz_and_offset('-01', days=1)
-
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"expiration": timestamp}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
-
-    @testcase.attr('positive')
-    def test_secret_create_defaults_positive_hour_short_expiration(self):
-        """Create a secret with a malformed timezone (+01 hours)."""
-        timestamp = utils.create_timestamp_w_tz_and_offset('+01', days=1)
-
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"expiration": timestamp}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
-
-    @testcase.attr('negative')
-    def test_secret_create_defaults_int_as_name(self):
-        """Create a secret with an integer as the name.
-
-        Should return 400.
-        """
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"name": 400}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
-
-    @testcase.attr('positive')
-    def test_secret_create_defaults_invalid_algorithm(self):
-        """Create a secret with an invalid algorithm."""
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"algorithm": 'invalid_algorithm'}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
-
-    @testcase.attr('negative')
-    def test_secret_create_defaults_invalid_expiration(self):
+    def test_secret_create_defaults_expiration_passed(self):
         """Create a secret with an expiration that has already passed.
 
         Should return a 400.
@@ -278,56 +159,6 @@ class SecretsTestCase(base.TestCase):
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 400)
-
-    @testcase.attr('positive')
-    def test_secret_create_defaults_max_secret_size(self):
-        """Create a secret with a maximum sized payload."""
-        large_string = str(bytearray().zfill(max_allowed_payload_in_bytes))
-
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"payload": large_string}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
-
-    @testcase.attr('negative')
-    def test_secret_create_nones_valid_content_type_and_encoding(self):
-        """Create a secret with only a type and encoding (without a payload).
-
-        Should return a 400.
-        """
-        test_model = secret_models.SecretModel(**secret_create_nones_data)
-        overrides = {"payload_content_type": "application/octet-stream",
-                     "payload_content_encoding": "base64"}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
-
-    @testcase.attr('negative')
-    def test_secret_creating_defaults_text_plain_mime_type_no_payload(self):
-        """Create a secret with text/plain content type (without a payload).
-
-        Should return a 400.
-        """
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"payload": None}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
-
-    @testcase.attr('positive')
-    def test_secret_create_defaults_text_plain_payload_content_type(self):
-        """Create a secret with text/plain content-type."""
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"payload_content_type": 'text/plain',
-                     "payload_content_encoding": None}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
 
     @testcase.attr('negative')
     def test_secret_create_emptystrings(self):
@@ -341,19 +172,6 @@ class SecretsTestCase(base.TestCase):
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 400)
 
-    @testcase.attr('positive')
-    def test_secret_create_defaults_empty_name(self):
-        """Empty secret name should default to a UUID on GET."""
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"name": ''}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
-
-        get_resp = self.behaviors.get_secret_metadata(secret_ref)
-        self.assertIn(get_resp.model.name, secret_ref)
-
     @testcase.attr('negative')
     def test_secret_create_defaults_invalid_content_type(self):
         """Create secret with an invalid content type in HTTP header.
@@ -366,20 +184,6 @@ class SecretsTestCase(base.TestCase):
         resp, secret_ref = self.behaviors.create_secret(test_model, headers)
         self.assertEqual(resp.status_code, 415)
 
-    @testcase.attr('positive')
-    def test_secret_create_defaults_none_as_bit_length(self):
-        """Test that a Secret's bit_length is optional."""
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"bit_length": None}
-        test_model.override_values(**overrides)
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
-
-        get_resp = self.behaviors.get_secret_metadata(secret_ref)
-        self.assertEqual(get_resp.status_code, 200)
-        self.assertEqual(get_resp.model.bit_length, None)
-
     @testcase.attr('negative')
     def test_secret_create_defaults_oversized_payload(self):
         """Create a secret that is larger than the max payload size.
@@ -387,11 +191,10 @@ class SecretsTestCase(base.TestCase):
         Should return a 413 if the secret size is greater than the
         maximum allowed size.
         """
-        oversized_payload = max_allowed_payload_in_bytes + 1
-        data = str(bytearray().zfill(oversized_payload))
+        oversized_payload = str(oversized)
 
         test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"payload": data}
+        overrides = {"payload": oversized_payload}
         test_model.override_values(**overrides)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
@@ -490,11 +293,11 @@ class SecretsTestCase(base.TestCase):
 
         Launchpad bug #1315498.
         """
-        data = bytearray().zfill(max_allowed_payload_in_bytes + 1)
+        oversized_payload = oversized
 
         # put a value in the middle of the data that does not have a UTF-8
         # code point.  Using // to be python3-friendly.
-        data[max_allowed_payload_in_bytes // 2] = b'\xb0'
+        oversized_payload[max_allowed_payload_in_bytes // 2] = b'\xb0'
 
         test_model = secret_models.SecretModel(**secret_create_two_phase_data)
 
@@ -505,7 +308,7 @@ class SecretsTestCase(base.TestCase):
             secret_ref=secret_ref,
             payload_content_type='application/octet-stream',
             payload_content_encoding='base64',
-            payload=str(data))
+            payload=str(oversized_payload))
         self.assertEqual(put_resp.status_code, 413)
 
     @testcase.attr('negative')
@@ -515,7 +318,7 @@ class SecretsTestCase(base.TestCase):
         Covers the case of putting secret data that is larger than the maximum
         secret size allowed by Barbican. Beyond that it should return 413.
         """
-        data = bytearray().zfill(max_allowed_payload_in_bytes + 1)
+        oversized_payload = oversized
 
         test_model = secret_models.SecretModel(**secret_create_two_phase_data)
 
@@ -526,7 +329,7 @@ class SecretsTestCase(base.TestCase):
             secret_ref=secret_ref,
             payload_content_type='application/octet-stream',
             payload_content_encoding='base64',
-            payload=str(data))
+            payload=str(oversized_payload))
         self.assertEqual(put_resp.status_code, 413)
 
     @testcase.attr('positive')
@@ -639,6 +442,84 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(resp.status_code, 404)
 
     @utils.parameterized_dataset({
+        'alphanumeric': ['1f34ds'],
+        'punctuation': ['~!@#$%^&*()_+`-={}[]|:;<>,.?'],
+        'uuid': ['54262d9d-4bc7-4821-8df0-dc2ca8e112bb'],
+        'len_255': [len_255_string],
+        'empty': ['']
+    })
+    @testcase.attr('positive')
+    def test_secret_create_defaults_valid_name(self, name):
+        """Covers cases of creating secrets with valid names."""
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {"name": name}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+    @utils.parameterized_dataset({
+        'int': [400]
+    })
+    @testcase.attr('negative')
+    def test_secret_create_defaults_invalid_name(self, name):
+        """Create secrets with various invalid names.
+
+        Should return 400.
+        """
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {"name": name}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 400)
+
+    @utils.parameterized_dataset({
+        'invalid': ['invalid']
+    })
+    @testcase.attr('positive')
+    def test_secret_create_defaults_valid_algorithms(self, algorithm):
+        """Creates secrets with various valid algorithms."""
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {"algorithm": algorithm}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+    @utils.parameterized_dataset({
+        'int': [400]
+    })
+    @testcase.attr('negative')
+    def test_secret_create_defaults_invalid_algorithms(self, algorithm):
+        """Creates secrets with various invalid algorithms."""
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {"algorithm": algorithm}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 400)
+
+    @utils.parameterized_dataset({
+        '512': [512],
+        'sixteen': [16],
+        'fifteen': [15],
+        'eight': [8],
+        'seven': [7],
+        'one': [1],
+        'none': [None]
+    })
+    @testcase.attr('positive')
+    def test_secret_create_defaults_valid_bit_length(self, bit_length):
+        """Covers cases of creating secrets with valid bit lengths."""
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {"bit_length": bit_length}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+    @utils.parameterized_dataset({
         'str_type': ['not-an-int'],
         'empty': [''],
         'blank': [' '],
@@ -648,7 +529,7 @@ class SecretsTestCase(base.TestCase):
     })
     @testcase.attr('negative')
     def test_secret_create_defaults_invalid_bit_length(self, bit_length):
-        """Covers cases of creating a secret with invalid bit lengths."""
+        """Covers cases of creating secrets with invalid bit lengths."""
         test_model = secret_models.SecretModel(**secret_create_defaults_data)
         overrides = {"bit_length": bit_length}
         test_model.override_values(**overrides)
@@ -657,18 +538,71 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(resp.status_code, 400)
 
     @utils.parameterized_dataset({
+        'cbc': ['cbc'],
+        'unknown_positive': ['unknown']
+    })
+    @testcase.attr('positive')
+    def test_secret_create_defaults_valid_mode(self, mode):
+        """Covers cases of creating secrets with valid modes."""
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {"mode": mode}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+    @utils.parameterized_dataset({
         'zero': [0],
-        'large_string': [large_string],
+        'oversized_string': [str(oversized)],
+        'int': [400]
     })
     @testcase.attr('negative')
     def test_secret_create_defaults_invalid_mode(self, mode):
-        """Covers cases of creating a secret with invalid modes."""
+        """Covers cases of creating secrets with invalid modes."""
         test_model = secret_models.SecretModel(**secret_create_defaults_data)
         overrides = {"mode": mode}
         test_model.override_values(**overrides)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 400)
+
+    @utils.parameterized_dataset({
+        'text_content_type_none_encoding': {
+            'payload_content_type': 'text/plain',
+            'payload_content_encoding': None},
+
+        'utf8_text_content_type_none_encoding': {
+            'payload_content_type': 'text/plain; charset=utf-8',
+            'payload_content_encoding': None},
+
+        'no_space_utf8_text_content_type_none_encoding': {
+            'payload_content_type': 'text/plain;charset=utf-8',
+            'payload_content_encoding': None},
+
+        'octet_content_type_base64_encoding': {
+            'payload_content_type': 'application/octet-stream',
+            'payload_content_encoding': 'base64'}
+    })
+    @testcase.attr('positive')
+    def test_secret_create_defaults_valid_types_and_encoding(self, **kwargs):
+        """Creates secrets with various content types and encodings."""
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        test_model.override_values(**kwargs)
+        payload_content_encoding = test_model.payload_content_encoding
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        get_resp = self.behaviors.get_secret(
+            secret_ref,
+            payload_content_type=test_model.payload_content_type,
+            payload_content_encoding=payload_content_encoding)
+
+        if payload_content_encoding == 'base64':
+            self.assertIn(test_model.payload,
+                          binascii.b2a_base64(get_resp.content))
+        else:
+            self.assertIn(test_model.payload, get_resp.content)
 
     @utils.parameterized_dataset({
         'empty_content_type_and_encoding': {
@@ -680,8 +614,8 @@ class SecretsTestCase(base.TestCase):
             'payload_content_encoding': None},
 
         'large_string_content_type_and_encoding': {
-            'payload_content_type': large_string,
-            'payload_content_encoding': large_string},
+            'payload_content_type': str(oversized),
+            'payload_content_encoding': str(oversized)},
 
         'int_content_type_and_encoding': {
             'payload_content_type': 123,
@@ -740,8 +674,8 @@ class SecretsTestCase(base.TestCase):
             'payload_content_encoding': 'invalid'},
     })
     @testcase.attr('negative')
-    def test_secret_create_defaults(self, **kwargs):
-        """Creating a secret with invalid payload types and encodings."""
+    def test_secret_create_defaults_invalid_types_and_encoding(self, **kwargs):
+        """Creating secrets with invalid payload types and encodings."""
         test_model = secret_models.SecretModel(**secret_create_defaults_data)
         test_model.override_values(**kwargs)
 
@@ -749,87 +683,78 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(resp.status_code, 400)
 
     @utils.parameterized_dataset({
-        'alphanumeric': ['1f34ds'],
-        'punctuation': ['~!@#$%^&*()_+`-={}[]|:;<>,.?'],
-        'uuid': ['54262d9d-4bc7-4821-8df0-dc2ca8e112bb'],
-        'len_255': [len_255_string]
+        'max_payload_string': [max_payload_string]
     })
-    @testcase.attr('postive')
-    def test_secret_create_defaults_valid_name(self, name):
-        """Covers cases of creating a secret with valid names."""
+    @testcase.attr('positive')
+    def test_secret_create_defaults_valid_payload(self, payload):
+        """Create secrets with a various valid payloads."""
         test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"name": name}
+        overrides = {"payload": payload}
         test_model.override_values(**overrides)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 201)
 
     @utils.parameterized_dataset({
-        '512': [512],
-        'sixteen': [16],
-        'fifteen': [15],
-        'eight': [8],
-        'seven': [7],
-        'one': [1]
+        'empty': [''],
+        'array': [['boom']],
+        'int': [123],
+        'none': [None]
+    })
+    @testcase.attr('negative')
+    def test_secret_create_defaults_invalid_payload(self, payload):
+        """Covers creating secrets with various invalid payloads."""
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {"payload_content_type": "application/octet-stream",
+                     "payload_content_encoding": "base64",
+                     "payload": payload}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 400)
+
+    @utils.parameterized_dataset({
+        'negative_five_long_expire': {
+            'timezone': '-05:00',
+            'days': 5},
+
+        'positive_five_long_expire': {
+            'timezone': '+05:00',
+            'days': 5},
+
+        'negative_one_short_expire': {
+            'timezone': '-01',
+            'days': 1},
+
+        'positive_one_short_expire': {
+            'timezone': '+01',
+            'days': 1}
     })
     @testcase.attr('positive')
-    def test_secret_create_defaults_valid_bit_length(self, bit_length):
-        """Covers cases of creating a secret with valid bit lengths."""
+    def test_secret_create_defaults_valid_expiration(self, **kwargs):
+        """Create secrets with a various valid expiration data."""
+        timestamp = utils.create_timestamp_w_tz_and_offset(**kwargs)
+
         test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"bit_length": bit_length}
+        overrides = {"expiration": timestamp}
         test_model.override_values(**overrides)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 201)
 
     @utils.parameterized_dataset({
-        'cbc': ['cbc'],
-        'unknown_positive': ['unknown']
+        'malformed_timezone': {
+            'timezone': '-5:00',
+            'days': 0}
     })
-    @testcase.attr('positive')
-    def test_secret_create_defaults_valid_mode(self, mode):
-        """Covers cases of creating a secret with valid modes."""
+    @testcase.attr('negative')
+    def test_secret_create_defaults_invalid_expiration(self, **kwargs):
+        """Create secrets with various invalid expiration data."""
+        timestamp = utils.create_timestamp_w_tz_and_offset(**kwargs)
+
         test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"mode": mode}
+        overrides = {"expiration": timestamp}
         test_model.override_values(**overrides)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
-
-    @utils.parameterized_dataset({
-        'text_content_type_none_encoding': {
-            'payload_content_type': 'text/plain',
-            'payload_content_encoding': None},
-
-        'utf8_text_content_type_none_encoding': {
-            'payload_content_type': 'text/plain; charset=utf-8',
-            'payload_content_encoding': None},
-
-        'no_space_utf8_text_content_type_none_encoding': {
-            'payload_content_type': 'text/plain;charset=utf-8',
-            'payload_content_encoding': None},
-
-        'octet_content_type_base64_encoding': {
-            'payload_content_type': 'application/octet-stream',
-            'payload_content_encoding': 'base64'}
-    })
-    @testcase.attr('positive')
-    def test_secret_create_defaults_normalize(self, **kwargs):
-        """Creates a secret with various content types and encodings."""
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        test_model.override_values(**kwargs)
-        payload_content_encoding = test_model.payload_content_encoding
-
-        resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
-
-        get_resp = self.behaviors.get_secret(
-            secret_ref,
-            payload_content_type=test_model.payload_content_type,
-            payload_content_encoding=payload_content_encoding)
-
-        if payload_content_encoding == 'base64':
-            self.assertIn(test_model.payload,
-                          binascii.b2a_base64(get_resp.content))
-        else:
-            self.assertIn(test_model.payload, get_resp.content)
+        self.assertEqual(resp.status_code, 400)
