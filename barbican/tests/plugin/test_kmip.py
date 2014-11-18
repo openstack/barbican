@@ -27,6 +27,7 @@ from kmip.core.messages import contents
 from kmip.core import objects
 from kmip.services import kmip_client as proxy
 from kmip.services import results
+from oslo.config import cfg
 
 from barbican.plugin import kmip_secret_store as kss
 
@@ -39,9 +40,11 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
         self.kmipclient_mock = mock.MagicMock(name="KMIP client mock")
 
-        self.credential = None
+        CONF = cfg.CONF
+        CONF.kmip_plugin.keyfile = None
 
-        self.secret_store = kss.KMIPSecretStore()
+        self.credential = None
+        self.secret_store = kss.KMIPSecretStore(CONF)
         self.secret_store.client = self.kmipclient_mock
         self.secret_store.credential = self.credential
 
