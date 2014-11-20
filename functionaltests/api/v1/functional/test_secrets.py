@@ -68,11 +68,6 @@ secret_create_two_phase_data = {
     "mode": "cbc",
 }
 
-max_allowed_payload_in_bytes = 10000
-max_payload_string = str(bytearray().zfill(max_allowed_payload_in_bytes))
-oversized = bytearray().zfill(max_allowed_payload_in_bytes + 1)
-len_255_string = str(bytearray().zfill(255))
-
 
 @utils.parameterized_test_case
 class SecretsTestCase(base.TestCase):
@@ -191,10 +186,8 @@ class SecretsTestCase(base.TestCase):
         Should return a 413 if the secret size is greater than the
         maximum allowed size.
         """
-        oversized_payload = str(oversized)
-
         test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"payload": oversized_payload}
+        overrides = {"payload": str(self.oversized_payload)}
         test_model.override_values(**overrides)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
@@ -293,11 +286,11 @@ class SecretsTestCase(base.TestCase):
 
         Launchpad bug #1315498.
         """
-        oversized_payload = oversized
+        oversized_payload = bytearray().zfill(self.max_payload_size + 1)
 
         # put a value in the middle of the data that does not have a UTF-8
         # code point.  Using // to be python3-friendly.
-        oversized_payload[max_allowed_payload_in_bytes // 2] = b'\xb0'
+        oversized_payload[self.max_payload_size // 2] = b'\xb0'
 
         test_model = secret_models.SecretModel(**secret_create_two_phase_data)
 
@@ -318,7 +311,7 @@ class SecretsTestCase(base.TestCase):
         Covers the case of putting secret data that is larger than the maximum
         secret size allowed by Barbican. Beyond that it should return 413.
         """
-        oversized_payload = oversized
+        oversized_payload = self.oversized_payload
 
         test_model = secret_models.SecretModel(**secret_create_two_phase_data)
 
@@ -329,7 +322,7 @@ class SecretsTestCase(base.TestCase):
             secret_ref=secret_ref,
             payload_content_type='application/octet-stream',
             payload_content_encoding='base64',
-            payload=str(oversized_payload))
+            payload=oversized_payload)
         self.assertEqual(put_resp.status_code, 413)
 
     @testcase.attr('positive')
@@ -445,7 +438,7 @@ class SecretsTestCase(base.TestCase):
         'alphanumeric': ['1f34ds'],
         'punctuation': ['~!@#$%^&*()_+`-={}[]|:;<>,.?'],
         'uuid': ['54262d9d-4bc7-4821-8df0-dc2ca8e112bb'],
-        'len_255': [len_255_string],
+        'len_255': [base.TestCase.max_sized_field],
         'empty': ['']
     })
     @testcase.attr('positive')
@@ -553,7 +546,7 @@ class SecretsTestCase(base.TestCase):
 
     @utils.parameterized_dataset({
         'zero': [0],
-        'oversized_string': [str(oversized)],
+        'oversized_string': [base.TestCase.oversized_field],
         'int': [400]
     })
     @testcase.attr('negative')
@@ -614,8 +607,8 @@ class SecretsTestCase(base.TestCase):
             'payload_content_encoding': None},
 
         'large_string_content_type_and_encoding': {
-            'payload_content_type': str(oversized),
-            'payload_content_encoding': str(oversized)},
+            'payload_content_type': base.TestCase.oversized_field,
+            'payload_content_encoding': base.TestCase.oversized_field},
 
         'int_content_type_and_encoding': {
             'payload_content_type': 123,
@@ -683,7 +676,7 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(resp.status_code, 400)
 
     @utils.parameterized_dataset({
-        'max_payload_string': [max_payload_string]
+        'max_payload_string': [base.TestCase.max_sized_payload]
     })
     @testcase.attr('positive')
     def test_secret_create_defaults_valid_payload(self, payload):

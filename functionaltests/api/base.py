@@ -32,6 +32,12 @@ if os.path.exists('./etc/dev_tempest.conf'):
 
 
 class TestCase(oslotest.BaseTestCase):
+    max_payload_size = 10000
+    max_sized_payload = 'a' * max_payload_size
+    oversized_payload = 'a' * (max_payload_size + 1)
+    max_field_size = 255
+    max_sized_field = 'a' * max_field_size
+    oversized_field = 'a' * (max_field_size + 1)
 
     @classmethod
     def setUpClass(cls):
