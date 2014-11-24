@@ -2294,6 +2294,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
 
         self.container = create_container(id_ref='id1')
         self.consumer = create_consumer(self.container.id, id_ref='id2')
+        self.consumer2 = create_consumer(self.container.id, id_ref='id3')
 
         self.consumer_ref = {
             'name': self.consumer.name,
@@ -2391,6 +2392,43 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         self.assertEqual(resp.status_int, 404)
         # Error response should have json content type
         self.assertEqual(resp.content_type, "application/json")
+
+    def test_should_delete_consumers_on_container_delete(self):
+        consumers = [self.consumer, self.consumer2]
+        ret_val = (consumers, 0, 0, 1)
+        self.consumer_repo.get_by_container_id.return_value = ret_val
+
+        resp = self.app.delete(
+            '/containers/{0}/'.format(self.container.id)
+        )
+        self.assertEqual(resp.status_int, 204)
+
+        # Verify consumers were deleted
+        calls = []
+        for consumer in consumers:
+            calls.append(mock.call(consumer.id))
+        self.consumer_repo.delete_entity_by_id.assert_has_calls(
+            calls, any_order=True
+        )
+
+    def test_should_pass_on_container_delete_with_missing_consumers(self):
+        consumers = [self.consumer, self.consumer2]
+        ret_val = (consumers, 0, 0, 1)
+        self.consumer_repo.get_by_container_id.return_value = ret_val
+        self.consumer_repo.delete_entity_by_id.side_effect = excep.NotFound
+
+        resp = self.app.delete(
+            '/containers/{0}/'.format(self.container.id)
+        )
+        self.assertEqual(resp.status_int, 204)
+
+        # Verify consumers were deleted
+        calls = []
+        for consumer in consumers:
+            calls.append(mock.call(consumer.id))
+        self.consumer_repo.delete_entity_by_id.assert_has_calls(
+            calls, any_order=True
+        )
 
 
 class WhenGettingContainersListUsingResource(FunctionalTest):

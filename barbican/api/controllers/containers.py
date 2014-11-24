@@ -71,6 +71,10 @@ class ContainerController(object):
     @controllers.handle_exceptions(u._('Container deletion'))
     @controllers.enforce_rbac('container:delete')
     def on_delete(self, keystone_id, **kwargs):
+        container_consumers = self.consumer_repo.get_by_container_id(
+            self.container_id,
+            suppress_exception=True
+        )
         try:
             self.container_repo.delete_entity_by_id(
                 entity_id=self.container_id,
@@ -79,6 +83,12 @@ class ContainerController(object):
         except exception.NotFound:
             LOG.exception('Problem deleting container')
             container_not_found()
+
+        for consumer in container_consumers[0]:
+            try:
+                self.consumer_repo.delete_entity_by_id(consumer.id)
+            except exception.NotFound:
+                pass
 
 
 class ContainersController(object):
