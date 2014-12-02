@@ -19,7 +19,7 @@ Barbican exception subclasses
 
 import urlparse
 
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 
 _FATAL_EXCEPTION_FORMAT_ERRORS = False
 

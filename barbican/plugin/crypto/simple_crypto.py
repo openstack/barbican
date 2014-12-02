@@ -19,7 +19,7 @@ from cryptography import fernet
 from oslo.config import cfg
 import six
 
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 from barbican.plugin.crypto import crypto as c
 
 
@@ -45,7 +45,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
 
     def _get_kek(self, kek_meta_dto):
         if not kek_meta_dto.plugin_meta:
-            raise ValueError('KEK not yet created.')
+            raise ValueError(u._('KEK not yet created.'))
         # the kek is stored encrypted. Need to decrypt.
         encryptor = fernet.Fernet(self.master_kek)
         # Note : If plugin_meta type is unicode, encode to byte.
@@ -58,8 +58,14 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         kek = self._get_kek(kek_meta_dto)
         unencrypted = encrypt_dto.unencrypted
         if not isinstance(unencrypted, str):
-            raise ValueError('Unencrypted data must be a byte type, '
-                             'but was {0}'.format(type(unencrypted)))
+            raise ValueError(
+                u._(
+                    'Unencrypted data must be a byte type, but was '
+                    '{unencrypted_type}'
+                ).format(
+                    unencrypted_type=type(unencrypted)
+                )
+            )
         encryptor = fernet.Fernet(kek)
         cyphertext = encryptor.encrypt(unencrypted)
         return c.ResponseDTO(cyphertext, None)
@@ -123,7 +129,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
                                                      generate_dto.passphrase)
         if generate_dto.algorithm.lower() == 'dsa':
             if generate_dto.passphrase:
-                raise ValueError('Passphrase not supported for DSA key')
+                raise ValueError(u._('Passphrase not supported for DSA key'))
             public_key, private_key = self._serialize_dsa_key(public_key,
                                                               private_key)
         private_dto = self.encrypt(c.EncryptDTO(private_key),

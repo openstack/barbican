@@ -22,7 +22,7 @@ import uuid
 
 from oslo.config import cfg
 
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 import barbican.openstack.common.log as logging
 
 

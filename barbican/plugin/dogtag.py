@@ -30,7 +30,7 @@ from requests import exceptions as request_exceptions
 
 from barbican.common import exception
 from barbican.common import utils
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 import barbican.plugin.interface.certificate_manager as cm
 import barbican.plugin.interface.secret_store as sstore
 
@@ -354,8 +354,8 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         passphrase = key_spec.passphrase
         if passphrase:
             raise DogtagPluginNotSupportedException(
-                "Passphrase encryption is not supported for symmetric"
-                " key generating algorithms.")
+                u._("Passphrase encryption is not supported for symmetric"
+                    " key generating algorithms."))
 
         response = self.keyclient.generate_symmetric_key(
             client_key_id,
@@ -385,9 +385,10 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         passphrase_metadata = None
         if passphrase:
             if algorithm == key.KeyClient.DSA_ALGORITHM:
-                raise DogtagPluginNotSupportedException("Passphrase encryption"
-                                                        " is not supported for"
-                                                        " DSA algorithm")
+                raise DogtagPluginNotSupportedException(
+                    u._("Passphrase encryption is not "
+                        "supported for DSA algorithm")
+                )
 
             stored_passphrase_info = self.keyclient.archive_key(
                 uuid.uuid4().hex,
@@ -506,13 +507,13 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
             else:
                 if key_spec.alg.upper() == key.KeyClient.DSA_ALGORITHM:
                     raise sstore.SecretGeneralException(
-                        "DSA keys should not have a passphrase in the"
-                        " database, for being used during retrieval."
+                        u._("DSA keys should not have a passphrase in the"
+                            " database, for being used during retrieval.")
                     )
                 raise sstore.SecretGeneralException(
-                    "Secrets of type " + secret_type +
-                    " should not have a passphrase in the database, "
-                    "for being used during retrieval."
+                    u._("Secrets of type {secret_type} should not have a "
+                        "passphrase in the database, for being used during "
+                        "retrieval.").format(secret_type=secret_type)
                 )
         return passphrase
 
@@ -524,8 +525,10 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
                            sstore.SecretType.PRIVATE]:
             if twsk:
                 raise DogtagPluginNotSupportedException(
-                    "Encryption using session key is not supported when "
-                    "retrieving a " + secret_type + " key.")
+                    u._("Encryption using session key is not supported when "
+                        "retrieving a {secret_type} "
+                        "key.").format(secret_type=secret_type)
+                )
 
         return twsk
 
@@ -563,8 +566,15 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
         request_id = plugin_meta.get(self.REQUEST_ID, None)
         if not request_id:
             raise cm.CertificateGeneralException(
-                "{0} not found for {1} for order_id {2}".format(
-                    self.REQUEST_ID, operation, order_id))
+                u._(
+                    "{request} not found for {operation} for "
+                    "order_id {order_id}"
+                ).format(
+                    request=self.REQUEST_ID,
+                    operation=operation,
+                    order_id=order_id
+                )
+            )
         return request_id
 
     @_catch_request_exception
@@ -595,8 +605,14 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
         request = self._get_request(request_id)
         if not request:
             raise cm.CertificateGeneralException(
-                "No request found for request_id {0} for order {1}".format(
-                    request_id, order_id))
+                u._(
+                    "No request found for request_id {request_id} for "
+                    "order {order_id}"
+                ).format(
+                    request_id=request_id,
+                    order_id=order_id
+                )
+            )
 
         request_status = request.request_status
 
@@ -615,20 +631,28 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
             cert_id = request.cert_id
             if not cert_id:
                 raise cm.CertificateGeneralException(
-                    "Request {0} reports status_complete, but no cert_id "
-                    "has been returned".format(request_id))
+                    u._(
+                        "Request {request_id} reports status_complete, but no "
+                        "cert_id has been returned"
+                    ).format(
+                        request_id=request_id
+                    )
+                )
 
             cert = self._get_cert(cert_id)
             if not cert:
                 raise cm.CertificateGeneralException(
-                    "Certificate not found for cert_id: {0}".format(cert_id))
+                    u._("Certificate not found for cert_id: {cert_id}").format(
+                        cert_id=cert_id
+                    )
+                )
             return cm.ResultDTO(
                 cm.CertificateStatus.CERTIFICATE_GENERATED,
                 certificate=cert.encoded,
                 intermediates=cert.pkcs7_cert_chain)
         else:
             raise cm.CertificateGeneralException(
-                "Invalid request_status returned by CA")
+                u._("Invalid request_status returned by CA"))
 
     @_catch_request_exception
     def issue_certificate_request(self, order_id, order_meta, plugin_meta):
@@ -653,7 +677,7 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
         if not profile_id:
             return cm.ResultDTO(
                 cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
-                status_message="No profile_id specified")
+                status_message=u._("No profile_id specified"))
 
         try:
             enrollment_results = self.certclient.enroll_cert(
@@ -667,7 +691,7 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
             request = enrollment_result.request
             if not request:
                 raise cm.CertificateGeneralException(
-                    "No request returned in enrollment_results")
+                    u._("No request returned in enrollment_results"))
 
             # store the request_id in the plugin metadata
             plugin_meta[self.REQUEST_ID] = request.request_id
@@ -687,12 +711,18 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
                         cm.CertificateStatus.WAITING_FOR_CA)
                 elif request_status == pki.cert.CertRequestStatus.COMPLETE:
                     raise cm.CertificateGeneralException(
-                        "request_id {0} returns COMPLETE but no cert returned"
-                        .format(request.request_id))
+                        u._("request_id {req_id} returns COMPLETE but no cert "
+                            "returned").format(req_id=request.request_id))
                 else:
                     raise cm.CertificateGeneralException(
-                        "Invalid request_status {0} for request_id {1}"
-                        .format(request_status, request.request_id))
+                        u._(
+                            "Invalid request_status {status} for "
+                            "request_id {request_id}"
+                        ).format(
+                            status=request_status,
+                            request_id=request.request_id
+                        )
+                    )
 
             return cm.ResultDTO(
                 cm.CertificateStatus.CERTIFICATE_GENERATED,
@@ -705,7 +735,8 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
                 status_message=e.message)
         except pki.PKIException as e:
             raise cm.CertificateGeneralException(
-                "Exception thrown by enroll_cert: {0}".format(e.message))
+                u._("Exception thrown by enroll_cert: {message}").format(
+                    message=e.message))
 
     def modify_certificate_request(self, order_id, order_meta, plugin_meta):
         """Modify a certificate request.
@@ -730,8 +761,10 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
         elif result_dto.status == cm.CertificateStatus.INVALID_OPERATION:
             return cm.ResultDTO(
                 cm.CertificateStatus.INVALID_OPERATION,
-                status_message="Modify request: unable to cancel: {0}"
-                .format(result_dto.status_message))
+                status_message=u._(
+                    "Modify request: unable to cancel: "
+                    "{message}").format(message=result_dto.status_message)
+            )
         else:
             # other status (ca_unavailable, client_data_issue)
             # return result from cancel operation
@@ -757,7 +790,7 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
         except pki.RequestNotFoundException:
             return cm.ResultDTO(
                 cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
-                status_message="no request found for this order")
+                status_message=u._("no request found for this order"))
         except pki.ConflictingOperationException as e:
             return cm.ResultDTO(
                 cm.CertificateStatus.INVALID_OPERATION,

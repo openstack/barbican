@@ -20,7 +20,7 @@ import webob.exc
 from barbican.api import middleware as mw
 from barbican.common import utils
 import barbican.context
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 from barbican.openstack.common import policy
 
 LOG = utils.getLogger(__name__)
@@ -51,7 +51,7 @@ class BaseContextMiddleware(mw.Middleware):
         try:
             request_id = resp.request.context.request_id
         except AttributeError:
-            LOG.warn(u._('Unable to retrieve request id from context'))
+            LOG.warn(u._LW('Unable to retrieve request id from context'))
         else:
             resp.headers['x-openstack-request-id'] = 'req-%s' % request_id
         return resp
@@ -115,6 +115,7 @@ class ContextMiddleware(BaseContextMiddleware):
                 catalog_header = req.headers.get('X-Service-Catalog')
                 service_catalog = json.loads(catalog_header)
             except ValueError:
+                LOG.exception(u._LE('Problem processing X-Service-Catalog'))
                 raise webob.exc.HTTPInternalServerError(
                     u._('Invalid service catalog json.'))
 

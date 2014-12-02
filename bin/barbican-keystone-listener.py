@@ -20,7 +20,6 @@ Barbican Keystone notification listener server.
 """
 
 import eventlet
-import gettext
 import os
 import sys
 
@@ -40,8 +39,6 @@ possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
 if os.path.exists(os.path.join(possible_topdir, 'barbican', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
-
-gettext.install('barbican', unicode=1)
 
 from barbican.common import config
 from barbican.openstack.common import log

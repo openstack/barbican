@@ -15,7 +15,7 @@ from webob import exc
 
 from barbican import api
 from barbican.common import utils
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 
 LOG = utils.getLogger(__name__)
 
@@ -95,9 +95,12 @@ def handle_exceptions(operation_name=u._('System')):
             try:
                 return fn(inst, *args, **kwargs)
             except exc.HTTPError as f:
-                LOG.exception('Webob error seen')
+                LOG.exception(u._LE('Webob error seen'))
                 raise f  # Already converted to Webob exception, just reraise
             except Exception as e:
+                # In case intervening modules have disabled logging.
+                LOG.logger.disabled = False
+
                 status, message = api.generate_safe_exception_message(
                     operation_name, e)
                 LOG.exception(message)
@@ -115,8 +118,13 @@ def _do_enforce_content_types(pecan_req, valid_content_types):
     types passed in by our caller.
     """
     if pecan_req.content_type not in valid_content_types:
-        m = ("Unexpected content type: {0}.  Expected content types "
-             "are: {1}").format(pecan_req.content_type, valid_content_types)
+        m = u._(
+            "Unexpected content type: {type}.  Expected content types "
+            "are: {expected}"
+        ).format(
+            type=pecan_req.content_type,
+            expected=valid_content_types
+        )
         pecan.abort(415, m)
 
 

@@ -20,9 +20,9 @@ from barbican.common import hrefs
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
+from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repo
-from barbican.openstack.common import gettextutils as u
 
 LOG = utils.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class ContainerController(object):
                 keystone_id=keystone_id
             )
         except exception.NotFound:
-            LOG.exception('Problem deleting container')
+            LOG.exception(u._LE('Problem deleting container'))
             container_not_found()
 
         for consumer in container_consumers[0]:
@@ -169,8 +169,11 @@ class ContainersController(object):
             if not secret:
                 # This only partially localizes the error message and
                 # doesn't localize secret_ref.name.
-                pecan.abort(404, u._("Secret provided for '{0}' doesn't"
-                                     " exist.").format(secret_ref.name))
+                pecan.abort(
+                    404,
+                    u._("Secret provided for '{secret_name}' doesn't "
+                        "exist.").format(secret_name=secret_ref.name)
+                )
 
         self.container_repo.create_from(new_container)
 

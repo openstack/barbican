@@ -19,9 +19,9 @@ from barbican.common import hrefs
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
+from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repo
-from barbican.openstack.common import gettextutils as u
 
 LOG = utils.getLogger(__name__)
 
@@ -159,7 +159,7 @@ class ContainerConsumersController(object):
         try:
             self.consumer_repo.delete_entity_by_id(consumer.id, keystone_id)
         except exception.NotFound:
-            LOG.exception('Problem deleting consumer')
+            LOG.exception(u._LE('Problem deleting consumer'))
             _consumer_not_found()
         return self._return_container_data(self.container_id, keystone_id)
 

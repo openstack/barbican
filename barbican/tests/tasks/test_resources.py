@@ -15,8 +15,8 @@
 
 import mock
 
+from barbican import i18n as u
 from barbican.model import models
-from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import timeutils
 from barbican.tasks import resources
 from barbican.tests import utils

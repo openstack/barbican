@@ -28,7 +28,7 @@ from stevedore import named
 
 from barbican.common import exception
 import barbican.common.utils as utils
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 
 
 CONF = cfg.CONF
@@ -89,8 +89,8 @@ class CertificatePluginNotFound(exception.BarbicanException):
     def __init__(self, plugin_name=None):
         if plugin_name:
             message = u._(
-                "Certificate plugin \"{0}\""
-                " not found or configured.").format(plugin_name)
+                'Certificate plugin "{name}"'
+                ' not found or configured.').format(name=plugin_name)
         else:
             message = u._("Certificate plugin not found or configured.")
         super(CertificatePluginNotFound, self).__init__(message)
@@ -101,8 +101,8 @@ class CertificateEventPluginNotFound(exception.BarbicanException):
     def __init__(self, plugin_name=None):
         if plugin_name:
             message = u._(
-                "Certificate event plugin "
-                "\"{0}\" not found or configured.").format(plugin_name)
+                'Certificate event plugin "{name}" not found or '
+                'configured.').format(name=plugin_name)
         else:
             message = u._("Certificate event plugin not found or configured.")
         super(CertificateEventPluginNotFound, self).__init__(message)
@@ -112,7 +112,9 @@ class CertificateStatusNotSupported(exception.BarbicanException):
     """Raised when cert status returned is unknown."""
     def __init__(self, status):
         super(CertificateStatusNotSupported, self).__init__(
-            u._("Certificate status of '{0}' not supported").format(status))
+            u._("Certificate status of {status} not "
+                "supported").format(status=status)
+        )
         self.status = status
 
 
@@ -121,7 +123,7 @@ class CertificateGeneralException(exception.BarbicanException):
     def __init__(self, reason=u._('Unknown')):
         super(CertificateGeneralException, self).__init__(
             u._('Problem seen during certificate processing - '
-                'Reason: {0}').format(reason)
+                'Reason: {reason}').format(reason=reason)
         )
         self.reason = reason
 
@@ -131,7 +133,7 @@ class CertificateStatusClientDataIssue(exception.BarbicanException):
     def __init__(self, reason=u._('Unknown')):
         super(CertificateStatusClientDataIssue, self).__init__(
             u._('Problem with data in certificate request - '
-                'Reason: {0}').format(reason)
+                'Reason: {reason}').format(reason=reason)
         )
         self.reason = reason
 
@@ -141,7 +143,7 @@ class CertificateStatusInvalidOperation(exception.BarbicanException):
     def __init__(self, reason=u._('Unknown')):
         super(CertificateStatusInvalidOperation, self).__init__(
             u._('Invalid operation requested - '
-                'Reason: {0}').format(reason)
+                'Reason: {reason}').format(reason=reason)
         )
         self.reason = reason
 

@@ -18,7 +18,7 @@ import six
 
 from barbican.common import exception
 from barbican.common import utils
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 
 LOG = utils.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class CryptoKEKBindingException(exception.BarbicanException):
     def __init__(self, plugin_name=u._('Unknown')):
         super(CryptoKEKBindingException, self).__init__(
             u._('Failed to bind kek metadata for '
-                'plugin: {0}').format(plugin_name)
+                'plugin: {name}').format(name=plugin_name)
         )
         self.plugin_name = plugin_name
 

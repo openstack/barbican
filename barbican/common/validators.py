@@ -21,8 +21,8 @@ import six
 
 from barbican.common import exception
 from barbican.common import utils
+from barbican import i18n as u
 from barbican.model import models
-from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import timeutils
 from barbican.plugin.util import mime_types
 
@@ -77,8 +77,10 @@ class ValidatorBase(object):
         """
         schema_name = self.name
         if parent_schema:
-            schema_name = u._("{0}' within '{1}").format(self.name,
-                                                         parent_schema)
+            schema_name = u._(
+                "{schema_name}' within '{parent_schema_name}").format(
+                    schema_name=self.name,
+                    parent_schema_name=parent_schema)
         return schema_name
 
     def _assert_schema_is_valid(self, json_data, schema_name):
@@ -220,8 +222,8 @@ class NewSecretValidator(ValidatorBase):
         self._assert_validity(
             content_type.lower() in mime_types.SUPPORTED,
             schema_name,
-            u._("payload_content_type is not one of {0}").format(
-                mime_types.SUPPORTED),
+            u._("payload_content_type is not one of {supported}").format(
+                supported=mime_types.SUPPORTED),
             "payload_content_type")
 
         if content_type == 'application/octet-stream':

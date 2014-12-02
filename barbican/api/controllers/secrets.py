@@ -22,8 +22,8 @@ from barbican.common import hrefs
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
+from barbican import i18n as u
 from barbican.model import repositories as repo
-from barbican.openstack.common import gettextutils as u
 from barbican.plugin import resources as plugin
 from barbican.plugin import util as putil
 
@@ -139,9 +139,8 @@ class SecretController(object):
                 pecan.request.content_type == 'application/json'):
             pecan.abort(
                 415,
-                u._("Content-Type of '{0}' is not supported for PUT.").format(
-                    pecan.request.content_type
-                )
+                u._("Content-Type of '{content_type}' is not supported for "
+                    "PUT.").format(content_type=pecan.request.content_type)
             )
 
         transport_key_id = kwargs.get('transport_key_id')

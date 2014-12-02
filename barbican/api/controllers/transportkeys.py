@@ -22,9 +22,9 @@ from barbican.common import exception
 from barbican.common import hrefs
 from barbican.common import utils
 from barbican.common import validators
+from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repo
-from barbican.openstack.common import gettextutils as u
 
 LOG = utils.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class TransportKeyController(object):
             # TODO(alee) response should be 204 on success
             # pecan.response.status = 204
         except exception.NotFound:
-            LOG.exception('Problem deleting transport_key')
+            LOG.exception(u._LE('Problem deleting transport_key'))
             _transport_key_not_found()
 
 

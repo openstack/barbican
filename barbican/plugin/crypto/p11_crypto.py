@@ -22,7 +22,7 @@ from oslo.config import cfg
 
 from barbican.common import exception
 from barbican.common import utils
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 from barbican.openstack.common import jsonutils as json
 from barbican.plugin.crypto import crypto as plugin
 
@@ -377,7 +377,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         return self.encrypt(plugin.EncryptDTO(rand), kek_meta_dto, keystone_id)
 
     def generate_asymmetric(self, generate_dto, kek_meta_dto, keystone_id):
-        raise NotImplementedError("Feature not implemented for PKCS11")
+        raise NotImplementedError(u._("Feature not implemented for PKCS11"))
 
     def supports(self, type_enum, algorithm=None, bit_length=None, mode=None):
         if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:

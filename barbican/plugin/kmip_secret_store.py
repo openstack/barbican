@@ -27,7 +27,7 @@ from kmip.core.factories import credentials
 from kmip.core.factories import secrets
 from kmip.core import objects as kmip_objects
 
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 from barbican.openstack.common import log as logging
 from barbican.plugin.interface import secret_store as ss
 
@@ -166,7 +166,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
 
     def generate_asymmetric_key(self, key_spec):
         raise NotImplementedError(
-            "Feature not yet implemented by KMIP Secret Store plugin")
+            u._("Feature not yet implemented by KMIP Secret Store plugin"))
 
     def store_secret(self, secret_dto):
         """Stores a secret
@@ -217,7 +217,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                                           secret,
                                           self.credential)
         except Exception as e:
-            LOG.exception("Error opening or writing to client")
+            LOG.exception(u._LE("Error opening or writing to client"))
             raise ss.SecretGeneralException(str(e))
         else:
             if result.result_status.enum == enums.ResultStatus.SUCCESS:
@@ -247,7 +247,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                       "retrieval")
             result = self.client.get(uuid, self.credential)
         except Exception as e:
-            LOG.exception("Error opening or writing to client")
+            LOG.exception(u._LE("Error opening or writing to client"))
             raise ss.SecretGeneralException(str(e))
         else:
             if result.result_status.enum == enums.ResultStatus.SUCCESS:
@@ -266,12 +266,15 @@ class KMIPSecretStore(ss.SecretStoreBase):
                         secret_block.key_value.key_value.value)
 
                 else:
-                    msg = ("Unknown key value type received from KMIP " +
-                           "server, expected {0} or {1}, " +
-                           "received: {2}").format(
-                               kmip_objects.KeyValueStruct,
-                               kmip_objects.KeyValueString,
-                               key_value_type)
+                    msg = u._(
+                        "Unknown key value type received from KMIP "
+                        "server, expected {key_value_struct} or "
+                        "{key_value_string}, received: {key_value_type}"
+                    ).format(
+                        key_value_struct=kmip_objects.KeyValueStruct,
+                        key_value_string=kmip_objects.KeyValueString,
+                        key_value_type=key_value_type
+                    )
                     LOG.exception(msg)
                     raise ss.SecretGeneralException(msg)
 
@@ -328,7 +331,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
             LOG.debug("Opened connection to KMIP client for secret deletion")
             result = self.client.destroy(uuid, self.credential)
         except Exception as e:
-            LOG.exception("Error opening or writing to client")
+            LOG.exception(u._LE("Error opening or writing to client"))
             raise ss.SecretGeneralException(str(e))
         else:
             if result.result_status.enum == enums.ResultStatus.SUCCESS:
@@ -482,9 +485,13 @@ class KMIPSecretStore(ss.SecretStoreBase):
         return None
 
     def _raise_secret_general_exception(self, result):
-        msg = "Status: {0}, Reason: {1}, Message: {2}".format(
-            result.result_status,
-            result.result_reason,
-            result.result_message)
+        msg = u._(
+            "Status: {status}, Reason: {reason}, "
+            "Message: {message}"
+        ).format(
+            status=result.result_status,
+            reason=result.result_reason,
+            message=result.result_message
+        )
         LOG.debug("ERROR from KMIP server: %s", msg)
         raise ss.SecretGeneralException(msg)

@@ -23,7 +23,7 @@ import pecan
 
 from barbican.common import exception
 from barbican.common import utils
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 from barbican.openstack.common import jsonutils as json
 from barbican.openstack.common import policy
 from barbican.plugin.interface import certificate_manager as cert_manager
@@ -59,8 +59,8 @@ def load_body(req, resp=None, validator=None):
     try:
         body = req.body_file.read(CONF.max_allowed_request_size_in_bytes)
     except IOError:
-        LOG.exception("Problem reading request JSON stream.")
-        pecan.abort(500, 'Read Error')
+        LOG.exception(u._LE("Problem reading request JSON stream."))
+        pecan.abort(500, u._('Read Error'))
 
     try:
         # TODO(jwood): Investigate how to get UTF8 format via openstack
@@ -69,20 +69,20 @@ def load_body(req, resp=None, validator=None):
         parsed_body = json.loads(body)
         strip_whitespace(parsed_body)
     except ValueError:
-        LOG.exception("Problem loading request JSON.")
-        pecan.abort(400, 'Malformed JSON')
+        LOG.exception(u._LE("Problem loading request JSON."))
+        pecan.abort(400, u._('Malformed JSON'))
 
     if validator:
         try:
             parsed_body = validator.validate(parsed_body)
         except exception.InvalidObject as e:
-            LOG.exception("Failed to validate JSON information")
+            LOG.exception(u._LE("Failed to validate JSON information"))
             pecan.abort(400, str(e))
         except exception.UnsupportedField as e:
-            LOG.exception("Provided field value is not supported")
+            LOG.exception(u._LE("Provided field value is not supported"))
             pecan.abort(400, str(e))
         except exception.LimitExceeded as e:
-            LOG.exception("Data limit exceeded")
+            LOG.exception(u._LE("Data limit exceeded"))
             pecan.abort(413, str(e))
 
     return parsed_body
@@ -110,18 +110,19 @@ def generate_safe_exception_message(operation_name, excep):
     try:
         raise excep
     except policy.PolicyNotAuthorized:
-        message = u._('{0} attempt not allowed - '
-                      'please review your '
-                      'user/project privileges').format(operation_name)
+        message = u._(
+            '{operation} attempt not allowed - '
+            'please review your '
+            'user/project privileges').format(operation=operation_name)
         status = 403
 
     except s.SecretContentTypeNotSupportedException as sctnse:
-        reason = u._("content-type of '{0}' not "
-                     "supported").format(sctnse.content_type)
+        reason = u._("content-type of '{content_type}' not "
+                     "supported").format(content_type=sctnse.content_type)
         status = 400
     except s.SecretContentEncodingNotSupportedException as ce:
-        reason = u._("content-encoding of '{0}' not "
-                     "supported").format(ce.content_encoding)
+        reason = u._("content-encoding of '{content_encoding}' not "
+                     "supported").format(content_encoding=ce.content_encoding)
         status = 400
     except s.SecretStorePluginNotFound:
         reason = u._("No plugin was found that could support "
@@ -159,12 +160,12 @@ def generate_safe_exception_message(operation_name, excep):
         status = 413
 
     except Exception:
-        message = u._('{0} failure seen - please contact site '
-                      'administrator.').format(operation_name)
+        message = u._('{operation} failure seen - please contact site '
+                      'administrator.').format(operation=operation_name)
 
     if reason:
-        message = u._('{0} issue seen - {1}.').format(operation_name,
-                                                      reason)
+        message = u._('{operation} issue seen - {reason}.').format(
+            operation=operation_name, reason=reason)
 
     return status, message
 

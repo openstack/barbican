@@ -21,7 +21,7 @@ from requests import exceptions as request_exceptions
 from symantecssl.core import Symantec
 from symantecssl import exceptions as symantec_exceptions
 
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 from barbican.plugin.interface import certificate_manager as cert
 
 CONF = cfg.CONF

@@ -15,7 +15,7 @@
 Default implementation of Barbican certificate processing plugins and support.
 """
 from barbican.common import utils
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 from barbican.plugin.interface import certificate_manager as cert
 
 LOG = utils.getLogger(__name__)
@@ -37,7 +37,7 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
                   populated by the plugin implementation
         :rtype: :class:`ResultDTO`
         """
-        LOG.info(u._('Invoking issue_certificate_request()'))
+        LOG.info(u._LI('Invoking issue_certificate_request()'))
         return cert.ResultDTO(cert.CertificateStatus.WAITING_FOR_CA)
 
     def modify_certificate_request(self, order_id, order_meta, plugin_meta):
@@ -53,7 +53,7 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
                   populated by the plugin implementation
         :rtype: :class:`ResultDTO`
         """
-        LOG.info(u._('Invoking modify_certificate_request()'))
+        LOG.info(u._LI('Invoking modify_certificate_request()'))
         return cert.ResultDTO(cert.CertificateStatus.WAITING_FOR_CA)
 
     def cancel_certificate_request(self, order_id, order_meta, plugin_meta):
@@ -69,7 +69,7 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
                   populated by the plugin implementation
         :rtype: :class:`ResultDTO`
         """
-        LOG.info(u._('Invoking cancel_certificate_request()'))
+        LOG.info(u._LI('Invoking cancel_certificate_request()'))
         return cert.ResultDTO(cert.CertificateStatus.REQUEST_CANCELED)
 
     def check_certificate_status(self, order_id, order_meta, plugin_meta):
@@ -85,7 +85,7 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
                   populated by the plugin implementation
         :rtype: :class:`ResultDTO`
         """
-        LOG.info(u._('Invoking check_certificate_status()'))
+        LOG.info(u._LI('Invoking check_certificate_status()'))
         return cert.ResultDTO(cert.CertificateStatus.WAITING_FOR_CA)
 
     def supports(self, certificate_spec):
@@ -112,7 +112,7 @@ class SimpleCertificateEventPlugin(cert.CertificateEventPluginBase):
                the certificate
         :returns: None
         """
-        LOG.info(u._('Invoking notify_certificate_is_ready()'))
+        LOG.info(u._LI('Invoking notify_certificate_is_ready()'))
 
     def notify_ca_is_unavailable(
             self, project_id, order_ref, error_msg, retry_in_msec):
@@ -125,4 +125,4 @@ class SimpleCertificateEventPlugin(cert.CertificateEventPluginBase):
                If this is 0, then no attempt will be made.
         :returns: None
         """
-        LOG.info(u._('Invoking notify_ca_is_unavailable()'))
+        LOG.info(u._LI('Invoking notify_ca_is_unavailable()'))

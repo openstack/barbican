@@ -14,7 +14,7 @@ import pecan
 
 from barbican.api import controllers
 from barbican.common import utils
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 from barbican import version
 
 LOG = utils.getLogger(__name__)

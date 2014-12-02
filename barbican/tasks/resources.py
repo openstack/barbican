@@ -22,9 +22,9 @@ import six
 
 from barbican import api
 from barbican.common import utils
+from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as rep
-from barbican.openstack.common import gettextutils as u
 from barbican.plugin import resources as plugin
 from barbican.tasks import certificate_resources as cert
 
@@ -62,16 +62,16 @@ class BaseTask(object):
             entity = self.retrieve_entity(*args, **kwargs)
         except Exception as e:
             # Serious error!
-            LOG.exception(u._("Could not retrieve information needed to "
-                              "process task '%s'."), name)
+            LOG.exception(u._LE("Could not retrieve information needed to "
+                                "process task '%s'."), name)
             raise e
 
         # Process the target entity.
         try:
             self.handle_processing(entity, *args, **kwargs)
         except Exception as e_orig:
-            LOG.exception(u._("Could not perform processing for "
-                              "task '%s'."), name)
+            LOG.exception(u._LE("Could not perform processing for "
+                                "task '%s'."), name)
 
             # Handle failure to process entity.
             try:
@@ -80,17 +80,17 @@ class BaseTask(object):
                 self.handle_error(entity, status, message, e_orig,
                                   *args, **kwargs)
             except Exception:
-                LOG.exception(u._("Problem handling an error for task '%s', "
-                                  "raising original "
-                                  "exception."), name)
+                LOG.exception(u._LE("Problem handling an error for task '%s', "
+                                    "raising original "
+                                    "exception."), name)
             raise e_orig
 
         # Handle successful conclusion of processing.
         try:
             self.handle_success(entity, *args, **kwargs)
         except Exception as e:
-            LOG.exception(u._("Could not process after successfully executing"
-                              " task '%s'."), name)
+            LOG.exception(u._LE("Could not process after successfully "
+                                "executing task '%s'."), name)
             raise e
 
     @abc.abstractmethod
@@ -239,7 +239,8 @@ class BeginTypeOrder(BaseTask):
             LOG.debug("...done requesting a certificate.")
         else:
             raise NotImplementedError(
-                'Order type "{0}" not implemented.'.format(order_type))
+                u._('Order type "{order_type}" not implemented.').format(
+                    order_type=order_type))
 
 
 class UpdateOrder(BaseTask):
@@ -276,7 +277,7 @@ class UpdateOrder(BaseTask):
         order.status = models.States.ERROR
         order.error_status_code = status
         order.error_reason = message
-        LOG.exception(u._("An error has occurred updating the order."))
+        LOG.exception(u._LE("An error has occurred updating the order."))
         self.repos.order_repo.save(order)
 
     def handle_success(self, order, *args, **kwargs):
@@ -299,6 +300,7 @@ class UpdateOrder(BaseTask):
             LOG.debug("...done updating a certificate order.")
         else:
             raise NotImplementedError(
-                'Order type "{0}" not implemented.'.format(order_type))
+                u._('Order type "{order_type}" not implemented.').format(
+                    order_type=order_type))
 
         LOG.debug("...done updating order.")

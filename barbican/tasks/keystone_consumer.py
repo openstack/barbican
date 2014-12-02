@@ -18,8 +18,8 @@ Server-side Keystone notification payload processing logic.
 """
 
 from barbican.common import utils
+from barbican import i18n as u
 from barbican.model import repositories as rep
-from barbican.openstack.common import gettextutils as u
 from barbican.tasks import resources
 
 
@@ -75,17 +75,35 @@ class KeystoneEventConsumer(resources.BaseTask):
 
     def handle_error(self, project, status, message, exception,
                      project_id=None, resource_type=None, operation_type=None):
-        LOG.error('Error processing Keystone event, project_id={0}, event '
-                  'resource={1}, event operation={2}, status={3}, error '
-                  'message={4}'.format(project.project_id, resource_type,
-                                       operation_type, status, message))
+        LOG.error(
+            u._LE(
+                'Error processing Keystone event, project_id=%(project_id)s, '
+                'event resource=%(resource)s, event operation=%(operation)s, '
+                'status=%(status)s, error message=%(message)s'
+            ),
+            {
+                'project_id': project.project_id,
+                'resource': resource_type,
+                'operation': operation_type,
+                'status': status,
+                'message': message
+            }
+        )
 
     def handle_success(self, project, project_id=None, resource_type=None,
                        operation_type=None):
-        LOG.info('Successfully handled Keystone event, project_id={0}, event '
-                 'resource={1}, event operation={2}'.format(project_id,
-                                                            resource_type,
-                                                            operation_type))
+        LOG.info(
+            u._LI(
+                'Successfully handled Keystone event, '
+                'project_id=%(project_id)s, event resource=%(resource)s, '
+                'event operation=%(operation)s'
+            ),
+            {
+                'project_id': project_id,
+                'resource': resource_type,
+                'operation': operation_type
+            }
+        )
 
     def handle_cleanup(self, project, project_id=None, resource_type=None,
                        operation_type=None):
@@ -101,8 +119,9 @@ class KeystoneEventConsumer(resources.BaseTask):
         etc.) performed on Keystone resource.
         """
         if project is None:
-            LOG.info('No action is needed as there are no Barbican resources '
-                     'present for Keystone project_id={0}'.format(project_id))
+            LOG.info(u._LI('No action is needed as there are no Barbican '
+                           'resources present for Keystone '
+                           'project_id=%s'), project_id)
             return
 
         # barbican entities use projects table 'id' field as foreign key.
@@ -114,5 +133,5 @@ class KeystoneEventConsumer(resources.BaseTask):
 
         # reached here means there is no error so log the successful
         # cleanup log entry.
-        LOG.info('Successfully completed Barbican resources cleanup for '
-                 'Keystone project_id={0}'.format(project_id))
+        LOG.info(u._LI('Successfully completed Barbican resources cleanup for '
+                       'Keystone project_id=%s'), project_id)

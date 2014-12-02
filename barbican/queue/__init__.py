@@ -23,7 +23,7 @@ from oslo.messaging import server as msg_server
 
 from barbican.common import exception
 from barbican.common import utils
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 
 
 LOG = utils.getLogger(__name__)

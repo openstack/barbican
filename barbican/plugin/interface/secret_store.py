@@ -21,7 +21,7 @@ from stevedore import named
 
 from barbican.common import exception
 from barbican.common import utils
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 
 
 CONF = cfg.CONF
@@ -48,8 +48,8 @@ class SecretStorePluginNotFound(exception.BarbicanException):
     """Raised when no plugins are installed."""
     def __init__(self, plugin_name=None):
         if plugin_name:
-            message = u._("Secret store plugin \"{0}\""
-                          " not found.").format(plugin_name)
+            message = u._('Secret store plugin "{name}"'
+                          ' not found.').format(name=plugin_name)
         else:
             message = u._("Secret store plugin not found.")
         super(SecretStorePluginNotFound, self).__init__(message)
@@ -57,15 +57,16 @@ class SecretStorePluginNotFound(exception.BarbicanException):
 
 class SecretStoreSupportedPluginNotFound(exception.BarbicanException):
     """Raised if no plugins are found that support the requested operation."""
-    message = "Secret store plugin not found for requested operation."
+    message = u._("Secret store plugin not found for requested operation.")
 
 
 class SecretContentTypeNotSupportedException(exception.BarbicanException):
     """Raised when support for payload content type is not available."""
     def __init__(self, content_type):
         super(SecretContentTypeNotSupportedException, self).__init__(
-            u._("Secret Content Type "
-                "of '{0}' not supported").format(content_type)
+            u._("Secret Content Type of '{content_type}' "
+                "not supported").format(
+                    content_type=content_type)
         )
         self.content_type = content_type
 
@@ -74,8 +75,9 @@ class SecretContentEncodingNotSupportedException(exception.BarbicanException):
     """Raised when support for payload content encoding is not available."""
     def __init__(self, content_encoding):
         super(SecretContentEncodingNotSupportedException, self).__init__(
-            u._("Secret Content-Encoding of '{0}' not supported").format(
-                content_encoding)
+            u._("Secret Content-Encoding of '{content_encoding}' "
+                "not supported").format(
+                    content_encoding=content_encoding)
         )
         self.content_encoding = content_encoding
 
@@ -101,7 +103,7 @@ class SecretGeneralException(exception.BarbicanException):
     def __init__(self, reason=u._('Unknown')):
         super(SecretGeneralException, self).__init__(
             u._('Problem seen during crypto processing - '
-                'Reason: {0}').format(reason)
+                'Reason: {reason}').format(reason=reason)
         )
         self.reason = reason
 
@@ -118,7 +120,8 @@ class SecretAcceptNotSupportedException(exception.BarbicanException):
     """Raised when requested decrypted content-type is not available."""
     def __init__(self, accept):
         super(SecretAcceptNotSupportedException, self).__init__(
-            u._("Secret Accept of '{0}' not supported").format(accept)
+            u._("Secret Accept of '{accept}' not supported").format(
+                accept=accept)
         )
         self.accept = accept
 
@@ -135,8 +138,8 @@ class SecretAlgorithmNotSupportedException(exception.BarbicanException):
     """Raised when support for an algorithm is not available."""
     def __init__(self, algorithm):
         super(SecretAlgorithmNotSupportedException, self).__init__(
-            u._("Secret algorithm of '{0}' not supported").format(
-                algorithm)
+            u._("Secret algorithm of '{algorithm}' not supported").format(
+                algorithm=algorithm)
         )
         self.algorithm = algorithm
 

@@ -16,9 +16,7 @@
 
 """
 gettext for openstack-common modules.
-
 Usual usage in an openstack.common module:
-
     from barbican.openstack.common.gettextutils import _
 """
 
@@ -44,7 +42,6 @@ class TranslatorFactory(object):
 
     def __init__(self, domain, lazy=False, localedir=None):
         """Establish a set of translation functions for the domain.
-
         :param domain: Name of translation domain,
                        specifying a message catalog.
         :type domain: str
@@ -62,16 +59,13 @@ class TranslatorFactory(object):
 
     def _make_translation_func(self, domain=None):
         """Return a new translation function ready for use.
-
         Takes into account whether or not lazy translation is being
         done.
-
         The domain can be specified to override the default from the
         factory, but the localedir from the factory is always used
         because we assume the log-level translation catalogs are
         installed in the same directory as the main application
         catalog.
-
         """
         if domain is None:
             domain = self.domain
@@ -141,7 +135,6 @@ _LC = _translators.log_critical
 
 def enable_lazy():
     """Convenience function for configuring _() to use lazy gettext
-
     Call this at the start of execution to enable the gettextutils._
     function to use lazy gettext functionality. This is useful if
     your project is importing _ directly instead of using the
@@ -161,15 +154,12 @@ def enable_lazy():
 
 def install(domain, lazy=False):
     """Install a _() function using the given translation domain.
-
     Given a translation domain, install a _() function using gettext's
     install() function.
-
     The main difference from gettext.install() is that we allow
     overriding the default localedir (e.g. /usr/share/locale) using
     a translation-domain-specific environment variable (e.g.
     NOVA_LOCALEDIR).
-
     :param domain: the translation domain
     :param lazy: indicates whether or not to install the lazy _() function.
                  The lazy _() introduces a way to do deferred translation
@@ -194,7 +184,6 @@ def install(domain, lazy=False):
 
 class Message(six.text_type):
     """A Message object is a unicode object that can be translated.
-
     Translation of Message is done explicitly using the translate() method.
     For all non-translation intents and purposes, a Message is simply unicode,
     and can be treated as such.
@@ -203,7 +192,6 @@ class Message(six.text_type):
     def __new__(cls, msgid, msgtext=None, params=None,
                 domain='barbican', *args):
         """Create a new Message object.
-
         In order for translation to work gettext requires a message ID, this
         msgid will be used as the base unicode text. It is also possible
         for the msgid and the base unicode text to be different by passing
@@ -224,11 +212,9 @@ class Message(six.text_type):
 
     def translate(self, desired_locale=None):
         """Translate this message to the desired locale.
-
         :param desired_locale: The desired locale to translate the message to,
                                if no locale is provided the message will be
                                translated to the system's default locale.
-
         :returns: the translated message in unicode
         """
 
@@ -286,7 +272,6 @@ class Message(six.text_type):
 
     def _sanitize_mod_params(self, other):
         """Sanitize the object being modded with this Message.
-
         - Add support for modding 'None' so translation supports it
         - Trim the modded object, which can be a large dictionary, to only
         those keys that would actually be used in a translation
@@ -335,7 +320,6 @@ class Message(six.text_type):
 
 def get_available_languages(domain):
     """Lists the available languages for the given translation domain.
-
     :param domain: the domain to get languages for
     """
     if domain in _AVAILABLE_LANGUAGES:
@@ -383,10 +367,8 @@ def get_available_languages(domain):
 
 def translate(obj, desired_locale=None):
     """Gets the translated unicode representation of the given object.
-
     If the object is not translatable it is returned as-is.
     If the locale is None the object is translated to the system locale.
-
     :param obj: the object to translate
     :param desired_locale: the locale to translate the message to, if None the
                            default system locale will be used
@@ -407,14 +389,11 @@ def translate(obj, desired_locale=None):
 
 def _translate_args(args, desired_locale=None):
     """Translates all the translatable elements of the given arguments object.
-
     This method is used for translating the translatable values in method
     arguments which include values of tuples or dictionaries.
     If the object is not a tuple or a dictionary the object itself is
     translated if it is translatable.
-
     If the locale is None the object is translated to the system locale.
-
     :param args: the args to translate
     :param desired_locale: the locale to translate the args to, if None the
                            default system locale will be used
@@ -433,33 +412,26 @@ def _translate_args(args, desired_locale=None):
 
 class TranslationHandler(handlers.MemoryHandler):
     """Handler that translates records before logging them.
-
     The TranslationHandler takes a locale and a target logging.Handler object
     to forward LogRecord objects to after translating them. This handler
     depends on Message objects being logged, instead of regular strings.
-
     The handler can be configured declaratively in the logging.conf as follows:
-
         [handlers]
         keys = translatedlog, translator
-
         [handler_translatedlog]
         class = handlers.WatchedFileHandler
         args = ('/var/log/api-localized.log',)
         formatter = context
-
         [handler_translator]
         class = openstack.common.log.TranslationHandler
         target = translatedlog
         args = ('zh_CN',)
-
     If the specified locale is not available in the system, the handler will
     log in the default locale.
     """
 
     def __init__(self, locale=None, target=None):
         """Initialize a TranslationHandler
-
         :param locale: locale to use for translating messages
         :param target: logging.Handler object to forward
                        LogRecord objects to after translation

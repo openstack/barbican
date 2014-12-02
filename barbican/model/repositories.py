@@ -31,9 +31,9 @@ import sqlalchemy.orm as sa_orm
 
 from barbican.common import exception
 from barbican.common import utils
+from barbican import i18n as u
 from barbican.model.migration import commands
 from barbican.model import models
-from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import timeutils
 
 LOG = utils.getLogger(__name__)
@@ -181,8 +181,8 @@ def get_engine():
             _ENGINE.connect = wrap_db_error(_ENGINE.connect)
             _ENGINE.connect()
         except Exception as err:
-            msg = u._("Error configuring registry database with supplied "
-                      "sql_connection. Got error: %s") % err
+            msg = u._LE("Error configuring registry database with supplied "
+                        "sql_connection. Got error: {error}").format(error=err)
             LOG.exception(msg)
             raise
 
@@ -196,18 +196,18 @@ def get_engine():
             tables = meta.tables
             if tables and 'alembic_version' in tables:
                 # Upgrade the database to the latest version.
-                LOG.info(u._('Updating schema to latest version'))
+                LOG.info(u._LI('Updating schema to latest version'))
                 commands.upgrade()
             else:
                 # Create database tables from our models.
-                LOG.info(u._('Auto-creating barbican registry DB'))
+                LOG.info(u._LI('Auto-creating barbican registry DB'))
                 models.register_models(_ENGINE)
 
                 # Sync the alembic version 'head' with current models.
                 commands.stamp()
 
         else:
-            LOG.info(u._('not auto-creating barbican registry DB'))
+            LOG.info(u._LI('not auto-creating barbican registry DB'))
 
     return _ENGINE
 
@@ -247,7 +247,7 @@ def wrap_db_error(f):
 
             remaining_attempts = _MAX_RETRIES
             while True:
-                LOG.warning(u._('SQL connection failed. %d attempts left.'),
+                LOG.warning(u._LW('SQL connection failed. %d attempts left.'),
                             remaining_attempts)
                 remaining_attempts -= 1
                 time.sleep(_RETRY_INTERVAL)
@@ -329,8 +329,9 @@ class Repositories(object):
             # Enforce that either all arguments are non-None or else all None.
             test_set = set(kwargs.values())
             if None in test_set and len(test_set) > 1:
-                raise NotImplementedError('No support for mixing None '
-                                          'and non-None repository instances')
+                raise NotImplementedError(u._LE('No support for mixing None '
+                                                'and non-None repository '
+                                                'instances'))
 
             # Only set properties for specified repositories.
             self._set_repo('project_repo', ProjectRepo, kwargs)
@@ -383,12 +384,10 @@ class BaseRepo(object):
             entity = query.one()
 
         except sa_orm.exc.NoResultFound:
-            LOG.exception("Not found for %s", entity_id)
+            LOG.exception(u._LE("Not found for %s"), entity_id)
             entity = None
             if not suppress_exception:
-                raise exception.NotFound(
-                    "No {0} found with ID {1}".format(
-                        self._do_entity_name(), entity_id))
+                _raise_entity_not_found(self._do_entity_name(), entity_id)
 
         return entity
 
@@ -396,12 +395,15 @@ class BaseRepo(object):
         """Sub-class hook: create from entity."""
         start = time.time()  # DEBUG
         if not entity:
-            msg = "Must supply non-None {0}.".format(self._do_entity_name)
+            msg = u._(
+                "Must supply non-None {entity_name}."
+            ).format(entity_name=self._do_entity_name)
             raise exception.Invalid(msg)
 
         if entity.id:
-            msg = "Must supply {0} with id=None(i.e. new entity).".format(
-                self._do_entity_name)
+            msg = u._(
+                "Must supply {entity_name} with id=None(i.e. new entity)."
+            ).format(entity_name=self._do_entity_name)
             raise exception.Invalid(msg)
 
         LOG.debug("Begin create from...")
@@ -417,13 +419,12 @@ class BaseRepo(object):
             LOG.debug("Saving entity...")
             entity.save(session=session)
         except sqlalchemy.exc.IntegrityError:
-            LOG.exception('Problem saving entity for create')
+            LOG.exception(u._LE('Problem saving entity for create'))
             if values:
                 values_id = values['id']
             else:
                 values_id = None
-            raise exception.Duplicate("Entity ID {0} already exists!"
-                                      .format(values_id))
+            _raise_entity_id_already_exists(values_id)
 
         LOG.debug('Elapsed repo '
                   'create secret:%s', (time.time() - start))  # DEBUG
@@ -447,9 +448,8 @@ class BaseRepo(object):
         try:
             entity.save()
         except sqlalchemy.exc.IntegrityError:
-            LOG.exception('Problem saving entity for update')
-            raise exception.NotFound("Entity ID %s not found"
-                                     % entity.id)
+            LOG.exception(u._LE('Problem saving entity for update'))
+            _raise_entity_id_not_found(entity.id)
 
     def update(self, entity_id, values, purge_props=False):
         """Set the given properties on an entity and update it.
@@ -469,9 +469,8 @@ class BaseRepo(object):
         try:
             entity.delete(session=session)
         except sqlalchemy.exc.IntegrityError:
-            LOG.exception('Problem finding entity to delete')
-            raise exception.NotFound("Entity ID %s not found"
-                                     % entity_id)
+            LOG.exception(u._LE('Problem finding entity to delete'))
+            _raise_entity_id_not_found(entity.id)
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
@@ -503,12 +502,13 @@ class BaseRepo(object):
         status = values.get('status', None)
         if not status:
             # TODO(jfwood): I18n this!
-            msg = "{0} status is required.".format(self._do_entity_name())
+            msg = u._("{entity_name} status is required.").format(
+                entity_name=self._do_entity_name())
             raise exception.Invalid(msg)
 
         if not models.States.is_valid(status):
-            msg = "Invalid status '{0}' for {1}.".format(
-                status, self._do_entity_name())
+            msg = u._("Invalid status '{status}' for {entity_name}.").format(
+                status=status, entity_name=self._do_entity_name())
             raise exception.Invalid(msg)
 
         return values
@@ -546,13 +546,11 @@ class BaseRepo(object):
         try:
             entity_ref.save(session=session)
         except sqlalchemy.exc.IntegrityError:
-            LOG.exception('Problem saving entity for _update')
+            LOG.exception(u._LE('Problem saving entity for _update'))
             if entity_id:
-                raise exception.NotFound("Entity ID %s not found"
-                                         % entity_id)
+                _raise_entity_id_not_found(entity_id)
             else:
-                raise exception.Duplicate("Entity ID %s already exists!"
-                                          % values['id'])
+                _raise_entity_id_already_exists(values['id'])
 
         return self.get(entity_ref.id)
 
@@ -570,8 +568,10 @@ class BaseRepo(object):
 
         This will filter deleted entities if there.
         """
-        msg = u._("{0} is missing query build method for get project "
-                  "entities.").format(self._do_entity_name())
+        msg = u._(
+            "{entity_name} is missing query build method for get "
+            "project entities.").format(
+                entity_name=self._do_entity_name())
         raise NotImplementedError(msg)
 
     def get_project_entities(self, project_id, session=None):
@@ -617,10 +617,12 @@ class BaseRepo(object):
                 # Its a soft delete so its more like entity update
                 entity.delete(session=session)
         except sqlalchemy.exc.SQLAlchemyError:
-            LOG.exception('Problem finding project related entity to delete')
+            LOG.exception(u._LE('Problem finding project related entity to '
+                                'delete'))
             if not suppress_exception:
-                raise exception.BarbicanException('Error deleting project '
-                                                  'entities for project_id=%s',
+                raise exception.BarbicanException(u._('Error deleting project '
+                                                      'entities for '
+                                                      'project_id=%s'),
                                                   project_id)
 
 
@@ -651,10 +653,11 @@ class ProjectRepo(BaseRepo):
         except sa_orm.exc.NoResultFound:
             entity = None
             if not suppress_exception:
-                LOG.exception("Problem getting Project %s", keystone_id)
-                raise exception.NotFound("No %s found with keystone-ID %s"
-                                         % (self._do_entity_name(),
-                                            keystone_id))
+                LOG.exception(u._LE("Problem getting Project %s"), keystone_id)
+                raise exception.NotFound(u._(
+                    "No {entity_name} found with keystone-ID {id}").format(
+                        entity_name=self._do_entity_name(),
+                        id=keystone_id))
 
         return entity
 
@@ -719,8 +722,7 @@ class SecretRepo(BaseRepo):
             entities = None
             total = 0
             if not suppress_exception:
-                raise exception.NotFound("No %s's found"
-                                         % (self._do_entity_name()))
+                _raise_no_entities_found(self._do_entity_name())
 
         return entities, offset, limit, total
 
@@ -990,8 +992,7 @@ class OrderRepo(BaseRepo):
             entities = None
             total = 0
             if not suppress_exception:
-                raise exception.NotFound("No %s's found"
-                                         % (self._do_entity_name()))
+                _raise_no_entities_found(self._do_entity_name())
 
         return entities, offset, limit, total
 
@@ -1116,8 +1117,7 @@ class ContainerRepo(BaseRepo):
             entities = None
             total = 0
             if not suppress_exception:
-                raise exception.NotFound("No %s's found"
-                                         % (self._do_entity_name()))
+                _raise_no_entities_found(self._do_entity_name())
 
         return entities, offset, limit, total
 
@@ -1207,8 +1207,7 @@ class ContainerConsumerRepo(BaseRepo):
             entities = None
             total = 0
             if not suppress_exception:
-                raise exception.NotFound("No %ss found"
-                                         % (self._do_entity_name()))
+                _raise_no_entities_found(self._do_entity_name())
 
         return entities, offset, limit, total
 
@@ -1228,12 +1227,15 @@ class ContainerConsumerRepo(BaseRepo):
             consumer = query.one()
         except sa_orm.exc.NoResultFound:
             if not suppress_exception:
-                raise exception.NotFound("Could not find %s"
-                                         % (self._do_entity_name()))
+                raise exception.NotFound(
+                    u._("Could not find {entity_name}").format(
+                        entity_name=self._do_entity_name()))
+
         except sa_orm.exc.MultipleResultsFound:
             if not suppress_exception:
-                raise exception.NotFound("Found more than one %s"
-                                         % (self._do_entity_name()))
+                raise exception.NotFound(
+                    u._("Found more than one {entity_name}").format(
+                        entity_name=self._do_entity_name()))
         return consumer
 
     def create_from(self, new_consumer, container):
@@ -1323,8 +1325,7 @@ class TransportKeyRepo(BaseRepo):
             entities = None
             total = 0
             if not suppress_exception:
-                raise exception.NotFound("No {0}'s found".format(
-                    self._do_entity_name()))
+                _raise_no_entities_found(self._do_entity_name())
 
         return entities, offset, limit, total
 
@@ -1373,3 +1374,26 @@ def _get_repository(global_ref, repo_class):
     if not global_ref:
         global_ref = repo_class()
     return global_ref
+
+
+def _raise_entity_not_found(entity_name, entity_id):
+    raise exception.NotFound(u._("No {entity} found with ID {id}").format(
+        entity=entity_name,
+        id=entity_id))
+
+
+def _raise_entity_id_not_found(entity_id):
+    raise exception.NotFound(u._("Entity ID {entity_id} not "
+                                 "found").format(entity_id=entity_id))
+
+
+def _raise_no_entities_found(entity_name):
+    raise exception.NotFound(
+        u._("No {entity_name}'s found").format(
+            entity_name=entity_name))
+
+
+def _raise_entity_id_already_exists(entity_id):
+    raise exception.Duplicate(
+        u._("Entity ID {entity_id} "
+            "already exists!").format(entity_id=entity_id))

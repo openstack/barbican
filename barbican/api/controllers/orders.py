@@ -19,9 +19,9 @@ from barbican.common import hrefs
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
+from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repo
-from barbican.openstack.common import gettextutils as u
 from barbican.openstack.common import jsonutils as json
 from barbican.queue import client as async_client
 
@@ -146,7 +146,7 @@ class OrderController(object):
             self.order_repo.delete_entity_by_id(entity_id=self.order_id,
                                                 keystone_id=keystone_id)
         except exception.NotFound:
-            LOG.exception('Problem deleting order')
+            LOG.exception(u._LE('Problem deleting order'))
             _order_not_found()
 
 
