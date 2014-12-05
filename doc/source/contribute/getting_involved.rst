@@ -68,4 +68,4 @@ review system for all code reviews. If you're unfamiliar with using
 the OpenStack Gerrit review system, please review the `Gerrit Workflow`_
 wiki documentation.
 
-.. _`Gerrit Workflow`: https://wiki.openstack.org/wiki/Gerrit_Workflow
+.. _`Gerrit Workflow`: http://docs.openstack.org/infra/manual/developers.html#development-workflow

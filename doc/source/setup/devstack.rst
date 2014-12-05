@@ -81,7 +81,7 @@ Installation
     sudo apt-get install -y python-pip python-dev libffi-dev libssl-dev git
 
     # Clone DevStack and Barbican
-    git clone https://github.com/openstack-dev/devstack.git
+    git clone https://git.openstack.org/cgit/openstack-dev/devstack.git
     git clone https://github.com/openstack/barbican.git
 
     # Patch DevStack with Barbican setup files
