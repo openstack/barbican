@@ -21,7 +21,7 @@ pycrypto>=2.6
 pysqlite
 keystonemiddleware>=1.0.0
 six>=1.7.0
-SQLAlchemy>=0.8.4,<=0.8.99,>=0.9.7,<=0.9.99
+SQLAlchemy>=0.9.7,<=0.9.99
 stevedore>=1.1.0  # Apache-2.0
 WebOb>=1.2.3
 wsgiref>=0.1.2
