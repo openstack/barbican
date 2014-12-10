@@ -42,7 +42,7 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
 
         self.keystone_id = 'keystone1234'
         self.project_id = 'projectid1234'
-        self.project = models.Tenant()
+        self.project = models.Project()
         self.project.id = self.project_id
         self.project.keystone_id = self.keystone_id
         self.project_repo = mock.MagicMock()
@@ -198,7 +198,7 @@ class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
 
         self.keystone_id = 'keystone1234'
         self.project_id = 'projectid1234'
-        self.project = models.Tenant()
+        self.project = models.Project()
         self.project.id = self.project_id
         self.project.keystone_id = self.keystone_id
         self.project_repo = mock.MagicMock()

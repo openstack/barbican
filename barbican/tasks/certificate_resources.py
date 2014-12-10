@@ -239,7 +239,7 @@ def _get_plugin_meta(order_model, repos):
 def _notify_ca_unavailable(order_model, result):
     """Notify observer(s) that the CA was unavailable at this time."""
     cert.EVENT_PLUGIN_MANAGER.notify_ca_is_unavailable(
-        order_model.tenant_id,
+        order_model.project_id,
         hrefs.convert_order_to_href(order_model.id),
         result.status_message,
         result.retry_msec)
@@ -281,7 +281,7 @@ def _save_secrets(result, project_model, repos):
     container_model = models.Container()
     container_model.type = "certificate"
     container_model.status = models.States.ACTIVE
-    container_model.tenant_id = project_model.id
+    container_model.project_id = project_model.id
     repos.container_repo.create_from(container_model)
 
     # create container_secret for certificate

@@ -65,7 +65,7 @@ class TestSecretStoreBase(testtools.TestCase):
         self.kek_meta_project_model.plugin_meta = 'kek-meta-plugin-meta'
 
         self.encrypted_datum_model = models.EncryptedDatum()
-        self.encrypted_datum_model.kek_meta_tenant = (
+        self.encrypted_datum_model.kek_meta_project = (
             self.kek_meta_project_model)
         self.encrypted_datum_model.cypher_text = base64.b64encode(
             'cypher_text')
@@ -647,9 +647,10 @@ class WhenTestingStoreCryptoStoreSecretAndDatum(TestSecretStoreBase):
             self.project_secret_repo.create_from.call_count, 1)
         args, kwargs = self.project_secret_repo.create_from.call_args
         test_project_secret_model = args[0]
-        self.assertIsInstance(test_project_secret_model, models.TenantSecret)
+        self.assertIsInstance(test_project_secret_model, models.ProjectSecret)
         self.assertEqual(
-            self.context.project_model.id, test_project_secret_model.tenant_id)
+            self.context.project_model.id,
+            test_project_secret_model.project_id)
         self.assertEqual(
             models.States.ACTIVE, test_project_secret_model.status)
 

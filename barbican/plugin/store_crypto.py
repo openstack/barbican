@@ -115,10 +115,10 @@ class StoreCryptoAdapterPlugin(object):
 
         # Find HSM-style 'crypto' plugin.
         decrypting_plugin = manager.PLUGIN_MANAGER.get_plugin_retrieve(
-            datum_model.kek_meta_tenant.plugin_name)
+            datum_model.kek_meta_project.plugin_name)
 
         # wrap the KEKDatum instance in our DTO
-        kek_meta_dto = crypto.KEKMetaDTO(datum_model.kek_meta_tenant)
+        kek_meta_dto = crypto.KEKMetaDTO(datum_model.kek_meta_project)
 
         # Convert from text-based storage format to binary.
         encrypted = base64.b64decode(datum_model.cypher_text)
@@ -298,8 +298,8 @@ def _store_secret_and_datum(
     # Create Secret entities in data store.
     if not secret_model.id:
         repositories.get_secret_repository().create_from(secret_model)
-        new_assoc = models.TenantSecret()
-        new_assoc.tenant_id = context.project_model.id
+        new_assoc = models.ProjectSecret()
+        new_assoc.project_id = context.project_model.id
         new_assoc.secret_id = secret_model.id
         new_assoc.role = "admin"
         new_assoc.status = models.States.ACTIVE

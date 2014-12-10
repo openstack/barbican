@@ -631,21 +631,21 @@ class ProjectRepo(BaseRepo):
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
-        return "Tenant"
+        return "Project"
 
     def _do_create_instance(self):
-        return models.Tenant()
+        return models.Project()
 
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
-        return session.query(models.Tenant).filter_by(id=entity_id)
+        return session.query(models.Project).filter_by(id=entity_id)
 
     def find_by_keystone_id(self, keystone_id, suppress_exception=False,
                             session=None):
         session = self.get_session(session)
 
         try:
-            query = session.query(models.Tenant)
+            query = session.query(models.Project)
             query = query.filter_by(keystone_id=keystone_id)
 
             entity = query.one()
@@ -663,8 +663,8 @@ class ProjectRepo(BaseRepo):
 
     def _build_get_project_entities_query(self, project_id, session):
         """Builds query for retrieving project for given id."""
-        return session.query(models.Tenant).filter_by(id=project_id).filter_by(
-            deleted=False)
+        query = session.query(models.Project)
+        return query.filter_by(id=project_id).filter_by(deleted=False)
 
 
 class SecretRepo(BaseRepo):
@@ -704,10 +704,10 @@ class SecretRepo(BaseRepo):
             if bits > 0:
                 query = query.filter(models.Secret.bit_length == bits)
 
-            query = query.join(models.TenantSecret,
-                               models.Secret.tenant_assocs)
-            query = query.join(models.Tenant, models.TenantSecret.tenants)
-            query = query.filter(models.Tenant.keystone_id == keystone_id)
+            query = query.join(models.ProjectSecret,
+                               models.Secret.project_assocs)
+            query = query.join(models.Project, models.ProjectSecret.projects)
+            query = query.filter(models.Project.keystone_id == keystone_id)
 
             start = offset
             end = offset + limit
@@ -746,9 +746,9 @@ class SecretRepo(BaseRepo):
         query = session.query(models.Secret)
         query = query.filter_by(id=entity_id, deleted=False)
         query = query.filter(expiration_filter)
-        query = query.join(models.TenantSecret, models.Secret.tenant_assocs)
-        query = query.join(models.Tenant, models.TenantSecret.tenants)
-        query = query.filter(models.Tenant.keystone_id == keystone_id)
+        query = query.join(models.ProjectSecret, models.Secret.project_assocs)
+        query = query.join(models.Project, models.ProjectSecret.projects)
+        query = query.filter(models.Project.keystone_id == keystone_id)
 
         return query
 
@@ -759,14 +759,14 @@ class SecretRepo(BaseRepo):
     def _build_get_project_entities_query(self, project_id, session):
         """Builds query for retrieving Secrets associated with a given project
 
-        Discovery is done via a TenantSecret association.
+        Discovery is done via a ProjectSecret association.
 
         :param project_id: id of barbican project entity
         :param session: existing db session reference.
         """
         query = session.query(models.Secret).filter_by(deleted=False)
-        query = query.join(models.TenantSecret, models.Secret.tenant_assocs)
-        query = query.filter(models.TenantSecret.tenant_id == project_id)
+        query = query.join(models.ProjectSecret, models.Secret.project_assocs)
+        query = query.filter(models.ProjectSecret.project_id == project_id)
         return query
 
 
@@ -871,7 +871,7 @@ class KEKDatumRepo(BaseRepo):
         # TODO(jfwood): Reverse this...attempt insert first, then get on fail.
         try:
             query = session.query(models.KEKDatum)
-            query = query.filter_by(tenant_id=project.id,
+            query = query.filter_by(project_id=project.id,
                                     plugin_name=plugin_name,
                                     active=True,
                                     deleted=False)
@@ -882,9 +882,9 @@ class KEKDatumRepo(BaseRepo):
 
             kek_datum = models.KEKDatum()
 
-            kek_datum.kek_label = "tenant-{0}-key-{1}".format(
+            kek_datum.kek_label = "project-{0}-key-{1}".format(
                 project.keystone_id, uuid.uuid4())
-            kek_datum.tenant_id = project.id
+            kek_datum.project_id = project.id
             kek_datum.plugin_name = plugin_name
             kek_datum.status = models.States.ACTIVE
 
@@ -916,7 +916,7 @@ class KEKDatumRepo(BaseRepo):
         :param session: existing db session reference.
         """
         return session.query(models.KEKDatum).filter_by(
-            tenant_id=project_id).filter_by(deleted=False)
+            project_id=project_id).filter_by(deleted=False)
 
 
 class ProjectSecretRepo(BaseRepo):
@@ -924,27 +924,27 @@ class ProjectSecretRepo(BaseRepo):
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
-        return "TenantSecret"
+        return "ProjectSecret"
 
     def _do_create_instance(self):
-        return models.TenantSecret()
+        return models.ProjectSecret()
 
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
-        return session.query(models.TenantSecret).filter_by(id=entity_id)
+        return session.query(models.ProjectSecret).filter_by(id=entity_id)
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
 
     def _build_get_project_entities_query(self, project_id, session):
-        """Builds query for retrieving TenantSecret related to given project.
+        """Builds query for retrieving ProjectSecret related to given project.
 
         :param project_id: id of barbican project entity
         :param session: existing db session reference.
         """
-        return session.query(models.TenantSecret).filter_by(
-            tenant_id=project_id).filter_by(deleted=False)
+        return session.query(models.ProjectSecret).filter_by(
+            project_id=project_id).filter_by(deleted=False)
 
 
 class OrderRepo(BaseRepo):
@@ -976,8 +976,8 @@ class OrderRepo(BaseRepo):
             query = session.query(models.Order)
             query = query.order_by(models.Order.created_at)
             query = query.filter_by(deleted=False)
-            query = query.join(models.Tenant, models.Order.tenant)
-            query = query.filter(models.Tenant.keystone_id == keystone_id)
+            query = query.join(models.Project, models.Order.project)
+            query = query.filter(models.Project.keystone_id == keystone_id)
 
             start = offset
             end = offset + limit
@@ -1007,8 +1007,8 @@ class OrderRepo(BaseRepo):
         """Sub-class hook: build a retrieve query."""
         query = session.query(models.Order)
         query = query.filter_by(id=entity_id, deleted=False)
-        query = query.join(models.Tenant, models.Order.tenant)
-        query = query.filter(models.Tenant.keystone_id == keystone_id)
+        query = query.join(models.Project, models.Order.project)
+        query = query.filter(models.Project.keystone_id == keystone_id)
         return query
 
     def _do_validate(self, values):
@@ -1022,7 +1022,7 @@ class OrderRepo(BaseRepo):
         :param session: existing db session reference.
         """
         return session.query(models.Order).filter_by(
-            tenant_id=project_id).filter_by(deleted=False)
+            project_id=project_id).filter_by(deleted=False)
 
 
 class OrderPluginMetadatumRepo(BaseRepo):
@@ -1101,8 +1101,8 @@ class ContainerRepo(BaseRepo):
             query = session.query(models.Container)
             query = query.order_by(models.Container.created_at)
             query = query.filter_by(deleted=False)
-            query = query.join(models.Tenant, models.Container.tenant)
-            query = query.filter(models.Tenant.keystone_id == keystone_id)
+            query = query.join(models.Project, models.Container.project)
+            query = query.filter(models.Project.keystone_id == keystone_id)
 
             start = offset
             end = offset + limit
@@ -1132,8 +1132,8 @@ class ContainerRepo(BaseRepo):
         """Sub-class hook: build a retrieve query."""
         query = session.query(models.Container)
         query = query.filter_by(id=entity_id, deleted=False)
-        query = query.join(models.Tenant, models.Container.tenant)
-        query = query.filter(models.Tenant.keystone_id == keystone_id)
+        query = query.join(models.Project, models.Container.project)
+        query = query.filter(models.Project.keystone_id == keystone_id)
         return query
 
     def _do_validate(self, values):
@@ -1147,7 +1147,7 @@ class ContainerRepo(BaseRepo):
         :param session: existing db session reference.
         """
         return session.query(models.Container).filter_by(
-            deleted=False).filter_by(tenant_id=project_id)
+            deleted=False).filter_by(project_id=project_id)
 
 
 class ContainerSecretRepo(BaseRepo):

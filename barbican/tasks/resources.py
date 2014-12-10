@@ -208,7 +208,7 @@ class BeginTypeOrder(BaseTask):
         meta_info = order_info.get('meta')
 
         # Retrieve the project.
-        project = self.repos.project_repo.get(order.tenant_id)
+        project = self.repos.project_repo.get(order.project_id)
 
         if order_type == models.OrderType.KEY:
             # Create Secret

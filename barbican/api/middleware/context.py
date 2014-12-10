@@ -27,7 +27,7 @@ LOG = utils.getLogger(__name__)
 
 # TODO(jwood) Need to figure out why config is ignored in this module.
 context_opts = [
-    cfg.BoolOpt('owner_is_tenant', default=True,
+    cfg.BoolOpt('owner_is_project', default=True,
                 help=u._('When true, this option sets the owner of an image '
                          'to be the project. Otherwise, the owner of the '
                          ' image will be the authenticated user issuing the '
@@ -125,7 +125,7 @@ class ContextMiddleware(BaseContextMiddleware):
             'roles': roles,
             'is_admin': CONF.admin_role.strip().lower() in roles,
             'auth_tok': req.headers.get('X-Auth-Token', deprecated_token),
-            'owner_is_project': CONF.owner_is_tenant,
+            'owner_is_project': CONF.owner_is_project,
             'service_catalog': service_catalog,
             'policy_enforcer': self.policy_enforcer,
         }

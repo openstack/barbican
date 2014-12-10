@@ -159,7 +159,7 @@ class ContainersController(object):
         LOG.debug('Start on_post...%s', data)
 
         new_container = models.Container(data)
-        new_container.tenant_id = project.id
+        new_container.project_id = project.id
 
         # TODO(hgedikli): performance optimizations
         for secret_ref in new_container.container_secrets:

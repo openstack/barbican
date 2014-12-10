@@ -87,10 +87,10 @@ def create_order_with_meta(id_ref="id", order_type="certificate", meta={},
 
 def validate_datum(test, datum):
     test.assertIsNone(datum.kek_meta_extended)
-    test.assertIsNotNone(datum.kek_meta_tenant)
-    test.assertTrue(datum.kek_meta_tenant.bind_completed)
-    test.assertIsNotNone(datum.kek_meta_tenant.plugin_name)
-    test.assertIsNotNone(datum.kek_meta_tenant.kek_label)
+    test.assertIsNotNone(datum.kek_meta_project)
+    test.assertTrue(datum.kek_meta_project.bind_completed)
+    test.assertIsNotNone(datum.kek_meta_project.plugin_name)
+    test.assertIsNotNone(datum.kek_meta_project.kek_label)
 
 
 def create_container(id_ref):
@@ -222,7 +222,7 @@ class BaseSecretsResource(FunctionalTest):
 
         self.keystone_id = 'keystone1234'
         self.project_entity_id = 'tid1234'
-        self.project = models.Tenant()
+        self.project = models.Project()
         self.project.id = self.project_entity_id
         self.project.keystone_id = self.keystone_id
         self.project_repo = mock.MagicMock()
@@ -362,7 +362,7 @@ class BaseSecretsResource(FunctionalTest):
 
         args, kwargs = self.project_repo.create_from.call_args
         project = args[0]
-        self.assertIsInstance(project, models.Tenant)
+        self.assertIsInstance(project, models.Project)
         self.assertEqual(self.keystone_id, project.keystone_id)
 
     def _test_should_add_new_secret_metadata_without_payload(self):
@@ -378,8 +378,8 @@ class BaseSecretsResource(FunctionalTest):
 
         args, kwargs = self.project_secret_repo.create_from.call_args
         project_secret = args[0]
-        self.assertIsInstance(project_secret, models.TenantSecret)
-        self.assertEqual(project_secret.tenant_id, self.project_entity_id)
+        self.assertIsInstance(project_secret, models.ProjectSecret)
+        self.assertEqual(project_secret.project_id, self.project_entity_id)
         self.assertEqual(project_secret.secret_id, secret.id)
 
         self.assertFalse(self.datum_repo.create_from.called)
@@ -951,7 +951,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
                                     mode=self.secret_mode,
                                     encrypted_datum=self.datum)
 
-        self.project = models.Tenant()
+        self.project = models.Project()
         self.project.id = self.project_id
         self.keystone_id = self.keystone_id
         self.project_repo = mock.MagicMock()
@@ -1460,7 +1460,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         self.project_internal_id = 'projectid1234'
         self.project_keystone_id = 'keystoneid1234'
 
-        self.project = models.Tenant()
+        self.project = models.Project()
         self.project.id = self.project_internal_id
         self.project.keystone_id = self.project_keystone_id
 
@@ -1854,7 +1854,7 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         self.project_internal_id = 'projectid1234'
         self.project_keystone_id = 'keystoneid1234'
 
-        self.project = models.Tenant()
+        self.project = models.Project()
         self.project.id = self.project_internal_id
         self.project.keystone_id = self.project_keystone_id
 
@@ -2016,7 +2016,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
         self.project_internal_id = 'projectid1234'
         self.project_keystone_id = 'keystoneid1234'
 
-        self.project = models.Tenant()
+        self.project = models.Project()
         self.project.id = self.project_internal_id
         self.project.keystone_id = self.project_keystone_id
 
@@ -2099,7 +2099,7 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
         self.project_keystone_id = 'keystoneid1234'
         self.project_internal_id = 'projectid1234'
 
-        self.project = models.Tenant()
+        self.project = models.Project()
         self.project.id = self.project_internal_id
         self.project.keystone_id = self.project_keystone_id
 
@@ -2200,7 +2200,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
         self.project_keystone_id = 'keystoneid1234'
         self.container = create_container(id_ref='id1')
 
-        self.project = models.Tenant()
+        self.project = models.Project()
         self.project.id = self.project_internal_id
         self.project.keystone_id = self.project_keystone_id
 
@@ -2283,7 +2283,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         self.project_keystone_id = 'keystoneid1234'
         self.project_internal_id = 'projectid1234'
 
-        self.project = models.Tenant()
+        self.project = models.Project()
         self.project.id = self.project_internal_id
         self.project.keystone_id = self.project_keystone_id
 

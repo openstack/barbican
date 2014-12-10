@@ -205,7 +205,7 @@ class WhenUsingKeystoneEventConsumer(listener_test.UtilMixin,
                               operation_type='deleted')
         self.assertIsNone(result, 'No return is expected as result')
 
-    @mock.patch.object(models.Tenant, 'delete',
+    @mock.patch.object(models.Project, 'delete',
                        side_effect=sqlalchemy.exc.SQLAlchemyError)
     def test_delete_project_entities_alchemy_error_suppress_exception_true(
             self, mock_entity_delete):
@@ -220,7 +220,7 @@ class WhenUsingKeystoneEventConsumer(listener_test.UtilMixin,
             project1_id, suppress_exception=True)
         self.assertIsNone(no_error)
 
-    @mock.patch.object(models.Tenant, 'delete',
+    @mock.patch.object(models.Project, 'delete',
                        side_effect=sqlalchemy.exc.SQLAlchemyError)
     def test_delete_project_entities_alchemy_error_suppress_exception_false(
             self, mock_entity_delete):
