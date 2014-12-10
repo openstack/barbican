@@ -108,6 +108,10 @@ class ModelBase(object):
         # import api here to prevent circular dependency problem
         import barbican.model.repositories
         session = session or barbican.model.repositories.get_session()
+        # if model is being created ensure that created/updated are the same
+        if self.id is None:
+            self.created_at = timeutils.utcnow()
+            self.updated_at = self.created_at
         session.add(self)
         session.flush()
 

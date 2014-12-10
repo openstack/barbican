@@ -39,6 +39,7 @@ class WhenCreatingNewSecret(utils.BaseTestCase):
         self.assertEqual(secret.bit_length, self.parsed_secret['bit_length'])
         self.assertEqual(secret.mode, self.parsed_secret['mode'])
         self.assertIsInstance(secret.expiration, datetime.datetime)
+        self.assertEqual(secret.created_at, secret.updated_at)
 
 
 class WhenCreatingNewOrder(utils.BaseTestCase):
