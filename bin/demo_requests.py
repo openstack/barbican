@@ -33,7 +33,7 @@ LOG.addHandler(logging.StreamHandler(sys.stdout))
 
 
 # Project ID:
-proj = '12345'
+proj = '12345678'
 
 # Endpoint:
 end_point = 'http://localhost:9311'
@@ -55,13 +55,16 @@ def demo_version():
     LOG.info('Version: {0}\n'.format(v.text))
 
 
-def demo_store_secret_one_step_text(suppress=False):
+def demo_store_secret_one_step_text(suffix=None, suppress=False):
     """Store secret (1-step):"""
     ep_1step = '/'.join([end_point, version, 'secrets'])
+    secret = 'my-secret-here'
+    if suffix:
+        secret = '-'.join([secret, suffix])
 
     # POST metadata:
     payload = {
-        'payload': 'my-secret-here',
+        'payload': secret,
         'payload_content_type': 'text/plain'
     }
     pr = requests.post(ep_1step, data=json.dumps(payload), headers=hdrs)
@@ -88,7 +91,7 @@ def demo_store_secret_two_step_binary():
     payload = {}
     pr = requests.post(ep_2step, data=json.dumps(payload), headers=hdrs)
     pr_j = pr.json()
-    secret_ref = pr.json().get('secret_ref')
+    secret_ref = pr_j.get('secret_ref')
     assert(secret_ref)
 
     # PUT data to store:
@@ -109,12 +112,24 @@ def demo_store_secret_two_step_binary():
     return secret_ref
 
 
-def demo_store_container_rsa():
+def demo_retrieve_secret_list():
+    ep_list = '/'.join([end_point, version, 'secrets'])
+
+    hdrs_get = dict(hdrs)
+    gr = requests.get(ep_list, headers=hdrs_get)
+    gr_j = gr.json()
+    LOG.info('Get secret list:')
+    for secret_info in gr_j.get('secrets'):
+        LOG.info('    {0}'.format(secret_info.get('secret_ref')))
+    LOG.info('\n')
+
+
+def demo_store_container_rsa(suffix=None):
     """Store secret (2-step):"""
     ep_cont = '/'.join([end_point, version, 'containers'])
-    secret_prk = demo_store_secret_one_step_text(suppress=True)
-    secret_puk = demo_store_secret_one_step_text(suppress=True)
-    secret_pp = demo_store_secret_one_step_text(suppress=True)
+    secret_prk = demo_store_secret_one_step_text(suffix=suffix, suppress=True)
+    secret_puk = demo_store_secret_one_step_text(suffix=suffix, suppress=True)
+    secret_pp = demo_store_secret_one_step_text(suffix=suffix, suppress=True)
 
     # POST metadata:
     payload = {
@@ -143,6 +158,18 @@ def demo_store_container_rsa():
     LOG.info('Get RSA container: {0}\n'.format(gr.content))
 
     return container_ref
+
+
+def demo_retrieve_container_list():
+    ep_list = '/'.join([end_point, version, 'containers'])
+
+    hdrs_get = dict(hdrs)
+    gr = requests.get(ep_list, headers=hdrs_get)
+    gr_j = gr.json()
+    LOG.info('Get container list:')
+    for secret_info in gr_j.get('containers'):
+        LOG.info('    {0}'.format(secret_info.get('container_ref')))
+    LOG.info('\n')
 
 
 def demo_delete_secret(secret_ref):
@@ -193,15 +220,26 @@ def demo_consumers_delete(container_ref):
 
 if __name__ == '__main__':
     demo_version()
+
+    # Demonstrate secret actions:
     secret_ref = demo_store_secret_one_step_text()
-    demo_delete_secret(secret_ref)
+    secret_ref2 = demo_store_secret_two_step_binary()
 
-    secret_ref = demo_store_secret_two_step_binary()
-    demo_delete_secret(secret_ref)
+    demo_retrieve_secret_list()
 
-    container_ref = demo_store_container_rsa()
+    demo_delete_secret(secret_ref)
+    demo_delete_secret(secret_ref2)
+
+    # Demonstrate container and consumer actions:
+    container_ref = demo_store_container_rsa(suffix='1')
+    container_ref2 = demo_store_container_rsa(suffix='2')
+
+    demo_retrieve_container_list()
+
     demo_consumers_add(container_ref)
     demo_consumers_add(container_ref)  # Should be idempotent
     demo_consumers_delete(container_ref)
     demo_consumers_add(container_ref)
+
     demo_delete_container(container_ref)
+    demo_delete_container(container_ref2)
