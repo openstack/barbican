@@ -72,6 +72,15 @@ _CONNECTION = None
 _IDLE_TIMEOUT = None
 
 
+def hard_reset():
+    """Performs a hard reset of database resources, used for unit testing."""
+    global _ENGINE, _MAKER
+    if _ENGINE:
+        _ENGINE.dispose()
+    _ENGINE = None
+    _MAKER = None
+
+
 def start():
     """Start database and establish a read/write connection to it.
 
