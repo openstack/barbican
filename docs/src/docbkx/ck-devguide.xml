@@ -150,9 +150,9 @@
         token, you must supply a payload of credentials in the
         authentication request.</para>
       <para>Credentials are usually a combination of your user name
-        and password, and optionally, the name or ID of the tenant in
+        and password, and optionally, the name or ID of the project in
         which your cloud runs. Ask your cloud administrator for your
-        user name, password, and tenant so that you can generate
+        user name, password, and project so that you can generate
         authentication tokens. </para>
       <para>When you send API requests, you include the token in the
           <code>X-Auth-Token</code> HTTP header. If you access

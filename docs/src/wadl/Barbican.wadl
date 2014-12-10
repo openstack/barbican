@@ -23,7 +23,7 @@
 			<resource id="tenantid" path="/{tenantId}">
 				<param name="tenantId" type="xsd:string"
 					required="true" style="template">
-					<doc>This parameter specifies the tenant ID of the client
+					<doc>This parameter specifies the project ID of the client
 						subscribing to the Barbican service</doc>
 				</param>
 				<!-- SECRETS resource -->
@@ -68,8 +68,8 @@
 	<method name="GET" id="getSecrets">
 		<wadl:doc xml:lang="EN" title="Get Secrets"
 			xmlns="http://docbook.org/ns/docbook">
-			<para role="shortdesc">This method retrieves all secrets for a given tenant.</para>
-			<para>This method lists all the secrets for a tenant.</para>
+			<para role="shortdesc">This method retrieves all secrets for a given project.</para>
+			<para>This method lists all the secrets for a project.</para>
 		</wadl:doc>
 		<request>
 			<representation mediaType="application/json">
@@ -81,7 +81,7 @@
 		<response status="200">
 			<doc title="Error">This status code is returned when the
 				secrets have been successfully retrieved for the
-				tenant. </doc>
+				project. </doc>
 			<representation mediaType="application/json">
 				<doc>
 					<xsdxt:code href="../wadl/samples/resgetSecrets.json"/>
@@ -306,7 +306,7 @@ The following values are supported:</para>
 		<response status="404">
 			<doc title="Error">This error code is returned when the
 				supplied UUID doesn't match the secret in the
-				datastore for the specified tenant.</doc>
+				datastore for the specified project.</doc>
 		</response>
 		<response status="400">
 			<doc title="Error">This error code is returned when no
@@ -339,8 +339,8 @@ The following values are supported:</para>
 	<method name="GET" id="getOrders">
 		<wadl:doc xml:lang="EN" title="Get Orders"
 			xmlns="http://docbook.org/ns/docbook">
-			<para role="shortdesc">This method retrieves all orders for a given tenant.</para>
-			<para>This method lists all orders for a specified tenant. Performing a GET on the secrets resource with no UUID retrieves a batch of the most recent orders per the requesting tenant. 
+			<para role="shortdesc">This method retrieves all orders for a given project.</para>
+			<para>This method lists all orders for a specified project. Performing a GET on the secrets resource with no UUID retrieves a batch of the most recent orders per the requesting project.
 				The retrieved list of orders is ordered by oldest to newest created date. </para>
 		</wadl:doc>
 		<request>
