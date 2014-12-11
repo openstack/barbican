@@ -51,17 +51,23 @@ class OrderBehaviors(base_behaviors.BaseBehaviors):
                                response_model_type=order_models.OrderModel,
                                extra_headers=extra_headers)
 
-    def get_orders(self, limit=10, offset=0, extra_headers=None):
+    def get_orders(self, limit=10, offset=0, name_filter=None,
+                   extra_headers=None):
         """Get a list of orders.
 
         :param limit: limits number of returned orders (default 10)
         :param offset: represents how many records to skip before retrieving
                        the list (default 0)
+        :param name_filter: optional filter to limit the returned secrets to
+                        those whose name matches the filter.
         :param extra_headers: Optional HTTP headers to add to the request
         :return the response, a list of orders and the next/pref hrefs
         """
-        resp = self.client.get('orders',
-                               params={'limit': limit, 'offset': offset},
+        params = {'limit': limit, 'offset': offset}
+        if name_filter:
+            params['name'] = name_filter
+
+        resp = self.client.get('orders', params=params,
                                extra_headers=extra_headers)
 
         orders_list = self.get_json(resp)

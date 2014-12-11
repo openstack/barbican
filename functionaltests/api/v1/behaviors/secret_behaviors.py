@@ -79,15 +79,22 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
         return self.client.get(
             secret_ref, response_model_type=secret_models.SecretModel)
 
-    def get_secrets(self, limit=10, offset=0):
+    def get_secrets(self, limit=10, offset=0, name_filter=None,
+                    extra_headers=None):
         """Handles getting a list of secrets.
 
         :param limit: limits number of returned secrets
         :param offset: represents how many records to skip before retrieving
                        the list
+        :param name_filter: optional filter to limit the returned secrets to
+                        those whose name matches the filter.
+        :param extra_headers: Optional HTTP headers to add to the request
         """
-        resp = self.client.get('secrets', params={'limit': limit,
-                                                  'offset': offset})
+        params = {'limit': limit, 'offset': offset}
+        if name_filter:
+            params['name'] = name_filter
+        resp = self.client.get('secrets', params=params,
+                               extra_headers=extra_headers)
 
         secrets_list = self.get_json(resp)
 

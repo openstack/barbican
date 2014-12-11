@@ -960,3 +960,29 @@ class SecretsTestCase(base.TestCase):
 
         resp, secret_ref = self.behaviors.create_secret(test_model, headers)
         self.assertEqual(resp.status_code, 415)
+
+
+class SecretsPagingTestCase(base.PagingTestCase):
+
+    def setUp(self):
+        super(SecretsPagingTestCase, self).setUp()
+        self.behaviors = secret_behaviors.SecretBehaviors(self.client)
+
+        # make a local mutable copy of the default data to prevent
+        # possible data contamination
+        self.create_default_data = get_default_data()
+
+    def tearDown(self):
+        self.behaviors.delete_all_created_secrets()
+        super(SecretsPagingTestCase, self).tearDown()
+
+    def create_model(self):
+        return secret_models.SecretModel(**self.create_default_data)
+
+    def create_resources(self, count=0, model=None):
+        for x in range(0, count):
+            self.behaviors.create_secret(model)
+
+    def get_resources(self, limit=10, offset=0, name_filter=""):
+        return self.behaviors.get_secrets(limit=limit, offset=offset,
+                                          name_filter=name_filter)
