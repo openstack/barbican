@@ -347,8 +347,8 @@
             authentication token, you must supply a payload of
             credentials in the authentication request.</para>
         <para>Credentials are usually a combination of your user name and password, and optionally,
-            the name or ID of the tenant in which your cloud runs. Ask your cloud administrator for
-            your user name, password, and tenant so that you can generate authentication tokens. </para>
+            the name or ID of the project in which your cloud runs. Ask your cloud administrator for
+            your user name, password, and project so that you can generate authentication tokens. </para>
         <para>When you send API requests, you include the token in the
             X-Auth-Token header. If you access multiple OpenStack
             services, you must get a token for each service. A token
@@ -641,7 +641,7 @@
         <section xml:id="Retrieve_multiple_secrets">
             <title>Retrieving a list of stored secrets</title>
             <para>You can retrieve a list of secrets that are
-                associated with a given tenant by typing the following
+                associated with a given project by typing the following
                 command:</para>
             <para>
                 <programlisting>curl -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'X-Project-Id:12345' https://<replaceable>endpointURL</replaceable>/v1/secrets</programlisting>
@@ -701,7 +701,7 @@
             <title>Retrieving a list of orders</title>
             <para>You can use a single <command>GET</command> request
                 to retrieve metadata for multiple orders for a given
-                tenant. To do so, type the following command:</para>
+                project. To do so, type the following command:</para>
             <para>
                 <programlisting>curl -H 'Accept: application/json' -H 'X-Project-Id:12345' https://<replaceable>endpointURL</replaceable>/v1/orders        </programlisting>
             </para>
