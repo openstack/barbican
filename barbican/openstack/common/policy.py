@@ -873,7 +873,7 @@ class GenericCheck(Check):
 
         Matches look like:
 
-            tenant:%(tenant_id)s
+            project:%(project_id)s
             role:compute:admin
             True:%(user.enabled)s
             'Member':%(role.name)s

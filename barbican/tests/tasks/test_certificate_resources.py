@@ -118,7 +118,7 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
         self.order_model = mock.MagicMock()
         self.order_model.id = self.order_id
         self.order_model.meta = self.order_meta
-        self.order_model.tenant_id = self.project_id
+        self.order_model.project_id = self.project_id
         self.repos = mock.MagicMock()
         self.project_model = mock.MagicMock()
 

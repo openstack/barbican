@@ -360,8 +360,8 @@ def _save_secret(secret_model, project_model, repos):
     # Create Secret entities in data store.
     if not secret_model.id:
         repos.secret_repo.create_from(secret_model)
-        new_assoc = models.TenantSecret()
-        new_assoc.tenant_id = project_model.id
+        new_assoc = models.ProjectSecret()
+        new_assoc.project_id = project_model.id
         new_assoc.secret_id = secret_model.id
         new_assoc.role = "admin"
         new_assoc.status = models.States.ACTIVE
@@ -382,7 +382,7 @@ def _save_container(spec, project_model, repos, private_secret_model,
     container_model.name = spec.get('name')
     container_model.type = spec.get('algorithm', '').lower()
     container_model.status = models.States.ACTIVE
-    container_model.tenant_id = project_model.id
+    container_model.project_id = project_model.id
     repos.container_repo.create_from(container_model)
 
     # create container_secret for private_key

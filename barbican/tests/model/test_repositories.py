@@ -53,11 +53,11 @@ class TestSecretRepository(RepositoryTestCase):
         session = self.repo.get_session()
 
         secret = self.repo.create_from(models.Secret(), session=session)
-        project = models.Tenant(keystone_id="my keystone id")
+        project = models.Project(keystone_id="my keystone id")
         project.save(session=session)
-        project_secret = models.TenantSecret(
+        project_secret = models.ProjectSecret(
             secret_id=secret.id,
-            tenant_id=project.id,
+            project_id=project.id,
         )
         project_secret.save(session=session)
 
@@ -82,16 +82,16 @@ class TestSecretRepository(RepositoryTestCase):
             models.Secret(dict(name="name2")),
             session=session,
         )
-        project = models.Tenant(keystone_id="my keystone id")
+        project = models.Project(keystone_id="my keystone id")
         project.save(session=session)
-        project_secret1 = models.TenantSecret(
+        project_secret1 = models.ProjectSecret(
             secret_id=secret1.id,
-            tenant_id=project.id,
+            project_id=project.id,
         )
         project_secret1.save(session=session)
-        project_secret2 = models.TenantSecret(
+        project_secret2 = models.ProjectSecret(
             secret_id=secret2.id,
-            tenant_id=project.id,
+            project_id=project.id,
         )
         project_secret2.save(session=session)
 
@@ -117,16 +117,16 @@ class TestSecretRepository(RepositoryTestCase):
             models.Secret(dict(algorithm="algorithm2")),
             session=session,
         )
-        project = models.Tenant(keystone_id="my keystone id")
+        project = models.Project(keystone_id="my keystone id")
         project.save(session=session)
-        project_secret1 = models.TenantSecret(
+        project_secret1 = models.ProjectSecret(
             secret_id=secret1.id,
-            tenant_id=project.id,
+            project_id=project.id,
         )
         project_secret1.save(session=session)
-        project_secret2 = models.TenantSecret(
+        project_secret2 = models.ProjectSecret(
             secret_id=secret2.id,
-            tenant_id=project.id,
+            project_id=project.id,
         )
         project_secret2.save(session=session)
 
@@ -152,16 +152,16 @@ class TestSecretRepository(RepositoryTestCase):
             models.Secret(dict(mode="mode2")),
             session=session,
         )
-        project = models.Tenant(keystone_id="my keystone id")
+        project = models.Project(keystone_id="my keystone id")
         project.save(session=session)
-        project_secret1 = models.TenantSecret(
+        project_secret1 = models.ProjectSecret(
             secret_id=secret1.id,
-            tenant_id=project.id,
+            project_id=project.id,
         )
         project_secret1.save(session=session)
-        project_secret2 = models.TenantSecret(
+        project_secret2 = models.ProjectSecret(
             secret_id=secret2.id,
-            tenant_id=project.id,
+            project_id=project.id,
         )
         project_secret2.save(session=session)
 
@@ -187,16 +187,16 @@ class TestSecretRepository(RepositoryTestCase):
             models.Secret(dict(bit_length=2048)),
             session=session,
         )
-        project = models.Tenant(keystone_id="my keystone id")
+        project = models.Project(keystone_id="my keystone id")
         project.save(session=session)
-        project_secret1 = models.TenantSecret(
+        project_secret1 = models.ProjectSecret(
             secret_id=secret1.id,
-            tenant_id=project.id,
+            project_id=project.id,
         )
         project_secret1.save(session=session)
-        project_secret2 = models.TenantSecret(
+        project_secret2 = models.ProjectSecret(
             secret_id=secret2.id,
-            tenant_id=project.id,
+            project_id=project.id,
         )
         project_secret2.save(session=session)
 

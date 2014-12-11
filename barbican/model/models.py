@@ -199,20 +199,20 @@ class ModelBase(object):
         return expiration
 
 
-class TenantSecret(BASE, ModelBase):
+class ProjectSecret(BASE, ModelBase):
     """Represents an association between a Project and a Secret."""
 
-    __tablename__ = 'tenant_secret'
+    __tablename__ = 'project_secret'
 
     role = sa.Column(sa.String(255))
-    secret = orm.relationship("Secret", backref="tenant_assocs")
-    tenant_id = sa.Column(
-        sa.String(36), sa.ForeignKey('tenants.id'), primary_key=True)
+    secret = orm.relationship("Secret", backref="project_assocs")
+    project_id = sa.Column(
+        sa.String(36), sa.ForeignKey('projects.id'), primary_key=True)
     secret_id = sa.Column(
         sa.String(36), sa.ForeignKey('secrets.id'), primary_key=True)
 
     __table_args__ = (sa.UniqueConstraint(
-        'tenant_id', 'secret_id', name='_tenant_secret_uc'),)
+        'project_id', 'secret_id', name='_project_secret_uc'),)
 
 
 class ContainerSecret(BASE, ModelBase):
@@ -236,21 +236,21 @@ class ContainerSecret(BASE, ModelBase):
                                           name='_container_secret_name_uc'),)
 
 
-class Tenant(BASE, ModelBase):
+class Project(BASE, ModelBase):
     """Represents a Project in the datastore.
 
     Projects are users that wish to store secret information within
     Cloudkeep's Barbican.
     """
 
-    __tablename__ = 'tenants'
+    __tablename__ = 'projects'
 
     keystone_id = sa.Column(sa.String(255), unique=True)
 
-    orders = orm.relationship("Order", backref="tenant")
-    secrets = orm.relationship("TenantSecret", backref="tenants")
-    keks = orm.relationship("KEKDatum", backref="tenant")
-    containers = orm.relationship("Container", backref="tenant")
+    orders = orm.relationship("Order", backref="project")
+    secrets = orm.relationship("ProjectSecret", backref="projects")
+    keks = orm.relationship("KEKDatum", backref="project")
+    containers = orm.relationship("Container", backref="project")
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -379,7 +379,7 @@ class EncryptedDatum(BASE, ModelBase):
     kek_meta_extended = sa.Column(sa.Text)
 
     # Eager load this relationship via 'lazy=False'.
-    kek_meta_tenant = orm.relationship("KEKDatum", lazy=False)
+    kek_meta_project = orm.relationship("KEKDatum", lazy=False)
 
     def __init__(self, secret=None, kek_datum=None):
         """Creates encrypted datum from a secret and KEK metadata."""
@@ -390,7 +390,7 @@ class EncryptedDatum(BASE, ModelBase):
 
         if kek_datum:
             self.kek_id = kek_datum.id
-            self.kek_meta_tenant = kek_datum
+            self.kek_meta_project = kek_datum
 
         self.status = States.ACTIVE
 
@@ -428,8 +428,8 @@ class KEKDatum(BASE, ModelBase):
     plugin_name = sa.Column(sa.String(255), nullable=False)
     kek_label = sa.Column(sa.String(255))
 
-    tenant_id = sa.Column(
-        sa.String(36), sa.ForeignKey('tenants.id'), nullable=False)
+    project_id = sa.Column(
+        sa.String(36), sa.ForeignKey('projects.id'), nullable=False)
 
     active = sa.Column(sa.Boolean, nullable=False, default=True)
     bind_completed = sa.Column(sa.Boolean, nullable=False, default=False)
@@ -455,8 +455,8 @@ class Order(BASE, ModelBase):
     __tablename__ = 'orders'
 
     type = sa.Column(sa.String(255), nullable=False, default='key')
-    tenant_id = sa.Column(sa.String(36), sa.ForeignKey('tenants.id'),
-                          nullable=False)
+    project_id = sa.Column(sa.String(36), sa.ForeignKey('projects.id'),
+                           nullable=False)
 
     error_status_code = sa.Column(sa.String(16))
     error_reason = sa.Column(sa.String(255))
@@ -562,8 +562,8 @@ class Container(BASE, ModelBase):
     name = sa.Column(sa.String(255))
     type = sa.Column(sa.Enum('generic', 'rsa', 'dsa', 'certificate',
                              name='container_types'))
-    tenant_id = sa.Column(sa.String(36), sa.ForeignKey('tenants.id'),
-                          nullable=False)
+    project_id = sa.Column(sa.String(36), sa.ForeignKey('projects.id'),
+                           nullable=False)
     consumers = sa.orm.relationship("ContainerConsumerMetadatum")
 
     def __init__(self, parsed_request=None):
@@ -691,7 +691,7 @@ class TransportKey(BASE, ModelBase):
                 'plugin_name': self.plugin_name}
 
 # Keep this tuple synchronized with the models in the file
-MODELS = [TenantSecret, Tenant, Secret, EncryptedDatum, Order, Container,
+MODELS = [ProjectSecret, Project, Secret, EncryptedDatum, Order, Container,
           ContainerConsumerMetadatum, ContainerSecret, TransportKey,
           SecretStoreMetadatum, OrderPluginMetadatum, KEKDatum]
 

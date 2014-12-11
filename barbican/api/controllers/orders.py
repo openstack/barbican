@@ -215,7 +215,7 @@ class OrdersController(object):
         new_order = models.Order()
         new_order.meta = body.get('meta')
         new_order.type = order_type
-        new_order.tenant_id = project.id
+        new_order.project_id = project.id
 
         self.order_repo.create_from(new_order)
 

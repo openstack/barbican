@@ -130,7 +130,7 @@ class ContainerConsumersController(object):
 
         new_consumer = models.ContainerConsumerMetadatum(self.container_id,
                                                          data)
-        new_consumer.tenant_id = project.id
+        new_consumer.project_id = project.id
         self.consumer_repo.create_from(new_consumer, container)
 
         pecan.response.headers['Location'] = (
