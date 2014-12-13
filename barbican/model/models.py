@@ -638,11 +638,13 @@ class ContainerConsumerMetadatum(BASE, ModelBase):
         sa.Index('values_index', 'container_id', 'name', 'URL')
     )
 
-    def __init__(self, container_id, parsed_request=None):
+    def __init__(self, container_id, parsed_request):
         """Registers a Consumer to a Container."""
         super(ContainerConsumerMetadatum, self).__init__()
 
-        if parsed_request:
+        # TODO(john-wood-w) This class should really be immutable due to the
+        # data_hash attribute.
+        if container_id and parsed_request:
             self.container_id = container_id
             self.name = parsed_request.get('name')
             self.URL = parsed_request.get('URL')

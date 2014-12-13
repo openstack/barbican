@@ -69,10 +69,9 @@ def enforce_rbac(action_name='default'):
             # context placed here by context.py
             # middleware
             ctx = _get_barbican_context(pecan.request)
+            external_project_id = None
             if ctx:
                 external_project_id = ctx.project
-            else:
-                external_project_id = None
 
             _do_enforce_rbac(pecan.request, action_name, ctx)
             # insert external_project_id as the first arg to the guarded method

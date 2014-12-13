@@ -64,7 +64,7 @@ class SecretContentTypeNotSupportedException(exception.BarbicanException):
     """Raised when support for payload content type is not available."""
     def __init__(self, content_type):
         super(SecretContentTypeNotSupportedException, self).__init__(
-            u._("Secret Content Type of '{content_type}' "
+            u._("A Content-Type of '{content_type}' for secrets is "
                 "not supported").format(
                     content_type=content_type)
         )

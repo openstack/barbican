@@ -266,12 +266,12 @@ class UpdateOrder(BaseTask):
                 secret_meta_repo=secret_meta_repo
             )
 
-    def retrieve_entity(self, order_id, external_project_id):
+    def retrieve_entity(self, order_id, external_project_id, updated_meta):
         return self.repos.order_repo.get(
             entity_id=order_id,
             external_project_id=external_project_id)
 
-    def handle_processing(self, order, updated_meta):
+    def handle_processing(self, order, order_id, keystone_id, updated_meta):
         self.handle_order(order, updated_meta)
 
     def handle_error(self, order, status, message, exception,
