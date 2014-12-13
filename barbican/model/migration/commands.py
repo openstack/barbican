@@ -43,6 +43,11 @@ CONF.register_opts(db_opts)
 def init_config(sql_url=None):
     """Initialize and return the Alembic configuration."""
     sqlalchemy_url = sql_url or CONF.sql_connection
+    if not sqlalchemy_url:
+        raise RuntimeError("Please specify a SQLAlchemy-friendly URL to "
+                           "connect to the proper database, either through "
+                           "the CLI or the configuration file.")
+
     if sqlalchemy_url and 'sqlite' in sqlalchemy_url:
         LOG.warn('!!! Limited support for migration commands using sqlite'
                  ' databases; This operation may not succeed.')
