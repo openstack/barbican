@@ -22,6 +22,10 @@ from barbican.common import exception as excep
 from barbican.common import validators
 from barbican.tests import utils
 
+VALID_PKCS10 = "valid PKCS10"
+VALID_EXTENSIONS = "valid extensions"
+VALID_FULL_CMC = "valid CMC"
+
 
 def suite():
     suite = unittest.TestSuite()
@@ -896,6 +900,211 @@ class WhenTestingAsymmetricTypeOrderValidator(utils.BaseTestCase):
         self.asymmetric_order_req['meta']['algorithm'] = 'aes'
         result = self.validator.validate(self.asymmetric_order_req)
         self.assertIsNone(result['meta']['expiration'])
+
+
+class WhenTestingSimpleCMCOrderValidator(utils.BaseTestCase):
+
+    def setUp(self):
+        super(WhenTestingSimpleCMCOrderValidator, self).setUp()
+        self.type = 'certificate'
+        self.meta = {'request_type': 'simple-cmc',
+                     'request_data': VALID_PKCS10,
+                     'requestor_name': 'Barbican User',
+                     'requestor_email': 'barbican_user@example.com',
+                     'requestor_phone': '555-1212'}
+        self._set_order()
+        self.validator = validators.TypeOrderValidator()
+
+    def _set_order(self):
+        self.order_req = {'type': self.type,
+                          'meta': self.meta}
+
+    def test_should_pass_good_data(self):
+        self.validator.validate(self.order_req)
+
+    def test_should_raise_with_no_metadata(self):
+        self.order_req = {'type': self.type}
+        self.assertRaises(excep.InvalidObject,
+                          self.validator.validate,
+                          self.order_req)
+
+    def test_should_raise_with_bad_request_type(self):
+        self.meta['request_type'] = 'bad_request_type'
+        self._set_order()
+        self.assertRaises(excep.InvalidCertificateRequestType,
+                          self.validator.validate,
+                          self.order_req)
+
+    def test_should_raise_with_no_request_data(self):
+        del self.meta['request_data']
+        self._set_order()
+        self.assertRaises(excep.MissingMetadataField,
+                          self.validator.validate,
+                          self.order_req)
+
+    @testtools.skip("Not yet implemented")
+    def test_should_raise_with_bad_pkcs10_data(self):
+        self.meta['request_data'] = 'Bad PKCS#10 Data'
+        self._set_order()
+        self.assertRaises(excep.InvalidPKCS10Data,
+                          self.validator.validate,
+                          self.order_req)
+
+
+class WhenTestingFullCMCOrderValidator(utils.BaseTestCase):
+
+    def setUp(self):
+        super(WhenTestingFullCMCOrderValidator, self).setUp()
+        self.type = 'certificate'
+        self.meta = {'request_type': 'full-cmc',
+                     'request_data': VALID_FULL_CMC,
+                     'requestor_name': 'Barbican User',
+                     'requestor_email': 'barbican_user@example.com',
+                     'requestor_phone': '555-1212'}
+        self._set_order()
+        self.validator = validators.TypeOrderValidator()
+
+    def _set_order(self):
+        self.order_req = {'type': self.type,
+                          'meta': self.meta}
+
+    def test_should_pass_good_data(self):
+        self.validator.validate(self.order_req)
+
+    def test_should_raise_with_no_request_data(self):
+        del self.meta['request_data']
+        self._set_order()
+        self.assertRaises(excep.MissingMetadataField,
+                          self.validator.validate,
+                          self.order_req)
+
+    @testtools.skip("Not yet implemented")
+    def test_should_raise_with_bad_cmc_data(self):
+        self.meta['request_data'] = 'Bad CMC Data'
+        self._set_order()
+        self.assertRaises(excep.InvalidCMCData,
+                          self.validator.validate,
+                          self.order_req)
+
+
+class WhenTestingCustomOrderValidator(utils.BaseTestCase):
+
+    def setUp(self):
+        super(WhenTestingCustomOrderValidator, self).setUp()
+        self.type = 'certificate'
+        self.meta = {'request_type': 'custom',
+                     'ca_param_1': 'value_1',
+                     'ca_param_2': 'value_2',
+                     'requestor_name': 'Barbican User',
+                     'requestor_email': 'barbican_user@example.com',
+                     'requestor_phone': '555-1212'}
+        self._set_order()
+        self.validator = validators.TypeOrderValidator()
+
+    def _set_order(self):
+        self.order_req = {'type': self.type,
+                          'meta': self.meta}
+
+    def test_should_pass_good_data(self):
+        self.validator.validate(self.order_req)
+
+    def test_should_pass_with_no_request_type(self):
+        # defaults to custom
+        del self.meta['request_type']
+        self._set_order()
+        self.validator.validate(self.order_req)
+
+
+class WhenTestingStoredKeyOrderValidator(utils.BaseTestCase):
+
+    def setUp(self):
+        super(WhenTestingStoredKeyOrderValidator, self).setUp()
+        self.type = 'certificate'
+        self.meta = {'request_type': 'stored-key',
+                     'container_ref': 'good_container_ref',
+                     'subject_dn': 'cn=barbican-server,o=example.com',
+                     'extensions': VALID_EXTENSIONS,
+                     'requestor_name': 'Barbican User',
+                     'requestor_email': 'barbican_user@example.com',
+                     'requestor_phone': '555-1212'}
+        self.order_req = {'type': self.type,
+                          'meta': self.meta}
+        self.validator = validators.TypeOrderValidator()
+
+    def test_should_pass_good_data(self):
+        self.validator.validate(self.order_req)
+
+    def test_should_raise_with_no_container_ref(self):
+        del self.meta['container_ref']
+        self.assertRaises(excep.MissingMetadataField,
+                          self.validator.validate,
+                          self.order_req)
+
+    def test_should_raise_with_no_subject_dn(self):
+        del self.meta['subject_dn']
+        self.assertRaises(excep.MissingMetadataField,
+                          self.validator.validate,
+                          self.order_req)
+
+    def test_should_pass_with_no_extensions_data(self):
+        del self.meta['extensions']
+        self.validator.validate(self.order_req)
+
+    @testtools.skip("Not yet implemented")
+    def test_should_raise_with_bad_extensions_data(self):
+        self.meta['extensions'] = 'Bad extensions data'
+        self.assertRaises(excep.InvalidExtensionsData,
+                          self.validator.validate,
+                          self.order_req)
+
+    @testtools.skip("Not yet implemented")
+    def test_should_raise_with_bad_subject_dn(self):
+        self.meta['subject_dn'] = "Bad subject DN data"
+        self.assertRaises(excep.InvalidSubjectDN,
+                          self.validator.validate,
+                          self.order_req)
+
+    @testtools.skip("Not yet implemented")
+    def test_should_raise_with_missing_container(self):
+        self.meta['container_ref'] = 'missing_container_ref'
+        self.assertRaises(excep.InvalidContainer,
+                          self.validator.validate,
+                          self.order_req)
+
+    @testtools.skip("Not yet implemented")
+    def test_should_raise_with_container_not_cert_type(self):
+        self.meta['container_ref'] = 'bad_type_container_ref'
+        self.assertRaises(excep.InvalidContainer,
+                          self.validator.validate,
+                          self.order_req)
+
+    @testtools.skip("Not yet implemented")
+    def test_should_raise_with_inaccessible_container(self):
+        self.meta['container_ref'] = 'inaccessible_container_ref'
+        self.assertRaises(excep.InvalidContainer,
+                          self.validator.validate,
+                          self.order_req)
+
+    @testtools.skip("Not yet implemented")
+    def test_should_raise_with_missing_public_key(self):
+        self.meta['container_ref'] = 'missing_public_key_ref'
+        self.assertRaises(excep.InvalidContainer,
+                          self.validator.validate,
+                          self.order_req)
+
+    @testtools.skip("Not yet implemented")
+    def test_should_raise_with_inaccessible_public_key(self):
+        self.meta['container_ref'] = 'inaccessible_public_key_ref'
+        self.assertRaises(excep.InvalidContainer,
+                          self.validator.validate,
+                          self.order_req)
+
+    @testtools.skip("Not yet implemented")
+    def test_should_raise_with_missing_private_key(self):
+        self.meta['container_ref'] = 'missing_private_key_ref'
+        self.assertRaises(excep.InvalidContainer,
+                          self.validator.validate,
+                          self.order_req)
 
 if __name__ == '__main__':
     unittest.main()

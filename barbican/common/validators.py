@@ -277,7 +277,6 @@ class TypeOrderValidator(ValidatorBase):
         self._assert_schema_is_valid(json_data, schema_name)
 
         order_type = json_data.get('type').lower()
-        # Note(atiwari): No support for certificate so far
         if order_type == models.OrderType.CERTIFICATE:
             certificate_meta = json_data.get('meta')
             self._validate_certificate_meta(certificate_meta, schema_name)
@@ -338,11 +337,120 @@ class TypeOrderValidator(ValidatorBase):
 
         self._validate_bit_length(asymmetric_meta, schema_name)
 
+    def _get_required_metadata_value(self, metadata, key):
+        data = metadata.get(key, None)
+        if data is None:
+            raise exception.MissingMetadataField(required=key)
+        return data
+
     def _validate_certificate_meta(self, certificate_meta, schema_name):
         """Validation specific to meta for certificate type order."""
         self._assert_validity(certificate_meta is not None,
                               schema_name,
                               u._("'meta' attributes is required"), "meta")
+
+        jump_table = {
+            'simple-cmc': self._validate_simple_cmc_request,
+            'full-cmc': self._validate_full_cmc_request,
+            'stored-key': self._validate_stored_key_request,
+            'custom': self._validate_custom_request
+        }
+
+        request_type = certificate_meta.get("request_type", "custom")
+        if request_type not in jump_table:
+            raise exception.InvalidCertificateRequestType(request_type)
+
+        jump_table[request_type](certificate_meta)
+
+    def _validate_simple_cmc_request(self, certificate_meta):
+        """Validates simple CMC (which are PKCS10 requests)."""
+        request_data = self._get_required_metadata_value(
+            certificate_meta, "request_data")
+        self._validate_pkcs10_data(request_data)
+
+    def _validate_full_cmc_request(self, certificate_meta):
+        """Validate full CMC request."""
+        request_data = self._get_required_metadata_value(
+            certificate_meta, "request_data")
+        self._validate_full_cmc_data(request_data)
+
+    def _validate_stored_key_request(self, certificate_meta):
+        """Validate stored-key cert request."""
+        container_ref = self._get_required_metadata_value(
+            certificate_meta, "container_ref")
+        self._validate_certificate_container(container_ref)
+        subject_dn = self._get_required_metadata_value(
+            certificate_meta, "subject_dn")
+        self._validate_subject_dn_data(subject_dn)
+
+        extensions = certificate_meta.get("extensions", None)
+        if extensions:
+            self._validate_extensions_data(extensions)
+
+    def _validate_custom_request(self, certificate_meta):
+        """Validate custom data request
+
+        We cannot do any validation here because the request
+        parameters are custom.  Validation will be done by the
+        plugin.  We may choose to select the relevant plugin and
+        call the supports() method to raise validation errors.
+        """
+        pass
+
+    def _validate_pkcs10_data(self, request_data):
+        """Confirm that the request_data is valid PKCS#10."""
+        """
+        TODO(alee-3) complete this function
+
+        Parse data into the ASN.1 structure defined by PKCS10.
+        If parsing fails, raise InvalidPKCS10Data
+        """
+        pass
+
+    def _validate_full_cmc_data(self, request_data):
+        """Confirm that request_data is valid Full CMC data."""
+        """
+        TODO(alee-3) complete this function
+
+        Parse data into the ASN.1 structure defined for full CMC.
+        If parsing fails, raise InvalidCMCData
+        """
+        pass
+
+    def _validate_certificate_container(self, public_key_ref):
+        """Confirm that the container contains the proper data."""
+        """
+        TODO(alee-3) complete this function
+
+        Check that the container:
+        * exists
+        * is of certificate type
+        * contains a public key which is accessible by the user
+        * contains a private key which is accessible by the user (note, this
+          is like POP-lite.  Someone should not be able to have the server
+          generate a CSR without being able to retrieve the private key.
+        """
+        pass
+
+    def _validate_subject_dn_data(self, subject_dn):
+        """Confirm that the subject_dn contains valid data."""
+        """
+        TODO(alee-3) complete this function
+
+        Validate subject_dn conforms with RFC 1485.
+        If not, raise InvalidSubjectDN
+        """
+        pass
+
+    def _validate_extensions_data(self, extensions):
+        """Confirm that the extensions data is valid."""
+        """
+        TODO(alee-3) complete this function
+
+        Parse the extensions data into the correct ASN.1 structure.
+        If the parsing fails, throw InvalidExtensionsData
+        """
+        pass
 
     def _extract_expiration(self, json_data, schema_name):
         """Extracts and returns the expiration date from the JSON data."""
