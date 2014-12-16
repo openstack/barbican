@@ -2048,6 +2048,36 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
         container = args[0]
         self.assertIsInstance(container, models.Container)
 
+    def _assert_returned_valid_container(self, resp):
+        self.assertEqual(resp.status_int, 201)
+        self.assertNotIn(self.project_keystone_id, resp.headers['Location'])
+
+        args, kwargs = self.container_repo.create_from.call_args
+        container = args[0]
+        self.assertIsInstance(container, models.Container)
+
+    def test_should_create_container_w_empty_name(self):
+        # Name key missing
+        container_req_w_no_name = {'type': self.type,
+                                   'secret_refs': self.secret_refs}
+        resp = self.app.post_json(
+            '/containers/',
+            container_req_w_no_name
+        )
+
+        self._assert_returned_valid_container(resp)
+
+        # Name key is null
+        container_req_w_null_name = {'name': None,
+                                     'type': self.type,
+                                     'secret_refs': self.secret_refs}
+        resp = self.app.post_json(
+            '/containers/',
+            container_req_w_null_name
+        )
+
+        self._assert_returned_valid_container(resp)
+
     def test_should_raise_container_bad_json(self):
         resp = self.app.post(
             '/containers/',
