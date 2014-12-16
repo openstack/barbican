@@ -31,8 +31,8 @@ class BarbicanClientAuth(auth.AuthBase):
 
         self.username = credentials.username
         self.password = credentials.password
-        self.project_id = credentials.tenant_id
-        self.project_name = credentials.tenant_name
+        self.project_id = credentials.project_id
+        self.project_name = credentials.project_name
         self.token = auth_provider.get_token()
 
     def __call__(self, r):
