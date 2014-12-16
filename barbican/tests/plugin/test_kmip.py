@@ -15,28 +15,22 @@
 import socket
 
 import mock
-import testtools
 
 from barbican.plugin.interface import secret_store
 from barbican.tests import utils
 
-try:
-    from kmip.core import attributes as attr
-    from kmip.core import enums
-    from kmip.core.factories import attributes
-    from kmip.core.factories import secrets
-    from kmip.core.messages import contents
-    from kmip.core import objects
-    from kmip.services import kmip_client as proxy
-    from kmip.services import results
+from kmip.core import attributes as attr
+from kmip.core import enums
+from kmip.core.factories import attributes
+from kmip.core.factories import secrets
+from kmip.core.messages import contents
+from kmip.core import objects
+from kmip.services import kmip_client as proxy
+from kmip.services import results
 
-    from barbican.plugin import kmip_secret_store as kss
-    kmip_available = True
-except ImportError:
-    kmip_available = False
+from barbican.plugin import kmip_secret_store as kss
 
 
-@testtools.skipIf(not kmip_available, "KMIP imports not available")
 class WhenTestingKMIPSecretStore(utils.BaseTestCase):
     """Test using the KMIP server backend for SecretStore."""
 
