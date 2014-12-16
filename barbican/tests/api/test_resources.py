@@ -1827,6 +1827,7 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
             WhenCreatingTypeOrdersUsingOrdersResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
 
     @property
     def root(self):
@@ -1868,7 +1869,6 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         self.queue_resource.process_type_order.return_value = None
 
     def test_should_add_new_order(self):
-        self.skipTest("atiwari: remove skip once CR 111412 merged")
         resp = self.app.post_json(
             '/orders/', self.key_order_req
         )
