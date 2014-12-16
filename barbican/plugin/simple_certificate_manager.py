@@ -98,6 +98,17 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
         """
         return True
 
+    def supported_request_types(self):
+        """Returns the request types supported by this plugin.
+
+        :returns: dict containing Barbican-core defined request types
+                  supported by this plugin.
+        """
+        return [cert.CertificateRequestType.CUSTOM_REQUEST,
+                cert.CertificateRequestType.SIMPLE_CMC_REQUEST,
+                cert.CertificateRequestType.FULL_CMC_REQUEST,
+                cert.CertificateRequestType.STORED_KEY_REQUEST]
+
 
 class SimpleCertificateEventPlugin(cert.CertificateEventPluginBase):
     """Simple/default certificate event plugin."""

@@ -163,6 +163,20 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
             self.repos
         )
 
+    def test_should_return_for_stored_key_request(self):
+        # simple test to satisfy coverage requirements.
+        # TODO(alee) replace with better tests once _generate_csr() is written
+        self.order_meta[cert_man.REQUEST_TYPE] = (
+            cert_man.CertificateRequestType.STORED_KEY_REQUEST
+        )
+        self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
+
+        cert_res.issue_certificate_request(self.order_model,
+                                           self.project_model,
+                                           self.repos)
+
+        self._verify_issue_certificate_plugins_called()
+
     def test_should_raise_invalid_operation_seen(self):
         self.result.status = cert_man.CertificateStatus.INVALID_OPERATION
 
