@@ -253,7 +253,9 @@ class OrdersTestCase(base.TestCase):
         '128': [128],
         '192': [192],
         '256': [256],
-        '16M_plus_256': [16777472]
+        '1024': [1024],
+        '2048': [2048],
+        '4096': [4096]
     })
     @testcase.attr('positive')
     def test_create_order_defaults_valid_bit_length(self, bit_length):
@@ -275,7 +277,8 @@ class OrdersTestCase(base.TestCase):
         '129': [129],
         'none': [None],
         'empty': [''],
-        'space': [' ']
+        'space': [' '],
+        'over_signed_small_int': [32768]
     })
     @testcase.attr('negative')
     def test_create_order_defaults_invalid_bit_length(self, bit_length):

@@ -37,6 +37,8 @@ common_opts = [
 CONF = cfg.CONF
 CONF.register_opts(common_opts)
 
+MYSQL_SMALL_INT_MAX = 32767
+
 
 def secret_too_big(data):
     if isinstance(data, six.text_type):
@@ -119,7 +121,11 @@ class NewSecretValidator(ValidatorBase):
                 "name": {"type": "string", "maxLength": 255},
                 "algorithm": {"type": "string", "maxLength": 255},
                 "mode": {"type": "string", "maxLength": 255},
-                "bit_length": {"type": "integer", "minimum": 1},
+                "bit_length": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": MYSQL_SMALL_INT_MAX
+                },
                 "expiration": {"type": "string", "maxLength": 255},
                 "payload": {"type": "string"},
                 "payload_content_type": {"type": "string", "maxLength": 255},
