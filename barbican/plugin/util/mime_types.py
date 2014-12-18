@@ -119,15 +119,13 @@ def augment_fields_with_content_types(secret):
 
     fields = secret.to_dict_fields()
 
-    if not secret.encrypted_data:
+    if not secret.secret_store_metadata:
         return fields
 
-    # TODO(jwood): How deal with merging more than one datum instance?
-    for datum in secret.encrypted_data:
-        if datum.content_type in CTYPES_MAPPINGS:
-            fields.update(
-                {'content_types': CTYPES_MAPPINGS[datum.content_type]}
-            )
-            break
+    content_type = secret.secret_store_metadata.get('content_type')
+    if content_type and content_type.value in CTYPES_MAPPINGS:
+        fields.update(
+            {'content_types': CTYPES_MAPPINGS[content_type.value]}
+        )
 
     return fields

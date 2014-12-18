@@ -223,7 +223,8 @@ def generate_asymmetric_secret(spec, content_type,
         private_secret_model,
         public_secret_model,
         passphrase_secret_model,
-        project_model
+        project_model,
+        content_type
     )
 
     # Save secret and metadata.
@@ -309,13 +310,15 @@ def _generate_asymmetric_key(
         private_secret_model,
         public_secret_model,
         passphrase_secret_model,
-        project_model):
+        project_model,
+        content_type):
     if isinstance(generate_plugin, store_crypto.StoreCryptoAdapterPlugin):
         context = store_crypto.StoreCryptoContext(
             project_model,
             private_secret_model=private_secret_model,
             public_secret_model=public_secret_model,
-            passphrase_secret_model=passphrase_secret_model)
+            passphrase_secret_model=passphrase_secret_model,
+            content_type=content_type)
         asymmetric_meta_dto = generate_plugin.generate_asymmetric_key(
             key_spec, context)
     else:
