@@ -66,13 +66,13 @@ class TestCase(oslotest.BaseTestCase):
         return name
 
 
-class BarbicanCredentials(auth.KeystoneV2Credentials):
+class BarbicanCredentials(auth.KeystoneV3Credentials):
 
     def __init__(self):
         credentials = dict(
             username=CONF.identity.admin_username,
             password=CONF.identity.admin_password,
-            tenant_name=CONF.identity.admin_tenant_name
+            project_name=CONF.identity.admin_tenant_name
         )
 
         super(BarbicanCredentials, self).__init__(**credentials)
