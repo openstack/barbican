@@ -262,13 +262,16 @@ def delete_secret(secret_model, project_id, repos):
     #   Note: Must use the dict/tuple format for py2.6 usage.
     secret_metadata = _get_secret_meta(secret_model, repos)
 
-    # Locate a suitable plugin to delete the secret from.
-    plugin_manager = secret_store.SecretStorePluginManager()
-    delete_plugin = plugin_manager.get_plugin_retrieve_delete(
-        secret_metadata.get('plugin_name'))
+    # We should only try to delete a secret using the plugin interface if
+    # there's the metadata available. This addresses bug/1377330.
+    if secret_metadata:
+        # Locate a suitable plugin to delete the secret from.
+        plugin_manager = secret_store.SecretStorePluginManager()
+        delete_plugin = plugin_manager.get_plugin_retrieve_delete(
+            secret_metadata.get('plugin_name'))
 
-    # Delete the secret from plugin storage.
-    delete_plugin.delete_secret(secret_metadata)
+        # Delete the secret from plugin storage.
+        delete_plugin.delete_secret(secret_metadata)
 
     # Delete the secret from data model.
     repos.secret_repo.delete_entity_by_id(entity_id=secret_model.id,

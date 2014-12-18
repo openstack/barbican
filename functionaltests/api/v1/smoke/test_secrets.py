@@ -131,6 +131,17 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(del_resp.status_code, 204)
 
     @testcase.attr('positive')
+    def test_secret_delete_minimal_secret_w_no_metadata(self):
+        """Covers deleting a secret with nones data."""
+        test_model = secret_models.SecretModel(**secret_create_nones_data)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        del_resp = self.behaviors.delete_secret(secret_ref)
+        self.assertEqual(del_resp.status_code, 204)
+
+    @testcase.attr('positive')
     def test_secret_get_defaults(self):
         """Covers getting a secret's payload data."""
         test_model = secret_models.SecretModel(**secret_create_defaults_data)

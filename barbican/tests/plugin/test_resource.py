@@ -44,6 +44,8 @@ class WhenTestingPluginResource(testtools.TestCase):
             'return_value.get_plugin_generate.return_value':
             self.moc_plugin,
             'return_value.get_plugin_store.return_value':
+            self.moc_plugin,
+            'return_value.get_plugin_retrieve_delete.return_value':
             self.moc_plugin
         }
 
@@ -134,3 +136,37 @@ class WhenTestingPluginResource(testtools.TestCase):
                          call_count, 1)
         self.assertEqual(self.repos.container_secret_repo.create_from.
                          call_count, 2)
+
+    def test_delete_secret_w_metadata(self):
+        project_id = "some_id"
+        secret_model = mock.MagicMock()
+        secret_meta = mock.MagicMock()
+        self.repos.secret_meta_repo.get_metadata_for_secret.return_value = (
+            secret_meta)
+        self.plugin_resource.delete_secret(secret_model=secret_model,
+                                           project_id=project_id,
+                                           repos=self.repos)
+
+        meta_repo = self.repos.secret_meta_repo
+        meta_repo.get_metadata_for_secret.assert_called_once_with(
+            secret_model.id)
+
+        self.moc_plugin.delete_secret.assert_called_once_with(secret_meta)
+
+        self.repos.secret_repo.delete_entity_by_id.assert_called_once_with(
+            entity_id=secret_model.id, keystone_id=project_id)
+
+    def test_delete_secret_w_out_metadata(self):
+        project_id = "some_id"
+        secret_model = mock.MagicMock()
+        self.repos.secret_meta_repo.get_metadata_for_secret.return_value = None
+        self.plugin_resource.delete_secret(secret_model=secret_model,
+                                           project_id=project_id,
+                                           repos=self.repos)
+
+        meta_repo = self.repos.secret_meta_repo
+        meta_repo.get_metadata_for_secret.assert_called_once_with(
+            secret_model.id)
+
+        self.repos.secret_repo.delete_entity_by_id.assert_called_once_with(
+            entity_id=secret_model.id, keystone_id=project_id)
