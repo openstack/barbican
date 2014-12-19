@@ -2258,7 +2258,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
         self.assertEqual(resp.status_int, 200)
         self.assertNotIn(self.project_keystone_id, resp.headers['Location'])
 
-        args, kwargs = self.consumer_repo.create_from.call_args
+        args, kwargs = self.consumer_repo.create_or_update_from.call_args
         consumer = args[0]
         self.assertIsInstance(consumer, models.ContainerConsumerMetadatum)
 
@@ -2436,7 +2436,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         # Verify consumers were deleted
         calls = []
         for consumer in consumers:
-            calls.append(mock.call(consumer.id))
+            calls.append(mock.call(consumer.id, self.project_keystone_id))
         self.consumer_repo.delete_entity_by_id.assert_has_calls(
             calls, any_order=True
         )
@@ -2455,7 +2455,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         # Verify consumers were deleted
         calls = []
         for consumer in consumers:
-            calls.append(mock.call(consumer.id))
+            calls.append(mock.call(consumer.id, self.project_keystone_id))
         self.consumer_repo.delete_entity_by_id.assert_has_calls(
             calls, any_order=True
         )

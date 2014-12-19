@@ -41,8 +41,6 @@ LOG = utils.getLogger(__name__)
 
 _ENGINE = None
 _MAKER = None
-_MAX_RETRIES = None
-_RETRY_INTERVAL = None
 BASE = models.BASE
 sa_logger = None
 
@@ -67,9 +65,6 @@ db_opts = [
 CONF = cfg.CONF
 CONF.register_opts(db_opts)
 CONF.import_opt('debug', 'barbican.openstack.common.log')
-
-_CONNECTION = None
-_IDLE_TIMEOUT = None
 
 
 def hard_reset():
@@ -128,13 +123,9 @@ def clear():
 
 def setup_db_env():
     """Setup configuration for database."""
-    global sa_logger, _IDLE_TIMEOUT, _MAX_RETRIES, _RETRY_INTERVAL, _CONNECTION
+    global sa_logger
 
-    _IDLE_TIMEOUT = CONF.sql_idle_timeout
-    _MAX_RETRIES = CONF.sql_max_retries
-    _RETRY_INTERVAL = CONF.sql_retry_interval
-    _CONNECTION = CONF.sql_connection
-    LOG.debug("Sql connection = %s", _CONNECTION)
+    LOG.debug("Sql connection = %s", CONF.sql_connection)
     sa_logger = logging.getLogger('sqlalchemy.engine')
     if CONF.debug:
         sa_logger.setLevel(logging.DEBUG)
@@ -164,61 +155,45 @@ def get_session():
 def get_engine():
     """Return a SQLAlchemy engine."""
     """May assign _ENGINE if not already assigned"""
-    global _ENGINE, sa_logger, _CONNECTION, _IDLE_TIMEOUT, _MAX_RETRIES
-    global _RETRY_INTERVAL
+    global _ENGINE
+    _ENGINE = _get_engine(_ENGINE)
+    return _ENGINE
 
-    if not _ENGINE:
-        if not _CONNECTION:
-            raise exception.BarbicanException('No _CONNECTION configured')
+
+def _get_engine(engine):
+    if not engine:
+        connection = CONF.sql_connection
+        if not connection:
+            raise exception.BarbicanException(
+                u._('No SQL connection configured'))
 
     # TODO(jfwood):
     # connection_dict = sqlalchemy.engine.url.make_url(_CONNECTION)
 
         engine_args = {
-            'pool_recycle': _IDLE_TIMEOUT,
+            'pool_recycle': CONF.sql_idle_timeout,
             'echo': False,
             'convert_unicode': True}
 
         try:
-            LOG.debug("Sql connection: %s; Args: %s", _CONNECTION, engine_args)
-            _ENGINE = sqlalchemy.create_engine(_CONNECTION, **engine_args)
-
-        # TODO(jfwood): if 'mysql' in connection_dict.drivername:
-        # TODO(jfwood): sqlalchemy.event.listen(_ENGINE, 'checkout',
-        # TODO(jfwood):                         ping_listener)
-
-            _ENGINE.connect = wrap_db_error(_ENGINE.connect)
-            _ENGINE.connect()
+            engine = _create_engine(connection, **engine_args)
+            engine.connect()
         except Exception as err:
-            msg = u._LE("Error configuring registry database with supplied "
-                        "sql_connection. Got error: {error}").format(error=err)
+            msg = u._("Error configuring registry database with supplied "
+                      "sql_connection. Got error: {error}").format(error=err)
             LOG.exception(msg)
-            raise
-
-        sa_logger = logging.getLogger('sqlalchemy.engine')
-        if CONF.debug:
-            sa_logger.setLevel(logging.DEBUG)
+            raise exception.BarbicanException(msg)
 
         if CONF.db_auto_create:
             meta = sqlalchemy.MetaData()
-            meta.reflect(bind=_ENGINE)
+            meta.reflect(bind=engine)
             tables = meta.tables
-            if tables and 'alembic_version' in tables:
-                # Upgrade the database to the latest version.
-                LOG.info(u._LI('Updating schema to latest version'))
-                commands.upgrade()
-            else:
-                # Create database tables from our models.
-                LOG.info(u._LI('Auto-creating barbican registry DB'))
-                models.register_models(_ENGINE)
 
-                # Sync the alembic version 'head' with current models.
-                commands.stamp()
-
+            _auto_generate_tables(engine, tables)
         else:
-            LOG.info(u._LI('not auto-creating barbican registry DB'))
+            LOG.info(u._LI('Not auto-creating barbican registry DB'))
 
-    return _ENGINE
+    return engine
 
 
 def get_maker():
@@ -245,6 +220,35 @@ def is_db_connection_error(args):
     return False
 
 
+def _create_engine(connection, **engine_args):
+    LOG.debug("Sql connection: %s; Args: %s", connection, engine_args)
+
+    engine = sqlalchemy.create_engine(connection, **engine_args)
+
+    # TODO(jfwood): if 'mysql' in connection_dict.drivername:
+    # TODO(jfwood): sqlalchemy.event.listen(_ENGINE, 'checkout',
+    # TODO(jfwood):                         ping_listener)
+
+    # Wrap the engine's connect method with a retry decorator.
+    engine.connect = wrap_db_error(engine.connect)
+
+    return engine
+
+
+def _auto_generate_tables(engine, tables):
+    if tables and 'alembic_version' in tables:
+        # Upgrade the database to the latest version.
+        LOG.info(u._LI('Updating schema to latest version'))
+        commands.upgrade()
+    else:
+        # Create database tables from our models.
+        LOG.info(u._LI('Auto-creating barbican registry DB'))
+        models.register_models(engine)
+
+        # Sync the alembic version 'head' with current models.
+        commands.stamp()
+
+
 def wrap_db_error(f):
     """Retry DB connection. Copied from nova and modified."""
     def _wrap(*args, **kwargs):
@@ -254,16 +258,16 @@ def wrap_db_error(f):
             if not is_db_connection_error(e.args[0]):
                 raise
 
-            remaining_attempts = _MAX_RETRIES
+            remaining_attempts = CONF.sql_max_retries
             while True:
                 LOG.warning(u._LW('SQL connection failed. %d attempts left.'),
                             remaining_attempts)
                 remaining_attempts -= 1
-                time.sleep(_RETRY_INTERVAL)
+                time.sleep(CONF.sql_retry_interval)
                 try:
                     return f(*args, **kwargs)
                 except sqlalchemy.exc.OperationalError as e:
-                    if (remaining_attempts == 0 or not
+                    if (remaining_attempts <= 0 or not
                             is_db_connection_error(e.args[0])):
                         raise
                 except sqlalchemy.exc.DBAPIError:
@@ -340,7 +344,7 @@ class Repositories(object):
             if None in test_set and len(test_set) > 1:
                 raise NotImplementedError(u._LE('No support for mixing None '
                                                 'and non-None repository '
-                                                'instances'))
+                                                'instances.'))
 
             # Only set properties for specified repositories.
             self._set_repo('project_repo', ProjectRepo, kwargs)
@@ -402,50 +406,20 @@ class BaseRepo(object):
 
     def create_from(self, entity, session=None):
         """Sub-class hook: create from entity."""
-        start = time.time()  # DEBUG
         if not entity:
             msg = u._(
                 "Must supply non-None {entity_name}."
-            ).format(entity_name=self._do_entity_name)
+            ).format(entity_name=self._do_entity_name())
             raise exception.Invalid(msg)
 
         if entity.id:
             msg = u._(
-                "Must supply {entity_name} with id=None(i.e. new entity)."
-            ).format(entity_name=self._do_entity_name)
+                "Must supply {entity_name} with id=None (i.e. new entity)."
+            ).format(entity_name=self._do_entity_name())
             raise exception.Invalid(msg)
 
         LOG.debug("Begin create from...")
-
-        # Validate the attributes before we go any further. From my
-        # (unknown Glance developer) investigation, the @validates
-        # decorator does not validate
-        # on new records, only on existing records, which is, well,
-        # idiotic.
-        values = self._do_validate(entity.to_dict())
-
-        try:
-            LOG.debug("Saving entity...")
-            entity.save(session=session)
-        except sqlalchemy.exc.IntegrityError:
-            LOG.exception(u._LE('Problem saving entity for create'))
-            if values:
-                values_id = values['id']
-            else:
-                values_id = None
-            _raise_entity_id_already_exists(values_id)
-
-        LOG.debug('Elapsed repo '
-                  'create secret:%s', (time.time() - start))  # DEBUG
-
-        return entity
-
-    def save(self, entity):
-        """Saves the state of the entity.
-
-        :raises NotFound if entity does not exist.
-        """
-        entity.updated_at = timeutils.utcnow()
+        start = time.time()  # DEBUG
 
         # Validate the attributes before we go any further. From my
         # (unknown Glance developer) investigation, the @validates
@@ -455,39 +429,43 @@ class BaseRepo(object):
         self._do_validate(entity.to_dict())
 
         try:
-            entity.save()
+            LOG.debug("Saving entity...")
+            entity.save(session=session)
         except sqlalchemy.exc.IntegrityError:
-            LOG.exception(u._LE('Problem saving entity for update'))
-            _raise_entity_id_not_found(entity.id)
+            LOG.exception(u._LE('Problem saving entity for create'))
+            _raise_entity_already_exists(self._do_entity_name())
 
-    def update(self, entity_id, values, purge_props=False):
-        """Set the given properties on an entity and update it.
+        LOG.debug('Elapsed repo '
+                  'create secret:%s', (time.time() - start))  # DEBUG
 
-        :raises NotFound if entity does not exist.
-        """
-        return self._update(entity_id, values, purge_props)
+        return entity
 
-    def delete_entity_by_id(self, entity_id, keystone_id):
+    def save(self, entity):
+        """Saves the state of the entity."""
+        entity.updated_at = timeutils.utcnow()
+
+        # Validate the attributes before we go any further. From my
+        # (unknown Glance developer) investigation, the @validates
+        # decorator does not validate
+        # on new records, only on existing records, which is, well,
+        # idiotic.
+        self._do_validate(entity.to_dict())
+
+        entity.save()
+
+    def delete_entity_by_id(self, entity_id, keystone_id, session=None):
         """Remove the entity by its ID."""
 
-        session = get_session()
+        session = self.get_session(session)
 
         entity = self.get(entity_id=entity_id, keystone_id=keystone_id,
                           session=session)
 
-        try:
-            entity.delete(session=session)
-        except sqlalchemy.exc.IntegrityError:
-            LOG.exception(u._LE('Problem finding entity to delete'))
-            _raise_entity_id_not_found(entity.id)
+        entity.delete(session=session)
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
         return "Entity"
-
-    def _do_create_instance(self):
-        """Sub-class hook: return new entity (in Python, not in db)."""
-        return None
 
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
@@ -521,47 +499,6 @@ class BaseRepo(object):
             raise exception.Invalid(msg)
 
         return values
-
-    def _update(self, entity_id, values, purge_props=False):
-        """Used internally by update()
-
-        :param values: A dict of attributes to set
-        :param entity_id: If None, create the entity, otherwise,
-                          find and update it
-        """
-        session = get_session()
-
-        if entity_id:
-            entity_ref = self.get(entity_id, session=session)
-            values['updated_at'] = timeutils.utcnow()
-        else:
-            self._do_convert_values(values)
-            entity_ref = self._do_create_instance()
-
-        # Need to canonicalize ownership
-        if 'owner' in values and not values['owner']:
-            values['owner'] = None
-
-        entity_ref.update(values)
-
-        # Validate the attributes before we go any further. From my
-        # (unknown Glance developer) investigation, the @validates
-        # decorator does not validate
-        # on new records, only on existing records, which is, well,
-        # idiotic.
-        self._do_validate(entity_ref.to_dict())
-        self._update_values(entity_ref, values)
-
-        try:
-            entity_ref.save(session=session)
-        except sqlalchemy.exc.IntegrityError:
-            LOG.exception(u._LE('Problem saving entity for _update'))
-            if entity_id:
-                _raise_entity_id_not_found(entity_id)
-            else:
-                _raise_entity_id_already_exists(values['id'])
-
-        return self.get(entity_ref.id)
 
     def _update_values(self, entity_ref, values):
         for k in values:
@@ -642,9 +579,6 @@ class ProjectRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "Project"
 
-    def _do_create_instance(self):
-        return models.Project()
-
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.Project).filter_by(id=entity_id)
@@ -694,53 +628,46 @@ class SecretRepo(BaseRepo):
         session = self.get_session(session)
         utcnow = timeutils.utcnow()
 
-        try:
-            query = session.query(models.Secret)
-            query = query.order_by(models.Secret.created_at)
-            query = query.filter_by(deleted=False)
+        query = session.query(models.Secret)
+        query = query.order_by(models.Secret.created_at)
+        query = query.filter_by(deleted=False)
 
-            # Note(john-wood-w): SQLAlchemy requires '== None' below,
-            #   not 'is None'.
-            query = query.filter(or_(models.Secret.expiration == None,
-                                     models.Secret.expiration > utcnow))
+        # Note(john-wood-w): SQLAlchemy requires '== None' below,
+        #   not 'is None'.
+        query = query.filter(or_(models.Secret.expiration == None,
+                                 models.Secret.expiration > utcnow))
 
-            if name:
-                query = query.filter(models.Secret.name.like(name))
-            if alg:
-                query = query.filter(models.Secret.algorithm.like(alg))
-            if mode:
-                query = query.filter(models.Secret.mode.like(mode))
-            if bits > 0:
-                query = query.filter(models.Secret.bit_length == bits)
+        if name:
+            query = query.filter(models.Secret.name.like(name))
+        if alg:
+            query = query.filter(models.Secret.algorithm.like(alg))
+        if mode:
+            query = query.filter(models.Secret.mode.like(mode))
+        if bits > 0:
+            query = query.filter(models.Secret.bit_length == bits)
 
-            query = query.join(models.ProjectSecret,
-                               models.Secret.project_assocs)
-            query = query.join(models.Project, models.ProjectSecret.projects)
-            query = query.filter(models.Project.keystone_id == keystone_id)
+        query = query.join(models.ProjectSecret,
+                           models.Secret.project_assocs)
+        query = query.join(models.Project, models.ProjectSecret.projects)
+        query = query.filter(models.Project.keystone_id == keystone_id)
 
-            start = offset
-            end = offset + limit
-            LOG.debug('Retrieving from %s to %s', start, end)
-            total = query.count()
-            entities = query[start:end]
-            LOG.debug('Number entities retrieved: %s out of %s',
-                      len(entities), total
-                      )
+        start = offset
+        end = offset + limit
+        LOG.debug('Retrieving from %s to %s', start, end)
+        total = query.count()
+        entities = query[start:end]
+        LOG.debug('Number entities retrieved: %s out of %s',
+                  len(entities), total
+                  )
 
-        except sa_orm.exc.NoResultFound:
-            entities = None
-            total = 0
-            if not suppress_exception:
-                _raise_no_entities_found(self._do_entity_name())
+        if total <= 0 and not suppress_exception:
+            _raise_no_entities_found(self._do_entity_name())
 
         return entities, offset, limit, total
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
         return "Secret"
-
-    def _do_create_instance(self):
-        return models.Secret()
 
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
@@ -788,9 +715,6 @@ class EncryptedDatumRepo(BaseRepo):
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
         return "EncryptedDatum"
-
-    def _do_create_instance(self):
-        return models.EncryptedDatum()
 
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
@@ -842,9 +766,6 @@ class SecretStoreMetadatumRepo(BaseRepo):
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
         return "SecretStoreMetadatum"
-
-    def _do_create_instance(self):
-        return models.SecretStoreMetadatum()
 
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
@@ -905,9 +826,6 @@ class KEKDatumRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "KEKDatum"
 
-    def _do_create_instance(self):
-        return models.KEKDatum()
-
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.KEKDatum).filter_by(id=entity_id)
@@ -934,9 +852,6 @@ class ProjectSecretRepo(BaseRepo):
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
         return "ProjectSecret"
-
-    def _do_create_instance(self):
-        return models.ProjectSecret()
 
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
@@ -981,36 +896,29 @@ class OrderRepo(BaseRepo):
 
         session = self.get_session(session)
 
-        try:
-            query = session.query(models.Order)
-            query = query.order_by(models.Order.created_at)
-            query = query.filter_by(deleted=False)
-            query = query.join(models.Project, models.Order.project)
-            query = query.filter(models.Project.keystone_id == keystone_id)
+        query = session.query(models.Order)
+        query = query.order_by(models.Order.created_at)
+        query = query.filter_by(deleted=False)
+        query = query.join(models.Project, models.Order.project)
+        query = query.filter(models.Project.keystone_id == keystone_id)
 
-            start = offset
-            end = offset + limit
-            LOG.debug('Retrieving from %s to %s', start, end)
-            total = query.count()
-            entities = query[start:end]
-            LOG.debug('Number entities retrieved: %s out of %s',
-                      len(entities), total
-                      )
+        start = offset
+        end = offset + limit
+        LOG.debug('Retrieving from %s to %s', start, end)
+        total = query.count()
+        entities = query[start:end]
+        LOG.debug('Number entities retrieved: %s out of %s',
+                  len(entities), total
+                  )
 
-        except sa_orm.exc.NoResultFound:
-            entities = None
-            total = 0
-            if not suppress_exception:
-                _raise_no_entities_found(self._do_entity_name())
+        if total <= 0 and not suppress_exception:
+            _raise_no_entities_found(self._do_entity_name())
 
         return entities, offset, limit, total
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
         return "Order"
-
-    def _do_create_instance(self):
-        return models.Order()
 
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
@@ -1077,9 +985,6 @@ class OrderPluginMetadatumRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "OrderPluginMetadatum"
 
-    def _do_create_instance(self):
-        return models.OrderPluginMetadatum()
-
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
         query = session.query(models.OrderPluginMetadatum)
@@ -1106,36 +1011,29 @@ class ContainerRepo(BaseRepo):
 
         session = self.get_session(session)
 
-        try:
-            query = session.query(models.Container)
-            query = query.order_by(models.Container.created_at)
-            query = query.filter_by(deleted=False)
-            query = query.join(models.Project, models.Container.project)
-            query = query.filter(models.Project.keystone_id == keystone_id)
+        query = session.query(models.Container)
+        query = query.order_by(models.Container.created_at)
+        query = query.filter_by(deleted=False)
+        query = query.join(models.Project, models.Container.project)
+        query = query.filter(models.Project.keystone_id == keystone_id)
 
-            start = offset
-            end = offset + limit
-            LOG.debug('Retrieving from %s to %s', start, end)
-            total = query.count()
-            entities = query[start:end]
-            LOG.debug('Number entities retrieved: %s out of %s',
-                      len(entities), total
-                      )
+        start = offset
+        end = offset + limit
+        LOG.debug('Retrieving from %s to %s', start, end)
+        total = query.count()
+        entities = query[start:end]
+        LOG.debug('Number entities retrieved: %s out of %s',
+                  len(entities), total
+                  )
 
-        except sa_orm.exc.NoResultFound:
-            entities = None
-            total = 0
-            if not suppress_exception:
-                _raise_no_entities_found(self._do_entity_name())
+        if total <= 0 and not suppress_exception:
+            _raise_no_entities_found(self._do_entity_name())
 
         return entities, offset, limit, total
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
         return "Container"
-
-    def _do_create_instance(self):
-        return models.Container()
 
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
@@ -1165,9 +1063,6 @@ class ContainerSecretRepo(BaseRepo):
             """Sub-class hook: return entity name, such as for debugging."""
             return "ContainerSecret"
 
-        def _do_create_instance(self):
-            return models.ContainerSecret()
-
         def _do_build_get_query(self, entity_id, keystone_id, session):
             """Sub-class hook: build a retrieve query."""
             return session.query(models.ContainerSecret
@@ -1195,28 +1090,24 @@ class ContainerConsumerRepo(BaseRepo):
 
         session = self.get_session(session)
 
-        try:
-            query = session.query(models.ContainerConsumerMetadatum)
-            query = query.order_by(models.ContainerConsumerMetadatum.name)
-            query = query.filter_by(deleted=False)
-            query = query.filter(
-                models.ContainerConsumerMetadatum.container_id == container_id
-            )
+        query = session.query(models.ContainerConsumerMetadatum)
+        query = query.order_by(models.ContainerConsumerMetadatum.name)
+        query = query.filter_by(deleted=False)
+        query = query.filter(
+            models.ContainerConsumerMetadatum.container_id == container_id
+        )
 
-            start = offset
-            end = offset + limit
-            LOG.debug('Retrieving from %s to %s', start, end)
-            total = query.count()
-            entities = query[start:end]
-            LOG.debug('Number entities retrieved: %s out of %s',
-                      len(entities), total
-                      )
+        start = offset
+        end = offset + limit
+        LOG.debug('Retrieving from %s to %s', start, end)
+        total = query.count()
+        entities = query[start:end]
+        LOG.debug('Number entities retrieved: %s out of %s',
+                  len(entities), total
+                  )
 
-        except sa_orm.exc.NoResultFound:
-            entities = None
-            total = 0
-            if not suppress_exception:
-                _raise_no_entities_found(self._do_entity_name())
+        if total <= 0 and not suppress_exception:
+            _raise_no_entities_found(self._do_entity_name())
 
         return entities, offset, limit, total
 
@@ -1240,15 +1131,10 @@ class ContainerConsumerRepo(BaseRepo):
                     u._("Could not find {entity_name}").format(
                         entity_name=self._do_entity_name()))
 
-        except sa_orm.exc.MultipleResultsFound:
-            if not suppress_exception:
-                raise exception.NotFound(
-                    u._("Found more than one {entity_name}").format(
-                        entity_name=self._do_entity_name()))
         return consumer
 
-    def create_from(self, new_consumer, container):
-        session = get_session()
+    def create_or_update_from(self, new_consumer, container, session=None):
+        session = self.get_session(session)
         try:
             container.updated_at = timeutils.utcnow()
             container.consumers.append(new_consumer)
@@ -1273,9 +1159,6 @@ class ContainerConsumerRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "ContainerConsumer"
 
-    def _do_create_instance(self):
-        return models.ContainerConsumerMetadatum("uuid")
-
     def _do_build_get_query(self, entity_id, keystone_id, session):
         """Sub-class hook: build a retrieve query."""
         query = session.query(models.ContainerConsumerMetadatum)
@@ -1297,9 +1180,6 @@ class TransportKeyRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "TransportKey"
 
-    def _do_create_instance(self):
-        return models.TransportKey()
-
     def get_by_create_date(self, plugin_name=None,
                            offset_arg=None, limit_arg=None,
                            suppress_exception=False, session=None):
@@ -1313,28 +1193,24 @@ class TransportKeyRepo(BaseRepo):
 
         session = self.get_session(session)
 
-        try:
+        query = session.query(models.TransportKey)
+        query = query.order_by(models.TransportKey.created_at)
+        if plugin_name is not None:
             query = session.query(models.TransportKey)
-            query = query.order_by(models.TransportKey.created_at)
-            if plugin_name is not None:
-                query = session.query(models.TransportKey)
-                query = query.filter_by(deleted=False, plugin_name=plugin_name)
-            else:
-                query = query.filter_by(deleted=False)
+            query = query.filter_by(deleted=False, plugin_name=plugin_name)
+        else:
+            query = query.filter_by(deleted=False)
 
-            start = offset
-            end = offset + limit
-            LOG.debug('Retrieving from %s to %s', start, end)
-            total = query.count()
-            entities = query[start:end]
-            LOG.debug('Number of entities retrieved: %s out of %s',
-                      len(entities), total)
+        start = offset
+        end = offset + limit
+        LOG.debug('Retrieving from %s to %s', start, end)
+        total = query.count()
+        entities = query[start:end]
+        LOG.debug('Number of entities retrieved: %s out of %s',
+                  len(entities), total)
 
-        except sa_orm.exc.NoResultFound:
-            entities = None
-            total = 0
-            if not suppress_exception:
-                _raise_no_entities_found(self._do_entity_name())
+        if total <= 0 and not suppress_exception:
+            _raise_no_entities_found(self._do_entity_name())
 
         return entities, offset, limit, total
 
@@ -1398,11 +1274,11 @@ def _raise_entity_id_not_found(entity_id):
 
 def _raise_no_entities_found(entity_name):
     raise exception.NotFound(
-        u._("No {entity_name}'s found").format(
+        u._("No entities of type {entity_name} found").format(
             entity_name=entity_name))
 
 
-def _raise_entity_id_already_exists(entity_id):
+def _raise_entity_already_exists(entity_name):
     raise exception.Duplicate(
-        u._("Entity ID {entity_id} "
-            "already exists!").format(entity_id=entity_id))
+        u._("Entity '{entity_name}' "
+            "already exists").format(entity_name=entity_name))

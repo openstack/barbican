@@ -38,18 +38,18 @@ class BarbicanException(Exception):
     """
     message = u._("An unknown exception occurred")
 
-    def __init__(self, message=None, *args, **kwargs):
-        if not message:
-            message = self.message
+    def __init__(self, message_arg=None, *args, **kwargs):
+        if not message_arg:
+            message_arg = self.message
         try:
-            message = message % kwargs
+            self.message = message_arg % kwargs
         except Exception as e:
             if _FATAL_EXCEPTION_FORMAT_ERRORS:
                 raise e
             else:
                 # at least get the core message out if something happened
                 pass
-        super(BarbicanException, self).__init__(message)
+        super(BarbicanException, self).__init__(self.message)
 
 
 class MissingArgumentError(BarbicanException):

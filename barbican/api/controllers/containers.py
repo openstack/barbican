@@ -86,7 +86,8 @@ class ContainerController(object):
 
         for consumer in container_consumers[0]:
             try:
-                self.consumer_repo.delete_entity_by_id(consumer.id)
+                self.consumer_repo.delete_entity_by_id(
+                    consumer.id, keystone_id)
             except exception.NotFound:
                 pass
 
