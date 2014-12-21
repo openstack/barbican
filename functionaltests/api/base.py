@@ -72,7 +72,8 @@ class BarbicanCredentials(auth.KeystoneV3Credentials):
         credentials = dict(
             username=CONF.identity.admin_username,
             password=CONF.identity.admin_password,
-            project_name=CONF.identity.admin_tenant_name
+            project_name=CONF.identity.admin_tenant_name,
+            domain_name=CONF.identity.admin_domain_name,
         )
 
         super(BarbicanCredentials, self).__init__(**credentials)
