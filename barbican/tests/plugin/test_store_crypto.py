@@ -43,7 +43,7 @@ class TestSecretStoreBase(testtools.TestCase):
 
         self.project_model = mock.MagicMock()
         self.project_model.id = 'project-model-id'
-        self.project_model.keystone_id = self.project_id
+        self.project_model.external_id = self.project_id
         self.secret_dto = secret_store.SecretDTO(
             secret_store.SecretType.SYMMETRIC,
             self.secret,

@@ -224,7 +224,7 @@ class BaseSecretsResource(FunctionalTest):
         self.project_entity_id = 'tid1234'
         self.project = models.Project()
         self.project.id = self.project_entity_id
-        self.project.keystone_id = self.keystone_id
+        self.project.external_id = self.keystone_id
         self.project_repo = mock.MagicMock()
         self.project_repo.find_by_keystone_id.return_value = self.project
 
@@ -363,7 +363,7 @@ class BaseSecretsResource(FunctionalTest):
         args, kwargs = self.project_repo.create_from.call_args
         project = args[0]
         self.assertIsInstance(project, models.Project)
-        self.assertEqual(self.keystone_id, project.keystone_id)
+        self.assertEqual(self.keystone_id, project.external_id)
 
     def _test_should_add_new_secret_metadata_without_payload(self):
         self.app.post_json(
@@ -953,7 +953,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.project = models.Project()
         self.project.id = self.project_id
-        self.keystone_id = self.keystone_id
+        self.project.external_id = self.keystone_id
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
         self.project_repo.find_by_keystone_id.return_value = self.project
@@ -1462,7 +1462,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
 
         self.project = models.Project()
         self.project.id = self.project_internal_id
-        self.project.keystone_id = self.project_keystone_id
+        self.project.external_id = self.project_keystone_id
 
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
@@ -1857,7 +1857,7 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
 
         self.project = models.Project()
         self.project.id = self.project_internal_id
-        self.project.keystone_id = self.project_keystone_id
+        self.project.external_id = self.project_keystone_id
 
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
@@ -2018,7 +2018,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
 
         self.project = models.Project()
         self.project.id = self.project_internal_id
-        self.project.keystone_id = self.project_keystone_id
+        self.project.external_id = self.project_keystone_id
 
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
@@ -2131,7 +2131,7 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
 
         self.project = models.Project()
         self.project.id = self.project_internal_id
-        self.project.keystone_id = self.project_keystone_id
+        self.project.external_id = self.project_keystone_id
 
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
@@ -2232,7 +2232,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
 
         self.project = models.Project()
         self.project.id = self.project_internal_id
-        self.project.keystone_id = self.project_keystone_id
+        self.project.external_id = self.project_keystone_id
 
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
@@ -2315,7 +2315,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
 
         self.project = models.Project()
         self.project.id = self.project_internal_id
-        self.project.keystone_id = self.project_keystone_id
+        self.project.external_id = self.project_keystone_id
 
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project

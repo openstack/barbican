@@ -589,7 +589,7 @@ class ProjectRepo(BaseRepo):
 
         try:
             query = session.query(models.Project)
-            query = query.filter_by(keystone_id=keystone_id)
+            query = query.filter_by(external_id=keystone_id)
 
             entity = query.one()
 
@@ -649,7 +649,7 @@ class SecretRepo(BaseRepo):
         query = query.join(models.ProjectSecret,
                            models.Secret.project_assocs)
         query = query.join(models.Project, models.ProjectSecret.projects)
-        query = query.filter(models.Project.keystone_id == keystone_id)
+        query = query.filter(models.Project.external_id == keystone_id)
 
         start = offset
         end = offset + limit
@@ -684,7 +684,7 @@ class SecretRepo(BaseRepo):
         query = query.filter(expiration_filter)
         query = query.join(models.ProjectSecret, models.Secret.project_assocs)
         query = query.join(models.Project, models.ProjectSecret.projects)
-        query = query.filter(models.Project.keystone_id == keystone_id)
+        query = query.filter(models.Project.external_id == keystone_id)
 
         return query
 
@@ -813,7 +813,7 @@ class KEKDatumRepo(BaseRepo):
             kek_datum = models.KEKDatum()
 
             kek_datum.kek_label = "project-{0}-key-{1}".format(
-                project.keystone_id, uuid.uuid4())
+                project.external_id, uuid.uuid4())
             kek_datum.project_id = project.id
             kek_datum.plugin_name = plugin_name
             kek_datum.status = models.States.ACTIVE
@@ -900,7 +900,7 @@ class OrderRepo(BaseRepo):
         query = query.order_by(models.Order.created_at)
         query = query.filter_by(deleted=False)
         query = query.join(models.Project, models.Order.project)
-        query = query.filter(models.Project.keystone_id == keystone_id)
+        query = query.filter(models.Project.external_id == keystone_id)
 
         start = offset
         end = offset + limit
@@ -925,7 +925,7 @@ class OrderRepo(BaseRepo):
         query = session.query(models.Order)
         query = query.filter_by(id=entity_id, deleted=False)
         query = query.join(models.Project, models.Order.project)
-        query = query.filter(models.Project.keystone_id == keystone_id)
+        query = query.filter(models.Project.external_id == keystone_id)
         return query
 
     def _do_validate(self, values):
@@ -1015,7 +1015,7 @@ class ContainerRepo(BaseRepo):
         query = query.order_by(models.Container.created_at)
         query = query.filter_by(deleted=False)
         query = query.join(models.Project, models.Container.project)
-        query = query.filter(models.Project.keystone_id == keystone_id)
+        query = query.filter(models.Project.external_id == keystone_id)
 
         start = offset
         end = offset + limit
@@ -1040,7 +1040,7 @@ class ContainerRepo(BaseRepo):
         query = session.query(models.Container)
         query = query.filter_by(id=entity_id, deleted=False)
         query = query.join(models.Project, models.Container.project)
-        query = query.filter(models.Project.keystone_id == keystone_id)
+        query = query.filter(models.Project.external_id == keystone_id)
         return query
 
     def _do_validate(self, values):

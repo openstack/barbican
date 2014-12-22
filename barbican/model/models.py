@@ -245,7 +245,7 @@ class Project(BASE, ModelBase):
 
     __tablename__ = 'projects'
 
-    keystone_id = sa.Column(sa.String(255), unique=True)
+    external_id = sa.Column(sa.String(255), unique=True)
 
     orders = orm.relationship("Order", backref="project")
     secrets = orm.relationship("ProjectSecret", backref="projects")
@@ -254,7 +254,7 @@ class Project(BASE, ModelBase):
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
-        return {'keystone_id': self.keystone_id}
+        return {'external_id': self.external_id}
 
 
 class Secret(BASE, ModelBase):
