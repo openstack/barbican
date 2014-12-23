@@ -13,7 +13,6 @@
 
 import abc
 
-from oslo.config import cfg
 import six
 
 from barbican.common import exception
@@ -21,26 +20,6 @@ from barbican.common import utils
 from barbican import i18n as u
 
 LOG = utils.getLogger(__name__)
-
-CONF = cfg.CONF
-
-DEFAULT_PLUGIN_NAMESPACE = 'barbican.crypto.plugin'
-DEFAULT_PLUGINS = ['simple_crypto']
-
-crypto_opt_group = cfg.OptGroup(name='crypto',
-                                title='Crypto Plugin Options')
-crypto_opts = [
-    cfg.StrOpt('namespace',
-               default=DEFAULT_PLUGIN_NAMESPACE,
-               help=u._('Extension namespace to search for plugins.')
-               ),
-    cfg.MultiStrOpt('enabled_crypto_plugins',
-                    default=DEFAULT_PLUGINS,
-                    help=u._('List of crypto plugins to load.')
-                    )
-]
-CONF.register_group(crypto_opt_group)
-CONF.register_opts(crypto_opts, group=crypto_opt_group)
 
 
 class CryptoPluginNotFound(exception.BarbicanException):
