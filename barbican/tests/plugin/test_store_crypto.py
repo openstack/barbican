@@ -430,7 +430,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
             'get_plugin_retrieve.return_value': self.retrieving_plugin,
         }
         self.gen_plugin_patcher = mock.patch(
-            'barbican.plugin.crypto.manager.PLUGIN_MANAGER',
+            'barbican.plugin.crypto.manager._PLUGIN_MANAGER',
             **gen_plugin_config
         )
         self._start_patcher(self.gen_plugin_patcher)

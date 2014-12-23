@@ -11,14 +11,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from oslo.concurrency import lockutils
 from oslo.config import cfg
 from stevedore import named
 
 from barbican.common import utils
+from barbican import i18n as u
 from barbican.plugin.crypto import crypto
 from barbican.plugin.interface import secret_store
 
+_PLUGIN_MANAGER = None
+
 CONF = cfg.CONF
+
+DEFAULT_PLUGIN_NAMESPACE = 'barbican.crypto.plugin'
+DEFAULT_PLUGINS = ['simple_crypto']
+
+crypto_opt_group = cfg.OptGroup(name='crypto',
+                                title='Crypto Plugin Options')
+crypto_opts = [
+    cfg.StrOpt('namespace',
+               default=DEFAULT_PLUGIN_NAMESPACE,
+               help=u._('Extension namespace to search for plugins.')
+               ),
+    cfg.MultiStrOpt('enabled_crypto_plugins',
+                    default=DEFAULT_PLUGINS,
+                    help=u._('List of crypto plugins to load.')
+                    )
+]
+CONF.register_group(crypto_opt_group)
+CONF.register_opts(crypto_opts, group=crypto_opt_group)
 
 
 class _CryptoPluginManager(named.NamedExtensionManager):
@@ -82,4 +104,10 @@ class _CryptoPluginManager(named.NamedExtensionManager):
         return decrypting_plugin
 
 
-PLUGIN_MANAGER = _CryptoPluginManager()
+@lockutils.synchronized('crypto_get_manager')
+def get_manager():
+    """Return a singleton crypto plugin manager."""
+    global _PLUGIN_MANAGER
+    if not _PLUGIN_MANAGER:
+        _PLUGIN_MANAGER = _CryptoPluginManager()
+    return _PLUGIN_MANAGER

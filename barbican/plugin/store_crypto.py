@@ -73,7 +73,7 @@ class StoreCryptoAdapterPlugin(object):
         """
 
         # Find HSM-style 'crypto' plugin.
-        encrypting_plugin = manager.PLUGIN_MANAGER.get_plugin_store_generate(
+        encrypting_plugin = manager.get_manager().get_plugin_store_generate(
             crypto.PluginSupportTypes.ENCRYPT_DECRYPT
         )
 
@@ -114,7 +114,7 @@ class StoreCryptoAdapterPlugin(object):
         datum_model = context.secret_model.encrypted_data[0]
 
         # Find HSM-style 'crypto' plugin.
-        decrypting_plugin = manager.PLUGIN_MANAGER.get_plugin_retrieve(
+        decrypting_plugin = manager.get_manager().get_plugin_retrieve(
             datum_model.kek_meta_project.plugin_name)
 
         # wrap the KEKDatum instance in our DTO
@@ -154,7 +154,7 @@ class StoreCryptoAdapterPlugin(object):
         plugin_type = _determine_generation_type(key_spec.alg)
         if crypto.PluginSupportTypes.SYMMETRIC_KEY_GENERATION != plugin_type:
             raise sstore.SecretAlgorithmNotSupportedException(key_spec.alg)
-        generating_plugin = manager.PLUGIN_MANAGER.get_plugin_store_generate(
+        generating_plugin = manager.get_manager().get_plugin_store_generate(
             plugin_type,
             key_spec.alg,
             key_spec.bit_length,
@@ -191,7 +191,7 @@ class StoreCryptoAdapterPlugin(object):
         if crypto.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION != plugin_type:
             raise sstore.SecretAlgorithmNotSupportedException(key_spec.alg)
 
-        generating_plugin = manager.PLUGIN_MANAGER.get_plugin_store_generate(
+        generating_plugin = manager.get_manager().get_plugin_store_generate(
             plugin_type, key_spec.alg, key_spec.bit_length, None)
 
         # Find or create a key encryption key metadata.
