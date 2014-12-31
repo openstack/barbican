@@ -153,7 +153,6 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
 
         return private_dto, public_dto, passphrase_dto
 
-    # TODO(atiwari): fix bug 1331815
     def supports(self, type_enum, algorithm=None, bit_length=None,
                  mode=None):
         if type_enum == c.PluginSupportTypes.ENCRYPT_DECRYPT:

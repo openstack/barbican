@@ -56,7 +56,6 @@ class TestCryptoPlugin(plugin.CryptoPluginBase):
                 plugin.ResponseDTO('insecure_public_key', None),
                 passwd_res_dto)
 
-    # TODO(atiwari): fix bug 1331815
     def supports(self, type_enum, algorithm=None, bit_length=None, mode=None):
         if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:
             return True
