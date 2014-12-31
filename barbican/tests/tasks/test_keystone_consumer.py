@@ -175,7 +175,7 @@ class WhenUsingKeystoneEventConsumer(listener_test.UtilMixin,
         # After project entities delete, make sure secret is not found
         ex = self.assertRaises(exception.NotFound, self.repos.secret_repo.get,
                                entity_id=secret_id,
-                               keystone_id=self.project_id1)
+                               external_project_id=self.project_id1)
         self.assertIn(secret_id, str(ex))
 
         # After project entities delete, make sure project_secret is not found

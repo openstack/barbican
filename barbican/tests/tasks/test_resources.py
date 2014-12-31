@@ -40,11 +40,11 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
                      'mode': 'CBC'}
         self.order.meta = self.meta
 
-        self.keystone_id = 'keystone1234'
+        self.external_project_id = 'keystone1234'
         self.project_id = 'projectid1234'
         self.project = models.Project()
         self.project.id = self.project_id
-        self.project.external_id = self.keystone_id
+        self.project.external_id = self.external_project_id
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
 
@@ -95,10 +95,11 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
     @mock.patch('barbican.plugin.resources.generate_secret')
     def test_should_process_key_order(self, mock_generate_secret):
         mock_generate_secret.return_value = self.secret
-        self.resource.process(self.order.id, self.keystone_id)
+        self.resource.process(self.order.id, self.external_project_id)
 
         self.order_repo.get.assert_called_once_with(
-            entity_id=self.order.id, keystone_id=self.keystone_id)
+            entity_id=self.order.id,
+            external_project_id=self.external_project_id)
         self.assertEqual(self.order.status, models.States.ACTIVE)
 
         secret_info = self.order.to_dict_fields()['meta']
@@ -119,7 +120,7 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
             ValueError,
             self.resource.process,
             self.order.id,
-            self.keystone_id,
+            self.external_project_id,
         )
 
         # Order state doesn't change because can't retrieve it to change it.
@@ -134,7 +135,7 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
             ValueError,
             self.resource.process,
             self.order.id,
-            self.keystone_id,
+            self.external_project_id,
         )
 
         self.assertEqual(models.States.ERROR, self.order.status)
@@ -154,7 +155,7 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
             ValueError,
             self.resource.process,
             self.order.id,
-            self.keystone_id,
+            self.external_project_id,
         )
 
     def test_should_fail_during_error_report_fail(self):
@@ -175,7 +176,7 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
             TypeError,
             self.resource.process,
             self.order.id,
-            self.keystone_id,
+            self.external_project_id,
         )
 
 
@@ -196,11 +197,11 @@ class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
                      'expiration': timeutils.utcnow()}
         self.order.meta = self.meta
 
-        self.keystone_id = 'keystone1234'
+        self.external_project_id = 'keystone1234'
         self.project_id = 'projectid1234'
         self.project = models.Project()
         self.project.id = self.project_id
-        self.project.external_id = self.keystone_id
+        self.project.external_id = self.external_project_id
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
 
@@ -249,10 +250,12 @@ class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
     def test_should_process_asymmetric_order(self,
                                              mock_generate_asymmetric_secret):
         mock_generate_asymmetric_secret.return_value = self.container
-        self.resource.process(self.order.id, self.keystone_id)
+        self.resource.process(self.order.id, self.external_project_id)
 
         self.order_repo.get.assert_called_once_with(
-            entity_id=self.order.id, keystone_id=self.keystone_id)
+            entity_id=self.order.id,
+            external_project_id=self.external_project_id)
+
         self.assertEqual(self.order.status, models.States.ACTIVE)
 
         secret_info = self.order.to_dict_fields()['meta']
@@ -273,7 +276,7 @@ class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
             ValueError,
             self.resource.process,
             self.order.id,
-            self.keystone_id,
+            self.external_project_id,
         )
 
         # Order state doesn't change because can't retrieve it to change it.
@@ -288,7 +291,7 @@ class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
             ValueError,
             self.resource.process,
             self.order.id,
-            self.keystone_id,
+            self.external_project_id,
         )
 
         self.assertEqual(models.States.ERROR, self.order.status)
@@ -308,7 +311,7 @@ class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
             ValueError,
             self.resource.process,
             self.order.id,
-            self.keystone_id,
+            self.external_project_id,
         )
 
     def test_should_fail_during_error_report_fail(self):
@@ -329,5 +332,5 @@ class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
             TypeError,
             self.resource.process,
             self.order.id,
-            self.keystone_id,
+            self.external_project_id,
         )

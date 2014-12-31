@@ -67,8 +67,9 @@ class KeystoneEventConsumer(resources.BaseTask):
     def retrieve_entity(self, project_id, resource_type=None,
                         operation_type=None):
         project_repo = self.repos.project_repo
-        return project_repo.find_by_keystone_id(keystone_id=project_id,
-                                                suppress_exception=True)
+        return project_repo.find_by_external_project_id(
+            external_project_id=project_id,
+            suppress_exception=True)
 
     def handle_processing(self, barbican_project, *args, **kwargs):
         self.handle_cleanup(barbican_project, *args, **kwargs)

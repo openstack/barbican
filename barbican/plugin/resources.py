@@ -275,7 +275,7 @@ def delete_secret(secret_model, project_id, repos):
 
     # Delete the secret from data model.
     repos.secret_repo.delete_entity_by_id(entity_id=secret_model.id,
-                                          keystone_id=project_id)
+                                          external_project_id=project_id)
 
 
 def _store_secret(store_plugin, secret_dto, secret_model, project_model):

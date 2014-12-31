@@ -380,7 +380,7 @@ class BaseRepo(object):
         LOG.debug("Getting session...")
         return session or get_session()
 
-    def get(self, entity_id, keystone_id=None,
+    def get(self, entity_id, external_project_id=None,
             force_show_deleted=False,
             suppress_exception=False, session=None):
         """Get an entity or raise if it does not exist."""
@@ -388,7 +388,7 @@ class BaseRepo(object):
 
         try:
             query = self._do_build_get_query(entity_id,
-                                             keystone_id, session)
+                                             external_project_id, session)
 
             # filter out deleted entities if requested
             if not force_show_deleted:
@@ -453,12 +453,14 @@ class BaseRepo(object):
 
         entity.save()
 
-    def delete_entity_by_id(self, entity_id, keystone_id, session=None):
+    def delete_entity_by_id(self, entity_id, external_project_id,
+                            session=None):
         """Remove the entity by its ID."""
 
         session = self.get_session(session)
 
-        entity = self.get(entity_id=entity_id, keystone_id=keystone_id,
+        entity = self.get(entity_id=entity_id,
+                          external_project_id=external_project_id,
                           session=session)
 
         entity.delete(session=session)
@@ -467,7 +469,7 @@ class BaseRepo(object):
         """Sub-class hook: return entity name, such as for debugging."""
         return "Entity"
 
-    def _do_build_get_query(self, entity_id, keystone_id, session):
+    def _do_build_get_query(self, entity_id, external_project_id, session):
         """Sub-class hook: build a retrieve query."""
         return None
 
@@ -579,28 +581,29 @@ class ProjectRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "Project"
 
-    def _do_build_get_query(self, entity_id, keystone_id, session):
+    def _do_build_get_query(self, entity_id, external_project_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.Project).filter_by(id=entity_id)
 
-    def find_by_keystone_id(self, keystone_id, suppress_exception=False,
-                            session=None):
+    def find_by_external_project_id(self, external_project_id,
+                                    suppress_exception=False, session=None):
         session = self.get_session(session)
 
         try:
             query = session.query(models.Project)
-            query = query.filter_by(external_id=keystone_id)
+            query = query.filter_by(external_id=external_project_id)
 
             entity = query.one()
 
         except sa_orm.exc.NoResultFound:
             entity = None
             if not suppress_exception:
-                LOG.exception(u._LE("Problem getting Project %s"), keystone_id)
+                LOG.exception(u._LE("Problem getting Project %s"),
+                              external_project_id)
                 raise exception.NotFound(u._(
                     "No {entity_name} found with keystone-ID {id}").format(
                         entity_name=self._do_entity_name(),
-                        id=keystone_id))
+                        id=external_project_id))
 
         return entity
 
@@ -613,14 +616,14 @@ class ProjectRepo(BaseRepo):
 class SecretRepo(BaseRepo):
     """Repository for the Secret entity."""
 
-    def get_by_create_date(self, keystone_id, offset_arg=None, limit_arg=None,
-                           name=None, alg=None, mode=None, bits=0,
-                           suppress_exception=False, session=None):
+    def get_by_create_date(self, external_project_id, offset_arg=None,
+                           limit_arg=None, name=None, alg=None, mode=None,
+                           bits=0, suppress_exception=False, session=None):
         """Returns a list of secrets
 
         The returned secrets are ordered by the date they were created at
-        and paged based on the offset and limit fields. The keystone_id is
-        external-to-Barbican value assigned to the project by Keystone.
+        and paged based on the offset and limit fields. The external_project_id
+        is external-to-Barbican value assigned to the project by Keystone.
         """
 
         offset, limit = clean_paging_values(offset_arg, limit_arg)
@@ -649,7 +652,7 @@ class SecretRepo(BaseRepo):
         query = query.join(models.ProjectSecret,
                            models.Secret.project_assocs)
         query = query.join(models.Project, models.ProjectSecret.projects)
-        query = query.filter(models.Project.external_id == keystone_id)
+        query = query.filter(models.Project.external_id == external_project_id)
 
         start = offset
         end = offset + limit
@@ -669,7 +672,7 @@ class SecretRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "Secret"
 
-    def _do_build_get_query(self, entity_id, keystone_id, session):
+    def _do_build_get_query(self, entity_id, external_project_id, session):
         """Sub-class hook: build a retrieve query."""
         utcnow = timeutils.utcnow()
 
@@ -684,7 +687,7 @@ class SecretRepo(BaseRepo):
         query = query.filter(expiration_filter)
         query = query.join(models.ProjectSecret, models.Secret.project_assocs)
         query = query.join(models.Project, models.ProjectSecret.projects)
-        query = query.filter(models.Project.external_id == keystone_id)
+        query = query.filter(models.Project.external_id == external_project_id)
 
         return query
 
@@ -716,7 +719,7 @@ class EncryptedDatumRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "EncryptedDatum"
 
-    def _do_build_get_query(self, entity_id, keystone_id, session):
+    def _do_build_get_query(self, entity_id, external_project_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.EncryptedDatum).filter_by(id=entity_id)
 
@@ -767,7 +770,7 @@ class SecretStoreMetadatumRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "SecretStoreMetadatum"
 
-    def _do_build_get_query(self, entity_id, keystone_id, session):
+    def _do_build_get_query(self, entity_id, external_project_id, session):
         """Sub-class hook: build a retrieve query."""
         query = session.query(models.SecretStoreMetadatum)
         return query.filter_by(id=entity_id)
@@ -826,7 +829,7 @@ class KEKDatumRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "KEKDatum"
 
-    def _do_build_get_query(self, entity_id, keystone_id, session):
+    def _do_build_get_query(self, entity_id, external_project_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.KEKDatum).filter_by(id=entity_id)
 
@@ -853,7 +856,7 @@ class ProjectSecretRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "ProjectSecret"
 
-    def _do_build_get_query(self, entity_id, keystone_id, session):
+    def _do_build_get_query(self, entity_id, external_project_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.ProjectSecret).filter_by(id=entity_id)
 
@@ -874,14 +877,15 @@ class ProjectSecretRepo(BaseRepo):
 class OrderRepo(BaseRepo):
     """Repository for the Order entity."""
 
-    def get_by_create_date(self, keystone_id, offset_arg=None, limit_arg=None,
-                           suppress_exception=False, session=None):
+    def get_by_create_date(self, external_project_id, offset_arg=None,
+                           limit_arg=None, suppress_exception=False,
+                           session=None):
         """Returns a list of orders
 
         The list is ordered by the date they were created at and paged
         based on the offset and limit fields.
 
-        :param keystone_id: The keystone id for the project.
+        :param external_project_id: The keystone id for the project.
         :param offset_arg: The entity number where the query result should
                            start.
         :param limit_arg: The maximum amount of entities in the result set.
@@ -900,7 +904,7 @@ class OrderRepo(BaseRepo):
         query = query.order_by(models.Order.created_at)
         query = query.filter_by(deleted=False)
         query = query.join(models.Project, models.Order.project)
-        query = query.filter(models.Project.external_id == keystone_id)
+        query = query.filter(models.Project.external_id == external_project_id)
 
         start = offset
         end = offset + limit
@@ -920,12 +924,12 @@ class OrderRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "Order"
 
-    def _do_build_get_query(self, entity_id, keystone_id, session):
+    def _do_build_get_query(self, entity_id, external_project_id, session):
         """Sub-class hook: build a retrieve query."""
         query = session.query(models.Order)
         query = query.filter_by(id=entity_id, deleted=False)
         query = query.join(models.Project, models.Order.project)
-        query = query.filter(models.Project.external_id == keystone_id)
+        query = query.filter(models.Project.external_id == external_project_id)
         return query
 
     def _do_validate(self, values):
@@ -985,7 +989,7 @@ class OrderPluginMetadatumRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "OrderPluginMetadatum"
 
-    def _do_build_get_query(self, entity_id, keystone_id, session):
+    def _do_build_get_query(self, entity_id, external_project_id, session):
         """Sub-class hook: build a retrieve query."""
         query = session.query(models.OrderPluginMetadatum)
         return query.filter_by(id=entity_id)
@@ -998,12 +1002,13 @@ class OrderPluginMetadatumRepo(BaseRepo):
 class ContainerRepo(BaseRepo):
     """Repository for the Container entity."""
 
-    def get_by_create_date(self, keystone_id, offset_arg=None, limit_arg=None,
-                           suppress_exception=False, session=None):
+    def get_by_create_date(self, external_project_id, offset_arg=None,
+                           limit_arg=None, suppress_exception=False,
+                           session=None):
         """Returns a list of containers
 
         The list is ordered by the date they were created at and paged
-        based on the offset and limit fields. The keystone_id is
+        based on the offset and limit fields. The external_project_id is
         external-to-Barbican value assigned to the project by Keystone.
         """
 
@@ -1015,7 +1020,7 @@ class ContainerRepo(BaseRepo):
         query = query.order_by(models.Container.created_at)
         query = query.filter_by(deleted=False)
         query = query.join(models.Project, models.Container.project)
-        query = query.filter(models.Project.external_id == keystone_id)
+        query = query.filter(models.Project.external_id == external_project_id)
 
         start = offset
         end = offset + limit
@@ -1035,12 +1040,12 @@ class ContainerRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "Container"
 
-    def _do_build_get_query(self, entity_id, keystone_id, session):
+    def _do_build_get_query(self, entity_id, external_project_id, session):
         """Sub-class hook: build a retrieve query."""
         query = session.query(models.Container)
         query = query.filter_by(id=entity_id, deleted=False)
         query = query.join(models.Project, models.Container.project)
-        query = query.filter(models.Project.external_id == keystone_id)
+        query = query.filter(models.Project.external_id == external_project_id)
         return query
 
     def _do_validate(self, values):
@@ -1063,7 +1068,7 @@ class ContainerSecretRepo(BaseRepo):
             """Sub-class hook: return entity name, such as for debugging."""
             return "ContainerSecret"
 
-        def _do_build_get_query(self, entity_id, keystone_id, session):
+        def _do_build_get_query(self, entity_id, external_project_id, session):
             """Sub-class hook: build a retrieve query."""
             return session.query(models.ContainerSecret
                                  ).filter_by(id=entity_id)
@@ -1082,8 +1087,7 @@ class ContainerConsumerRepo(BaseRepo):
         """Returns a list of Consumers
 
         The list is ordered by the date they were created at and paged
-        based on the offset and limit fields. The keystone_id is
-        external-to-Barbican value assigned to the project by Keystone.
+        based on the offset and limit fields.
         """
 
         offset, limit = clean_paging_values(offset_arg, limit_arg)
@@ -1159,7 +1163,7 @@ class ContainerConsumerRepo(BaseRepo):
         """Sub-class hook: return entity name, such as for debugging."""
         return "ContainerConsumer"
 
-    def _do_build_get_query(self, entity_id, keystone_id, session):
+    def _do_build_get_query(self, entity_id, external_project_id, session):
         """Sub-class hook: build a retrieve query."""
         query = session.query(models.ContainerConsumerMetadatum)
         return query.filter_by(id=entity_id, deleted=False)
@@ -1222,7 +1226,7 @@ class TransportKeyRepo(BaseRepo):
             suppress_exception=suppress_exception, session=session)
         return entity
 
-    def _do_build_get_query(self, entity_id, keystone_id, session):
+    def _do_build_get_query(self, entity_id, external_project_id, session):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.TransportKey).filter_by(id=entity_id)
 

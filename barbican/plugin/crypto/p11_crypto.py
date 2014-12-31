@@ -330,7 +330,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
 
         return unwrapped
 
-    def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
+    def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
         key = self._unwrap_key(kek_meta_dto.plugin_meta)
         iv = self._generate_iv()
         gcm = self._build_gcm_params(iv)
@@ -344,7 +344,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         return plugin.ResponseDTO(cyphertext, kek_meta_extended)
 
     def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
-                keystone_id):
+                project_id):
         key = self._unwrap_key(kek_meta_dto.plugin_meta)
         meta_extended = json.loads(kek_meta_extended)
         iv = base64.b64decode(meta_extended['iv'])
@@ -369,14 +369,14 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
 
         return kek_meta_dto
 
-    def generate_symmetric(self, generate_dto, kek_meta_dto, keystone_id):
+    def generate_symmetric(self, generate_dto, kek_meta_dto, project_id):
         byte_length = generate_dto.bit_length / 8
         rand = self.session.generateRandom(byte_length)
         if len(rand) != byte_length:
             raise P11CryptoPluginException()
-        return self.encrypt(plugin.EncryptDTO(rand), kek_meta_dto, keystone_id)
+        return self.encrypt(plugin.EncryptDTO(rand), kek_meta_dto, project_id)
 
-    def generate_asymmetric(self, generate_dto, kek_meta_dto, keystone_id):
+    def generate_asymmetric(self, generate_dto, kek_meta_dto, project_id):
         raise NotImplementedError(u._("Feature not implemented for PKCS11"))
 
     def supports(self, type_enum, algorithm=None, bit_length=None, mode=None):

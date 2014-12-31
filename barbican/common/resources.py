@@ -31,8 +31,8 @@ def get_or_create_project(project_id, project_repo):
     :param project_repo: Project repository.
     :return: Project model instance
     """
-    project = project_repo.find_by_keystone_id(project_id,
-                                               suppress_exception=True)
+    project = project_repo.find_by_external_project_id(project_id,
+                                                       suppress_exception=True)
     if not project:
         LOG.debug('Creating project for %s', project_id)
         project = models.Project()

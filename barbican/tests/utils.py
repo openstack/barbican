@@ -27,7 +27,7 @@ class BaseTestCase(oslotest.BaseTestCase):
     def setUp(self):
         super(BaseTestCase, self).setUp()
         self.order_id = 'order1234'
-        self.keystone_id = 'keystone1234'
+        self.external_project_id = 'keystone1234'
 
     def tearDown(self):
         super(BaseTestCase, self).tearDown()

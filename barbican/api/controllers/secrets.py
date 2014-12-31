@@ -84,11 +84,12 @@ class SecretController(object):
     @allow_all_content_types
     @controllers.handle_exceptions(u._('Secret retrieval'))
     @controllers.enforce_rbac('secret:get')
-    def index(self, keystone_id, **kwargs):
+    def index(self, external_project_id, **kwargs):
 
-        secret = self.repos.secret_repo.get(entity_id=self.secret_id,
-                                            keystone_id=keystone_id,
-                                            suppress_exception=True)
+        secret = self.repos.secret_repo.get(
+            entity_id=self.secret_id,
+            external_project_id=external_project_id,
+            suppress_exception=True)
         if not secret:
             _secret_not_found()
 
@@ -106,7 +107,7 @@ class SecretController(object):
                     secret_fields['transport_key_id'] = transport_key_id
             return hrefs.convert_to_hrefs(secret_fields)
         else:
-            project = res.get_or_create_project(keystone_id,
+            project = res.get_or_create_project(external_project_id,
                                                 self.repos.project_repo)
             pecan.override_template('', pecan.request.accept.header_value)
             transport_key = None
@@ -133,7 +134,7 @@ class SecretController(object):
     @controllers.enforce_rbac('secret:put')
     @controllers.enforce_content_types(['application/octet-stream',
                                        'text/plain'])
-    def on_put(self, keystone_id, **kwargs):
+    def on_put(self, external_project_id, **kwargs):
 
         if (not pecan.request.content_type or
                 pecan.request.content_type == 'application/json'):
@@ -151,16 +152,17 @@ class SecretController(object):
         if validators.secret_too_big(payload):
             raise exception.LimitExceeded()
 
-        secret_model = self.repos.secret_repo.get(entity_id=self.secret_id,
-                                                  keystone_id=keystone_id,
-                                                  suppress_exception=True)
+        secret_model = self.repos.secret_repo.get(
+            entity_id=self.secret_id,
+            external_project_id=external_project_id,
+            suppress_exception=True)
         if not secret_model:
             _secret_not_found()
 
         if secret_model.encrypted_data:
             _secret_already_has_data()
 
-        project_model = res.get_or_create_project(keystone_id,
+        project_model = res.get_or_create_project(external_project_id,
                                                   self.repos.project_repo)
         content_type = pecan.request.content_type
         content_encoding = pecan.request.headers.get('Content-Encoding')
@@ -174,15 +176,16 @@ class SecretController(object):
     @allow_all_content_types
     @controllers.handle_exceptions(u._('Secret deletion'))
     @controllers.enforce_rbac('secret:delete')
-    def on_delete(self, keystone_id, **kwargs):
+    def on_delete(self, external_project_id, **kwargs):
 
-        secret_model = self.repos.secret_repo.get(entity_id=self.secret_id,
-                                                  keystone_id=keystone_id,
-                                                  suppress_exception=True)
+        secret_model = self.repos.secret_repo.get(
+            entity_id=self.secret_id,
+            external_project_id=external_project_id,
+            suppress_exception=True)
         if not secret_model:
             _secret_not_found()
 
-        plugin.delete_secret(secret_model, keystone_id, self.repos)
+        plugin.delete_secret(secret_model, external_project_id, self.repos)
 
 
 class SecretsController(object):
@@ -215,12 +218,12 @@ class SecretsController(object):
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Secret(s) retrieval'))
     @controllers.enforce_rbac('secrets:get')
-    def index(self, keystone_id, **kw):
+    def index(self, external_project_id, **kw):
         def secret_fields(field):
             return putil.mime_types.augment_fields_with_content_types(field)
 
         LOG.debug('Start secrets on_get '
-                  'for project-ID %s:', keystone_id)
+                  'for project-ID %s:', external_project_id)
 
         name = kw.get('name', '')
         if name:
@@ -235,7 +238,7 @@ class SecretsController(object):
             bits = 0
 
         result = self.repos.secret_repo.get_by_create_date(
-            keystone_id,
+            external_project_id,
             offset_arg=kw.get('offset', 0),
             limit_arg=kw.get('limit', None),
             name=name,
@@ -267,11 +270,11 @@ class SecretsController(object):
     @controllers.handle_exceptions(u._('Secret creation'))
     @controllers.enforce_rbac('secrets:post')
     @controllers.enforce_content_types(['application/json'])
-    def on_post(self, keystone_id, **kwargs):
-        LOG.debug('Start on_post for project-ID %s:...', keystone_id)
+    def on_post(self, external_project_id, **kwargs):
+        LOG.debug('Start on_post for project-ID %s:...', external_project_id)
 
         data = api.load_body(pecan.request, validator=self.validator)
-        project = res.get_or_create_project(keystone_id,
+        project = res.get_or_create_project(external_project_id,
                                             self.repos.project_repo)
 
         transport_key_needed = data.get('transport_key_needed',

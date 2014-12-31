@@ -45,8 +45,8 @@ class TransportKeyController(object):
     @pecan.expose(generic=True)
     @controllers.handle_exceptions(u._('Transport Key retrieval'))
     @controllers.enforce_rbac('transport_key:get')
-    def index(self, keystone_id):
-        LOG.debug("== Getting transport key for %s", keystone_id)
+    def index(self, external_project_id):
+        LOG.debug("== Getting transport key for %s", external_project_id)
         transport_key = self.repo.get(entity_id=self.transport_key_id)
         if not transport_key:
             _transport_key_not_found()
@@ -57,11 +57,12 @@ class TransportKeyController(object):
     @index.when(method='DELETE')
     @controllers.handle_exceptions(u._('Transport Key deletion'))
     @controllers.enforce_rbac('transport_key:delete')
-    def on_delete(self, keystone_id, **kwargs):
+    def on_delete(self, external_project_id, **kwargs):
         LOG.debug("== Deleting transport key ===")
         try:
-            self.repo.delete_entity_by_id(entity_id=self.transport_key_id,
-                                          keystone_id=keystone_id)
+            self.repo.delete_entity_by_id(
+                entity_id=self.transport_key_id,
+                external_project_id=external_project_id)
             # TODO(alee) response should be 204 on success
             # pecan.response.status = 204
         except exception.NotFound:
@@ -84,7 +85,7 @@ class TransportKeysController(object):
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Transport Key(s) retrieval'))
     @controllers.enforce_rbac('transport_keys:get')
-    def index(self, keystone_id, **kw):
+    def index(self, external_project_id, **kw):
         LOG.debug('Start transport_keys on_get')
 
         plugin_name = kw.get('plugin_name', None)
@@ -120,7 +121,7 @@ class TransportKeysController(object):
     @controllers.handle_exceptions(u._('Transport Key Creation'))
     @controllers.enforce_rbac('transport_keys:post')
     @controllers.enforce_content_types(['application/json'])
-    def on_post(self, keystone_id, **kwargs):
+    def on_post(self, external_project_id, **kwargs):
         LOG.debug('Start transport_keys on_post')
 
         # TODO(alee) POST should determine the plugin name and call the

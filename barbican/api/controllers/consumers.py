@@ -44,10 +44,11 @@ class ContainerConsumerController(object):
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('ContainerConsumer retrieval'))
     @controllers.enforce_rbac('consumer:get')
-    def index(self, keystone_id):
-        consumer = self.consumer_repo.get(entity_id=self.consumer_id,
-                                          keystone_id=keystone_id,
-                                          suppress_exception=True)
+    def index(self, external_project_id):
+        consumer = self.consumer_repo.get(
+            entity_id=self.consumer_id,
+            external_project_id=external_project_id,
+            suppress_exception=True)
         if not consumer:
             _consumer_not_found()
 
@@ -77,12 +78,12 @@ class ContainerConsumersController(object):
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('ContainerConsumers(s) retrieval'))
     @controllers.enforce_rbac('consumers:get')
-    def index(self, keystone_id, **kw):
+    def index(self, external_project_id, **kw):
         LOG.debug('Start consumers on_get '
                   'for container-ID %s:', self.container_id)
 
         try:
-            self.container_repo.get(self.container_id, keystone_id)
+            self.container_repo.get(self.container_id, external_project_id)
         except exception.NotFound:
             controllers.containers.container_not_found()
 
@@ -117,14 +118,16 @@ class ContainerConsumersController(object):
     @controllers.handle_exceptions(u._('ContainerConsumer creation'))
     @controllers.enforce_rbac('consumers:post')
     @controllers.enforce_content_types(['application/json'])
-    def on_post(self, keystone_id, **kwargs):
+    def on_post(self, external_project_id, **kwargs):
 
-        project = res.get_or_create_project(keystone_id, self.project_repo)
+        project = res.get_or_create_project(external_project_id,
+                                            self.project_repo)
         data = api.load_body(pecan.request, validator=self.validator)
         LOG.debug('Start on_post...%s', data)
 
         try:
-            container = self.container_repo.get(self.container_id, keystone_id)
+            container = self.container_repo.get(self.container_id,
+                                                external_project_id)
         except exception.NotFound:
             controllers.containers.container_not_found()
 
@@ -137,13 +140,14 @@ class ContainerConsumersController(object):
             '/containers/{0}/consumers'.format(new_consumer.container_id)
         )
 
-        return self._return_container_data(self.container_id, keystone_id)
+        return self._return_container_data(self.container_id,
+                                           external_project_id)
 
     @index.when(method='DELETE', template='json')
     @controllers.handle_exceptions(u._('ContainerConsumer deletion'))
     @controllers.enforce_rbac('consumers:delete')
     @controllers.enforce_content_types(['application/json'])
-    def on_delete(self, keystone_id, **kwargs):
+    def on_delete(self, external_project_id, **kwargs):
         data = api.load_body(pecan.request, validator=self.validator)
         LOG.debug(data)
         consumer = self.consumer_repo.get_by_values(
@@ -157,15 +161,18 @@ class ContainerConsumersController(object):
         LOG.debug("Found consumer: %s", consumer)
 
         try:
-            self.consumer_repo.delete_entity_by_id(consumer.id, keystone_id)
+            self.consumer_repo.delete_entity_by_id(consumer.id,
+                                                   external_project_id)
         except exception.NotFound:
             LOG.exception(u._LE('Problem deleting consumer'))
             _consumer_not_found()
-        return self._return_container_data(self.container_id, keystone_id)
+        return self._return_container_data(self.container_id,
+                                           external_project_id)
 
-    def _return_container_data(self, container_id, keystone_id):
+    def _return_container_data(self, container_id, external_project_id):
         try:
-            container = self.container_repo.get(container_id, keystone_id)
+            container = self.container_repo.get(container_id,
+                                                external_project_id)
             dict_fields = container.to_dict_fields()
         except Exception:
             controllers.containers.container_not_found()

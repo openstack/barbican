@@ -140,10 +140,10 @@ class WhenUsingBeginTypeOrderTask(utils.BaseTestCase):
 
         self.tasks.process_type_order(context=None,
                                       order_id=self.order_id,
-                                      keystone_id=self.keystone_id)
+                                      project_id=self.external_project_id)
 
         mock_begin_order.return_value.process.assert_called_with(
-            self.order_id, self.keystone_id)
+            self.order_id, self.external_project_id)
 
     @mock.patch('barbican.tasks.resources.UpdateOrder')
     def test_should_update_order(self, mock_update_order):
@@ -152,10 +152,10 @@ class WhenUsingBeginTypeOrderTask(utils.BaseTestCase):
 
         self.tasks.update_order(context=None,
                                 order_id=self.order_id,
-                                keystone_id=self.keystone_id,
+                                project_id=self.external_project_id,
                                 updated_meta=updated_meta)
         mock_update_order.return_value.process.assert_called_with(
-            self.order_id, self.keystone_id, updated_meta
+            self.order_id, self.external_project_id, updated_meta
         )
 
     @mock.patch('barbican.tasks.resources.BeginTypeOrder')
@@ -163,7 +163,8 @@ class WhenUsingBeginTypeOrderTask(utils.BaseTestCase):
         """Test process_type_order() handles all exceptions."""
         mock_begin_order.return_value.process.side_effect = Exception()
 
-        self.tasks.process_type_order(None, self.order_id, self.keystone_id)
+        self.tasks.process_type_order(None, self.order_id,
+                                      self.external_project_id)
 
 
 class WhenUsingTaskServer(utils.BaseTestCase):

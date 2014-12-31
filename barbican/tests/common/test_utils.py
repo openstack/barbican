@@ -25,7 +25,7 @@ class WhenTestingHostnameForRefsGetter(test_utils.BaseTestCase):
 
         self.host = 'host'
         self.version = 'version'
-        self.keystone_id = 'keystone_id'
+        self.external_project_id = 'external_project_id'
         self.resource = 'resource'
 
         self._old_host = utils.CONF.host_href
