@@ -139,7 +139,15 @@ class WhenTestingAugmentFieldsWithContentTypes(utils.BaseTestCase):
 
     def _test_secret_and_datum_for_content_type(self, content_type):
         self.assertIn(content_type, mime_types.INTERNAL_CTYPES)
+
+        # TODO(rm_work): This is deprecated and should eventually be removed
         self.datum.content_type = mime_types.INTERNAL_CTYPES[content_type]
+
+        # Set up the Secret Metadata
+        content_meta = models.SecretStoreMetadatum('content_type',
+                                                   self.datum.content_type)
+        self.secret.secret_store_metadata['content_type'] = content_meta
+
         fields = mime_types.augment_fields_with_content_types(self.secret)
 
         self.assertIn('content_types', fields)

@@ -60,7 +60,7 @@ def get_barbican_env(keystone_id):
 
 def create_secret(id_ref="id", name="name",
                   algorithm=None, bit_length=None,
-                  mode=None, encrypted_datum=None):
+                  mode=None, encrypted_datum=None, content_type=None):
     """Generate a Secret entity instance."""
     info = {'id': id_ref,
             'name': name,
@@ -71,6 +71,10 @@ def create_secret(id_ref="id", name="name",
     secret.id = id_ref
     if encrypted_datum:
         secret.encrypted_data = [encrypted_datum]
+    if content_type:
+        content_meta = models.SecretStoreMetadatum('content_type',
+                                                   content_type)
+        secret.secret_store_metadata['content_type'] = content_meta
     return secret
 
 
@@ -949,7 +953,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
                                     algorithm=self.secret_algorithm,
                                     bit_length=self.secret_bit_length,
                                     mode=self.secret_mode,
-                                    encrypted_datum=self.datum)
+                                    encrypted_datum=self.datum,
+                                    content_type=self.datum.content_type)
 
         self.project = models.Project()
         self.project.id = self.project_id
@@ -1075,6 +1080,9 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
     def test_should_get_secret_meta_for_binary(self, mock_get_transport_key):
         mock_get_transport_key.return_value = None
         self.datum.content_type = "application/octet-stream"
+        self.secret.secret_store_metadata['content_type'].value = (
+            self.datum.content_type
+        )
         self.datum.cypher_text = 'aaaa'
 
         resp = self.app.get(
@@ -1099,6 +1107,9 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             self, mock_get_transport_key_id):
         mock_get_transport_key_id.return_value = self.transport_key_id
         self.datum.content_type = "application/octet-stream"
+        self.secret.secret_store_metadata['content_type'].value = (
+            self.datum.content_type
+        )
         self.datum.cypher_text = 'aaaa'
 
         resp = self.app.get(
@@ -1296,6 +1307,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
     def test_should_raise_to_put_secret_with_unsupported_encoding(self):
         self.secret.encrypted_data = []
+        self.secret.secret_store_metadata.clear()
         resp = self.app.put(
             '/secrets/{0}/'.format(self.secret.id),
             'plain text',
