@@ -43,9 +43,13 @@ class TransportKeyController(object):
         self.repo = transport_key_repo or repo.TransportKeyRepo()
 
     @pecan.expose(generic=True)
+    def index(self, external_project_id, **kwargs):
+        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
+
+    @index.when(method='GET')
     @controllers.handle_exceptions(u._('Transport Key retrieval'))
     @controllers.enforce_rbac('transport_key:get')
-    def index(self, external_project_id):
+    def on_get(self, external_project_id):
         LOG.debug("== Getting transport key for %s", external_project_id)
         transport_key = self.repo.get(entity_id=self.transport_key_id)
         if not transport_key:
@@ -82,10 +86,14 @@ class TransportKeysController(object):
     def _lookup(self, transport_key_id, *remainder):
         return TransportKeyController(transport_key_id, self.repo), remainder
 
-    @pecan.expose(generic=True, template='json')
+    @pecan.expose(generic=True)
+    def index(self, external_project_id, **kwargs):
+        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
+
+    @index.when(method='GET', template='json')
     @controllers.handle_exceptions(u._('Transport Key(s) retrieval'))
     @controllers.enforce_rbac('transport_keys:get')
-    def index(self, external_project_id, **kw):
+    def on_get(self, external_project_id, **kw):
         LOG.debug('Start transport_keys on_get')
 
         plugin_name = kw.get('plugin_name', None)

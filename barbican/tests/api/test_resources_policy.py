@@ -51,7 +51,7 @@ class TestableResource(object):
     def on_get(self, req, resp, *args, **kwargs):
         with mock.patch('pecan.request', req):
             with mock.patch('pecan.response', resp):
-                return self.controller.index(*args, **kwargs)
+                return self.controller.on_get(*args, **kwargs)
 
     def on_post(self, req, resp, *args, **kwargs):
         with mock.patch('pecan.request', req):

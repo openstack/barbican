@@ -1449,6 +1449,26 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.assertEqual(resp.content_type, "application/json")
 
 
+class WhenPerformingUnallowedOperationsOnSecrets(BaseSecretsResource):
+
+    def test_should_not_allow_put_on_secrets(self):
+        resp = self.app.put_json(
+            '/secrets/',
+            self.secret_req,
+            expect_errors=True
+        )
+
+        self.assertEqual(resp.status_int, 405)
+
+    def test_should_not_allow_delete_on_secrets(self):
+        resp = self.app.delete(
+            '/secrets/',
+            expect_errors=True
+        )
+
+        self.assertEqual(resp.status_int, 405)
+
+
 class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
     def setUp(self):
         super(
@@ -1916,6 +1936,79 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         self.assertEqual(resp.status_int, 415)
 
 
+class WhenPerformingUnallowedOperationsOnOrders(FunctionalTest):
+    def setUp(self):
+        super(
+            WhenPerformingUnallowedOperationsOnOrders, self
+        ).setUp()
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
+
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            orders = controllers.orders.OrdersController(self.project_repo,
+                                                         self.order_repo,
+                                                         self.queue_resource)
+
+        return RootController()
+
+    def _init(self):
+        self.project_internal_id = 'projectid1234'
+        self.external_project_id = 'keystoneid1234'
+
+        self.project = models.Project()
+        self.project.id = self.project_internal_id
+        self.project.external_id = self.external_project_id
+
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
+
+        self.order_repo = mock.MagicMock()
+        self.order_repo.create_from.return_value = None
+        self.queue_resource = mock.MagicMock()
+
+        self.type = 'key'
+        self.meta = {"name": "secretname",
+                     "algorithm": "AES",
+                     "bit_length": 256,
+                     "mode": "cbc",
+                     'payload_content_type':
+                     'application/octet-stream'}
+
+        self.key_order_req = {'type': self.type,
+                              'meta': self.meta}
+
+    def test_should_not_allow_put_orders(self):
+        resp = self.app.put_json(
+            '/orders/',
+            self.key_order_req,
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 405)
+
+    def test_should_not_allow_delete_orders(self):
+        resp = self.app.delete(
+            '/orders/',
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 405)
+
+    def test_should_not_allow_post_order_by_id(self):
+        resp = self.app.post_json(
+            '/orders/{0}/'.format('id1'),
+            self.key_order_req,
+            headers={
+                'Content-Type': 'application/json'
+            },
+            expect_errors=True
+        )
+
+        self.assertEqual(resp.status_int, 405)
+
+
 class WhenAddingNavigationHrefs(utils.BaseTestCase):
 
     def setUp(self):
@@ -2204,6 +2297,90 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
         self.assertEqual(resp.content_type, "application/json")
 
 
+class WhenPerformingUnallowedOperationsOnContainers(FunctionalTest):
+    def setUp(self):
+        super(
+            WhenPerformingUnallowedOperationsOnContainers, self
+        ).setUp()
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
+
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            containers = controllers.containers.ContainersController(
+                self.project_repo, self.container_repo, self.secret_repo,
+                self.consumer_repo
+            )
+
+        return RootController()
+
+    def _init(self):
+        self.name = 'test container name'
+        self.type = 'generic'
+        self.secret_refs = [
+            {
+                'name': 'test secret 1',
+                'secret_ref': '1231'
+            },
+            {
+                'name': 'test secret 2',
+                'secret_ref': '1232'
+            },
+            {
+                'name': 'test secret 3',
+                'secret_ref': '1233'
+            }
+        ]
+
+        self.external_project_id = 'keystoneid1234'
+        self.project_internal_id = 'projectid1234'
+
+        self.project = models.Project()
+        self.project.id = self.project_internal_id
+        self.project.external_id = self.external_project_id
+
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
+
+        self.container = create_container(id_ref='id1')
+
+        self.container_repo = mock.MagicMock()
+        self.container_repo.get.return_value = self.container
+        self.container_repo.delete_entity_by_id.return_value = None
+
+        self.secret_repo = mock.MagicMock()
+
+        self.consumer_repo = mock.MagicMock()
+        self.container_req = {'name': self.name,
+                              'type': self.type,
+                              'secret_refs': self.secret_refs}
+
+    def test_should_not_allow_put_on_containers(self):
+        resp = self.app.put_json(
+            '/containers/',
+            self.container_req,
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 405)
+
+    def test_should_not_allow_post_on_container_by_id(self):
+        resp = self.app.post_json(
+            '/containers/{0}/'.format(self.container.id),
+            self.container_req,
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 405)
+
+    def test_should_not_allow_put_on_container_by_id(self):
+        resp = self.app.put_json(
+            '/containers/{0}/'.format(self.container.id),
+            self.container_req,
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 405)
+
+
 class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
     def setUp(self):
         super(
@@ -2480,6 +2657,117 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         self.consumer_repo.delete_entity_by_id.assert_has_calls(
             calls, any_order=True
         )
+
+
+class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
+    def setUp(self):
+        super(
+            WhenPerformingUnallowedOperationsOnConsumers, self
+        ).setUp()
+        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
+
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            containers = controllers.containers.ContainersController(
+                self.project_repo, self.container_repo, self.secret_repo,
+                self.consumer_repo
+            )
+
+        return RootController()
+
+    def _init(self):
+        self.name = 'test container name'
+        self.type = 'generic'
+        self.secret_refs = [
+            {
+                'name': 'test secret 1',
+                'secret_ref': '1231'
+            },
+            {
+                'name': 'test secret 2',
+                'secret_ref': '1232'
+            },
+            {
+                'name': 'test secret 3',
+                'secret_ref': '1233'
+            }
+        ]
+
+        self.consumer_ref = {
+            'name': 'test_consumer1',
+            'URL': 'http://consumer/1'
+        }
+        self.external_project_id = 'keystoneid1234'
+        self.project_internal_id = 'projectid1234'
+
+        self.project = models.Project()
+        self.project.id = self.project_internal_id
+        self.project.external_id = self.external_project_id
+
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
+
+        self.consumer_repo = mock.MagicMock()
+
+        self.container = create_container(id_ref='id1')
+        self.consumer = create_consumer(self.container.id, id_ref='id2')
+        self.consumer2 = create_consumer(self.container.id, id_ref='id3')
+
+        self.consumer_ref = {
+            'name': self.consumer.name,
+            'URL': self.consumer.URL
+        }
+
+        self.container_repo = mock.MagicMock()
+        self.container_repo.get.return_value = self.container
+        self.consumer_repo.get_by_values.return_value = self.consumer
+        self.consumer_repo.delete_entity_by_id.return_value = None
+
+        self.secret_repo = mock.MagicMock()
+
+    def test_should_not_allow_put_on_consumers(self):
+        ret_val = ([self.consumer], 0, 0, 1)
+        self.consumer_repo.get_by_container_id.return_value = ret_val
+
+        resp = self.app.put_json(
+            '/containers/{0}/consumers/'.format(self.container.id),
+            self.consumer_ref,
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 405)
+
+    def test_should_not_allow_post_on_consumer_by_id(self):
+        self.consumer_repo.get.return_value = self.consumer
+        resp = self.app.post_json(
+            '/containers/{0}/consumers/{1}/'.format(self.container.id,
+                                                    self.consumer.id),
+            self.consumer_ref,
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 405)
+
+    def test_should_not_allow_put_on_consumer_by_id(self):
+        self.consumer_repo.get.return_value = self.consumer
+        resp = self.app.put_json(
+            '/containers/{0}/consumers/{1}/'.format(self.container.id,
+                                                    self.consumer.id),
+            self.consumer_ref,
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 405)
+
+    def test_should_not_allow_delete_on_consumer_by_id(self):
+        self.consumer_repo.get.return_value = self.consumer
+        resp = self.app.delete(
+            '/containers/{0}/consumers/{1}/'.format(self.container.id,
+                                                    self.consumer.id),
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 405)
 
 
 class WhenGettingContainersListUsingResource(FunctionalTest):
