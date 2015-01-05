@@ -51,10 +51,11 @@ class ContainerController(object):
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Container retrieval'))
     @controllers.enforce_rbac('container:get')
-    def index(self, keystone_id):
-        container = self.container_repo.get(entity_id=self.container_id,
-                                            keystone_id=keystone_id,
-                                            suppress_exception=True)
+    def index(self, external_project_id):
+        container = self.container_repo.get(
+            entity_id=self.container_id,
+            external_project_id=external_project_id,
+            suppress_exception=True)
         if not container:
             container_not_found()
 
@@ -70,7 +71,7 @@ class ContainerController(object):
     @index.when(method='DELETE', template='')
     @controllers.handle_exceptions(u._('Container deletion'))
     @controllers.enforce_rbac('container:delete')
-    def on_delete(self, keystone_id, **kwargs):
+    def on_delete(self, external_project_id, **kwargs):
         container_consumers = self.consumer_repo.get_by_container_id(
             self.container_id,
             suppress_exception=True
@@ -78,7 +79,7 @@ class ContainerController(object):
         try:
             self.container_repo.delete_entity_by_id(
                 entity_id=self.container_id,
-                keystone_id=keystone_id
+                external_project_id=external_project_id
             )
         except exception.NotFound:
             LOG.exception(u._LE('Problem deleting container'))
@@ -87,7 +88,7 @@ class ContainerController(object):
         for consumer in container_consumers[0]:
             try:
                 self.consumer_repo.delete_entity_by_id(
-                    consumer.id, keystone_id)
+                    consumer.id, external_project_id)
             except exception.NotFound:
                 pass
 
@@ -152,9 +153,10 @@ class ContainersController(object):
     @controllers.handle_exceptions(u._('Container creation'))
     @controllers.enforce_rbac('containers:post')
     @controllers.enforce_content_types(['application/json'])
-    def on_post(self, keystone_id, **kwargs):
+    def on_post(self, external_project_id, **kwargs):
 
-        project = res.get_or_create_project(keystone_id, self.project_repo)
+        project = res.get_or_create_project(external_project_id,
+                                            self.project_repo)
 
         data = api.load_body(pecan.request, validator=self.validator)
         LOG.debug('Start on_post...%s', data)
@@ -164,9 +166,10 @@ class ContainersController(object):
 
         # TODO(hgedikli): performance optimizations
         for secret_ref in new_container.container_secrets:
-            secret = self.secret_repo.get(entity_id=secret_ref.secret_id,
-                                          keystone_id=keystone_id,
-                                          suppress_exception=True)
+            secret = self.secret_repo.get(
+                entity_id=secret_ref.secret_id,
+                external_project_id=external_project_id,
+                suppress_exception=True)
             if not secret:
                 # This only partially localizes the error message and
                 # doesn't localize secret_ref.name.

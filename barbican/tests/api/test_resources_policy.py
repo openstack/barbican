@@ -233,7 +233,7 @@ class WhenTestingSecretsResource(BaseTestCase):
     def setUp(self):
         super(WhenTestingSecretsResource, self).setUp()
 
-        self.keystone_id = '12345'
+        self.external_project_id = '12345'
 
         # Force an error on GET calls that pass RBAC, as we are not testing
         #   such flows in this test module.
@@ -274,10 +274,10 @@ class WhenTestingSecretsResource(BaseTestCase):
                                content_type='application/json')
 
     def _invoke_on_post(self):
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
+        self.resource.on_post(self.req, self.resp, self.external_project_id)
 
     def _invoke_on_get(self):
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        self.resource.on_get(self.req, self.resp, self.external_project_id)
 
 
 class WhenTestingSecretResource(BaseTestCase):
@@ -285,7 +285,7 @@ class WhenTestingSecretResource(BaseTestCase):
     def setUp(self):
         super(WhenTestingSecretResource, self).setUp()
 
-        self.keystone_id = '12345project'
+        self.external_project_id = '12345project'
         self.secret_id = '12345secret'
 
         # Force an error on GET and DELETE calls that pass RBAC,
@@ -344,15 +344,15 @@ class WhenTestingSecretResource(BaseTestCase):
 
     def _invoke_on_get(self):
         self.resource.on_get(self.req, self.resp,
-                             self.keystone_id)
+                             self.external_project_id)
 
     def _invoke_on_put(self):
         self.resource.on_put(self.req, self.resp,
-                             self.keystone_id)
+                             self.external_project_id)
 
     def _invoke_on_delete(self):
         self.resource.on_delete(self.req, self.resp,
-                                self.keystone_id)
+                                self.external_project_id)
 
 
 class WhenTestingOrdersResource(BaseTestCase):
@@ -360,7 +360,7 @@ class WhenTestingOrdersResource(BaseTestCase):
     def setUp(self):
         super(WhenTestingOrdersResource, self).setUp()
 
-        self.keystone_id = '12345'
+        self.external_project_id = '12345'
 
         # Force an error on GET calls that pass RBAC, as we are not testing
         #   such flows in this test module.
@@ -394,10 +394,10 @@ class WhenTestingOrdersResource(BaseTestCase):
                                self._invoke_on_get)
 
     def _invoke_on_post(self):
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
+        self.resource.on_post(self.req, self.resp, self.external_project_id)
 
     def _invoke_on_get(self):
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        self.resource.on_get(self.req, self.resp, self.external_project_id)
 
 
 class WhenTestingOrderResource(BaseTestCase):
@@ -405,7 +405,7 @@ class WhenTestingOrderResource(BaseTestCase):
     def setUp(self):
         super(WhenTestingOrderResource, self).setUp()
 
-        self.keystone_id = '12345project'
+        self.external_project_id = '12345project'
         self.order_id = '12345order'
 
         # Force an error on GET and DELETE calls that pass RBAC,
@@ -438,10 +438,10 @@ class WhenTestingOrderResource(BaseTestCase):
                                self._invoke_on_delete)
 
     def _invoke_on_get(self):
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        self.resource.on_get(self.req, self.resp, self.external_project_id)
 
     def _invoke_on_delete(self):
-        self.resource.on_delete(self.req, self.resp, self.keystone_id)
+        self.resource.on_delete(self.req, self.resp, self.external_project_id)
 
 
 class WhenTestingConsumersResource(BaseTestCase):
@@ -449,7 +449,7 @@ class WhenTestingConsumersResource(BaseTestCase):
     def setUp(self):
         super(WhenTestingConsumersResource, self).setUp()
 
-        self.keystone_id = '12345project'
+        self.external_project_id = '12345project'
         self.container_id = '12345container'
 
         # Force an error on GET calls that pass RBAC, as we are not testing
@@ -496,13 +496,13 @@ class WhenTestingConsumersResource(BaseTestCase):
                                content_type='application/json')
 
     def _invoke_on_post(self):
-        self.resource.on_post(self.req, self.resp, self.keystone_id)
+        self.resource.on_post(self.req, self.resp, self.external_project_id)
 
     def _invoke_on_delete(self):
-        self.resource.on_delete(self.req, self.resp, self.keystone_id)
+        self.resource.on_delete(self.req, self.resp, self.external_project_id)
 
     def _invoke_on_get(self):
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        self.resource.on_get(self.req, self.resp, self.external_project_id)
 
 
 class WhenTestingConsumerResource(BaseTestCase):
@@ -510,7 +510,7 @@ class WhenTestingConsumerResource(BaseTestCase):
     def setUp(self):
         super(WhenTestingConsumerResource, self).setUp()
 
-        self.keystone_id = '12345project'
+        self.external_project_id = '12345project'
         self.consumer_id = '12345consumer'
 
         # Force an error on GET calls that pass RBAC, as we are not testing
@@ -536,4 +536,4 @@ class WhenTestingConsumerResource(BaseTestCase):
                                self._invoke_on_get)
 
     def _invoke_on_get(self):
-        self.resource.on_get(self.req, self.resp, self.keystone_id)
+        self.resource.on_get(self.req, self.resp, self.external_project_id)

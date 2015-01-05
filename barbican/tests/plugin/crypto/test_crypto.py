@@ -31,12 +31,12 @@ from barbican.tests import utils
 class TestCryptoPlugin(plugin.CryptoPluginBase):
     """Crypto plugin implementation for testing the plugin manager."""
 
-    def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
+    def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
         cypher_text = b'cypher_text'
         return plugin.ResponseDTO(cypher_text, None)
 
     def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
-                keystone_id):
+                project_id):
         return b'unencrypted_data'
 
     def bind_kek_metadata(self, kek_meta_dto):
@@ -46,10 +46,10 @@ class TestCryptoPlugin(plugin.CryptoPluginBase):
         kek_meta_dto.plugin_meta = None
         return kek_meta_dto
 
-    def generate_symmetric(self, generate_dto, kek_meta_dto, keystone_id):
+    def generate_symmetric(self, generate_dto, kek_meta_dto, project_id):
         return plugin.ResponseDTO("encrypted insecure key", None)
 
-    def generate_asymmetric(self, generate_dto, kek_meta_dto, keystone_id):
+    def generate_asymmetric(self, generate_dto, kek_meta_dto, project_id):
         passwd_res_dto = (plugin.ResponseDTO('passphrase', None)
                           if generate_dto.passphrase else None)
         return (plugin.ResponseDTO('insecure_private_key', None),

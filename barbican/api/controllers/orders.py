@@ -85,9 +85,9 @@ class OrderController(object):
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Order retrieval'))
     @controllers.enforce_rbac('order:get')
-    def index(self, keystone_id):
+    def index(self, external_project_id):
         order = self.order_repo.get(entity_id=self.order_id,
-                                    keystone_id=keystone_id,
+                                    external_project_id=external_project_id,
                                     suppress_exception=True)
         if not order:
             _order_not_found()
@@ -98,7 +98,7 @@ class OrderController(object):
     @controllers.handle_exceptions(u._('Order update'))
     @controllers.enforce_rbac('order:put')
     @controllers.enforce_content_types(['application/json'])
-    def on_put(self, keystone_id, **kwargs):
+    def on_put(self, external_project_id, **kwargs):
         raw_body = pecan.request.body
         order_type = None
         if raw_body:
@@ -107,9 +107,10 @@ class OrderController(object):
         if not order_type:
             _order_type_not_in_order()
 
-        order_model = self.order_repo.get(entity_id=self.order_id,
-                                          keystone_id=keystone_id,
-                                          suppress_exception=True)
+        order_model = self.order_repo.get(
+            entity_id=self.order_id,
+            external_project_id=external_project_id,
+            suppress_exception=True)
 
         if not order_model:
             _order_not_found()
@@ -134,17 +135,18 @@ class OrderController(object):
         # TODO(chellygel): Put updated_meta into a separate order association
         # entity.
         self.queue.update_order(order_id=self.order_id,
-                                keystone_id=keystone_id,
+                                project_id=external_project_id,
                                 updated_meta=updated_meta)
 
     @index.when(method='DELETE')
     @controllers.handle_exceptions(u._('Order deletion'))
     @controllers.enforce_rbac('order:delete')
-    def on_delete(self, keystone_id, **kwargs):
+    def on_delete(self, external_project_id, **kwargs):
 
         try:
-            self.order_repo.delete_entity_by_id(entity_id=self.order_id,
-                                                keystone_id=keystone_id)
+            self.order_repo.delete_entity_by_id(
+                entity_id=self.order_id,
+                external_project_id=external_project_id)
         except exception.NotFound:
             LOG.exception(u._LE('Problem deleting order'))
             _order_not_found()
@@ -169,12 +171,12 @@ class OrdersController(object):
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Order(s) retrieval'))
     @controllers.enforce_rbac('orders:get')
-    def index(self, keystone_id, **kw):
+    def index(self, external_project_id, **kw):
         LOG.debug('Start orders on_get '
-                  'for project-ID %s:', keystone_id)
+                  'for project-ID %s:', external_project_id)
 
         result = self.order_repo.get_by_create_date(
-            keystone_id, offset_arg=kw.get('offset', 0),
+            external_project_id, offset_arg=kw.get('offset', 0),
             limit_arg=kw.get('limit', None), suppress_exception=True)
         orders, offset, limit, total = result
 
@@ -196,16 +198,17 @@ class OrdersController(object):
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Order update'))
     @controllers.enforce_rbac('orders:put')
-    def on_put(self, keystone_id, **kwargs):
+    def on_put(self, external_project_id, **kwargs):
         _order_update_not_supported()
 
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('Order creation'))
     @controllers.enforce_rbac('orders:post')
     @controllers.enforce_content_types(['application/json'])
-    def on_post(self, keystone_id, **kwargs):
+    def on_post(self, external_project_id, **kwargs):
 
-        project = res.get_or_create_project(keystone_id, self.project_repo)
+        project = res.get_or_create_project(external_project_id,
+                                            self.project_repo)
 
         body = api.load_body(pecan.request,
                              validator=self.type_order_validator)
@@ -220,10 +223,10 @@ class OrdersController(object):
         self.order_repo.create_from(new_order)
 
         self.queue.process_type_order(order_id=new_order.id,
-                                      keystone_id=keystone_id)
+                                      project_id=external_project_id)
         pecan.response.status = 202
         pecan.response.headers['Location'] = '/{0}/orders/{1}'.format(
-            keystone_id, new_order.id
+            external_project_id, new_order.id
         )
         url = hrefs.convert_order_to_href(new_order.id)
         return {'order_ref': url}

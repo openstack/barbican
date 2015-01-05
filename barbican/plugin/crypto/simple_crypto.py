@@ -54,7 +54,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
 
         return encryptor.decrypt(kek_meta_dto.plugin_meta)
 
-    def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
+    def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
         kek = self._get_kek(kek_meta_dto)
         unencrypted = encrypt_dto.unencrypted
         if not isinstance(unencrypted, str):
@@ -71,7 +71,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         return c.ResponseDTO(cyphertext, None)
 
     def decrypt(self, encrypted_dto, kek_meta_dto, kek_meta_extended,
-                keystone_id):
+                project_id):
         kek = self._get_kek(kek_meta_dto)
         encrypted = encrypted_dto.encrypted
         decryptor = fernet.Fernet(kek)
@@ -88,15 +88,15 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
             kek_meta_dto.plugin_meta = encryptor.encrypt(key)
         return kek_meta_dto
 
-    def generate_symmetric(self, generate_dto, kek_meta_dto, keystone_id):
+    def generate_symmetric(self, generate_dto, kek_meta_dto, project_id):
         byte_length = int(generate_dto.bit_length) / 8
         unencrypted = os.urandom(byte_length)
 
         return self.encrypt(c.EncryptDTO(unencrypted),
                             kek_meta_dto,
-                            keystone_id)
+                            project_id)
 
-    def generate_asymmetric(self, generate_dto, kek_meta_dto, keystone_id):
+    def generate_asymmetric(self, generate_dto, kek_meta_dto, project_id):
         """Generate asymmetric keys based on below rules:
 
         - RSA, with passphrase (supported)
@@ -134,11 +134,11 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
                                                               private_key)
         private_dto = self.encrypt(c.EncryptDTO(private_key),
                                    kek_meta_dto,
-                                   keystone_id)
+                                   project_id)
 
         public_dto = self.encrypt(c.EncryptDTO(public_key),
                                   kek_meta_dto,
-                                  keystone_id)
+                                  project_id)
 
         passphrase_dto = None
         if generate_dto.passphrase:
@@ -149,7 +149,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
             passphrase_dto = self.encrypt(c.EncryptDTO(generate_dto.
                                                        passphrase),
                                           kek_meta_dto,
-                                          keystone_id)
+                                          project_id)
 
         return private_dto, public_dto, passphrase_dto
 

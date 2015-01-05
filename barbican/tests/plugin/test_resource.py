@@ -154,7 +154,7 @@ class WhenTestingPluginResource(testtools.TestCase):
         self.moc_plugin.delete_secret.assert_called_once_with(secret_meta)
 
         self.repos.secret_repo.delete_entity_by_id.assert_called_once_with(
-            entity_id=secret_model.id, keystone_id=project_id)
+            entity_id=secret_model.id, external_project_id=project_id)
 
     def test_delete_secret_w_out_metadata(self):
         project_id = "some_id"
@@ -169,4 +169,4 @@ class WhenTestingPluginResource(testtools.TestCase):
             secret_model.id)
 
         self.repos.secret_repo.delete_entity_by_id.assert_called_once_with(
-            entity_id=secret_model.id, keystone_id=project_id)
+            entity_id=secret_model.id, external_project_id=project_id)

@@ -31,14 +31,14 @@ from barbican.model import models
 from barbican.tests import utils
 
 
-def get_barbican_env(keystone_id):
+def get_barbican_env(external_project_id):
     class NoopPolicyEnforcer(object):
         def enforce(self, *args, **kwargs):
             return
 
     kwargs = {'roles': None,
               'user': None,
-              'project': keystone_id,
+              'project': external_project_id,
               'is_admin': True,
               'policy_enforcer': NoopPolicyEnforcer()}
     barbican_env = {'barbican.context':
@@ -104,7 +104,7 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
             WhenGettingTransKeysListUsingTransportKeysResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -118,7 +118,7 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
 
     def _init(self):
         self.plugin_name = "default_plugin"
-        self.keystone_id = 'keystoneid1234'
+        self.external_project_id = 'keystoneid1234'
         self.params = {'offset': 2, 'limit': 2}
 
         self.transport_key = SAMPLE_TRANSPORT_KEY
@@ -157,15 +157,15 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
         self.assertTrue('previous' in resp.namespace)
         self.assertTrue('next' in resp.namespace)
 
-        url_nav_next = self._create_url(self.keystone_id,
+        url_nav_next = self._create_url(self.external_project_id,
                                         self.offset + self.limit, self.limit)
         self.assertTrue(resp.body.count(url_nav_next) == 1)
 
-        url_nav_prev = self._create_url(self.keystone_id,
+        url_nav_prev = self._create_url(self.external_project_id,
                                         0, self.limit)
         self.assertTrue(resp.body.count(url_nav_prev) == 1)
 
-        url_hrefs = self._create_url(self.keystone_id)
+        url_hrefs = self._create_url(self.external_project_id)
         self.assertTrue(resp.body.count(url_hrefs) ==
                         (self.num_keys + 2))
 
@@ -192,7 +192,8 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
         self.assertFalse('previous' in resp.namespace)
         self.assertFalse('next' in resp.namespace)
 
-    def _create_url(self, keystone_id, offset_arg=None, limit_arg=None):
+    def _create_url(self, external_project_id, offset_arg=None,
+                    limit_arg=None):
         if limit_arg:
             offset = int(offset_arg)
             limit = int(limit_arg)
@@ -208,7 +209,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
             WhenCreatingTransKeysListUsingTransportKeysResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -222,7 +223,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
 
     def _init(self):
         self.plugin_name = "default_plugin"
-        self.keystone_id = 'keystoneid1234'
+        self.external_project_id = 'keystoneid1234'
 
         self.repo = mock.MagicMock()
         self.transport_key_req = {
@@ -274,7 +275,7 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
             WhenGettingOrDeletingTransKeyUsingTransportKeyResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -287,7 +288,7 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
         return RootController()
 
     def _init(self):
-        self.project_keystone_id = 'keystoneid1234'
+        self.external_project_id = 'keystoneid1234'
         self.transport_key = SAMPLE_TRANSPORT_KEY
         self.tkey_id = "id1"
 
@@ -315,7 +316,8 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
     def test_should_delete_transport_key(self):
         self.app.delete('/transport_keys/{0}/'.format(self.tkey.id))
         self.repo.delete_entity_by_id.assert_called_once_with(
-            entity_id=self.tkey.id, keystone_id=self.project_keystone_id)
+            entity_id=self.tkey.id,
+            external_project_id=self.external_project_id)
 
     def test_should_throw_exception_for_delete_when_trans_key_not_found(self):
         self.repo.delete_entity_by_id.side_effect = excep.NotFound(

@@ -43,14 +43,14 @@ from barbican.tests import utils
 LOG = logging.getLogger(__name__)
 
 
-def get_barbican_env(keystone_id):
+def get_barbican_env(external_project_id):
     """Create and return a barbican.context for use with the RBAC decorator
 
-    Injects the provided keystone_id.
+    Injects the provided external_project_id.
     """
     kwargs = {'roles': None,
               'user': None,
-              'project': keystone_id,
+              'project': external_project_id,
               'is_admin': True}
     ctx = barbican.context.RequestContext(**kwargs)
     ctx.policy_enforcer = None
@@ -187,7 +187,7 @@ class BaseSecretsResource(FunctionalTest):
     def setUp(self):
         super(BaseSecretsResource, self).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -224,13 +224,14 @@ class BaseSecretsResource(FunctionalTest):
             self.secret_req['payload_content_encoding'] = (
                 payload_content_encoding)
 
-        self.keystone_id = 'keystone1234'
+        self.external_project_id = 'keystone1234'
         self.project_entity_id = 'tid1234'
         self.project = models.Project()
         self.project.id = self.project_entity_id
-        self.project.external_id = self.keystone_id
+        self.project.external_id = self.external_project_id
         self.project_repo = mock.MagicMock()
-        self.project_repo.find_by_keystone_id.return_value = self.project
+        self.project_repo.find_by_external_project_id.return_value = (
+            self.project)
 
         self.secret = models.Secret()
         self.secret.id = '123'
@@ -360,14 +361,14 @@ class BaseSecretsResource(FunctionalTest):
 
     def _test_should_add_new_secret_if_project_does_not_exist(self):
         self.project_repo.get.return_value = None
-        self.project_repo.find_by_keystone_id.return_value = None
+        self.project_repo.find_by_external_project_id.return_value = None
 
         self._test_should_add_new_secret_one_step(check_project_id=False)
 
         args, kwargs = self.project_repo.create_from.call_args
         project = args[0]
         self.assertIsInstance(project, models.Project)
-        self.assertEqual(self.keystone_id, project.external_id)
+        self.assertEqual(self.external_project_id, project.external_id)
 
     def _test_should_add_new_secret_metadata_without_payload(self):
         self.app.post_json(
@@ -714,7 +715,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
     def setUp(self):
         super(WhenGettingSecretsListUsingSecretsResource, self).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -731,7 +732,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
     def _init(self):
         self.project_id = 'project1234'
-        self.keystone_id = 'keystone1234'
+        self.external_project_id = 'keystone1234'
         self.name = 'name 1234 !@#$%^&*()_+=-{}[];:<>,./?'
         self.secret_algorithm = "AES"
         self.secret_bit_length = 256
@@ -790,7 +791,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
         # Verify that the name is unquoted correctly in the
         # secrets.on_get function prior to searching the repo.
         self.secret_repo.get_by_create_date.assert_called_once_with(
-            self.keystone_id,
+            self.external_project_id,
             offset_arg=u'{0}'.format(self.offset),
             limit_arg=u'{0}'.format(self.limit),
             suppress_exception=True,
@@ -812,7 +813,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
         )
 
         self.secret_repo.get_by_create_date.assert_called_once_with(
-            self.keystone_id,
+            self.external_project_id,
             offset_arg=u'{0}'.format(self.offset),
             limit_arg=u'{0}'.format(self.limit),
             suppress_exception=True,
@@ -825,15 +826,15 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
         self.assertTrue('previous' in resp.namespace)
         self.assertTrue('next' in resp.namespace)
 
-        url_nav_next = self._create_url(self.keystone_id,
+        url_nav_next = self._create_url(self.external_project_id,
                                         self.offset + self.limit, self.limit)
         self.assertTrue(resp.body.count(url_nav_next) == 1)
 
-        url_nav_prev = self._create_url(self.keystone_id,
+        url_nav_prev = self._create_url(self.external_project_id,
                                         0, self.limit)
         self.assertTrue(resp.body.count(url_nav_prev) == 1)
 
-        url_hrefs = self._create_url(self.keystone_id)
+        url_hrefs = self._create_url(self.external_project_id)
         self.assertTrue(resp.body.count(url_hrefs) ==
                         (self.num_secrets + 2))
 
@@ -856,7 +857,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
         )
 
         self.secret_repo.get_by_create_date.assert_called_once_with(
-            self.keystone_id,
+            self.external_project_id,
             offset_arg=u'{0}'.format(self.offset),
             limit_arg=u'{0}'.format(self.limit),
             suppress_exception=True,
@@ -880,7 +881,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
         # Verify that controller call above normalizes bits to zero!
         self.secret_repo.get_by_create_date.assert_called_once_with(
-            self.keystone_id,
+            self.external_project_id,
             offset_arg=u'{0}'.format(self.offset),
             limit_arg=u'{0}'.format(self.limit),
             suppress_exception=True,
@@ -890,7 +891,8 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
             bits=0
         )
 
-    def _create_url(self, keystone_id, offset_arg=None, limit_arg=None):
+    def _create_url(self, external_project_id, offset_arg=None,
+                    limit_arg=None):
         if limit_arg:
             offset = int(offset_arg)
             limit = int(limit_arg)
@@ -906,7 +908,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             WhenGettingPuttingOrDeletingSecretUsingSecretResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -923,7 +925,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
     def _init(self):
         self.project_id = 'projectid1234'
-        self.keystone_id = 'keystone1234'
+        self.external_project_id = 'keystone1234'
         self.name = 'name1234'
 
         secret_id = "idsecret1"
@@ -958,10 +960,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.project = models.Project()
         self.project.id = self.project_id
-        self.project.external_id = self.keystone_id
+        self.project.external_id = self.external_project_id
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
-        self.project_repo.find_by_keystone_id.return_value = self.project
+        self.project_repo.find_by_external_project_id.return_value = (
+            self.project)
 
         self.secret_repo = mock.MagicMock()
         self.secret_repo.get.return_value = self.secret
@@ -992,7 +995,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         )
         self.secret_repo.get.assert_called_once_with(
             entity_id=self.secret.id,
-            keystone_id=self.keystone_id,
+            external_project_id=self.external_project_id,
             suppress_exception=True)
         self.assertEqual(resp.status_int, 200)
 
@@ -1014,7 +1017,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.secret_repo.get.assert_called_once_with(
             entity_id=self.secret.id,
-            keystone_id=self.keystone_id,
+            external_project_id=self.external_project_id,
             suppress_exception=True)
         self.assertEqual(resp.status_int, 200)
 
@@ -1042,7 +1045,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.secret_repo.get.assert_called_once_with(
             entity_id=self.secret.id,
-            keystone_id=self.keystone_id,
+            external_project_id=self.external_project_id,
             suppress_exception=True)
         self.assertEqual(resp.status_int, 200)
 
@@ -1072,7 +1075,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.secret_repo.get.assert_called_once_with(
             entity_id=self.secret.id,
-            keystone_id=self.keystone_id,
+            external_project_id=self.external_project_id,
             suppress_exception=True)
         self.assertEqual(resp.status_int, 400)
 
@@ -1092,7 +1095,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.secret_repo.get.assert_called_once_with(
             entity_id=self.secret.id,
-            keystone_id=self.keystone_id,
+            external_project_id=self.external_project_id,
             suppress_exception=True)
 
         self.assertEqual(resp.status_int, 200)
@@ -1120,7 +1123,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         self.secret_repo.get.assert_called_once_with(
             entity_id=self.secret.id,
-            keystone_id=self.keystone_id,
+            external_project_id=self.external_project_id,
             suppress_exception=True)
 
         self.assertEqual(resp.status_int, 200)
@@ -1418,7 +1421,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         )
 
         mock_delete_secret.assert_called_once_with(self.secret,
-                                                   self.keystone_id,
+                                                   self.external_project_id,
                                                    mock.ANY)
 
     @mock.patch('barbican.plugin.resources.delete_secret')
@@ -1429,7 +1432,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             headers={'Accept': 'application/json'}
         )
 
-        mocked.assert_called_once_with(self.secret, self.keystone_id, mock.ANY)
+        mocked.assert_called_once_with(self.secret, self.external_project_id,
+                                       mock.ANY)
 
     def test_should_throw_exception_for_delete_when_secret_not_found(self):
         self.secret_repo.get.return_value = None
@@ -1449,7 +1453,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
             WhenCreatingOrdersUsingOrdersResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -1470,11 +1474,11 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         self.secret_mode = "cbc"
 
         self.project_internal_id = 'projectid1234'
-        self.project_keystone_id = 'keystoneid1234'
+        self.external_project_id = 'keystoneid1234'
 
         self.project = models.Project()
         self.project.id = self.project_internal_id
-        self.project.external_id = self.project_keystone_id
+        self.project.external_id = self.external_project_id
 
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
@@ -1504,7 +1508,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         self.assertEqual(resp.status_int, 202)
 
         self.queue_resource.process_type_order.assert_called_once_with(
-            order_id=None, keystone_id=self.project_keystone_id)
+            order_id=None, project_id=self.external_project_id)
 
         args, kwargs = self.order_repo.create_from.call_args
         order = args[0]
@@ -1564,7 +1568,7 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
             WhenGettingOrdersListUsingOrdersResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -1579,7 +1583,7 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
 
     def _init(self):
         self.project_id = 'project1234'
-        self.keystone_id = 'keystoneid1234'
+        self.external_project_id = 'keystoneid1234'
         self.name = 'name1234'
         self.mime_type = 'text/plain'
         self.secret_algorithm = "algo"
@@ -1620,7 +1624,7 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
         resp = self.app.get('/orders/', self.params)
 
         self.order_repo.get_by_create_date.assert_called_once_with(
-            self.keystone_id,
+            self.external_project_id,
             offset_arg=u'{0}'.format(self.offset),
             limit_arg=u'{0}'.format(self.limit),
             suppress_exception=True
@@ -1629,15 +1633,15 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
         self.assertTrue('previous' in resp.namespace)
         self.assertTrue('next' in resp.namespace)
 
-        url_nav_next = self._create_url(self.keystone_id,
+        url_nav_next = self._create_url(self.external_project_id,
                                         self.offset + self.limit, self.limit)
         self.assertTrue(resp.body.count(url_nav_next) == 1)
 
-        url_nav_prev = self._create_url(self.keystone_id,
+        url_nav_prev = self._create_url(self.external_project_id,
                                         0, self.limit)
         self.assertTrue(resp.body.count(url_nav_prev) == 1)
 
-        url_hrefs = self._create_url(self.keystone_id)
+        url_hrefs = self._create_url(self.external_project_id)
         self.assertTrue(resp.body.count(url_hrefs) ==
                         (self.num_orders + 2))
 
@@ -1653,7 +1657,7 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
         resp = self.app.get('/orders/', self.params)
 
         self.order_repo.get_by_create_date.assert_called_once_with(
-            self.keystone_id,
+            self.external_project_id,
             offset_arg=u'{0}'.format(self.offset),
             limit_arg=u'{0}'.format(self.limit),
             suppress_exception=True
@@ -1662,7 +1666,8 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
         self.assertFalse('previous' in resp.namespace)
         self.assertFalse('next' in resp.namespace)
 
-    def _create_url(self, keystone_id, offset_arg=None, limit_arg=None):
+    def _create_url(self, external_project_id, offset_arg=None,
+                    limit_arg=None):
         if limit_arg:
             offset = int(offset_arg)
             limit = int(limit_arg)
@@ -1678,7 +1683,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
             WhenGettingOrDeletingOrderUsingOrderResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -1692,7 +1697,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         return RootController()
 
     def _init(self):
-        self.project_keystone_id = 'keystoneid1234'
+        self.external_project_id = 'keystoneid1234'
         self.requestor = 'requestor1234'
 
         self.order = create_order_with_meta(id_ref="id1",
@@ -1712,13 +1717,14 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
 
         self.order_repo.get.assert_called_once_with(
             entity_id=self.order.id,
-            keystone_id=self.project_keystone_id,
+            external_project_id=self.external_project_id,
             suppress_exception=True)
 
     def test_should_delete_order(self):
         self.app.delete('/orders/{0}/'.format(self.order.id))
         self.order_repo.delete_entity_by_id.assert_called_once_with(
-            entity_id=self.order.id, keystone_id=self.project_keystone_id)
+            entity_id=self.order.id,
+            external_project_id=self.external_project_id)
 
     def test_should_throw_exception_for_get_when_order_not_found(self):
         self.order_repo.get.return_value = None
@@ -1746,7 +1752,7 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
             WhenPuttingOrderWithMetadataUsingOrderResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -1760,7 +1766,7 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
         return RootController()
 
     def _init(self):
-        self.project_keystone_id = 'keystoneid1234'
+        self.external_project_id = 'keystoneid1234'
         self.requestor = 'requestor1234'
 
         self.order = create_order_with_meta(
@@ -1795,7 +1801,7 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
         self.assertEqual(resp.status_int, 204)
         self.order_repo.get.assert_called_once_with(
             entity_id=self.order.id,
-            keystone_id=self.project_keystone_id,
+            external_project_id=self.external_project_id,
             suppress_exception=True)
 
     def test_should_fail_bad_type(self):
@@ -1812,7 +1818,7 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
         self.assertEqual(resp.status_int, 400)
         self.order_repo.get.assert_called_once_with(
             entity_id=self.order.id,
-            keystone_id=self.project_keystone_id,
+            external_project_id=self.external_project_id,
             suppress_exception=True)
 
     def test_should_fail_bad_status(self):
@@ -1829,7 +1835,7 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
         self.assertEqual(resp.status_int, 400)
         self.order_repo.get.assert_called_once_with(
             entity_id=self.order.id,
-            keystone_id=self.project_keystone_id,
+            external_project_id=self.external_project_id,
             suppress_exception=True)
 
 
@@ -1839,7 +1845,7 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
             WhenCreatingTypeOrdersUsingOrdersResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -1865,11 +1871,11 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
                               'meta': self.meta}
 
         self.project_internal_id = 'projectid1234'
-        self.project_keystone_id = 'keystoneid1234'
+        self.external_project_id = 'keystoneid1234'
 
         self.project = models.Project()
         self.project.id = self.project_internal_id
-        self.project.external_id = self.project_keystone_id
+        self.project.external_id = self.external_project_id
 
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
@@ -1887,7 +1893,7 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         self.assertEqual(resp.status_int, 202)
 
         self.queue_resource.process_type_order.assert_called_once_with(
-            order_id=None, keystone_id=self.project_keystone_id)
+            order_id=None, project_id=self.external_project_id)
 
         args, kwargs = self.order_repo.create_from.call_args
         order = args[0]
@@ -1914,7 +1920,7 @@ class WhenAddingNavigationHrefs(utils.BaseTestCase):
         super(WhenAddingNavigationHrefs, self).setUp()
 
         self.resource_name = 'orders'
-        self.keystone_id = '12345'
+        self.external_project_id = '12345'
         self.num_elements = 100
         self.data = dict()
 
@@ -1993,7 +1999,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
             WhenCreatingContainersUsingContainersResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -2026,11 +2032,11 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
         ]
 
         self.project_internal_id = 'projectid1234'
-        self.project_keystone_id = 'keystoneid1234'
+        self.external_project_id = 'keystoneid1234'
 
         self.project = models.Project()
         self.project.id = self.project_internal_id
-        self.project.external_id = self.project_keystone_id
+        self.project.external_id = self.external_project_id
 
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
@@ -2054,7 +2060,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
             self.container_req
         )
         self.assertEqual(resp.status_int, 201)
-        self.assertNotIn(self.project_keystone_id, resp.headers['Location'])
+        self.assertNotIn(self.external_project_id, resp.headers['Location'])
 
         args, kwargs = self.container_repo.create_from.call_args
         container = args[0]
@@ -2062,7 +2068,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
 
     def _assert_returned_valid_container(self, resp):
         self.assertEqual(resp.status_int, 201)
-        self.assertNotIn(self.project_keystone_id, resp.headers['Location'])
+        self.assertNotIn(self.external_project_id, resp.headers['Location'])
 
         args, kwargs = self.container_repo.create_from.call_args
         container = args[0]
@@ -2123,7 +2129,7 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
             WhenGettingOrDeletingContainerUsingContainerResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -2138,12 +2144,12 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
         return RootController()
 
     def _init(self):
-        self.project_keystone_id = 'keystoneid1234'
+        self.external_project_id = 'keystoneid1234'
         self.project_internal_id = 'projectid1234'
 
         self.project = models.Project()
         self.project.id = self.project_internal_id
-        self.project.external_id = self.project_keystone_id
+        self.project.external_id = self.external_project_id
 
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
@@ -2165,7 +2171,7 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
 
         self.container_repo.get.assert_called_once_with(
             entity_id=self.container.id,
-            keystone_id=self.project_keystone_id,
+            external_project_id=self.external_project_id,
             suppress_exception=True)
 
     def test_should_delete_container(self):
@@ -2174,7 +2180,8 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
         ))
 
         self.container_repo.delete_entity_by_id.assert_called_once_with(
-            entity_id=self.container.id, keystone_id=self.project_keystone_id)
+            entity_id=self.container.id,
+            external_project_id=self.external_project_id)
 
     def test_should_throw_exception_for_get_when_container_not_found(self):
         self.container_repo.get.return_value = None
@@ -2201,7 +2208,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
             WhenCreatingConsumersUsingConsumersResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -2239,12 +2246,12 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
         }
 
         self.project_internal_id = 'projectid1234'
-        self.project_keystone_id = 'keystoneid1234'
+        self.external_project_id = 'keystoneid1234'
         self.container = create_container(id_ref='id1')
 
         self.project = models.Project()
         self.project.id = self.project_internal_id
-        self.project.external_id = self.project_keystone_id
+        self.project.external_id = self.external_project_id
 
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
@@ -2268,7 +2275,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
             self.consumer_ref
         )
         self.assertEqual(resp.status_int, 200)
-        self.assertNotIn(self.project_keystone_id, resp.headers['Location'])
+        self.assertNotIn(self.external_project_id, resp.headers['Location'])
 
         args, kwargs = self.consumer_repo.create_or_update_from.call_args
         consumer = args[0]
@@ -2307,7 +2314,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
             WhenGettingOrDeletingConsumersUsingConsumerResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.project_keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -2322,12 +2329,12 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         return RootController()
 
     def _init(self):
-        self.project_keystone_id = 'keystoneid1234'
+        self.external_project_id = 'keystoneid1234'
         self.project_internal_id = 'projectid1234'
 
         self.project = models.Project()
         self.project.id = self.project_internal_id
-        self.project.external_id = self.project_keystone_id
+        self.project.external_id = self.external_project_id
 
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
@@ -2404,7 +2411,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         ), self.consumer_ref)
 
         self.consumer_repo.delete_entity_by_id.assert_called_once_with(
-            self.consumer.id, self.project_keystone_id)
+            self.consumer.id, self.external_project_id)
 
     def test_should_fail_deleting_consumer_bad_json(self):
         resp = self.app.delete(
@@ -2448,7 +2455,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         # Verify consumers were deleted
         calls = []
         for consumer in consumers:
-            calls.append(mock.call(consumer.id, self.project_keystone_id))
+            calls.append(mock.call(consumer.id, self.external_project_id))
         self.consumer_repo.delete_entity_by_id.assert_has_calls(
             calls, any_order=True
         )
@@ -2467,7 +2474,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         # Verify consumers were deleted
         calls = []
         for consumer in consumers:
-            calls.append(mock.call(consumer.id, self.project_keystone_id))
+            calls.append(mock.call(consumer.id, self.external_project_id))
         self.consumer_repo.delete_entity_by_id.assert_has_calls(
             calls, any_order=True
         )
@@ -2479,7 +2486,7 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
             WhenGettingContainersListUsingResource, self
         ).setUp()
         self.app = webtest.TestApp(app.PecanAPI(self.root))
-        self.app.extra_environ = get_barbican_env(self.keystone_id)
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
     def root(self):
@@ -2495,7 +2502,7 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
 
     def _init(self):
         self.project_id = 'project1234'
-        self.keystone_id = 'keystoneid1234'
+        self.external_project_id = 'keystoneid1234'
 
         self.num_containers = 10
         self.offset = 2
@@ -2525,7 +2532,7 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
         )
 
         self.container_repo.get_by_create_date.assert_called_once_with(
-            self.keystone_id,
+            self.external_project_id,
             offset_arg=u'{0}'.format(self.offset),
             limit_arg=u'{0}'.format(self.limit),
             suppress_exception=True
@@ -2534,15 +2541,15 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
         self.assertTrue('previous' in resp.namespace)
         self.assertTrue('next' in resp.namespace)
 
-        url_nav_next = self._create_url(self.keystone_id,
+        url_nav_next = self._create_url(self.external_project_id,
                                         self.offset + self.limit, self.limit)
         self.assertTrue(resp.body.count(url_nav_next) == 1)
 
-        url_nav_prev = self._create_url(self.keystone_id,
+        url_nav_prev = self._create_url(self.external_project_id,
                                         0, self.limit)
         self.assertTrue(resp.body.count(url_nav_prev) == 1)
 
-        url_hrefs = self._create_url(self.keystone_id)
+        url_hrefs = self._create_url(self.external_project_id)
         self.assertTrue(resp.body.count(url_hrefs) ==
                         (self.num_containers + 2))
 
@@ -2564,7 +2571,7 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
         )
 
         self.container_repo.get_by_create_date.assert_called_once_with(
-            self.keystone_id,
+            self.external_project_id,
             offset_arg=u'{0}'.format(self.offset),
             limit_arg=u'{0}'.format(self.limit),
             suppress_exception=True
@@ -2573,7 +2580,8 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
         self.assertFalse('previous' in resp.namespace)
         self.assertFalse('next' in resp.namespace)
 
-    def _create_url(self, keystone_id, offset_arg=None, limit_arg=None):
+    def _create_url(self, external_project_id, offset_arg=None,
+                    limit_arg=None):
         if limit_arg:
             offset = int(offset_arg)
             limit = int(limit_arg)

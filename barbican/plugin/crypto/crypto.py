@@ -245,7 +245,7 @@ class CryptoPluginBase(object):
 
     # TODO(atiwari): fix 1331815
     @abc.abstractmethod
-    def encrypt(self, encrypt_dto, kek_meta_dto, keystone_id):
+    def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
         """Encryption handler function
 
         This method will be called by Barbican when requesting an encryption
@@ -260,7 +260,7 @@ class CryptoPluginBase(object):
             :meth:`bind_kek_metadata` has already taken place before this
             instance is passed in.
         :type kek_meta_dto: :class:`KEKMetaDTO`
-        :param keystone_id: Project ID associated with the unencrypted data.
+        :param project_id: Project ID associated with the unencrypted data.
         :return: A response DTO containing the cyphertext and KEK information.
         :rtype: :class:`ResponseDTO`
         """
@@ -268,7 +268,7 @@ class CryptoPluginBase(object):
 
     @abc.abstractmethod
     def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
-                keystone_id):
+                project_id):
         """Decrypt encrypted_datum in the context of the provided project.
 
         :param decrypt_dto: data transfer object containing the cyphertext
@@ -276,7 +276,7 @@ class CryptoPluginBase(object):
         :param kek_meta_dto: Key encryption key metadata to use for decryption
         :param kek_meta_extended: Optional per-secret KEK metadata to use for
             decryption.
-        :param keystone_id: keystone_id associated with the encrypted datum.
+        :param project_id: Project ID associated with the encrypted datum.
         :returns: str -- unencrypted byte data
 
         """
@@ -306,7 +306,7 @@ class CryptoPluginBase(object):
         raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
-    def generate_symmetric(self, generate_dto, kek_meta_dto, keystone_id):
+    def generate_symmetric(self, generate_dto, kek_meta_dto, project_id):
         """Generate a new key.
 
         :param generate_dto: data transfer object for the record
@@ -314,7 +314,7 @@ class CryptoPluginBase(object):
                parameters can be extracted from this object, including
                bit_length, algorithm and mode
         :param kek_meta_dto: Key encryption key metadata to use for decryption
-        :param keystone_id: keystone_id associated with the data.
+        :param project_id: Project ID associated with the data.
         :returns: An object of type ResponseDTO containing encrypted data and
             kek_meta_extended, the former the resultant cypher text, the latter
             being optional per-secret metadata needed to decrypt (over and
@@ -323,8 +323,7 @@ class CryptoPluginBase(object):
         raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
-    def generate_asymmetric(self, generate_dto,
-                            kek_meta_dto, keystone_id):
+    def generate_asymmetric(self, generate_dto, kek_meta_dto, project_id):
         """Create a new asymmetric key.
 
         :param generate_dto: data transfer object for the record
@@ -332,7 +331,7 @@ class CryptoPluginBase(object):
                parameters can be extracted from this object, including
                bit_length, algorithm and passphrase
         :param kek_meta_dto: Key encryption key metadata to use for decryption
-        :param keystone_id: keystone_id associated with the data.
+        :param project_id: Project ID associated with the data.
         :returns: A tuple containing  objects for private_key, public_key and
             optionally one for passphrase. The objects will be of type
             ResponseDTO.
@@ -345,8 +344,7 @@ class CryptoPluginBase(object):
 
     # TODO(atiwari): fix 1331815
     @abc.abstractmethod
-    def supports(self, type_enum, algorithm=None, bit_length=None,
-                 mode=None):
+    def supports(self, type_enum, algorithm=None, bit_length=None, mode=None):
         """Used to determine if the plugin supports the requested operation.
 
         :param type_enum: Enumeration from PluginSupportsType class

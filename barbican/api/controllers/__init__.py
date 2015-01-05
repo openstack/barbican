@@ -70,14 +70,14 @@ def enforce_rbac(action_name='default'):
             # middleware
             ctx = _get_barbican_context(pecan.request)
             if ctx:
-                keystone_id = ctx.project
+                external_project_id = ctx.project
             else:
-                keystone_id = None
+                external_project_id = None
 
             _do_enforce_rbac(pecan.request, action_name, ctx)
-            # insert keystone_id as the first arg to the guarded method
+            # insert external_project_id as the first arg to the guarded method
             args = list(args)
-            args.insert(0, keystone_id)
+            args.insert(0, external_project_id)
             # Execute guarded method now.
             return fn(inst, *args, **kwargs)
 

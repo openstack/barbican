@@ -74,22 +74,22 @@ class Tasks(object):
     """
 
     @transactional
-    def process_type_order(self, context, order_id, keystone_id):
+    def process_type_order(self, context, order_id, project_id):
         """Process TypeOrder."""
         LOG.debug('TypeOrder id is {0}'.format(order_id))
         task = resources.BeginTypeOrder()
         try:
-            task.process(order_id, keystone_id)
+            task.process(order_id, project_id)
         except Exception:
             LOG.exception(">>>>> Task exception seen, details reported "
                           "on the Orders entity.")
 
     @transactional
-    def update_order(self, context, order_id, keystone_id, updated_meta):
+    def update_order(self, context, order_id, project_id, updated_meta):
         """Update Order."""
         task = resources.UpdateOrder()
         try:
-            task.process(order_id, keystone_id, updated_meta)
+            task.process(order_id, project_id, updated_meta)
         except Exception:
             LOG.exception(">>>>> Task exception seen, details reported "
                           "on the Orders entity.")

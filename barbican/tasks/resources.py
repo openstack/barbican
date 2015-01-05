@@ -166,9 +166,10 @@ class BeginTypeOrder(BaseTask):
                 container_repo=container_repo,
                 container_secret_repo=container_secret_repo)
 
-    def retrieve_entity(self, order_id, keystone_id):
-        return self.repos.order_repo.get(entity_id=order_id,
-                                         keystone_id=keystone_id)
+    def retrieve_entity(self, order_id, external_project_id):
+        return self.repos.order_repo.get(
+            entity_id=order_id,
+            external_project_id=external_project_id)
 
     def handle_processing(self, order, *args, **kwargs):
         self.handle_order(order)
@@ -265,9 +266,10 @@ class UpdateOrder(BaseTask):
                 secret_meta_repo=secret_meta_repo
             )
 
-    def retrieve_entity(self, order_id, keystone_id):
-        return self.repos.order_repo.get(entity_id=order_id,
-                                         keystone_id=keystone_id)
+    def retrieve_entity(self, order_id, external_project_id):
+        return self.repos.order_repo.get(
+            entity_id=order_id,
+            external_project_id=external_project_id)
 
     def handle_processing(self, order, updated_meta):
         self.handle_order(order, updated_meta)
