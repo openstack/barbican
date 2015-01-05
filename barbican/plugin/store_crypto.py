@@ -90,7 +90,7 @@ class StoreCryptoAdapterPlugin(object):
 
         # Create an encrypted datum instance and add the encrypted cyphertext.
         response_dto = encrypting_plugin.encrypt(
-            encrypt_dto, kek_meta_dto, context.project_model.keystone_id
+            encrypt_dto, kek_meta_dto, context.project_model.external_id
         )
 
         # Convert binary data into a text-based format.
@@ -128,7 +128,7 @@ class StoreCryptoAdapterPlugin(object):
         secret = decrypting_plugin.decrypt(decrypt_dto,
                                            kek_meta_dto,
                                            datum_model.kek_meta_extended,
-                                           context.project_model.keystone_id)
+                                           context.project_model.external_id)
         key_spec = sstore.KeySpec(alg=context.secret_model.algorithm,
                                   bit_length=context.secret_model.bit_length,
                                   mode=context.secret_model.mode)
@@ -170,7 +170,7 @@ class StoreCryptoAdapterPlugin(object):
                                           key_spec.mode, None)
         # Create the encrypted meta.
         response_dto = generating_plugin.generate_symmetric(
-            generate_dto, kek_meta_dto, context.project_model.keystone_id)
+            generate_dto, kek_meta_dto, context.project_model.external_id)
 
         # Convert binary data into a text-based format.
         _store_secret_and_datum(
@@ -205,7 +205,7 @@ class StoreCryptoAdapterPlugin(object):
         # Create the encrypted meta.
         private_key_dto, public_key_dto, passwd_dto = (
             generating_plugin.generate_asymmetric(
-                generate_dto, kek_meta_dto, context.project_model.keystone_id
+                generate_dto, kek_meta_dto, context.project_model.external_id
             )
         )
 

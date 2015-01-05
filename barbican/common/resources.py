@@ -36,7 +36,7 @@ def get_or_create_project(project_id, project_repo):
     if not project:
         LOG.debug('Creating project for %s', project_id)
         project = models.Project()
-        project.keystone_id = project_id
+        project.external_id = project_id
         project.status = models.States.ACTIVE
         project_repo.create_from(project)
     return project

@@ -44,7 +44,7 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
         self.project_id = 'projectid1234'
         self.project = models.Project()
         self.project.id = self.project_id
-        self.project.keystone_id = self.keystone_id
+        self.project.external_id = self.keystone_id
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
 
@@ -200,7 +200,7 @@ class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
         self.project_id = 'projectid1234'
         self.project = models.Project()
         self.project.id = self.project_id
-        self.project.keystone_id = self.keystone_id
+        self.project.external_id = self.keystone_id
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
 
