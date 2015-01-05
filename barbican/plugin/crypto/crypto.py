@@ -243,7 +243,6 @@ class CryptoPluginBase(object):
     persist the data that is assigned to these DTOs by the plugin.
     """
 
-    # TODO(atiwari): fix 1331815
     @abc.abstractmethod
     def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
         """Encryption handler function
@@ -342,7 +341,6 @@ class CryptoPluginBase(object):
         """
         raise NotImplementedError  # pragma: no cover
 
-    # TODO(atiwari): fix 1331815
     @abc.abstractmethod
     def supports(self, type_enum, algorithm=None, bit_length=None, mode=None):
         """Used to determine if the plugin supports the requested operation.
