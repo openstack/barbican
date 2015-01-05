@@ -60,6 +60,34 @@ class MissingCredentialError(BarbicanException):
     message = u._("Missing required credential: %(required)s")
 
 
+class MissingMetadataField(BarbicanException):
+    message = u._("Missing required metadata field for %(required)s")
+
+
+class InvalidSubjectDN(BarbicanException):
+    message = u._("Invalid subject DN: %(subject_dn)")
+
+
+class InvalidContainer(BarbicanException):
+    message = u._("Invalid container: %(reason)")
+
+
+class InvalidExtensionsData(BarbicanException):
+    message = u._("Invalid extensions data.")
+
+
+class InvalidCMCData(BarbicanException):
+    message = u._("Invalid CMC Data")
+
+
+class InvalidPKCS10Data(BarbicanException):
+    message = u._("Invalid PKCS10 Data")
+
+
+class InvalidCertificateRequestType(BarbicanException):
+    message = u._("Invalid Certificate Request Type")
+
+
 class BadAuthStrategy(BarbicanException):
     message = u._("Incorrect auth strategy, expected \"%(expected)s\" but "
                   "received \"%(received)s\"")
