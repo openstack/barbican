@@ -32,7 +32,7 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
         resp = self.client.post('secrets', request_model=model,
                                 extra_headers=headers)
 
-        returned_data = resp.json()
+        returned_data = self.get_json(resp)
         secret_ref = returned_data.get('secret_ref')
         if secret_ref:
             self.created_entities.append(secret_ref)
@@ -77,7 +77,7 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
         resp = self.client.get('secrets', params={'limit': limit,
                                                   'offset': offset})
 
-        secrets_list = resp.json()
+        secrets_list = self.get_json(resp)
 
         secrets, next_ref, prev_ref = self.client.get_list_of_models(
             secrets_list, secret_models.SecretModel)

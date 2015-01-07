@@ -33,7 +33,7 @@ class ConsumerBehaviors(base_behaviors.BaseBehaviors):
 
         resp = self.client.post(url, request_model=model)
 
-        returned_data = resp.json()
+        returned_data = self.get_json(resp)
         consumer_data = returned_data['consumers']
 
         return resp, consumer_data
@@ -55,7 +55,7 @@ class ConsumerBehaviors(base_behaviors.BaseBehaviors):
         params = {'limit': limit, 'offset': offset}
         resp = self.client.get(url, params=params)
 
-        consumer_list = resp.json()
+        consumer_list = self.get_json(resp)
 
         consumers, next_ref, prev_ref = self.client.get_list_of_models(
             consumer_list, consumer_model.ConsumerModel)
@@ -73,7 +73,7 @@ class ConsumerBehaviors(base_behaviors.BaseBehaviors):
         url = '{0}/consumers'.format(container_ref)
 
         resp = self.client.delete(url, request_model=model)
-        returned_data = resp.json()
+        returned_data = self.get_json(resp)
         consumer_data = returned_data['consumers']
 
         return resp, consumer_data

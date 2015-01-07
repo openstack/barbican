@@ -15,12 +15,27 @@ limitations under the License.
 """
 import os
 
+from tempest.openstack.common import log as logging
+
 
 class BaseBehaviors(object):
 
     def __init__(self, client):
+        self.LOG = logging.getLogger(type(self).__name__)
         self.client = client
         self.created_entities = []
+
+    def get_json(self, response):
+        json_data = dict()
+
+        try:
+            json_data = response.json()
+        except ValueError as e:
+            self.LOG.error("Error converting response to JSON: %s", e.message)
+            self.LOG.error("Response Content: %s", response.content)
+            self.LOG.exception(e)
+
+        return json_data
 
     def get_id_from_href(self, href):
         """Returns the id from reference.

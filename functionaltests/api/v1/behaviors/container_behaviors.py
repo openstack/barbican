@@ -33,7 +33,7 @@ class ContainerBehaviors(base_behaviors.BaseBehaviors):
         resp = self.client.post('containers', request_model=model,
                                 extra_headers=extra_headers)
 
-        returned_data = resp.json()
+        returned_data = self.get_json(resp)
         container_ref = returned_data.get('container_ref')
         if container_ref:
             self.created_entities.append(container_ref)
@@ -67,7 +67,7 @@ class ContainerBehaviors(base_behaviors.BaseBehaviors):
         params = {'limit': limit, 'offset': offset}
         resp = self.client.get('containers', params=params)
 
-        container_list = resp.json()
+        container_list = self.get_json(resp)
 
         containers, next_ref, prev_ref = self.client.get_list_of_models(
             container_list, container_models.ContainerModel)
