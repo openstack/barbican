@@ -115,9 +115,9 @@ class ContextMiddleware(BaseContextMiddleware):
                 catalog_header = req.headers.get('X-Service-Catalog')
                 service_catalog = json.loads(catalog_header)
             except ValueError:
-                LOG.exception(u._LE('Problem processing X-Service-Catalog'))
-                raise webob.exc.HTTPInternalServerError(
-                    u._('Invalid service catalog json.'))
+                msg = u._('Problem processing X-Service-Catalog')
+                LOG.exception(msg)
+                raise webob.exc.HTTPInternalServerError(msg)
 
         kwargs = {
             'user': req.headers.get('X-User-Id'),

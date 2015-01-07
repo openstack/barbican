@@ -1,5 +1,3 @@
-# Copyright (c) 2013-2014 Rackspace, Inc.
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -22,10 +20,10 @@ from barbican.tasks import resources
 from barbican.tests import utils
 
 
-class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
+class BaseOrderTestCase(utils.BaseTestCase):
 
     def setUp(self):
-        super(WhenBeginningKeyTypeOrder, self).setUp()
+        super(BaseOrderTestCase, self).setUp()
         self.requestor = 'requestor1234'
         self.order = models.Order()
         self.order.id = "id1"
@@ -78,19 +76,25 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
 
         self.container_secret_repo = mock.MagicMock()
         self.container_secret_repo.create_from.return_value = None
+        self.container = models.Container()
 
-        self.secret_meta_repo = mock.MagicMock()
 
-        self.resource = resources.BeginTypeOrder(self.project_repo,
-                                                 self.order_repo,
-                                                 self.secret_repo,
-                                                 self.project_secret_repo,
-                                                 self.datum_repo,
-                                                 self.kek_repo,
-                                                 self.secret_meta_repo,
-                                                 self.container_repo,
-                                                 self.container_secret_repo,
-                                                 self.order_plugin_meta_repo)
+class WhenBeginningKeyTypeOrder(BaseOrderTestCase):
+
+    def setUp(self):
+        super(WhenBeginningKeyTypeOrder, self).setUp()
+
+        self.resource = resources.BeginTypeOrder(
+            project_repo=self.project_repo,
+            order_repo=self.order_repo,
+            secret_repo=self.secret_repo,
+            project_secret_repo=self.project_secret_repo,
+            datum_repo=self.datum_repo,
+            kek_repo=self.kek_repo,
+            secret_meta_repo=self.secret_meta_repo,
+            container_repo=self.container_repo,
+            container_secret_repo=self.container_secret_repo,
+            order_plugin_meta_repo=self.order_plugin_meta_repo)
 
     @mock.patch('barbican.plugin.resources.generate_secret')
     def test_should_process_key_order(self, mock_generate_secret):
@@ -180,71 +184,65 @@ class WhenBeginningKeyTypeOrder(utils.BaseTestCase):
         )
 
 
-class WhenBeginningAsymmetricTypeOrder(utils.BaseTestCase):
+class WhenUpdatingKeyTypeOrder(BaseOrderTestCase):
+
+    def setUp(self):
+        super(WhenUpdatingKeyTypeOrder, self).setUp()
+
+        self.resource = resources.UpdateOrder(
+            project_repo=self.project_repo,
+            order_repo=self.order_repo,
+            secret_repo=self.secret_repo,
+            project_secret_repo=self.project_secret_repo,
+            datum_repo=self.datum_repo,
+            kek_repo=self.kek_repo,
+            secret_meta_repo=self.secret_meta_repo,
+            container_repo=self.container_repo,
+            container_secret_repo=self.container_secret_repo)
+
+    @mock.patch(
+        'barbican.tasks.certificate_resources.modify_certificate_request')
+    def test_should_fail_during_processing(self, mock_mod_cert):
+        mock_mod_cert.side_effect = ValueError('Abort!')
+
+        self.order.type = models.OrderType.CERTIFICATE
+
+        exception = self.assertRaises(
+            ValueError,
+            self.resource.process,
+            self.order_id,
+            self.external_project_id,
+            self.meta,
+        )
+
+        self.assertEqual('Abort!', exception.message)
+
+        mock_mod_cert.assert_called_once_with(self.order, self.meta, mock.ANY)
+
+        self.assertEqual(models.States.ERROR, self.order.status)
+        self.assertEqual(500, self.order.error_status_code)
+        self.assertEqual(u._('Update Order failure seen - please contact '
+                             'site administrator.'), self.order.error_reason)
+
+
+class WhenBeginningAsymmetricTypeOrder(BaseOrderTestCase):
 
     def setUp(self):
         super(WhenBeginningAsymmetricTypeOrder, self).setUp()
-        self.requestor = 'requestor1234'
-        self.order = models.Order()
-        self.order.id = "id1"
-        self.order.requestor = self.requestor
+
         self.order.type = "asymmetric"
-        self.meta = {'name': 'myrsakey',
-                     'payload_content_type':
-                     'application/octet-stream',
-                     'algorithm': 'rsa',
-                     'bit_length': 2048,
-                     'expiration': timeutils.utcnow()}
-        self.order.meta = self.meta
 
-        self.external_project_id = 'keystone1234'
-        self.project_id = 'projectid1234'
-        self.project = models.Project()
-        self.project.id = self.project_id
-        self.project.external_id = self.external_project_id
-        self.project_repo = mock.MagicMock()
-        self.project_repo.get.return_value = self.project
-
-        self.order.status = models.States.PENDING
-        self.order.project_id = self.project_id
-        self.order_repo = mock.MagicMock()
-        self.order_repo.get.return_value = self.order
-
-        self.order_repo = mock.MagicMock()
-        self.order_repo.get.return_value = self.order
-
-        self.order_plugin_meta_repo = mock.MagicMock()
-
-        self.secret_repo = mock.MagicMock()
-        self.secret_repo.create_from.return_value = None
-
-        self.project_secret_repo = mock.MagicMock()
-        self.project_secret_repo.create_from.return_value = None
-
-        self.datum_repo = mock.MagicMock()
-        self.datum_repo.create_from.return_value = None
-
-        self.kek_repo = mock.MagicMock()
-
-        self.secret_meta_repo = mock.MagicMock()
-
-        self.container_repo = mock.MagicMock()
-        self.container_repo.create_from.return_value = None
-
-        self.container_secret_repo = mock.MagicMock()
-        self.container_secret_repo.create_from.return_value = None
-        self.container = models.Container()
-
-        self.resource = resources.BeginTypeOrder(self.project_repo,
-                                                 self.order_repo,
-                                                 self.secret_repo,
-                                                 self.project_secret_repo,
-                                                 self.datum_repo,
-                                                 self.kek_repo,
-                                                 self.secret_meta_repo,
-                                                 self.container_repo,
-                                                 self.container_secret_repo,
-                                                 self.order_plugin_meta_repo)
+        self.resource = resources.BeginTypeOrder(
+            project_repo=self.project_repo,
+            order_repo=self.order_repo,
+            secret_repo=self.secret_repo,
+            project_secret_repo=self.project_secret_repo,
+            datum_repo=self.datum_repo,
+            kek_repo=self.kek_repo,
+            secret_meta_repo=self.secret_meta_repo,
+            container_repo=self.container_repo,
+            container_secret_repo=self.container_secret_repo,
+            order_plugin_meta_repo=self.order_plugin_meta_repo)
 
     @mock.patch('barbican.plugin.resources.generate_asymmetric_secret')
     def test_should_process_asymmetric_order(self,

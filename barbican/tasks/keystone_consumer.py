@@ -38,31 +38,42 @@ class KeystoneEventConsumer(resources.BaseTask):
     def __init__(self, project_repo=None, order_repo=None,
                  secret_repo=None, project_secret_repo=None,
                  datum_repo=None, kek_repo=None, secret_meta_repo=None,
-                 container_repo=None):
+                 container_repo=None, repositories=None,
+                 db_start=rep.start, db_commit=rep.commit,
+                 db_rollback=rep.rollback, db_clear=rep.clear):
         LOG.debug('Creating KeystoneEventConsumer task processor')
-        self.repos = rep.Repositories(project_repo=project_repo,
-                                      order_repo=order_repo,
-                                      secret_repo=secret_repo,
-                                      project_secret_repo=project_secret_repo,
-                                      datum_repo=datum_repo,
-                                      kek_repo=kek_repo,
-                                      secret_meta_repo=secret_meta_repo,
-                                      container_repo=container_repo)
+
+        self.db_start = db_start
+        self.db_commit = db_commit
+        self.db_rollback = db_rollback
+        self.db_clear = db_clear
+
+        self.repos = repositories
+        if not repositories:
+            self.repos = rep.Repositories(
+                project_repo=project_repo,
+                order_repo=order_repo,
+                secret_repo=secret_repo,
+                project_secret_repo=project_secret_repo,
+                datum_repo=datum_repo,
+                kek_repo=kek_repo,
+                secret_meta_repo=secret_meta_repo,
+                container_repo=container_repo)
 
     def process(self, *args, **kwargs):
         try:
-            rep.start()
+            self.db_start()
             super(KeystoneEventConsumer, self).process(*args, **kwargs)
-            rep.commit()
+            self.db_commit()
         except Exception as e:
             """Exceptions that reach here needs to revert the entire
             transaction.
             No need to log error message as its already done earlier.
             """
-            rep.rollback()
+            self.db_rollback()
             raise e
         finally:
-            rep.clear()
+            self.db_clear()
 
     def retrieve_entity(self, project_id, resource_type=None,
                         operation_type=None):

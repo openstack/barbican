@@ -112,10 +112,12 @@ def create_container(id_ref):
 
 def create_consumer(container_id, id_ref):
     """Generate a ContainerConsumerMetadatum entity instance."""
-    consumer = models.ContainerConsumerMetadatum(container_id)
+    data = {
+        'name': 'test name',
+        'URL': 'http://test/url'
+    }
+    consumer = models.ContainerConsumerMetadatum(container_id, data)
     consumer.id = id_ref
-    consumer.name = 'test name'
-    consumer.URL = 'http://test/url'
     return consumer
 
 

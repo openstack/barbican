@@ -28,6 +28,10 @@ class RepositoryTestCase(utils.BaseTestCase):
     Database/Repository oriented unit tests should *not* modify the global
     state in the barbican/model/repositories.py module, as this can lead to
     hard to debug errors. Instead only utilize methods in this fixture.
+
+    Also, database-oriented unit tests extending this class MUST NO INVOKE
+    the repositories.start()/clear()/hard_reset() methods!*, otherwise *VERY*
+    hard to debug 'Broken Pipe' errors could result!
     """
     def setUp(self):
         super(RepositoryTestCase, self).setUp()
@@ -35,7 +39,7 @@ class RepositoryTestCase(utils.BaseTestCase):
         # Ensure we are using in-memory SQLite database, and creating tables.
         repositories.CONF.set_override("sql_connection", "sqlite:///:memory:")
         repositories.CONF.set_override("db_auto_create", True)
-        repositories.CONF.set_override("debug", True)
+        repositories.CONF.set_override("debug", False)
 
         # Ensure the connection is completely closed, so any previous in-memory
         # database can be removed prior to starting the next test run.

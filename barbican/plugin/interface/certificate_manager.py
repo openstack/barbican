@@ -90,7 +90,7 @@ class CertificatePluginNotFound(exception.BarbicanException):
         if plugin_name:
             message = u._(
                 'Certificate plugin "{name}"'
-                ' not found or configured.').format(name=plugin_name)
+                ' not found.').format(name=plugin_name)
         else:
             message = u._("Certificate plugin not found or configured.")
         super(CertificatePluginNotFound, self).__init__(message)
@@ -101,10 +101,10 @@ class CertificateEventPluginNotFound(exception.BarbicanException):
     def __init__(self, plugin_name=None):
         if plugin_name:
             message = u._(
-                'Certificate event plugin "{name}" not found or '
-                'configured.').format(name=plugin_name)
+                'Certificate event plugin "{name}" '
+                'not found.').format(name=plugin_name)
         else:
-            message = u._("Certificate event plugin not found or configured.")
+            message = u._("Certificate event plugin not found.")
         super(CertificateEventPluginNotFound, self).__init__(message)
 
 

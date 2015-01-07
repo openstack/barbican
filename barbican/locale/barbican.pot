@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2015.1.dev86.g7b38b5d\n"
+"Project-Id-Version: barbican 2015.1.dev103.gb90a40b\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-12-07 19:03-0600\n"
+"POT-Creation-Date: 2014-12-13 20:17-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -117,15 +117,15 @@ msgstr ""
 msgid "Container deletion"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:113
+#: barbican/api/controllers/containers.py:114
 msgid "Containers(s) retrieval"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:151
+#: barbican/api/controllers/containers.py:152
 msgid "Container creation"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:174
+#: barbican/api/controllers/containers.py:175
 msgid "Secret provided for '{secret_name}' doesn't exist."
 msgstr ""
 
@@ -260,8 +260,8 @@ msgid ""
 "This only applies when using ContextMiddleware."
 msgstr ""
 
-#: barbican/api/middleware/context.py:120
-msgid "Invalid service catalog json."
+#: barbican/api/middleware/context.py:118
+msgid "Problem processing X-Service-Catalog"
 msgstr ""
 
 #: barbican/api/middleware/context.py:143
@@ -646,61 +646,67 @@ msgstr ""
 msgid "transport_key must be provided"
 msgstr ""
 
-#: barbican/model/repositories.py:398
+#: barbican/model/repositories.py:168
+msgid "No SQL connection configured"
+msgstr ""
+
+#: barbican/model/repositories.py:182
+msgid ""
+"Error configuring registry database with supplied sql_connection. Got "
+"error: {error}"
+msgstr ""
+
+#: barbican/model/repositories.py:410
 msgid "Must supply non-None {entity_name}."
 msgstr ""
 
-#: barbican/model/repositories.py:404
-msgid "Must supply {entity_name} with id=None(i.e. new entity)."
+#: barbican/model/repositories.py:416
+msgid "Must supply {entity_name} with id=None (i.e. new entity)."
 msgstr ""
 
-#: barbican/model/repositories.py:505
+#: barbican/model/repositories.py:492
 msgid "{entity_name} status is required."
 msgstr ""
 
-#: barbican/model/repositories.py:510
+#: barbican/model/repositories.py:497
 msgid "Invalid status '{status}' for {entity_name}."
 msgstr ""
 
-#: barbican/model/repositories.py:571
+#: barbican/model/repositories.py:517
 msgid "{entity_name} is missing query build method for get project entities."
 msgstr ""
 
-#: barbican/model/repositories.py:623
+#: barbican/model/repositories.py:569
 #, python-format
 msgid "Error deleting project entities for project_id=%s"
 msgstr ""
 
-#: barbican/model/repositories.py:657
+#: barbican/model/repositories.py:600
 msgid "No {entity_name} found with keystone-ID {id}"
 msgstr ""
 
-#: barbican/model/repositories.py:864
+#: barbican/model/repositories.py:794
 msgid "Tried to register crypto plugin with null or empty name."
 msgstr ""
 
-#: barbican/model/repositories.py:1231
+#: barbican/model/repositories.py:1131
 msgid "Could not find {entity_name}"
 msgstr ""
 
-#: barbican/model/repositories.py:1237
-msgid "Found more than one {entity_name}"
-msgstr ""
-
-#: barbican/model/repositories.py:1380
+#: barbican/model/repositories.py:1265
 msgid "No {entity} found with ID {id}"
 msgstr ""
 
-#: barbican/model/repositories.py:1386
+#: barbican/model/repositories.py:1271
 msgid "Entity ID {entity_id} not found"
 msgstr ""
 
-#: barbican/model/repositories.py:1392
-msgid "No {entity_name}'s found"
+#: barbican/model/repositories.py:1277
+msgid "No entities of type {entity_name} found"
 msgstr ""
 
-#: barbican/model/repositories.py:1398
-msgid "Entity ID {entity_id} already exists!"
+#: barbican/model/repositories.py:1283
+msgid "Entity '{entity_name}' already exists"
 msgstr ""
 
 #: barbican/openstack/common/eventlet_backdoor.py:142
@@ -1179,7 +1185,7 @@ msgid "Extension namespace to search for eventing plugins."
 msgstr ""
 
 #: barbican/plugin/interface/certificate_manager.py:91
-msgid "Certificate plugin \"{name}\" not found or configured."
+msgid "Certificate plugin \"{name}\" not found."
 msgstr ""
 
 #: barbican/plugin/interface/certificate_manager.py:95
@@ -1187,11 +1193,11 @@ msgid "Certificate plugin not found or configured."
 msgstr ""
 
 #: barbican/plugin/interface/certificate_manager.py:103
-msgid "Certificate event plugin \"{name}\" not found or configured."
+msgid "Certificate event plugin \"{name}\" not found."
 msgstr ""
 
 #: barbican/plugin/interface/certificate_manager.py:107
-msgid "Certificate event plugin not found or configured."
+msgid "Certificate event plugin not found."
 msgstr ""
 
 #: barbican/plugin/interface/certificate_manager.py:115
@@ -1227,7 +1233,7 @@ msgid "Secret store plugin not found for requested operation."
 msgstr ""
 
 #: barbican/plugin/interface/secret_store.py:67
-msgid "Secret Content Type of '{content_type}' not supported"
+msgid "A Content-Type of '{content_type}' for secrets is not supported"
 msgstr ""
 
 #: barbican/plugin/interface/secret_store.py:78
@@ -1335,8 +1341,11 @@ msgstr ""
 msgid "Update Order"
 msgstr ""
 
-#: barbican/tests/tasks/test_resources.py:142
-#: barbican/tests/tasks/test_resources.py:296
+#: barbican/tests/tasks/test_resources.py:146
 msgid "Process TypeOrder failure seen - please contact site administrator."
+msgstr ""
+
+#: barbican/tests/tasks/test_resources.py:223
+msgid "Update Order failure seen - please contact site administrator."
 msgstr ""
 

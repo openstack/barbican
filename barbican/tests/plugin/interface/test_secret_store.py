@@ -119,6 +119,25 @@ class WhenTestingSecretStorePluginManager(utils.BaseTestCase):
             keySpec,
         )
 
+    def test_get_store_no_plugin_found_by_name(self):
+        plugin = TestSecretStore([str.KeyAlgorithm.AES])
+        plugin_mock = mock.MagicMock(obj=plugin)
+        self.manager.extensions = [plugin_mock]
+
+        keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
+        plugin_name = 'plugin'
+
+        exception_result = self.assertRaises(
+            str.SecretStorePluginNotFound,
+            self.manager.get_plugin_store,
+            keySpec,
+            plugin_name=plugin_name
+        )
+
+        self.assertEqual(
+            'Secret store plugin "{name}" not found.'.format(name=plugin_name),
+            exception_result.message)
+
     def test_get_generate_no_plugin_found(self):
         self.manager.extensions = []
         keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
