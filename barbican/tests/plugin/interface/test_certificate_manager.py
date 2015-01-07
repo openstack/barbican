@@ -97,3 +97,60 @@ class WhenTestingCertificateEventPluginManager(testtools.TestCase):
             self.error_msg,
             self.retry_in_msec,
         )
+
+
+class WhenTestingCertificatePluginManager(testtools.TestCase):
+
+    def setUp(self):
+        super(WhenTestingCertificatePluginManager, self).setUp()
+        self.cert_spec = {}
+
+        self.plugin_returned = mock.MagicMock()
+        self.plugin_name = 'mock.MagicMock'
+        types_list = [cm.CertificateRequestType.SIMPLE_CMC_REQUEST,
+                      cm.CertificateRequestType.CUSTOM_REQUEST]
+        self.plugin_returned.supported_request_types.return_value = types_list
+        self.plugin_returned.supports.return_value = True
+        self.plugin_loaded = mock.MagicMock(obj=self.plugin_returned)
+        self.manager = cm.CertificatePluginManager()
+        self.manager.extensions = [self.plugin_loaded]
+
+    def test_get_plugin_by_name(self):
+        self.assertEqual(self.plugin_returned,
+                         self.manager.get_plugin_by_name(self.plugin_name))
+
+    def test_raises_error_with_no_plugin_by_name_found(self):
+        self.manager.extensions = []
+        self.assertRaises(
+            cm.CertificatePluginNotFound,
+            self.manager.get_plugin_by_name,
+            'any-name-here'
+        )
+
+    def test_get_plugin_no_request_type_provided(self):
+        # no request_type defaults to "custom"
+        self.assertEqual(self.plugin_returned,
+                         self.manager.get_plugin(self.cert_spec))
+
+    def test_get_plugin_request_type_supported(self):
+        self.cert_spec = {
+            cm.REQUEST_TYPE: cm.CertificateRequestType.SIMPLE_CMC_REQUEST}
+        self.assertEqual(self.plugin_returned,
+                         self.manager.get_plugin(self.cert_spec))
+
+    def test_raises_error_get_plugin_request_type_not_supported(self):
+        self.cert_spec = {
+            cm.REQUEST_TYPE: cm.CertificateRequestType.FULL_CMC_REQUEST}
+        self.assertRaises(
+            cm.CertificatePluginNotFound,
+            self.manager.get_plugin,
+            self.cert_spec
+        )
+
+    def test_raises_error_with_no_plugin_found(self):
+        self.manager.extensions = []
+        self.assertRaises(
+            cm.CertificatePluginNotFound,
+            self.manager.get_plugin,
+            self.cert_spec
+        )

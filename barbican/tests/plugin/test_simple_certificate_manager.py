@@ -48,6 +48,14 @@ class WhenTestingSimpleCertificateManagerPlugin(testtools.TestCase):
 
         self.assertTrue(result)
 
+    def test_supported_request_types(self):
+        result = self.plugin.supported_request_types()
+        supported_list = [cm.CertificateRequestType.CUSTOM_REQUEST,
+                          cm.CertificateRequestType.SIMPLE_CMC_REQUEST,
+                          cm.CertificateRequestType.FULL_CMC_REQUEST,
+                          cm.CertificateRequestType.STORED_KEY_REQUEST]
+        self.assertEqual(result, supported_list)
+
 
 class WhenTestingSimpleCertificateEventManagerPlugin(testtools.TestCase):
 

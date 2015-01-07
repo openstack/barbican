@@ -83,6 +83,17 @@ CA_PLUGIN_TYPE_SYMANTEC = "symantec"
 CA_TYPE = "ca_type"
 CA_SUBJECT_KEY_IDENTIFIER = "ca_subject_key_identifier"
 
+# field to get the certificate request type
+REQUEST_TYPE = "request_type"
+
+
+class CertificateRequestType(object):
+    """Constants to define the certificate request type."""
+    CUSTOM_REQUEST = "custom"
+    FULL_CMC_REQUEST = "full-cmc"
+    SIMPLE_CMC_REQUEST = "simple-cmc"
+    STORED_KEY_REQUEST = "stored-key"
+
 
 class CertificatePluginNotFound(exception.BarbicanException):
     """Raised when no certificate plugin supporting a request is available."""
@@ -266,6 +277,14 @@ class CertificatePluginBase(object):
         """
         raise NotImplementedError  # pragma: no cover
 
+    def supported_request_types(self):
+        """Returns the request_types supported by this plugin.
+
+        :returns: a list of the Barbican-core defined request_types
+                  supported by this plugin.
+        """
+        return [CertificateRequestType.CUSTOM_REQUEST]  # pragma: no cover
+
 
 class CertificateStatus(object):
     """Defines statuses for certificate request process.
@@ -339,9 +358,18 @@ class CertificatePluginManager(named.NamedExtensionManager):
                                  generate the certificate order
         :returns: CertificatePluginBase plugin implementation
         """
+        request_type = certificate_spec.get(
+            REQUEST_TYPE,
+            CertificateRequestType.CUSTOM_REQUEST)
+
         for ext in self.extensions:
+            supported_request_types = ext.obj.supported_request_types()
+            if request_type not in supported_request_types:
+                continue
+
             if ext.obj.supports(certificate_spec):
                 return ext.obj
+
         raise CertificatePluginNotFound()
 
     def get_plugin_by_name(self, plugin_name):
@@ -383,7 +411,7 @@ class _CertificateEventPluginManager(named.NamedExtensionManager,
     def get_plugin_by_name(self, plugin_name):
         """Gets a supporting certificate event plugin.
 
-        :returns: CertficiateEventPluginBase plugin implementation
+        :returns: CertificateEventPluginBase plugin implementation
         """
         for ext in self.extensions:
             if utils.generate_fullname_for(ext.obj) == plugin_name:

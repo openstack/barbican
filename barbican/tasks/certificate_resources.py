@@ -75,6 +75,10 @@ def issue_certificate_request(order_model, project_model, repos):
     # Locate a suitable plugin to issue a certificate.
     cert_plugin = cert.CertificatePluginManager().get_plugin(order_model.meta)
 
+    request_type = order_model.meta.get(cert.REQUEST_TYPE)
+    if request_type == cert.CertificateRequestType.STORED_KEY_REQUEST:
+        _generate_csr(order_model, repos)
+
     result = cert_plugin.issue_certificate_request(order_model.id,
                                                    order_model.meta,
                                                    plugin_meta)
@@ -234,6 +238,18 @@ def _get_plugin_meta(order_model, repos):
             order_model.id)
     else:
         return dict()
+
+
+def _generate_csr(order_model, repos):
+    """Generate a CSR from the public key and add to the order metadata."""
+    """
+    TODO(alee-3)  Implement this method.
+
+    * Get the public key from the container_ref
+    * Generate a CSR from the public key.
+    * Add the CSR to the order_metadata as the "request"
+    """
+    pass
 
 
 def _notify_ca_unavailable(order_model, result):
