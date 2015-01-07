@@ -16,6 +16,7 @@ import binascii
 
 from testtools import testcase
 
+from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import secret_models
@@ -66,6 +67,7 @@ secret_create_two_phase_data = {
 }
 
 
+@utils.parameterized_test_case
 class SecretsTestCase(base.TestCase):
 
     def setUp(self):
@@ -90,10 +92,20 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(resp.model.status, "ACTIVE")
         self.assertGreater(resp.model.secret_ref, 0)
 
+    @utils.parameterized_dataset({
+        'alphanumeric': ['1f34ds'],
+        'punctuation': ['~!@#$%^&*()_+`-={}[]|:;<>,.?'],
+        'uuid': ['54262d9d-4bc7-4821-8df0-dc2ca8e112bb'],
+        'len_255': [str(bytearray().zfill(255))],
+        'empty': [''],
+        'null': [None]
+    })
     @testcase.attr('positive')
-    def test_secret_get_defaults_metadata(self):
+    def test_secret_get_defaults_metadata_w_valid_name(self, name):
         """Covers getting and checking a secret's metadata."""
         test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        overrides = {'name': name}
+        test_model.override_values(**overrides)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 201)

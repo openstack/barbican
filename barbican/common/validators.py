@@ -178,7 +178,7 @@ class NewSecretValidator(ValidatorBase):
     def _extract_name(self, json_data):
         """Extracts and returns the name from the JSON data."""
         name = json_data.get('name')
-        if name:
+        if isinstance(name, six.string_types):
             return name.strip()
         return None
 

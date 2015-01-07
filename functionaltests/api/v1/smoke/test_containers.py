@@ -14,6 +14,7 @@
 # limitations under the License.
 from testtools import testcase
 
+from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import container_behaviors
 from functionaltests.api.v1.behaviors import secret_behaviors
@@ -70,6 +71,7 @@ create_container_empty_data = {
 }
 
 
+@utils.parameterized_test_case
 class ContainersTestCase(base.TestCase):
 
     def setUp(self):
@@ -149,11 +151,21 @@ class ContainersTestCase(base.TestCase):
         self.assertEqual(resp.status_code, 201)
         self.assertGreater(len(container_ref), 0)
 
+    @utils.parameterized_dataset({
+        'alphanumeric': ['a2j3j6ll9'],
+        'punctuation': ['~!@#$%^&*()_+`-={}[]|:;<>,.?'],
+        'len_255': [str(bytearray().zfill(255))],
+        'uuid': ['54262d9d-4bc7-4821-8df0-dc2ca8e112bb'],
+        'empty': ['']
+    })
     @testcase.attr('positive')
-    def test_container_get_defaults(self):
+    def test_container_get_defaults_w_valid_name(self, name):
         """Covers getting a generic container with a three secrets."""
         test_model = container_models.ContainerModel(
             **create_container_defaults_data)
+        overrides = {'name': name}
+        test_model.override_values(**overrides)
+
         secret_refs = []
         for secret_ref in test_model.secret_refs:
             secret_refs.append(secret_ref['secret_ref'])
@@ -166,9 +178,9 @@ class ContainersTestCase(base.TestCase):
 
         # Verify the response data
         self.assertEqual(get_resp.status_code, 200)
-        self.assertEqual(get_resp.model.name, "containername")
+        self.assertEqual(get_resp.model.name, test_model.name)
         self.assertEqual(get_resp.model.container_ref, container_ref)
-        self.assertEqual(get_resp.model.type, "generic")
+        self.assertEqual(get_resp.model.type, test_model.type)
 
         # Verify the secret refs in the response
         self.assertEqual(len(get_resp.model.secret_refs), 3)
