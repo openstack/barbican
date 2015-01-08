@@ -31,7 +31,7 @@ class OrderBehaviors(base_behaviors.BaseBehaviors):
         resp = self.client.post('orders', request_model=model,
                                 extra_headers=extra_headers)
 
-        returned_data = resp.json()
+        returned_data = self.get_json(resp)
         order_ref = returned_data.get('order_ref')
 
         # remember this order for our housekeeping cleanup
@@ -64,7 +64,7 @@ class OrderBehaviors(base_behaviors.BaseBehaviors):
                                params={'limit': limit, 'offset': offset},
                                extra_headers=extra_headers)
 
-        orders_list = resp.json()
+        orders_list = self.get_json(resp)
 
         orders, next_ref, prev_ref = self.client.get_list_of_models(
             orders_list, order_models.OrderModel)
