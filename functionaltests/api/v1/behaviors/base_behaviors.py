@@ -31,9 +31,9 @@ class BaseBehaviors(object):
         try:
             json_data = response.json()
         except ValueError as e:
+            self.LOG.exception(e)
             self.LOG.error("Error converting response to JSON: %s", e.message)
             self.LOG.error("Response Content: %s", response.content)
-            self.LOG.exception(e)
 
         return json_data
 
