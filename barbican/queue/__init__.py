@@ -105,8 +105,7 @@ def init(conf, is_server_side=True):
     global TRANSPORT, IS_SERVER_SIDE
     exmods = get_allowed_exmods()
     IS_SERVER_SIDE = is_server_side
-    TRANSPORT = messaging.get_transport(conf,
-                                        allowed_remote_exmods=exmods)
+    TRANSPORT = messaging.get_transport(conf, allowed_remote_exmods=exmods)
 
 
 def is_server_side():
@@ -115,7 +114,6 @@ def is_server_side():
 
 def cleanup():
     global TRANSPORT
-    assert TRANSPORT is not None
     TRANSPORT.cleanup()
     TRANSPORT = None
 
@@ -131,7 +129,6 @@ def get_client(target=None, version_cap=None, serializer=None):
     if not CONF.queue.enable:
         return None
 
-    assert TRANSPORT is not None
     queue_target = target or get_target()
     return messaging.RPCClient(TRANSPORT,
                                target=queue_target,
@@ -140,7 +137,6 @@ def get_client(target=None, version_cap=None, serializer=None):
 
 
 def get_server(target, endpoints, serializer=None):
-    assert TRANSPORT is not None
     return messaging.get_rpc_server(TRANSPORT,
                                     target,
                                     endpoints,

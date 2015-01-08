@@ -377,8 +377,8 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
     def test_map_type_ss_to_kmip_valid_type(self):
         ss_types = [secret_store.SecretType.SYMMETRIC]
         for ss_type in ss_types:
-            assert (
-                self.secret_store._map_type_ss_to_kmip(ss_type) is not None)
+            self.assertIsNotNone(
+                self.secret_store._map_type_ss_to_kmip(ss_type))
 
     def test_map_type_ss_to_kmip_invalid_type(self):
         self.assertIsNone(
@@ -387,8 +387,8 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
     def test_map_type_kmip_to_ss_valid_type(self):
         kmip_types = [enums.ObjectType.SYMMETRIC_KEY]
         for kmip_type in kmip_types:
-            assert (
-                self.secret_store._map_type_kmip_to_ss(kmip_type) is not None)
+            self.assertIsNotNone(
+                self.secret_store._map_type_kmip_to_ss(kmip_type))
 
     def test_map_type_kmip_to_ss_invalid_type(self):
         self.assertIsNone(
@@ -399,8 +399,8 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
                    secret_store.KeyAlgorithm.DES,
                    secret_store.KeyAlgorithm.DESEDE]
         for alg in ss_algs:
-            assert (
-                self.secret_store._map_algorithm_ss_to_kmip(alg) is not None)
+            self.assertIsNotNone(
+                self.secret_store._map_algorithm_ss_to_kmip(alg))
 
     def test_map_algorithm_ss_to_kmip_invalid_alg(self):
         self.assertIsNone(
@@ -411,8 +411,8 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
                      enums.CryptographicAlgorithm.DES,
                      enums.CryptographicAlgorithm.TRIPLE_DES]
         for alg in kmip_algs:
-            assert (
-                self.secret_store._map_algorithm_kmip_to_ss(alg) is not None)
+            self.assertIsNotNone(
+                self.secret_store._map_algorithm_kmip_to_ss(alg))
 
     def test_map_algorithm_kmip_to_ss_invalid_alg(self):
         self.assertIsNone(

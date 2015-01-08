@@ -475,7 +475,7 @@ class BaseSecretsResource(FunctionalTest):
             self.secret_req,
             expect_errors=True
         )
-        assert resp.status_int == 400
+        self.assertEqual(resp.status_int, 400)
 
 
 class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):

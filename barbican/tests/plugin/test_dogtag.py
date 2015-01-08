@@ -183,7 +183,8 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
         }
         result = self.plugin.get_secret(secret_metadata)
 
-        assert result.secret == test_key.exportKey('PEM').encode('utf-8')
+        self.assertEqual(result.secret,
+                         test_key.exportKey('PEM').encode('utf-8'))
 
     def test_get_public_key(self):
         test_public_key = RSA.generate(2048).publickey()
@@ -200,8 +201,8 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
         }
         result = self.plugin.get_secret(secret_metadata)
 
-        assert result.secret == (test_public_key.exportKey('PEM')
-                                 .encode('utf-8'))
+        self.assertEqual(result.secret,
+                         test_public_key.exportKey('PEM').encode('utf-8'))
 
     def test_store_passphrase_for_using_in_private_key_retrieval(self):
 
@@ -217,9 +218,10 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
 
         asym_key_DTO = self.plugin.generate_asymmetric_key(key_spec)
 
-        assert asym_key_DTO.private_key_meta[
-            dogtag_import.DogtagKRAPlugin.PASSPHRASE_KEY_ID
-        ] == '1'
+        self.assertEqual(
+            asym_key_DTO.private_key_meta[
+                dogtag_import.DogtagKRAPlugin.PASSPHRASE_KEY_ID],
+            '1')
 
         self.keyclient_mock.generate_asymmetric_key.assert_called_once_with(
             mock.ANY,
