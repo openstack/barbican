@@ -75,7 +75,8 @@ class BaseModel(object):
             json_dict = json.loads(serialized_str)
             return cls.dict_to_obj(json_dict)
         except TypeError as e:
-            LOG.error('Couldn\'t deserialize input: %s', e)
+            LOG.error('Couldn\'t deserialize input: %s\n Because: %s',
+                      serialized_str, e)
 
     @classmethod
     def dict_to_obj(cls, input_dict):
