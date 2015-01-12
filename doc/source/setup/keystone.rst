@@ -42,9 +42,7 @@ the get version call.
        [filter:keystone_authtoken]
        paste.filter_factory = keystonemiddleware.auth_token:filter_factory
        signing_dir = /tmp/barbican/cache
-       auth_host = {YOUR_KEYSTONE_ENDPOINT}
-       auth_port = 35357
-       auth_protocol = http
+       identity_uri = http://{YOUR_KEYSTONE_ENDPOINT}:35357
        admin_tenant_name = service
        admin_user = {YOUR_KEYSTONE_USERNAME}
        admin_password = {YOUR_KEYSTONE_PASSWORD}
