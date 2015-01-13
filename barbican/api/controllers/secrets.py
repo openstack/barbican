@@ -81,10 +81,14 @@ class SecretController(object):
                                        transport_key_repo=transport_key_repo)
 
     @pecan.expose(generic=True)
+    def index(self, **kwargs):
+        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
+
+    @index.when(method='GET')
     @allow_all_content_types
     @controllers.handle_exceptions(u._('Secret retrieval'))
     @controllers.enforce_rbac('secret:get')
-    def index(self, external_project_id, **kwargs):
+    def on_get(self, external_project_id, **kwargs):
 
         secret = self.repos.secret_repo.get(
             entity_id=self.secret_id,
@@ -215,10 +219,14 @@ class SecretsController(object):
                                 self.repos.secret_meta_repo,
                                 self.repos.transport_key_repo), remainder
 
-    @pecan.expose(generic=True, template='json')
+    @pecan.expose(generic=True)
+    def index(self, **kwargs):
+        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
+
+    @index.when(method='GET', template='json')
     @controllers.handle_exceptions(u._('Secret(s) retrieval'))
     @controllers.enforce_rbac('secrets:get')
-    def index(self, external_project_id, **kw):
+    def on_get(self, external_project_id, **kw):
         def secret_fields(field):
             return putil.mime_types.augment_fields_with_content_types(field)
 

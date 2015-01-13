@@ -41,10 +41,14 @@ class ContainerConsumerController(object):
         self.consumer_repo = consumer_repo or repo.ContainerConsumerRepo()
         self.validator = validators.ContainerConsumerValidator()
 
-    @pecan.expose(generic=True, template='json')
+    @pecan.expose(generic=True)
+    def index(self):
+        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
+
+    @index.when(method='GET', template='json')
     @controllers.handle_exceptions(u._('ContainerConsumer retrieval'))
     @controllers.enforce_rbac('consumer:get')
-    def index(self, external_project_id):
+    def on_get(self, external_project_id):
         consumer = self.consumer_repo.get(
             entity_id=self.consumer_id,
             external_project_id=external_project_id,
@@ -75,10 +79,14 @@ class ContainerConsumersController(object):
         return ContainerConsumerController(consumer_id, self.project_repo,
                                            self.consumer_repo), remainder
 
-    @pecan.expose(generic=True, template='json')
+    @pecan.expose(generic=True)
+    def index(self, **kwargs):
+        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
+
+    @index.when(method='GET', template='json')
     @controllers.handle_exceptions(u._('ContainerConsumers(s) retrieval'))
     @controllers.enforce_rbac('consumers:get')
-    def index(self, external_project_id, **kw):
+    def on_get(self, external_project_id, **kw):
         LOG.debug('Start consumers on_get '
                   'for container-ID %s:', self.container_id)
 

@@ -82,10 +82,14 @@ class OrderController(object):
         self.queue = queue_resource or async_client.TaskClient()
         self.type_order_validator = validators.TypeOrderValidator()
 
-    @pecan.expose(generic=True, template='json')
+    @pecan.expose(generic=True)
+    def index(self, **kwargs):
+        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
+
+    @index.when(method='GET', template='json')
     @controllers.handle_exceptions(u._('Order retrieval'))
     @controllers.enforce_rbac('order:get')
-    def index(self, external_project_id):
+    def on_get(self, external_project_id):
         order = self.order_repo.get(entity_id=self.order_id,
                                     external_project_id=external_project_id,
                                     suppress_exception=True)
@@ -168,10 +172,14 @@ class OrdersController(object):
     def _lookup(self, order_id, *remainder):
         return OrderController(order_id, self.order_repo), remainder
 
-    @pecan.expose(generic=True, template='json')
+    @pecan.expose(generic=True)
+    def index(self, **kwargs):
+        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
+
+    @index.when(method='GET', template='json')
     @controllers.handle_exceptions(u._('Order(s) retrieval'))
     @controllers.enforce_rbac('orders:get')
-    def index(self, external_project_id, **kw):
+    def on_get(self, external_project_id, **kw):
         LOG.debug('Start orders on_get '
                   'for project-ID %s:', external_project_id)
 
@@ -195,7 +203,7 @@ class OrdersController(object):
 
         return orders_resp_overall
 
-    @pecan.expose(generic=True, template='json')
+    @index.when(method='PUT', template='json')
     @controllers.handle_exceptions(u._('Order update'))
     @controllers.enforce_rbac('orders:put')
     def on_put(self, external_project_id, **kwargs):

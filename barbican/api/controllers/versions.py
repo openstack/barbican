@@ -25,9 +25,13 @@ class VersionController(object):
     def __init__(self):
         LOG.debug('=== Creating VersionController ===')
 
-    @pecan.expose('json')
-    @controllers.handle_exceptions(u._('Version retrieval'))
+    @pecan.expose(generic=True)
     def index(self):
+        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
+
+    @index.when(method='GET', template='json')
+    @controllers.handle_exceptions(u._('Version retrieval'))
+    def on_get(self):
         return {
             'v1': 'current',
             'build': version.__version__

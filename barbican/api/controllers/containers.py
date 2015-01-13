@@ -48,10 +48,14 @@ class ContainerController(object):
             container_id, self.project_repo, self.consumer_repo,
             self.container_repo)
 
-    @pecan.expose(generic=True, template='json')
+    @pecan.expose(generic=True)
+    def index(self, **kwargs):
+        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
+
+    @index.when(method='GET', template='json')
     @controllers.handle_exceptions(u._('Container retrieval'))
     @controllers.enforce_rbac('container:get')
-    def index(self, external_project_id):
+    def on_get(self, external_project_id):
         container = self.container_repo.get(
             entity_id=self.container_id,
             external_project_id=external_project_id,
@@ -111,10 +115,14 @@ class ContainersController(object):
                                     self.container_repo, self.consumer_repo),
                 remainder)
 
-    @pecan.expose(generic=True, template='json')
+    @pecan.expose(generic=True)
+    def index(self, **kwargs):
+        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
+
+    @index.when(method='GET', template='json')
     @controllers.handle_exceptions(u._('Containers(s) retrieval'))
     @controllers.enforce_rbac('containers:get')
-    def index(self, project_id, **kw):
+    def on_get(self, project_id, **kw):
         LOG.debug('Start containers on_get for project-ID %s:', project_id)
 
         result = self.container_repo.get_by_create_date(
