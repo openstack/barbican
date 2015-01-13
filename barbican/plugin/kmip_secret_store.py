@@ -27,7 +27,8 @@ from kmip.core.factories import credentials
 from kmip.core.factories import secrets
 from kmip.core import objects as kmip_objects
 
-from barbican import i18n as u
+
+from barbican import i18n as u  # noqa
 from barbican.openstack.common import log as logging
 from barbican.plugin.interface import secret_store as ss
 
@@ -63,6 +64,14 @@ kmip_opts = [
                default=None,
                help=u._('File path to concatenated "certification authority" '
                         'certificates'),
+               ),
+    cfg.StrOpt('certfile',
+               default=None,
+               help=u._('File path to local client certificate'),
+               ),
+    cfg.StrOpt('keyfile',
+               default=None,
+               help=u._('File path to local client certificate keyfile'),
                )
 ]
 CONF.register_group(kmip_opt_group)
@@ -101,6 +110,8 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 enums.CryptographicAlgorithm.TRIPLE_DES}
         }
 
+        # TODO(tkelsey): check the certificate file has good permissions
+
         credential_type = credentials.CredentialType.USERNAME_AND_PASSWORD
         credential_value = {'Username': conf.kmip_plugin.username,
                             'Password': conf.kmip_plugin.password}
@@ -111,7 +122,11 @@ class KMIPSecretStore(ss.SecretStoreBase):
             host=conf.kmip_plugin.host,
             port=int(conf.kmip_plugin.port),
             ssl_version=conf.kmip_plugin.ssl_version,
-            ca_certs=conf.kmip_plugin.ca_certs)
+            ca_certs=conf.kmip_plugin.ca_certs,
+            certfile=conf.kmip_plugin.certfile,
+            keyfile=conf.kmip_plugin.keyfile,
+            username=conf.kmip_plugin.username,
+            password=conf.kmip_plugin.password)
 
     def generate_symmetric_key(self, key_spec):
         """Generate a symmetric key.
