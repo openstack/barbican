@@ -220,3 +220,79 @@ class WhenCreatingOrderRetryTask(utils.BaseTestCase):
             order_retry_task.get_retry_params(),
             (["one", "two"], {"three": "four"}),
         )
+
+
+class WhenCreatingNewCertificateAuthority(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenCreatingNewCertificateAuthority, self).setUp()
+        expiration = (datetime.datetime.utcnow() +
+                      datetime.timedelta(minutes=10))
+        self.parsed_ca = {'plugin_name': 'dogtag_plugin',
+                          'plugin_ca_id': 'ca_master',
+                          'expiration': expiration.isoformat(),
+                          'name': 'Dogtag CA',
+                          'description': 'Master CA for Dogtag plugin',
+                          'ca_signing_certificate': 'XXXXX',
+                          'intermediates': 'YYYYY'}
+
+    def test_new_ca_is_created_from_dict(self):
+        ca = models.CertificateAuthority(self.parsed_ca)
+        self.assertEqual(self.parsed_ca['plugin_name'], ca.plugin_name)
+        self.assertEqual(self.parsed_ca['plugin_ca_id'], ca.plugin_ca_id)
+        self.assertEqual(self.parsed_ca['name'], ca.ca_meta['name'].value)
+        self.assertEqual(self.parsed_ca['description'],
+                         ca.ca_meta['description'].value)
+        self.assertEqual(self.parsed_ca['ca_signing_certificate'],
+                         ca.ca_meta['ca_signing_certificate'].value)
+        self.assertEqual(self.parsed_ca['intermediates'],
+                         ca.ca_meta['intermediates'].value)
+        self.assertIsInstance(ca.expiration, datetime.datetime)
+        self.assertEqual(ca.created_at, ca.updated_at)
+
+
+class WhenCreatingNewProjectCertificateAuthority(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenCreatingNewProjectCertificateAuthority, self).setUp()
+        expiration = (datetime.datetime.utcnow() +
+                      datetime.timedelta(minutes=10))
+        self.parsed_ca = {'plugin_name': 'dogtag_plugin',
+                          'plugin_ca_id': 'ca_master',
+                          'expiration': expiration.isoformat(),
+                          'name': 'Dogtag CA',
+                          'description': 'Master CA for Dogtag plugin',
+                          'ca_signing_certificate': 'XXXXX',
+                          'intermediates': 'YYYYY'}
+
+    def test_create_new_project_ca(self):
+        ca = models.CertificateAuthority(self.parsed_ca)
+        ca.id = '67890'
+        project = models.Project()
+        project.id = '12345'
+        project_ca = models.ProjectCertificateAuthority(project.id, ca.id)
+
+        self.assertEqual(ca.id, project_ca.ca_id)
+        self.assertEqual(project.id, project_ca.project_id)
+
+
+class WhenCreatingNewPreferredCertificateAuthority(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenCreatingNewPreferredCertificateAuthority, self).setUp()
+        expiration = (datetime.datetime.utcnow() +
+                      datetime.timedelta(minutes=10))
+        self.parsed_ca = {'plugin_name': 'dogtag_plugin',
+                          'plugin_ca_id': 'ca_master',
+                          'expiration': expiration.isoformat(),
+                          'name': 'Dogtag CA',
+                          'description': 'Master CA for Dogtag plugin',
+                          'ca_signing_certificate': 'XXXXX',
+                          'intermediates': 'YYYYY'}
+
+    def test_create_new_preferred_ca(self):
+        ca = models.CertificateAuthority(self.parsed_ca)
+        ca.id = '67890'
+        project = models.Project()
+        project.id = '12345'
+        preferred_ca = models.PreferredCertificateAuthority(project.id, ca.id)
+
+        self.assertEqual(ca.id, preferred_ca.ca_id)
+        self.assertEqual(project.id, preferred_ca.project_id)

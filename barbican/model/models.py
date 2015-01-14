@@ -28,6 +28,7 @@ from sqlalchemy import types as sql_types
 
 from barbican.common import exception
 from barbican.common import utils
+from barbican import i18n as u
 from barbican.openstack.common import jsonutils as json
 from barbican.openstack.common import timeutils
 
@@ -251,6 +252,7 @@ class Project(BASE, ModelBase):
     secrets = orm.relationship("ProjectSecret", backref="projects")
     keks = orm.relationship("KEKDatum", backref="project")
     containers = orm.relationship("Container", backref="project")
+    cas = orm.relationship("ProjectCertificateAuthority", backref="project")
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -714,10 +716,213 @@ class TransportKey(BASE, ModelBase):
         return {'transport_key_id': self.id,
                 'plugin_name': self.plugin_name}
 
+
+class CertificateAuthority(BASE, ModelBase):
+    """CertificateAuthority model to specify the CAs available to Barbican
+
+    Represents the CAs available for certificate issuance to Barbican.
+    """
+
+    __tablename__ = 'certificate_authorities'
+
+    plugin_name = sa.Column(sa.String(255), nullable=False)
+    plugin_ca_id = sa.Column(sa.Text, nullable=False)
+    expiration = sa.Column(sa.DateTime, default=None)
+
+    ca_meta = orm.relationship(
+        'CertificateAuthorityMetadatum',
+        collection_class=col.attribute_mapped_collection('key'),
+        backref="ca",
+        cascade="all, delete-orphan"
+    )
+
+    def __init__(self, parsed_ca_in):
+        """Creates certificate authority entity ."""
+        super(CertificateAuthority, self).__init__()
+
+        msg = u._("Must supply Non-None {0} argument "
+                  "for CertificateAuthority entry.")
+
+        parsed_ca = dict(parsed_ca_in)
+
+        plugin_name = parsed_ca.pop('plugin_name', None)
+        if plugin_name is None:
+            raise exception.MissingArgumentError(msg.format("plugin_name"))
+        self.plugin_name = plugin_name
+
+        plugin_ca_id = parsed_ca.pop('plugin_ca_id', None)
+        if plugin_ca_id is None:
+            raise exception.MissingArgumentError(msg.format("plugin_ca_id"))
+        self.plugin_ca_id = plugin_ca_id
+
+        expiration = parsed_ca.pop('expiration', None)
+        self.expiration = self._iso_to_datetime(expiration)
+
+        for key in parsed_ca:
+            meta = CertificateAuthorityMetadatum(key, parsed_ca[key])
+            self.ca_meta[key] = meta
+
+        self.status = States.ACTIVE
+
+    def _do_delete_children(self, session):
+        """Sub-class hook: delete children relationships."""
+        for k, v in self.ca_meta.items():
+            v.delete(session)
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        if self.expiration:
+            expiration = self.expiration.isoformat()
+        else:
+            expiration = None
+
+        return {
+            'ca_id': self.id,
+            'plugin_name': self.plugin_name,
+            'plugin_ca_id': self.plugin_ca_id,
+            'expiration': expiration,
+            'meta': [
+                {
+                    meta['key']: meta['value']
+                } for key, meta in self.ca_meta.items()
+            ]
+        }
+
+
+class CertificateAuthorityMetadatum(BASE, ModelBase):
+    """Represents CA metadatum for a single key-value pair."""
+
+    __tablename__ = "certificate_authority_metadata"
+
+    key = sa.Column(sa.String(255), primary_key=True)
+    value = sa.Column(sa.String(255), nullable=False)
+    ca_id = sa.Column(
+        sa.String(36), sa.ForeignKey('certificate_authorities.id'),
+        primary_key=True)
+
+    __table_args__ = (sa.UniqueConstraint(
+        'ca_id', 'key', name='_certificate_authority_metadatum_uc'),)
+
+    def __init__(self, key, value):
+        super(CertificateAuthorityMetadatum, self).__init__()
+
+        msg = u._("Must supply non-None {0} argument "
+                  "for CertificateAuthorityMetadatum entry.")
+
+        if key is None:
+            raise exception.MissingArgumentError(msg.format("key"))
+        self.key = key
+
+        if value is None:
+            raise exception.MissingArgumentError(msg.format("value"))
+        self.value = value
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {
+            'key': self.key,
+            'value': self.value
+        }
+
+
+class ProjectCertificateAuthority(BASE, ModelBase):
+    """Stores CAs available for a project.
+
+    Admins can define a set of CAs that are available for use in a particular
+    project.  There can be multiple entries for any given project.
+    """
+
+    __tablename__ = 'project_certificate_authorities'
+
+    project_id = sa.Column(sa.String(36),
+                           sa.ForeignKey('projects.id'),
+                           primary_key=True)
+
+    ca_id = sa.Column(sa.String(36),
+                      sa.ForeignKey('certificate_authorities.id'),
+                      primary_key=True)
+
+    ca = orm.relationship("CertificateAuthority", backref="project_cas")
+
+    __table_args__ = (sa.UniqueConstraint(
+        'project_id', 'ca_id', name='_project_certificate_authority_uc'),)
+
+    def __init__(self, project_id, ca_id):
+        """Registers a Consumer to a Container."""
+        super(ProjectCertificateAuthority, self).__init__()
+
+        msg = u._("Must supply non-None {0} argument "
+                  "for ProjectCertificateAuthority entry.")
+
+        if project_id is None:
+            raise exception.MissingArgumentError(msg.format("project_id"))
+        self.project_id = project_id
+
+        if ca_id is None:
+            raise exception.MissingArgumentError(msg.format("ca_id"))
+        self.ca_id = ca_id
+
+        self.status = States.ACTIVE
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {'project_id': self.project_id,
+                'ca_id': self.ca_id}
+
+
+class PreferredCertificateAuthority(BASE, ModelBase):
+    """Stores preferred CAs for any project.
+
+    Admins can define a set of CAs available for issuance requests for
+    any project in the ProjectCertificateAuthority table..
+    """
+
+    __tablename__ = 'preferred_certificate_authorities'
+
+    project_id = sa.Column(sa.String(36),
+                           sa.ForeignKey('projects.id'),
+                           primary_key=True,
+                           unique=True)
+
+    ca_id = sa.Column(sa.String(36),
+                      sa.ForeignKey('certificate_authorities.id'))
+
+    project = orm.relationship('Project',
+                               backref=orm.backref('preferred_ca'),
+                               uselist=False)
+
+    ca = orm.relationship('CertificateAuthority',
+                          backref=orm.backref('preferred_ca'))
+
+    def __init__(self, project_id, ca_id):
+        """Registers a Consumer to a Container."""
+        super(PreferredCertificateAuthority, self).__init__()
+
+        msg = u._("Must supply non-None {0} argument "
+                  "for PreferredCertificateAuthority entry.")
+
+        if project_id is None:
+            raise exception.MissingArgumentError(msg.format("project_id"))
+        self.project_id = project_id
+
+        if ca_id is None:
+            raise exception.MissingArgumentError(msg.format("ca_id"))
+        self.ca_id = ca_id
+
+        self.status = States.ACTIVE
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {'project_id': self.project_id,
+                'ca_id': self.ca_id}
+
+
 # Keep this tuple synchronized with the models in the file
 MODELS = [ProjectSecret, Project, Secret, EncryptedDatum, Order, Container,
           ContainerConsumerMetadatum, ContainerSecret, TransportKey,
-          SecretStoreMetadatum, OrderPluginMetadatum, KEKDatum]
+          SecretStoreMetadatum, OrderPluginMetadatum, KEKDatum,
+          CertificateAuthority, CertificateAuthorityMetadatum,
+          ProjectCertificateAuthority, PreferredCertificateAuthority]
 
 
 def register_models(engine):
