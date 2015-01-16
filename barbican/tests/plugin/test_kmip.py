@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import socket
+import stat
 
 import mock
 
@@ -420,3 +421,34 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
     def test_map_algorithm_kmip_to_ss_invalid_alg(self):
         self.assertIsNone(
             self.secret_store._map_algorithm_kmip_to_ss('bad_alg'))
+
+    def test_check_keyfile_permissions_good(self):
+        config = {'return_value.st_mode':
+                  (stat.S_IRUSR | stat.S_IFREG)}
+        func = 'barbican.plugin.kmip_secret_store.LOG.warning'
+
+        with mock.patch('os.stat', **config):
+            with mock.patch(func) as m:
+                self.secret_store._check_keyfile_permissions('/some/path/')
+                self.assertEqual(len(m.mock_calls), 0)
+
+    def test_check_keyfile_permissions_bad(self):
+        config = {'return_value.st_mode':
+                  (stat.S_IWOTH | stat.S_IFREG)}
+        func = 'barbican.plugin.kmip_secret_store.LOG.warning'
+
+        with mock.patch('os.stat', **config):
+            with mock.patch(func) as m:
+                self.secret_store._check_keyfile_permissions('/some/path/')
+                self.assertEqual(len(m.mock_calls), 1)
+
+    def test_checks_keyfile_permissions(self):
+        config = {'return_value': True}
+        func = ("barbican.plugin.kmip_secret_store."
+                "KMIPSecretStore._check_keyfile_permissions")
+
+        with mock.patch(func, **config) as m:
+            CONF = cfg.CONF
+            CONF.kmip_plugin.keyfile = '/some/path'
+            kss.KMIPSecretStore(CONF)
+            self.assertEqual(len(m.mock_calls), 1)
