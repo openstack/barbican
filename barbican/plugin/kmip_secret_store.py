@@ -82,6 +82,11 @@ CONF.register_opts(kmip_opts, group=kmip_opt_group)
 attribute_debug_msg = "Created attribute type %s with value %s"
 
 
+class KMIPSecretStoreError(Exception):
+    def __init__(self, what):
+        super(KMIPSecretStoreError, self).__init__(what)
+
+
 class KMIPSecretStore(ss.SecretStoreBase):
 
     KEY_UUID = "key_uuid"
@@ -113,7 +118,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         }
 
         if conf.kmip_plugin.keyfile is not None:
-            self._check_keyfile_permissions(conf.kmip_plugin.keyfile)
+            self._validate_keyfile_permissions(conf.kmip_plugin.keyfile)
 
         credential_type = credentials.CredentialType.USERNAME_AND_PASSWORD
         credential_value = {'Username': conf.kmip_plugin.username,
@@ -514,15 +519,19 @@ class KMIPSecretStore(ss.SecretStoreBase):
         LOG.debug("ERROR from KMIP server: %s", msg)
         raise ss.SecretGeneralException(msg)
 
-    def _check_keyfile_permissions(self, path):
+    def _validate_keyfile_permissions(self, path):
         """Check that file has permissions appropriate for a sensitive key
 
         Key files are extremely sensitive, they should be owned by the user
         who they relate to. They should be readable only (to avoid accidental
         changes). They should not be readable or writeable by any other user.
+
+        :raises: KMIPSecretStoreError
         """
         expected = (stat.S_IRUSR | stat.S_IFREG)  # 0o100400
         st = os.stat(path)
         if st.st_mode != expected:
-            LOG.warning(u._('Poor key file permissions found, recommend 400 '
-                            'for path: {file_path}').format(file_path=path))
+            raise KMIPSecretStoreError(
+                u._('Bad key file permissions found, expected 400 '
+                    'for path: {file_path}').format(file_path=path)
+            )
