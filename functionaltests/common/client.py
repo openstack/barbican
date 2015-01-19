@@ -71,9 +71,14 @@ class BarbicanClient(object):
         str_request = self.stringify_request(request_kwargs, response)
         LOG.info('Request (%s)\n %s', test_name, str_request)
 
+    def _status_is_2xx_success(self, status_code):
+        return status_code >= 200 and status_code < 300
+
     def attempt_to_deserialize(self, response, model_type):
-        if model_type and hasattr(model_type, 'json_to_obj'):
+        if (self._status_is_2xx_success(response.status_code) and
+                model_type and hasattr(model_type, 'json_to_obj')):
             return model_type.json_to_obj(response.content)
+        return None
 
     def attempt_to_serialize(self, model):
         if model and hasattr(model, 'obj_to_json'):
