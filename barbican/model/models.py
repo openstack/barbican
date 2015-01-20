@@ -548,6 +548,28 @@ class OrderPluginMetadatum(BASE, ModelBase):
                 'value': self.value}
 
 
+class OrderRetryTask(BASE):
+
+    __tablename__ = "order_retry_tasks"
+    __table_args__ = {"mysql_engine": "InnoDB"}
+    __table_initialized__ = False
+
+    id = sa.Column(
+        sa.String(36), primary_key=True, default=utils.generate_uuid,
+    )
+    order_id = sa.Column(
+        sa.String(36), sa.ForeignKey("orders.id"), nullable=False,
+    )
+    retry_task = sa.Column(sa.Text, nullable=False)
+    retry_at = sa.Column(sa.DateTime, default=None, nullable=False)
+    retry_args = sa.Column(sa.Text, nullable=False)
+    retry_kwargs = sa.Column(sa.Text, nullable=False)
+    retry_count = sa.Column(sa.Integer, nullable=False, default=0)
+
+    def get_retry_params(self):
+        return json.loads(self.retry_args), json.loads(self.retry_kwargs)
+
+
 class Container(BASE, ModelBase):
     """Represents a Container for Secrets in the datastore.
 
