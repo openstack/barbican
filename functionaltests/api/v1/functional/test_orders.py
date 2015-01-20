@@ -127,12 +127,10 @@ class OrdersTestCase(base.TestCase):
 
         # verify the new secret's name matches the name in the secret ref
         # in the newly created order.
-        secret_id_from_ref = utils.get_id_from_ref(order_resp.model.secret_ref)
         secret_resp = self.secret_behaviors.get_secret_metadata(
             order_resp.model.secret_ref)
         self.assertEqual(secret_resp.status_code, 200)
-        self.assertGreater(len(secret_id_from_ref), 0)
-        self.assertEqual(secret_resp.model.name, secret_id_from_ref)
+        self.assertEqual(secret_resp.model.name, test_model.meta['name'])
 
     @testcase.attr('positive')
     def test_order_and_secret_metadata_same(self):

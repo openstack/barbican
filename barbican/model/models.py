@@ -323,7 +323,7 @@ class Secret(BASE, ModelBase):
 
         return {
             'secret_id': self.id,
-            'name': self.name or self.id,
+            'name': self.name,
             'expiration': expiration,
             'algorithm': self.algorithm,
             'bit_length': self.bit_length,
@@ -601,7 +601,7 @@ class Container(BASE, ModelBase):
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
         return {'container_id': self.id,
-                'name': self.name or self.id,
+                'name': self.name,
                 'type': self.type,
                 'secret_refs': [
                     {

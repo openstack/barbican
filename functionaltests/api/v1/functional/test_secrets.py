@@ -439,7 +439,8 @@ class SecretsTestCase(base.TestCase):
         'punctuation': ['~!@#$%^&*()_+`-={}[]|:;<>,.?'],
         'uuid': ['54262d9d-4bc7-4821-8df0-dc2ca8e112bb'],
         'len_255': [base.TestCase.max_sized_field],
-        'empty': ['']
+        'empty': [''],
+        'null': [None]
     })
     @testcase.attr('positive')
     def test_secret_create_defaults_valid_name(self, name):
