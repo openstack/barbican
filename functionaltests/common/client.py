@@ -52,15 +52,34 @@ class BarbicanClient(object):
             'Content-Type': 'application/json'
         }
 
+    def _attempt_to_stringify_content(self, content, content_tag):
+        if content is None:
+            return content
+        try:
+            # NOTE(jaosorior): The content is decoded as ascii since the
+            # logging module has problems with utf-8 strings and will end up
+            # trying to decode this as ascii.
+            return content.decode('ascii')
+        except UnicodeDecodeError:
+            # NOTE(jaosorior): Since we are using base64 as default and this is
+            # only for logging (in order to debug); Lets not put too much
+            # effort in this and just use encoded string.
+            return content.encode('base64')
+
     def stringify_request(self, request_kwargs, response):
         format_kwargs = {
             'code': response.status_code,
             'method': request_kwargs.get('method'),
             'url': request_kwargs.get('url'),
             'headers': response.request.headers,
-            'body': request_kwargs.get('data'),
-            'response_body': response.content
         }
+
+        format_kwargs['body'] = self._attempt_to_stringify_content(
+            request_kwargs.get('data'), 'body')
+
+        format_kwargs['response_body'] = self._attempt_to_stringify_content(
+            response.content, 'response_body')
+
         return ('{code} {method} {url}\n'
                 'Request Headers: {headers}\n'
                 'Request Body: {body}\n'
