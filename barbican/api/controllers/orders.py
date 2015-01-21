@@ -43,16 +43,6 @@ def _order_update_not_supported():
     pecan.abort(405, u._("Order update is not supported."))
 
 
-def _order_type_not_in_order():
-    """Throw exception that order type is not available in the order."""
-    pecan.abort(400, u._("Order type is expected but not received."))
-
-
-def _order_meta_not_in_update():
-    """Throw exception that order meta is not available for an order update."""
-    pecan.abort(400, u._("Order meta is expected for order updates."))
-
-
 def _order_update_not_supported_for_type(order_type):
     """Throw exception that update is not supported."""
     pecan.abort(400, u._("Updates are not supported for order type "
@@ -102,14 +92,8 @@ class OrderController(object):
     @controllers.enforce_rbac('order:put')
     @controllers.enforce_content_types(['application/json'])
     def on_put(self, external_project_id, **kwargs):
-        raw_body = pecan.request.body
-        order_type = None
-        if raw_body:
-            unvalidated_body = api.load_body(pecan.request)
-            order_type = unvalidated_body.get('type')
-
-        if not order_type:
-            _order_type_not_in_order()
+        body = api.load_body(pecan.request,
+                             validator=self.type_order_validator)
 
         order_model = self.order_repo.get(
             entity_id=self.order_id,
@@ -118,6 +102,8 @@ class OrderController(object):
 
         if not order_model:
             _order_not_found()
+
+        order_type = body.get('type')
 
         if order_model.type != order_type:
             order_cannot_modify_order_type()
@@ -128,19 +114,11 @@ class OrderController(object):
         if models.States.PENDING != order_model.status:
             _order_cannot_be_updated_if_not_pending(order_model.status)
 
-        body = api.load_body(pecan.request,
-                             validator=self.type_order_validator)
-
-        updated_meta = body.get('meta')
-
-        if not updated_meta:
-            _order_meta_not_in_update()
-
-        # TODO(chellygel): Put updated_meta into a separate order association
+        # TODO(chellygel): Put 'meta' into a separate order association
         # entity.
         self.queue.update_order(order_id=self.order_id,
                                 project_id=external_project_id,
-                                updated_meta=updated_meta)
+                                updated_meta=body.get('meta'))
 
     @index.when(method='DELETE')
     @controllers.handle_exceptions(u._('Order deletion'))

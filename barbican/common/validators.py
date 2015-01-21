@@ -270,7 +270,8 @@ class TypeOrderValidator(ValidatorBase):
         self.schema = {
             "type": "object",
             "$schema": "http://json-schema.org/draft-03/schema",
-            "properties": {"meta": {"type": "object"},
+            "properties": {"meta": {"type": "object",
+                                    "required": True},
                            "type": {"type": "string",
                                     "required": True,
                                     "enum": ['key', 'asymmetric',
@@ -302,9 +303,6 @@ class TypeOrderValidator(ValidatorBase):
     def _validate_key_meta(self, key_meta, schema_name):
         """Validation specific to meta for key type order."""
 
-        self._assert_validity(key_meta is not None,
-                              schema_name,
-                              u._("'meta' attributes is required"), "meta")
         secret_validator = NewSecretValidator()
         secret_validator.validate(key_meta, parent_schema=self.name)
 
@@ -320,9 +318,6 @@ class TypeOrderValidator(ValidatorBase):
 
     def _validate_asymmetric_meta(self, asymmetric_meta, schema_name):
         """Validation specific to meta for asymmetric type order."""
-        self._assert_validity(asymmetric_meta is not None,
-                              schema_name,
-                              u._("'meta' attributes is required"), "meta")
 
         # Validate secret metadata.
         secret_validator = NewSecretValidator()
@@ -351,9 +346,6 @@ class TypeOrderValidator(ValidatorBase):
 
     def _validate_certificate_meta(self, certificate_meta, schema_name):
         """Validation specific to meta for certificate type order."""
-        self._assert_validity(certificate_meta is not None,
-                              schema_name,
-                              u._("'meta' attributes is required"), "meta")
 
         jump_table = {
             'simple-cmc': self._validate_simple_cmc_request,

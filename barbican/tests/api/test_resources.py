@@ -1569,10 +1569,26 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
 
         self.assertEqual(resp.status_int, 202)
 
-    def test_should_raise_add_new_order_no_secret(self):
+    def test_should_raise_add_new_order_no_secret_info(self):
         resp = self.app.post_json(
             '/orders/',
             {},
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 400)
+
+    def test_should_raise_add_new_order_no_type(self):
+        resp = self.app.post_json(
+            '/orders/',
+            {'meta': self.meta},
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 400)
+
+    def test_should_raise_add_new_order_no_meta(self):
+        resp = self.app.post_json(
+            '/orders/',
+            {'type': self.type},
             expect_errors=True
         )
         self.assertEqual(resp.status_int, 400)
