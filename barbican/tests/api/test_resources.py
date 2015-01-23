@@ -1536,6 +1536,17 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         order = args[0]
         self.assertIsInstance(order, models.Order)
 
+    def test_should_fail_creating_order_with_bogus_content(self):
+        resp = self.app.post(
+            '/orders/',
+            'bogus',
+            headers={
+                'Content-Type': 'application/json'
+            },
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 400)
+
     def test_should_allow_add_new_order_unsupported_algorithm(self):
         # TODO(john-wood-w) Allow until plugin validation is added.
 
@@ -1825,6 +1836,17 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
             entity_id=self.order.id,
             external_project_id=self.external_project_id,
             suppress_exception=True)
+
+    def test_should_fail_with_bogus_content(self):
+        resp = self.app.put(
+            '/orders/{0}/'.format(self.order.id),
+            'bogus',
+            headers={
+                'Content-Type': 'application/json'
+            },
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 400)
 
     def test_should_fail_bad_type(self):
         self.order['type'] = 'secret'

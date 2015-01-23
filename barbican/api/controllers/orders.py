@@ -22,7 +22,6 @@ from barbican.common import validators
 from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repo
-from barbican.openstack.common import jsonutils as json
 from barbican.queue import client as async_client
 
 LOG = utils.getLogger(__name__)
@@ -106,7 +105,8 @@ class OrderController(object):
         raw_body = pecan.request.body
         order_type = None
         if raw_body:
-            order_type = json.loads(raw_body).get('type')
+            unvalidated_body = api.load_body(pecan.request)
+            order_type = unvalidated_body.get('type')
 
         if not order_type:
             _order_type_not_in_order()
