@@ -18,9 +18,17 @@ import os
 import requests
 from requests import auth
 from tempest.common.utils import misc as misc_utils
+from tempest import config
 from tempest.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
+
+CONF = config.CONF
+
+# Use local tempest conf if one is available.
+# This usually means we're running tests outside of devstack.
+if os.path.exists('./etc/dev_tempest.conf'):
+    CONF.set_config_path('./etc/dev_tempest.conf')
 
 
 class BarbicanClientAuth(auth.AuthBase):
@@ -51,6 +59,7 @@ class BarbicanClient(object):
         self.default_headers = {
             'Content-Type': 'application/json'
         }
+        self.region = CONF.identity.region
 
     def _attempt_to_stringify_content(self, content, content_tag):
         if content is None:
@@ -106,6 +115,7 @@ class BarbicanClient(object):
     def get_base_url(self, include_version=True):
         filters = {
             'service': 'key-manager',
+            'region': self.region,
             'api_version': self.api_version if include_version else ''
         }
 
