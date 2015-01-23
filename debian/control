@@ -6,7 +6,7 @@ Uploaders: John Wood <john.wood@rackspace.com>,
  Douglas Mendizabal <douglas.mendizabal@rackspace.com>
 Build-Depends: debhelper (>= 9), python
 Standards-Version: 3.9.3
-X-Python-Version: >= 2.6
+X-Python-Version: >= 2.7
 Homepage: http://launchpad.net/barbican
 Vcs-Browser: https://github.com/jfwood/barbican
 Vcs-Git: git://github.com/jfwood/barbican.git

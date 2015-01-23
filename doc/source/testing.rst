@@ -15,15 +15,12 @@ refer to the `tox documentation`_ for assistance.
 Unit Tests
 ------------
 
-Currently, we provide tox environments for Python 2.6 and 2.7. By default
+Currently, we provide tox environments for Python 2.7. By default
 all available test environments within the tox configuration will execute
 when calling ``tox``. If you want to run them independently, you can do so
 with the following commands
 
 .. code-block:: bash
-
-    # Executes tests on Python 2.6
-    tox -e py26
 
     # Executes tests on Python 2.7
     tox -e py27
