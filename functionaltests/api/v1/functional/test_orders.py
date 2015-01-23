@@ -384,11 +384,8 @@ class OrdersTestCase(base.TestCase):
 
     @utils.parameterized_dataset({
         'empty': [''],
-        'invalid': ['invalid'],
-        'text': ['text'],
         'text/plain': ['text/plain'],
         'text_plain_space_charset_utf8': ['text/plain; charset=utf-8'],
-        'text_slash_with_no_subtype': ['text/']
     })
     @testcase.attr('positive')
     def test_create_order_defaults_valid_payload_content_type(self, pct):
@@ -402,7 +399,10 @@ class OrdersTestCase(base.TestCase):
 
     @utils.parameterized_dataset({
         'int': [123],
-        'oversized_string': [base.TestCase.oversized_field]
+        'invalid': ['invalid'],
+        'oversized_string': [base.TestCase.oversized_field],
+        'text': ['text'],
+        'text_slash_with_no_subtype': ['text/'],
     })
     @testcase.attr('negative')
     def test_create_order_defaults_invalid_payload_content_type(self, pct):

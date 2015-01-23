@@ -154,9 +154,9 @@ class NewSecretValidator(ValidatorBase):
         expiration = self._extract_expiration(json_data, schema_name)
         self._assert_expiration_is_valid(expiration, schema_name)
         json_data['expiration'] = expiration
+        content_type = json_data.get('payload_content_type')
 
         if 'payload' in json_data:
-            content_type = json_data.get('payload_content_type')
             content_encoding = json_data.get('payload_content_encoding')
             self._validate_content_parameters(content_type, content_encoding,
                                               schema_name)
@@ -172,6 +172,10 @@ class NewSecretValidator(ValidatorBase):
                                   u._("payload must be provided when "
                                       "payload_content_type is specified"),
                                   "payload")
+
+            if content_type:
+                self._validate_payload_content_type_is_supported(content_type,
+                                                                 schema_name)
 
         return json_data
 
@@ -225,12 +229,8 @@ class NewSecretValidator(ValidatorBase):
                 "be supplied."),
             "payload_content_type")
 
-        self._assert_validity(
-            content_type.lower() in mime_types.SUPPORTED,
-            schema_name,
-            u._("payload_content_type is not one of {supported}").format(
-                supported=mime_types.SUPPORTED),
-            "payload_content_type")
+        self._validate_payload_content_type_is_supported(content_type,
+                                                         schema_name)
 
         if content_type == 'application/octet-stream':
             self._assert_validity(
@@ -247,6 +247,15 @@ class NewSecretValidator(ValidatorBase):
                 u._("payload_content_encoding must not be specified when "
                     "payload_content_type is text/plain"),
                 "payload_content_encoding")
+
+    def _validate_payload_content_type_is_supported(self, content_type,
+                                                    schema_name):
+        self._assert_validity(
+            content_type.lower() in mime_types.SUPPORTED,
+            schema_name,
+            u._("payload_content_type is not one of {supported}").format(
+                supported=mime_types.SUPPORTED),
+            "payload_content_type")
 
     def _extract_payload(self, json_data):
         """Extracts and returns the payload from the JSON data.
