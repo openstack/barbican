@@ -1516,8 +1516,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
                      "algorithm": "AES",
                      "bit_length": 256,
                      "mode": "cbc",
-                     'payload_content_type':
-                     'application/octet-stream'}
+                     'payload_content_type': 'application/octet-stream'}
 
         self.key_order_req = {'type': self.type,
                               'meta': self.meta}
@@ -1593,6 +1592,15 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
             expect_errors=True,
         )
         self.assertEqual(resp.status_int, 415)
+
+    def test_should_raise_add_new_order_with_unsupported_content_type(self):
+        self.meta["payload_content_type"] = 'unsupported type'
+        resp = self.app.post_json(
+            '/orders/',
+            self.key_order_req,
+            expect_errors=True,
+        )
+        self.assertEqual(resp.status_int, 400)
 
 
 class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):

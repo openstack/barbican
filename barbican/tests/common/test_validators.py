@@ -887,8 +887,10 @@ class WhenTestingAsymmetricTypeOrderValidator(utils.BaseTestCase):
                           self.asymmetric_order_req)
 
     def test_should_raise_with_wrong_payload_content_type_in_order_refs(self):
-        self.asymmetric_order_req['meta'
-                                  ]['payload_content_type'] = 'plain/text'
+        # NOTE(jaosorior): this is actually a valid content type, but it is not
+        # supported by asymmetric key orders.
+        self.asymmetric_order_req['meta']['payload_content_type'] = (
+            'text/plain')
         self.assertRaises(excep.UnsupportedField,
                           self.validator.validate,
                           self.asymmetric_order_req)
