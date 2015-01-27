@@ -16,7 +16,7 @@ API JSON validators.
 import abc
 
 import jsonschema as schema
-from oslo.config import cfg
+from oslo_config import cfg
 import six
 
 from barbican.common import exception

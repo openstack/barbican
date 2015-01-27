@@ -11,7 +11,7 @@
 # limitations under the License.
 
 import mock
-from oslo.config import cfg
+from oslo_config import cfg
 import sqlalchemy
 
 from barbican.common import exception

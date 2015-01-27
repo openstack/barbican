@@ -16,7 +16,7 @@ from Crypto.PublicKey import DSA
 from Crypto.PublicKey import RSA
 from Crypto.Util import asn1
 from cryptography import fernet
-from oslo.config import cfg
+from oslo_config import cfg
 import six
 
 from barbican import i18n as u

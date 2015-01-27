@@ -20,7 +20,7 @@ Common utilities for Barbican.
 import time
 import uuid
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from barbican import i18n as u
 import barbican.openstack.common.log as logging

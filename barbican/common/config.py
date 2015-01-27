@@ -20,7 +20,7 @@ Configuration setup for Barbican.
 import logging
 import os
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 import barbican.version
 

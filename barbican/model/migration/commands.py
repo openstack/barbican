@@ -25,7 +25,7 @@ import os
 
 from alembic import command as alembic_command
 from alembic import config as alembic_config
-from oslo.config import cfg
+from oslo_config import cfg
 
 from barbican.common import utils
 

@@ -36,7 +36,7 @@ from barbican.plugin.interface import secret_store as ss
 
 LOG = logging.getLogger(__name__)
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 CONF = cfg.CONF
 

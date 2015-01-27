@@ -13,7 +13,7 @@
 
 import base64
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from barbican.common import utils
 from barbican.model import models
