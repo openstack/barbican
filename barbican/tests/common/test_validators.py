@@ -840,6 +840,13 @@ class WhenTestingKeyTypeOrderValidator(utils.BaseTestCase):
                                       self.key_order_req)
         self.assertEqual('meta', exception.invalid_property)
 
+    def test_should_raise_with_no_algorithm_in_order_refs(self):
+        del self.key_order_req['meta']['algorithm']
+
+        self.assertRaises(excep.InvalidObject,
+                          self.validator.validate,
+                          self.key_order_req)
+
     def test_should_raise_with_wrong_exp_meta_in_order_refs(self):
         self.key_order_req['meta']['algorithm'] = 'AES'
         self.key_order_req['meta']['expiration'] = '2014-02-28T19:14:44.180394'
