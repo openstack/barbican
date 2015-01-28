@@ -18,9 +18,9 @@ class DatabaseManager:
 
     def __init__(self):
         self.parser = self.get_main_parser()
-        self.subparsers = self.parser.add_subparsers(title='subcommands',
-                                                     description=
-                                                     'Action to perform')
+        self.subparsers = self.parser.add_subparsers(
+            title='subcommands',
+            description='Action to perform')
         self.add_revision_args()
         self.add_downgrade_args()
         self.add_upgrade_args()
@@ -29,7 +29,7 @@ class DatabaseManager:
         """Create top-level parser and arguments."""
         parser = argparse.ArgumentParser(description='Barbican DB manager.')
         parser.add_argument('--dburl', '-d', default=None,
-                             help='URL to the database.')
+                            help='URL to the database.')
 
         return parser
 
@@ -90,6 +90,11 @@ class DatabaseManager:
         args.func(args)
 
 
+def _exception_is_successfull_exit(thrown_exception):
+    return (isinstance(thrown_exception, SystemExit) and
+            (thrown_exception.code is None or thrown_exception.code == 0))
+
+
 def main():
     # Import and configure logging.
     log.setup('barbican-db-manage')
@@ -99,7 +104,9 @@ def main():
     try:
         dm = DatabaseManager()
         dm.execute()
-    except:
+    except Exception as ex:
+        if _exception_is_successfull_exit(ex):
+            pass
         LOG.exception('Problem trying to execute Alembic commands')
 
 
