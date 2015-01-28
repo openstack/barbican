@@ -64,39 +64,33 @@ def init_config(sql_url=None):
 def upgrade(to_version='head', sql_url=None):
     """Upgrade to the specified version."""
     alembic_cfg = init_config(sql_url)
-    if alembic_cfg:
-        alembic_command.upgrade(alembic_cfg, to_version)
+    alembic_command.upgrade(alembic_cfg, to_version)
 
 
 def downgrade(to_version, sql_url=None):
     """Downgrade to the specified version."""
     alembic_cfg = init_config(sql_url)
-    if alembic_cfg:
-        alembic_command.downgrade(alembic_cfg, to_version)
+    alembic_command.downgrade(alembic_cfg, to_version)
 
 
 def history(verbose, sql_url=None):
     alembic_cfg = init_config(sql_url)
-    if alembic_cfg:
-        alembic_command.history(alembic_cfg, verbose=verbose)
+    alembic_command.history(alembic_cfg, verbose=verbose)
 
 
 def current(verbose, sql_url=None):
     alembic_cfg = init_config(sql_url)
-    if alembic_cfg:
-        alembic_command.current(alembic_cfg, verbose=verbose)
+    alembic_command.current(alembic_cfg, verbose=verbose)
 
 
 def stamp(to_version='head', sql_url=None):
     """Stamp the specified version, with no migration performed."""
     alembic_cfg = init_config(sql_url)
-    if alembic_cfg:
-        alembic_command.stamp(alembic_cfg, to_version)
+    alembic_command.stamp(alembic_cfg, to_version)
 
 
 def generate(autogenerate=True, message='generate changes', sql_url=None):
     """Generate a version file."""
     alembic_cfg = init_config(sql_url)
-    if alembic_cfg:
-        alembic_command.revision(alembic_cfg, message=message,
-                                 autogenerate=autogenerate)
+    alembic_command.revision(alembic_cfg, message=message,
+                             autogenerate=autogenerate)
