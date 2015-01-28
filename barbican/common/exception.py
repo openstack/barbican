@@ -363,3 +363,13 @@ class InUseByStore(BarbicanException):
 
 class ImageSizeLimitExceeded(BarbicanException):
     message = u._("The provided image is too large.")
+
+
+class StoredKeyContainerNotFound(BarbicanException):
+    message = u._("Container %(container_id) does not exist for stored "
+                  "key certificate generation.")
+
+
+class StoredKeyPrivateKeyNotFound(BarbicanException):
+    message = u._("Container %(container_id) does not reference a private "
+                  "key needed for stored key certificate generation.")

@@ -18,7 +18,9 @@ PasteDeploy>=1.5.0
 pbr>=0.6,!=0.7,<1.0
 pecan>=0.8.0
 pycrypto>=2.6
+pyOpenSSL>=0.11
 pysqlite
+python-ldap>=2.4
 keystonemiddleware>=1.0.0
 six>=1.7.0
 SQLAlchemy>=0.9.7,<=0.9.99

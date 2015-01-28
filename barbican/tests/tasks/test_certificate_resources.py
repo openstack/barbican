@@ -13,9 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from Crypto.PublicKey import RSA
 import mock
+from OpenSSL import crypto
 
+from barbican.common import exception as excep
 from barbican.common import hrefs
+from barbican.model import models
 from barbican.plugin.interface import certificate_manager as cert_man
 from barbican.tasks import certificate_resources as cert_res
 from barbican.tests import utils
@@ -127,6 +131,59 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
         self._config_save_meta_plugin()
         self._config_get_meta_plugin()
 
+        self.private_key_secret_id = "private_key_secret_id"
+        self.public_key_secret_id = "public_key_secret_id"
+        self.passphrase_secret_id = "passphrase_secret_id"
+        self.private_key_value = None
+        self.public_key_value = "my public key"
+        self.passphrase_value = "my passphrase"
+
+        self.container_id = "container_id"
+        self.parsed_container_with_passphrase = {
+            'name': 'container name',
+            'type': 'asymmetric',
+            'secret_refs': [
+                {'name': 'private_key',
+                 'secret_ref':
+                 'https://localhost/secrets/' + self.private_key_secret_id},
+                {'name': 'public_key',
+                 'secret_ref':
+                 'https://localhost/secrets/' + self.public_key_secret_id},
+                {'name': 'private_key_passphrase',
+                 'secret_ref':
+                 'https://localhost/secrets/' + self.passphrase_secret_id}
+            ]}
+
+        self.parsed_container_without_passphrase = {
+            'name': 'container name',
+            'type': 'asymmetric',
+            'secret_refs': [
+                {'name': 'private_key',
+                 'secret_ref':
+                 'https://localhost/secrets/' + self.private_key_secret_id},
+                {'name': 'public_key',
+                 'secret_ref':
+                 'https://localhost/secrets/' + self.public_key_secret_id},
+            ]}
+
+        self.stored_key_meta = {
+            cert_man.REQUEST_TYPE:
+            cert_man.CertificateRequestType.STORED_KEY_REQUEST,
+            "container_ref":
+            "https://localhost/containers/" + self.container_id,
+            "subject_name": "cn=host.example.com,ou=dev,ou=us,o=example.com"
+        }
+
+    def stored_key_side_effect(self, *args, **kwargs):
+        if args[0] == self.private_key_secret_id:
+            return self.private_key_value
+        elif args[0] == self.public_key_secret_id:
+            return self.public_key_value
+        elif args[0] == self.passphrase_secret_id:
+            return self.passphrase_value
+        else:
+            return None
+
     def tearDown(self):
         super(WhenIssuingCertificateRequests, self).tearDown()
         self.cert_plugin_patcher.stop()
@@ -163,12 +220,20 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
             self.repos
         )
 
-    def test_should_return_for_stored_key_request(self):
-        # simple test to satisfy coverage requirements.
-        # TODO(alee) replace with better tests once _generate_csr() is written
-        self.order_meta[cert_man.REQUEST_TYPE] = (
-            cert_man.CertificateRequestType.STORED_KEY_REQUEST
-        )
+    def test_should_return_for_pyopenssl_stored_key(self):
+        self.container = models.Container(
+            self.parsed_container_without_passphrase)
+        self.repos.container_repo.get.return_value = self.container
+
+        pkey = crypto.PKey()
+        pkey.generate_key(crypto.TYPE_RSA, 2048)
+        self.private_key_value = crypto.dump_privatekey(
+            crypto.FILETYPE_PEM, pkey)
+
+        self.repos.secret_repo.get.side_effect = self.stored_key_side_effect
+
+        self.order_meta.update(self.stored_key_meta)
+
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
 
         cert_res.issue_certificate_request(self.order_model,
@@ -176,6 +241,158 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
                                            self.repos)
 
         self._verify_issue_certificate_plugins_called()
+        self.assertIsNotNone(self.order_meta['request'])
+
+        # TODO(alee-3) Add tests to validate the request based on the validator
+        # code that dave-mccowan is adding.
+
+    def test_should_return_for_pyopenssl_stored_key_with_passphrase(self):
+        self.container = models.Container(
+            self.parsed_container_with_passphrase)
+        self.repos.container_repo.get.return_value = self.container
+
+        pkey = crypto.PKey()
+        pkey.generate_key(crypto.TYPE_RSA, 2048)
+        self.private_key_value = crypto.dump_privatekey(
+            crypto.FILETYPE_PEM, pkey, passphrase=self.passphrase_value)
+
+        self.repos.secret_repo.get.side_effect = self.stored_key_side_effect
+
+        self.order_meta.update(self.stored_key_meta)
+
+        self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
+
+        cert_res.issue_certificate_request(self.order_model,
+                                           self.project_model,
+                                           self.repos)
+
+        self._verify_issue_certificate_plugins_called()
+        self.assertIsNotNone(self.order_meta['request'])
+
+        # TODO(alee-3) Add tests to validate the request based on the validator
+        # code that dave-mccowan is adding.
+
+    def test_should_return_for_pycrypto_stored_key_with_passphrase(self):
+        self.container = models.Container(
+            self.parsed_container_with_passphrase)
+        self.repos.container_repo.get.return_value = self.container
+
+        private_key = RSA.generate(2048, None, None, 65537)
+        public_key = private_key.publickey()
+
+        self.private_key_value = private_key.exportKey(
+            'PEM', self.passphrase_value, 8)
+        self.public_key_value = public_key.exportKey()
+        self.repos.secret_repo.get.side_effect = self.stored_key_side_effect
+
+        self.order_meta.update(self.stored_key_meta)
+        self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
+
+        cert_res.issue_certificate_request(self.order_model,
+                                           self.project_model,
+                                           self.repos)
+
+        self._verify_issue_certificate_plugins_called()
+        self.assertIsNotNone(self.order_meta['request'])
+
+        # TODO(alee-3) Add tests to validate the request based on the validator
+        # code that dave-mccowan is adding.
+
+    def test_should_return_for_pycrypto_stored_key_without_passphrase(self):
+        self.container = models.Container(
+            self.parsed_container_without_passphrase)
+        self.repos.container_repo.get.return_value = self.container
+
+        private_key = RSA.generate(2048, None, None, 65537)
+        public_key = private_key.publickey()
+
+        self.private_key_value = private_key.exportKey('PEM', None, 8)
+        self.public_key_value = public_key.exportKey()
+        self.repos.secret_repo.get.side_effect = self.stored_key_side_effect
+
+        self.order_meta.update(self.stored_key_meta)
+        self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
+
+        cert_res.issue_certificate_request(self.order_model,
+                                           self.project_model,
+                                           self.repos)
+
+        self._verify_issue_certificate_plugins_called()
+        self.assertIsNotNone(self.order_meta['request'])
+
+        # TODO(alee-3) Add tests to validate the request based on the validator
+        # code that dave-mccowan is adding.
+
+    def test_should_raise_for_pycrypto_stored_key_no_container(self):
+        self.container = models.Container(
+            self.parsed_container_without_passphrase)
+        self.repos.container_repo.get.return_value = None
+
+        private_key = RSA.generate(2048, None, None, 65537)
+        public_key = private_key.publickey()
+
+        self.private_key_value = private_key.exportKey('PEM', None, 8)
+        self.public_key_value = public_key.exportKey()
+        self.repos.secret_repo.get.side_effect = self.stored_key_side_effect
+
+        self.order_meta.update(self.stored_key_meta)
+        self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
+
+        self.assertRaises(excep.StoredKeyContainerNotFound,
+                          cert_res.issue_certificate_request,
+                          self.order_model,
+                          self.project_model,
+                          self.repos)
+
+    def test_should_raise_for_pycrypto_stored_key_no_private_key(self):
+        self.container = models.Container(
+            self.parsed_container_without_passphrase)
+        self.repos.container_repo.get.return_value = self.container
+
+        private_key = RSA.generate(2048, None, None, 65537)
+        public_key = private_key.publickey()
+
+        self.private_key_value = private_key.exportKey('PEM', None, 8)
+        self.public_key_value = public_key.exportKey()
+        self.repos.secret_repo.get.return_value = None
+
+        self.order_meta.update(self.stored_key_meta)
+        self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
+
+        self.assertRaises(excep.StoredKeyPrivateKeyNotFound,
+                          cert_res.issue_certificate_request,
+                          self.order_model,
+                          self.project_model,
+                          self.repos)
+
+    def test_should_return_for_pyopenssl_stored_key_with_extensions(self):
+        self.container = models.Container(
+            self.parsed_container_without_passphrase)
+        self.repos.container_repo.get.return_value = self.container
+
+        pkey = crypto.PKey()
+        pkey.generate_key(crypto.TYPE_RSA, 2048)
+        self.private_key_value = crypto.dump_privatekey(
+            crypto.FILETYPE_PEM, pkey)
+
+        self.repos.secret_repo.get.side_effect = self.stored_key_side_effect
+
+        self.order_meta.update(self.stored_key_meta)
+        self.order_meta['extensions'] = 'my ASN.1 extensions structure here'
+        # TODO(alee-3) Add real extensions data here
+
+        self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
+
+        cert_res.issue_certificate_request(self.order_model,
+                                           self.project_model,
+                                           self.repos)
+
+        self._verify_issue_certificate_plugins_called()
+        self.assertIsNotNone(self.order_meta['request'])
+
+        # TODO(alee-3) Add tests to validate the request based on the validator
+        # code that dave-mccowan is adding.
+        # TODO(alee-3) Add tests to validate the extensions in the request
 
     def test_should_raise_invalid_operation_seen(self):
         self.result.status = cert_man.CertificateStatus.INVALID_OPERATION
