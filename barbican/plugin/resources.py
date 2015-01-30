@@ -108,8 +108,6 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
         enforce_text_only=True)
 
     # Store the secret securely.
-    # TODO(john-wood-w) Remove the SecretStoreContext once repository factory
-    #  and unit test patch work is completed.
     secret_type = None
     if key_spec is not None:
         secret_type = secret_store.KeyAlgorithm().get_secret_type(key_spec.alg)
@@ -133,8 +131,6 @@ def get_secret(requesting_content_type, secret_model, project_model, repos,
                twsk=None, transport_key=None):
     tr.analyze_before_decryption(requesting_content_type)
 
-    # Construct metadata dict from data model.
-    #   Note: Must use the dict/tuple format for py2.6 usage.
     secret_metadata = _get_secret_meta(secret_model, repos)
 
     if twsk is not None:
@@ -259,8 +255,6 @@ def generate_asymmetric_secret(spec, content_type,
 def delete_secret(secret_model, project_id, repos):
     """Remove a secret from secure backend."""
 
-    # Construct metadata dict from data model.
-    #   Note: Must use the dict/tuple format for py2.6 usage.
     secret_metadata = _get_secret_meta(secret_model, repos)
 
     # We should only try to delete a secret using the plugin interface if
@@ -326,8 +320,7 @@ def _generate_asymmetric_key(
     return asymmetric_meta_dto
 
 
-def _get_secret(
-        retrieve_plugin, secret_metadata, secret_model, project_model):
+def _get_secret(retrieve_plugin, secret_metadata, secret_model, project_model):
     if isinstance(retrieve_plugin, store_crypto.StoreCryptoAdapterPlugin):
         context = store_crypto.StoreCryptoContext(
             project_model,
