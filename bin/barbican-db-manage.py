@@ -25,6 +25,7 @@ class DatabaseManager:
         self.add_downgrade_args()
         self.add_upgrade_args()
         self.add_history_args()
+        self.add_current_args()
 
     def get_main_parser(self):
         """Create top-level parser and arguments."""
@@ -76,6 +77,16 @@ class DatabaseManager:
                                         'revisions.')
         create_parser.set_defaults(func=self.history)
 
+    def add_current_args(self):
+        """Create 'current' command parser and arguments."""
+        create_parser = self.subparsers.add_parser(
+            'current',
+            help='Display the current revision for a database.')
+        create_parser.add_argument('--verbose', '-V', action="store_true",
+                                   help='Show full information about the '
+                                        'revision.')
+        create_parser.set_defaults(func=self.current)
+
     def revision(self, args):
         """Process the 'revision' Alembic command."""
         commands.generate(autogenerate=args.autogenerate,
@@ -92,6 +103,9 @@ class DatabaseManager:
 
     def history(self, args):
         commands.history(args.verbose, sql_url=args.dburl)
+
+    def current(self, args):
+        commands.current(args.verbose, sql_url=args.dburl)
 
     def execute(self):
         """Parse the command line arguments."""

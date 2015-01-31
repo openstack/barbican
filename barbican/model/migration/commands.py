@@ -81,6 +81,12 @@ def history(verbose, sql_url=None):
         alembic_command.history(alembic_cfg, verbose=verbose)
 
 
+def current(verbose, sql_url=None):
+    alembic_cfg = init_config(sql_url)
+    if alembic_cfg:
+        alembic_command.current(alembic_cfg, verbose=verbose)
+
+
 def stamp(to_version='head', sql_url=None):
     """Stamp the specified version, with no migration performed."""
     alembic_cfg = init_config(sql_url)
