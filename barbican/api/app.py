@@ -16,8 +16,6 @@
 """
 API application handler for Cloudkeep's Barbican
 """
-import json
-
 import pecan
 from webob import exc as webob_exc
 
@@ -37,6 +35,7 @@ from barbican.api.controllers import transportkeys
 from barbican.api.controllers import versions
 from barbican.common import config
 from barbican.model import repositories
+from barbican.openstack.common import jsonutils as json
 from barbican.openstack.common import log
 from barbican import queue
 

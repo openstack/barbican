@@ -12,8 +12,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import json
-
 from oslo.config import cfg
 import webob.exc
 
@@ -21,6 +19,7 @@ from barbican.api import middleware as mw
 from barbican.common import utils
 import barbican.context
 from barbican import i18n as u
+from barbican.openstack.common import jsonutils as json
 from barbican.openstack.common import policy
 
 LOG = utils.getLogger(__name__)
