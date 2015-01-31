@@ -24,6 +24,7 @@ class DatabaseManager:
         self.add_revision_args()
         self.add_downgrade_args()
         self.add_upgrade_args()
+        self.add_history_args()
 
     def get_main_parser(self):
         """Create top-level parser and arguments."""
@@ -65,6 +66,16 @@ class DatabaseManager:
                                    help='the version to downgrade back to.')
         create_parser.set_defaults(func=self.downgrade)
 
+    def add_history_args(self):
+        """Create 'history' command parser and arguments."""
+        create_parser = self.subparsers.add_parser(
+            'history',
+            help='List changeset scripts in chronological order.')
+        create_parser.add_argument('--verbose', '-V', action="store_true",
+                                   help='Show full information about the '
+                                        'revisions.')
+        create_parser.set_defaults(func=self.history)
+
     def revision(self, args):
         """Process the 'revision' Alembic command."""
         commands.generate(autogenerate=args.autogenerate,
@@ -73,13 +84,14 @@ class DatabaseManager:
 
     def upgrade(self, args):
         """Process the 'upgrade' Alembic command."""
-        commands.upgrade(to_version=args.version,
-                         sql_url=args.dburl)
+        commands.upgrade(to_version=args.version, sql_url=args.dburl)
 
     def downgrade(self, args):
         """Process the 'downgrade' Alembic command."""
-        commands.downgrade(to_version=args.version,
-                           sql_url=args.dburl)
+        commands.downgrade(to_version=args.version, sql_url=args.dburl)
+
+    def history(self, args):
+        commands.history(args.verbose, sql_url=args.dburl)
 
     def execute(self):
         """Parse the command line arguments."""
