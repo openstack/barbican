@@ -181,9 +181,9 @@ class ModelBase(object):
         }
 
         if self.deleted_at:
-            dict_fields['deleted'] = self.deleted_at.isoformat()
+            dict_fields['deleted_at'] = self.deleted_at.isoformat()
         if self.deleted:
-            dict_fields['is_deleted'] = True
+            dict_fields['deleted'] = True
         dict_fields.update(self._do_extra_dict_fields())
         return dict_fields
 
