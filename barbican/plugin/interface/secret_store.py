@@ -152,6 +152,12 @@ class SecretStorePluginsNotConfigured(exception.BarbicanException):
         )
 
 
+class StorePluginNotAvailableOrMisconfigured(exception.BarbicanException):
+    message = u._("The requested Store Plugin %(plugin_name) is not "
+                  "currently available. This is probably a server "
+                  "misconfiguration.")
+
+
 class SecretType(object):
 
     """Constant to define the symmetric key type.
@@ -470,13 +476,22 @@ class SecretStorePluginManager(named.NamedExtensionManager):
     def get_plugin_retrieve_delete(self, plugin_name):
         """Gets a secret retrieve/delete plugin.
 
+        If this function is being called, it is because we are trying to
+        retrieve or delete an already stored secret. Thus, the plugin name is
+        actually gotten from the plugin metadata that has already been stored
+        in the database. So, in this case, if this plugin is not available,
+        this might be due to a server misconfiguration.
+
         :returns: SecretStoreBase plugin implementation
+        :raises: StorePluginNotAvailableOrMisconfigured: If the plugin wasn't
+                 found it's because the plugin parameters were not properly
+                 configured on the database side.
         """
 
         for ext in self.extensions:
             if utils.generate_fullname_for(ext.obj) == plugin_name:
                 return ext.obj
-        raise SecretStorePluginNotFound(plugin_name)
+        raise StorePluginNotAvailableOrMisconfigured(plugin_name)
 
     @_enforce_extensions_configured
     def get_plugin_generate(self, key_spec):
