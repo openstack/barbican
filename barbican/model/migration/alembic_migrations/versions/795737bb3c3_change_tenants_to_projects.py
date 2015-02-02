@@ -45,8 +45,8 @@ def downgrade():
     op.alter_column('tenant_secret', 'project_id',
                     new_column_name='tenant_id')
 
-    op.create_unique_constraint('_project_secret_uc', 'project_secret',
-                                ['project_id', 'secret_id'])
+    op.create_unique_constraint('_tenant_secret_uc', 'tenant_secret',
+                                ['tenant_id', 'secret_id'])
 
     # projects table
     op.rename_table('projects', 'tenants')
