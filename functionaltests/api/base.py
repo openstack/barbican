@@ -47,7 +47,12 @@ class TestCase(oslotest.BaseTestCase):
     def setUp(self):
         self.LOG.info('Starting: %s', self._testMethodName)
         super(TestCase, self).setUp()
-        credentials = BarbicanCredentials()
+
+        # determine which type of credentials to use
+        if 'v3' in CONF.identity.auth_version:
+            credentials = BarbicanV3Credentials()
+        else:
+            credentials = BarbicanV2Credentials()
 
         mgr = tempest_clients.Manager(credentials=credentials)
         auth_provider = mgr.get_auth_provider(credentials)
@@ -66,7 +71,22 @@ class TestCase(oslotest.BaseTestCase):
         return name
 
 
-class BarbicanCredentials(auth.KeystoneV3Credentials):
+class BarbicanV2Credentials(auth.KeystoneV2Credentials):
+
+    def __init__(self):
+        credentials = dict(
+            username=CONF.identity.admin_username,
+            password=CONF.identity.admin_password
+        )
+        # Some identity v2 implementations don't need the tenant name, so
+        # only include it here if the user provided it in the config file.
+        if CONF.identity.admin_tenant_name:
+            credentials['tenant_name'] = CONF.identity.admin_tenant_name
+
+        super(BarbicanV2Credentials, self).__init__(**credentials)
+
+
+class BarbicanV3Credentials(auth.KeystoneV3Credentials):
 
     def __init__(self):
         credentials = dict(
@@ -76,4 +96,4 @@ class BarbicanCredentials(auth.KeystoneV3Credentials):
             domain_name=CONF.identity.admin_domain_name,
         )
 
-        super(BarbicanCredentials, self).__init__(**credentials)
+        super(BarbicanV3Credentials, self).__init__(**credentials)

@@ -39,9 +39,23 @@ class BarbicanClientAuth(auth.AuthBase):
 
         self.username = credentials.username
         self.password = credentials.password
-        self.project_id = credentials.project_id
-        self.project_name = credentials.project_name
-        self.token = auth_provider.get_token()
+
+        if 'v3' in CONF.identity.auth_version:
+            self.project_name = credentials.project_name
+            self.project_id = credentials.project_id
+        else:
+            self.tenant_name = credentials.tenant_name
+            self.project_id = credentials.tenant_id
+
+        try:
+            self.token = auth_provider.get_token()
+        except ValueError:
+            # hockeynut - some auth providers will allow the v3 expiration
+            # date format which includes milliseconds.  This change will retry
+            # the call to get the auth token with the milliseconds included in
+            # the date format string.
+            auth_provider.EXPIRY_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
+            self.token = auth_provider.get_token()
 
     def __call__(self, r):
         r.headers['X-Project-Id'] = self.project_id
