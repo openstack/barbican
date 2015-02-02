@@ -52,6 +52,22 @@ class BarbicanException(Exception):
         super(BarbicanException, self).__init__(self.message)
 
 
+class BarbicanHTTPException(BarbicanException):
+    """Base Barbican Exception to handle HTTP responses
+
+    To correctly use this class, inherit from it and define the following
+    properties:
+
+    - message: The message that will be displayed in the server log.
+    - client_message: The message that will actually be outputted to the
+                      client.
+    - status_code: The HTTP status code that should be returned.
+                   The default status code is 500.
+    """
+    client_message = u._("failure seen - please contact site administrator.")
+    status_code = 500
+
+
 class MissingArgumentError(BarbicanException):
     message = u._("Missing required argument.")
 
@@ -158,8 +174,10 @@ class Invalid(BarbicanException):
     message = u._("Data supplied was not valid.")
 
 
-class NoDataToProcess(BarbicanException):
+class NoDataToProcess(BarbicanHTTPException):
     message = u._("No data supplied to process.")
+    client_message = message
+    status_code = 400
 
 
 class InvalidSortKey(Invalid):
@@ -201,10 +219,12 @@ class MultipleChoices(BarbicanException):
                   "returned:\n%(body)s")
 
 
-class LimitExceeded(BarbicanException):
+class LimitExceeded(BarbicanHTTPException):
     message = u._("The request returned a 413 Request Entity Too Large. This "
                   "generally means that rate limiting or a quota threshold "
                   "was breached.\n\nThe response body:\n%(body)s")
+    client_message = u._("Provided information too large to process")
+    status_code = 413
 
     def __init__(self, *args, **kwargs):
         super(LimitExceeded, self).__init__(*args, **kwargs)
@@ -299,18 +319,24 @@ class SchemaLoadError(BarbicanException):
     message = u._("Unable to load schema: %(reason)s")
 
 
-class InvalidObject(BarbicanException):
-    message = u._("Provided object does not match schema "
-                  "'%(schema)s': %(reason)s")
+class InvalidObject(BarbicanHTTPException):
+    status_code = 400
 
     def __init__(self, *args, **kwargs):
-        super(InvalidObject, self).__init__(*args, **kwargs)
         self.invalid_property = kwargs.get('property')
+        self.message = u._("Failed to validate JSON information: ")
+        self.client_message = u._("Provided object does not match "
+                                  "schema '{schema}': "
+                                  "{reason}").format(*args, **kwargs)
+        self.message = self.message + self.client_message
+        super(InvalidObject, self).__init__(*args, **kwargs)
 
 
-class UnsupportedField(BarbicanException):
+class UnsupportedField(BarbicanHTTPException):
     message = u._("No support for value set on field '%(field)s' on "
                   "schema '%(schema)s': %(reason)s")
+    client_message = u._("Provided field value is not supported")
+    status_code = 400
 
     def __init__(self, *args, **kwargs):
         super(UnsupportedField, self).__init__(*args, **kwargs)
