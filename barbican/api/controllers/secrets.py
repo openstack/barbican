@@ -89,7 +89,6 @@ class SecretController(object):
     @controllers.handle_exceptions(u._('Secret retrieval'))
     @controllers.enforce_rbac('secret:get')
     def on_get(self, external_project_id, **kwargs):
-
         secret = self.repos.secret_repo.get(
             entity_id=self.secret_id,
             external_project_id=external_project_id,
@@ -98,39 +97,61 @@ class SecretController(object):
             _secret_not_found()
 
         if controllers.is_json_request_accept(pecan.request):
-            # Metadata-only response, no secret retrieval is necessary.
-            pecan.override_template('json', 'application/json')
-            secret_fields = putil.mime_types.augment_fields_with_content_types(
-                secret)
-            transport_key_needed = kwargs.get('transport_key_needed',
-                                              'false').lower() == 'true'
-            if transport_key_needed:
-                transport_key_id = plugin.get_transport_key_id_for_retrieval(
-                    secret)
-                if transport_key_id is not None:
-                    secret_fields['transport_key_id'] = transport_key_id
-            return hrefs.convert_to_hrefs(secret_fields)
+            return self._on_get_secret_metadata(secret, **kwargs)
         else:
-            project = res.get_or_create_project(external_project_id,
-                                                self.repos.project_repo)
-            pecan.override_template('', pecan.request.accept.header_value)
-            transport_key = None
-            twsk = kwargs.get('trans_wrapped_session_key', None)
-            if twsk is not None:
-                transport_key_id = kwargs.get('transport_key_id', None)
-                if transport_key_id is None:
-                    _request_has_twsk_but_no_transport_key_id()
-                transport_key_model = self.repos.transport_key_repo.get(
-                    entity_id=transport_key_id,
-                    suppress_exception=True)
-                transport_key = transport_key_model.transport_key
+            return self._on_get_secret_payload(secret, external_project_id,
+                                               **kwargs)
 
-            return plugin.get_secret(pecan.request.accept.header_value,
-                                     secret,
-                                     project,
-                                     self.repos,
-                                     twsk,
-                                     transport_key)
+    def _on_get_secret_metadata(self, secret, **kwargs):
+        """GET Metadata-only for a secret."""
+        pecan.override_template('json', 'application/json')
+
+        secret_fields = putil.mime_types.augment_fields_with_content_types(
+            secret)
+
+        transport_key_id = self._get_transport_key_id_if_needed(
+            kwargs.get('transport_key_needed'), secret)
+
+        if transport_key_id:
+            secret_fields['transport_key_id'] = transport_key_id
+
+        return hrefs.convert_to_hrefs(secret_fields)
+
+    def _get_transport_key_id_if_needed(self, transport_key_needed, secret):
+        if transport_key_needed and transport_key_needed.lower() == 'true':
+            return plugin.get_transport_key_id_for_retrieval(secret)
+        return None
+
+    def _on_get_secret_payload(self, secret, external_project_id, **kwargs):
+        """GET actual payload containing the secret."""
+        project = res.get_or_create_project(external_project_id,
+                                            self.repos.project_repo)
+
+        pecan.override_template('', pecan.request.accept.header_value)
+
+        twsk = kwargs.get('trans_wrapped_session_key', None)
+        transport_key = None
+
+        if twsk:
+            transport_key = self._get_transport_key(
+                kwargs.get('transport_key_id', None))
+
+        return plugin.get_secret(pecan.request.accept.header_value,
+                                 secret,
+                                 project,
+                                 self.repos,
+                                 twsk,
+                                 transport_key)
+
+    def _get_transport_key(self, transport_key_id):
+        if transport_key_id is None:
+            _request_has_twsk_but_no_transport_key_id()
+
+        transport_key_model = self.repos.transport_key_repo.get(
+            entity_id=transport_key_id,
+            suppress_exception=True)
+
+        return transport_key_model.transport_key
 
     @index.when(method='PUT')
     @allow_all_content_types
