@@ -51,7 +51,9 @@ dogtag_plugin_opts = [
     cfg.StrOpt('nss_db_path',
                help=u._('Path to the NSS certificate database')),
     cfg.StrOpt('nss_password',
-               help=u._('Password for NSS certificate database'))
+               help=u._('Password for NSS certificate database')),
+    cfg.StrOpt('simple_cmc_profile',
+               help=u._('Profile for simple CMC requests'))
 ]
 
 CONF.register_group(dogtag_plugin_group)
@@ -544,6 +546,22 @@ def _catch_request_exception(ca_related_function):
     return _catch_ca_unavailable
 
 
+def _catch_enrollment_exceptions(ca_related_function):
+    def _catch_enrollment_exception(self, *args, **kwargs):
+        try:
+            return ca_related_function(self, *args, **kwargs)
+        except pki.BadRequestException as e:
+            return cm.ResultDTO(
+                cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
+                status_message=e.message)
+        except pki.PKIException as e:
+            raise cm.CertificateGeneralException(
+                u._("Exception thrown by enroll_cert: {message}").format(
+                    message=e.message))
+
+    return _catch_enrollment_exception
+
+
 class DogtagCAPlugin(cm.CertificatePluginBase):
     """Implementation of the cert plugin with Dogtag CA as the backend."""
 
@@ -561,6 +579,8 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
 
         if crypto is not None:
             crypto.initialize()
+
+        self.simple_cmc_profile = conf.dogtag_plugin.simple_cmc_profile
 
     def _get_request_id(self, order_id, plugin_meta, operation):
         request_id = plugin_meta.get(self.REQUEST_ID, None)
@@ -656,7 +676,87 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
 
     @_catch_request_exception
     def issue_certificate_request(self, order_id, order_meta, plugin_meta):
-        """Issue a certificate request to Dogtag CA
+        """Issue a certificate request to the Dogtag CA
+
+         Call the relevant certificate issuance function depending on the
+         Barbican defined request type in the order_meta.
+
+        :param order_id: ID of the order associated with this request
+        :param order_meta: dict containing all the inputs for this request.
+               This includes the request_type.
+        :param plugin_meta: Used to store data for status check
+        :return: cm.ResultDTO
+        """
+        request_type = order_meta.get(
+            cm.REQUEST_TYPE,
+            cm.CertificateRequestType.CUSTOM_REQUEST)
+
+        jump_table = {
+            cm.CertificateRequestType.SIMPLE_CMC_REQUEST:
+            self._issue_simple_cmc_request,
+            cm.CertificateRequestType.FULL_CMC_REQUEST:
+            self._issue_full_cmc_request,
+            cm.CertificateRequestType.STORED_KEY_REQUEST:
+            self._issue_stored_key_request,
+            cm.CertificateRequestType.CUSTOM_REQUEST:
+            self._issue_custom_certificate_request
+        }
+
+        if request_type not in jump_table:
+            raise DogtagPluginNotSupportedException(
+                "Dogtag plugin does not support %s request type".format(
+                    request_type))
+
+        return jump_table[request_type](order_id, order_meta, plugin_meta)
+
+    @_catch_enrollment_exceptions
+    def _issue_simple_cmc_request(self, order_id, order_meta, plugin_meta):
+        """Issue a simple CMC request to the Dogtag CA.
+
+        :param order_id:
+        :param order_meta:
+        :param plugin_meta:
+        :return: cm.ResultDTO
+        """
+        profile_id = self.simple_cmc_profile
+        inputs = {
+            'cert_request_type': 'pkcs10',
+            'cert_request': order_meta.get('request_data')
+        }
+
+        request = self.certclient.create_enrollment_request(profile_id, inputs)
+        results = self.certclient.submit_enrollment_request(request)
+        return self._process_enrollment_results(results, plugin_meta)
+
+    def _issue_full_cmc_request(self, order_id, order_meta, plugin_meta):
+        """Issue a full CMC request to the Dogtag CA.
+
+        :param order_id:
+        :param order_meta:
+        :param plugin_meta:
+        :return: cm.ResultDTO
+        """
+        raise DogtagPluginNotSupportedException(
+            "Dogtag plugin does not support %s request type".format(
+                cm.CertificateRequestType.FULL_CMC_REQUEST))
+
+    def _issue_stored_key_request(self, order_id, order_meta, plugin_meta):
+        """Issue a simple CMC request to the Dogtag CA.
+
+        :param order_id:
+        :param order_meta:
+        :param plugin_meta:
+        :return: cm.ResultDTO
+        """
+        return self._issue_simple_cmc_request(
+            order_id,
+            order_meta,
+            plugin_meta)
+
+    @_catch_enrollment_exceptions
+    def _issue_custom_certificate_request(self, order_id, order_meta,
+                                          plugin_meta):
+        """Issue a custom certificate request to Dogtag CA
 
         For now, we assume that we are talking to the Dogtag CA that
         is deployed with the KRA back-end, and we are connected as a
@@ -679,64 +779,57 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
                 cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
                 status_message=u._("No profile_id specified"))
 
-        try:
-            enrollment_results = self.certclient.enroll_cert(
-                profile_id, order_meta)
+        results = self.certclient.enroll_cert(profile_id, order_meta)
+        return self._process_enrollment_results(results, plugin_meta)
 
-            # Although it is possible to create multiple certs in an invocation
-            # of enroll_cert, Barbican cannot handle this case.  Assume
-            # only once cert and request generated for now.
-            enrollment_result = enrollment_results[0]
+    def _process_enrollment_results(self, enrollment_results, plugin_meta):
+        """Process results received from Dogtag CA for enrollment
 
-            request = enrollment_result.request
-            if not request:
-                raise cm.CertificateGeneralException(
-                    u._("No request returned in enrollment_results"))
+        :param enrollment_results: list of CertEnrollmentResult objects
+        :param plugin_meta: metadata dict for storing plugin specific data
+        :return: cm.ResultDTO
+        """
 
-            # store the request_id in the plugin metadata
-            plugin_meta[self.REQUEST_ID] = request.request_id
+        # Although it is possible to create multiple certs in an invocation
+        # of enroll_cert, Barbican cannot handle this case.  Assume
+        # only once cert and request generated for now.
+        enrollment_result = enrollment_results[0]
 
-            cert = enrollment_result.cert
-            if not cert:
-                request_status = request.request_status
-                if request_status == pki.cert.CertRequestStatus.REJECTED:
-                    return cm.ResultDTO(
-                        cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
-                        status_message=request.error_message)
-                elif request_status == pki.cert.CertRequestStatus.CANCELED:
-                    return cm.ResultDTO(
-                        cm.CertificateStatus.REQUEST_CANCELED)
-                elif request_status == pki.cert.CertRequestStatus.PENDING:
-                    return cm.ResultDTO(
-                        cm.CertificateStatus.WAITING_FOR_CA)
-                elif request_status == pki.cert.CertRequestStatus.COMPLETE:
-                    raise cm.CertificateGeneralException(
-                        u._("request_id {req_id} returns COMPLETE but no cert "
-                            "returned").format(req_id=request.request_id))
-                else:
-                    raise cm.CertificateGeneralException(
-                        u._(
-                            "Invalid request_status {status} for "
-                            "request_id {request_id}"
-                        ).format(
-                            status=request_status,
-                            request_id=request.request_id
-                        )
-                    )
-
-            return cm.ResultDTO(
-                cm.CertificateStatus.CERTIFICATE_GENERATED,
-                certificate=cert.encoded,
-                intermediates=cert.pkcs7_cert_chain)
-
-        except pki.BadRequestException as e:
-            return cm.ResultDTO(
-                cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
-                status_message=e.message)
-        except pki.PKIException as e:
+        request = enrollment_result.request
+        if not request:
             raise cm.CertificateGeneralException(
-                u._("Exception thrown by enroll_cert: {message}").format(
-                    message=e.message))
+                u._("No request returned in enrollment_results"))
+
+        # store the request_id in the plugin metadata
+        plugin_meta[self.REQUEST_ID] = request.request_id
+
+        cert = enrollment_result.cert
+        if not cert:
+            request_status = request.request_status
+            if request_status == pki.cert.CertRequestStatus.REJECTED:
+                return cm.ResultDTO(
+                    cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
+                    status_message=request.error_message)
+            elif request_status == pki.cert.CertRequestStatus.CANCELED:
+                return cm.ResultDTO(cm.CertificateStatus.REQUEST_CANCELED)
+            elif request_status == pki.cert.CertRequestStatus.PENDING:
+                return cm.ResultDTO(cm.CertificateStatus.WAITING_FOR_CA)
+            elif request_status == pki.cert.CertRequestStatus.COMPLETE:
+                raise cm.CertificateGeneralException(
+                    u._("request_id {req_id} returns COMPLETE but no cert "
+                        "returned").format(req_id=request.request_id))
+            else:
+                raise cm.CertificateGeneralException(
+                    u._("Invalid request_status {status} for "
+                        "request_id {request_id}").format(
+                            status=request_status,
+                            request_id=request.request_id)
+                )
+
+        return cm.ResultDTO(
+            cm.CertificateStatus.CERTIFICATE_GENERATED,
+            certificate=cert.encoded,
+            intermediates=cert.pkcs7_cert_chain)
 
     def modify_certificate_request(self, order_id, order_meta, plugin_meta):
         """Modify a certificate request.
@@ -805,3 +898,13 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
             pass
 
         return True
+
+    def supported_request_types(self):
+        """Returns the request_types supported by this plugin.
+
+        :returns: a list of the Barbican-core defined request_types
+                  supported by this plugin.
+        """
+        return [cm.CertificateRequestType.SIMPLE_CMC_REQUEST,
+                cm.CertificateRequestType.STORED_KEY_REQUEST,
+                cm.CertificateRequestType.CUSTOM_REQUEST]

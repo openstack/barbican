@@ -311,10 +311,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.patcher.stop()
         os.rmdir(self.nss_dir)
 
-    def test_issue_certificate_request(self):
-        order_meta = {dogtag_import.DogtagCAPlugin.PROFILE_ID: self.profile_id}
-        plugin_meta = {}
-
+    def _process_custom_cert_request(self, order_meta, plugin_meta):
         enrollment_result = dogtag_cert.CertEnrollmentResult(
             self.request, self.cert)
         enrollment_results = [enrollment_result]
@@ -340,6 +337,101 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.assertEqual(
             plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID),
             self.request_id_mock
+        )
+
+    def _process_simple_cmc_cert_request(self, order_meta, plugin_meta):
+        inputs = {
+            'cert_request_type': 'pkcs10',
+            'cert_request': order_meta.get('request_data')
+        }
+
+        self.request.request_status = dogtag_cert.CertRequestStatus.PENDING
+        enrollment_request = mock.MagicMock()
+        enrollment_result = dogtag_cert.CertEnrollmentResult(
+            self.request, None
+        )
+        enrollment_results = [enrollment_result]
+        self.certclient_mock.create_enrollment_request.return_value = (
+            enrollment_request)
+        self.certclient_mock.submit_enrollment_request.return_value = (
+            enrollment_results)
+
+        result_dto = self.plugin.issue_certificate_request(
+            self.order_id, order_meta, plugin_meta)
+
+        self.certclient_mock.create_enrollment_request.assert_called_once_with(
+            self.cfg_mock.dogtag_plugin.simple_cmc_profile,
+            inputs)
+
+        self.certclient_mock.submit_enrollment_request.assert_called_once_with(
+            enrollment_request)
+
+        self.assertEqual(result_dto.status,
+                         cm.CertificateStatus.WAITING_FOR_CA,
+                         "result_dto status incorrect")
+
+        self.assertEqual(
+            plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID),
+            self.request_id_mock
+        )
+
+    def test_issue_simple_cmc_request(self):
+        order_meta = {
+            cm.REQUEST_TYPE: cm.CertificateRequestType.SIMPLE_CMC_REQUEST,
+            'request_data': 'PKCS10 data ...'
+        }
+        plugin_meta = {}
+        self._process_simple_cmc_cert_request(order_meta, plugin_meta)
+
+    def test_issue_full_cmc_request(self):
+        order_meta = {
+            cm.REQUEST_TYPE: cm.CertificateRequestType.FULL_CMC_REQUEST,
+            'request_data': 'Full CMC data ...'
+        }
+        plugin_meta = {}
+
+        self.assertRaises(
+            dogtag_import.DogtagPluginNotSupportedException,
+            self.plugin.issue_certificate_request,
+            self.order_id,
+            order_meta,
+            plugin_meta
+        )
+
+    def test_issue_stored_key_request(self):
+        order_meta = {
+            cm.REQUEST_TYPE: cm.CertificateRequestType.STORED_KEY_REQUEST,
+            'request_data': 'PKCS10 data ...'
+        }
+        plugin_meta = {}
+        self._process_simple_cmc_cert_request(order_meta, plugin_meta)
+
+    def test_issue_custom_key_request(self):
+        order_meta = {
+            cm.REQUEST_TYPE: cm.CertificateRequestType.CUSTOM_REQUEST,
+            dogtag_import.DogtagCAPlugin.PROFILE_ID: self.profile_id,
+        }
+        plugin_meta = {}
+        self._process_custom_cert_request(order_meta, plugin_meta)
+
+    def test_issue_no_cert_request_type_provided(self):
+        order_meta = {dogtag_import.DogtagCAPlugin.PROFILE_ID: self.profile_id}
+        plugin_meta = {}
+        self._process_custom_cert_request(order_meta, plugin_meta)
+
+    def test_issue_bad_cert_request_type_provided(self):
+        order_meta = {
+            cm.REQUEST_TYPE: 'BAD_REQUEST_TYPE',
+            dogtag_import.DogtagCAPlugin.PROFILE_ID: self.profile_id,
+        }
+        plugin_meta = {}
+
+        self.assertRaises(
+            dogtag_import.DogtagPluginNotSupportedException,
+            self.plugin.issue_certificate_request,
+            self.order_id,
+            order_meta,
+            plugin_meta
         )
 
     def test_issue_return_data_error_with_no_profile_id(self):
