@@ -15,8 +15,8 @@
 import uuid
 
 import mock
-from oslo.config import cfg
 from oslo import messaging
+from oslo_config import cfg
 import six
 
 from barbican.openstack.common import service
@@ -273,7 +273,7 @@ class WhenUsingMessageServer(UtilMixin, utils.BaseTestCase):
         super(WhenUsingMessageServer, self).setUp()
         queue.init(self.conf)
 
-        patcher = mock.patch('oslo.messaging.server.MessageHandlingServer')
+        patcher = mock.patch('oslo_messaging.server.MessageHandlingServer')
         mock_server_class = patcher.start()
         self.addCleanup(patcher.stop)
 

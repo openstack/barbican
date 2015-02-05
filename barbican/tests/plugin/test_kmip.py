@@ -28,7 +28,7 @@ from kmip.core.messages import contents
 from kmip.core import objects
 from kmip.services import kmip_client as proxy
 from kmip.services import results
-from oslo.config import cfg
+from oslo_config import cfg
 
 from barbican.plugin import kmip_secret_store as kss
 

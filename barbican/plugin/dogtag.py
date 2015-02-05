@@ -18,7 +18,7 @@ import uuid
 
 from Crypto.PublicKey import RSA
 from Crypto.Util import asn1
-from oslo.config import cfg
+from oslo_config import cfg
 import pki
 import pki.cert
 import pki.client

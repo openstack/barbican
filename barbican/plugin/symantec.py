@@ -16,7 +16,7 @@
 """
 Barbican certificate processing plugins and support.
 """
-from oslo.config import cfg
+from oslo_config import cfg
 from requests import exceptions as request_exceptions
 from symantecssl.core import Symantec
 from symantecssl import exceptions as symantec_exceptions

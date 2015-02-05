@@ -12,7 +12,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from oslo import i18n
+import oslo_i18n as i18n
 
 _translators = i18n.TranslatorFactory(domain='barbican')
 

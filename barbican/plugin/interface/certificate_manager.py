@@ -22,7 +22,7 @@ implementations. Hence do not place vendor-specific content in this module.
 
 import abc
 
-from oslo.config import cfg
+from oslo_config import cfg
 import six
 from stevedore import named
 

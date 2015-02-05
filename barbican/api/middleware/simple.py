@@ -18,7 +18,7 @@ A filter middleware that just outputs to logs, for instructive/sample
 purposes only.
 """
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from barbican.api import middleware
 from barbican.common import utils

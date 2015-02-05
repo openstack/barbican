@@ -18,7 +18,7 @@ API handler for Cloudkeep's Barbican
 """
 import pkgutil
 
-from oslo.config import cfg
+from oslo_config import cfg
 import pecan
 
 from barbican.common import exception

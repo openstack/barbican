@@ -24,7 +24,7 @@ import logging
 import time
 import uuid
 
-from oslo.config import cfg
+from oslo_config import cfg
 import sqlalchemy
 from sqlalchemy import or_
 import sqlalchemy.orm as sa_orm

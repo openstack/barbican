@@ -17,7 +17,7 @@ import textwrap
 import cffi
 from cryptography.hazmat.primitives import padding
 from eventlet import semaphore
-from oslo.config import cfg
+from oslo_config import cfg
 
 from barbican.common import exception
 from barbican.common import utils

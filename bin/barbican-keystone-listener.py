@@ -45,7 +45,7 @@ from barbican.openstack.common import log
 from barbican.openstack.common import service
 from barbican import queue
 from barbican.queue import keystone_listener
-from oslo.config import cfg
+from oslo_config import cfg
 
 
 def fail(returncode, e):

@@ -25,7 +25,7 @@ try:
 except ImportError:
     newrelic_loaded = False
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from barbican.api.controllers import containers
 from barbican.api.controllers import orders

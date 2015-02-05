@@ -22,7 +22,7 @@ For typical-flow business logic tests of these classes, see the
 import os
 
 import mock
-from oslo.config import cfg
+from oslo_config import cfg
 from webob import exc
 
 from barbican.api.controllers import consumers

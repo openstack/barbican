@@ -18,7 +18,7 @@ Server-side (i.e. worker side) classes and logic.
 """
 import functools
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from barbican.common import utils
 from barbican.model import repositories
@@ -108,7 +108,7 @@ class TaskServer(Tasks, service.Service):
         super(TaskServer, self).__init__()
 
         # This property must be defined for the 'endpoints' specified below,
-        #   as the oslo.messaging RPC server will ask for it.
+        #   as the oslo_messaging RPC server will ask for it.
         self.target = queue.get_target()
 
         # Create an oslo RPC server, that calls back on to this class

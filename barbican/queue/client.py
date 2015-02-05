@@ -26,7 +26,7 @@ LOG = utils.getLogger(__name__)
 class TaskClient(object):
     """API-side client interface to asynchronous queuing services.
 
-    The class delegates calls to the oslo.messaging RPC framework.
+    The class delegates calls to the oslo_messaging RPC framework.
     """
     def __init__(self):
         super(TaskClient, self).__init__()

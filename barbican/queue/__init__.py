@@ -16,10 +16,10 @@
 """
 Queue objects for Cloudkeep's Barbican
 """
-from oslo.config import cfg
-from oslo import messaging
-from oslo.messaging.notify import dispatcher as notfiy_dispatcher
-from oslo.messaging import server as msg_server
+from oslo_config import cfg
+import oslo_messaging as messaging
+from oslo_messaging.notify import dispatcher as notfiy_dispatcher
+from oslo_messaging import server as msg_server
 
 from barbican.common import exception
 from barbican.common import utils
