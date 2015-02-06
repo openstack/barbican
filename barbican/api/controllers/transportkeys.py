@@ -118,7 +118,10 @@ class TransportKeysController(object):
                 for s in transport_keys
             ]
             transport_keys_resp_overall = hrefs.add_nav_hrefs(
-                'transport_keys', offset, limit, total,
+                'transport_keys',
+                offset,
+                limit,
+                total,
                 {'transport_keys': transport_keys_resp}
             )
             transport_keys_resp_overall.update({'total': total})
