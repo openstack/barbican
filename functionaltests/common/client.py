@@ -127,6 +127,8 @@ class BarbicanClient(object):
             return model.obj_to_json()
 
     def get_base_url(self, include_version=True):
+        if CONF.keymanager.override_url:
+            return CONF.keymanager.override_url
         filters = {
             'service': 'key-manager',
             'region': self.region,
