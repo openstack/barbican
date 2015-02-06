@@ -279,13 +279,18 @@ class TypeOrderValidator(ValidatorBase):
         self.schema = {
             "type": "object",
             "$schema": "http://json-schema.org/draft-03/schema",
-            "properties": {"meta": {"type": "object",
-                                    "required": True},
-                           "type": {"type": "string",
-                                    "required": True,
-                                    "enum": ['key', 'asymmetric',
-                                             'certificate']}
-                           }}
+            "properties": {
+                "meta": {
+                    "type": "object",
+                    "required": True
+                },
+                "type": {
+                    "type": "string",
+                    "required": True,
+                    "enum": ['key', 'asymmetric', 'certificate']
+                }
+            }
+        }
 
     def validate(self, json_data, parent_schema=None):
         schema_name = self._full_name(parent_schema)
