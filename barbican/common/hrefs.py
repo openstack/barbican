@@ -13,40 +13,33 @@
 from barbican.common import utils
 
 
+def convert_resource_id_to_href(resource_slug, resource_id):
+    """Convert the resouce ID to a HATEOS-style href with resource slug."""
+    if resource_id:
+        resource = '{slug}/{id}'.format(slug=resource_slug, id=resource_id)
+    else:
+        resource = '{slug}/????'.format(slug=resource_slug)
+    return utils.hostname_for_refs(resource=resource)
+
+
 def convert_secret_to_href(secret_id):
     """Convert the secret IDs to a HATEOS-style href."""
-    if secret_id:
-        resource = 'secrets/' + secret_id
-    else:
-        resource = 'secrets/????'
-    return utils.hostname_for_refs(resource=resource)
+    return convert_resource_id_to_href('secrets', secret_id)
 
 
 def convert_order_to_href(order_id):
     """Convert the order IDs to a HATEOS-style href."""
-    if order_id:
-        resource = 'orders/' + order_id
-    else:
-        resource = 'orders/????'
-    return utils.hostname_for_refs(resource=resource)
+    return convert_resource_id_to_href('orders', order_id)
 
 
 def convert_container_to_href(container_id):
     """Convert the container IDs to a HATEOS-style href."""
-    if container_id:
-        resource = 'containers/' + container_id
-    else:
-        resource = 'containers/????'
-    return utils.hostname_for_refs(resource=resource)
+    return convert_resource_id_to_href('containers', container_id)
 
 
 def convert_transport_key_to_href(transport_key_id):
     """Convert the transport key IDs to a HATEOS-style href."""
-    if transport_key_id:
-        resource = 'transport_keys/' + transport_key_id
-    else:
-        resource = 'transport_keys/????'
-    return utils.hostname_for_refs(resource=resource)
+    return convert_resource_id_to_href('transport_keys', transport_key_id)
 
 
 # TODO(hgedikli) handle list of fields in here
