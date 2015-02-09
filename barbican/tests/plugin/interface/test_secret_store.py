@@ -205,6 +205,22 @@ class WhenTestingSecretStorePluginManager(utils.BaseTestCase):
             transport_key_needed=True,
         )
 
+    @mock.patch('barbican.common.utils.generate_fullname_for')
+    def test_get_retrieve_plugin_raises_when_not_available(
+            self, generate_full_name_for):
+        plugin = TestSecretStore([str.KeyAlgorithm.AES])
+        plugin_mock = mock.MagicMock(obj=plugin)
+        self.manager.extensions = [plugin_mock]
+
+        generate_full_name_for.return_value = "another plugin name"
+        plugin_name = 'plugin name searched for'
+
+        self.assertRaises(
+            str.StorePluginNotAvailableOrMisconfigured,
+            self.manager.get_plugin_retrieve_delete,
+            plugin_name=plugin_name,
+        )
+
     def test_get_store_plugin_with_tkey_and_supports_storage(self):
         plugin1 = TestSecretStore([str.KeyAlgorithm.AES])
         plugin1_mock = mock.MagicMock(obj=plugin1)
