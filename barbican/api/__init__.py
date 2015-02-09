@@ -26,8 +26,6 @@ from barbican.common import utils
 from barbican import i18n as u
 from barbican.openstack.common import jsonutils as json
 from barbican.openstack.common import policy
-from barbican.plugin.interface import certificate_manager as cert_manager
-from barbican.plugin.interface import secret_store as s
 
 
 LOG = utils.getLogger(__name__)
@@ -76,15 +74,9 @@ def load_body(req, resp=None, validator=None):
     if validator:
         try:
             parsed_body = validator.validate(parsed_body)
-        except exception.InvalidObject as e:
-            LOG.exception(u._LE("Failed to validate JSON information"))
-            pecan.abort(400, str(e))
-        except exception.UnsupportedField as e:
-            LOG.exception(u._LE("Provided field value is not supported"))
-            pecan.abort(400, str(e))
-        except exception.LimitExceeded as e:
-            LOG.exception(u._LE("Data limit exceeded"))
-            pecan.abort(413, str(e))
+        except exception.BarbicanHTTPException as e:
+            LOG.exception(e.message)
+            pecan.abort(e.status_code, str(e.client_message))
 
     return parsed_body
 
@@ -117,49 +109,9 @@ def generate_safe_exception_message(operation_name, excep):
             'user/project privileges').format(operation=operation_name)
         status = 403
 
-    except s.SecretContentTypeNotSupportedException as sctnse:
-        reason = u._("content-type of '{content_type}' not "
-                     "supported").format(content_type=sctnse.content_type)
-        status = 400
-    except s.SecretContentEncodingNotSupportedException as ce:
-        reason = u._("content-encoding of '{content_encoding}' not "
-                     "supported").format(content_encoding=ce.content_encoding)
-        status = 400
-    except s.SecretStorePluginNotFound:
-        reason = u._("No plugin was found that could support "
-                     "your request")
-        status = 400
-    except s.SecretPayloadDecodingError:
-        reason = u._("Problem decoding payload")
-        status = 400
-    except s.SecretContentEncodingMustBeBase64:
-        reason = u._("Text-based binary secret payloads must "
-                     "specify a content-encoding of 'base64'")
-        status = 400
-    except s.SecretNotFoundException:
-        reason = u._("Not Found.  Sorry but your secret is in "
-                     "another castle")
-        status = 404
-    except s.SecretAlgorithmNotSupportedException:
-        reason = u._("Requested algorithm is not supported")
-        status = 400
-
-    except cert_manager.CertificateStatusClientDataIssue as cdi:
-        reason = cdi.reason
-        status = 400
-
-    except cert_manager.CertificateStatusInvalidOperation as cio:
-        reason = cio.reason
-        status = 400
-
-    except exception.NoDataToProcess:
-        reason = u._("No information provided to process")
-        status = 400
-    except exception.LimitExceeded:
-        reason = u._("Provided information too large "
-                     "to process")
-        status = 413
-
+    except exception.BarbicanHTTPException as http_exception:
+        reason = http_exception.client_message
+        status = http_exception.status_code
     except Exception:
         message = u._('{operation} failure seen - please contact site '
                       'administrator.').format(operation=operation_name)

@@ -139,24 +139,32 @@ class CertificateGeneralException(exception.BarbicanException):
         self.reason = reason
 
 
-class CertificateStatusClientDataIssue(exception.BarbicanException):
+class CertificateStatusClientDataIssue(exception.BarbicanHTTPException):
     """Raised when the CA has encountered an issue with request data."""
+
+    client_message = ""
+    status_code = 400
+
     def __init__(self, reason=u._('Unknown')):
         super(CertificateStatusClientDataIssue, self).__init__(
             u._('Problem with data in certificate request - '
                 'Reason: {reason}').format(reason=reason)
         )
-        self.reason = reason
+        self.client_message = self.message
 
 
-class CertificateStatusInvalidOperation(exception.BarbicanException):
+class CertificateStatusInvalidOperation(exception.BarbicanHTTPException):
     """Raised when the CA has encountered an issue with request data."""
+
+    client_message = ""
+    status_code = 400
+
     def __init__(self, reason=u._('Unknown')):
         super(CertificateStatusInvalidOperation, self).__init__(
             u._('Invalid operation requested - '
                 'Reason: {reason}').format(reason=reason)
         )
-        self.reason = reason
+        self.client_message = self.message
 
 
 @six.add_metaclass(abc.ABCMeta)

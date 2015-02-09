@@ -44,8 +44,12 @@ CONF.register_group(store_opt_group)
 CONF.register_opts(store_opts, group=store_opt_group)
 
 
-class SecretStorePluginNotFound(exception.BarbicanException):
+class SecretStorePluginNotFound(exception.BarbicanHTTPException):
     """Raised when no plugins are installed."""
+
+    client_message = u._("No plugin was found that could support your request")
+    status_code = 400
+
     def __init__(self, plugin_name=None):
         if plugin_name:
             message = u._('Secret store plugin "{name}"'
@@ -60,8 +64,11 @@ class SecretStoreSupportedPluginNotFound(exception.BarbicanException):
     message = u._("Secret store plugin not found for requested operation.")
 
 
-class SecretContentTypeNotSupportedException(exception.BarbicanException):
+class SecretContentTypeNotSupportedException(exception.BarbicanHTTPException):
     """Raised when support for payload content type is not available."""
+
+    status_code = 400
+
     def __init__(self, content_type):
         super(SecretContentTypeNotSupportedException, self).__init__(
             u._("A Content-Type of '{content_type}' for secrets is "
@@ -69,10 +76,16 @@ class SecretContentTypeNotSupportedException(exception.BarbicanException):
                     content_type=content_type)
         )
         self.content_type = content_type
+        self.client_message = u._(
+            "content-type of '{content_type}' not supported").format(
+                content_type=content_type)
 
 
-class SecretContentEncodingNotSupportedException(exception.BarbicanException):
+class SecretContentEncodingNotSupportedException(
+        exception.BarbicanHTTPException):
     """Raised when support for payload content encoding is not available."""
+    status_code = 400
+
     def __init__(self, content_encoding):
         super(SecretContentEncodingNotSupportedException, self).__init__(
             u._("Secret Content-Encoding of '{content_encoding}' "
@@ -80,6 +93,9 @@ class SecretContentEncodingNotSupportedException(exception.BarbicanException):
                     content_encoding=content_encoding)
         )
         self.content_encoding = content_encoding
+        self.client_message = u._(
+            "content-encoding of '{content_encoding}' not supported").format(
+                content_encoding=content_encoding)
 
 
 class SecretNoPayloadProvidedException(exception.BarbicanException):
@@ -90,8 +106,13 @@ class SecretNoPayloadProvidedException(exception.BarbicanException):
         )
 
 
-class SecretContentEncodingMustBeBase64(exception.BarbicanException):
+class SecretContentEncodingMustBeBase64(exception.BarbicanHTTPException):
     """Raised when encoding must be base64."""
+
+    client_message = u._("Text-based binary secret payloads must "
+                         "specify a content-encoding of 'base64'")
+    status_code = 400
+
     def __init__(self):
         super(SecretContentEncodingMustBeBase64, self).__init__(
             u._("Encoding type must be 'base64' for text-based payloads.")
@@ -108,8 +129,12 @@ class SecretGeneralException(exception.BarbicanException):
         self.reason = reason
 
 
-class SecretPayloadDecodingError(exception.BarbicanException):
+class SecretPayloadDecodingError(exception.BarbicanHTTPException):
     """Raised when payload could not be decoded."""
+
+    client_message = u._("Problem decoding payload")
+    status_code = 400
+
     def __init__(self):
         super(SecretPayloadDecodingError, self).__init__(
             u._("Problem decoding payload")
@@ -126,16 +151,24 @@ class SecretAcceptNotSupportedException(exception.BarbicanException):
         self.accept = accept
 
 
-class SecretNotFoundException(exception.BarbicanException):
+class SecretNotFoundException(exception.BarbicanHTTPException):
     """Raised when secret information could not be located."""
+
+    client_message = u._("Not Found. Sorry but your secret is in another "
+                         "castle")
+    status_code = 404
+
     def __init__(self):
         super(SecretNotFoundException, self).__init__(
-            u._('No secret information found')
-        )
+            u._('No secret information found'))
 
 
-class SecretAlgorithmNotSupportedException(exception.BarbicanException):
+class SecretAlgorithmNotSupportedException(exception.BarbicanHTTPException):
     """Raised when support for an algorithm is not available."""
+
+    client_message = u._("Requested algorithm is not supported")
+    status_code = 400
+
     def __init__(self, algorithm):
         super(SecretAlgorithmNotSupportedException, self).__init__(
             u._("Secret algorithm of '{algorithm}' not supported").format(
