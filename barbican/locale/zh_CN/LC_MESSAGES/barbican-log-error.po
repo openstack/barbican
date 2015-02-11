@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-03 06:10+0000\n"
-"PO-Revision-Date: 2015-02-02 08:54+0000\n"
-"Last-Translator: DuanXin <1145833162@qq.com>\n"
+"POT-Creation-Date: 2015-02-10 06:20+0000\n"
+"PO-Revision-Date: 2015-02-09 16:06+0000\n"
+"Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
 "Language: zh_CN\n"
@@ -20,25 +20,13 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: barbican/api/__init__.py:63
+#: barbican/api/__init__.py:61
 msgid "Problem reading request JSON stream."
 msgstr "JSON请求流中读取数据时出错。"
 
-#: barbican/api/__init__.py:73
+#: barbican/api/__init__.py:71
 msgid "Problem loading request JSON."
 msgstr "JSON请求加载时出错"
-
-#: barbican/api/__init__.py:80
-msgid "Failed to validate JSON information"
-msgstr "JSON信息验证失败"
-
-#: barbican/api/__init__.py:83
-msgid "Provided field value is not supported"
-msgstr "不支持提供的字段值"
-
-#: barbican/api/__init__.py:86
-msgid "Data limit exceeded"
-msgstr "数据超过限制"
 
 #: barbican/api/controllers/__init__.py:97
 msgid "Webob error seen"
