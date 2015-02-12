@@ -27,6 +27,8 @@ from barbican.plugin.crypto import crypto as plugin
 
 
 Attribute = collections.namedtuple("Attribute", ["type", "value"])
+CKAttributes = collections.namedtuple("CKAttributes", ["template", "cffivals"])
+CKMechanism = collections.namedtuple("CKMechanism", ["mech", "cffivals"])
 
 CKR_OK = 0
 CKF_RW_SESSION = (1 << 1)
@@ -338,13 +340,13 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
 
             attributes[index].value = val_list[-1]
 
-        return attributes, val_list
+        return CKAttributes(attributes, val_list)
 
     def _get_or_generate_mkek(self, mkek_label, mkek_length):
         mkek = self._get_key_handle(mkek_label)
         if not mkek:
             # Generate a key that is persistent and not extractable
-            template, val_list = self._build_attributes([
+            ck_attributes = self._build_attributes([
                 Attribute(CKA_CLASS, CKO_SECRET_KEY),
                 Attribute(CKA_KEY_TYPE, CKK_AES),
                 Attribute(CKA_VALUE_LEN, mkek_length),
@@ -360,7 +362,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
                 Attribute(CKA_UNWRAP, True),
                 Attribute(CKA_EXTRACTABLE, False)
             ])
-            mkek = self._generate_kek(template)
+            mkek = self._generate_kek(ck_attributes.template)
 
         self.key_handles[mkek_label] = mkek
 
@@ -370,7 +372,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         hmac_key = self._get_key_handle(hmac_label)
         if not hmac_key:
             # Generate a key that is persistent and not extractable
-            template, val_list = self._build_attributes([
+            ck_attributes = self._build_attributes([
                 Attribute(CKA_CLASS, CKO_SECRET_KEY),
                 Attribute(CKA_KEY_TYPE, CKK_AES),
                 Attribute(CKA_VALUE_LEN, 32),
@@ -382,7 +384,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
                 Attribute(CKA_TOKEN, True),
                 Attribute(CKA_EXTRACTABLE, False)
             ])
-            hmac_key = self._generate_kek(template)
+            hmac_key = self._generate_kek(ck_attributes.template)
 
         self.key_handles[hmac_label] = hmac_key
 
@@ -392,13 +394,13 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         if mkek_label in self.key_handles:
             return self.key_handles[mkek_label]
 
-        template, val_list = self._build_attributes([
+        ck_attributes = self._build_attributes([
             Attribute(CKA_CLASS, CKO_SECRET_KEY),
             Attribute(CKA_KEY_TYPE, CKK_AES),
             Attribute(CKA_LABEL, mkek_label)
         ])
         rv = self.lib.C_FindObjectsInit(
-            self.session, template, len(template)
+            self.session, ck_attributes.template, len(ck_attributes.template)
         )
         self._check_error(rv)
 
@@ -435,7 +437,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         gcm.ulTagBits = 128
         mech.parameter = gcm
         mech.parameter_len = 48  # sizeof(CK_AES_GCM_PARAMS)
-        return mech
+        return CKMechanism(mech, gcm)
 
     def _generate_kek(self, template):
         """Generates both master and project KEKs
@@ -454,7 +456,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
 
     def _generate_wrapped_kek(self, kek_label, key_length):
         # generate a non-persistent key that is extractable
-        template, val_list = self._build_attributes([
+        ck_attributes = self._build_attributes([
             Attribute(CKA_CLASS, CKO_SECRET_KEY),
             Attribute(CKA_KEY_TYPE, CKK_AES),
             Attribute(CKA_VALUE_LEN, key_length),
@@ -468,7 +470,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             Attribute(CKA_UNWRAP, True),
             Attribute(CKA_EXTRACTABLE, True)
         ])
-        kek = self._generate_kek(template)
+        kek = self._generate_kek(ck_attributes.template)
         mech = self.ffi.new("CK_MECHANISM *")
         mech.mechanism = CKM_AES_CBC_PAD
         iv = self._generate_random(16)
@@ -547,7 +549,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         mech.parameter = iv
         mech.parameter_len = 16
 
-        template, val_list = self._build_attributes([
+        ck_attributes = self._build_attributes([
             Attribute(CKA_CLASS, CKO_SECRET_KEY),
             Attribute(CKA_KEY_TYPE, CKK_AES),
             Attribute(CKA_ENCRYPT, True),
@@ -560,7 +562,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
 
         rv = self.lib.C_UnwrapKey(
             self.rw_session, mech, mkek, wrapped_key, len(wrapped_key),
-            template, len(template), unwrapped
+            ck_attributes.template, len(ck_attributes.template), unwrapped
         )
         self._check_error(rv)
 
@@ -577,9 +579,9 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
     def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
         key = self._unwrap_key(kek_meta_dto.plugin_meta)
         iv = self._generate_random(16)
-        mech = self._build_gcm_mech(iv)
+        ck_mechanism = self._build_gcm_mech(iv)
         with self.enc_sem:
-            rv = self.lib.C_EncryptInit(self.session, mech, key)
+            rv = self.lib.C_EncryptInit(self.session, ck_mechanism.mech, key)
             self._check_error(rv)
             # GCM does not require padding, but sometimes HSMs don't seem to
             # know that and then you need to pad things for no reason.
@@ -608,9 +610,9 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         meta_extended = json.loads(kek_meta_extended)
         iv = base64.b64decode(meta_extended['iv'])
         iv = self.ffi.new("CK_BYTE[]", iv)
-        mech = self._build_gcm_mech(iv)
+        ck_mechanism = self._build_gcm_mech(iv)
         with self.dec_sem:
-            rv = self.lib.C_DecryptInit(self.session, mech, key)
+            rv = self.lib.C_DecryptInit(self.session, ck_mechanism.mech, key)
             self._check_error(rv)
             pt = self.ffi.new(
                 "CK_BYTE[{0}]".format(len(decrypt_dto.encrypted))
