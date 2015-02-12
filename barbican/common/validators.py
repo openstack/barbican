@@ -26,7 +26,9 @@ from barbican.common import utils
 from barbican import i18n as u
 from barbican.model import models
 from barbican.openstack.common import timeutils
+from barbican.plugin.interface import secret_store
 from barbican.plugin.util import mime_types
+from barbican.plugin.util import translations
 
 
 LOG = utils.getLogger(__name__)
@@ -130,6 +132,16 @@ class NewSecretValidator(ValidatorBase):
                 },
                 "expiration": {"type": "string", "maxLength": 255},
                 "payload": {"type": "string"},
+                "secret_type": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "enum": [secret_store.SecretType.SYMMETRIC,
+                             secret_store.SecretType.PASSPHRASE,
+                             secret_store.SecretType.PRIVATE,
+                             secret_store.SecretType.PUBLIC,
+                             secret_store.SecretType.CERTIFICATE,
+                             secret_store.SecretType.OPAQUE]
+                },
                 "payload_content_type": {"type": "string", "maxLength": 255},
                 "payload_content_encoding": {
                     "type": "string",
@@ -178,8 +190,13 @@ class NewSecretValidator(ValidatorBase):
                                   "payload")
 
             if content_type:
-                self._validate_payload_content_type_is_supported(content_type,
-                                                                 schema_name)
+                self._assert_validity(
+                    mime_types.is_supported(content_type),
+                    schema_name,
+                    u._("payload_content_type is not one of {supported}"
+                        ).format(supplied=content_type,
+                                 supported=mime_types.SUPPORTED),
+                    "payload_content_type")
 
         return json_data
 
@@ -233,39 +250,32 @@ class NewSecretValidator(ValidatorBase):
                 "be supplied."),
             "payload_content_type")
 
-        self._validate_payload_content_type_is_supported(content_type,
-                                                         schema_name)
-
-        if content_type == 'application/octet-stream':
-            self._assert_validity(
-                content_encoding is not None,
-                schema_name,
-                u._("payload_content_encoding must be specified when "
-                    "payload_content_type is application/octet-stream."),
-                "payload_content_encoding")
-
-        if content_type.startswith('text/plain'):
-            self._assert_validity(
-                content_encoding is None,
-                schema_name,
-                u._("payload_content_encoding must not be specified when "
-                    "payload_content_type is text/plain"),
-                "payload_content_encoding")
-
-    def _validate_payload_content_type_is_supported(self, content_type,
-                                                    schema_name):
         self._assert_validity(
-            content_type.lower() in mime_types.SUPPORTED,
+            mime_types.is_supported(content_type),
             schema_name,
-            u._("payload_content_type is not one of {supported}").format(
-                supported=mime_types.SUPPORTED),
+            u._("payload_content_type {supplied} is not one of {supported}"
+                ).format(supplied=content_type,
+                         supported=mime_types.SUPPORTED),
             "payload_content_type")
+
+        self._assert_validity(
+            mime_types.is_content_type_with_encoding_supported(
+                content_type,
+                content_encoding),
+            schema_name,
+            u._("payload_content_encoding is not one of {supported}").format(
+                supported=mime_types.get_supported_encodings(content_type)),
+            "payload_content_encoding")
 
     def _validate_payload_by_content_encoding(self, payload_content_encoding,
                                               payload, schema_name):
         if payload_content_encoding == 'base64':
             try:
-                base64.b64decode(payload)
+                secret_payload = payload
+                if translations.is_pem_payload(payload):
+                    pems = translations.get_pem_components(payload)
+                    secret_payload = pems[1]
+                base64.b64decode(secret_payload)
             except TypeError:
                 LOG.exception("Problem parsing payload")
                 raise exception.InvalidObject(schema=schema_name,

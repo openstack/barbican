@@ -21,6 +21,7 @@ from barbican.model import repositories
 from barbican.plugin.crypto import crypto
 from barbican.plugin.crypto import manager
 from barbican.plugin.interface import secret_store as sstore
+from barbican.plugin.util import translations
 
 CONF = cfg.CONF
 
@@ -82,7 +83,14 @@ class StoreCryptoAdapterPlugin(object):
             encrypting_plugin, context.project_model)
 
         # Secrets are base64 encoded before being passed to the secret stores.
-        normalized_secret = base64.b64decode(secret_dto.secret)
+        normalized_secret = secret_dto.secret
+        secret_type = secret_dto.type
+        if (secret_type == sstore.SecretType.PRIVATE or
+                secret_type == sstore.SecretType.PUBLIC or
+                secret_type == sstore.SecretType.CERTIFICATE):
+            normalized_secret = translations.get_pem_components(
+                normalized_secret)[1]
+        normalized_secret = base64.b64decode(normalized_secret)
         encrypt_dto = crypto.EncryptDTO(normalized_secret)
 
         # Enhance the context with content_type, This is needed to build
@@ -101,10 +109,11 @@ class StoreCryptoAdapterPlugin(object):
 
         return None
 
-    def get_secret(self, secret_metadata, context):
+    def get_secret(self, secret_type, metadata, context):
         """Retrieve a secret.
 
-        :param secret_metadata: secret metadata
+        :param secret_type: secret type
+        :param metadata: secret metadata
         :param context: StoreCryptoContext for secret
         :returns: SecretDTO that contains secret
         """
@@ -131,11 +140,16 @@ class StoreCryptoAdapterPlugin(object):
                                            kek_meta_dto,
                                            datum_model.kek_meta_extended,
                                            context.project_model.external_id)
+        secret = base64.b64encode(secret)
+        if (secret_type == sstore.SecretType.PRIVATE or
+                secret_type == sstore.SecretType.PUBLIC or
+                secret_type == sstore.SecretType.CERTIFICATE):
+            secret = translations.to_pem(secret_type, secret, True)
         key_spec = sstore.KeySpec(alg=context.secret_model.algorithm,
                                   bit_length=context.secret_model.bit_length,
                                   mode=context.secret_model.mode)
 
-        return sstore.SecretDTO(sstore.SecretType.SYMMETRIC,
+        return sstore.SecretDTO(secret_type,
                                 secret, key_spec,
                                 datum_model.content_type)
 

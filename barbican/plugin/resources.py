@@ -101,17 +101,12 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
         key_spec=key_spec, plugin_name=plugin_name)
 
     # Normalize inputs prior to storage.
-    # TODO(john-wood-w) Normalize all secrets to base64, so we don't have to
-    #  pass in 'content' type to the store_secret() call below.
     unencrypted, content_type = tr.normalize_before_encryption(
         unencrypted_raw, content_type_raw, content_encoding,
-        enforce_text_only=True)
+        secret_model.secret_type, enforce_text_only=True)
 
     # Store the secret securely.
-    secret_type = None
-    if key_spec is not None:
-        secret_type = secret_store.KeyAlgorithm().get_secret_type(key_spec.alg)
-    secret_dto = secret_store.SecretDTO(type=secret_type,
+    secret_dto = secret_store.SecretDTO(type=secret_model.secret_type,
                                         secret=unencrypted,
                                         key_spec=key_spec,
                                         content_type=content_type,
@@ -181,6 +176,7 @@ def generate_secret(spec, content_type, project_model):
 
     # Create secret model to eventually save metadata to.
     secret_model = models.Secret(spec)
+    secret_model['secret_type'] = secret_store.SecretType.SYMMETRIC
 
     # Generate the secret.
     secret_metadata = _generate_symmetric_key(
@@ -206,9 +202,14 @@ def generate_asymmetric_secret(spec, content_type, project_model):
 
     # Create secret models to eventually save metadata to.
     private_secret_model = models.Secret(spec)
+    private_secret_model['secret_type'] = secret_store.SecretType.PRIVATE
     public_secret_model = models.Secret(spec)
+    public_secret_model['secret_type'] = secret_store.SecretType.PUBLIC
     passphrase_secret_model = (models.Secret(spec)
                                if spec.get('passphrase') else None)
+    if passphrase_secret_model:
+        passphrase_type = secret_store.SecretType.PASSPHRASE
+        passphrase_secret_model['secret_type'] = passphrase_type
 
     # Generate the secret.
     asymmetric_meta_dto = _generate_asymmetric_key(
@@ -319,9 +320,12 @@ def _get_secret(retrieve_plugin, secret_metadata, secret_model, project_model):
         context = store_crypto.StoreCryptoContext(
             project_model,
             secret_model=secret_model)
-        secret_dto = retrieve_plugin.get_secret(secret_metadata, context)
+        secret_dto = retrieve_plugin.get_secret(secret_model.secret_type,
+                                                secret_metadata,
+                                                context)
     else:
-        secret_dto = retrieve_plugin.get_secret(secret_metadata)
+        secret_dto = retrieve_plugin.get_secret(secret_model.secret_type,
+                                                secret_metadata)
     return secret_dto
 
 

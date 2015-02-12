@@ -111,8 +111,8 @@ class WhenTestingAugmentFieldsWithContentTypes(utils.BaseTestCase):
 
     def test_static_supported_binary(self):
         for bin in mime_types.BINARY:
-            self.assertEqual('application/octet-stream',
-                             mime_types.INTERNAL_CTYPES[bin])
+            self.assertTrue(mime_types.INTERNAL_CTYPES[bin] in
+                            mime_types.BINARY)
 
     def test_static_content_to_encodings(self):
         self.assertIn('text/plain', mime_types.CTYPES_TO_ENCODINGS)
@@ -195,3 +195,31 @@ class WhenTestingNormalizationOfMIMETypes(utils.BaseTestCase):
         mime = 'something/bogus'
         r = mime_types.normalize_content_type(mime)
         self.assertEqual(r, 'something/bogus')
+
+
+@utils.parameterized_test_case
+class WhenTestingIfContentTypeAndEncodingSupported(utils.BaseTestCase):
+
+    @utils.parameterized_dataset({
+        'plaintext_none': ['text/plain', None],
+        'octectstream_base64': ['application/octet-stream', 'base64'],
+        'pkcs8_base64': ['application/pkcs8', 'base64'],
+        'pkix_base64': ['application/pkix-cert', 'base64'],
+    })
+    def test_content_type_encoding_supported(self, content_type, encoding):
+        self.assertTrue(mime_types.is_content_type_with_encoding_supported(
+            content_type,
+            encoding))
+
+    @utils.parameterized_dataset({
+        'plaintext_none': ['text/plain', 'base64'],
+        'octectstream_no_encoding': ['application/octet-stream', None],
+        'pkcs8_no_encoding': ['application/pkcs8', None],
+        'pkix_no_encoding': ['application/pkix-cert', None],
+        'unknown_with_valid_encoding': ['application/uknown-content-type',
+                                        'base64']
+    })
+    def test_content_type_encoding_not_supported(self, content_type, encoding):
+        self.assertFalse(mime_types.is_content_type_with_encoding_supported(
+            content_type,
+            encoding))

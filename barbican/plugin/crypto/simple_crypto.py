@@ -170,10 +170,10 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
     def _wrap_key(self, public_key, private_key,
                   passphrase):
         pkcs = 8
-        key_wrap_format = 'PEM'
+        key_wrap_format = 'DER'
 
         private_key = private_key.exportKey(key_wrap_format, passphrase, pkcs)
-        public_key = public_key.exportKey()
+        public_key = public_key.exportKey(key_wrap_format)
 
         return public_key, private_key
 
@@ -182,16 +182,12 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         pub_seq = asn1.DerSequence()
         pub_seq[:] = [0, public_key.p, public_key.q,
                       public_key.g, public_key.y]
-        public_key = ("-----BEGIN DSA PUBLIC KEY-----\n{0}"
-                      "-----END DSA PUBLIC KEY-----"
-                      .format(pub_seq.encode().encode("base64")))
+        public_key = pub_seq.encode()
 
         prv_seq = asn1.DerSequence()
         prv_seq[:] = [0, private_key.p, private_key.q,
                       private_key.g, private_key.y, private_key.x]
-        private_key = ("-----BEGIN DSA PRIVATE KEY-----\n{0}"
-                       "-----END DSA PRIVATE KEY-----"
-                       .format(prv_seq.encode().encode("base64")))
+        private_key = prv_seq.encode()
 
         return public_key, private_key
 

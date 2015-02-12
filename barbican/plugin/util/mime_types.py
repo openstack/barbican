@@ -26,7 +26,9 @@ PLAIN_TEXT = ['text/plain',
               'text/plain;charset=utf-8',
               'text/plain; charset=utf-8']
 PLAIN_TEXT_CHARSETS = ['utf-8']
-BINARY = ['application/octet-stream']
+BINARY = ['application/octet-stream',
+          'application/pkcs8',
+          'application/pkix-cert']
 SUPPORTED = PLAIN_TEXT + BINARY
 
 # Normalizes client types to internal types.
@@ -34,6 +36,8 @@ INTERNAL_CTYPES = {'text/plain': 'text/plain',
                    'text/plain;charset=utf-8': 'text/plain',
                    'text/plain; charset=utf-8': 'text/plain',
                    'application/octet-stream': 'application/octet-stream',
+                   'application/pkcs8': 'application/pkcs8',
+                   'application/pkix-cert': 'application/pkix-cert',
                    'application/aes': 'application/aes'}
 
 # Maps mime-types used to specify secret data formats to the types that can
@@ -42,9 +46,13 @@ INTERNAL_CTYPES = {'text/plain': 'text/plain',
 #   which are then used as the keys to the 'CTYPES_MAPPINGS' below.
 CTYPES_PLAIN = {'default': 'text/plain'}
 CTYPES_BINARY = {'default': 'application/octet-stream'}
+CTYPES_PKCS8 = {'default': 'application/pkcs8'}
+CTYPES_PKIX_CERT = {'default': 'application/pkix-cert'}
 CTYPES_AES = {'default': 'application/aes'}
 CTYPES_MAPPINGS = {'text/plain': CTYPES_PLAIN,
                    'application/octet-stream': CTYPES_BINARY,
+                   'application/pkcs8': CTYPES_PKCS8,
+                   'application/pkix-cert': CTYPES_PKIX_CERT,
                    'application/aes': CTYPES_AES}
 
 # Supported encodings
@@ -53,6 +61,8 @@ ENCODINGS = ['base64']
 # Maps normalized content-types to supported encoding(s)
 CTYPES_TO_ENCODINGS = {'text/plain': None,
                        'application/octet-stream': ['base64', 'binary'],
+                       'application/pkcs8': ['base64', 'binary'],
+                       'application/pkix-cert': ['base64', 'binary'],
                        'application/aes': None}
 
 
@@ -75,7 +85,8 @@ def normalize_content_type(mime_type):
 
 
 def is_supported(mime_type):
-    return mime_type in SUPPORTED
+    normalized_type = normalize_content_type(mime_type)
+    return normalized_type in SUPPORTED
 
 
 def is_base64_encoding_supported(mime_type):
@@ -83,6 +94,22 @@ def is_base64_encoding_supported(mime_type):
         encodings = CTYPES_TO_ENCODINGS[INTERNAL_CTYPES[mime_type]]
         return encodings and ('base64' in encodings)
     return False
+
+
+def is_content_type_with_encoding_supported(content_type, content_encoding):
+    if not is_supported(content_type):
+        return False
+    normalized_type = normalize_content_type(content_type)
+    encodings = CTYPES_TO_ENCODINGS[INTERNAL_CTYPES[normalized_type]]
+    if encodings:
+        return content_encoding in encodings
+    else:
+        return content_encoding is None
+
+
+def get_supported_encodings(content_type):
+    normalized_type = normalize_content_type(content_type)
+    return CTYPES_TO_ENCODINGS[INTERNAL_CTYPES[normalized_type]]
 
 
 def is_base64_processing_needed(content_type, content_encoding):

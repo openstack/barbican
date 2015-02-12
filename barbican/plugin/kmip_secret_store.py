@@ -250,9 +250,10 @@ class KMIPSecretStore(ss.SecretStoreBase):
             self.client.close()
             LOG.debug("Closed connection to KMIP client for secret storage")
 
-    def get_secret(self, secret_metadata):
+    def get_secret(self, secret_type, secret_metadata):
         """Gets a secret
 
+        :param secret_type: secret type
         :param secret_metadata: Dictionary of key metadata, requires:
         {'key_uuid': <uuid of key>}
         :returns: SecretDTO of the retrieved Secret
@@ -272,9 +273,6 @@ class KMIPSecretStore(ss.SecretStoreBase):
         else:
             if result.result_status.enum == enums.ResultStatus.SUCCESS:
                 secret_block = result.secret.key_block
-
-                secret_type = self._map_type_kmip_to_ss(
-                    result.object_type.enum)
 
                 key_value_type = type(secret_block.key_value.key_material)
                 if key_value_type == kmip_objects.KeyMaterialStruct:
@@ -461,19 +459,6 @@ class KMIPSecretStore(ss.SecretStoreBase):
         """
         if object_type == ss.SecretType.SYMMETRIC:
             return enums.ObjectType.SYMMETRIC_KEY
-        else:
-            return None
-
-    def _map_type_kmip_to_ss(self, object_type):
-        """Map KMIP type enum to SecretType enum
-
-        Returns None if the type is not supported. The KMIP plugin only
-        supports symmetric keys for now.
-        :param object_type: KMIP type enum
-        :returns: SecretType enum if type is supported, None if not supported
-        """
-        if object_type == enums.ObjectType.SYMMETRIC_KEY:
-            return ss.SecretType.SYMMETRIC
         else:
             return None
 

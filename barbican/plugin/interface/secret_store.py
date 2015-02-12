@@ -302,7 +302,7 @@ class SecretDTO(object):
                secret has been encrypted using a transport key.  The transport
                key is a base64 encoded x509 transport certificate.
         """
-        self.type = type
+        self.type = type or SecretType.OPAQUE
         self.secret = secret
         self.key_spec = key_spec
         self.content_type = content_type
@@ -386,7 +386,7 @@ class SecretStoreBase(object):
         raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
-    def get_secret(self, secret_metadata):
+    def get_secret(self, secret_type, secret_metadata):
         """Retrieves a secret from the secret store.
 
         Retrieves a secret from the secret store and returns a SecretDTO that
@@ -396,6 +396,12 @@ class SecretStoreBase(object):
         generate or store methods. This data is used by the plugins to retrieve
         the key.
 
+        The secret_type parameter may be useful for secret stores to know the
+        expected format of the secret. For instance if the type is
+        SecretDTO.PRIVATE then a PKCS8 structure is returned. This way secret
+        stores do not need to manage the secret type on their own.
+
+        :param secret_type: secret type
         :param secret_metadata: secret metadata
         :returns: SecretDTO that contains secret
         """

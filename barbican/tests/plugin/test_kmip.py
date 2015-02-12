@@ -48,6 +48,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         self.secret_store = kss.KMIPSecretStore(CONF)
         self.secret_store.client = self.kmipclient_mock
         self.secret_store.credential = self.credential
+        self.symmetric_type = secret_store.SecretType.SYMMETRIC
 
         self.sample_secret_features = {
             'key_format_type': enums.KeyFormatType.RAW,
@@ -280,13 +281,14 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
     def test_get_secret_symmetric_assert_called(self):
         metadata = {kss.KMIPSecretStore.KEY_UUID: 'uuid'}
-        self.secret_store.get_secret(metadata)
+        self.secret_store.get_secret(self.symmetric_type, metadata)
         self.kmipclient_mock.get.assert_called_once_with('uuid',
                                                          self.credential)
 
     def test_get_secret_symmetric_return_value_key_material_struct(self):
         metadata = {kss.KMIPSecretStore.KEY_UUID: 'uuid'}
-        return_value = self.secret_store.get_secret(metadata)
+        return_value = self.secret_store.get_secret(self.symmetric_type,
+                                                    metadata)
         self.assertEqual(secret_store.SecretDTO, type(return_value))
         self.assertEqual(secret_store.SecretType.SYMMETRIC, return_value.type)
         # The plugin returns a base64 string for the secret
@@ -306,7 +308,8 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
                 secret=sample_secret))
 
         metadata = {kss.KMIPSecretStore.KEY_UUID: 'uuid'}
-        return_value = self.secret_store.get_secret(metadata)
+        return_value = self.secret_store.get_secret(self.symmetric_type,
+                                                    metadata)
         self.assertEqual(secret_store.SecretDTO, type(return_value))
         self.assertEqual(secret_store.SecretType.SYMMETRIC, return_value.type)
         # The plugin returns a base64 string for the secret
@@ -328,7 +331,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         self.assertRaises(
             secret_store.SecretGeneralException,
             self.secret_store.get_secret,
-            metadata)
+            self.symmetric_type, metadata)
 
     def test_get_secret_symmetric_error_occurs(self):
         self.secret_store.client.get = mock.create_autospec(
@@ -338,7 +341,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         self.assertRaises(
             secret_store.SecretGeneralException,
             self.secret_store.get_secret,
-            metadata)
+            self.symmetric_type, metadata)
 
     def test_get_secret_symmetric_error_opening_connection(self):
         self.secret_store.client.open = mock.Mock(side_effect=socket.error)
@@ -347,7 +350,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         self.assertRaises(
             secret_store.SecretGeneralException,
             self.secret_store.get_secret,
-            metadata)
+            self.symmetric_type, metadata)
 
     # ---------------- TEST DELETE -------------------------------------------
 
@@ -395,16 +398,6 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
     def test_map_type_ss_to_kmip_invalid_type(self):
         self.assertIsNone(
             self.secret_store._map_type_ss_to_kmip('bad_type'))
-
-    def test_map_type_kmip_to_ss_valid_type(self):
-        kmip_types = [enums.ObjectType.SYMMETRIC_KEY]
-        for kmip_type in kmip_types:
-            self.assertIsNotNone(
-                self.secret_store._map_type_kmip_to_ss(kmip_type))
-
-    def test_map_type_kmip_to_ss_invalid_type(self):
-        self.assertIsNone(
-            self.secret_store._map_type_kmip_to_ss('bad_type'))
 
     def test_map_algorithm_ss_to_kmip_valid_alg(self):
         ss_algs = [secret_store.KeyAlgorithm.AES,

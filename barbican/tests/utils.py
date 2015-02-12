@@ -416,3 +416,57 @@ def generate_test_uuid(tail_value=0):
     """Returns a blank uuid with the given value added to the end segment."""
     return '00000000-0000-0000-0000-{value:0>{pad}}'.format(value=tail_value,
                                                             pad=12)
+
+
+def get_private_key():
+    s = ("-----BEGIN PRIVATE KEY-----"
+         "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAMxOUcg4eiBTZnIy"
+         "4XhEV+IoBbye/ZkXnxWQPnz9Cm+2C3rIYBev6WLqztSfi1EHnn3jM9p36KJuVgvA"
+         "Jr4wfn19hM9pw5Cq5hcnkVlBCAKoCM7p/jf7G2qv0yxlhXK3eZVzR/8Km3wImKN5"
+         "mJRqCv89I1LXyiuHYlVrznx8hjTZAgMBAAECgYAYyVu0rd1rNJMWQcQHAkujPXXM"
+         "t4FO5IXBaPmb0ltEyFJGOC8oUIhBHvmu5BhT4VfCMCFnXOrVYguAa3SH2HxP54Wb"
+         "xfycCNow5ikujEfdvsAZi1tnKedFRnJhdANCAM+6+fTNUzNElUW6kjuvwWWnRq7C"
+         "iCHqhd5ssVa8vMjPjQJBAPpMz0rXo2DDtYqQLOnWwAbV+djM1+ldmBdh/Q4zETDO"
+         "xgPfUvLBhU40LJt8NQeia6Ce4oYH+W4WRyNYvvmcGz8CQQDQ9V/8IuMJN6vyAKrc"
+         "WMPyLfYFu3wJ74/DX0EZ7lf+UhTlCEwEQaVQ78El1oFJDl7cjnH3Ay5GNsFfHOfd"
+         "uaHnAkAa21MCvNCS+WzpST8IeDpygVMlqBUivSAsoh78/w3BJu6oS7YixhD/qyl+"
+         "JX2rLApQWbwElaZ14X4QlN0o+08RAkEAi79vIDtcx69Z6ZGUs6UR9wfR/+dxf1ue"
+         "NDWiXmtOoiHXI422+SnGHCkcbefVszxPKQaDJYYVDpRUIv47+8fIhQJAIPlfqUpN"
+         "0c23beUUWItd+fSVLH+bxTUv+FUqLQIC2VlXVecg7+eAOMNzF2CqcpWstIcrYkV7"
+         "lECxnorexnYA8g=="
+         "-----END PRIVATE KEY-----")
+    return s
+
+
+def get_public_key():
+    s = ("-----BEGIN PUBLIC KEY-----"
+         "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDMTlHIOHogU2ZyMuF4RFfiKAW8"
+         "nv2ZF58VkD58/Qpvtgt6yGAXr+li6s7Un4tRB5594zPad+iiblYLwCa+MH59fYTP"
+         "acOQquYXJ5FZQQgCqAjO6f43+xtqr9MsZYVyt3mVc0f/Cpt8CJijeZiUagr/PSNS"
+         "18orh2JVa858fIY02QIDAQAB"
+         "-----END PUBLIC KEY-----")
+    return s
+
+
+def get_certificate():
+    s = ("-----BEGIN CERTIFICATE-----"
+         "MIIDTzCCArigAwIBAgIJANwgT2i4cVRAMA0GCSqGSIb3DQEBBQUAMHkxCzAJBgNV"
+         "BAYTAlVTMQswCQYDVQQIEwJUWDEPMA0GA1UEBxMGQXVzdGluMRYwFAYDVQQKEw1t"
+         "eWNvbXBhbnkuY29tMQ8wDQYDVQQDEwZjb21tb24xIzAhBgkqhkiG9w0BCQEWFGNv"
+         "bW1vbkBteWNvbXBhbnkuY29tMB4XDTE1MDIxNzIxMDA1N1oXDTE4MDIxNjIxMDA1"
+         "N1oweTELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAlRYMQ8wDQYDVQQHEwZBdXN0aW4x"
+         "FjAUBgNVBAoTDW15Y29tcGFueS5jb20xDzANBgNVBAMTBmNvbW1vbjEjMCEGCSqG"
+         "SIb3DQEJARYUY29tbW9uQG15Y29tcGFueS5jb20wgZ8wDQYJKoZIhvcNAQEBBQAD"
+         "gY0AMIGJAoGBAMxOUcg4eiBTZnIy4XhEV+IoBbye/ZkXnxWQPnz9Cm+2C3rIYBev"
+         "6WLqztSfi1EHnn3jM9p36KJuVgvAJr4wfn19hM9pw5Cq5hcnkVlBCAKoCM7p/jf7"
+         "G2qv0yxlhXK3eZVzR/8Km3wImKN5mJRqCv89I1LXyiuHYlVrznx8hjTZAgMBAAGj"
+         "gd4wgdswHQYDVR0OBBYEFBxIlJZjp3+TkIwy8G3dqfCgL6GfMIGrBgNVHSMEgaMw"
+         "gaCAFBxIlJZjp3+TkIwy8G3dqfCgL6GfoX2kezB5MQswCQYDVQQGEwJVUzELMAkG"
+         "A1UECBMCVFgxDzANBgNVBAcTBkF1c3RpbjEWMBQGA1UEChMNbXljb21wYW55LmNv"
+         "bTEPMA0GA1UEAxMGY29tbW9uMSMwIQYJKoZIhvcNAQkBFhRjb21tb25AbXljb21w"
+         "YW55LmNvbYIJANwgT2i4cVRAMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQEFBQAD"
+         "gYEANTlbvNaoADYMzGOoLgaAVt7tjQ6EZVXjswax1jnj8dEoQpUNCAzkkwFJDFqt"
+         "mOTTZxpWNbDm9AcbCubrLXwN22eBqYz02cBGoBnN/h2qINSL2caM08OMmMDm1g1Q"
+         "+iH+eUsCmvkTnylw8FJwN7TYV0No6V9/+aWvf6h1NqDiiLc="
+         "-----END CERTIFICATE-----")
+    return s
