@@ -298,6 +298,7 @@ class TypeOrderValidator(ValidatorBase):
         self._assert_schema_is_valid(json_data, schema_name)
 
         order_type = json_data.get('type').lower()
+
         if order_type == models.OrderType.CERTIFICATE:
             certificate_meta = json_data.get('meta')
             self._validate_certificate_meta(certificate_meta, schema_name)
@@ -309,6 +310,7 @@ class TypeOrderValidator(ValidatorBase):
         elif order_type == models.OrderType.KEY:
             key_meta = json_data.get('meta')
             self._validate_key_meta(key_meta, schema_name)
+
         else:
             self._raise_feature_not_implemented(order_type, schema_name)
 
@@ -328,7 +330,7 @@ class TypeOrderValidator(ValidatorBase):
         # Validation secret generation related fields.
         # TODO(jfwood): Invoke the crypto plugin for this purpose
 
-        self._validate_bit_length(key_meta, schema_name)
+        self._validate_meta_parameters(key_meta, "key", schema_name)
 
     def _validate_asymmetric_meta(self, asymmetric_meta, schema_name):
         """Validation specific to meta for asymmetric type order."""
@@ -345,12 +347,8 @@ class TypeOrderValidator(ValidatorBase):
                                                         "tet-stream' "
                                                         "supported"))
 
-        self._assert_validity(asymmetric_meta.get('algorithm') is not None,
-                              schema_name,
-                              u._("'algorithm' is required field "
-                                  "for asymmetric type order"), "meta")
-
-        self._validate_bit_length(asymmetric_meta, schema_name)
+        self._validate_meta_parameters(asymmetric_meta, "asymmetric key",
+                                       schema_name)
 
     def _get_required_metadata_value(self, metadata, key):
         data = metadata.get(key, None)
@@ -463,6 +461,15 @@ class TypeOrderValidator(ValidatorBase):
         If the parsing fails, throw InvalidExtensionsData
         """
         pass
+
+    def _validate_meta_parameters(self, meta, order_type, schema_name):
+        self._assert_validity(meta.get('algorithm'),
+                              schema_name,
+                              u._("'algorithm' is required field "
+                                  "for {0} type order").format(order_type),
+                              "meta")
+
+        self._validate_bit_length(meta, schema_name)
 
     def _extract_expiration(self, json_data, schema_name):
         """Extracts and returns the expiration date from the JSON data."""
