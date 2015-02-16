@@ -1648,7 +1648,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
             entity_id=self.order.id,
             external_project_id=self.external_project_id)
 
-    def test_should_throw_exception_for_get_when_order_not_found(self):
+    def test_should_404_for_get_when_order_not_found(self):
         self.order_repo.get.return_value = None
         resp = self.app.get(
             '/orders/{0}/'.format(self.order.id),
@@ -1656,9 +1656,8 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         )
         self.assertEqual(resp.status_int, 404)
 
-    def test_should_throw_exception_for_delete_when_order_not_found(self):
-        self.order_repo.delete_entity_by_id.side_effect = excep.NotFound(
-            "Test not found exception")
+    def test_should_404_for_delete_when_order_not_found(self):
+        self.order_repo.get.return_value = None
         resp = self.app.delete(
             '/orders/{0}/'.format(self.order.id),
             expect_errors=True
