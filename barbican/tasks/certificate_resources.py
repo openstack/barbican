@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ldap
+from OpenSSL import crypto
+
+from barbican.common import exception as excep
 from barbican.common import hrefs
 import barbican.common.utils as utils
 from barbican.model import models
@@ -242,14 +246,60 @@ def _get_plugin_meta(order_model, repos):
 
 def _generate_csr(order_model, repos):
     """Generate a CSR from the public key and add to the order metadata."""
-    """
-    TODO(alee-3)  Implement this method.
 
-    * Get the public key from the container_ref
-    * Generate a CSR from the public key.
-    * Add the CSR to the order_metadata as the "request"
-    """
-    pass
+    container_ref = order_model.meta.get('container_ref')
+
+    # extract container_id as the last part of the URL
+    container_id = container_ref.rsplit('/', 1)[1]
+
+    container = repos.container_repo.get(container_id)
+    if not container:
+        raise excep.StoredKeyContainerNotFound(container_id)
+
+    passphrase = None
+    private_key = None
+
+    for cs in container.container_secrets:
+        if cs.name == 'private_key':
+            private_key = repos.secret_repo.get(cs.secret_id)
+        elif cs.name == 'private_key_passphrase':
+            passphrase = repos.secret_repo.get(cs.secret_id)
+
+    if not private_key:
+        raise excep.StoredKeyPrivateKeyNotFound(container_id)
+
+    pkey = crypto.load_privatekey(
+        crypto.FILETYPE_PEM,
+        private_key,
+        passphrase)
+
+    subject_name = order_model.meta.get('subject_name')
+    subject_name_dns = ldap.dn.str2dn(subject_name)
+    extensions = order_model.meta.get('extensions', None)
+
+    req = crypto.X509Req()
+    subj = req.get_subject()
+    for ava in subject_name_dns:
+        for key, val, extra in ava:
+            setattr(subj, key.upper(), val)
+    req.set_pubkey(pkey)
+    if extensions:
+        # TODO(alee-3) We need code here to parse the encoded extensions and
+        # convert them into X509Extension objects.  This code will also be
+        # used in the validation code.  Commenting out for now till we figure
+        # out how to do this.
+        # req.add_extensions(extensions)
+        pass
+    req.sign(pkey, 'sha256')
+
+    # TODO(alee-3) For now, we store the CSR in the order_meta.  We need
+    # to revisit whether this is the right place to store this data as it
+    # is not data that was provided by the client.  We may end up storing
+    # it in the barbican_metadata structure.
+
+    order_model.meta['request'] = crypto.dump_certificate_request(
+        crypto.FILETYPE_PEM, req)
+    order_model.save()
 
 
 def _notify_ca_unavailable(order_model, result):
