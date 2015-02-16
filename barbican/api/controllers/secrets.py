@@ -64,12 +64,12 @@ def _request_has_twsk_but_no_transport_key_id():
 class SecretController(object):
     """Handles Secret retrieval and deletion requests."""
 
-    def __init__(self, secret_id,
+    def __init__(self, secret,
                  project_repo=None, secret_repo=None, datum_repo=None,
                  kek_repo=None, secret_meta_repo=None,
                  transport_key_repo=None):
         LOG.debug('=== Creating SecretController ===')
-        self.secret_id = secret_id
+        self.secret = secret
 
         # TODO(john-wood-w) Remove passed-in repositories in favor of
         #  repository factories and patches in unit tests.
@@ -89,17 +89,11 @@ class SecretController(object):
     @controllers.handle_exceptions(u._('Secret retrieval'))
     @controllers.enforce_rbac('secret:get')
     def on_get(self, external_project_id, **kwargs):
-        secret = self.repos.secret_repo.get(
-            entity_id=self.secret_id,
-            external_project_id=external_project_id,
-            suppress_exception=True)
-        if not secret:
-            _secret_not_found()
-
         if controllers.is_json_request_accept(pecan.request):
-            return self._on_get_secret_metadata(secret, **kwargs)
+            return self._on_get_secret_metadata(self.secret, **kwargs)
         else:
-            return self._on_get_secret_payload(secret, external_project_id,
+            return self._on_get_secret_payload(self.secret,
+                                               external_project_id,
                                                **kwargs)
 
     def _on_get_secret_metadata(self, secret, **kwargs):
@@ -177,14 +171,7 @@ class SecretController(object):
         if validators.secret_too_big(payload):
             raise exception.LimitExceeded()
 
-        secret_model = self.repos.secret_repo.get(
-            entity_id=self.secret_id,
-            external_project_id=external_project_id,
-            suppress_exception=True)
-        if not secret_model:
-            _secret_not_found()
-
-        if secret_model.encrypted_data:
+        if self.secret.encrypted_data:
             _secret_already_has_data()
 
         project_model = res.get_or_create_project(external_project_id,
@@ -193,8 +180,8 @@ class SecretController(object):
         content_encoding = pecan.request.headers.get('Content-Encoding')
 
         plugin.store_secret(payload, content_type,
-                            content_encoding, secret_model.to_dict_fields(),
-                            secret_model, project_model, self.repos,
+                            content_encoding, self.secret.to_dict_fields(),
+                            self.secret, project_model, self.repos,
                             transport_key_id=transport_key_id)
 
     @index.when(method='DELETE')
@@ -202,15 +189,7 @@ class SecretController(object):
     @controllers.handle_exceptions(u._('Secret deletion'))
     @controllers.enforce_rbac('secret:delete')
     def on_delete(self, external_project_id, **kwargs):
-
-        secret_model = self.repos.secret_repo.get(
-            entity_id=self.secret_id,
-            external_project_id=external_project_id,
-            suppress_exception=True)
-        if not secret_model:
-            _secret_not_found()
-
-        plugin.delete_secret(secret_model, external_project_id, self.repos)
+        plugin.delete_secret(self.secret, external_project_id, self.repos)
 
 
 class SecretsController(object):
@@ -232,7 +211,16 @@ class SecretsController(object):
 
     @pecan.expose()
     def _lookup(self, secret_id, *remainder):
-        return SecretController(secret_id,
+        ctx = controllers._get_barbican_context(pecan.request)
+
+        secret = self.repos.secret_repo.get(
+            entity_id=secret_id,
+            external_project_id=ctx.project,
+            suppress_exception=True)
+        if not secret:
+            _secret_not_found()
+
+        return SecretController(secret,
                                 self.repos.project_repo,
                                 self.repos.secret_repo,
                                 self.repos.datum_repo,
