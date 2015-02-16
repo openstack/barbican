@@ -31,6 +31,7 @@ from barbican.common import utils
 from barbican import i18n as u
 from barbican.openstack.common import jsonutils as json
 from barbican.openstack.common import timeutils
+from barbican.plugin.interface import secret_store
 
 LOG = utils.getLogger(__name__)
 BASE = declarative.declarative_base()
@@ -271,6 +272,8 @@ class Secret(BASE, ModelBase):
     __tablename__ = 'secrets'
 
     name = sa.Column(sa.String(255))
+    secret_type = sa.Column(sa.String(255),
+                            server_default=secret_store.SecretType.OPAQUE)
     expiration = sa.Column(sa.DateTime, default=None)
     algorithm = sa.Column(sa.String(255))
     bit_length = sa.Column(sa.Integer)
@@ -296,6 +299,9 @@ class Secret(BASE, ModelBase):
 
         if parsed_request:
             self.name = parsed_request.get('name')
+            self.secret_type = parsed_request.get(
+                'secret_type',
+                secret_store.SecretType.OPAQUE)
             expiration = self._iso_to_datetime(parsed_request.get
                                                ('expiration'))
             self.expiration = expiration
@@ -326,6 +332,7 @@ class Secret(BASE, ModelBase):
         return {
             'secret_id': self.id,
             'name': self.name,
+            'secret_type': self.secret_type,
             'expiration': expiration,
             'algorithm': self.algorithm,
             'bit_length': self.bit_length,

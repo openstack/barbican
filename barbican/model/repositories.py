@@ -618,7 +618,8 @@ class SecretRepo(BaseRepo):
 
     def get_by_create_date(self, external_project_id, offset_arg=None,
                            limit_arg=None, name=None, alg=None, mode=None,
-                           bits=0, suppress_exception=False, session=None):
+                           bits=0, secret_type=None, suppress_exception=False,
+                           session=None):
         """Returns a list of secrets
 
         The returned secrets are ordered by the date they were created at
@@ -648,6 +649,8 @@ class SecretRepo(BaseRepo):
             query = query.filter(models.Secret.mode.like(mode))
         if bits > 0:
             query = query.filter(models.Secret.bit_length == bits)
+        if secret_type:
+            query = query.filter(models.Secret.secret_type == secret_type)
 
         query = query.join(models.ProjectSecret,
                            models.Secret.project_assocs)
