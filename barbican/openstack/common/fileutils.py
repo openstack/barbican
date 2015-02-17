@@ -15,24 +15,27 @@
 
 import contextlib
 import errno
+import logging
 import os
+import stat
 import tempfile
 
-from barbican.openstack.common import excutils
-from barbican.openstack.common import log as logging
+from oslo.utils import excutils
 
 LOG = logging.getLogger(__name__)
 
 _FILE_CACHE = {}
+DEFAULT_MODE = stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO
 
 
-def ensure_tree(path):
+def ensure_tree(path, mode=DEFAULT_MODE):
     """Create a directory (and any ancestor directories required)
 
     :param path: Directory to create
+    :param mode: Directory creation permissions
     """
     try:
-        os.makedirs(path)
+        os.makedirs(path, mode)
     except OSError as exc:
         if exc.errno == errno.EEXIST:
             if not os.path.isdir(path):
@@ -50,8 +53,8 @@ def read_cached_file(filename, force_reload=False):
     """
     global _FILE_CACHE
 
-    if force_reload and filename in _FILE_CACHE:
-        del _FILE_CACHE[filename]
+    if force_reload:
+        delete_cached_file(filename)
 
     reloaded = False
     mtime = os.path.getmtime(filename)
@@ -64,6 +67,17 @@ def read_cached_file(filename, force_reload=False):
         cache_info['mtime'] = mtime
         reloaded = True
     return (reloaded, cache_info['data'])
+
+
+def delete_cached_file(filename):
+    """Delete cached file if present.
+
+    :param filename: filename to delete
+    """
+    global _FILE_CACHE
+
+    if filename in _FILE_CACHE:
+        del _FILE_CACHE[filename]
 
 
 def delete_if_exists(path, remove=os.unlink):
@@ -99,7 +113,7 @@ def remove_path_on_error(path, remove=delete_if_exists):
 def file_open(*args, **kwargs):
     """Open file
 
-    see built-in file() documentation for more details
+    see built-in open() documentation for more details
 
     Note: The reason this is kept in a separate module is to easily
     be able to provide a stub module that doesn't alter system
