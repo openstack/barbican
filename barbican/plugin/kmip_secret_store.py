@@ -28,15 +28,13 @@ from kmip.core.factories import attributes
 from kmip.core.factories import credentials
 from kmip.core.factories import secrets
 from kmip.core import objects as kmip_objects
-
+from oslo_config import cfg
+from oslo_log import log
 
 from barbican import i18n as u  # noqa
-from barbican.openstack.common import log as logging
 from barbican.plugin.interface import secret_store as ss
 
-LOG = logging.getLogger(__name__)
-
-from oslo_config import cfg
+LOG = log.getLogger(__name__)
 
 CONF = cfg.CONF
 

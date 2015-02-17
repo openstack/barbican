@@ -21,19 +21,12 @@ import logging
 import os
 
 from oslo_config import cfg
+from oslo_log import log
 
 import barbican.version
 
 CONF = cfg.CONF
-CONF.import_opt('verbose', 'barbican.openstack.common.log')
-CONF.import_opt('debug', 'barbican.openstack.common.log')
-CONF.import_opt('log_dir', 'barbican.openstack.common.log')
-CONF.import_opt('log_file', 'barbican.openstack.common.log')
-CONF.import_opt('log_config_append', 'barbican.openstack.common.log')
-CONF.import_opt('log_format', 'barbican.openstack.common.log')
-CONF.import_opt('log_date_format', 'barbican.openstack.common.log')
-CONF.import_opt('use_syslog', 'barbican.openstack.common.log')
-CONF.import_opt('syslog_log_facility', 'barbican.openstack.common.log')
+log.register_options(CONF)
 
 LOG = logging.getLogger(__name__)
 
