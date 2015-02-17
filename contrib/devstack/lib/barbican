@@ -94,6 +94,11 @@ function configure_barbican {
     # Set the log file location
     iniset $BARBICAN_CONF DEFAULT log_file "$BARBICAN_API_LOG_DIR/barbican.log"
 
+    # Format logging
+    if [ "$LOG_COLOR" == "True" ] && [ "$SYSLOG" == "False" ]; then
+        setup_colorized_logging $BARBICAN_CONF DEFAULT "project_id" "user_id"
+    fi
+
     # Install the policy file for the API server
     cp $BARBICAN_DIR/etc/barbican/policy.json $BARBICAN_CONF_DIR
     iniset $BARBICAN_CONF DEFAULT policy_file $BARBICAN_CONF_DIR/policy.json
