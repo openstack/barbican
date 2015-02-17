@@ -14,7 +14,6 @@ import pecan
 
 from barbican import api
 from barbican.api import controllers
-from barbican.common import exception
 from barbican.common import hrefs
 from barbican.common import resources as res
 from barbican.common import utils
@@ -64,9 +63,9 @@ class OrderController(object):
 
     """Handles Order retrieval and deletion requests."""
 
-    def __init__(self, order_id, order_repo=None,
+    def __init__(self, order, order_repo=None,
                  queue_resource=None):
-        self.order_id = order_id
+        self.order = order
         self.order_repo = order_repo or repo.OrderRepo()
         self.queue = queue_resource or async_client.TaskClient()
         self.type_order_validator = validators.TypeOrderValidator()
@@ -79,13 +78,7 @@ class OrderController(object):
     @controllers.handle_exceptions(u._('Order retrieval'))
     @controllers.enforce_rbac('order:get')
     def on_get(self, external_project_id):
-        order = self.order_repo.get(entity_id=self.order_id,
-                                    external_project_id=external_project_id,
-                                    suppress_exception=True)
-        if not order:
-            _order_not_found()
-
-        return hrefs.convert_to_hrefs(order.to_dict_fields())
+        return hrefs.convert_to_hrefs(self.order.to_dict_fields())
 
     @index.when(method='PUT')
     @controllers.handle_exceptions(u._('Order update'))
@@ -94,29 +87,20 @@ class OrderController(object):
     def on_put(self, external_project_id, **kwargs):
         body = api.load_body(pecan.request,
                              validator=self.type_order_validator)
-
-        order_model = self.order_repo.get(
-            entity_id=self.order_id,
-            external_project_id=external_project_id,
-            suppress_exception=True)
-
-        if not order_model:
-            _order_not_found()
-
         order_type = body.get('type')
 
-        if order_model.type != order_type:
+        if self.order.type != order_type:
             order_cannot_modify_order_type()
 
-        if models.OrderType.CERTIFICATE != order_model.type:
+        if models.OrderType.CERTIFICATE != self.order.type:
             _order_update_not_supported_for_type(order_type)
 
-        if models.States.PENDING != order_model.status:
-            _order_cannot_be_updated_if_not_pending(order_model.status)
+        if models.States.PENDING != self.order.status:
+            _order_cannot_be_updated_if_not_pending(self.order.status)
 
         # TODO(chellygel): Put 'meta' into a separate order association
         # entity.
-        self.queue.update_order(order_id=self.order_id,
+        self.queue.update_order(order_id=self.order.id,
                                 project_id=external_project_id,
                                 updated_meta=body.get('meta'))
 
@@ -124,14 +108,9 @@ class OrderController(object):
     @controllers.handle_exceptions(u._('Order deletion'))
     @controllers.enforce_rbac('order:delete')
     def on_delete(self, external_project_id, **kwargs):
-
-        try:
-            self.order_repo.delete_entity_by_id(
-                entity_id=self.order_id,
-                external_project_id=external_project_id)
-        except exception.NotFound:
-            LOG.exception(u._LE('Problem deleting order'))
-            _order_not_found()
+        self.order_repo.delete_entity_by_id(
+            entity_id=self.order.id,
+            external_project_id=external_project_id)
 
 
 class OrdersController(object):
@@ -148,7 +127,15 @@ class OrdersController(object):
 
     @pecan.expose()
     def _lookup(self, order_id, *remainder):
-        return OrderController(order_id, self.order_repo), remainder
+        ctx = controllers._get_barbican_context(pecan.request)
+
+        order = self.order_repo.get(entity_id=order_id,
+                                    external_project_id=ctx.project,
+                                    suppress_exception=True)
+        if not order:
+            _order_not_found()
+
+        return OrderController(order, self.order_repo), remainder
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
