@@ -121,6 +121,18 @@ def create_consumer(container_id, id_ref):
     return consumer
 
 
+def mock_assert_uuid(*args, **kwargs):
+    """This function just mocks the assert_is_valid_uuid_from_path
+
+    This is because some of the tests below actually use a notation other than
+    UUID for the secrets and the orders respective IDs. Now, instead of
+    enforcing UUID in the tests, we let the tests use whatever they want. This
+    is because a human readable id is more useful than UUID for testing
+    purposes.
+    """
+    pass
+
+
 class SecretAllowAllMimeTypesDecoratorTest(utils.BaseTestCase):
 
     def setUp(self):
@@ -769,6 +781,8 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
             return '/secrets'
 
 
+@mock.patch('barbican.api.controllers.assert_is_valid_uuid_from_uri',
+            mock_assert_uuid)
 class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
     def setUp(self):
         super(
@@ -1599,6 +1613,8 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
             return '/orders'
 
 
+@mock.patch('barbican.api.controllers.assert_is_valid_uuid_from_uri',
+            mock_assert_uuid)
 class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
     def setUp(self):
         super(
@@ -1667,6 +1683,8 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         self.assertEqual(resp.content_type, "application/json")
 
 
+@mock.patch('barbican.api.controllers.assert_is_valid_uuid_from_uri',
+            mock_assert_uuid)
 class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
     def setUp(self):
         super(
@@ -1906,6 +1924,8 @@ class WhenPerformingUnallowedOperationsOnOrders(FunctionalTest):
         )
         self.assertEqual(resp.status_int, 405)
 
+    @mock.patch('barbican.api.controllers.assert_is_valid_uuid_from_uri',
+                mock_assert_uuid)
     def test_should_not_allow_post_order_by_id(self):
         resp = self.app.post_json(
             '/orders/{0}/'.format('id1'),
