@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2015.1.dev12\n"
+"Project-Id-Version: barbican 2015.1.dev23\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-10 06:20+0000\n"
+"POT-Creation-Date: 2015-02-17 06:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -533,6 +533,20 @@ msgstr ""
 msgid "The provided image is too large."
 msgstr ""
 
+#: barbican/common/exception.py:369
+#, python-format
+msgid ""
+"Container %(container_id) does not exist for stored key certificate "
+"generation."
+msgstr ""
+
+#: barbican/common/exception.py:374
+#, python-format
+msgid ""
+"Container %(container_id) does not reference a private key needed for "
+"stored key certificate generation."
+msgstr ""
+
 #: barbican/common/utils.py:113
 msgid "Cannot generate a fullname for a null instance"
 msgstr ""
@@ -549,7 +563,7 @@ msgstr ""
 msgid "payload must be provided when payload_content_type is specified"
 msgstr ""
 
-#: barbican/common/validators.py:201 barbican/common/validators.py:478
+#: barbican/common/validators.py:201 barbican/common/validators.py:485
 msgid "Invalid date for 'expiration'"
 msgstr ""
 
@@ -577,65 +591,65 @@ msgstr ""
 msgid "payload_content_type is not one of {supported}"
 msgstr ""
 
-#: barbican/common/validators.py:325
+#: barbican/common/validators.py:327
 msgid "'payload' not allowed for key type order"
 msgstr ""
 
-#: barbican/common/validators.py:344
+#: barbican/common/validators.py:346
 msgid "Only 'application/octet-stream' supported"
 msgstr ""
 
-#: barbican/common/validators.py:350
-msgid "'algorithm' is required field for asymmetric type order"
+#: barbican/common/validators.py:468
+msgid "'algorithm' is required field for {0} type order"
 msgstr ""
 
-#: barbican/common/validators.py:490
+#: barbican/common/validators.py:497
 msgid "Must have non-zero positive bit_length to generate secret"
 msgstr ""
 
-#: barbican/common/validators.py:498
+#: barbican/common/validators.py:505
 msgid "Must be a positive integer that is a multiple of 8"
 msgstr ""
 
-#: barbican/common/validators.py:506
+#: barbican/common/validators.py:513
 msgid "Feature not implemented for '{0}' order type"
 msgstr ""
 
-#: barbican/common/validators.py:578
+#: barbican/common/validators.py:585
 msgid "Duplicate reference names are not allowed"
 msgstr ""
 
-#: barbican/common/validators.py:590
+#: barbican/common/validators.py:597
 msgid "Duplicate secret ids are not allowed"
 msgstr ""
 
-#: barbican/common/validators.py:608
+#: barbican/common/validators.py:615
 msgid ""
 "only 'private_key', 'public_key' and 'private_key_passphrase' reference "
 "names are allowed for RSA type"
 msgstr ""
 
-#: barbican/common/validators.py:616
+#: barbican/common/validators.py:623
 msgid ""
 "The minimum required reference names are 'public_key' and'private_key' "
 "for RSA type"
 msgstr ""
 
-#: barbican/common/validators.py:629
+#: barbican/common/validators.py:636
 msgid ""
 "only 'private_key', 'certificate' , 'private_key_passphrase',  or "
 "'intermediates' reference names are allowed for Certificate type"
 msgstr ""
 
-#: barbican/common/validators.py:637
+#: barbican/common/validators.py:644
 msgid "The minimum required reference name is 'certificate' for Certificate type"
 msgstr ""
 
-#: barbican/common/validators.py:683
+#: barbican/common/validators.py:690
 msgid "plugin_name must be provided"
 msgstr ""
 
-#: barbican/common/validators.py:690
+#: barbican/common/validators.py:697
 msgid "transport_key must be provided"
 msgstr ""
 
@@ -1148,39 +1162,39 @@ msgstr ""
 msgid "List of crypto plugins to load."
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:136
+#: barbican/plugin/crypto/p11_crypto.py:138
 msgid "Path to vendor PKCS11 library"
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:138
+#: barbican/plugin/crypto/p11_crypto.py:140
 msgid "Password to login to PKCS11 session"
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:140
+#: barbican/plugin/crypto/p11_crypto.py:142
 msgid "Master KEK label (used in the HSM)"
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:142
+#: barbican/plugin/crypto/p11_crypto.py:144
 msgid "Master KEK length in bytes."
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:144
+#: barbican/plugin/crypto/p11_crypto.py:146
 msgid "HMAC label (used in the HSM)"
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:234
+#: barbican/plugin/crypto/p11_crypto.py:236
 msgid "More than one key found for label"
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:238
+#: barbican/plugin/crypto/p11_crypto.py:240
 msgid "General exception"
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:259
+#: barbican/plugin/crypto/p11_crypto.py:261
 msgid "library_path is required"
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:652
+#: barbican/plugin/crypto/p11_crypto.py:654
 msgid "Feature not implemented for PKCS11"
 msgstr ""
 
