@@ -27,6 +27,7 @@ except ImportError:
 from oslo_config import cfg
 from oslo_log import log
 
+from barbican.api.controllers import cas
 from barbican.api.controllers import containers
 from barbican.api.controllers import orders
 from barbican.api.controllers import secrets
@@ -48,6 +49,7 @@ class RootController(object):
         self.orders = orders.OrdersController()
         self.containers = containers.ContainersController()
         self.transport_keys = transportkeys.TransportKeysController()
+        self.cas = cas.CertificateAuthoritiesController()
 
 
 def build_wsgi_app(controller=None, transactional=False):

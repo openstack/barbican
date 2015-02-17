@@ -47,6 +47,11 @@ def convert_consumer_to_href(consumer_id):
     return convert_resource_id_to_href('consumers', consumer_id) + '/consumers'
 
 
+def convert_certificate_authority_to_href(ca_id):
+    """Convert the ca ID to a HATEOS-style href."""
+    return convert_resource_id_to_href('cas', ca_id)
+
+
 # TODO(hgedikli) handle list of fields in here
 def convert_to_hrefs(fields):
     """Convert id's within a fields dict to HATEOS-style hrefs."""

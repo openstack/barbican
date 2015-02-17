@@ -46,7 +46,8 @@ BASE = models.BASE
 sa_logger = None
 
 # Singleton repository references, instantiated via get_xxxx_repository()
-#   functions below.
+#   functions below.  Please keep this list in alphabetical order.
+_CA_REPOSITORY = None
 _CONTAINER_CONSUMER_REPOSITORY = None
 _CONTAINER_REPOSITORY = None
 _CONTAINER_SECRET_REPOSITORY = None
@@ -55,12 +56,13 @@ _KEK_DATUM_REPOSITORY = None
 _ORDER_PLUGIN_META_REPOSITORY = None
 _ORDER_BARBICAN_META_REPOSITORY = None
 _ORDER_REPOSITORY = None
+_PREFERRED_CA_REPOSITORY = None
 _PROJECT_REPOSITORY = None
+_PROJECT_CA_REPOSITORY = None
 _PROJECT_SECRET_REPOSITORY = None
 _SECRET_META_REPOSITORY = None
 _SECRET_REPOSITORY = None
 _TRANSPORT_KEY_REPOSITORY = None
-
 
 db_opts = [
     cfg.IntOpt('sql_idle_timeout', default=3600),
@@ -338,7 +340,8 @@ class BaseRepo(object):
 
         try:
             query = self._do_build_get_query(entity_id,
-                                             external_project_id, session)
+                                             external_project_id,
+                                             session)
 
             # filter out deleted entities if requested
             if not force_show_deleted:
@@ -1241,6 +1244,302 @@ class TransportKeyRepo(BaseRepo):
         pass
 
 
+class CertificateAuthorityRepo(BaseRepo):
+    """Repository for the CertificateAuthority entity."""
+
+    def get_by_create_date(self, offset_arg=None, limit_arg=None,
+                           plugin_name=None, plugin_ca_id=None,
+                           suppress_exception=False, session=None,
+                           show_expired=False):
+        """Returns a list of certificate authorities
+
+        The returned certificate authorities are ordered by the date they
+        were created and paged based on the offset and limit fields.
+        """
+
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
+
+        session = self.get_session(session)
+
+        query = session.query(models.CertificateAuthority)
+        query = query.order_by(models.CertificateAuthority.created_at)
+        query = query.filter_by(deleted=False)
+
+        # Note(alee) SQLAlchemy requires '== None' below,
+        #   not 'is None'.
+        if not show_expired:
+            utcnow = timeutils.utcnow()
+            query = query.filter(or_(
+                models.CertificateAuthority.expiration == None,
+                models.CertificateAuthority.expiration > utcnow))
+
+        if plugin_name:
+            query = query.filter(
+                models.CertificateAuthority.plugin_name.like(plugin_name))
+        if plugin_ca_id:
+            query = query.filter(
+                models.CertificateAuthority.plugin_ca_id.like(plugin_ca_id))
+
+        start = offset
+        end = offset + limit
+        LOG.debug('Retrieving from %s to %s', start, end)
+        total = query.count()
+        entities = query[start:end]
+        LOG.debug('Number entities retrieved: %s out of %s',
+                  len(entities), total
+                  )
+
+        if total <= 0 and not suppress_exception:
+            _raise_no_entities_found(self._do_entity_name())
+
+        return entities, offset, limit, total
+
+    def update_entity(self, old_ca, parsed_ca_in, session=None):
+        """Updates CA entry and its sub-entries."""
+        parsed_ca = dict(parsed_ca_in)
+
+        # these fields cannot be  modified
+        parsed_ca.pop('plugin_name', None)
+        parsed_ca.pop('plugin_ca_id', None)
+
+        expiration = parsed_ca.pop('expiration', None)
+        expiration_iso = timeutils.parse_isotime(expiration.strip())
+        old_ca.expiration = timeutils.normalize_time(expiration_iso)
+
+        session = self.get_session(session)
+        for k, v in old_ca.ca_meta.items():
+            v.delete(session)
+
+        for key in parsed_ca:
+            meta = models.CertificateAuthorityMetadatum(key, parsed_ca[key])
+            old_ca.ca_meta[key] = meta
+
+        old_ca.save(session)
+
+        return old_ca
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "CertificateAuthority"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+        utcnow = timeutils.utcnow()
+
+        # Note(alee): SQLAlchemy requires '== None' below,
+        #   not 'is None'.
+        # TODO(jfwood): Performance? Is the many-to-many join needed?
+        expiration_filter = or_(
+            models.CertificateAuthority.expiration == None,
+            models.CertificateAuthority.expiration > utcnow)
+
+        query = session.query(models.CertificateAuthority)
+        query = query.filter_by(id=entity_id, deleted=False)
+        query = query.filter(expiration_filter)
+
+        return query
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
+class CertificateAuthorityMetadatumRepo(BaseRepo):
+    """Repository for the CertificateAuthorityMetadatum entity
+
+    Stores key/value information on behalf of a CA.
+    """
+
+    def save(self, metadata, ca_model):
+        """Saves the the specified metadata for the CA.
+
+        :raises NotFound if entity does not exist.
+        """
+        now = timeutils.utcnow()
+        session = get_session()
+
+        for k, v in metadata.items():
+            meta_model = models.CertificateAuthorityMetadatum(k, v)
+            meta_model.updated_at = now
+            meta_model.ca = ca_model
+            meta_model.save(session=session)
+
+    def get_metadata_for_certificate_authority(self, ca_id):
+        """Returns a dict of CertificateAuthorityMetadatum instances."""
+
+        session = get_session()
+
+        try:
+            query = session.query(models.CertificateAuthorityMetadatum)
+            query = query.filter_by(deleted=False)
+
+            query = query.filter(
+                models.CertificateAuthorityMetadatum.ca_id == ca_id)
+
+            metadata = query.all()
+
+        except sa_orm.exc.NoResultFound:
+            metadata = dict()
+
+        return dict((m.key, m.value) for m in metadata)
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "CertificateAuthorityMetadatum"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+        query = session.query(models.CertificateAuthorityMetadatum)
+        return query.filter_by(id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
+class ProjectCertificateAuthorityRepo(BaseRepo):
+    """Repository for the ProjectCertificateAuthority entity."""
+
+    def get_by_create_date(self, offset_arg=None, limit_arg=None,
+                           project_id=None, ca_id=None,
+                           suppress_exception=False, session=None):
+        """Returns a list of project CAs
+
+        The returned project are ordered by the date they
+        were created and paged based on the offset and limit fields.
+        """
+
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
+
+        session = self.get_session(session)
+
+        query = session.query(models.ProjectCertificateAuthority)
+        query = query.order_by(models.ProjectCertificateAuthority.created_at)
+        query = query.filter_by(deleted=False)
+
+        if project_id:
+            query = query.filter(
+                models.ProjectCertificateAuthority.project_id.like(project_id))
+        if ca_id:
+            query = query.filter(
+                models.ProjectCertificateAuthority.ca_id.like(ca_id))
+
+        start = offset
+        end = offset + limit
+        LOG.debug('Retrieving from %s to %s', start, end)
+        total = query.count()
+        entities = query[start:end]
+        LOG.debug('Number entities retrieved: %s out of %s',
+                  len(entities), total
+                  )
+
+        if total <= 0 and not suppress_exception:
+            _raise_no_entities_found(self._do_entity_name())
+
+        return entities, offset, limit, total
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "ProjectCertificateAuthority"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.ProjectCertificateAuthority).filter_by(
+            id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+    def _build_get_project_entities_query(self, project_id, session):
+        """Builds query for retrieving CA related to given project.
+
+        :param project_id: id of barbican project entity
+        :param session: existing db session reference.
+        """
+        return session.query(models.ProjectCertificateAuthority).filter_by(
+            project_id=project_id).filter_by(deleted=False)
+
+
+class PreferredCertificateAuthorityRepo(BaseRepo):
+    """Repository for the PreferredCertificateAuthority entity."""
+
+    PREFERRED_PROJECT_ID = "0"
+
+    def get_by_create_date(self, offset_arg=None, limit_arg=None,
+                           project_id=None, ca_id=None,
+                           suppress_exception=False, session=None):
+        """Returns a list of preferred CAs
+
+        The returned CAs are ordered by the date they
+        were created and paged based on the offset and limit fields.
+        """
+
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
+
+        session = self.get_session(session)
+
+        query = session.query(models.PreferredCertificateAuthority)
+        query = query.order_by(models.PreferredCertificateAuthority.created_at)
+        query = query.filter_by(deleted=False)
+
+        if project_id:
+            query = query.filter(
+                models.PreferredCertificateAuthority.project_id.like(
+                    project_id))
+        if ca_id:
+            query = query.filter(
+                models.PreferredCertificateAuthority.ca_id.like(ca_id))
+
+        start = offset
+        end = offset + limit
+        LOG.debug('Retrieving from %s to %s', start, end)
+        total = query.count()
+        entities = query[start:end]
+        LOG.debug('Number entities retrieved: %s out of %s',
+                  len(entities), total
+                  )
+
+        if total <= 0 and not suppress_exception:
+            _raise_no_entities_found(self._do_entity_name())
+
+        return entities, offset, limit, total
+
+    def get_global_preferred_ca(self):
+        pref_cas = self.get_project_entities(self.PREFERRED_PROJECT_ID)
+        if len(pref_cas) > 0:
+            return pref_cas[0]
+        return None
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "PreferredCertificateAuthority"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.PreferredCertificateAuthority).filter_by(
+            id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+    def _build_get_project_entities_query(self, project_id, session):
+        """Builds query for retrieving preferred CA related to given project.
+
+        :param project_id: id of barbican project entity
+        :param session: existing db session reference.
+        """
+        return session.query(models.PreferredCertificateAuthority).filter_by(
+            project_id=project_id).filter_by(deleted=False)
+
+
+def get_ca_repository():
+    """Returns a singleton Secret repository instance."""
+    global _CA_REPOSITORY
+    return _get_repository(_CA_REPOSITORY, CertificateAuthorityRepo)
+
+
 def get_container_consumer_repository():
     """Returns a singleton Container Consumer repository instance."""
     global _CONTAINER_CONSUMER_REPOSITORY
@@ -1292,10 +1591,24 @@ def get_order_repository():
     return _get_repository(_ORDER_REPOSITORY, OrderRepo)
 
 
+def get_preferred_ca_repository():
+    """Returns a singleton Secret repository instance."""
+    global _PREFERRED_CA_REPOSITORY
+    return _get_repository(_PREFERRED_CA_REPOSITORY,
+                           PreferredCertificateAuthorityRepo)
+
+
 def get_project_repository():
     """Returns a singleton Project repository instance."""
     global _PROJECT_REPOSITORY
     return _get_repository(_PROJECT_REPOSITORY, ProjectRepo)
+
+
+def get_project_ca_repository():
+    """Returns a singleton Secret repository instance."""
+    global _PROJECT_CA_REPOSITORY
+    return _get_repository(_PROJECT_CA_REPOSITORY,
+                           ProjectCertificateAuthorityRepo)
 
 
 def get_project_secret_repository():
