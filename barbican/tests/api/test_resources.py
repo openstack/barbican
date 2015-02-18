@@ -26,6 +26,7 @@ import urllib
 import mock
 import pecan
 from six import moves
+from testtools import testcase
 import webtest
 
 from barbican import api
@@ -152,7 +153,8 @@ class SecretAllowAllMimeTypesDecoratorTest(utils.BaseTestCase):
                           self._empty_function)
 
 
-class FunctionalTest(utils.BaseTestCase, utils.MockModelRepositoryMixin):
+class FunctionalTest(utils.BaseTestCase, utils.MockModelRepositoryMixin,
+                     testcase.WithAttributes):
 
     def setUp(self):
         super(FunctionalTest, self).setUp()
@@ -237,7 +239,7 @@ class BaseSecretsResource(FunctionalTest):
 
         # Set up mocked secret
         self.secret = models.Secret()
-        self.secret.id = '123'
+        self.secret.id = utils.generate_test_uuid(tail_value=1)
 
         # Set up mocked secret repo
         self.secret_repo = mock.MagicMock()
@@ -905,13 +907,40 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
                       resp.namespace['content_types'].itervalues())
         self.assertNotIn('mime_type', resp.namespace)
 
+    @testcase.attr('deprecated')
+    @mock.patch('barbican.plugin.resources.get_secret')
+    def test_should_get_secret_as_plain_based_on_content_type(self,
+                                                              mock_get_secret):
+        data = 'unencrypted_data'
+        mock_get_secret.return_value = data
+
+        resp = self.app.get(
+            '/secrets/{0}/payload/'.format(self.secret.id),
+            headers={'Accept': 'text/plain'}
+        )
+
+        self.secret_repo.get.assert_called_once_with(
+            entity_id=self.secret.id,
+            external_project_id=self.external_project_id,
+            suppress_exception=True)
+        self.assertEqual(resp.status_int, 200)
+
+        self.assertEqual(resp.body, data)
+        mock_get_secret.assert_called_once_with(
+            'text/plain',
+            self.secret,
+            self.project,
+            None,
+            None
+        )
+
     @mock.patch('barbican.plugin.resources.get_secret')
     def test_should_get_secret_as_plain(self, mock_get_secret):
         data = 'unencrypted_data'
         mock_get_secret.return_value = data
 
         resp = self.app.get(
-            '/secrets/{0}/'.format(self.secret.id),
+            '/secrets/{0}/payload/'.format(self.secret.id),
             headers={'Accept': 'text/plain'}
         )
 
@@ -937,7 +966,38 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         twsk = "trans_wrapped_session_key"
         resp = self.app.get(
-            '/secrets/{0}/?trans_wrapped_session_key={1}&transport_key_id={2}'
+            ('/secrets/{0}/payload/'
+             '?trans_wrapped_session_key={1}&transport_key_id={2}')
+            .format(self.secret.id, twsk, self.transport_key_id),
+            headers={'Accept': 'text/plain'}
+        )
+
+        self.secret_repo.get.assert_called_once_with(
+            entity_id=self.secret.id,
+            external_project_id=self.external_project_id,
+            suppress_exception=True)
+        self.assertEqual(resp.status_int, 200)
+
+        self.assertEqual(resp.body, data)
+        mock_get_secret.assert_called_once_with(
+            'text/plain',
+            self.secret,
+            self.project,
+            twsk,
+            self.transport_key_model.transport_key
+        )
+
+    @testcase.attr('deprecated')
+    @mock.patch('barbican.plugin.resources.get_secret')
+    def test_should_get_secret_as_plain_with_twsk_based_on_content_type(
+            self, mock_get_secret):
+        data = 'encrypted_data'
+        mock_get_secret.return_value = data
+
+        twsk = "trans_wrapped_session_key"
+        resp = self.app.get(
+            ('/secrets/{0}/'
+             '?trans_wrapped_session_key={1}&transport_key_id={2}')
             .format(self.secret.id, twsk, self.transport_key_id),
             headers={'Accept': 'text/plain'}
         )
@@ -965,7 +1025,28 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
         twsk = "trans_wrapped_session_key"
         resp = self.app.get(
-            '/secrets/{0}/?trans_wrapped_session_key={1}'.format(
+            '/secrets/{0}/payload/?trans_wrapped_session_key={1}'.format(
+                self.secret.id, twsk),
+            headers={'Accept': 'text/plain'},
+            expect_errors=True
+        )
+
+        self.secret_repo.get.assert_called_once_with(
+            entity_id=self.secret.id,
+            external_project_id=self.external_project_id,
+            suppress_exception=True)
+        self.assertEqual(resp.status_int, 400)
+
+    @testcase.attr('deprecated')
+    @mock.patch('barbican.plugin.resources.get_secret')
+    def test_should_throw_exception_for_get_when_twsk_but_no_tkey_id_old_way(
+            self, mock_get_secret):
+        data = 'encrypted_data'
+        mock_get_secret.return_value = data
+
+        twsk = "trans_wrapped_session_key"
+        resp = self.app.get(
+            '/secrets/{0}/payload/?trans_wrapped_session_key={1}'.format(
                 self.secret.id, twsk),
             headers={'Accept': 'text/plain'},
             expect_errors=True
@@ -1046,6 +1127,34 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.datum.cypher_text = 'aaaa'
 
         resp = self.app.get(
+            '/secrets/{0}/payload/'.format(self.secret.id),
+            headers={
+                'Accept': 'application/octet-stream',
+                'Accept-Encoding': 'gzip'
+            }
+        )
+
+        self.assertEqual(resp.body, data)
+
+        mock_get_secret.assert_called_once_with(
+            'application/octet-stream',
+            self.secret,
+            self.project,
+            None,
+            None
+        )
+
+    @testcase.attr('deprecated')
+    @mock.patch('barbican.plugin.resources.get_secret')
+    def test_should_get_secret_as_binary_based_on_content_type(
+            self, mock_get_secret):
+        data = 'unencrypted_data'
+        mock_get_secret.return_value = data
+
+        self.datum.content_type = "application/octet-stream"
+        self.datum.cypher_text = 'aaaa'
+
+        resp = self.app.get(
             '/secrets/{0}/'.format(self.secret.id),
             headers={
                 'Accept': 'application/octet-stream',
@@ -1075,7 +1184,17 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
 
     def test_should_throw_exception_for_get_when_accept_not_supported(self):
         resp = self.app.get(
-            '/secrets/{0}/'.format(self.secret.id),
+            '/secrets/{0}/payload/'.format(self.secret.id),
+            headers={'Accept': 'bogusaccept', 'Accept-Encoding': 'gzip'},
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 406)
+
+    @testcase.attr('deprecated')
+    def test_should_throw_exception_for_get_when_accept_not_supported_old_way(
+            self):
+        resp = self.app.get(
+            '/secrets/{0}/payload/'.format(self.secret.id),
             headers={'Accept': 'bogusaccept', 'Accept-Encoding': 'gzip'},
             expect_errors=True
         )
@@ -1356,6 +1475,31 @@ class WhenPerformingUnallowedOperationsOnSecrets(BaseSecretsResource):
             expect_errors=True
         )
 
+        self.assertEqual(resp.status_int, 405)
+
+    def test_should_only_allow_get_for_secret_payload_uri(self):
+        resp = self.app.post(
+            '/secrets/{0}/payload/'.format(self.secret.id),
+            'plain text',
+            headers={'Accept': 'text/plain'},
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 405)
+
+        resp = self.app.put(
+            '/secrets/{0}/payload/'.format(self.secret.id),
+            'plain text',
+            headers={'Accept': 'text/plain'},
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 405)
+
+        resp = self.app.delete(
+            '/secrets/{0}/payload/'.format(self.secret.id),
+            'plain text',
+            headers={'Accept': 'text/plain'},
+            expect_errors=True
+        )
         self.assertEqual(resp.status_int, 405)
 
 
