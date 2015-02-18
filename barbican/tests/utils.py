@@ -174,3 +174,9 @@ def get_id_from_ref(ref):
     if ref is not None and len(ref) > 0:
         ref_id = path.split(ref)[1]
     return ref_id
+
+
+def generate_test_uuid(tail_value=0):
+    """Returns a blank uuid with the given value added to the end segment."""
+    return '00000000-0000-0000-0000-{value:0>{pad}}'.format(value=tail_value,
+                                                            pad=12)
