@@ -46,10 +46,17 @@ sa_logger = None
 
 # Singleton repository references, instantiated via get_xxxx_repository()
 #   functions below.
-_SECRET_REPOSITORY = None
-_PROJECT_SECRET_REPOSITORY = None
+_CONTAINER_REPOSITORY = None
+_CONTAINER_SECRET_REPOSITORY = None
 _ENCRYPTED_DATUM_REPOSITORY = None
 _KEK_DATUM_REPOSITORY = None
+_ORDER_PLUGIN_META_REPOSITORY = None
+_ORDER_REPOSITORY = None
+_PROJECT_REPOSITORY = None
+_PROJECT_SECRET_REPOSITORY = None
+_SECRET_META_REPOSITORY = None
+_SECRET_REPOSITORY = None
+_TRANSPORT_KEY_REPOSITORY = None
 
 
 db_opts = [
@@ -1235,16 +1242,16 @@ class TransportKeyRepo(BaseRepo):
         pass
 
 
-def get_secret_repository():
-    """Returns a singleton Secret repository instance."""
-    global _SECRET_REPOSITORY
-    return _get_repository(_SECRET_REPOSITORY, SecretRepo)
+def get_container_repository():
+    """Returns a singleton Container repository instance."""
+    global _CONTAINER_REPOSITORY
+    return _get_repository(_CONTAINER_REPOSITORY, ContainerRepo)
 
 
-def get_project_secret_repository():
-    """Returns a singleton ProjectSecret repository instance."""
-    global _PROJECT_SECRET_REPOSITORY
-    return _get_repository(_PROJECT_SECRET_REPOSITORY, ProjectSecretRepo)
+def get_container_secret_repository():
+    """Returns a singleton Container-Secret repository instance."""
+    global _CONTAINER_SECRET_REPOSITORY
+    return _get_repository(_CONTAINER_SECRET_REPOSITORY, ContainerSecretRepo)
 
 
 def get_encrypted_datum_repository():
@@ -1257,6 +1264,49 @@ def get_kek_datum_repository():
     """Returns a singleton KEK Datum repository instance."""
     global _KEK_DATUM_REPOSITORY
     return _get_repository(_KEK_DATUM_REPOSITORY, KEKDatumRepo)
+
+
+def get_order_plugin_meta_repository():
+    """Returns a singleton Order-Plugin meta repository instance."""
+    global _ORDER_PLUGIN_META_REPOSITORY
+    return _get_repository(_ORDER_PLUGIN_META_REPOSITORY,
+                           OrderPluginMetadatumRepo)
+
+
+def get_order_repository():
+    """Returns a singleton Order repository instance."""
+    global _ORDER_REPOSITORY
+    return _get_repository(_ORDER_REPOSITORY, OrderRepo)
+
+
+def get_project_repository():
+    """Returns a singleton Project repository instance."""
+    global _PROJECT_REPOSITORY
+    return _get_repository(_PROJECT_REPOSITORY, ProjectRepo)
+
+
+def get_project_secret_repository():
+    """Returns a singleton ProjectSecret repository instance."""
+    global _PROJECT_SECRET_REPOSITORY
+    return _get_repository(_PROJECT_SECRET_REPOSITORY, ProjectSecretRepo)
+
+
+def get_secret_meta_repository():
+    """Returns a singleton Secret meta repository instance."""
+    global _SECRET_META_REPOSITORY
+    return _get_repository(_SECRET_META_REPOSITORY, SecretStoreMetadatumRepo)
+
+
+def get_secret_repository():
+    """Returns a singleton Secret repository instance."""
+    global _SECRET_REPOSITORY
+    return _get_repository(_SECRET_REPOSITORY, SecretRepo)
+
+
+def get_transport_key_repository():
+    """Returns a singleton Transport Key repository instance."""
+    global _TRANSPORT_KEY_REPOSITORY
+    return _get_repository(_TRANSPORT_KEY_REPOSITORY, TransportKeyRepo)
 
 
 def _get_repository(global_ref, repo_class):
