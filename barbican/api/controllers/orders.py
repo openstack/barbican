@@ -127,6 +127,7 @@ class OrdersController(object):
 
     @pecan.expose()
     def _lookup(self, order_id, *remainder):
+        controllers.assert_is_valid_uuid_from_uri(order_id)
         ctx = controllers._get_barbican_context(pecan.request)
 
         order = self.order_repo.get(entity_id=order_id,

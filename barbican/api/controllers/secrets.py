@@ -211,6 +211,7 @@ class SecretsController(object):
 
     @pecan.expose()
     def _lookup(self, secret_id, *remainder):
+        controllers.assert_is_valid_uuid_from_uri(secret_id)
         ctx = controllers._get_barbican_context(pecan.request)
 
         secret = self.repos.secret_repo.get(

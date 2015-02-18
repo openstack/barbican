@@ -373,3 +373,10 @@ class StoredKeyContainerNotFound(BarbicanException):
 class StoredKeyPrivateKeyNotFound(BarbicanException):
     message = u._("Container %(container_id) does not reference a private "
                   "key needed for stored key certificate generation.")
+
+
+class InvalidUUIDInURI(BarbicanHTTPException):
+    message = u._("The provided UUID in the URI (%(uuid_string)) is "
+                  "malformed.")
+    client_message = u._("The provided UUID in the URI is malformed.")
+    status_code = 404
