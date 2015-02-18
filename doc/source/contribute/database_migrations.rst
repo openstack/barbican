@@ -1,0 +1,231 @@
+Database Migrations
+====================
+
+Database migrations are managed using the Alembic_ library. The consensus for
+`OpenStack and SQLAlchemy`_ is that this library is preferred over
+sqlalchemy-migrate.
+
+Database migrations can be performed two ways: (1) via the API startup
+process, and (2) via a separate script.
+
+Database migrations can be optionally enabled during the API startup process.
+Corollaries for this are that a new deployment should begin with only one node
+to avoid migration race conditions.
+
+Alternatively, the automatic update startup behavior can be disabled, forcing
+the use of the migration script. This latter mode is probably safer to use in
+production environments.
+
+Policy
+-------
+
+A Barbican deployment goal is to update application and schema versions with
+zero downtime. The challenge is that at all times the database schema must be
+able to support two deployed application versions, so that a single migration
+does not break existing nodes running the previous deployment. For example,
+when deleting a column we would first deploy a new version that ignores the
+column. Once all nodes are ignoring the column, a second deployment would be
+made to remove the column from the database.
+
+To achieve this goal, the following rules will be observed for schema changes:
+
+1. Do not remove columns or tables directly, but rather:
+
+   a. Create a version of the application not dependent on the removed
+      column/table
+   b. Replace all nodes with this new application version
+   c. Create an Alembic version file to remove remove the column/table
+   d. Apply this change in production manually, or automatically with a future
+      version of the application
+
+2. Changing column attributes (types, names or widths) should be handled as
+   follows:
+
+   a. TODO: This Stack Overflow `Need to alter column types in production
+      database`_ page and many others summarize the grief involved in doing
+      these sort of migrations
+   b. TODO: What about old and new application versions happening
+      simultaneously?
+
+      i. Maybe have the new code perform migration to new column on each read
+         ...similar to how a no-sql db migration would occur?
+
+3. Transforming column attributes (ex: splitting one ``name`` column into a
+   ``first`` and ``last`` name):
+
+   a. TODO: An `Alembic example`_, but not robust for large datasets.
+
+Overview
+---------
+
+*Prior to invoking any migration steps below, change to your* ``barbican`` *project's
+folder and activate your virtual environment per the* `Developer Guide`_.
+
+**If you are using PostgreSQL, please ensure you are using SQLAlchemy version
+0.9.3 or higher, otherwise the generated version files will not be correct.**
+
+**You cannot use these migration tools and techniques with SQLite databases.**
+
+Consider taking a look at the `Alembic tutorial`_. As a brief summary: Alembic
+keeps track of a linked list of version files, each one applying a set of
+changes to the database schema that a previous version file in the linked list
+modified. Each version file has a unique Alembic-generated ID associated with
+it. Alembic generates a table in the project table space called
+``alembic_version`` that keeps track of the unique ID of the last version file
+applied to the schema. During an update, Alembic uses this stored version ID
+to determine what if any follow on version files to process.
+
+Generating Change Versions
+---------------------------
+
+To make schema changes, new version files need to be added to the
+``barbican/model/migration/alembic_migrations/versions/`` folder. This section
+discusses two ways to add these files.
+
+Automatically
+''''''''''''''
+
+Alembic autogenerates a new script by comparing a clean database (i.e., one
+without your recent changes) with any modifications you make to the Models.py
+or other files. This being said, automatic generation may miss changes... it
+is more of an 'automatic assist with expert review'. See `What does
+Autogenerate Detect`_ in the Alembic documentation for more details.
+
+First, you must start Barbican using a version of the code that does not
+include your changes, so that it creates a clean database. This example uses
+Barbican launched with DevStack (see `Barbican DevStack`_ wiki page for
+instructions).
+
+1. Make changes to the 'barbican/model/models.py' SQLAlchemy models or
+   checkout your branch that includes your changes using git.
+2. Execute ``bin/barbican-db-manage.py -d <Full URL to database, including
+   user/pw> revision -m '<your-summary-of-changes>' --autogenerate``
+
+   a. For example: ``bin/barbican-db-manage.py -d
+      mysql://root:password@127.0.0.1/barbican?charset=utf8
+      revision -m 'Make unneeded verification columns nullable' --autogenerate``
+
+3. Examine the generated version file, found in
+   ``barbican/model/migration/alembic_migrations/versions/``:
+
+   a. **Verify generated update/rollback steps, especially for modifications
+      to existing columns/tables**
+   b. **If you added new tables, follow this guidance**:
+
+      1. Make sure you added your new table to the ``MODELS`` element of the
+         ``barbican/model/models.py`` module.
+      2. Note that when Barbican boots up, it will add the new table to the
+         database. It will also try to apply the database version (that also
+         tries to add this table) via alembic. Therefore, please edit the
+         generated script file to add these lines:
+
+         a. ``ctx = op.get_context()`` (to get the alembic migration context in
+            current transaction)
+         b. ``con = op.get_bind()`` (get the database connection)
+         c. ``table_exists = ctx.dialect.has_table(con.engine,
+            'your-new-table-name-here')``
+         d. ``if not table_exists:``
+         e. ``...remaining create table logic here...``
+
+*Note: For anything but trivial or brand new columns/tables, database backups
+and maintenance-window downtimes might be called for.*
+
+Manually
+'''''''''
+
+1. Execute: ``bin/barbican-db-manage.py revision -m "<insert your change
+   description here>"``
+2. This will generate a new file in the
+   ``barbican/model/migration/alembic_migrations/versions/`` folder, with this
+   sort of file format:
+   ``<unique-Alembic-ID>_<your-change-description-from-above-but-truncated>.py``.
+   Note that only the first 20 characters of the description are used.
+3. You can then edit this file per tutorial and the `Alembic Operation
+   Reference`_ page for available operations you may make from the version
+   files. **You must properly fill in both the** ``upgrade()`` **and**
+   ``downgrade()`` **methods.**
+
+Applying Changes
+-----------------
+
+Barbican utilizes the Alembic version files as managing delta changes to the
+database. Therefore the first Alembic version file does **not** contain all
+time-zero database tables.
+
+To create the initial Barbican tables in the database, execute the Barbican
+application per the 'Via Application' section.
+
+Thereafter, it is suggested that only the ``barbican-db-manage.py`` script
+above be used to update the database schema per the 'Manually' section. Also,
+automatic database updates from the Barbican application should be disabled by
+adding/updating ``db_auto_create = False`` in the ``barbican-api.conf``
+configuration file.
+
+Via Application
+''''''''''''''''
+
+The last section of the `Alembic tutorial`_ describes the process used by the
+Barbican application to create and update the database table space
+automatically.
+
+By default, when the Barbican API boots up it will try to create the Barbican
+database tables (using SQLAlchemy), and then try to apply the latest version
+files (using Alembic). In this mode, the latest version of the Barbican
+application can create a new database table space updated to the latest schema
+version, or else it can update an existing database table space to the latest
+schema revision (called ``head`` in the docs).
+
+*To bypass this automatic behavior, add* ``db_auto_create = False`` *to the*
+``barbican-api.conf`` *file*.
+
+Manually
+'''''''''
+
+Run ``bin/barbican-db-manage.py -d <Full URL to database, including user/pw>
+upgrade -v head``, which will cause Alembic to apply the changes found in all
+version files after the version currently written in the target database, up
+until the latest version file in the linked chain of files.
+
+To upgrade to a specific version, run this command:
+``bin/barbican-db-manage.py -d <Full URL to database, including user/pw>
+upgrade -v <Alembic-ID-of-version>``. The ``Alembic-ID-of-version`` is a
+unique ID assigned to the change such ``as1a0c2cdafb38``.
+
+To downgrade to a specific version, run this command:
+``bin/barbican-db-manage.py -d <Full URL to database, including user/pw>
+downgrade -v <Alembic-ID-of-version>``.
+
+TODO Items
+-----------
+
+1. *[Done - It works!]* Verify alembic works with the current SQLAlchemy model
+   configuration in Barbican (which was borrowed from Glance).
+2. *[Done - It works, I was able to add/remove columns while app was running]*
+   Verify that SQLAlchemy is tolerant of schema miss-matches. For example, if
+   a column is added to a table schema, will this break existing deployments
+   that aren't expecting this column?
+3. *[Done - It works]* Add auto-migrate code to the boot up of models (see the
+   ``barbican\model\repositories.py`` file).
+4. *[Done - It works]* Add guard in Barbican model logic to guard against
+   running migrations with SQLite databases.
+5. Add detailed deployment steps for production, so how new nodes are rolled
+   in and old ones rolled out to complete move to new versions.
+6. *[In Progress]* Add a best-practices checklist section to this page.
+
+   a. This would provide guidance on safely migrating schemas, do's and
+      don'ts, etc.
+   b. This could also provide code guidance, such as ensuring that new schema
+      changes (eg. that new column) aren't required for proper functionality
+      of the previous version of the code.
+   c. If a server bounce is needed, notification guidelines to the devop team
+      would be spelled out here.
+
+.. _Alembic: https://alembic.readthedocs.org/en/latest/
+.. _Alembic Example: https://julo.ch/blog/migrating-content-with-alembic/
+.. _Alembic Operation Reference: https://alembic.readthedocs.org/en/latest/ops.html
+.. _Alembic tutorial: https://alembic.readthedocs.org/en/latest/tutorial.html
+.. _Barbican DevStack: https://wiki.openstack.org/wiki/BarbicanDevStack
+.. _Developer Guide: https://github.com/cloudkeep/barbican/wiki/Developer-Guide
+.. _Need to alter column types in production database: http://stackoverflow.com/questions/5329255/need-to-alter-column-types-in-production-database-sql-server-2005
+.. _OpenStack and SQLAlchemy: https://wiki.openstack.org/wiki/OpenStack_and_SQLAlchemy#Migrations
+.. _What does Autogenerate Detect: http://alembic.readthedocs.org/en/latest/autogenerate.html#what-does-autogenerate-detect-and-what-does-it-not-detect

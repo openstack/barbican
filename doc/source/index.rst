@@ -18,6 +18,7 @@ Getting Started
 
    contribute/getting_involved
    contribute/dependencies
+   contribute/database_migrations
    setup/index
    testing
    plugin/index
