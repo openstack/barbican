@@ -211,6 +211,10 @@ class SecretsController(object):
 
     @pecan.expose()
     def _lookup(self, secret_id, *remainder):
+        # NOTE(jaosorior): It's worth noting that even though this section
+        # actually does a lookup in the database regardless of the RBAC policy
+        # check, the execution only gets here if authentication of the user was
+        # previously successful.
         controllers.assert_is_valid_uuid_from_uri(secret_id)
         ctx = controllers._get_barbican_context(pecan.request)
 
