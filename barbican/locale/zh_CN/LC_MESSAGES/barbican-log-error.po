@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-17 06:12+0000\n"
-"PO-Revision-Date: 2015-02-16 06:46+0000\n"
-"Last-Translator: Andreas Jaeger <jaegerandi@gmail.com>\n"
+"POT-Creation-Date: 2015-02-18 06:11+0000\n"
+"PO-Revision-Date: 2015-02-17 19:28+0000\n"
+"Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
 "Language: zh_CN\n"
@@ -39,10 +39,6 @@ msgstr "删除用户时出错"
 #: barbican/api/controllers/containers.py:89
 msgid "Problem deleting container"
 msgstr "删除容器时出错"
-
-#: barbican/api/controllers/orders.py:133
-msgid "Problem deleting order"
-msgstr "删除命令时出错"
 
 #: barbican/api/controllers/transportkeys.py:73
 msgid "Problem deleting transport_key"
