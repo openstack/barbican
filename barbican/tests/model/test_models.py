@@ -17,6 +17,7 @@ import datetime
 
 from barbican.model import models
 from barbican.openstack.common import jsonutils as json
+from barbican.plugin.interface import secret_store
 from barbican.tests import utils
 
 
@@ -24,6 +25,7 @@ class WhenCreatingNewSecret(utils.BaseTestCase):
     def setUp(self):
         super(WhenCreatingNewSecret, self).setUp()
         self.parsed_secret = {'name': 'name',
+                              'secret_type': secret_store.SecretType.OPAQUE,
                               'algorithm': 'algorithm',
                               'bit_length': 512,
                               'mode': 'mode',
@@ -36,11 +38,20 @@ class WhenCreatingNewSecret(utils.BaseTestCase):
         self.parsed_secret['expiration'] = date_time
         secret = models.Secret(self.parsed_secret)
         self.assertEqual(secret.name, self.parsed_secret['name'])
+        self.assertEqual(secret.secret_type, self.parsed_secret['secret_type'])
         self.assertEqual(secret.algorithm, self.parsed_secret['algorithm'])
         self.assertEqual(secret.bit_length, self.parsed_secret['bit_length'])
         self.assertEqual(secret.mode, self.parsed_secret['mode'])
         self.assertIsInstance(secret.expiration, datetime.datetime)
         self.assertEqual(secret.created_at, secret.updated_at)
+
+    def test_new_secret_is_created_with_default_secret_type(self):
+        secret_spec = dict(self.parsed_secret)
+        date_time = datetime.datetime.now().isoformat()
+        secret_spec['expiration'] = date_time
+        del secret_spec['secret_type']
+        secret = models.Secret(secret_spec)
+        self.assertEqual(secret.secret_type, self.parsed_secret['secret_type'])
 
 
 class WhenCreatingNewOrder(utils.BaseTestCase):

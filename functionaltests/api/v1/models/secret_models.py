@@ -20,7 +20,7 @@ from functionaltests.api.v1.models.base_models import BaseModel
 class SecretModel(BaseModel):
 
     def __init__(self, name=None, expiration=None, algorithm=None,
-                 secret_ref=None, bit_length=None, mode=None,
+                 secret_ref=None, bit_length=None, mode=None, secret_type=None,
                  payload_content_type=None, payload=None, content_types=None,
                  payload_content_encoding=None, status=None, updated=None,
                  created=None):
@@ -31,6 +31,7 @@ class SecretModel(BaseModel):
         self.algorithm = algorithm
         self.bit_length = bit_length
         self.mode = mode
+        self.secret_type = secret_type
         self.payload_content_type = payload_content_type
         self.payload = payload
         self.content_types = content_types

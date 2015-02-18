@@ -13,6 +13,7 @@
 from barbican.common import exception
 from barbican.model import models
 from barbican.model import repositories
+from barbican.plugin.interface import secret_store as ss
 from barbican.tests import database_utils
 from barbican.tests import utils
 
@@ -40,6 +41,11 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
             'secret_1_dict': dict(bit_length=1024),
             'secret_2_dict': dict(bit_length=2048),
             'query_dict': dict(bits=1024)
+        },
+        'query_by_secret_type': {
+            'secret_1_dict': dict(secret_type=ss.SecretType.SYMMETRIC),
+            'secret_2_dict': dict(secret_type=ss.SecretType.OPAQUE),
+            'query_dict': dict(secret_type=ss.SecretType.SYMMETRIC)
         },
     }
 
