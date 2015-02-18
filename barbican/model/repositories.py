@@ -46,6 +46,7 @@ sa_logger = None
 
 # Singleton repository references, instantiated via get_xxxx_repository()
 #   functions below.
+_CONTAINER_CONSUMER_REPOSITORY = None
 _CONTAINER_REPOSITORY = None
 _CONTAINER_SECRET_REPOSITORY = None
 _ENCRYPTED_DATUM_REPOSITORY = None
@@ -1243,6 +1244,13 @@ class TransportKeyRepo(BaseRepo):
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
+
+
+def get_container_consumer_repository():
+    """Returns a singleton Container Consumer repository instance."""
+    global _CONTAINER_CONSUMER_REPOSITORY
+    return _get_repository(_CONTAINER_CONSUMER_REPOSITORY,
+                           ContainerConsumerRepo)
 
 
 def get_container_repository():
