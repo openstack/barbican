@@ -16,6 +16,7 @@ API JSON validators.
 import abc
 
 import jsonschema as schema
+import ldap
 from oslo_config import cfg
 import six
 
@@ -443,14 +444,15 @@ class TypeOrderValidator(ValidatorBase):
         pass
 
     def _validate_subject_dn_data(self, subject_dn):
-        """Confirm that the subject_dn contains valid data."""
-        """
-        TODO(alee-3) complete this function
+        """Confirm that the subject_dn contains valid data
 
-        Validate subject_dn conforms with RFC 1485.
+        Validate that the subject_dn string parses without error
         If not, raise InvalidSubjectDN
         """
-        pass
+        try:
+            ldap.dn.str2dn(subject_dn)
+        except Exception:
+            raise exception.InvalidSubjectDN(subject_dn=subject_dn)
 
     def _validate_extensions_data(self, extensions):
         """Confirm that the extensions data is valid."""
