@@ -23,7 +23,8 @@ Installing system dependencies
 .. code-block:: bash
 
     # Install dependencies required to build Barbican
-    sudo apt-get install -y python-pip python-dev libffi-dev libssl-dev libsqlite3-dev
+    sudo apt-get install -y python-pip python-dev libffi-dev libssl-dev libsqlite3-dev \
+                            libldap2-dev libsasl2-dev
 
     # Install dependencies required for PyEnv
     sudo apt-get install -y git curl make build-essential zlib1g-dev libbz2-dev \

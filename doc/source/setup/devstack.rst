@@ -78,7 +78,8 @@ Installation
 
     # Install system dependencies to start DevStack and install Barbican
     sudo apt-get update
-    sudo apt-get install -y python-pip python-dev libffi-dev libssl-dev git
+    sudo apt-get install -y python-pip python-dev libffi-dev libssl-dev git \
+                            libldap2-dev libsasl2-dev
 
     # Clone DevStack and Barbican
     git clone https://git.openstack.org/cgit/openstack-dev/devstack.git
