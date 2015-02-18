@@ -360,6 +360,10 @@ class TypeOrderValidator(ValidatorBase):
     def _validate_certificate_meta(self, certificate_meta, schema_name):
         """Validation specific to meta for certificate type order."""
 
+        if 'profile' in certificate_meta:
+            if 'ca_id' not in certificate_meta:
+                raise exception.MissingMetadataField(required='ca_id')
+
         jump_table = {
             'simple-cmc': self._validate_simple_cmc_request,
             'full-cmc': self._validate_full_cmc_request,
