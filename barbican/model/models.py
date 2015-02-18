@@ -120,11 +120,8 @@ class ModelBase(object):
         """Delete this object."""
         import barbican.model.repositories
         session = session or barbican.model.repositories.get_session()
-        self.deleted = True
-        self.deleted_at = timeutils.utcnow()
-        self.save(session=session)
-
         self._do_delete_children(session)
+        session.delete(self)
 
     def _do_delete_children(self, session):
         """Sub-class hook: delete children relationships."""
@@ -200,7 +197,21 @@ class ModelBase(object):
         return expiration
 
 
-class ProjectSecret(BASE, ModelBase):
+class SoftDeleteMixIn(object):
+    """Mix-in class that adds soft delete functionality."""
+
+    def delete(self, session=None):
+        """Delete this object."""
+        import barbican.model.repositories
+        session = session or barbican.model.repositories.get_session()
+        self.deleted = True
+        self.deleted_at = timeutils.utcnow()
+        self.save(session=session)
+
+        self._do_delete_children(session)
+
+
+class ProjectSecret(BASE, SoftDeleteMixIn, ModelBase):
     """Represents an association between a Project and a Secret."""
 
     __tablename__ = 'project_secret'
@@ -216,7 +227,7 @@ class ProjectSecret(BASE, ModelBase):
         'project_id', 'secret_id', name='_project_secret_uc'),)
 
 
-class ContainerSecret(BASE, ModelBase):
+class ContainerSecret(BASE, SoftDeleteMixIn, ModelBase):
     """Represents an association between a Container and a Secret."""
 
     __tablename__ = 'container_secret'
@@ -237,7 +248,7 @@ class ContainerSecret(BASE, ModelBase):
                                           name='_container_secret_name_uc'),)
 
 
-class Project(BASE, ModelBase):
+class Project(BASE, SoftDeleteMixIn, ModelBase):
     """Represents a Project in the datastore.
 
     Projects are users that wish to store secret information within
@@ -259,7 +270,7 @@ class Project(BASE, ModelBase):
         return {'external_id': self.external_id}
 
 
-class Secret(BASE, ModelBase):
+class Secret(BASE, SoftDeleteMixIn, ModelBase):
     """Represents a Secret in the datastore.
 
     Secrets are any information Projects wish to store within
@@ -333,7 +344,7 @@ class Secret(BASE, ModelBase):
         }
 
 
-class SecretStoreMetadatum(BASE, ModelBase):
+class SecretStoreMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     """Represents Secret Store metadatum for a single key-value pair."""
 
     __tablename__ = "secret_store_metadata"
@@ -365,7 +376,7 @@ class SecretStoreMetadatum(BASE, ModelBase):
         }
 
 
-class EncryptedDatum(BASE, ModelBase):
+class EncryptedDatum(BASE, SoftDeleteMixIn, ModelBase):
     """Represents the encrypted data for a Secret."""
 
     __tablename__ = 'encrypted_data'
@@ -401,7 +412,7 @@ class EncryptedDatum(BASE, ModelBase):
         return {'content_type': self.content_type}
 
 
-class KEKDatum(BASE, ModelBase):
+class KEKDatum(BASE, SoftDeleteMixIn, ModelBase):
     """Key encryption key (KEK) metadata model.
 
     Represents the key encryption key (KEK) metadata associated with a process
@@ -445,7 +456,7 @@ class KEKDatum(BASE, ModelBase):
         return {'algorithm': self.algorithm}
 
 
-class Order(BASE, ModelBase):
+class Order(BASE, SoftDeleteMixIn, ModelBase):
     """Represents an Order in the datastore.
 
     Orders are requests for Barbican to generate secrets,
@@ -516,7 +527,7 @@ class Order(BASE, ModelBase):
         return ret
 
 
-class OrderPluginMetadatum(BASE, ModelBase):
+class OrderPluginMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     """Represents Order plugin metadatum for a single key-value pair.
 
     This entity is used to store plugin-specific metadata on behalf of an
@@ -550,7 +561,7 @@ class OrderPluginMetadatum(BASE, ModelBase):
                 'value': self.value}
 
 
-class OrderRetryTask(BASE):
+class OrderRetryTask(BASE, SoftDeleteMixIn):
 
     __tablename__ = "order_retry_tasks"
     __table_args__ = {"mysql_engine": "InnoDB"}
@@ -572,7 +583,7 @@ class OrderRetryTask(BASE):
         return json.loads(self.retry_args), json.loads(self.retry_kwargs)
 
 
-class Container(BASE, ModelBase):
+class Container(BASE, SoftDeleteMixIn, ModelBase):
     """Represents a Container for Secrets in the datastore.
 
     Containers store secret references. Containers are owned by Projects.
@@ -641,7 +652,7 @@ class Container(BASE, ModelBase):
                 ]}
 
 
-class ContainerConsumerMetadatum(BASE, ModelBase):
+class ContainerConsumerMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     """Stores Consumer Registrations for Containers in the datastore.
 
     Services can register interest in Containers. Services will provide a type
@@ -682,7 +693,7 @@ class ContainerConsumerMetadatum(BASE, ModelBase):
                 'URL': self.URL}
 
 
-class TransportKey(BASE, ModelBase):
+class TransportKey(BASE, SoftDeleteMixIn, ModelBase):
     """Transport Key model for wrapping secrets in transit
 
     Represents the transport key used for wrapping secrets in transit
@@ -717,7 +728,7 @@ class TransportKey(BASE, ModelBase):
                 'plugin_name': self.plugin_name}
 
 
-class CertificateAuthority(BASE, ModelBase):
+class CertificateAuthority(BASE, SoftDeleteMixIn, ModelBase):
     """CertificateAuthority model to specify the CAs available to Barbican
 
     Represents the CAs available for certificate issuance to Barbican.
@@ -825,7 +836,7 @@ class CertificateAuthorityMetadatum(BASE, ModelBase):
         }
 
 
-class ProjectCertificateAuthority(BASE, ModelBase):
+class ProjectCertificateAuthority(BASE, SoftDeleteMixIn, ModelBase):
     """Stores CAs available for a project.
 
     Admins can define a set of CAs that are available for use in a particular
@@ -870,7 +881,7 @@ class ProjectCertificateAuthority(BASE, ModelBase):
                 'ca_id': self.ca_id}
 
 
-class PreferredCertificateAuthority(BASE, ModelBase):
+class PreferredCertificateAuthority(BASE, SoftDeleteMixIn, ModelBase):
     """Stores preferred CAs for any project.
 
     Admins can define a set of CAs available for issuance requests for
