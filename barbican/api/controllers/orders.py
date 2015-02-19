@@ -197,9 +197,10 @@ class OrdersController(object):
 
         self.queue.process_type_order(order_id=new_order.id,
                                       project_id=external_project_id)
-        pecan.response.status = 202
-        pecan.response.headers['Location'] = '/{0}/orders/{1}'.format(
-            external_project_id, new_order.id
-        )
+
         url = hrefs.convert_order_to_href(new_order.id)
+
+        pecan.response.status = 202
+        pecan.response.headers['Location'] = url
+
         return {'order_ref': url}

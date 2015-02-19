@@ -144,9 +144,8 @@ class ContainerConsumersController(object):
         new_consumer.project_id = project.id
         self.consumer_repo.create_or_update_from(new_consumer, container)
 
-        pecan.response.headers['Location'] = (
-            '/containers/{0}/consumers'.format(new_consumer.container_id)
-        )
+        url = hrefs.convert_consumer_to_href(new_consumer.container_id)
+        pecan.response.headers['Location'] = url
 
         return self._return_container_data(self.container_id,
                                            external_project_id)

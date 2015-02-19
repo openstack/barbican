@@ -307,12 +307,12 @@ class SecretsController(object):
             transport_key_needed=transport_key_needed,
             transport_key_id=data.get('transport_key_id'))
 
-        pecan.response.status = 201
-        pecan.response.headers['Location'] = '/secrets/{0}'.format(
-            new_secret.id
-        )
         url = hrefs.convert_secret_to_href(new_secret.id)
         LOG.debug('URI to secret is %s', url)
+
+        pecan.response.status = 201
+        pecan.response.headers['Location'] = url
+
         if transport_key_model is not None:
             tkey_url = hrefs.convert_transport_key_to_href(
                 transport_key_model.id)
