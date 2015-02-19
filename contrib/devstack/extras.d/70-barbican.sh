@@ -12,6 +12,9 @@ if is_service_enabled barbican; then
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring Barbican"
         configure_barbican
+        if [[ -n $BARBICAN_USE_DOGTAG ]]; then
+            configure_dogtag_plugin
+        fi
         configure_barbicanclient
 
         if is_service_enabled key; then
