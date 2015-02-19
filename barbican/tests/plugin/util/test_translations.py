@@ -12,6 +12,9 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import base64
+
 from barbican.plugin.interface import secret_store as s
 from barbican.plugin.util import translations
 from barbican.tests import utils
@@ -66,18 +69,8 @@ class WhenNormalizingBeforeEncryption(utils.BaseTestCase):
             content_encoding=''
         )
 
-        self.assertEqual(unencrypted, 'stuff')
+        self.assertEqual(unencrypted, base64.b64encode('stuff'))
         self.assertEqual(content_type, 'text/plain')
-
-    def test_base64_content_gets_decoded(self):
-        unencrypted, content_type = self.normalize(
-            unencrypted='YmFt',
-            content_type='application/octet-stream',
-            content_encoding='base64'
-        )
-
-        self.assertEqual(unencrypted, 'bam')
-        self.assertEqual(content_type, 'application/octet-stream')
 
     def test_null_content_encoding_gets_passed_through(self):
         unencrypted, content_type = self.normalize(
@@ -86,7 +79,7 @@ class WhenNormalizingBeforeEncryption(utils.BaseTestCase):
             content_encoding=None
         )
 
-        self.assertEqual(unencrypted, 'bam')
+        self.assertEqual(unencrypted, base64.b64encode('bam'))
         self.assertEqual(content_type, 'application/octet-stream')
 
     @utils.parameterized_dataset(dataset_for_raised_exceptions)

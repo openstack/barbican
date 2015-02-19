@@ -96,7 +96,7 @@ class WhenTestingPluginResource(testtools.TestCase):
 
         dto = self.moc_plugin.store_secret.call_args_list[0][0][0]
         self.assertEqual("symmetric", dto.type)
-        self.assertEqual('ABCDEFABCDEFABCDEFABCDEF', dto.secret)
+        self.assertEqual(secret, dto.secret)
         self.assertEqual(spec['algorithm'], dto.key_spec.alg)
         self.assertEqual(spec['bit_length'], dto.key_spec.bit_length)
         self.assertEqual(self.content_type, dto.content_type)
