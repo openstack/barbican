@@ -151,8 +151,8 @@ class WhenUsingBeginTypeOrderTask(utils.BaseTestCase):
 
     @mock.patch('barbican.tasks.resources.BeginTypeOrder')
     def test_process_order_catch_exception(self, mock_begin_order):
-        """Test process_type_order() handles all exceptions."""
-        mock_begin_order.return_value.process.side_effect = Exception()
+        """Test that BeginTypeOrder's process() handles all exceptions."""
+        mock_begin_order.return_value._process.side_effect = Exception()
 
         self.tasks.process_type_order(None, self.order_id,
                                       self.external_project_id)

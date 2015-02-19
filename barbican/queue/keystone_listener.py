@@ -89,6 +89,10 @@ class NotificationTask(object):
             except Exception:
                 # No need to log message here as task process method has
                 # already logged it
+                # TODO(john-wood-w) This really should be retried on a
+                #   schedule and really only if the database is down, not
+                #   for any exception otherwise tasks will be re-queued
+                #   repeatedly. Revisit as part of the retry task work later.
                 if self.conf.keystone_notifications.allow_requeue:
                     return messaging.NotificationResult.REQUEUE
                 else:

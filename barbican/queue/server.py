@@ -28,6 +28,7 @@ except ImportError:
 from oslo_config import cfg
 
 from barbican.common import utils
+from barbican import i18n as u
 from barbican.model import repositories
 from barbican.openstack.common import service
 from barbican import queue
@@ -46,13 +47,17 @@ def transactional(fn):
 
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
+        fn_name = getattr(fn, '__name__', '????')
+
         if not queue.is_server_side():
             fn(*args, **kwargs)  # Non-server mode directly invokes tasks.
+            LOG.info(u._LI("Completed worker task: '%s'"), fn_name)
         else:
             # Manage session/transaction.
             try:
                 fn(*args, **kwargs)
                 repositories.commit()
+                LOG.info(u._LI("Completed worker task: '%s'"), fn_name)
             except Exception:
                 """NOTE: Wrapped functions must process with care!
 
@@ -60,6 +65,10 @@ def transactional(fn):
                 including any updates made to entities such as setting error
                 codes and error messages.
                 """
+                LOG.exception(
+                    u._LE("Problem seen processing worker task: '%s'"),
+                    fn_name
+                )
                 repositories.rollback()
             finally:
                 repositories.clear()
@@ -113,25 +122,21 @@ class Tasks(object):
     @transactional
     def process_type_order(self, context, order_id, project_id):
         """Process TypeOrder."""
-        LOG.info('Processing TypeOrder: {0}'.format(order_id))
-        task = resources.BeginTypeOrder()
-        try:
-            task.process(order_id, project_id)
-        except Exception:
-            LOG.exception(">>>>> Task exception seen, details reported "
-                          "on the Orders entity.")
+        LOG.info(
+            u._LI("Processing type order: order ID is '%s'"),
+            order_id
+        )
+        resources.BeginTypeOrder().process(order_id, project_id)
 
     @monitored
     @transactional
     def update_order(self, context, order_id, project_id, updated_meta):
         """Update Order."""
-        LOG.info('Updating TypeOrder: {0}'.format(order_id))
-        task = resources.UpdateOrder()
-        try:
-            task.process(order_id, project_id, updated_meta)
-        except Exception:
-            LOG.exception(">>>>> Task exception seen, details reported "
-                          "on the Orders entity.")
+        LOG.info(
+            u._LI("Processing update order: order ID is '%s'"),
+            order_id
+        )
+        resources.UpdateOrder().process(order_id, project_id, updated_meta)
 
 
 class TaskServer(Tasks, service.Service):
@@ -160,11 +165,11 @@ class TaskServer(Tasks, service.Service):
                                         endpoints=[self])
 
     def start(self):
-        LOG.info("Starting the TaskServer")
+        LOG.info(u._LI("Starting the TaskServer"))
         self._server.start()
         super(TaskServer, self).start()
 
     def stop(self):
-        LOG.info("Halting the TaskServer")
+        LOG.info(u._LI("Halting the TaskServer"))
         super(TaskServer, self).stop()
         self._server.stop()

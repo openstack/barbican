@@ -86,8 +86,11 @@ class KeystoneEventConsumer(resources.BaseTask):
             }
         )
 
-    def handle_success(self, project, project_id=None, resource_type=None,
-                       operation_type=None):
+    def handle_success(self, project, result, project_id=None,
+                       resource_type=None, operation_type=None):
+        # Note: The processing 'result' argument can be ignored as 'result'
+        # only pertains to long-running tasks. See the documentation for
+        # BaseTask for more details.
         LOG.info(
             u._LI(
                 'Successfully handled Keystone event, '

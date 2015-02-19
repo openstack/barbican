@@ -48,6 +48,7 @@ class BaseOrderTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
         self.setup_project_repository_mock(self.project_repo)
 
         self.order.status = models.States.PENDING
+        self.order.id = 'orderid1234'
         self.order.project_id = self.project_id
         self.order_repo = mock.MagicMock()
         self.order_repo.get.return_value = self.order
@@ -83,6 +84,76 @@ class BaseOrderTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
         self.setup_container_secret_repository_mock(self.container_secret_repo)
 
         self.container = models.Container()
+
+
+class WhenUsingOrderTaskHelper(BaseOrderTestCase):
+
+    def setUp(self):
+        super(WhenUsingOrderTaskHelper, self).setUp()
+
+        self.result = resources.FollowOnProcessingStatusDTO()
+
+        self.helper = resources._OrderTaskHelper()
+
+    def test_should_retrieve_entity(self):
+        order_model = self.helper.retrieve_entity(
+            self.order.id, self.external_project_id)
+
+        self.assertEqual(self.order.id, order_model.id)
+        self.order_repo.get.assert_called_once_with(
+            entity_id=self.order.id,
+            external_project_id=self.external_project_id)
+
+    def test_should_handle_error(self):
+        self.helper.handle_error(self.order, 'status_code', 'reason',
+                                 ValueError())
+
+        self.assertEqual(models.States.ERROR, self.order.status)
+        self.assertEqual('status_code', self.order.error_status_code)
+        self.assertEqual('reason', self.order.error_reason)
+        self.order_repo.save.assert_called_once_with(self.order)
+
+    def test_should_handle_success_no_result(self):
+        self.helper.handle_success(self.order, None)
+
+        self.assertEqual(models.States.ACTIVE, self.order.status)
+        self.assertIsNone(self.order.sub_status)
+        self.assertIsNone(self.order.sub_status_message)
+        self.order_repo.save.assert_called_once_with(self.order)
+
+    def test_should_handle_success_result_no_follow_on_needed(self):
+        self.helper.handle_success(self.order, self.result)
+
+        self.assertEqual(models.States.ACTIVE, self.order.status)
+        self.assertEqual('Unknown', self.order.sub_status)
+        self.assertEqual('Unknown', self.order.sub_status_message)
+        self.order_repo.save.assert_called_once_with(self.order)
+
+    def test_should_handle_success_result_follow_on_needed(self):
+        self.result.retry_method = 'bogus_method_here'
+        self.result.status = 'status'
+        self.result.status_message = 'status_message'
+
+        self.helper.handle_success(self.order, self.result)
+
+        self.assertNotEqual(models.States.ACTIVE, self.order.status)
+        self.assertEqual('status', self.order.sub_status)
+        self.assertEqual('status_message', self.order.sub_status_message)
+        self.order_repo.save.assert_called_once_with(self.order)
+
+    def test_should_handle_success_result_large_statuses_clipped(self):
+        sub_status = 'z' * (models.SUB_STATUS_LENGTH + 1)
+        sub_status_message = 'z' * (models.SUB_STATUS_MESSAGE_LENGTH + 1)
+
+        self.result.status = sub_status
+        self.result.status_message = sub_status_message
+
+        self.helper.handle_success(self.order, self.result)
+
+        self.assertEqual(sub_status[:-1], self.order.sub_status)
+        self.assertEqual(
+            sub_status_message[:-1], self.order.sub_status_message)
+        self.order_repo.save.assert_called_once_with(self.order)
 
 
 class WhenBeginningKeyTypeOrder(BaseOrderTestCase):
@@ -179,12 +250,29 @@ class WhenBeginningKeyTypeOrder(BaseOrderTestCase):
         )
 
 
-class WhenUpdatingKeyTypeOrder(BaseOrderTestCase):
+class WhenUpdatingOrder(BaseOrderTestCase):
 
     def setUp(self):
-        super(WhenUpdatingKeyTypeOrder, self).setUp()
+        super(WhenUpdatingOrder, self).setUp()
+
+        self.updated_meta = 'updated'
 
         self.resource = resources.UpdateOrder()
+
+    @mock.patch(
+        'barbican.tasks.certificate_resources.modify_certificate_request')
+    def test_should_update_certificate_order(self, mock_modify_cert_request):
+        self.order.type = models.OrderType.CERTIFICATE
+
+        self.resource.process(
+            self.order.id, self.external_project_id, self.updated_meta)
+
+        self.assertEqual(self.order.status, models.States.ACTIVE)
+
+        mock_modify_cert_request.assert_called_once_with(
+            self.order,
+            self.updated_meta
+        )
 
     @mock.patch(
         'barbican.tasks.certificate_resources.modify_certificate_request')

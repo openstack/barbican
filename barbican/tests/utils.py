@@ -83,7 +83,7 @@ class MockModelRepositoryMixin(object):
     """Class for setting up the repo factory mocks
 
     This class has the purpose of setting up the mocks for the model repository
-    factory functions. This is because the are intended to be singletons, and
+    factory functions. This is because they are intended to be singletons, and
     thus called inside the code-base, and not really passed around as
     arguments. Thus, this kind of approach is needed.
 
