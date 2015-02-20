@@ -26,6 +26,7 @@ except ImportError:
     newrelic_loaded = False
 
 from oslo_config import cfg
+from oslo_log import log
 
 from barbican.api.controllers import containers
 from barbican.api.controllers import orders
@@ -36,7 +37,6 @@ from barbican.api.controllers import versions
 from barbican.common import config
 from barbican.model import repositories
 from barbican.openstack.common import jsonutils as json
-from barbican.openstack.common import log
 from barbican import queue
 
 if newrelic_loaded:
@@ -98,14 +98,14 @@ class PecanAPI(pecan.Pecan):
 def create_main_app(global_config, **local_conf):
     """uWSGI factory method for the Barbican-API application."""
 
-    # Configure oslo logging and configuration services.
-    config.parse_args()
-    log.setup('barbican')
-    config.setup_remote_pydev_debug()
-
     # Queuing initialization
     CONF = cfg.CONF
     queue.init(CONF, is_server_side=False)
+
+    # Configure oslo logging and configuration services.
+    config.parse_args()
+    log.setup(CONF, 'barbican')
+    config.setup_remote_pydev_debug()
 
     class RootController(object):
         secrets = secrets.SecretsController()

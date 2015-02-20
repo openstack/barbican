@@ -21,9 +21,9 @@ import time
 import uuid
 
 from oslo_config import cfg
+from oslo_log import log
 
 from barbican import i18n as u
-import barbican.openstack.common.log as logging
 
 
 host_opts = [
@@ -52,7 +52,7 @@ def hostname_for_refs(resource=None):
 #   register CLI option'
 #   error.
 def getLogger(name):
-    return logging.getLogger(name)
+    return log.getLogger(name)
 
 
 def get_accepted_encodings(req):

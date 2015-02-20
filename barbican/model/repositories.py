@@ -25,6 +25,7 @@ import time
 import uuid
 
 from oslo_config import cfg
+from oslo_log import log
 import sqlalchemy
 from sqlalchemy import or_
 import sqlalchemy.orm as sa_orm
@@ -72,7 +73,7 @@ db_opts = [
 
 CONF = cfg.CONF
 CONF.register_opts(db_opts)
-CONF.import_opt('debug', 'barbican.openstack.common.log')
+log.register_options(CONF)
 
 
 def hard_reset():
