@@ -123,7 +123,6 @@ class OrdersTestCase(base.TestCase):
 
         # verify the order
         self.assertEqual(order_resp.status_code, 200)
-        self.assertIsNotNone(order_resp.model.secret_ref)
         self.assertIsNotNone(order_resp.model.order_ref)
         self.assertEqual(order_resp.model.type, 'key')
         self.assertTrue(order_resp.model.status == "ACTIVE" or
