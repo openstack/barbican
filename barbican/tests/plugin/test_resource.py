@@ -51,7 +51,7 @@ class WhenTestingPluginResource(testtools.TestCase):
 
         self.moc_plugin_patcher = mock.patch(
             'barbican.plugin.interface.secret_store'
-            '.SecretStorePluginManager',
+            '.get_manager',
             **moc_plugin_config
         )
         self.moc_plugin_patcher.start()
