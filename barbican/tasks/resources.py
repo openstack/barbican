@@ -152,7 +152,7 @@ class BeginTypeOrder(BaseTask):
                  secret_repo=None, project_secret_repo=None, datum_repo=None,
                  kek_repo=None, container_repo=None,
                  container_secret_repo=None, secret_meta_repo=None,
-                 order_plugin_meta_repo=None):
+                 order_plugin_meta_repo=None, order_barbican_meta_repo=None):
             LOG.debug('Creating BeginTypeOrder task processor')
             self.repos = rep.Repositories(
                 project_repo=project_repo,
@@ -163,6 +163,7 @@ class BeginTypeOrder(BaseTask):
                 secret_meta_repo=secret_meta_repo,
                 order_repo=order_repo,
                 order_plugin_meta_repo=order_plugin_meta_repo,
+                order_barbican_meta_repo=order_barbican_meta_repo,
                 container_repo=container_repo,
                 container_secret_repo=container_secret_repo)
 

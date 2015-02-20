@@ -496,6 +496,12 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
         backref="order",
         cascade="all, delete-orphan")
 
+    order_barbican_metadata = orm.relationship(
+        "OrderBarbicanMetadatum",
+        collection_class=col.attribute_mapped_collection('key'),
+        backref="order",
+        cascade="all, delete-orphan")
+
     def __init__(self, parsed_request=None):
             """Creates a Order entity from a dict."""
             super(Order, self).__init__()
@@ -510,6 +516,8 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
     def _do_delete_children(self, session):
         """Sub-class hook: delete children relationships."""
         for k, v in self.order_plugin_metadata.items():
+            v.delete(session)
+        for k, v in self.order_barbican_metadata.items():
             v.delete(session)
 
     def _do_extra_dict_fields(self):
@@ -553,6 +561,42 @@ class OrderPluginMetadatum(BASE, SoftDeleteMixIn, ModelBase):
 
         msg = ("Must supply non-None {0} argument "
                "for OrderPluginMetadatum entry.")
+
+        if key is None:
+            raise exception.MissingArgumentError(msg.format("key"))
+        self.key = key
+
+        if value is None:
+            raise exception.MissingArgumentError(msg.format("value"))
+        self.value = value
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {'key': self.key,
+                'value': self.value}
+
+
+class OrderBarbicanMetadatum(BASE, SoftDeleteMixIn, ModelBase):
+    """Represents Order barbican metadatum for a single key-value pair.
+
+    This entity is used to store barbican-specific metadata on behalf of an
+    Order instance.  This is data that is stored by the server to help
+    process the order through its life cycle, but which is not in the original
+    request.
+    """
+
+    __tablename__ = "order_barbican_metadata"
+
+    order_id = sa.Column(sa.String(36), sa.ForeignKey('orders.id'),
+                         nullable=False)
+    key = sa.Column(sa.String(255), nullable=False)
+    value = sa.Column(sa.String(255), nullable=False)
+
+    def __init__(self, key, value):
+        super(OrderBarbicanMetadatum, self).__init__()
+
+        msg = ("Must supply non-None {0} argument "
+               "for OrderBarbicanMetadatum entry.")
 
         if key is None:
             raise exception.MissingArgumentError(msg.format("key"))
@@ -938,8 +982,8 @@ class PreferredCertificateAuthority(BASE, SoftDeleteMixIn, ModelBase):
 # Keep this tuple synchronized with the models in the file
 MODELS = [ProjectSecret, Project, Secret, EncryptedDatum, Order, Container,
           ContainerConsumerMetadatum, ContainerSecret, TransportKey,
-          SecretStoreMetadatum, OrderPluginMetadatum, KEKDatum,
-          CertificateAuthority, CertificateAuthorityMetadatum,
+          SecretStoreMetadatum, OrderPluginMetadatum, OrderBarbicanMetadatum,
+          KEKDatum, CertificateAuthority, CertificateAuthorityMetadatum,
           ProjectCertificateAuthority, PreferredCertificateAuthority]
 
 
