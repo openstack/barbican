@@ -59,7 +59,8 @@ class SymantecCertificatePlugin(cert.CertificatePluginBase):
         if self.url == None:
             raise ValueError(u._("url is required"))
 
-    def issue_certificate_request(self, order_id, order_meta, plugin_meta):
+    def issue_certificate_request(self, order_id, order_meta, plugin_meta,
+                                  barbican_meta_dto):
         """Create the initial order with CA
 
         :param order_id: ID associated with the order
@@ -68,6 +69,7 @@ class SymantecCertificatePlugin(cert.CertificatePluginBase):
                             this plugin. Plugins may also update/add
                             information here which Barbican will persist
                             on their behalf.
+        :param barbican_meta_dto: additional data needed to process order.
         :returns: ResultDTO
         """
         successful, error_msg, can_retry = _ca_create_order(order_meta,
@@ -84,7 +86,8 @@ class SymantecCertificatePlugin(cert.CertificatePluginBase):
 
         return cert.ResultDTO(status=status, status_message=message)
 
-    def modify_certificate_request(self, order_id, order_meta, plugin_meta):
+    def modify_certificate_request(self, order_id, order_meta, plugin_meta,
+                                   barbican_meta_dto):
         """Update the order meta-data
 
         :param order_id: ID associated with the order
@@ -93,10 +96,12 @@ class SymantecCertificatePlugin(cert.CertificatePluginBase):
                             this plugin. Plugins may also update/add
                             information here which Barbican will persist
                             on their behalf.
+        :param barbican_meta_dto: additional data needed to process order.
         """
         raise NotImplementedError  # pragma: no cover
 
-    def cancel_certificate_request(self, order_id, order_meta, plugin_meta):
+    def cancel_certificate_request(self, order_id, order_meta, plugin_meta,
+                                   barbican_meta_dto):
         """Cancel the order
 
         :param order_id: ID associated with the order
@@ -105,10 +110,12 @@ class SymantecCertificatePlugin(cert.CertificatePluginBase):
                             this plugin. Plugins may also update/add
                             information here which Barbican will persist
                             on their behalf.
+        :param barbican_meta_dto: additional data needed to process order.
         """
         raise NotImplementedError  # pragma: no cover
 
-    def check_certificate_status(self, order_id, order_meta, plugin_meta):
+    def check_certificate_status(self, order_id, order_meta, plugin_meta,
+                                 barbican_meta_dto):
         """Check status of the order
 
         :param order_id: ID associated with the order
@@ -117,6 +124,7 @@ class SymantecCertificatePlugin(cert.CertificatePluginBase):
                             this plugin. Plugins may also update/add
                             information here which Barbican will persist
                             on their behalf.
+        :param barbican_meta_dto: additional data needed to process order.
         """
         raise NotImplementedError  # pragma: no cover
 

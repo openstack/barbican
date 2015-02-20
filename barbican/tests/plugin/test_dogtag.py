@@ -306,6 +306,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             dogtag_cert.CertRequestStatus.COMPLETE)
         self.modified_request.cert_id = self.cert_id_mock
 
+        self.barbican_meta_dto = cm.BarbicanMetaDTO()
+
     def tearDown(self):
         super(WhenTestingDogtagCAPlugin, self).tearDown()
         self.patcher.stop()
@@ -318,7 +320,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.enroll_cert.return_value = enrollment_results
 
         result_dto = self.plugin.issue_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.enroll_cert.assert_called_once_with(
             self.profile_id,
@@ -357,7 +359,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             enrollment_results)
 
         result_dto = self.plugin.issue_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.create_enrollment_request.assert_called_once_with(
             self.cfg_mock.dogtag_plugin.simple_cmc_profile,
@@ -395,7 +397,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.plugin.issue_certificate_request,
             self.order_id,
             order_meta,
-            plugin_meta
+            plugin_meta,
+            self.barbican_meta_dto
         )
 
     def test_issue_stored_key_request(self):
@@ -431,7 +434,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.plugin.issue_certificate_request,
             self.order_id,
             order_meta,
-            plugin_meta
+            plugin_meta,
+            self.barbican_meta_dto
         )
 
     def test_issue_return_data_error_with_no_profile_id(self):
@@ -439,7 +443,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         plugin_meta = {}
 
         result_dto = self.plugin.issue_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.assertEqual(result_dto.status,
                          cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
@@ -459,7 +463,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.enroll_cert.return_value = enrollment_results
 
         result_dto = self.plugin.issue_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.enroll_cert.assert_called_once_with(
             self.profile_id,
@@ -485,7 +489,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.enroll_cert.return_value = enrollment_results
 
         result_dto = self.plugin.issue_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.enroll_cert.assert_called_once_with(
             self.profile_id,
@@ -511,7 +515,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.enroll_cert.return_value = enrollment_results
 
         result_dto = self.plugin.issue_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.enroll_cert.assert_called_once_with(
             self.profile_id,
@@ -540,7 +544,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.plugin.issue_certificate_request,
             self.order_id,
             order_meta,
-            plugin_meta
+            plugin_meta,
+            self.barbican_meta_dto
         )
 
         self.assertEqual(
@@ -563,7 +568,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.plugin.issue_certificate_request,
             self.order_id,
             order_meta,
-            plugin_meta
+            plugin_meta,
+            self.barbican_meta_dto
         )
 
         self.assertEqual(
@@ -579,7 +585,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             pki.BadRequestException("bad request"))
 
         result_dto = self.plugin.issue_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.enroll_cert.assert_called_once_with(
             self.profile_id,
@@ -601,7 +607,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.plugin.issue_certificate_request,
             self.order_id,
             order_meta,
-            plugin_meta
+            plugin_meta,
+            self.barbican_meta_dto
         )
 
     def test_issue_return_ca_unavailable(self):
@@ -612,7 +619,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             request_exceptions.RequestException())
 
         result_dto = self.plugin.issue_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.enroll_cert.assert_called_once_with(
             self.profile_id,
@@ -630,7 +637,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.review_request.return_value = self.review_response
 
         result_dto = self.plugin.cancel_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.cancel_request.assert_called_once_with(
             self.request_id_mock,
@@ -648,7 +655,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             pki.RequestNotFoundException("request_not_found"))
 
         result_dto = self.plugin.cancel_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.review_request.assert_called_once_with(
             self.request_id_mock)
@@ -666,7 +673,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             pki.ConflictingOperationException("conflicting_operation"))
 
         result_dto = self.plugin.cancel_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.cancel_request.assert_called_once_with(
             self.request_id_mock,
@@ -684,7 +691,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             request_exceptions.RequestException("request_exception"))
 
         result_dto = self.plugin.cancel_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.assertEqual(result_dto.status,
                          cm.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST,
@@ -699,7 +706,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.plugin.cancel_certificate_request,
             self.order_id,
             order_meta,
-            plugin_meta
+            plugin_meta,
+            self.barbican_meta_dto
         )
 
     def test_check_status(self):
@@ -710,7 +718,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.get_cert.return_value = self.cert
 
         result_dto = self.plugin.check_certificate_status(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.get_request.assert_called_once_with(
             self.request_id_mock)
@@ -734,7 +742,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.plugin.check_certificate_status,
             self.order_id,
             order_meta,
-            plugin_meta
+            plugin_meta,
+            self.barbican_meta_dto
         )
 
     def test_check_status_rejected(self):
@@ -745,7 +754,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.get_request.return_value = self.request
 
         result_dto = self.plugin.check_certificate_status(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.get_request.assert_called_once_with(
             self.request_id_mock)
@@ -765,7 +774,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.get_request.return_value = self.request
 
         result_dto = self.plugin.check_certificate_status(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.get_request.assert_called_once_with(
             self.request_id_mock)
@@ -785,7 +794,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.get_request.return_value = self.request
 
         result_dto = self.plugin.check_certificate_status(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.get_request.assert_called_once_with(
             self.request_id_mock)
@@ -809,7 +818,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.plugin.check_certificate_status,
             self.order_id,
             order_meta,
-            plugin_meta
+            plugin_meta,
+            self.barbican_meta_dto
         )
 
     def test_modify_request(self):
@@ -826,7 +836,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.enroll_cert.return_value = enrollment_results
 
         result_dto = self.plugin.modify_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.cancel_request.assert_called_once_with(
             self.request_id_mock,
@@ -859,7 +869,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             pki.RequestNotFoundException("request_not_found"))
 
         result_dto = self.plugin.modify_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.review_request.assert_called_once_with(
             self.request_id_mock)
@@ -877,7 +887,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             pki.ConflictingOperationException("conflicting_operation"))
 
         result_dto = self.plugin.modify_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.certclient_mock.cancel_request.assert_called_once_with(
             self.request_id_mock,
@@ -895,7 +905,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             request_exceptions.RequestException("request_exception"))
 
         result_dto = self.plugin.modify_certificate_request(
-            self.order_id, order_meta, plugin_meta)
+            self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
         self.assertEqual(result_dto.status,
                          cm.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST,
@@ -910,5 +920,6 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.plugin.modify_certificate_request,
             self.order_id,
             order_meta,
-            plugin_meta
+            plugin_meta,
+            self.barbican_meta_dto
         )
