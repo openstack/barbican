@@ -12,6 +12,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import uuid
+
 from oslo_config import cfg
 import webob.exc
 
@@ -47,12 +49,11 @@ CONF.register_opts(context_opts)
 
 class BaseContextMiddleware(mw.Middleware):
     def process_response(self, resp):
-        try:
-            request_id = resp.request.context.request_id
-        except AttributeError:
-            LOG.warn(u._LW('Unable to retrieve request id from context'))
-        else:
-            resp.headers['x-openstack-request-id'] = 'req-%s' % request_id
+        request_id = resp.request.headers.get('x-openstack-request-id')
+        if not request_id:
+            request_id = b'req-{0}'.format(str(uuid.uuid4()))
+
+        resp.headers['x-openstack-request-id'] = request_id
         return resp
 
 

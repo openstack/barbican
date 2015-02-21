@@ -24,12 +24,8 @@ class WhenTestingBaseContextMiddleware(utils.BaseTestCase):
         super(WhenTestingBaseContextMiddleware, self).setUp()
 
     def test_should_raise_attribute_error(self):
-
         base = context.BaseContextMiddleware(None)
-
-        response = base.process_response(None)
-
-        self.assertIsNone(response)
+        self.assertRaises(AttributeError, base.process_response, None)
 
 
 class WhenTestingContextMiddleware(utils.BaseTestCase):
