@@ -55,6 +55,7 @@ class BaseOrderTestCase(utils.BaseTestCase):
         self.order_repo.get.return_value = self.order
 
         self.order_plugin_meta_repo = mock.MagicMock()
+        self.order_barbican_meta_repo = mock.MagicMock()
 
         self.secret = models.Secret()
 
@@ -94,7 +95,8 @@ class WhenBeginningKeyTypeOrder(BaseOrderTestCase):
             secret_meta_repo=self.secret_meta_repo,
             container_repo=self.container_repo,
             container_secret_repo=self.container_secret_repo,
-            order_plugin_meta_repo=self.order_plugin_meta_repo)
+            order_plugin_meta_repo=self.order_plugin_meta_repo,
+            order_barbican_meta_repo=self.order_barbican_meta_repo)
 
     @mock.patch('barbican.plugin.resources.generate_secret')
     def test_should_process_key_order(self, mock_generate_secret):
@@ -242,7 +244,8 @@ class WhenBeginningAsymmetricTypeOrder(BaseOrderTestCase):
             secret_meta_repo=self.secret_meta_repo,
             container_repo=self.container_repo,
             container_secret_repo=self.container_secret_repo,
-            order_plugin_meta_repo=self.order_plugin_meta_repo)
+            order_plugin_meta_repo=self.order_plugin_meta_repo,
+            order_barbican_meta_repo=self.order_barbican_meta_repo)
 
     @mock.patch('barbican.plugin.resources.generate_asymmetric_secret')
     def test_should_process_asymmetric_order(self,

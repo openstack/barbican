@@ -53,6 +53,7 @@ _CONTAINER_SECRET_REPOSITORY = None
 _ENCRYPTED_DATUM_REPOSITORY = None
 _KEK_DATUM_REPOSITORY = None
 _ORDER_PLUGIN_META_REPOSITORY = None
+_ORDER_BARBICAN_META_REPOSITORY = None
 _ORDER_REPOSITORY = None
 _PROJECT_REPOSITORY = None
 _PROJECT_SECRET_REPOSITORY = None
@@ -366,6 +367,8 @@ class Repositories(object):
             self._set_repo('order_repo', OrderRepo, kwargs)
             self._set_repo('order_plugin_meta_repo', OrderPluginMetadatumRepo,
                            kwargs)
+            self._set_repo('order_barbican_meta_repo',
+                           OrderBarbicanMetadatumRepo, kwargs)
             self._set_repo('transport_key_repo', TransportKeyRepo, kwargs)
             self._set_repo('container_repo', ContainerRepo, kwargs)
             self._set_repo('container_secret_repo', ContainerSecretRepo,
@@ -1011,6 +1014,59 @@ class OrderPluginMetadatumRepo(BaseRepo):
         pass
 
 
+class OrderBarbicanMetadatumRepo(BaseRepo):
+    """Repository for the OrderBarbicanMetadatum entity
+
+    Stores key/value plugin information on behalf of a Order.
+    """
+
+    def save(self, metadata, order_model):
+        """Saves the the specified metadata for the order.
+
+        :raises NotFound if entity does not exist.
+        """
+        now = timeutils.utcnow()
+        session = get_session()
+
+        for k, v in metadata.items():
+            meta_model = models.OrderBarbicanMetadatum(k, v)
+            meta_model.updated_at = now
+            meta_model.order = order_model
+            meta_model.save(session=session)
+
+    def get_metadata_for_order(self, order_id):
+        """Returns a dict of OrderBarbicanMetadatum instances."""
+
+        session = get_session()
+
+        try:
+            query = session.query(models.OrderBarbicanMetadatum)
+            query = query.filter_by(deleted=False)
+
+            query = query.filter(
+                models.OrderBarbicanMetadatum.order_id == order_id)
+
+            metadata = query.all()
+
+        except sa_orm.exc.NoResultFound:
+            metadata = dict()
+
+        return dict((m.key, m.value) for m in metadata)
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "OrderBarbicanMetadatum"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+        query = session.query(models.OrderBarbicanMetadatum)
+        return query.filter_by(id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
 class ContainerRepo(BaseRepo):
     """Repository for the Container entity."""
 
@@ -1283,6 +1339,13 @@ def get_order_plugin_meta_repository():
     global _ORDER_PLUGIN_META_REPOSITORY
     return _get_repository(_ORDER_PLUGIN_META_REPOSITORY,
                            OrderPluginMetadatumRepo)
+
+
+def get_order_barbican_meta_repository():
+    """Returns a singleton Order-Barbican meta repository instance."""
+    global _ORDER_BARBICAN_META_REPOSITORY
+    return _get_repository(_ORDER_BARBICAN_META_REPOSITORY,
+                           OrderBarbicanMetadatumRepo)
 
 
 def get_order_repository():
