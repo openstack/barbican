@@ -963,7 +963,7 @@ class OrderRepo(BaseRepo):
 class OrderPluginMetadatumRepo(BaseRepo):
     """Repository for the OrderPluginMetadatum entity
 
-    Stores key/value plugin information on behalf of a Order.
+    Stores key/value plugin information on behalf of an Order.
     """
 
     def save(self, metadata, order_model):
