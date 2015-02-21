@@ -777,9 +777,9 @@ class SecretStoreMetadatumRepo(BaseRepo):
             metadata = query.all()
 
         except sa_orm.exc.NoResultFound:
-            metadata = dict()
+            metadata = {}
 
-        return dict((m.key, m.value) for m in metadata)
+        return {m.key: m.value for m in metadata}
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
@@ -996,9 +996,9 @@ class OrderPluginMetadatumRepo(BaseRepo):
             metadata = query.all()
 
         except sa_orm.exc.NoResultFound:
-            metadata = dict()
+            metadata = {}
 
-        return dict((m.key, m.value) for m in metadata)
+        return {m.key: m.value for m in metadata}
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
@@ -1049,9 +1049,9 @@ class OrderBarbicanMetadatumRepo(BaseRepo):
             metadata = query.all()
 
         except sa_orm.exc.NoResultFound:
-            metadata = dict()
+            metadata = {}
 
-        return dict((m.key, m.value) for m in metadata)
+        return {m.key: m.value for m in metadata}
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""

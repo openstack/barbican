@@ -110,8 +110,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
         super(WhenIssuingCertificateRequests, self).setUp()
         self.project_id = "56789"
         self.order_id = "12345"
-        self.order_meta = dict()
-        self.plugin_meta = dict()
+        self.order_meta = {}
+        self.plugin_meta = {}
         self.result = cert_man.ResultDTO(
             cert_man.CertificateStatus.WAITING_FOR_CA
         )

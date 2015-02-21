@@ -336,7 +336,7 @@ def _get_secret_meta(secret_model, repos):
         return repos.secret_meta_repo.get_metadata_for_secret(
             secret_model.id)
     else:
-        return dict()
+        return {}
 
 
 def _save_secret_metadata(secret_model, secret_metadata,
@@ -344,7 +344,7 @@ def _save_secret_metadata(secret_model, secret_metadata,
     """Add secret metadata to a secret."""
 
     if not secret_metadata:
-        secret_metadata = dict()
+        secret_metadata = {}
 
     secret_metadata['plugin_name'] = utils.generate_fullname_for(store_plugin)
 

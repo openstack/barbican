@@ -176,7 +176,7 @@ class WhenTestingBaseRepository(database_utils.RepositoryTestCase):
         exception_result = self.assertRaises(
             exception.Invalid,
             self.repo._do_validate,
-            dict())
+            {})
 
         self.assertEqual(
             "Entity status is required.",
