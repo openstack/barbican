@@ -653,7 +653,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
         resp = self.app.get(
             '/secrets/',
-            dict((k, v) for k, v in self.params.items() if v is not None)
+            {k: v for k, v in self.params.items() if v is not None}
         )
         # Verify that the name is unquoted correctly in the
         # secrets.on_get function prior to searching the repo.
@@ -676,7 +676,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
     def test_should_get_list_secrets(self):
         resp = self.app.get(
             '/secrets/',
-            dict((k, v) for k, v in self.params.items() if v is not None)
+            {k: v for k, v in self.params.items() if v is not None}
         )
 
         self.secret_repo.get_by_create_date.assert_called_once_with(
@@ -708,7 +708,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
     def test_response_should_include_total(self):
         resp = self.app.get(
             '/secrets/',
-            dict((k, v) for k, v in self.params.items() if v is not None)
+            {k: v for k, v in self.params.items() if v is not None}
         )
 
         self.assertIn('total', resp.namespace)
@@ -720,7 +720,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
         resp = self.app.get(
             '/secrets/',
-            dict((k, v) for k, v in self.params.items() if v is not None)
+            {k: v for k, v in self.params.items() if v is not None}
         )
 
         self.secret_repo.get_by_create_date.assert_called_once_with(
@@ -743,7 +743,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
         self.app.get(
             '/secrets/',
-            dict((k, v) for k, v in self.params.items() if v is not None)
+            {k: v for k, v in self.params.items() if v is not None}
         )
 
         # Verify that controller call above normalizes bits to zero!
@@ -1929,7 +1929,7 @@ class WhenAddingNavigationHrefs(utils.BaseTestCase):
         self.resource_name = 'orders'
         self.external_project_id = '12345'
         self.num_elements = 100
-        self.data = dict()
+        self.data = {}
 
     def test_add_nav_hrefs_adds_next_only(self):
         offset = 0

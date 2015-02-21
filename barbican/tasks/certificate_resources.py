@@ -241,7 +241,7 @@ def _get_plugin_meta(order_model, repos):
         return repos.order_plugin_meta_repo.get_metadata_for_order(
             order_model.id)
     else:
-        return dict()
+        return {}
 
 
 def _generate_csr(order_model, repos):
@@ -315,7 +315,7 @@ def _save_plugin_metadata(order_model, plugin_meta, repos):
     """Add plugin metadata to an order."""
 
     if not isinstance(plugin_meta, dict):
-        plugin_meta = dict()
+        plugin_meta = {}
 
     repos.order_plugin_meta_repo.save(plugin_meta, order_model)
 

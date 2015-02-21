@@ -55,7 +55,7 @@ class WhenTestingSymantecPlugin(utils.BaseTestCase):
         self.mock_create_order.return_value = (True, None, None)
 
         order_id = '1234'
-        plugin_meta = dict()
+        plugin_meta = {}
 
         result = self.symantec.issue_certificate_request(
             order_id,
@@ -69,7 +69,7 @@ class WhenTestingSymantecPlugin(utils.BaseTestCase):
         self.mock_create_order.return_value = (False, self.error_msg, True)
 
         order_id = '1234'
-        plugin_meta = dict()
+        plugin_meta = {}
 
         result = self.symantec.issue_certificate_request(
             order_id,
@@ -83,7 +83,7 @@ class WhenTestingSymantecPlugin(utils.BaseTestCase):
         self.mock_create_order.return_value = (False, self.error_msg, False)
 
         order_id = '12345'
-        plugin_meta = dict()
+        plugin_meta = {}
 
         result = self.symantec.issue_certificate_request(
             order_id,
@@ -95,7 +95,7 @@ class WhenTestingSymantecPlugin(utils.BaseTestCase):
 
     def test_should_raise_unsupported_certificate_request(self):
         order_id = '1234'
-        plugin_meta = dict()
+        plugin_meta = {}
         self.assertRaises(
             NotImplementedError,
             self.symantec.check_certificate_status,
