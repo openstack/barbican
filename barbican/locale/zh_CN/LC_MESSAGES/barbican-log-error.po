@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-18 06:11+0000\n"
-"PO-Revision-Date: 2015-02-17 19:28+0000\n"
+"POT-Creation-Date: 2015-02-21 06:07+0000\n"
+"PO-Revision-Date: 2015-02-20 06:42+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
@@ -28,7 +28,7 @@ msgstr "JSON请求流中读取数据时出错。"
 msgid "Problem loading request JSON."
 msgstr "JSON请求加载时出错"
 
-#: barbican/api/controllers/__init__.py:97
+#: barbican/api/controllers/__init__.py:100
 msgid "Webob error seen"
 msgstr "Webob出错"
 
@@ -44,24 +44,24 @@ msgstr "删除容器时出错"
 msgid "Problem deleting transport_key"
 msgstr "删除传输密匙时出错"
 
-#: barbican/model/repositories.py:345
+#: barbican/model/repositories.py:354
 msgid "No support for mixing None and non-None repository instances."
 msgstr "不支持混合None和non-None库的实例"
 
-#: barbican/model/repositories.py:400
+#: barbican/model/repositories.py:409
 #, python-format
 msgid "Not found for %s"
 msgstr "没有找到%s"
 
-#: barbican/model/repositories.py:435
+#: barbican/model/repositories.py:444
 msgid "Problem saving entity for create"
 msgstr "为创建保存实体时出错"
 
-#: barbican/model/repositories.py:568
+#: barbican/model/repositories.py:577
 msgid "Problem finding project related entity to delete"
 msgstr "寻找项目相关的实体来删除时出错"
 
-#: barbican/model/repositories.py:601
+#: barbican/model/repositories.py:610
 #, python-format
 msgid "Problem getting Project %s"
 msgstr "获取项目%s时出错"
@@ -76,24 +76,32 @@ msgstr "原始异常正在减少：%s"
 msgid "Unexpected exception occurred %d time(s)... retrying."
 msgstr "意想不到的异常发生%d time(s)...重试。"
 
-#: barbican/openstack/common/policy.py:511
+#: barbican/openstack/common/loopingcall.py:95
+msgid "in fixed duration looping call"
+msgstr ""
+
+#: barbican/openstack/common/loopingcall.py:138
+msgid "in dynamic looping call"
+msgstr ""
+
+#: barbican/openstack/common/policy.py:563
+#: barbican/openstack/common/policy.py:843
 #, python-format
 msgid "Failed to understand rule %s"
 msgstr "未能理解 %s 的规则"
 
-#: barbican/openstack/common/policy.py:521
+#: barbican/openstack/common/policy.py:573
 #, python-format
 msgid "No handler for matches of kind %s"
 msgstr "没有匹配的 %s 的处理程序"
 
-#: barbican/openstack/common/policy.py:791
-#, python-format
-msgid "Failed to understand rule %r"
-msgstr "未能理解 %r 的规则"
+#: barbican/openstack/common/service.py:268
+msgid "Unhandled exception"
+msgstr ""
 
-#: barbican/plugin/kmip_secret_store.py:243
-#: barbican/plugin/kmip_secret_store.py:273
-#: barbican/plugin/kmip_secret_store.py:357
+#: barbican/plugin/kmip_secret_store.py:241
+#: barbican/plugin/kmip_secret_store.py:271
+#: barbican/plugin/kmip_secret_store.py:355
 msgid "Error opening or writing to client"
 msgstr "打开或者写入客户端错误"
 

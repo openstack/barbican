@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-17 06:12+0000\n"
-"PO-Revision-Date: 2015-02-16 06:46+0000\n"
-"Last-Translator: Andreas Jaeger <jaegerandi@gmail.com>\n"
+"POT-Creation-Date: 2015-02-21 06:07+0000\n"
+"PO-Revision-Date: 2015-02-20 06:42+0000\n"
+"Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
 "Language: zh_CN\n"
@@ -24,7 +24,17 @@ msgstr ""
 msgid "Unable to retrieve request id from context"
 msgstr "无法从上下文检索请求id"
 
-#: barbican/model/repositories.py:263
+#: barbican/model/repositories.py:272
 #, python-format
 msgid "SQL connection failed. %d attempts left."
 msgstr "SQL连接失败。剩余 %d 次尝试。"
+
+#: barbican/openstack/common/loopingcall.py:87
+#, python-format
+msgid "task %(func_name)r run outlasted interval by %(delay).2f sec"
+msgstr ""
+
+#: barbican/openstack/common/service.py:355
+#, python-format
+msgid "pid %d not in child list"
+msgstr ""
