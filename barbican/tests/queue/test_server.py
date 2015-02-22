@@ -41,12 +41,6 @@ class WhenUsingTransactionalDecorator(utils.BaseTestCase):
         )
         self.is_server_side_patcher.start()
 
-        # Mock the various repository calls:
-        self.start_patcher = mock.patch(
-            'barbican.model.repositories.start'
-        )
-        self.start_mock = self.start_patcher.start()
-
         self.commit_patcher = mock.patch(
             'barbican.model.repositories.commit'
         )
@@ -82,7 +76,6 @@ class WhenUsingTransactionalDecorator(utils.BaseTestCase):
     def tearDown(self):
         super(WhenUsingTransactionalDecorator, self).tearDown()
         self.is_server_side_patcher.stop()
-        self.start_patcher.stop()
         self.commit_patcher.stop()
         self.rollback_patcher.stop()
         self.clear_patcher.stop()
@@ -93,7 +86,6 @@ class WhenUsingTransactionalDecorator(utils.BaseTestCase):
         self.assertEqual(self.args, self.test_object.my_args)
         self.assertEqual(self.kwargs, self.test_object.my_kwargs)
 
-        self.assertEqual(self.start_mock.call_count, 1)
         self.assertEqual(self.commit_mock.call_count, 1)
         self.assertEqual(self.rollback_mock.call_count, 0)
         self.assertEqual(self.clear_mock.call_count, 1)
@@ -103,7 +95,6 @@ class WhenUsingTransactionalDecorator(utils.BaseTestCase):
 
         self.test_object.test_method(*self.args, **self.kwargs)
 
-        self.assertEqual(self.start_mock.call_count, 1)
         self.assertEqual(self.commit_mock.call_count, 0)
         self.assertEqual(self.rollback_mock.call_count, 1)
         self.assertEqual(self.clear_mock.call_count, 1)

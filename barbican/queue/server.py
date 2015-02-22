@@ -40,9 +40,6 @@ def transactional(fn):
         if not queue.is_server_side():
             fn(*args, **kwargs)  # Non-server mode directly invokes tasks.
         else:
-            # Start the database session.
-            repositories.start()
-
             # Manage session/transaction.
             try:
                 fn(*args, **kwargs)
@@ -106,6 +103,9 @@ class TaskServer(Tasks, service.Service):
     """
     def __init__(self):
         super(TaskServer, self).__init__()
+
+        # Setting up db engine to avoid lazy initialization
+        repositories.setup_database_engine_and_factory()
 
         # This property must be defined for the 'endpoints' specified below,
         #   as the oslo_messaging RPC server will ask for it.

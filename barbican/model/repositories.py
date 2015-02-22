@@ -41,7 +41,7 @@ LOG = utils.getLogger(__name__)
 
 
 _ENGINE = None
-_MAKER = None
+_SESSION_FACTORY = None
 BASE = models.BASE
 sa_logger = None
 
@@ -79,31 +79,51 @@ log.register_options(CONF)
 
 def hard_reset():
     """Performs a hard reset of database resources, used for unit testing."""
-    global _ENGINE, _MAKER
+    # TODO(jvrbanac): Remove this as soon as we improve our unit testing
+    # to not require this.
+    global _ENGINE, _SESSION_FACTORY
     if _ENGINE:
         _ENGINE.dispose()
     _ENGINE = None
-    _MAKER = None
+    _SESSION_FACTORY = None
+
+    # Make sure we reinitialize the engine and session factory
+    setup_database_engine_and_factory()
+
+
+def setup_database_engine_and_factory():
+    global sa_logger, _SESSION_FACTORY, _ENGINE
+
+    LOG.info('Setting up database engine and session factory')
+    LOG.debug('Sql connection = %s', CONF.sql_connection)
+    sa_logger = logging.getLogger('sqlalchemy.engine')
+    if CONF.debug:
+        sa_logger.setLevel(logging.DEBUG)
+
+    _ENGINE = _get_engine(_ENGINE)
+
+    # Utilize SQLAlchemy's scoped_session to ensure that we only have one
+    # session instance per thread.
+    session_maker = sa_orm.sessionmaker(bind=_ENGINE)
+    _SESSION_FACTORY = sqlalchemy.orm.scoped_session(session_maker)
 
 
 def start():
-    """Start database and establish a read/write connection to it.
+    """Start for read-write requests placeholder
 
     Typically performed at the start of a request cycle, say for POST or PUT
     requests.
     """
-    configure_db()
-    get_session()
+    pass
 
 
 def start_read_only():
-    """Start database and establish a read-only connection to it.
+    """Start for read-only requests placeholder
 
     Typically performed at the start of a request cycle, say for GET or HEAD
     requests.
     """
-    # TODO(john-wood-w) Add optional, separate engine/connection for reads.
-    start()
+    pass
 
 
 def commit():
@@ -123,51 +143,17 @@ def rollback():
 
 
 def clear():
-    """Dispose of this session, releases database resources.
+    """Dispose of this session, releases db resources.
 
     Typically performed at the end of a request cycle, after a
     commit() or rollback().
     """
-    _MAKER.remove()
-
-
-def setup_db_env():
-    """Setup configuration for database."""
-    global sa_logger
-
-    LOG.debug("Sql connection = %s", CONF.sql_connection)
-    sa_logger = logging.getLogger('sqlalchemy.engine')
-    if CONF.debug:
-        sa_logger.setLevel(logging.DEBUG)
-
-
-def configure_db():
-    """Wrapper method for setting up and configuring the database
-
-    Establishes the database, create an engine if needed, and
-    register the models.
-    """
-    setup_db_env()
-    get_engine()
+    _SESSION_FACTORY.remove()
 
 
 def get_session():
     """Helper method to grab session."""
-    global _MAKER
-    if not _MAKER:
-        get_engine()
-        get_maker()
-        assert(_MAKER)
-    session = _MAKER()
-    return session
-
-
-def get_engine():
-    """Return a SQLAlchemy engine."""
-    """May assign _ENGINE if not already assigned"""
-    global _ENGINE
-    _ENGINE = _get_engine(_ENGINE)
-    return _ENGINE
+    return _SESSION_FACTORY()
 
 
 def _get_engine(engine):
@@ -204,19 +190,6 @@ def _get_engine(engine):
             LOG.info(u._LI('Not auto-creating barbican registry DB'))
 
     return engine
-
-
-def get_maker():
-    """Return a SQLAlchemy sessionmaker."""
-    """May assign __MAKER if not already assigned"""
-    global _MAKER, _ENGINE
-    assert _ENGINE
-    if not _MAKER:
-        # Utilize SQLAlchemy's scoped_session to ensure that we only have one
-        #   session instance per thread.
-        _MAKER = sqlalchemy.orm.scoped_session(
-            sa_orm.sessionmaker(bind=_ENGINE))
-    return _MAKER
 
 
 def is_db_connection_error(args):
