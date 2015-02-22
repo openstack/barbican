@@ -37,11 +37,12 @@ if os.path.exists(os.path.join(possible_topdir, 'barbican', '__init__.py')):
 
 
 from barbican.common import config
-from barbican.openstack.common import log
 from barbican.openstack.common import service
 from barbican import queue
 from barbican.queue import server
+
 from oslo_config import cfg
+from oslo_log import log
 
 
 def fail(returncode, e):
@@ -52,14 +53,14 @@ def fail(returncode, e):
 if __name__ == '__main__':
     try:
         config.parse_args()
+        CONF = cfg.CONF
 
         # Import and configure logging.
-        log.setup('barbican')
+        log.setup(CONF, 'barbican')
         LOG = log.getLogger(__name__)
         LOG.debug("Booting up Barbican worker node...")
 
         # Queuing initialization
-        CONF = cfg.CONF
         queue.init(CONF)
 
         service.launch(
