@@ -364,8 +364,8 @@ class SecretStoreMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     def __init__(self, key, value):
         super(SecretStoreMetadatum, self).__init__()
 
-        msg = ("Must supply non-None {0} argument "
-               "for SecretStoreMetadatum entry.")
+        msg = u._("Must supply non-None {0} argument "
+                  "for SecretStoreMetadatum entry.")
 
         if key is None:
             raise exception.MissingArgumentError(msg.format("key"))
@@ -559,8 +559,8 @@ class OrderPluginMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     def __init__(self, key, value):
         super(OrderPluginMetadatum, self).__init__()
 
-        msg = ("Must supply non-None {0} argument "
-               "for OrderPluginMetadatum entry.")
+        msg = u._("Must supply non-None {0} argument "
+                  "for OrderPluginMetadatum entry.")
 
         if key is None:
             raise exception.MissingArgumentError(msg.format("key"))
@@ -595,8 +595,8 @@ class OrderBarbicanMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     def __init__(self, key, value):
         super(OrderBarbicanMetadatum, self).__init__()
 
-        msg = ("Must supply non-None {0} argument "
-               "for OrderBarbicanMetadatum entry.")
+        msg = u._("Must supply non-None {0} argument "
+                  "for OrderBarbicanMetadatum entry.")
 
         if key is None:
             raise exception.MissingArgumentError(msg.format("key"))
@@ -760,7 +760,7 @@ class TransportKey(BASE, SoftDeleteMixIn, ModelBase):
         """Creates transport key entity ."""
         super(TransportKey, self).__init__()
 
-        msg = "Must supply non-None {0} argument for TransportKey entry."
+        msg = u._("Must supply non-None {0} argument for TransportKey entry.")
 
         if plugin_name is None:
             raise exception.MissingArgumentError(msg.format("plugin_name"))
