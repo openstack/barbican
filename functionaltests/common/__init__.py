@@ -27,3 +27,4 @@ if os.path.exists('./etc/dev_tempest.conf'):
 
 CONF.register_group(cfg.OptGroup('keymanager'))
 CONF.register_opt(cfg.StrOpt('override-url'), group='keymanager')
+CONF.register_opt(cfg.StrOpt('override-url-version'), group='keymanager')
