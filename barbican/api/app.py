@@ -42,10 +42,12 @@ if newrelic_loaded:
 
 
 class RootController(object):
-    secrets = secrets.SecretsController()
-    orders = orders.OrdersController()
-    containers = containers.ContainersController()
-    transport_keys = transportkeys.TransportKeysController()
+    def __init__(self):
+        # Adding the controllers at runtime to due config loading issues
+        self.secrets = secrets.SecretsController()
+        self.orders = orders.OrdersController()
+        self.containers = containers.ContainersController()
+        self.transport_keys = transportkeys.TransportKeysController()
 
 
 def build_wsgi_app(controller=None, transactional=False):
