@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from oslo_concurrency import lockutils
 from oslo_config import cfg
 from stevedore import named
 
@@ -104,7 +103,6 @@ class _CryptoPluginManager(named.NamedExtensionManager):
         return decrypting_plugin
 
 
-@lockutils.synchronized('crypto_get_manager')
 def get_manager():
     """Return a singleton crypto plugin manager."""
     global _PLUGIN_MANAGER

@@ -23,6 +23,7 @@ from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
 
+_SECRET_STORE = None
 
 CONF = cfg.CONF
 DEFAULT_PLUGIN_NAMESPACE = 'barbican.secretstore.plugin'
@@ -550,3 +551,10 @@ class SecretStorePluginManager(named.NamedExtensionManager):
             if ext.obj.generate_supports(key_spec):
                 return ext.obj
         raise SecretStoreSupportedPluginNotFound()
+
+
+def get_manager():
+    global _SECRET_STORE
+    if not _SECRET_STORE:
+        _SECRET_STORE = SecretStorePluginManager()
+    return _SECRET_STORE
