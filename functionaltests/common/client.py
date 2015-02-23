@@ -128,7 +128,11 @@ class BarbicanClient(object):
 
     def get_base_url(self, include_version=True):
         if CONF.keymanager.override_url:
-            return CONF.keymanager.override_url
+            if include_version:
+                return os.path.join(CONF.keymanager.override_url,
+                                    CONF.keymanager.override_url_version)
+            else:
+                return CONF.keymanager.override_url
         filters = {
             'service': 'key-manager',
             'region': self.region,
