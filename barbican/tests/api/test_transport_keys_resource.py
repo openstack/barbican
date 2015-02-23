@@ -103,7 +103,7 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
         super(
             WhenGettingTransKeysListUsingTransportKeysResource, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -208,7 +208,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
         super(
             WhenCreatingTransKeysListUsingTransportKeysResource, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -274,7 +274,7 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
         super(
             WhenGettingOrDeletingTransKeyUsingTransportKeyResource, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property

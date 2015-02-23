@@ -188,7 +188,7 @@ class BaseSecretsResource(FunctionalTest):
 
     def setUp(self):
         super(BaseSecretsResource, self).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -581,7 +581,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
     def setUp(self):
         super(WhenGettingSecretsListUsingSecretsResource, self).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -774,7 +774,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         super(
             WhenGettingPuttingOrDeletingSecretUsingSecretResource, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -1339,7 +1339,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         super(
             WhenCreatingOrdersUsingOrdersResource, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -1489,7 +1489,7 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
         super(
             WhenGettingOrdersListUsingOrdersResource, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -1604,7 +1604,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         super(
             WhenGettingOrDeletingOrderUsingOrderResource, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -1674,7 +1674,7 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
         super(
             WhenPuttingOrderWithMetadataUsingOrderResource, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -1778,7 +1778,7 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         super(
             WhenCreatingTypeOrdersUsingOrdersResource, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -1853,7 +1853,7 @@ class WhenPerformingUnallowedOperationsOnOrders(FunctionalTest):
         super(
             WhenPerformingUnallowedOperationsOnOrders, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -2005,7 +2005,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
         super(
             WhenCreatingContainersUsingContainersResource, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -2135,7 +2135,7 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
         super(
             WhenGettingOrDeletingContainerUsingContainerResource, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -2214,7 +2214,7 @@ class WhenPerformingUnallowedOperationsOnContainers(FunctionalTest):
         super(
             WhenPerformingUnallowedOperationsOnContainers, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -2298,7 +2298,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
         super(
             WhenCreatingConsumersUsingConsumersResource, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -2404,7 +2404,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         super(
             WhenGettingOrDeletingConsumersUsingConsumerResource, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -2576,7 +2576,7 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
         super(
             WhenPerformingUnallowedOperationsOnConsumers, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
@@ -2687,7 +2687,7 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
         super(
             WhenGettingContainersListUsingResource, self
         ).setUp()
-        self.app = webtest.TestApp(app.PecanAPI(self.root))
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
     @property
