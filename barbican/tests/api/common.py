@@ -1,0 +1,62 @@
+# Copyright (c) 2015 Ericsson AB.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import mock
+
+
+class MockModelRepositoryMixin(object):
+    """Class for setting up the repo factory mocks
+
+    This class has the purpose of setting up the mocks for the model repository
+    factory functions. This is because the are intended to be singletons, and
+    thus called inside the code-base, and not really passed around as
+    arguments. Thus, this kind of approach is needed.
+
+    The functions assume that the class that inherits from this is a test case
+    fixture class. This is because as a side-effect patcher objects will be
+    added to the class, and also the cleanup of these patcher objects will be
+    added to the tear-down of the respective classes.
+    """
+
+    def setup_order_repository_mock(self, mock_order_repo=mock.MagicMock()):
+        """Mocks the order repository factory function
+
+        :param mock_order_repo: The pre-configured mock order repo to be
+                                returned.
+        """
+        self.mock_order_repo_patcher = None
+        self._setup_repository_mock(repo_factory='get_order_repository',
+                                    mock_repo_obj=mock_order_repo,
+                                    patcher_obj=self.mock_order_repo_patcher)
+
+    def setup_project_repository_mock(self,
+                                      mock_project_repo=mock.MagicMock()):
+        """Mocks the project repository factory function
+
+        :param mock_project_repo: The pre-configured mock project repo to be
+                                  returned.
+        """
+        self.mock_project_repo_patcher = None
+        self._setup_repository_mock(repo_factory='get_project_repository',
+                                    mock_repo_obj=mock_project_repo,
+                                    patcher_obj=self.mock_project_repo_patcher)
+
+    def _setup_repository_mock(self, repo_factory, mock_repo_obj, patcher_obj):
+        patcher_obj = mock.patch(
+            'barbican.model.repositories.' + repo_factory,
+            return_value=mock_repo_obj
+        )
+        patcher_obj.start()
+        self.addCleanup(patcher_obj.stop)

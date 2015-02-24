@@ -37,6 +37,7 @@ from barbican.common import validators
 import barbican.context
 from barbican.model import models
 from barbican.openstack.common import timeutils
+from barbican.tests.api import common as api_common
 from barbican.tests import utils
 
 
@@ -1334,7 +1335,9 @@ class WhenPerformingUnallowedOperationsOnSecrets(BaseSecretsResource):
         self.assertEqual(resp.status_int, 405)
 
 
-class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
+class WhenCreatingOrdersUsingOrdersResource(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
+
     def setUp(self):
         super(
             WhenCreatingOrdersUsingOrdersResource, self
@@ -1347,9 +1350,7 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            orders = controllers.orders.OrdersController(self.project_repo,
-                                                         self.order_repo,
-                                                         self.queue_resource)
+            orders = controllers.orders.OrdersController(self.queue_resource)
 
         return RootController()
 
@@ -1372,6 +1373,9 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
 
         self.order_repo = mock.MagicMock()
         self.order_repo.create_from.return_value = None
+
+        self.setup_order_repository_mock(self.order_repo)
+        self.setup_project_repository_mock(self.project_repo)
 
         self.queue_resource = mock.MagicMock()
         self.queue_resource.process_order.return_value = None
@@ -1484,7 +1488,8 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         self.assertEqual(resp.status_int, 400)
 
 
-class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
+class WhenGettingOrdersListUsingOrdersResource(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
     def setUp(self):
         super(
             WhenGettingOrdersListUsingOrdersResource, self
@@ -1497,9 +1502,7 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            orders = controllers.orders.OrdersController(self.project_repo,
-                                                         self.order_repo,
-                                                         self.queue_resource)
+            orders = controllers.orders.OrdersController(self.queue_resource)
 
         return RootController()
 
@@ -1532,7 +1535,9 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
                                                            self.offset,
                                                            self.limit,
                                                            self.total)
-        self.project_repo = mock.MagicMock()
+
+        self.setup_order_repository_mock(self.order_repo)
+        self.setup_project_repository_mock()
 
         self.queue_resource = mock.MagicMock()
         self.queue_resource.process_order.return_value = None
@@ -1599,7 +1604,8 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
             return '/orders'
 
 
-class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
+class WhenGettingOrDeletingOrderUsingOrderResource(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
     def setUp(self):
         super(
             WhenGettingOrDeletingOrderUsingOrderResource, self
@@ -1612,9 +1618,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            orders = controllers.orders.OrdersController(self.project_repo,
-                                                         self.order_repo,
-                                                         self.queue_resource)
+            orders = controllers.orders.OrdersController(self.queue_resource)
 
         return RootController()
 
@@ -1633,7 +1637,9 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         self.order_repo.save.return_value = None
         self.order_repo.delete_entity_by_id.return_value = None
 
-        self.project_repo = mock.MagicMock()
+        self.setup_order_repository_mock(self.order_repo)
+        self.setup_project_repository_mock()
+
         self.queue_resource = mock.MagicMock()
 
     def test_should_get_order(self):
@@ -1669,7 +1675,9 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         self.assertEqual(resp.content_type, "application/json")
 
 
-class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
+class WhenPuttingOrderWithMetadataUsingOrderResource(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
+
     def setUp(self):
         super(
             WhenPuttingOrderWithMetadataUsingOrderResource, self
@@ -1682,9 +1690,7 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            orders = controllers.orders.OrdersController(self.project_repo,
-                                                         self.order_repo,
-                                                         self.queue_resource)
+            orders = controllers.orders.OrdersController(self.queue_resource)
 
         return RootController()
 
@@ -1709,7 +1715,9 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
 
         self.params = {'type': self.type, 'meta': self.meta}
 
-        self.project_repo = mock.MagicMock()
+        self.setup_order_repository_mock(self.order_repo)
+        self.setup_project_repository_mock()
+
         self.queue_resource = mock.MagicMock()
 
     def test_should_put_order(self):
@@ -1773,7 +1781,9 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
             suppress_exception=True)
 
 
-class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
+class WhenCreatingTypeOrdersUsingOrdersResource(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
+
     def setUp(self):
         super(
             WhenCreatingTypeOrdersUsingOrdersResource, self
@@ -1786,9 +1796,7 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            orders = controllers.orders.OrdersController(self.project_repo,
-                                                         self.order_repo,
-                                                         self.queue_resource)
+            orders = controllers.orders.OrdersController(self.queue_resource)
 
         return RootController()
 
@@ -1816,6 +1824,9 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
 
         self.order_repo = mock.MagicMock()
         self.order_repo.create_from.return_value = None
+
+        self.setup_order_repository_mock(self.order_repo)
+        self.setup_project_repository_mock(self.project_repo)
 
         self.queue_resource = mock.MagicMock()
         self.queue_resource.process_type_order.return_value = None
@@ -1848,7 +1859,9 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         self.assertEqual(resp.status_int, 415)
 
 
-class WhenPerformingUnallowedOperationsOnOrders(FunctionalTest):
+class WhenPerformingUnallowedOperationsOnOrders(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
+
     def setUp(self):
         super(
             WhenPerformingUnallowedOperationsOnOrders, self
@@ -1861,9 +1874,7 @@ class WhenPerformingUnallowedOperationsOnOrders(FunctionalTest):
         self._init()
 
         class RootController(object):
-            orders = controllers.orders.OrdersController(self.project_repo,
-                                                         self.order_repo,
-                                                         self.queue_resource)
+            orders = controllers.orders.OrdersController(self.queue_resource)
 
         return RootController()
 
@@ -1880,6 +1891,10 @@ class WhenPerformingUnallowedOperationsOnOrders(FunctionalTest):
 
         self.order_repo = mock.MagicMock()
         self.order_repo.create_from.return_value = None
+
+        self.setup_order_repository_mock(self.order_repo)
+        self.setup_project_repository_mock(self.project_repo)
+
         self.queue_resource = mock.MagicMock()
 
         self.type = 'key'
