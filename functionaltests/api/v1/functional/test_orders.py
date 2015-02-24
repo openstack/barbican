@@ -455,3 +455,22 @@ class OrdersTestCase(base.TestCase):
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(create_resp.status_code, 400)
+
+    @testcase.attr('positive')
+    def test_order_create_change_host_header(self, **kwargs):
+        """Create an order with a (possibly) malicious host name in header."""
+
+        test_model = order_models.OrderModel(**order_create_defaults_data)
+
+        malicious_hostname = 'some.bad.server.com'
+        changed_host_header = {'Host': malicious_hostname}
+
+        resp, order_ref = self.behaviors.create_order(
+            test_model, extra_headers=changed_host_header)
+
+        self.assertEqual(resp.status_code, 202)
+
+        # get Location field from result and assert that it is NOT the
+        # malicious one.
+        regex = '.*{0}.*'.format(malicious_hostname)
+        self.assertNotRegexpMatches(resp.headers['location'], regex)

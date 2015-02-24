@@ -214,3 +214,23 @@ class ConsumersTestCase(base.TestCase):
         self.assertIsNotNone(consumer_data)
         self.assertIn(self.consumer_data, consumer_data)
         self.assertEqual(1, count)
+
+    @testcase.attr('positive')
+    def test_create_consumer_change_host_header(self, **kwargs):
+        """Create a consumer with a (possibly) malicious host name header."""
+
+        test_model = consumer_model.ConsumerModel(**self.consumer_data)
+
+        malicious_hostname = 'some.bad.server.com'
+        changed_host_header = {'Host': malicious_hostname}
+
+        resp, consumer_data = self.consumer_behaviors.create_consumer(
+            test_model, self.container_ref, extra_headers=changed_host_header)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertIsNotNone(consumer_data)
+
+        # get Location field from result and assert that it is NOT the
+        # malicious one.
+        regex = '.*{0}.*'.format(malicious_hostname)
+        self.assertNotRegexpMatches(resp.headers['location'], regex)

@@ -19,11 +19,12 @@ from functionaltests.api.v1.models import consumer_model
 
 class ConsumerBehaviors(base_behaviors.BaseBehaviors):
 
-    def create_consumer(self, model, container_ref):
+    def create_consumer(self, model, container_ref, extra_headers=None):
         """Register a consumer to a container.
 
         :param model: The metadata for the consumer
         :param container_ref: Full reference to a container
+        :param extra_headers: Any additional headers to pass to the request
 
         :return: A tuple containing the response from the create
         and the href to the newly registered consumer
@@ -31,7 +32,8 @@ class ConsumerBehaviors(base_behaviors.BaseBehaviors):
 
         url = '{0}/consumers'.format(container_ref)
 
-        resp = self.client.post(url, request_model=model)
+        resp = self.client.post(url, request_model=model,
+                                extra_headers=extra_headers)
 
         returned_data = self.get_json(resp)
         consumer_data = returned_data['consumers']

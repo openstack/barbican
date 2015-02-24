@@ -194,6 +194,25 @@ class GenericContainersTestCase(BaseContainerTestCase):
         resp = self.behaviors.delete_container("not_a_ref", expected_fail=True)
         self.assertEqual(resp.status_code, 404)
 
+    @testcase.attr('positive')
+    def test_create_change_host_header(self, **kwargs):
+        """Create a container with a (possibly) malicious host name header."""
+
+        test_model = container_models.ContainerModel(**self.default_data)
+
+        malicious_hostname = 'some.bad.server.com'
+        changed_host_header = {'Host': malicious_hostname}
+
+        resp, container_ref = self.behaviors.create_container(
+            test_model, extra_headers=changed_host_header)
+
+        self.assertEqual(resp.status_code, 201)
+
+        # get Location field from result and assert that it is NOT the
+        # malicious one.
+        regex = '.*{0}.*'.format(malicious_hostname)
+        self.assertNotRegexpMatches(resp.headers['location'], regex)
+
 
 @utils.parameterized_test_case
 class RSAContainersTestCase(BaseContainerTestCase):
@@ -266,3 +285,22 @@ class RSAContainersTestCase(BaseContainerTestCase):
 
         resp, container_ref = self.behaviors.create_container(test_model)
         self.assertEqual(resp.status_code, 400)
+
+    @testcase.attr('positive')
+    def test_create_rsa_change_host_header(self, **kwargs):
+        """Create a container with a (possibly) malicious host name header."""
+
+        test_model = container_models.ContainerModel(**self.default_data)
+
+        malicious_hostname = 'some.bad.server.com'
+        changed_host_header = {'Host': malicious_hostname}
+
+        resp, container_ref = self.behaviors.create_container(
+            test_model, extra_headers=changed_host_header)
+
+        self.assertEqual(resp.status_code, 201)
+
+        # get Location field from result and assert that it is NOT the
+        # malicious one.
+        regex = '.*{0}.*'.format(malicious_hostname)
+        self.assertNotRegexpMatches(resp.headers['location'], regex)

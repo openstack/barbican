@@ -189,9 +189,9 @@ class ContainersController(object):
 
         self.container_repo.create_from(new_container)
 
-        pecan.response.status = 201
-        pecan.response.headers['Location'] = '/containers/{0}'.format(
-            new_container.id
-        )
         url = hrefs.convert_container_to_href(new_container.id)
+
+        pecan.response.status = 201
+        pecan.response.headers['Location'] = url
+
         return {'container_ref': url}

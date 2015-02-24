@@ -146,10 +146,10 @@ class TransportKeysController(object):
 
         self.repo.create_from(new_key)
 
-        pecan.response.status = 201
-        pecan.response.headers['Location'] = '/transport_keys/{0}'.format(
-            new_key.id
-        )
         url = hrefs.convert_transport_key_to_href(new_key.id)
         LOG.debug('URI to transport key is %s', url)
+
+        pecan.response.status = 201
+        pecan.response.headers['Location'] = url
+
         return {'transport_key_ref': url}

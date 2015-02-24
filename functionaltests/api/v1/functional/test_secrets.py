@@ -752,3 +752,22 @@ class SecretsTestCase(base.TestCase):
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 400)
+
+    @testcase.attr('positive')
+    def test_secret_create_change_host_header(self, **kwargs):
+        """Create a secret with a (possibly) malicious host name in header."""
+
+        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+
+        malicious_hostname = 'some.bad.server.com'
+        changed_host_header = {'Host': malicious_hostname}
+
+        resp, secret_ref = self.behaviors.create_secret(
+            test_model, headers=changed_host_header)
+
+        self.assertEqual(resp.status_code, 201)
+
+        # get Location field from result and assert that it is NOT the
+        # malicious one.
+        regex = '.*{0}.*'.format(malicious_hostname)
+        self.assertNotRegexpMatches(resp.headers['location'], regex)

@@ -42,6 +42,11 @@ def convert_transport_key_to_href(transport_key_id):
     return convert_resource_id_to_href('transport_keys', transport_key_id)
 
 
+def convert_consumer_to_href(consumer_id):
+    """Convert the consumer ID to a HATEOS-style href."""
+    return convert_resource_id_to_href('consumers', consumer_id) + '/consumers'
+
+
 # TODO(hgedikli) handle list of fields in here
 def convert_to_hrefs(fields):
     """Convert id's within a fields dict to HATEOS-style hrefs."""
