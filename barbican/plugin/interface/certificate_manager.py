@@ -211,7 +211,8 @@ class CertificatePluginBase(object):
     """
 
     @abc.abstractmethod
-    def issue_certificate_request(self, order_id, order_meta, plugin_meta):
+    def issue_certificate_request(self, order_id, order_meta, plugin_meta,
+                                  barbican_meta_dto):
         """Create the initial order
 
         :param order_id: ID associated with the order
@@ -220,6 +221,11 @@ class CertificatePluginBase(object):
                             this plugin. Plugins may also update/add
                             information here which Barbican will persist
                             on their behalf
+        :param barbican_meta_dto:
+            Data transfer object :class:`BarbicanMetaDTO` containing data
+            added to the request by the Barbican server to provide additional
+            context for processing, but which are not in
+            the original request.  For example, the plugin_ca_id
         :returns: A :class:`ResultDTO` instance containing the result
                   populated by the plugin implementation
         :rtype: :class:`ResultDTO`
@@ -227,7 +233,8 @@ class CertificatePluginBase(object):
         raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
-    def modify_certificate_request(self, order_id, order_meta, plugin_meta):
+    def modify_certificate_request(self, order_id, order_meta, plugin_meta,
+                                   barbican_meta_dto):
         """Update the order meta-data
 
         :param order_id: ID associated with the order
@@ -236,6 +243,11 @@ class CertificatePluginBase(object):
                             this plugin. Plugins may also update/add
                             information here which Barbican will persist
                             on their behalf
+        :param barbican_meta_dto:
+            Data transfer object :class:`BarbicanMetaDTO` containing data
+            added to the request by the Barbican server to provide additional
+            context for processing, but which are not in
+            the original request.  For example, the plugin_ca_id
         :returns: A :class:`ResultDTO` instance containing the result
                   populated by the plugin implementation
         :rtype: :class:`ResultDTO`
@@ -243,7 +255,8 @@ class CertificatePluginBase(object):
         raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
-    def cancel_certificate_request(self, order_id, order_meta, plugin_meta):
+    def cancel_certificate_request(self, order_id, order_meta, plugin_meta,
+                                   barbican_meta_dto):
         """Cancel the order
 
         :param order_id: ID associated with the order
@@ -252,6 +265,11 @@ class CertificatePluginBase(object):
                             this plugin. Plugins may also update/add
                             information here which Barbican will persist
                             on their behalf
+        :param barbican_meta_dto:
+            Data transfer object :class:`BarbicanMetaDTO` containing data
+            added to the request by the Barbican server to provide additional
+            context for processing, but which are not in
+            the original request.  For example, the plugin_ca_id
         :returns: A :class:`ResultDTO` instance containing the result
                   populated by the plugin implementation
         :rtype: :class:`ResultDTO`
@@ -259,7 +277,8 @@ class CertificatePluginBase(object):
         raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
-    def check_certificate_status(self, order_id, order_meta, plugin_meta):
+    def check_certificate_status(self, order_id, order_meta, plugin_meta,
+                                 barbican_meta_dto):
         """Check status of the order
 
         :param order_id: ID associated with the order
@@ -268,6 +287,11 @@ class CertificatePluginBase(object):
                             this plugin. Plugins may also update/add
                             information here which Barbican will persist
                             on their behalf
+        :param barbican_meta_dto:
+            Data transfer object :class:`BarbicanMetaDTO` containing data
+            added to the request by the Barbican server to provide additional
+            context for processing, but which are not in
+            the original request.  For example, the plugin_ca_id
         :returns: A :class:`ResultDTO` instance containing the result
                   populated by the plugin implementation
         :rtype: :class:`ResultDTO`
@@ -346,6 +370,25 @@ class ResultDTO(object):
         self.intermediates = intermediates
         self.retry_msec = int(retry_msec)
         self.retry_method = retry_method
+
+
+class BarbicanMetaDTO(object):
+    """Barbican meta data transfer object
+
+    Information needed to process a certificate request that is not specified
+    in the original request, and written by Barbican core, that is needed
+    by the plugin to process requests.
+    """
+
+    def __init__(self, plugin_ca_id=None, generated_csr=None):
+        """Creates a new BarbicanMetaDTO.
+
+        :param plugin_ca_id: ca_id as known to the plugin
+        :param generated_csr: csr generated in the stored-key case
+        :return: BarbicanMetaDTO
+        """
+        self.plugin_ca_id = plugin_ca_id
+        self.generated_csr = generated_csr
 
 
 class CertificatePluginManager(named.NamedExtensionManager):

@@ -24,7 +24,8 @@ LOG = utils.getLogger(__name__)
 class SimpleCertificatePlugin(cert.CertificatePluginBase):
     """Simple/default certificate plugin."""
 
-    def issue_certificate_request(self, order_id, order_meta, plugin_meta):
+    def issue_certificate_request(self, order_id, order_meta, plugin_meta,
+                                  barbican_meta_dto):
         """Create the initial order with CA
 
         :param order_id: ID associated with the order
@@ -33,6 +34,7 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
                             this plugin. Plugins may also update/add
                             information here which Barbican will persist
                             on their behalf.
+        :param barbican_meta_dto: additional data needed to process order.
         :returns: A :class:`ResultDTO` instance containing the result
                   populated by the plugin implementation
         :rtype: :class:`ResultDTO`
@@ -40,7 +42,8 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
         LOG.info(u._LI('Invoking issue_certificate_request()'))
         return cert.ResultDTO(cert.CertificateStatus.WAITING_FOR_CA)
 
-    def modify_certificate_request(self, order_id, order_meta, plugin_meta):
+    def modify_certificate_request(self, order_id, order_meta, plugin_meta,
+                                   barbican_meta_dto):
         """Update the order meta-data
 
         :param order_id: ID associated with the order
@@ -49,6 +52,7 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
                             this plugin. Plugins may also update/add
                             information here which Barbican will persist
                             on their behalf.
+        :param barbican_meta_dto: additional data needed to process order.
         :returns: A :class:`ResultDTO` instance containing the result
                   populated by the plugin implementation
         :rtype: :class:`ResultDTO`
@@ -56,7 +60,8 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
         LOG.info(u._LI('Invoking modify_certificate_request()'))
         return cert.ResultDTO(cert.CertificateStatus.WAITING_FOR_CA)
 
-    def cancel_certificate_request(self, order_id, order_meta, plugin_meta):
+    def cancel_certificate_request(self, order_id, order_meta, plugin_meta,
+                                   barbican_meta_dto):
         """Cancel the order
 
         :param order_id: ID associated with the order
@@ -65,6 +70,7 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
                             this plugin. Plugins may also update/add
                             information here which Barbican will persist
                             on their behalf.
+        :param barbican_meta_dto: additional data needed to process order.
         :returns: A :class:`ResultDTO` instance containing the result
                   populated by the plugin implementation
         :rtype: :class:`ResultDTO`
@@ -72,7 +78,8 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
         LOG.info(u._LI('Invoking cancel_certificate_request()'))
         return cert.ResultDTO(cert.CertificateStatus.REQUEST_CANCELED)
 
-    def check_certificate_status(self, order_id, order_meta, plugin_meta):
+    def check_certificate_status(self, order_id, order_meta, plugin_meta,
+                                 barbican_meta_dto):
         """Check status of the order
 
         :param order_id: ID associated with the order
@@ -81,6 +88,7 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
                             this plugin. Plugins may also update/add
                             information here which Barbican will persist
                             on their behalf.
+        :param barbican_meta_dto: additional data needed to process order.
         :returns: A :class:`ResultDTO` instance containing the result
                   populated by the plugin implementation
         :rtype: :class:`ResultDTO`

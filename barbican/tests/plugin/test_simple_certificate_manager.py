@@ -24,22 +24,22 @@ class WhenTestingSimpleCertificateManagerPlugin(testtools.TestCase):
         self.plugin = simple.SimpleCertificatePlugin()
 
     def test_issue_certificate_request(self):
-        result = self.plugin.issue_certificate_request(None, None, None)
+        result = self.plugin.issue_certificate_request(None, None, None, None)
 
         self.assertEqual(cm.CertificateStatus.WAITING_FOR_CA, result.status)
 
     def test_check_certificate_status(self):
-        result = self.plugin.check_certificate_status(None, None, None)
+        result = self.plugin.check_certificate_status(None, None, None, None)
 
         self.assertEqual(cm.CertificateStatus.WAITING_FOR_CA, result.status)
 
     def test_modify_certificate_request(self):
-        result = self.plugin.modify_certificate_request(None, None, None)
+        result = self.plugin.modify_certificate_request(None, None, None, None)
 
         self.assertEqual(cm.CertificateStatus.WAITING_FOR_CA, result.status)
 
     def test_cancel_certificate_request(self):
-        result = self.plugin.cancel_certificate_request(None, None, None)
+        result = self.plugin.cancel_certificate_request(None, None, None, None)
 
         self.assertEqual(cm.CertificateStatus.REQUEST_CANCELED, result.status)
 

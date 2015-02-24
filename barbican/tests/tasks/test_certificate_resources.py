@@ -110,8 +110,10 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
         super(WhenIssuingCertificateRequests, self).setUp()
         self.project_id = "56789"
         self.order_id = "12345"
+        self.barbican_meta_dto = mock.MagicMock()
         self.order_meta = {}
         self.plugin_meta = {}
+        self.barbican_meta = {}
         self.result = cert_man.ResultDTO(
             cert_man.CertificateStatus.WAITING_FOR_CA
         )
@@ -123,6 +125,7 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
         self.order_model.id = self.order_id
         self.order_model.meta = self.order_meta
         self.order_model.project_id = self.project_id
+        self.order_model.order_barbican_meta = self.barbican_meta
         self.repos = mock.MagicMock()
         self.project_model = mock.MagicMock()
 
@@ -130,6 +133,7 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
         self._config_cert_event_plugin()
         self._config_save_meta_plugin()
         self._config_get_meta_plugin()
+        self._config_barbican_meta_dto()
 
         self.private_key_secret_id = "private_key_secret_id"
         self.public_key_secret_id = "public_key_secret_id"
@@ -173,6 +177,7 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
             "https://localhost/containers/" + self.container_id,
             "subject_name": "cn=host.example.com,ou=dev,ou=us,o=example.com"
         }
+        self.order_model.order_barbican_metadata = {}
 
     def stored_key_side_effect(self, *args, **kwargs):
         if args[0] == self.private_key_secret_id:
@@ -190,6 +195,7 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
         self.save_plugin_meta_patcher.stop()
         self.get_plugin_meta_patcher.stop()
         self.cert_event_plugin_patcher.stop()
+        self.barbican_meta_dto_patcher.stop()
 
     def test_should_return_waiting_for_ca(self):
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
@@ -241,7 +247,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
                                            self.repos)
 
         self._verify_issue_certificate_plugins_called()
-        self.assertIsNotNone(self.order_meta['request'])
+        self.assertIsNotNone(
+            self.order_model.order_barbican_metadata['generated_csr'])
 
         # TODO(alee-3) Add tests to validate the request based on the validator
         # code that dave-mccowan is adding.
@@ -267,7 +274,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
                                            self.repos)
 
         self._verify_issue_certificate_plugins_called()
-        self.assertIsNotNone(self.order_meta['request'])
+        self.assertIsNotNone(
+            self.order_model.order_barbican_metadata['generated_csr'])
 
         # TODO(alee-3) Add tests to validate the request based on the validator
         # code that dave-mccowan is adding.
@@ -293,7 +301,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
                                            self.repos)
 
         self._verify_issue_certificate_plugins_called()
-        self.assertIsNotNone(self.order_meta['request'])
+        self.assertIsNotNone(
+            self.order_model.order_barbican_metadata['generated_csr'])
 
         # TODO(alee-3) Add tests to validate the request based on the validator
         # code that dave-mccowan is adding.
@@ -318,7 +327,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
                                            self.repos)
 
         self._verify_issue_certificate_plugins_called()
-        self.assertIsNotNone(self.order_meta['request'])
+        self.assertIsNotNone(
+            self.order_model.order_barbican_metadata['generated_csr'])
 
         # TODO(alee-3) Add tests to validate the request based on the validator
         # code that dave-mccowan is adding.
@@ -388,7 +398,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
                                            self.repos)
 
         self._verify_issue_certificate_plugins_called()
-        self.assertIsNotNone(self.order_meta['request'])
+        self.assertIsNotNone(
+            self.order_model.order_barbican_metadata['generated_csr'])
 
         # TODO(alee-3) Add tests to validate the request based on the validator
         # code that dave-mccowan is adding.
@@ -443,7 +454,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
         self.cert_plugin.issue_certificate_request.assert_called_once_with(
             self.order_id,
             self.order_meta,
-            self.plugin_meta
+            self.plugin_meta,
+            self.barbican_meta_dto
         )
 
         self.mock_save_plugin.assert_called_once_with(
@@ -487,3 +499,13 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase):
             **get_plugin_config
         )
         self.get_plugin_meta_patcher.start()
+
+    def _config_barbican_meta_dto(self):
+        """Mock the BarbicanMetaDTO."""
+        get_plugin_config = {'return_value': self.barbican_meta_dto}
+        self.barbican_meta_dto_patcher = mock.patch(
+            'barbican.plugin.interface.certificate_manager'
+            '.BarbicanMetaDTO',
+            **get_plugin_config
+        )
+        self.barbican_meta_dto_patcher.start()

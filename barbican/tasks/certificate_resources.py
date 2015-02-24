@@ -75,17 +75,24 @@ def issue_certificate_request(order_model, project_model, repos):
     container_model = None
 
     plugin_meta = _get_plugin_meta(order_model, repos)
+    barbican_meta_dto = cert.BarbicanMetaDTO()
 
     # Locate a suitable plugin to issue a certificate.
     cert_plugin = cert.CertificatePluginManager().get_plugin(order_model.meta)
 
     request_type = order_model.meta.get(cert.REQUEST_TYPE)
     if request_type == cert.CertificateRequestType.STORED_KEY_REQUEST:
-        _generate_csr(order_model, repos)
+        csr = order_model.order_barbican_metadata.get('generated_csr')
+        if csr is None:
+            csr = _generate_csr(order_model, repos)
+            order_model.order_barbican_metadata['generated_csr'] = csr
+            order_model.save()
+        barbican_meta_dto.generated_csr = csr
 
     result = cert_plugin.issue_certificate_request(order_model.id,
                                                    order_model.meta,
-                                                   plugin_meta)
+                                                   plugin_meta,
+                                                   barbican_meta_dto)
 
     # Save plugin order plugin state
     _save_plugin_metadata(order_model, plugin_meta, repos)
@@ -134,13 +141,15 @@ def check_certificate_request(order_model, project_model, plugin_name, repos):
     """
     container_model = None
     plugin_meta = _get_plugin_meta(order_model, repos)
+    barbican_meta_dto = cert.BarbicanMetaDTO()
 
     cert_plugin = cert.CertificatePluginManager().get_plugin_by_name(
         plugin_name)
 
     result = cert_plugin.check_certificate_request(order_model.id,
                                                    order_model.meta,
-                                                   plugin_meta)
+                                                   plugin_meta,
+                                                   barbican_meta_dto)
 
     # Save plugin order plugin state
     _save_plugin_metadata(order_model, plugin_meta, repos)
@@ -245,8 +254,14 @@ def _get_plugin_meta(order_model, repos):
 
 
 def _generate_csr(order_model, repos):
-    """Generate a CSR from the public key and add to the order metadata."""
+    """Generate a CSR from the public key.
 
+    :param: order_model - order for the request
+    :param: repos - parameter to get to repositories
+    :return: CSR (certificate signing request) in PEM format
+    :raise: :class:`StoredKeyPrivateKeyNotFound` if private key not found
+            :class:`StoredKeyContainerNotFound` if container not found
+    """
     container_ref = order_model.meta.get('container_ref')
 
     # extract container_id as the last part of the URL
@@ -292,14 +307,8 @@ def _generate_csr(order_model, repos):
         pass
     req.sign(pkey, 'sha256')
 
-    # TODO(alee-3) For now, we store the CSR in the order_meta.  We need
-    # to revisit whether this is the right place to store this data as it
-    # is not data that was provided by the client.  We may end up storing
-    # it in the barbican_metadata structure.
-
-    order_model.meta['request'] = crypto.dump_certificate_request(
-        crypto.FILETYPE_PEM, req)
-    order_model.save()
+    csr = crypto.dump_certificate_request(crypto.FILETYPE_PEM, req)
+    return csr
 
 
 def _notify_ca_unavailable(order_model, result):

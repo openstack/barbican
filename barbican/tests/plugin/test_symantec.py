@@ -17,6 +17,7 @@ import mock
 import testtools
 
 try:
+    import barbican.plugin.interface.certificate_manager as cm
     import barbican.plugin.symantec as sym
     imports_ok = True
 except ImportError:
@@ -40,6 +41,7 @@ class WhenTestingSymantecPlugin(utils.BaseTestCase):
 
         self.error_msg = 'Error Message Here'
         self.symantec = sym.SymantecCertificatePlugin()
+        self.barbican_plugin_dto = cm.BarbicanMetaDTO()
 
         self.symantec_patcher = mock.patch(
             'barbican.plugin.symantec._ca_create_order'
@@ -60,7 +62,8 @@ class WhenTestingSymantecPlugin(utils.BaseTestCase):
         result = self.symantec.issue_certificate_request(
             order_id,
             self.order_meta,
-            plugin_meta
+            plugin_meta,
+            self.barbican_plugin_dto
         )
 
         self.assertEqual(result.status, "waiting for CA")
@@ -74,7 +77,8 @@ class WhenTestingSymantecPlugin(utils.BaseTestCase):
         result = self.symantec.issue_certificate_request(
             order_id,
             self.order_meta,
-            plugin_meta
+            plugin_meta,
+            self.barbican_plugin_dto
         )
 
         self.assertEqual(result.status, "client data issue seen")
@@ -88,7 +92,8 @@ class WhenTestingSymantecPlugin(utils.BaseTestCase):
         result = self.symantec.issue_certificate_request(
             order_id,
             self.order_meta,
-            plugin_meta
+            plugin_meta,
+            self.barbican_plugin_dto
         )
 
         self.assertEqual(result.status, "CA unavailable for request")
@@ -101,5 +106,6 @@ class WhenTestingSymantecPlugin(utils.BaseTestCase):
             self.symantec.check_certificate_status,
             order_id,
             self.order_meta,
-            plugin_meta
+            plugin_meta,
+            self.barbican_plugin_dto
         )
