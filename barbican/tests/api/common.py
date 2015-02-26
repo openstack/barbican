@@ -30,6 +30,32 @@ class MockModelRepositoryMixin(object):
     added to the tear-down of the respective classes.
     """
 
+    def setup_encrypted_datum_repository_mock(
+            self, mock_encrypted_datum_repo=mock.MagicMock()):
+        """Mocks the encrypted datum repository factory function
+
+        :param mock_encrypted_datum_repo: The pre-configured mock
+                                          encrypted datum repo to be returned.
+        """
+        self.mock_encrypted_datum_repo_patcher = None
+        self._setup_repository_mock(
+            repo_factory='get_encrypted_datum_repository',
+            mock_repo_obj=mock_encrypted_datum_repo,
+            patcher_obj=self.mock_encrypted_datum_repo_patcher)
+
+    def setup_kek_datum_repository_mock(self,
+                                        mock_kek_datum_repo=mock.MagicMock()):
+        """Mocks the kek datum repository factory function
+
+        :param mock_kek_datum_repo: The pre-configured mock kek-datum repo to
+                                    be returned.
+        """
+        self.mock_kek_datum_repo_patcher = None
+        self._setup_repository_mock(
+            repo_factory='get_kek_datum_repository',
+            mock_repo_obj=mock_kek_datum_repo,
+            patcher_obj=self.mock_kek_datum_repo_patcher)
+
     def setup_order_repository_mock(self, mock_order_repo=mock.MagicMock()):
         """Mocks the order repository factory function
 
@@ -52,6 +78,56 @@ class MockModelRepositoryMixin(object):
         self._setup_repository_mock(repo_factory='get_project_repository',
                                     mock_repo_obj=mock_project_repo,
                                     patcher_obj=self.mock_project_repo_patcher)
+
+    def setup_project_secret_repository_mock(
+            self, mock_project_secret_repo=mock.MagicMock()):
+        """Mocks the project-secret repository factory function
+
+        :param mock_project_secret_repo: The pre-configured mock project-secret
+                                         repo to be returned.
+        """
+        self.mock_project_secret_repo_patcher = None
+        self._setup_repository_mock(
+            repo_factory='get_project_secret_repository',
+            mock_repo_obj=mock_project_secret_repo,
+            patcher_obj=self.mock_project_secret_repo_patcher)
+
+    def setup_secret_meta_repository_mock(
+            self, mock_secret_meta_repo=mock.MagicMock()):
+        """Mocks the secret-meta repository factory function
+
+        :param mock_secret_meta_repo: The pre-configured mock secret-meta repo
+                                      to be returned.
+        """
+        self.mock_secret_meta_repo_patcher = None
+        self._setup_repository_mock(
+            repo_factory='get_secret_meta_repository',
+            mock_repo_obj=mock_secret_meta_repo,
+            patcher_obj=self.mock_secret_meta_repo_patcher)
+
+    def setup_secret_repository_mock(self, mock_secret_repo=mock.MagicMock()):
+        """Mocks the secret repository factory function
+
+        :param mock_secret_repo: The pre-configured mock secret repo to be
+                                 returned.
+        """
+        self.mock_secret_repo_patcher = None
+        self._setup_repository_mock(repo_factory='get_secret_repository',
+                                    mock_repo_obj=mock_secret_repo,
+                                    patcher_obj=self.mock_secret_repo_patcher)
+
+    def setup_transport_key_repository_mock(
+            self, mock_transport_key_repo=mock.MagicMock()):
+        """Mocks the transport-key repository factory function
+
+        :param mock_transport_key_repo: The pre-configured mock transport_key
+                                        repo to be returned.
+        """
+        self.mock_transport_key_repo_patcher = None
+        self._setup_repository_mock(
+            repo_factory='get_transport_key_repository',
+            mock_repo_obj=mock_transport_key_repo,
+            patcher_obj=self.mock_transport_key_repo_patcher)
 
     def _setup_repository_mock(self, repo_factory, mock_repo_obj, patcher_obj):
         patcher_obj = mock.patch(

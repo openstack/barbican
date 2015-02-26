@@ -229,7 +229,8 @@ class WhenTestingVersionResource(BaseTestCase):
         self.resource.on_get(self.req, self.resp)
 
 
-class WhenTestingSecretsResource(BaseTestCase):
+class WhenTestingSecretsResource(BaseTestCase,
+                                 api_common.MockModelRepositoryMixin):
     """RBAC tests for the barbican.api.resources.SecretsResource class."""
     def setUp(self):
         super(WhenTestingSecretsResource, self).setUp()
@@ -243,14 +244,16 @@ class WhenTestingSecretsResource(BaseTestCase):
                                             side_effect=self
                                             ._generate_get_error())
         self.secret_repo.get_by_create_date = get_by_create_date
+        self.setup_secret_repository_mock(self.secret_repo)
 
-        self.resource = SecretsResource(project_repo=mock.MagicMock(),
-                                        secret_repo=self.secret_repo,
-                                        project_secret_repo=mock.MagicMock(),
-                                        datum_repo=mock.MagicMock(),
-                                        kek_repo=mock.MagicMock(),
-                                        secret_meta_repo=mock.MagicMock(),
-                                        transport_key_repo=mock.MagicMock())
+        self.setup_encrypted_datum_repository_mock()
+        self.setup_kek_datum_repository_mock()
+        self.setup_project_repository_mock()
+        self.setup_project_secret_repository_mock()
+        self.setup_secret_meta_repository_mock()
+        self.setup_transport_key_repository_mock()
+
+        self.resource = SecretsResource()
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
@@ -281,7 +284,8 @@ class WhenTestingSecretsResource(BaseTestCase):
         self.resource.on_get(self.req, self.resp, self.external_project_id)
 
 
-class WhenTestingSecretResource(BaseTestCase):
+class WhenTestingSecretResource(BaseTestCase,
+                                api_common.MockModelRepositoryMixin):
     """RBAC tests for the barbican.api.resources.SecretResource class."""
     def setUp(self):
         super(WhenTestingSecretResource, self).setUp()
@@ -296,14 +300,15 @@ class WhenTestingSecretResource(BaseTestCase):
                                      side_effect=self._generate_get_error())
         self.secret_repo.get = fail_method
         self.secret_repo.delete_entity_by_id = fail_method
+        self.setup_secret_repository_mock(self.secret_repo)
 
-        self.resource = SecretResource(self.secret_id,
-                                       project_repo=mock.MagicMock(),
-                                       secret_repo=self.secret_repo,
-                                       datum_repo=mock.MagicMock(),
-                                       kek_repo=mock.MagicMock(),
-                                       secret_meta_repo=mock.MagicMock(),
-                                       transport_key_repo=mock.MagicMock())
+        self.setup_encrypted_datum_repository_mock()
+        self.setup_kek_datum_repository_mock()
+        self.setup_project_repository_mock()
+        self.setup_secret_meta_repository_mock()
+        self.setup_transport_key_repository_mock()
+
+        self.resource = SecretResource(self.secret_id)
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)

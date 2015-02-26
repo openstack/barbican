@@ -184,7 +184,7 @@ class WhenTestingVersionResource(FunctionalTest):
         self.assertEqual('current', resp.json['v1'])
 
 
-class BaseSecretsResource(FunctionalTest):
+class BaseSecretsResource(FunctionalTest, api_common.MockModelRepositoryMixin):
     """Base test class for the Secrets resource."""
 
     def setUp(self):
@@ -197,11 +197,7 @@ class BaseSecretsResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            secrets = controllers.secrets.SecretsController(
-                self.project_repo, self.secret_repo,
-                self.project_secret_repo, self.datum_repo, self.kek_repo,
-                self.secret_meta_repo, self.transport_key_repo
-            )
+            secrets = controllers.secrets.SecretsController()
 
         return RootController()
 
@@ -227,26 +223,39 @@ class BaseSecretsResource(FunctionalTest):
             self.secret_req['payload_content_encoding'] = (
                 payload_content_encoding)
 
+        # Set up mocked project
         self.external_project_id = 'keystone1234'
         self.project_entity_id = 'tid1234'
         self.project = models.Project()
         self.project.id = self.project_entity_id
         self.project.external_id = self.external_project_id
+
+        # Set up mocked project repo
         self.project_repo = mock.MagicMock()
         self.project_repo.find_by_external_project_id.return_value = (
             self.project)
+        self.setup_project_repository_mock(self.project_repo)
 
+        # Set up mocked secret
         self.secret = models.Secret()
         self.secret.id = '123'
+
+        # Set up mocked secret repo
         self.secret_repo = mock.MagicMock()
         self.secret_repo.create_from.return_value = self.secret
+        self.setup_secret_repository_mock(self.secret_repo)
 
+        # Set up mocked project-secret repo
         self.project_secret_repo = mock.MagicMock()
         self.project_secret_repo.create_from.return_value = None
+        self.setup_project_secret_repository_mock(self.project_secret_repo)
 
+        # Set up mocked encrypted datum repo
         self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
+        self.setup_encrypted_datum_repository_mock(self.datum_repo)
 
+        # Set up mocked kek datum
         self.kek_datum = models.KEKDatum()
         self.kek_datum.kek_label = "kek_label"
         self.kek_datum.bind_completed = False
@@ -255,17 +264,23 @@ class BaseSecretsResource(FunctionalTest):
         self.kek_datum.mode = ''
         self.kek_datum.plugin_meta = ''
 
+        # Set up mocked kek datum repo
         self.kek_repo = mock.MagicMock()
         self.kek_repo.find_or_create_kek_datum.return_value = self.kek_datum
+        self.setup_kek_datum_repository_mock(self.kek_repo)
 
-        self.secret_meta_repo = mock.MagicMock()
+        # Set up mocked secret meta repo
+        self.setup_secret_meta_repository_mock()
 
+        # Set up mocked transport key
         self.transport_key = models.TransportKey(
             'default_plugin_name', 'XXXABCDEF')
         self.transport_key_id = 'tkey12345'
         self.tkey_url = hrefs.convert_transport_key_to_href(
             self.transport_key.id)
-        self.transport_key_repo = mock.MagicMock()
+
+        # Set up mocked transport key
+        self.setup_transport_key_repository_mock()
 
 
 class BaseSecretTestSuite(BaseSecretsResource):
@@ -578,7 +593,8 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretTestSuite):
         self.assertEqual(resp.status_int, 400)
 
 
-class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
+class WhenGettingSecretsListUsingSecretsResource(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
 
     def setUp(self):
         super(WhenGettingSecretsListUsingSecretsResource, self).setUp()
@@ -590,11 +606,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            secrets = controllers.secrets.SecretsController(
-                self.project_repo, self.secret_repo,
-                self.project_secret_repo, self.datum_repo, self.kek_repo,
-                self.secret_meta_repo, self.transport_key_repo
-            )
+            secrets = controllers.secrets.SecretsController()
 
         return RootController()
 
@@ -610,6 +622,7 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
         self.offset = 2
         self.limit = 2
 
+        # Set up mocked secrets list
         secret_params = {'name': self.name,
                          'algorithm': self.secret_algorithm,
                          'bit_length': self.secret_bit_length,
@@ -621,23 +634,35 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
                         id in moves.range(self.num_secrets)]
         self.total = len(self.secrets)
 
+        # Set up mocked secret repo
         self.secret_repo = mock.MagicMock()
         self.secret_repo.get_by_create_date.return_value = (self.secrets,
                                                             self.offset,
                                                             self.limit,
                                                             self.total)
+        self.setup_secret_repository_mock(self.secret_repo)
 
-        self.project_repo = mock.MagicMock()
+        # Set up mocked project repo
+        self.setup_project_repository_mock()
 
+        # Set up mocked project-secret repo
         self.project_secret_repo = mock.MagicMock()
         self.project_secret_repo.create_from.return_value = None
+        self.setup_project_secret_repository_mock(self.project_secret_repo)
 
+        # Set up mocked encrypted datum repo
         self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
+        self.setup_encrypted_datum_repository_mock(self.datum_repo)
 
-        self.kek_repo = mock.MagicMock()
+        # Set up mocked kek datum repo
+        self.setup_kek_datum_repository_mock()
 
-        self.secret_meta_repo = mock.MagicMock()
+        # Set up mocked secret meta repo
+        self.setup_secret_meta_repository_mock()
+
+        # Set up mocked transport key repo
+        self.setup_transport_key_repository_mock()
 
         self.params = {'offset': self.offset,
                        'limit': self.limit,
@@ -645,7 +670,6 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
                        'alg': None,
                        'bits': 0,
                        'mode': None}
-        self.transport_key_repo = mock.MagicMock()
 
     def test_should_list_secrets_by_name(self):
         # Quote the name parameter to simulate how it would be
@@ -770,7 +794,8 @@ class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
             return '/secrets'
 
 
-class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
+class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
     def setUp(self):
         super(
             WhenGettingPuttingOrDeletingSecretUsingSecretResource, self
@@ -783,11 +808,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            secrets = controllers.secrets.SecretsController(
-                self.project_repo, self.secret_repo,
-                self.project_secret_repo, self.datum_repo, self.kek_repo,
-                self.secret_meta_repo, self.transport_key_repo
-            )
+            secrets = controllers.secrets.SecretsController()
 
         return RootController()
 
@@ -826,32 +847,49 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
                                     encrypted_datum=self.datum,
                                     content_type=self.datum.content_type)
 
+        # Set up mocked project
         self.project = models.Project()
         self.project.id = self.project_id
         self.project.external_id = self.external_project_id
+
+        # Set up mocked project repo
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
         self.project_repo.find_by_external_project_id.return_value = (
             self.project)
+        self.setup_project_repository_mock(self.project_repo)
 
-        self.secret_repo = mock.MagicMock()
-        self.secret_repo.get.return_value = self.secret
-        self.secret_repo.delete_entity_by_id.return_value = None
+        # Set up mocked secret repo
+        self.secret_repo = mock.Mock()
+        self.secret_repo.get = mock.Mock(return_value=self.secret)
+        self.secret_repo.delete_entity_by_id = mock.Mock(return_value=None)
+        self.setup_secret_repository_mock(self.secret_repo)
 
-        self.project_secret_repo = mock.MagicMock()
+        # Set up mocked project-secret repo
+        self.setup_project_secret_repository_mock()
 
+        # Set up mocked encrypted datum repo
         self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
+        self.setup_encrypted_datum_repository_mock(self.datum_repo)
 
-        self.kek_repo = mock.MagicMock()
+        # Set up mocked kek datum repo
+        self.setup_kek_datum_repository_mock()
 
+        # Set up mocked secret meta repo
         self.secret_meta_repo = mock.MagicMock()
         self.secret_meta_repo.get_metadata_for_secret.return_value = None
+        self.setup_secret_meta_repository_mock(self.secret_meta_repo)
 
+        # Set up mocked transport key
         self.transport_key_model = models.TransportKey(
             "default_plugin", "my transport key")
+
+        # Set up mocked transport key repo
         self.transport_key_repo = mock.MagicMock()
         self.transport_key_repo.get.return_value = self.transport_key_model
+        self.setup_transport_key_repository_mock(self.transport_key_repo)
+
         self.transport_key_id = 'tkey12345'
 
     @mock.patch('barbican.plugin.resources.get_transport_key_id_for_retrieval')
@@ -1035,7 +1073,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         )
 
     def test_should_throw_exception_for_get_when_secret_not_found(self):
-        self.secret_repo.get.return_value = None
+        self.secret_repo.get = mock.Mock(return_value=None)
 
         resp = self.app.get(
             '/secrets/{0}/'.format(self.secret.id),

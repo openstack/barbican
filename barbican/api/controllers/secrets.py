@@ -64,21 +64,20 @@ def _request_has_twsk_but_no_transport_key_id():
 class SecretController(object):
     """Handles Secret retrieval and deletion requests."""
 
-    def __init__(self, secret,
-                 project_repo=None, secret_repo=None, datum_repo=None,
-                 kek_repo=None, secret_meta_repo=None,
-                 transport_key_repo=None):
+    def __init__(self, secret):
         LOG.debug('=== Creating SecretController ===')
         self.secret = secret
 
         # TODO(john-wood-w) Remove passed-in repositories in favor of
         #  repository factories and patches in unit tests.
-        self.repos = repo.Repositories(project_repo=project_repo,
-                                       secret_repo=secret_repo,
-                                       datum_repo=datum_repo,
-                                       kek_repo=kek_repo,
-                                       secret_meta_repo=secret_meta_repo,
-                                       transport_key_repo=transport_key_repo)
+        self.repos = repo.Repositories(
+            project_repo=repo.get_project_repository(),
+            secret_repo=repo.get_secret_repository(),
+            datum_repo=repo.get_encrypted_datum_repository(),
+            kek_repo=repo.get_kek_datum_repository(),
+            secret_meta_repo=repo.get_secret_meta_repository(),
+            transport_key_repo=repo.get_transport_key_repository()
+        )
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
@@ -195,19 +194,18 @@ class SecretController(object):
 class SecretsController(object):
     """Handles Secret creation requests."""
 
-    def __init__(self,
-                 project_repo=None, secret_repo=None,
-                 project_secret_repo=None, datum_repo=None, kek_repo=None,
-                 secret_meta_repo=None, transport_key_repo=None):
+    def __init__(self):
         LOG.debug('Creating SecretsController')
         self.validator = validators.NewSecretValidator()
-        self.repos = repo.Repositories(project_repo=project_repo,
-                                       project_secret_repo=project_secret_repo,
-                                       secret_repo=secret_repo,
-                                       datum_repo=datum_repo,
-                                       kek_repo=kek_repo,
-                                       secret_meta_repo=secret_meta_repo,
-                                       transport_key_repo=transport_key_repo)
+        self.repos = repo.Repositories(
+            project_repo=repo.get_project_repository(),
+            project_secret_repo=repo.get_project_secret_repository(),
+            secret_repo=repo.get_secret_repository(),
+            datum_repo=repo.get_encrypted_datum_repository(),
+            kek_repo=repo.get_kek_datum_repository(),
+            secret_meta_repo=repo.get_secret_meta_repository(),
+            transport_key_repo=repo.get_transport_key_repository()
+        )
 
     @pecan.expose()
     def _lookup(self, secret_id, *remainder):
@@ -225,13 +223,7 @@ class SecretsController(object):
         if not secret:
             _secret_not_found()
 
-        return SecretController(secret,
-                                self.repos.project_repo,
-                                self.repos.secret_repo,
-                                self.repos.datum_repo,
-                                self.repos.kek_repo,
-                                self.repos.secret_meta_repo,
-                                self.repos.transport_key_repo), remainder
+        return SecretController(secret), remainder
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
