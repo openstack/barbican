@@ -31,6 +31,7 @@ from barbican.api.controllers import secrets
 from barbican.api.controllers import versions
 from barbican import context
 from barbican.openstack.common import policy
+from barbican.tests.api import common as api_common
 from barbican.tests import utils
 
 
@@ -355,7 +356,8 @@ class WhenTestingSecretResource(BaseTestCase):
                                 self.external_project_id)
 
 
-class WhenTestingOrdersResource(BaseTestCase):
+class WhenTestingOrdersResource(BaseTestCase,
+                                api_common.MockModelRepositoryMixin):
     """RBAC tests for the barbican.api.resources.OrdersResource class."""
     def setUp(self):
         super(WhenTestingOrdersResource, self).setUp()
@@ -370,9 +372,10 @@ class WhenTestingOrdersResource(BaseTestCase):
                                             ._generate_get_error())
         self.order_repo.get_by_create_date = get_by_create_date
 
-        self.resource = OrdersResource(project_repo=mock.MagicMock(),
-                                       order_repo=self.order_repo,
-                                       queue_resource=mock.MagicMock())
+        self.setup_order_repository_mock(self.order_repo)
+        self.setup_project_repository_mock()
+
+        self.resource = OrdersResource(queue_resource=mock.MagicMock())
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
@@ -400,7 +403,8 @@ class WhenTestingOrdersResource(BaseTestCase):
         self.resource.on_get(self.req, self.resp, self.external_project_id)
 
 
-class WhenTestingOrderResource(BaseTestCase):
+class WhenTestingOrderResource(BaseTestCase,
+                               api_common.MockModelRepositoryMixin):
     """RBAC tests for the barbican.api.resources.OrderResource class."""
     def setUp(self):
         super(WhenTestingOrderResource, self).setUp()
@@ -416,8 +420,9 @@ class WhenTestingOrderResource(BaseTestCase):
         self.order_repo.get = fail_method
         self.order_repo.delete_entity_by_id = fail_method
 
-        self.resource = OrderResource(self.order_id,
-                                      order_repo=self.order_repo)
+        self.setup_order_repository_mock(self.order_repo)
+
+        self.resource = OrderResource(self.order_id)
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)

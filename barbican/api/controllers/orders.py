@@ -63,10 +63,9 @@ class OrderController(object):
 
     """Handles Order retrieval and deletion requests."""
 
-    def __init__(self, order, order_repo=None,
-                 queue_resource=None):
+    def __init__(self, order, queue_resource=None):
         self.order = order
-        self.order_repo = order_repo or repo.OrderRepo()
+        self.order_repo = repo.get_order_repository()
         self.queue = queue_resource or async_client.TaskClient()
         self.type_order_validator = validators.TypeOrderValidator()
 
@@ -116,12 +115,11 @@ class OrderController(object):
 class OrdersController(object):
     """Handles Order requests for Secret creation."""
 
-    def __init__(self, project_repo=None, order_repo=None,
-                 queue_resource=None):
+    def __init__(self, queue_resource=None):
 
         LOG.debug('Creating OrdersController')
-        self.project_repo = project_repo or repo.ProjectRepo()
-        self.order_repo = order_repo or repo.OrderRepo()
+        self.project_repo = repo.get_project_repository()
+        self.order_repo = repo.get_order_repository()
         self.queue = queue_resource or async_client.TaskClient()
         self.type_order_validator = validators.TypeOrderValidator()
 
