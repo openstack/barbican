@@ -454,7 +454,8 @@ class WhenTestingOrderResource(BaseTestCase,
         self.resource.on_delete(self.req, self.resp, self.external_project_id)
 
 
-class WhenTestingConsumersResource(BaseTestCase):
+class WhenTestingConsumersResource(BaseTestCase,
+                                   api_common.MockModelRepositoryMixin):
     """RBAC tests for the barbican.api.resources.ConsumersResource class."""
     def setUp(self):
         super(WhenTestingConsumersResource, self).setUp()
@@ -470,10 +471,11 @@ class WhenTestingConsumersResource(BaseTestCase):
                                              ._generate_get_error())
         self.consumer_repo.get_by_container_id = get_by_container_id
 
-        self.resource = ConsumersResource(container_id=self.container_id,
-                                          project_repo=mock.MagicMock(),
-                                          consumer_repo=self.consumer_repo,
-                                          container_repo=mock.MagicMock())
+        self.setup_project_repository_mock()
+        self.setup_container_consumer_repository_mock(self.consumer_repo)
+        self.setup_container_repository_mock()
+
+        self.resource = ConsumersResource(container_id=self.container_id)
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
@@ -515,7 +517,8 @@ class WhenTestingConsumersResource(BaseTestCase):
         self.resource.on_get(self.req, self.resp, self.external_project_id)
 
 
-class WhenTestingConsumerResource(BaseTestCase):
+class WhenTestingConsumerResource(BaseTestCase,
+                                  api_common.MockModelRepositoryMixin):
     """RBAC tests for the barbican.api.resources.ConsumerResource class."""
     def setUp(self):
         super(WhenTestingConsumerResource, self).setUp()
@@ -530,9 +533,9 @@ class WhenTestingConsumerResource(BaseTestCase):
                                      side_effect=self._generate_get_error())
         self.consumer_repo.get = fail_method
 
-        self.resource = ConsumerResource(consumer_id=self.consumer_id,
-                                         project_repo=mock.MagicMock(),
-                                         consumer_repo=self.consumer_repo)
+        self.setup_project_repository_mock()
+        self.setup_container_consumer_repository_mock(self.consumer_repo)
+        self.resource = ConsumerResource(consumer_id=self.consumer_id)
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)

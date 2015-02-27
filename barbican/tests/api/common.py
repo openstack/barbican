@@ -30,6 +30,33 @@ class MockModelRepositoryMixin(object):
     added to the tear-down of the respective classes.
     """
 
+    def setup_container_consumer_repository_mock(
+            self, mock_container_consumer_repo=mock.MagicMock()):
+        """Mocks the container consumer repository factory function
+
+        :param mock_container_consumer_repo: The pre-configured mock
+                                             container consumer repo to be
+                                             returned.
+        """
+        self.mock_container_consumer_repo_patcher = None
+        self._setup_repository_mock(
+            repo_factory='get_container_consumer_repository',
+            mock_repo_obj=mock_container_consumer_repo,
+            patcher_obj=self.mock_container_consumer_repo_patcher)
+
+    def setup_container_repository_mock(self,
+                                        mock_container_repo=mock.MagicMock()):
+        """Mocks the container repository factory function
+
+        :param mock_container_repo: The pre-configured mock
+                                             container repo to be returned.
+        """
+        self.mock_container_repo_patcher = None
+        self._setup_repository_mock(
+            repo_factory='get_container_repository',
+            mock_repo_obj=mock_container_repo,
+            patcher_obj=self.mock_container_repo_patcher)
+
     def setup_encrypted_datum_repository_mock(
             self, mock_encrypted_datum_repo=mock.MagicMock()):
         """Mocks the encrypted datum repository factory function

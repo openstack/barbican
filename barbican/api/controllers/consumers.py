@@ -35,10 +35,10 @@ def _consumer_not_found():
 class ContainerConsumerController(object):
     """Handles Consumer entity retrieval and deletion requests."""
 
-    def __init__(self, consumer_id, project_repo=None, consumer_repo=None):
+    def __init__(self, consumer_id):
         self.consumer_id = consumer_id
-        self.project_repo = project_repo or repo.ProjectRepo()
-        self.consumer_repo = consumer_repo or repo.ContainerConsumerRepo()
+        self.consumer_repo = repo.get_container_consumer_repository()
+        self.project_repo = repo.get_project_repository()
         self.validator = validators.ContainerConsumerValidator()
 
     @pecan.expose(generic=True)
@@ -66,18 +66,16 @@ class ContainerConsumerController(object):
 class ContainerConsumersController(object):
     """Handles Consumer creation requests."""
 
-    def __init__(self, container_id, project_repo=None, consumer_repo=None,
-                 container_repo=None):
+    def __init__(self, container_id):
         self.container_id = container_id
-        self.project_repo = project_repo or repo.ProjectRepo()
-        self.consumer_repo = consumer_repo or repo.ContainerConsumerRepo()
-        self.container_repo = container_repo or repo.ContainerRepo()
+        self.consumer_repo = repo.get_container_consumer_repository()
+        self.container_repo = repo.get_container_repository()
+        self.project_repo = repo.get_project_repository()
         self.validator = validators.ContainerConsumerValidator()
 
     @pecan.expose()
     def _lookup(self, consumer_id, *remainder):
-        return ContainerConsumerController(consumer_id, self.project_repo,
-                                           self.consumer_repo), remainder
+        return ContainerConsumerController(consumer_id), remainder
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
