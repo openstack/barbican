@@ -36,17 +36,13 @@ def container_not_found():
 class ContainerController(object):
     """Handles Container entity retrieval and deletion requests."""
 
-    def __init__(self, container_id, project_repo=None, container_repo=None,
-                 consumer_repo=None):
-        # TODO(rm_work): refactor this to use repo-factory method
+    def __init__(self, container_id):
         self.container_id = container_id
-        self.project_repo = project_repo or repo.ProjectRepo()
-        self.container_repo = container_repo or repo.ContainerRepo()
-        self.consumer_repo = consumer_repo or repo.ContainerConsumerRepo()
+        self.consumer_repo = repo.get_container_consumer_repository()
+        self.container_repo = repo.get_container_repository()
+        self.project_repo = repo.get_project_repository()
         self.validator = validators.ContainerValidator()
-        self.consumers = consumers.ContainerConsumersController(
-            container_id, self.project_repo, self.consumer_repo,
-            self.container_repo)
+        self.consumers = consumers.ContainerConsumersController(container_id)
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
@@ -100,20 +96,16 @@ class ContainerController(object):
 class ContainersController(object):
     """Handles Container creation requests."""
 
-    def __init__(self, project_repo=None, container_repo=None,
-                 secret_repo=None, consumer_repo=None):
-        # TODO(rm_work): refactor this to use repo-factory method
-        self.project_repo = project_repo or repo.ProjectRepo()
-        self.container_repo = container_repo or repo.ContainerRepo()
-        self.secret_repo = secret_repo or repo.SecretRepo()
-        self.consumer_repo = consumer_repo or repo.ContainerConsumerRepo()
+    def __init__(self):
+        self.consumer_repo = repo.get_container_consumer_repository()
+        self.container_repo = repo.get_container_repository()
+        self.project_repo = repo.get_project_repository()
+        self.secret_repo = repo.get_secret_repository()
         self.validator = validators.ContainerValidator()
 
     @pecan.expose()
     def _lookup(self, container_id, *remainder):
-        return (ContainerController(container_id, self.project_repo,
-                                    self.container_repo, self.consumer_repo),
-                remainder)
+        return ContainerController(container_id), remainder
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):

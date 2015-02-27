@@ -2053,7 +2053,9 @@ class TestingJsonSanitization(utils.BaseTestCase):
                          .endswith(' '), "whitespace should be gone")
 
 
-class WhenCreatingContainersUsingContainersResource(FunctionalTest):
+class WhenCreatingContainersUsingContainersResource(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
+
     def setUp(self):
         super(
             WhenCreatingContainersUsingContainersResource, self
@@ -2066,10 +2068,7 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            containers = controllers.containers.ContainersController(
-                self.project_repo, self.container_repo, self.secret_repo,
-                self.consumer_repo
-            )
+            containers = controllers.containers.ContainersController()
 
         return RootController()
 
@@ -2094,21 +2093,30 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
         self.project_internal_id = 'projectid1234'
         self.external_project_id = 'keystoneid1234'
 
+        # Set up mocked project
         self.project = models.Project()
         self.project.id = self.project_internal_id
         self.project.external_id = self.external_project_id
 
+        # Set up mocked project repo
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
+        self.setup_project_repository_mock(self.project_repo)
 
+        # Set up mocked container consumer repo
         self.container_repo = mock.MagicMock()
         self.container_repo.create_from.return_value = None
+        self.setup_container_repository_mock(self.container_repo)
 
+        # Set up mocked secret repo
         self.secret_repo = mock.MagicMock()
         self.secret_repo.create_from.return_value = None
+        self.setup_secret_repository_mock(self.secret_repo)
 
+        # Set up mocked consumer repo
         self.consumer_repo = mock.MagicMock()
         self.consumer_repo.create_from.return_value = None
+        self.setup_container_consumer_repository_mock(self.consumer_repo)
 
         self.container_req = {'name': self.name,
                               'type': self.type,
@@ -2183,7 +2191,9 @@ class WhenCreatingContainersUsingContainersResource(FunctionalTest):
         self.assertEqual(resp.status_int, 404)
 
 
-class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
+class WhenGettingOrDeletingContainerUsingContainerResource(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
+
     def setUp(self):
         super(
             WhenGettingOrDeletingContainerUsingContainerResource, self
@@ -2196,10 +2206,7 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            containers = controllers.containers.ContainersController(
-                self.project_repo, self.container_repo, self.secret_repo,
-                self.consumer_repo
-            )
+            containers = controllers.containers.ContainersController()
 
         return RootController()
 
@@ -2207,22 +2214,30 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
         self.external_project_id = 'keystoneid1234'
         self.project_internal_id = 'projectid1234'
 
+        # Set up mocked project
         self.project = models.Project()
         self.project.id = self.project_internal_id
         self.project.external_id = self.external_project_id
 
+        # Set up mocked project repo
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
+        self.setup_project_repository_mock(self.project_repo)
 
+        # Set up mocked container
         self.container = create_container(id_ref='id1')
 
+        # Set up mocked container repo
         self.container_repo = mock.MagicMock()
         self.container_repo.get.return_value = self.container
         self.container_repo.delete_entity_by_id.return_value = None
+        self.setup_container_repository_mock(self.container_repo)
 
-        self.secret_repo = mock.MagicMock()
+        # Set up mocked secret repo
+        self.setup_secret_repository_mock()
 
-        self.consumer_repo = mock.MagicMock()
+        # Set up container consumer repo
+        self.setup_container_consumer_repository_mock()
 
     def test_should_get_container(self):
         self.app.get('/containers/{0}/'.format(
@@ -2262,7 +2277,8 @@ class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
         self.assertEqual(resp.content_type, "application/json")
 
 
-class WhenPerformingUnallowedOperationsOnContainers(FunctionalTest):
+class WhenPerformingUnallowedOperationsOnContainers(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
     def setUp(self):
         super(
             WhenPerformingUnallowedOperationsOnContainers, self
@@ -2275,10 +2291,7 @@ class WhenPerformingUnallowedOperationsOnContainers(FunctionalTest):
         self._init()
 
         class RootController(object):
-            containers = controllers.containers.ContainersController(
-                self.project_repo, self.container_repo, self.secret_repo,
-                self.consumer_repo
-            )
+            containers = controllers.containers.ContainersController()
 
         return RootController()
 
@@ -2303,22 +2316,31 @@ class WhenPerformingUnallowedOperationsOnContainers(FunctionalTest):
         self.external_project_id = 'keystoneid1234'
         self.project_internal_id = 'projectid1234'
 
+        # Set up mocked project
         self.project = models.Project()
         self.project.id = self.project_internal_id
         self.project.external_id = self.external_project_id
 
+        # Set up mocked project repo
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
+        self.setup_project_repository_mock(self.project_repo)
 
+        # Set up mocked container
         self.container = create_container(id_ref='id1')
 
+        # Set up mocked container repo
         self.container_repo = mock.MagicMock()
         self.container_repo.get.return_value = self.container
         self.container_repo.delete_entity_by_id.return_value = None
+        self.setup_container_repository_mock(self.container_repo)
 
-        self.secret_repo = mock.MagicMock()
+        # Set up secret repo
+        self.setup_secret_repository_mock()
 
-        self.consumer_repo = mock.MagicMock()
+        # Set up container consumer repo
+        self.setup_container_consumer_repository_mock()
+
         self.container_req = {'name': self.name,
                               'type': self.type,
                               'secret_refs': self.secret_refs}
@@ -2346,7 +2368,8 @@ class WhenPerformingUnallowedOperationsOnContainers(FunctionalTest):
         self.assertEqual(resp.status_int, 405)
 
 
-class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
+class WhenCreatingConsumersUsingConsumersResource(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
     def setUp(self):
         super(
             WhenCreatingConsumersUsingConsumersResource, self
@@ -2359,10 +2382,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            containers = controllers.containers.ContainersController(
-                self.project_repo, self.container_repo, self.secret_repo,
-                self.consumer_repo
-            )
+            containers = controllers.containers.ContainersController()
 
         return RootController()
 
@@ -2391,23 +2411,34 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
 
         self.project_internal_id = 'projectid1234'
         self.external_project_id = 'keystoneid1234'
-        self.container = create_container(id_ref='id1')
 
+        # Set up mocked project
         self.project = models.Project()
         self.project.id = self.project_internal_id
         self.project.external_id = self.external_project_id
 
+        # Set up mocked project repo
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
+        self.setup_project_repository_mock(self.project_repo)
 
+        # Set up mocked container
+        self.container = create_container(id_ref='id1')
+
+        # Set up mocked container repo
         self.container_repo = mock.MagicMock()
         self.container_repo.get.return_value = self.container
+        self.setup_container_repository_mock(self.container_repo)
 
+        # Set up secret repo
         self.secret_repo = mock.MagicMock()
         self.secret_repo.create_from.return_value = None
+        self.setup_secret_repository_mock(self.secret_repo)
 
+        # Set up container consumer repo
         self.consumer_repo = mock.MagicMock()
         self.consumer_repo.create_from.return_value = None
+        self.setup_container_consumer_repository_mock(self.consumer_repo)
 
         self.container_req = {'name': self.name,
                               'type': self.type,
@@ -2452,7 +2483,9 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
         self.assertEqual(resp.status_int, 404)
 
 
-class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
+class WhenGettingOrDeletingConsumersUsingConsumerResource(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
+
     def setUp(self):
         super(
             WhenGettingOrDeletingConsumersUsingConsumerResource, self
@@ -2465,10 +2498,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            containers = controllers.containers.ContainersController(
-                self.project_repo, self.container_repo, self.secret_repo,
-                self.consumer_repo
-            )
+            containers = controllers.containers.ContainersController()
 
         return RootController()
 
@@ -2476,16 +2506,20 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         self.external_project_id = 'keystoneid1234'
         self.project_internal_id = 'projectid1234'
 
+        # Set up mocked project
         self.project = models.Project()
         self.project.id = self.project_internal_id
         self.project.external_id = self.external_project_id
 
+        # Set up mocked project repo
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
+        self.setup_project_repository_mock(self.project_repo)
 
-        self.consumer_repo = mock.MagicMock()
-
+        # Set up mocked container
         self.container = create_container(id_ref='id1')
+
+        # Set up mocked consumers
         self.consumer = create_consumer(self.container.id, id_ref='id2')
         self.consumer2 = create_consumer(self.container.id, id_ref='id3')
 
@@ -2494,12 +2528,19 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
             'URL': self.consumer.URL
         }
 
+        # Set up mocked container repo
         self.container_repo = mock.MagicMock()
         self.container_repo.get.return_value = self.container
+        self.setup_container_repository_mock(self.container_repo)
+
+        # Set up mocked container consumer repo
+        self.consumer_repo = mock.MagicMock()
         self.consumer_repo.get_by_values.return_value = self.consumer
         self.consumer_repo.delete_entity_by_id.return_value = None
+        self.setup_container_consumer_repository_mock(self.consumer_repo)
 
-        self.secret_repo = mock.MagicMock()
+        # Set up mocked secret repo
+        self.setup_secret_repository_mock()
 
     def test_should_get_consumer(self):
         ret_val = ([self.consumer], 0, 0, 1)
@@ -2624,7 +2665,8 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         )
 
 
-class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
+class WhenPerformingUnallowedOperationsOnConsumers(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
     def setUp(self):
         super(
             WhenPerformingUnallowedOperationsOnConsumers, self
@@ -2637,10 +2679,7 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
         self._init()
 
         class RootController(object):
-            containers = controllers.containers.ContainersController(
-                self.project_repo, self.container_repo, self.secret_repo,
-                self.consumer_repo
-            )
+            containers = controllers.containers.ContainersController()
 
         return RootController()
 
@@ -2669,16 +2708,20 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
         self.external_project_id = 'keystoneid1234'
         self.project_internal_id = 'projectid1234'
 
+        # Set up mocked project
         self.project = models.Project()
         self.project.id = self.project_internal_id
         self.project.external_id = self.external_project_id
 
+        # Set up mocked project repo
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
+        self.setup_project_repository_mock(self.project_repo)
 
-        self.consumer_repo = mock.MagicMock()
-
+        # Set up mocked container
         self.container = create_container(id_ref='id1')
+
+        # Set up mocked container consumers
         self.consumer = create_consumer(self.container.id, id_ref='id2')
         self.consumer2 = create_consumer(self.container.id, id_ref='id3')
 
@@ -2687,12 +2730,19 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
             'URL': self.consumer.URL
         }
 
+        # Set up container repo
         self.container_repo = mock.MagicMock()
         self.container_repo.get.return_value = self.container
+        self.setup_container_repository_mock(self.container_repo)
+
+        # Set up container consumer repo
+        self.consumer_repo = mock.MagicMock()
         self.consumer_repo.get_by_values.return_value = self.consumer
         self.consumer_repo.delete_entity_by_id.return_value = None
+        self.setup_container_consumer_repository_mock(self.consumer_repo)
 
-        self.secret_repo = mock.MagicMock()
+        # Set up secret repo
+        self.setup_secret_repository_mock()
 
     def test_should_not_allow_put_on_consumers(self):
         ret_val = ([self.consumer], 0, 0, 1)
@@ -2735,7 +2785,8 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
         self.assertEqual(resp.status_int, 405)
 
 
-class WhenGettingContainersListUsingResource(FunctionalTest):
+class WhenGettingContainersListUsingResource(
+        FunctionalTest, api_common.MockModelRepositoryMixin):
     def setUp(self):
         super(
             WhenGettingContainersListUsingResource, self
@@ -2748,10 +2799,7 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
         self._init()
 
         class RootController(object):
-            containers = controllers.containers.ContainersController(
-                self.project_repo, self.container_repo, self.secret_repo,
-                self.consumer_repo
-            )
+            containers = controllers.containers.ContainersController()
 
         return RootController()
 
@@ -2766,14 +2814,16 @@ class WhenGettingContainersListUsingResource(FunctionalTest):
         self.containers = [create_container(id_ref='id' + str(id_ref)) for
                            id_ref in moves.range(self.num_containers)]
         self.total = len(self.containers)
+
         self.container_repo = mock.MagicMock()
         self.container_repo.get_by_create_date.return_value = (self.containers,
                                                                self.offset,
                                                                self.limit,
                                                                self.total)
-        self.project_repo = mock.MagicMock()
-        self.secret_repo = mock.MagicMock()
-        self.consumer_repo = mock.MagicMock()
+        self.setup_container_repository_mock(self.container_repo)
+        self.setup_project_repository_mock()
+        self.setup_secret_repository_mock()
+        self.setup_container_consumer_repository_mock()
 
         self.params = {
             'offset': self.offset,
