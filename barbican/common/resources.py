@@ -18,12 +18,13 @@ Shared business logic.
 """
 from barbican.common import utils
 from barbican.model import models
+from barbican.model import repositories
 
 
 LOG = utils.getLogger(__name__)
 
 
-def get_or_create_project(project_id, project_repo):
+def get_or_create_project(project_id):
     """Returns project with matching project_id.
 
     Creates it if it does not exist.
@@ -31,6 +32,7 @@ def get_or_create_project(project_id, project_repo):
     :param project_repo: Project repository.
     :return: Project model instance
     """
+    project_repo = repositories.get_project_repository()
     project = project_repo.find_by_external_project_id(project_id,
                                                        suppress_exception=True)
     if not project:

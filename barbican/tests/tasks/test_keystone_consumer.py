@@ -48,11 +48,11 @@ class InitializeDatabaseMixin(object):
             container_secret_repo=None)
 
         self.project1_data = c_resources.get_or_create_project(
-            self.project_id1, self.repos.project_repo)
+            self.project_id1)
         self.assertIsNotNone(self.project1_data)
 
         self.project2_data = c_resources.get_or_create_project(
-            self.project_id2, self.repos.project_repo)
+            self.project_id2)
         self.assertIsNotNone(self.project2_data)
 
     def _create_secret_for_project(self, project_data):
