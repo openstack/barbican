@@ -98,7 +98,7 @@ class ConsumerResource(TestableResource):
     controller_cls = consumers.ContainerConsumerController
 
 
-class BaseTestCase(utils.BaseTestCase):
+class BaseTestCase(utils.BaseTestCase, api_common.MockModelRepositoryMixin):
 
     def setUp(self):
         super(BaseTestCase, self).setUp()
@@ -229,8 +229,7 @@ class WhenTestingVersionResource(BaseTestCase):
         self.resource.on_get(self.req, self.resp)
 
 
-class WhenTestingSecretsResource(BaseTestCase,
-                                 api_common.MockModelRepositoryMixin):
+class WhenTestingSecretsResource(BaseTestCase):
     """RBAC tests for the barbican.api.resources.SecretsResource class."""
     def setUp(self):
         super(WhenTestingSecretsResource, self).setUp()
@@ -284,8 +283,7 @@ class WhenTestingSecretsResource(BaseTestCase,
         self.resource.on_get(self.req, self.resp, self.external_project_id)
 
 
-class WhenTestingSecretResource(BaseTestCase,
-                                api_common.MockModelRepositoryMixin):
+class WhenTestingSecretResource(BaseTestCase):
     """RBAC tests for the barbican.api.resources.SecretResource class."""
     def setUp(self):
         super(WhenTestingSecretResource, self).setUp()
@@ -361,8 +359,7 @@ class WhenTestingSecretResource(BaseTestCase,
                                 self.external_project_id)
 
 
-class WhenTestingOrdersResource(BaseTestCase,
-                                api_common.MockModelRepositoryMixin):
+class WhenTestingOrdersResource(BaseTestCase):
     """RBAC tests for the barbican.api.resources.OrdersResource class."""
     def setUp(self):
         super(WhenTestingOrdersResource, self).setUp()
@@ -408,8 +405,7 @@ class WhenTestingOrdersResource(BaseTestCase,
         self.resource.on_get(self.req, self.resp, self.external_project_id)
 
 
-class WhenTestingOrderResource(BaseTestCase,
-                               api_common.MockModelRepositoryMixin):
+class WhenTestingOrderResource(BaseTestCase):
     """RBAC tests for the barbican.api.resources.OrderResource class."""
     def setUp(self):
         super(WhenTestingOrderResource, self).setUp()
@@ -454,8 +450,7 @@ class WhenTestingOrderResource(BaseTestCase,
         self.resource.on_delete(self.req, self.resp, self.external_project_id)
 
 
-class WhenTestingConsumersResource(BaseTestCase,
-                                   api_common.MockModelRepositoryMixin):
+class WhenTestingConsumersResource(BaseTestCase):
     """RBAC tests for the barbican.api.resources.ConsumersResource class."""
     def setUp(self):
         super(WhenTestingConsumersResource, self).setUp()
@@ -517,8 +512,7 @@ class WhenTestingConsumersResource(BaseTestCase,
         self.resource.on_get(self.req, self.resp, self.external_project_id)
 
 
-class WhenTestingConsumerResource(BaseTestCase,
-                                  api_common.MockModelRepositoryMixin):
+class WhenTestingConsumerResource(BaseTestCase):
     """RBAC tests for the barbican.api.resources.ConsumerResource class."""
     def setUp(self):
         super(WhenTestingConsumerResource, self).setUp()

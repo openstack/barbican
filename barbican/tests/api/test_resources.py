@@ -153,7 +153,7 @@ class SecretAllowAllMimeTypesDecoratorTest(utils.BaseTestCase):
                           self._empty_function)
 
 
-class FunctionalTest(utils.BaseTestCase):
+class FunctionalTest(utils.BaseTestCase, api_common.MockModelRepositoryMixin):
 
     def setUp(self):
         super(FunctionalTest, self).setUp()
@@ -184,7 +184,7 @@ class WhenTestingVersionResource(FunctionalTest):
         self.assertEqual('current', resp.json['v1'])
 
 
-class BaseSecretsResource(FunctionalTest, api_common.MockModelRepositoryMixin):
+class BaseSecretsResource(FunctionalTest):
     """Base test class for the Secrets resource."""
 
     def setUp(self):
@@ -593,8 +593,7 @@ class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretTestSuite):
         self.assertEqual(resp.status_int, 400)
 
 
-class WhenGettingSecretsListUsingSecretsResource(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenGettingSecretsListUsingSecretsResource(FunctionalTest):
 
     def setUp(self):
         super(WhenGettingSecretsListUsingSecretsResource, self).setUp()
@@ -794,8 +793,7 @@ class WhenGettingSecretsListUsingSecretsResource(
             return '/secrets'
 
 
-class WhenGettingPuttingOrDeletingSecretUsingSecretResource(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
     def setUp(self):
         super(
             WhenGettingPuttingOrDeletingSecretUsingSecretResource, self
@@ -1373,8 +1371,7 @@ class WhenPerformingUnallowedOperationsOnSecrets(BaseSecretsResource):
         self.assertEqual(resp.status_int, 405)
 
 
-class WhenCreatingOrdersUsingOrdersResource(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
 
     def setUp(self):
         super(
@@ -1526,8 +1523,7 @@ class WhenCreatingOrdersUsingOrdersResource(
         self.assertEqual(resp.status_int, 400)
 
 
-class WhenGettingOrdersListUsingOrdersResource(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
     def setUp(self):
         super(
             WhenGettingOrdersListUsingOrdersResource, self
@@ -1642,8 +1638,7 @@ class WhenGettingOrdersListUsingOrdersResource(
             return '/orders'
 
 
-class WhenGettingOrDeletingOrderUsingOrderResource(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
     def setUp(self):
         super(
             WhenGettingOrDeletingOrderUsingOrderResource, self
@@ -1713,8 +1708,7 @@ class WhenGettingOrDeletingOrderUsingOrderResource(
         self.assertEqual(resp.content_type, "application/json")
 
 
-class WhenPuttingOrderWithMetadataUsingOrderResource(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
 
     def setUp(self):
         super(
@@ -1819,8 +1813,7 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(
             suppress_exception=True)
 
 
-class WhenCreatingTypeOrdersUsingOrdersResource(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
 
     def setUp(self):
         super(
@@ -1897,8 +1890,7 @@ class WhenCreatingTypeOrdersUsingOrdersResource(
         self.assertEqual(resp.status_int, 415)
 
 
-class WhenPerformingUnallowedOperationsOnOrders(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenPerformingUnallowedOperationsOnOrders(FunctionalTest):
 
     def setUp(self):
         super(
@@ -2053,8 +2045,7 @@ class TestingJsonSanitization(utils.BaseTestCase):
                          .endswith(' '), "whitespace should be gone")
 
 
-class WhenCreatingContainersUsingContainersResource(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenCreatingContainersUsingContainersResource(FunctionalTest):
 
     def setUp(self):
         super(
@@ -2191,8 +2182,7 @@ class WhenCreatingContainersUsingContainersResource(
         self.assertEqual(resp.status_int, 404)
 
 
-class WhenGettingOrDeletingContainerUsingContainerResource(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenGettingOrDeletingContainerUsingContainerResource(FunctionalTest):
 
     def setUp(self):
         super(
@@ -2277,8 +2267,7 @@ class WhenGettingOrDeletingContainerUsingContainerResource(
         self.assertEqual(resp.content_type, "application/json")
 
 
-class WhenPerformingUnallowedOperationsOnContainers(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenPerformingUnallowedOperationsOnContainers(FunctionalTest):
     def setUp(self):
         super(
             WhenPerformingUnallowedOperationsOnContainers, self
@@ -2368,8 +2357,7 @@ class WhenPerformingUnallowedOperationsOnContainers(
         self.assertEqual(resp.status_int, 405)
 
 
-class WhenCreatingConsumersUsingConsumersResource(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
     def setUp(self):
         super(
             WhenCreatingConsumersUsingConsumersResource, self
@@ -2483,8 +2471,7 @@ class WhenCreatingConsumersUsingConsumersResource(
         self.assertEqual(resp.status_int, 404)
 
 
-class WhenGettingOrDeletingConsumersUsingConsumerResource(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
 
     def setUp(self):
         super(
@@ -2665,8 +2652,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(
         )
 
 
-class WhenPerformingUnallowedOperationsOnConsumers(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
     def setUp(self):
         super(
             WhenPerformingUnallowedOperationsOnConsumers, self
@@ -2785,8 +2771,7 @@ class WhenPerformingUnallowedOperationsOnConsumers(
         self.assertEqual(resp.status_int, 405)
 
 
-class WhenGettingContainersListUsingResource(
-        FunctionalTest, api_common.MockModelRepositoryMixin):
+class WhenGettingContainersListUsingResource(FunctionalTest):
     def setUp(self):
         super(
             WhenGettingContainersListUsingResource, self
