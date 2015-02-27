@@ -38,7 +38,6 @@ class ContainerConsumerController(object):
     def __init__(self, consumer_id):
         self.consumer_id = consumer_id
         self.consumer_repo = repo.get_container_consumer_repository()
-        self.project_repo = repo.get_project_repository()
         self.validator = validators.ContainerConsumerValidator()
 
     @pecan.expose(generic=True)
@@ -70,7 +69,6 @@ class ContainerConsumersController(object):
         self.container_id = container_id
         self.consumer_repo = repo.get_container_consumer_repository()
         self.container_repo = repo.get_container_repository()
-        self.project_repo = repo.get_project_repository()
         self.validator = validators.ContainerConsumerValidator()
 
     @pecan.expose()
@@ -126,8 +124,7 @@ class ContainerConsumersController(object):
     @controllers.enforce_content_types(['application/json'])
     def on_post(self, external_project_id, **kwargs):
 
-        project = res.get_or_create_project(external_project_id,
-                                            self.project_repo)
+        project = res.get_or_create_project(external_project_id)
         data = api.load_body(pecan.request, validator=self.validator)
         LOG.debug('Start on_post...%s', data)
 

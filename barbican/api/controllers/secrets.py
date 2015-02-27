@@ -117,8 +117,7 @@ class SecretController(object):
 
     def _on_get_secret_payload(self, secret, external_project_id, **kwargs):
         """GET actual payload containing the secret."""
-        project = res.get_or_create_project(external_project_id,
-                                            self.repos.project_repo)
+        project = res.get_or_create_project(external_project_id)
 
         pecan.override_template('', pecan.request.accept.header_value)
 
@@ -173,8 +172,7 @@ class SecretController(object):
         if self.secret.encrypted_data:
             _secret_already_has_data()
 
-        project_model = res.get_or_create_project(external_project_id,
-                                                  self.repos.project_repo)
+        project_model = res.get_or_create_project(external_project_id)
         content_type = pecan.request.content_type
         content_encoding = pecan.request.headers.get('Content-Encoding')
 
@@ -288,8 +286,7 @@ class SecretsController(object):
         LOG.debug('Start on_post for project-ID %s:...', external_project_id)
 
         data = api.load_body(pecan.request, validator=self.validator)
-        project = res.get_or_create_project(external_project_id,
-                                            self.repos.project_repo)
+        project = res.get_or_create_project(external_project_id)
 
         transport_key_needed = data.get('transport_key_needed',
                                         'false').lower() == 'true'

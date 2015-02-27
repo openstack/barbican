@@ -118,7 +118,6 @@ class OrdersController(object):
     def __init__(self, queue_resource=None):
 
         LOG.debug('Creating OrdersController')
-        self.project_repo = repo.get_project_repository()
         self.order_repo = repo.get_order_repository()
         self.queue = queue_resource or async_client.TaskClient()
         self.type_order_validator = validators.TypeOrderValidator()
@@ -183,8 +182,7 @@ class OrdersController(object):
     @controllers.enforce_content_types(['application/json'])
     def on_post(self, external_project_id, **kwargs):
 
-        project = res.get_or_create_project(external_project_id,
-                                            self.project_repo)
+        project = res.get_or_create_project(external_project_id)
 
         body = api.load_body(pecan.request,
                              validator=self.type_order_validator)
