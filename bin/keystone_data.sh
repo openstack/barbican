@@ -70,8 +70,8 @@ if [[ "$ENABLED_SERVICES" =~ "barbican" ]]; then
         keystone endpoint-create \
             --region RegionOne \
             --service_id $BARBICAN_SERVICE \
-            --publicurl "http://$SERVICE_HOST:9311/v1" \
-            --adminurl "http://$SERVICE_HOST:9312/v1" \
-            --internalurl "http://$SERVICE_HOST:9313/v1"
+            --publicurl "http://$SERVICE_HOST:9311" \
+            --adminurl "http://$SERVICE_HOST:9312" \
+            --internalurl "http://$SERVICE_HOST:9311"
     fi
 fi

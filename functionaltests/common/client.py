@@ -136,10 +136,13 @@ class BarbicanClient(object):
         filters = {
             'service': 'key-manager',
             'region': self.region,
-            'api_version': self.api_version if include_version else ''
         }
 
-        return self._auth_provider.base_url(filters)
+        base_url = self._auth_provider.base_url(filters)
+        if include_version:
+            return '/'.join([base_url, self.api_version])
+        else:
+            return base_url
 
     def get_list_of_models(self, item_list, model_type):
         """Takes a list of barbican objects and creates a list of models
