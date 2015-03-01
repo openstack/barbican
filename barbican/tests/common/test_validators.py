@@ -307,11 +307,31 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
 
-    def test_should_validate_with_wrong_encoding(self):
+    def test_should_validate_with_supported_encoding(self):
         self.secret_req['payload_content_type'] = 'application/octet-stream'
         self.secret_req['payload_content_encoding'] = 'base64'
+        self.secret_req['payload'] = 'bXktc2VjcmV0LWhlcmU='
 
         self.validator.validate(self.secret_req)
+
+    def test_validation_should_validate_with_good_base64_payload(self):
+        self.secret_req['payload_content_type'] = 'application/octet-stream'
+        self.secret_req['payload_content_encoding'] = 'base64'
+        self.secret_req['payload'] = 'bXktc2VjcmV0LWhlcmU='
+
+        self.validator.validate(self.secret_req)
+
+    def test_validation_should_raise_with_bad_base64_payload(self):
+        self.secret_req['payload_content_type'] = 'application/octet-stream'
+        self.secret_req['payload_content_encoding'] = 'base64'
+        self.secret_req['payload'] = '\u0080'
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.secret_req,
+        )
+        self.assertEqual('payload', exception.invalid_property)
 
 
 class WhenTestingContainerValidator(utils.BaseTestCase):
