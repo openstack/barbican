@@ -20,6 +20,7 @@ from barbican.common import exception as excep
 from barbican.common import hrefs
 import barbican.common.utils as utils
 from barbican.model import models
+from barbican.model import repositories as repos
 from barbican.plugin.interface import certificate_manager as cert
 from barbican.plugin import resources as plugin
 
@@ -63,18 +64,17 @@ ORDER_STATUS_CA_UNAVAIL_FOR_CHECK = models.OrderStatus(
 )
 
 
-def issue_certificate_request(order_model, project_model, repos):
+def issue_certificate_request(order_model, project_model):
     """Create the initial order with CA.
 
     :param: order_model - order associated with this cert request
     :param: project_model - project associated with this request
-    :param: repos - repos (to be removed)
     :returns: container_model - container with the relevant cert if
         the request has been completed.  None otherwise
     """
     container_model = None
 
-    plugin_meta = _get_plugin_meta(order_model, repos)
+    plugin_meta = _get_plugin_meta(order_model)
     barbican_meta_dto = cert.BarbicanMetaDTO()
 
     # Locate a suitable plugin to issue a certificate.
@@ -84,7 +84,7 @@ def issue_certificate_request(order_model, project_model, repos):
     if request_type == cert.CertificateRequestType.STORED_KEY_REQUEST:
         csr = order_model.order_barbican_metadata.get('generated_csr')
         if csr is None:
-            csr = _generate_csr(order_model, repos)
+            csr = _generate_csr(order_model)
             order_model.order_barbican_metadata['generated_csr'] = csr
             order_model.save()
         barbican_meta_dto.generated_csr = csr
@@ -95,18 +95,17 @@ def issue_certificate_request(order_model, project_model, repos):
                                                    barbican_meta_dto)
 
     # Save plugin order plugin state
-    _save_plugin_metadata(order_model, plugin_meta, repos)
+    _save_plugin_metadata(order_model, plugin_meta)
 
     # Handle result
     if cert.CertificateStatus.WAITING_FOR_CA == result.status:
         # TODO(alee-3): Add code to set sub status of "waiting for CA"
         _update_order_status(ORDER_STATUS_REQUEST_PENDING)
         _schedule_check_cert_request(cert_plugin, order_model, plugin_meta,
-                                     repos, result, project_model,
-                                     cert.RETRY_MSEC)
+                                     result, project_model, cert.RETRY_MSEC)
     elif cert.CertificateStatus.CERTIFICATE_GENERATED == result.status:
         _update_order_status(ORDER_STATUS_CERT_GENERATED)
-        container_model = _save_secrets(result, project_model, repos)
+        container_model = _save_secrets(result, project_model)
     elif cert.CertificateStatus.CLIENT_DATA_ISSUE_SEEN == result.status:
         _update_order_status(ORDER_STATUS_DATA_INVALID)
         raise cert.CertificateStatusClientDataIssue(result.status_message)
@@ -115,7 +114,7 @@ def issue_certificate_request(order_model, project_model, repos):
         _update_order_status(ORDER_STATUS_CA_UNAVAIL_FOR_ISSUE)
 
         _schedule_issue_cert_request(cert_plugin, order_model, plugin_meta,
-                                     repos, result, project_model,
+                                     result, project_model,
                                      cert.ERROR_RETRY_MSEC)
         _notify_ca_unavailable(order_model, result)
     elif cert.CertificateStatus.INVALID_OPERATION == result.status:
@@ -129,18 +128,17 @@ def issue_certificate_request(order_model, project_model, repos):
     return container_model
 
 
-def check_certificate_request(order_model, project_model, plugin_name, repos):
+def check_certificate_request(order_model, project_model, plugin_name):
     """Check the status of a certificate request with the CA.
 
     :param: order_model - order associated with this cert request
     :param: project_model - project associated with this request
     :param: plugin_name - plugin the issued the certificate request
-    :param; repos - repos (to be removed)
     :returns: container_model - container with the relevant cert if the
         request has been completed.  None otherwise.
     """
     container_model = None
-    plugin_meta = _get_plugin_meta(order_model, repos)
+    plugin_meta = _get_plugin_meta(order_model)
     barbican_meta_dto = cert.BarbicanMetaDTO()
 
     cert_plugin = cert.CertificatePluginManager().get_plugin_by_name(
@@ -152,17 +150,17 @@ def check_certificate_request(order_model, project_model, plugin_name, repos):
                                                    barbican_meta_dto)
 
     # Save plugin order plugin state
-    _save_plugin_metadata(order_model, plugin_meta, repos)
+    _save_plugin_metadata(order_model, plugin_meta)
 
     # Handle result
     if cert.CertificateStatus.WAITING_FOR_CA == result.status:
         _update_order_status(ORDER_STATUS_REQUEST_PENDING)
         _schedule_check_cert_request(cert_plugin, order_model, plugin_meta,
-                                     repos, result, project_model,
+                                     result, project_model,
                                      cert.RETRY_MSEC)
     elif cert.CertificateStatus.CERTIFICATE_GENERATED == result.status:
         _update_order_status(ORDER_STATUS_CERT_GENERATED)
-        container_model = _save_secrets(result, project_model, repos)
+        container_model = _save_secrets(result, project_model)
     elif cert.CertificateStatus.CLIENT_DATA_ISSUE_SEEN == result.status:
         _update_order_status(cert.ORDER_STATUS_DATA_INVALID)
         raise cert.CertificateStatusClientDataIssue(result.status_message)
@@ -170,7 +168,7 @@ def check_certificate_request(order_model, project_model, plugin_name, repos):
         # TODO(alee-3): decide what to do about retries here
         _update_order_status(ORDER_STATUS_CA_UNAVAIL_FOR_CHECK)
         _schedule_check_cert_request(cert_plugin, order_model, plugin_meta,
-                                     repos, result, project_model,
+                                     result, project_model,
                                      cert.ERROR_RETRY_MSEC)
 
     elif cert.CertificateStatus.INVALID_OPERATION == result.status:
@@ -183,7 +181,7 @@ def check_certificate_request(order_model, project_model, plugin_name, repos):
     return container_model
 
 
-def modify_certificate_request(order_model, updated_meta, repos):
+def modify_certificate_request(order_model, updated_meta):
     """Update the order with CA."""
     # TODO(chellygel): Add the modify certificate request logic.
     LOG.debug('in modify_certificate_request')
@@ -207,11 +205,10 @@ def _schedule_cert_retry_task(cert_result_dto, cert_plugin, order_model,
     _schedule_retry_task(retry_object, retry_method, retry_time, retry_args)
 
 
-def _schedule_issue_cert_request(cert_plugin, order_model, plugin_meta, repos,
+def _schedule_issue_cert_request(cert_plugin, order_model, plugin_meta,
                                  cert_result_dto, project_model, retry_time):
     retry_args = [order_model,
-                  project_model,
-                  repos]
+                  project_model]
     _schedule_cert_retry_task(
         cert_result_dto, cert_plugin, order_model, plugin_meta,
         retry_method="issue_certificate_request",
@@ -220,12 +217,11 @@ def _schedule_issue_cert_request(cert_plugin, order_model, plugin_meta, repos,
         retry_args=retry_args)
 
 
-def _schedule_check_cert_request(cert_plugin, order_model, plugin_meta, repos,
+def _schedule_check_cert_request(cert_plugin, order_model, plugin_meta,
                                  cert_result_dto, project_model, retry_time):
     retry_args = [order_model,
                   project_model,
-                  utils.generate_fullname_for(cert_plugin),
-                  repos]
+                  utils.generate_fullname_for(cert_plugin)]
     _schedule_cert_retry_task(
         cert_result_dto, cert_plugin, order_model, plugin_meta,
         retry_method="check_certificate_request",
@@ -245,19 +241,18 @@ def _schedule_retry_task(retry_object, retry_method, retry_time, args):
     pass
 
 
-def _get_plugin_meta(order_model, repos):
+def _get_plugin_meta(order_model):
     if order_model:
-        return repos.order_plugin_meta_repo.get_metadata_for_order(
-            order_model.id)
+        order_plugin_meta_repo = repos.get_order_plugin_meta_repository()
+        return order_plugin_meta_repo.get_metadata_for_order(order_model.id)
     else:
         return {}
 
 
-def _generate_csr(order_model, repos):
+def _generate_csr(order_model):
     """Generate a CSR from the public key.
 
     :param: order_model - order for the request
-    :param: repos - parameter to get to repositories
     :return: CSR (certificate signing request) in PEM format
     :raise: :class:`StoredKeyPrivateKeyNotFound` if private key not found
             :class:`StoredKeyContainerNotFound` if container not found
@@ -267,7 +262,8 @@ def _generate_csr(order_model, repos):
     # extract container_id as the last part of the URL
     container_id = container_ref.rsplit('/', 1)[1]
 
-    container = repos.container_repo.get(container_id)
+    container_repo = repos.get_container_repository()
+    container = container_repo.get(container_id)
     if not container:
         raise excep.StoredKeyContainerNotFound(container_id)
 
@@ -275,10 +271,11 @@ def _generate_csr(order_model, repos):
     private_key = None
 
     for cs in container.container_secrets:
+        secret_repo = repos.get_secret_repository()
         if cs.name == 'private_key':
-            private_key = repos.secret_repo.get(cs.secret_id)
+            private_key = secret_repo.get(cs.secret_id)
         elif cs.name == 'private_key_passphrase':
-            passphrase = repos.secret_repo.get(cs.secret_id)
+            passphrase = secret_repo.get(cs.secret_id)
 
     if not private_key:
         raise excep.StoredKeyPrivateKeyNotFound(container_id)
@@ -320,24 +317,24 @@ def _notify_ca_unavailable(order_model, result):
         result.retry_msec)
 
 
-def _save_plugin_metadata(order_model, plugin_meta, repos):
+def _save_plugin_metadata(order_model, plugin_meta):
     """Add plugin metadata to an order."""
 
     if not isinstance(plugin_meta, dict):
         plugin_meta = {}
 
-    repos.order_plugin_meta_repo.save(plugin_meta, order_model)
+    order_plugin_meta_repo = repos.get_order_plugin_meta_repository()
+    order_plugin_meta_repo.save(plugin_meta, order_model)
 
 
-def _save_secrets(result, project_model, repos):
+def _save_secrets(result, project_model):
     cert_secret_model, transport_key_model = plugin.store_secret(
         unencrypted_raw=result.certificate,
         content_type_raw='text/plain',
         content_encoding='base64',
         spec={},
         secret_model=None,
-        project_model=project_model,
-        repos=repos)
+        project_model=project_model)
 
     # save the certificate chain as a secret.
     if result.intermediates:
@@ -347,8 +344,7 @@ def _save_secrets(result, project_model, repos):
             content_encoding='base64',
             spec={},
             secret_model=None,
-            project_model=project_model,
-            repos=repos
+            project_model=project_model
         )
     else:
         intermediates_secret_model = None
@@ -357,14 +353,16 @@ def _save_secrets(result, project_model, repos):
     container_model.type = "certificate"
     container_model.status = models.States.ACTIVE
     container_model.project_id = project_model.id
-    repos.container_repo.create_from(container_model)
+    container_repo = repos.get_container_repository()
+    container_repo.create_from(container_model)
 
     # create container_secret for certificate
     new_consec_assoc = models.ContainerSecret()
     new_consec_assoc.name = 'certificate'
     new_consec_assoc.container_id = container_model.id
     new_consec_assoc.secret_id = cert_secret_model.id
-    repos.container_secret_repo.create_from(new_consec_assoc)
+    container_secret_repo = repos.get_container_secret_repository()
+    container_secret_repo.create_from(new_consec_assoc)
 
     if intermediates_secret_model:
         # create container_secret for intermediate certs
@@ -372,6 +370,6 @@ def _save_secrets(result, project_model, repos):
         new_consec_assoc.name = 'intermediates'
         new_consec_assoc.container_id = container_model.id
         new_consec_assoc.secret_id = intermediates_secret_model.id
-        repos.container_secret_repo.create_from(new_consec_assoc)
+        container_secret_repo.create_from(new_consec_assoc)
 
     return container_model

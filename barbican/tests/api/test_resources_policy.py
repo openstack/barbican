@@ -31,7 +31,6 @@ from barbican.api.controllers import secrets
 from barbican.api.controllers import versions
 from barbican import context
 from barbican.openstack.common import policy
-from barbican.tests.api import common as api_common
 from barbican.tests import utils
 
 
@@ -98,7 +97,7 @@ class ConsumerResource(TestableResource):
     controller_cls = consumers.ContainerConsumerController
 
 
-class BaseTestCase(utils.BaseTestCase, api_common.MockModelRepositoryMixin):
+class BaseTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
 
     def setUp(self):
         super(BaseTestCase, self).setUp()

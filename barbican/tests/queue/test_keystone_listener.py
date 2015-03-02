@@ -97,11 +97,10 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
                          'for project update event')
         self.assertIsNone(result)
 
-    @mock.patch('barbican.model.repositories.Repositories')
     @mock.patch.object(consumer.KeystoneEventConsumer, 'process',
                        return_value=None)
     def test_delete_project_event_notification_with_required_data(
-            self, mock_process, mock_repos):
+            self, mock_process):
 
         project_id = uuid.uuid4().hex
         self.task_args[self.type_index] = 'identity.project.deleted'
@@ -112,11 +111,10 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
                                              resource_type='project')
         self.assertEqual(messaging.NotificationResult.HANDLED, result)
 
-    @mock.patch('barbican.model.repositories.Repositories')
     @mock.patch.object(consumer.KeystoneEventConsumer, 'process',
                        return_value=None)
     def test_delete_project_event_with_different_service_name_in_event_type(
-            self, mock_process, mock_repos):
+            self, mock_process):
 
         project_id = uuid.uuid4().hex
         self.task_args[self.type_index] = 'aaa.project.deleted'
@@ -128,11 +126,10 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
                                              resource_type='project')
         self.assertEqual(messaging.NotificationResult.HANDLED, result)
 
-    @mock.patch('barbican.model.repositories.Repositories')
     @mock.patch.object(consumer.KeystoneEventConsumer, 'process',
                        return_value=None)
     def test_delete_project_event_with_event_type_in_different_case(
-            self, mock_process, mock_repos):
+            self, mock_process):
 
         project_id = uuid.uuid4().hex
         self.task_args[self.type_index] = 'Identity.PROJECT.DeleteD'
@@ -144,11 +141,10 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
                                              resource_type='project')
         self.assertEqual(messaging.NotificationResult.HANDLED, result)
 
-    @mock.patch('barbican.model.repositories.Repositories')
     @mock.patch.object(consumer.KeystoneEventConsumer, 'process',
                        return_value=None)
     def test_delete_project_event_with_incomplete_event_type_format(
-            self, mock_process, mock_repos):
+            self, mock_process):
 
         project_id = uuid.uuid4().hex
         self.task_args[self.type_index] = 'project.deleted'
@@ -229,10 +225,9 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
                          'notification')
         self.assertIsNone(result)
 
-    @mock.patch('barbican.model.repositories.Repositories')
     @mock.patch.object(consumer.KeystoneEventConsumer, 'process')
     def test_event_notification_with_processing_error_requeue_disabled(
-            self, mock_process, mock_repos):
+            self, mock_process):
 
         self.opt_in_group(queue.KS_NOTIFICATIONS_GRP_NAME, allow_requeue=False)
         local_task = keystone_listener.NotificationTask(self.conf)
@@ -247,10 +242,9 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
                         ' project delete event')
         self.assertEqual(messaging.NotificationResult.HANDLED, result)
 
-    @mock.patch('barbican.model.repositories.Repositories')
     @mock.patch.object(consumer.KeystoneEventConsumer, 'process')
     def test_event_notification_with_processing_error_requeue_enabled(
-            self, mock_process, mock_repos):
+            self, mock_process):
 
         self.opt_in_group(queue.KS_NOTIFICATIONS_GRP_NAME, allow_requeue=True)
         local_task = keystone_listener.NotificationTask(self.conf)

@@ -20,7 +20,7 @@ from barbican.tasks import resources
 from barbican.tests import utils
 
 
-class BaseOrderTestCase(utils.BaseTestCase):
+class BaseOrderTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
 
     def setUp(self):
         super(BaseOrderTestCase, self).setUp()
@@ -45,38 +45,43 @@ class BaseOrderTestCase(utils.BaseTestCase):
         self.project.external_id = self.external_project_id
         self.project_repo = mock.MagicMock()
         self.project_repo.get.return_value = self.project
+        self.setup_project_repository_mock(self.project_repo)
 
         self.order.status = models.States.PENDING
         self.order.project_id = self.project_id
         self.order_repo = mock.MagicMock()
         self.order_repo.get.return_value = self.order
+        self.setup_order_repository_mock(self.order_repo)
 
-        self.order_repo = mock.MagicMock()
-        self.order_repo.get.return_value = self.order
-
-        self.order_plugin_meta_repo = mock.MagicMock()
-        self.order_barbican_meta_repo = mock.MagicMock()
+        self.setup_order_plugin_meta_repository_mock()
+        self.setup_order_barbican_meta_repository_mock()
 
         self.secret = models.Secret()
 
         self.secret_repo = mock.MagicMock()
         self.secret_repo.create_from.return_value = None
+        self.setup_secret_repository_mock(self.secret_repo)
 
         self.project_secret_repo = mock.MagicMock()
         self.project_secret_repo.create_from.return_value = None
+        self.setup_project_secret_repository_mock(self.project_secret_repo)
 
         self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
+        self.setup_encrypted_datum_repository_mock(self.datum_repo)
 
-        self.kek_repo = mock.MagicMock()
+        self.setup_kek_datum_repository_mock()
 
-        self.secret_meta_repo = mock.MagicMock()
+        self.setup_secret_meta_repository_mock()
 
         self.container_repo = mock.MagicMock()
         self.container_repo.create_from.return_value = None
+        self.setup_container_repository_mock(self.container_repo)
 
         self.container_secret_repo = mock.MagicMock()
         self.container_secret_repo.create_from.return_value = None
+        self.setup_container_secret_repository_mock(self.container_secret_repo)
+
         self.container = models.Container()
 
 
@@ -85,18 +90,7 @@ class WhenBeginningKeyTypeOrder(BaseOrderTestCase):
     def setUp(self):
         super(WhenBeginningKeyTypeOrder, self).setUp()
 
-        self.resource = resources.BeginTypeOrder(
-            project_repo=self.project_repo,
-            order_repo=self.order_repo,
-            secret_repo=self.secret_repo,
-            project_secret_repo=self.project_secret_repo,
-            datum_repo=self.datum_repo,
-            kek_repo=self.kek_repo,
-            secret_meta_repo=self.secret_meta_repo,
-            container_repo=self.container_repo,
-            container_secret_repo=self.container_secret_repo,
-            order_plugin_meta_repo=self.order_plugin_meta_repo,
-            order_barbican_meta_repo=self.order_barbican_meta_repo)
+        self.resource = resources.BeginTypeOrder()
 
     @mock.patch('barbican.plugin.resources.generate_secret')
     def test_should_process_key_order(self, mock_generate_secret):
@@ -113,8 +107,7 @@ class WhenBeginningKeyTypeOrder(BaseOrderTestCase):
             secret_info,
             secret_info.get('payload_content_type',
                             'application/octet-stream'),
-            self.project,
-            mock.ANY
+            self.project
         )
 
     def test_should_fail_during_retrieval(self):
@@ -191,16 +184,7 @@ class WhenUpdatingKeyTypeOrder(BaseOrderTestCase):
     def setUp(self):
         super(WhenUpdatingKeyTypeOrder, self).setUp()
 
-        self.resource = resources.UpdateOrder(
-            project_repo=self.project_repo,
-            order_repo=self.order_repo,
-            secret_repo=self.secret_repo,
-            project_secret_repo=self.project_secret_repo,
-            datum_repo=self.datum_repo,
-            kek_repo=self.kek_repo,
-            secret_meta_repo=self.secret_meta_repo,
-            container_repo=self.container_repo,
-            container_secret_repo=self.container_secret_repo)
+        self.resource = resources.UpdateOrder()
 
     @mock.patch(
         'barbican.tasks.certificate_resources.modify_certificate_request')
@@ -214,12 +198,12 @@ class WhenUpdatingKeyTypeOrder(BaseOrderTestCase):
             self.resource.process,
             self.order_id,
             self.external_project_id,
-            self.meta,
+            self.meta
         )
 
         self.assertEqual('Abort!', exception.message)
 
-        mock_mod_cert.assert_called_once_with(self.order, self.meta, mock.ANY)
+        mock_mod_cert.assert_called_once_with(self.order, self.meta)
 
         self.assertEqual(models.States.ERROR, self.order.status)
         self.assertEqual(500, self.order.error_status_code)
@@ -234,18 +218,7 @@ class WhenBeginningAsymmetricTypeOrder(BaseOrderTestCase):
 
         self.order.type = "asymmetric"
 
-        self.resource = resources.BeginTypeOrder(
-            project_repo=self.project_repo,
-            order_repo=self.order_repo,
-            secret_repo=self.secret_repo,
-            project_secret_repo=self.project_secret_repo,
-            datum_repo=self.datum_repo,
-            kek_repo=self.kek_repo,
-            secret_meta_repo=self.secret_meta_repo,
-            container_repo=self.container_repo,
-            container_secret_repo=self.container_secret_repo,
-            order_plugin_meta_repo=self.order_plugin_meta_repo,
-            order_barbican_meta_repo=self.order_barbican_meta_repo)
+        self.resource = resources.BeginTypeOrder()
 
     @mock.patch('barbican.plugin.resources.generate_asymmetric_secret')
     def test_should_process_asymmetric_order(self,
@@ -264,8 +237,7 @@ class WhenBeginningAsymmetricTypeOrder(BaseOrderTestCase):
             secret_info,
             secret_info.get('payload_content_type',
                             'application/octet-stream'),
-            self.project,
-            mock.ANY
+            self.project
         )
 
     def test_should_fail_during_retrieval(self):
