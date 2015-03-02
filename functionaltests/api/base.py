@@ -17,8 +17,8 @@ import os
 
 import oslotest.base as oslotest
 from tempest import auth
-from tempest import clients as tempest_clients
 from tempest import config
+from tempest import manager as tempest_manager
 from tempest.openstack.common import log as logging
 
 from functionaltests.common import client
@@ -54,8 +54,7 @@ class TestCase(oslotest.BaseTestCase):
         else:
             credentials = BarbicanV2Credentials()
 
-        mgr = tempest_clients.Manager(credentials=credentials)
-        auth_provider = mgr.get_auth_provider(credentials)
+        auth_provider = tempest_manager.get_auth_provider(credentials)
         self.client = client.BarbicanClient(auth_provider)
 
     def tearDown(self):
