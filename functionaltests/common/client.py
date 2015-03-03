@@ -17,6 +17,7 @@ import os
 
 import requests
 from requests import auth
+from six.moves import urllib
 from tempest.common.utils import misc as misc_utils
 from tempest import config
 from tempest.openstack.common import log as logging
@@ -126,23 +127,46 @@ class BarbicanClient(object):
         if model and hasattr(model, 'obj_to_json'):
             return model.obj_to_json()
 
+    def _get_url_w_trailing_slash(self, url):
+        """Returns the given URL with a trailing slash
+
+        Given a URL, this function will return it with a trailing slash. If
+        there is already a trailing slash, then it will return the same URL
+        that was given.
+
+        Note that the instances where this is being used, actually need a
+        trailing slash. Be careful not to use this when it's not needed.
+        """
+        # NOTE(jaosorior): The urljoin needs this in order to actually append
+        # a URL to another. If a URL, say http://localhost/v1 doesn't have a
+        # slash in the end, the last fragment will be replaced with the second
+        # parameter given to urljoin; Which is not what we want.
+        if url[-1] != "/":
+            return url + "/"
+        return url
+
+    def _get_base_url_from_config(self, include_version):
+        if include_version:
+            base_url = urllib.parse.urljoin(
+                CONF.keymanager.override_url,
+                CONF.keymanager.override_url_version)
+        else:
+            base_url = CONF.keymanager.override_url
+        return self._get_url_w_trailing_slash(base_url)
+
     def get_base_url(self, include_version=True):
         if CONF.keymanager.override_url:
-            if include_version:
-                return os.path.join(CONF.keymanager.override_url,
-                                    CONF.keymanager.override_url_version)
-            else:
-                return CONF.keymanager.override_url
+            return self._get_base_url_from_config(include_version)
         filters = {
             'service': 'key-manager',
             'region': self.region,
         }
 
         base_url = self._auth_provider.base_url(filters)
+
         if include_version:
-            return '/'.join([base_url, self.api_version])
-        else:
-            return base_url
+            base_url = urllib.parse.urljoin(base_url, self.api_version)
+        return self._get_url_w_trailing_slash(base_url)
 
     def get_list_of_models(self, item_list, model_type):
         """Takes a list of barbican objects and creates a list of models
@@ -171,7 +195,7 @@ class BarbicanClient(object):
                 params=None):
         """Prepares and sends http request through Requests."""
         if 'http' not in url:
-            url = os.path.join(self.get_base_url(), url)
+            url = urllib.parse.urljoin(self.get_base_url(), url)
 
         # Duplicate Base headers and add extras (if needed)
         headers = {}
