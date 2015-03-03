@@ -18,6 +18,13 @@ Server-side (i.e. worker side) classes and logic.
 """
 import functools
 
+try:
+    import newrelic.agent
+    from newrelic.api import application
+    newrelic_loaded = True
+except ImportError:
+    newrelic_loaded = False
+
 from oslo_config import cfg
 
 from barbican.common import utils
@@ -26,6 +33,8 @@ from barbican.openstack.common import service
 from barbican import queue
 from barbican.tasks import resources
 
+if newrelic_loaded:
+    newrelic.agent.initialize('/etc/newrelic/newrelic.ini')
 
 LOG = utils.getLogger(__name__)
 
@@ -58,6 +67,36 @@ def transactional(fn):
     return wrapper
 
 
+def monitored(fn):  # pragma: no cover
+    """Provides monitoring capabilities for task methods."""
+    # TODO(jvrbanac): Figure out how we should test third-party monitoring
+
+    # Support NewRelic Monitoring
+    if newrelic_loaded:
+        # Create a NewRelic app instance
+        app = application.application_instance()
+
+        def newrelic_wrapper(*args, **kwargs):
+            # Resolve real name since decorators are wrapper the method
+            if len(args) > 0 and hasattr(args[0], fn.__name__):
+                cls = type(args[0])
+                task_name = '{0}:{1}.{2}'.format(
+                    cls.__module__,
+                    cls.__name__,
+                    fn.__name__
+                )
+            else:
+                task_name = newrelic.agent.callable_name(fn)
+
+            # Execute task under a monitored context
+            with newrelic.agent.BackgroundTask(app, task_name):
+                fn(*args, **kwargs)
+
+        return newrelic_wrapper
+
+    return fn
+
+
 class Tasks(object):
     """Tasks that can be invoked asynchronously in Barbican.
 
@@ -70,10 +109,11 @@ class Tasks(object):
     methods on itself, which include the methods in this class.
     """
 
+    @monitored
     @transactional
     def process_type_order(self, context, order_id, project_id):
         """Process TypeOrder."""
-        LOG.debug('TypeOrder id is {0}'.format(order_id))
+        LOG.info('Processing TypeOrder: {0}'.format(order_id))
         task = resources.BeginTypeOrder()
         try:
             task.process(order_id, project_id)
@@ -81,9 +121,11 @@ class Tasks(object):
             LOG.exception(">>>>> Task exception seen, details reported "
                           "on the Orders entity.")
 
+    @monitored
     @transactional
     def update_order(self, context, order_id, project_id, updated_meta):
         """Update Order."""
+        LOG.info('Updating TypeOrder: {0}'.format(order_id))
         task = resources.UpdateOrder()
         try:
             task.process(order_id, project_id, updated_meta)
@@ -118,9 +160,11 @@ class TaskServer(Tasks, service.Service):
                                         endpoints=[self])
 
     def start(self):
+        LOG.info("Starting the TaskServer")
         self._server.start()
         super(TaskServer, self).start()
 
     def stop(self):
+        LOG.info("Halting the TaskServer")
         super(TaskServer, self).stop()
         self._server.stop()
