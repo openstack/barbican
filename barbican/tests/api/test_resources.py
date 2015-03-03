@@ -37,7 +37,6 @@ from barbican.common import validators
 import barbican.context
 from barbican.model import models
 from barbican.openstack.common import timeutils
-from barbican.tests.api import common as api_common
 from barbican.tests import utils
 
 
@@ -153,7 +152,7 @@ class SecretAllowAllMimeTypesDecoratorTest(utils.BaseTestCase):
                           self._empty_function)
 
 
-class FunctionalTest(utils.BaseTestCase, api_common.MockModelRepositoryMixin):
+class FunctionalTest(utils.BaseTestCase, utils.MockModelRepositoryMixin):
 
     def setUp(self):
         super(FunctionalTest, self).setUp()
@@ -313,7 +312,6 @@ class BaseSecretTestSuite(BaseSecretsResource):
             expected,
             None,
             self.project,
-            mock.ANY,
             transport_key_needed=False,
             transport_key_id=None
         )
@@ -345,7 +343,6 @@ class BaseSecretTestSuite(BaseSecretsResource):
             expected,
             None,
             self.project if check_project_id else mock.ANY,
-            mock.ANY,
             transport_key_needed=False,
             transport_key_id=None
         )
@@ -375,7 +372,6 @@ class BaseSecretTestSuite(BaseSecretsResource):
             expected,
             None,
             self.project if check_project_id else mock.ANY,
-            mock.ANY,
             transport_key_needed=False,
             transport_key_id=self.transport_key_id
         )
@@ -930,7 +926,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             'text/plain',
             self.secret,
             self.project,
-            mock.ANY,
             None,
             None
         )
@@ -958,7 +953,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             'text/plain',
             self.secret,
             self.project,
-            mock.ANY,
             twsk,
             self.transport_key_model.transport_key
         )
@@ -1065,7 +1059,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             'application/octet-stream',
             self.secret,
             self.project,
-            mock.ANY,
             None,
             None
         )
@@ -1106,7 +1099,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             self.secret.to_dict_fields(),
             self.secret,
             self.project,
-            mock.ANY,
             transport_key_id=None
         )
 
@@ -1129,7 +1121,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             self.secret.to_dict_fields(),
             self.secret,
             self.project,
-            mock.ANY,
             transport_key_id=self.transport_key_id
         )
 
@@ -1155,7 +1146,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             self.secret.to_dict_fields(),
             self.secret,
             self.project,
-            mock.ANY,
             transport_key_id=None
         )
 
@@ -1182,7 +1172,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             self.secret.to_dict_fields(),
             self.secret,
             self.project,
-            mock.ANY,
             transport_key_id=self.transport_key_id
         )
 
@@ -1208,7 +1197,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             'base64', self.secret.to_dict_fields(),
             self.secret,
             self.project,
-            mock.ANY,
             transport_key_id=None
         )
 
@@ -1325,19 +1313,19 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         )
 
         mock_delete_secret.assert_called_once_with(self.secret,
-                                                   self.external_project_id,
-                                                   mock.ANY)
+                                                   self.external_project_id)
 
     @mock.patch('barbican.plugin.resources.delete_secret')
-    def test_should_delete_with_accept_header_application_json(self, mocked):
+    def test_should_delete_with_accept_header_application_json(
+            self, mock_delete_secret):
         """Covers Launchpad Bug: 1326481."""
         self.app.delete(
             '/secrets/{0}/'.format(self.secret.id),
             headers={'Accept': 'application/json'}
         )
 
-        mocked.assert_called_once_with(self.secret, self.external_project_id,
-                                       mock.ANY)
+        mock_delete_secret.assert_called_once_with(self.secret,
+                                                   self.external_project_id)
 
     def test_should_throw_exception_for_delete_when_secret_not_found(self):
         self.secret_repo.get.return_value = None

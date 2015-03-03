@@ -22,9 +22,11 @@ from barbican.model import models
 from barbican.plugin.crypto import crypto
 from barbican.plugin.interface import secret_store
 from barbican.plugin import store_crypto
+from barbican.tests import utils as test_utils
 
 
-class TestSecretStoreBase(testtools.TestCase):
+class TestSecretStoreBase(testtools.TestCase,
+                          test_utils.MockModelRepositoryMixin):
     """Define common configurations for testing store_crypto.py."""
     def setUp(self):
         super(TestSecretStoreBase, self).setUp()
@@ -107,60 +109,26 @@ class TestSecretStoreBase(testtools.TestCase):
         """Mock the get_secret_repository() factory function."""
         self.secret_repo = mock.MagicMock()
         self.secret_repo.create_from.return_value = self.secret_model
-
-        get_secret_repository_config = {
-            'return_value': self.secret_repo
-        }
-        self.get_secret_repository_patcher = mock.patch(
-            'barbican.model.repositories.get_secret_repository',
-            **get_secret_repository_config
-        )
-        self._start_patcher(self.get_secret_repository_patcher)
+        self.setup_secret_repository_mock(self.secret_repo)
 
     def _config_get_project_secret_repository(self):
         """Mock the get_project_secret_repository() factory function."""
         self.project_secret_repo = mock.MagicMock()
         self.project_secret_repo.create_from.return_value = None
-
-        get_project_secret_repository_config = {
-            'return_value': self.project_secret_repo
-        }
-        self.get_project_secret_repository_patcher = mock.patch(
-            'barbican.model.repositories.get_project_secret_repository',
-            **get_project_secret_repository_config
-        )
-        self._start_patcher(self.get_project_secret_repository_patcher)
+        self.setup_project_secret_repository_mock(self.project_secret_repo)
 
     def _config_get_encrypted_datum_repository(self):
         """Mock the get_encrypted_datum_repository() factory function."""
         self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
-
-        get_encrypted_datum_repository_config = {
-            'return_value': self.datum_repo
-        }
-        self.get_encrypted_datum_repository_patcher = mock.patch(
-            'barbican.model.repositories.get_encrypted_datum_repository',
-            **get_encrypted_datum_repository_config
-        )
-        self._start_patcher(
-            self.get_encrypted_datum_repository_patcher)
+        self.setup_encrypted_datum_repository_mock(self.datum_repo)
 
     def _config_get_kek_datum_repository(self):
         """Mock the get_kek_datum_repository() factory function."""
         kek_model = self.kek_meta_project_model
         self.kek_repo = mock.MagicMock()
         self.kek_repo.find_or_create_kek_datum.return_value = kek_model
-
-        get_kek_datum_repository_config = {
-            'return_value': self.kek_repo
-        }
-        self.get_kek_datum_repository_patcher = mock.patch(
-            'barbican.model.repositories.get_kek_datum_repository',
-            **get_kek_datum_repository_config
-        )
-        self._start_patcher(
-            self.get_kek_datum_repository_patcher)
+        self.setup_kek_datum_repository_mock(self.kek_repo)
 
 
 class WhenTestingStoreCrypto(TestSecretStoreBase):

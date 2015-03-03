@@ -67,17 +67,7 @@ class SecretController(object):
     def __init__(self, secret):
         LOG.debug('=== Creating SecretController ===')
         self.secret = secret
-
-        # TODO(john-wood-w) Remove passed-in repositories in favor of
-        #  repository factories and patches in unit tests.
-        self.repos = repo.Repositories(
-            project_repo=repo.get_project_repository(),
-            secret_repo=repo.get_secret_repository(),
-            datum_repo=repo.get_encrypted_datum_repository(),
-            kek_repo=repo.get_kek_datum_repository(),
-            secret_meta_repo=repo.get_secret_meta_repository(),
-            transport_key_repo=repo.get_transport_key_repository()
-        )
+        self.transport_key_repo = repo.get_transport_key_repository()
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
@@ -131,7 +121,6 @@ class SecretController(object):
         return plugin.get_secret(pecan.request.accept.header_value,
                                  secret,
                                  project,
-                                 self.repos,
                                  twsk,
                                  transport_key)
 
@@ -139,7 +128,7 @@ class SecretController(object):
         if transport_key_id is None:
             _request_has_twsk_but_no_transport_key_id()
 
-        transport_key_model = self.repos.transport_key_repo.get(
+        transport_key_model = self.transport_key_repo.get(
             entity_id=transport_key_id,
             suppress_exception=True)
 
@@ -178,7 +167,7 @@ class SecretController(object):
 
         plugin.store_secret(payload, content_type,
                             content_encoding, self.secret.to_dict_fields(),
-                            self.secret, project_model, self.repos,
+                            self.secret, project_model,
                             transport_key_id=transport_key_id)
 
     @index.when(method='DELETE')
@@ -186,7 +175,7 @@ class SecretController(object):
     @controllers.handle_exceptions(u._('Secret deletion'))
     @controllers.enforce_rbac('secret:delete')
     def on_delete(self, external_project_id, **kwargs):
-        plugin.delete_secret(self.secret, external_project_id, self.repos)
+        plugin.delete_secret(self.secret, external_project_id)
 
 
 class SecretsController(object):
@@ -195,15 +184,7 @@ class SecretsController(object):
     def __init__(self):
         LOG.debug('Creating SecretsController')
         self.validator = validators.NewSecretValidator()
-        self.repos = repo.Repositories(
-            project_repo=repo.get_project_repository(),
-            project_secret_repo=repo.get_project_secret_repository(),
-            secret_repo=repo.get_secret_repository(),
-            datum_repo=repo.get_encrypted_datum_repository(),
-            kek_repo=repo.get_kek_datum_repository(),
-            secret_meta_repo=repo.get_secret_meta_repository(),
-            transport_key_repo=repo.get_transport_key_repository()
-        )
+        self.secret_repo = repo.get_secret_repository()
 
     @pecan.expose()
     def _lookup(self, secret_id, *remainder):
@@ -214,7 +195,7 @@ class SecretsController(object):
         controllers.assert_is_valid_uuid_from_uri(secret_id)
         ctx = controllers._get_barbican_context(pecan.request)
 
-        secret = self.repos.secret_repo.get(
+        secret = self.secret_repo.get(
             entity_id=secret_id,
             external_project_id=ctx.project,
             suppress_exception=True)
@@ -249,7 +230,7 @@ class SecretsController(object):
             # the default should be used.
             bits = 0
 
-        result = self.repos.secret_repo.get_by_create_date(
+        result = self.secret_repo.get_by_create_date(
             external_project_id,
             offset_arg=kw.get('offset', 0),
             limit_arg=kw.get('limit', None),
@@ -297,7 +278,6 @@ class SecretsController(object):
                      'application/octet-stream'),
             data.get('payload_content_encoding'),
             data, None, project,
-            self.repos,
             transport_key_needed=transport_key_needed,
             transport_key_id=data.get('transport_key_id'))
 

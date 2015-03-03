@@ -289,7 +289,7 @@ def clean_paging_values(offset_arg=0, limit_arg=CONF.default_limit_paging):
     return offset, limit
 
 
-def delete_all_project_resources(project_id, repos):
+def delete_all_project_resources(project_id):
     """Logic to cleanup all project resources.
 
     This cleanup uses same alchemy session to perform all db operations as a
@@ -298,58 +298,23 @@ def delete_all_project_resources(project_id, repos):
     """
     session = get_session()
 
-    repos.container_repo.delete_project_entities(
+    container_repo = get_container_repository()
+    container_repo.delete_project_entities(
         project_id, suppress_exception=False, session=session)
     # secret children SecretStoreMetadatum, EncryptedDatum
     # and container_secrets are deleted as part of secret delete
-    repos.secret_repo.delete_project_entities(
+    secret_repo = get_secret_repository()
+    secret_repo.delete_project_entities(
         project_id, suppress_exception=False, session=session)
-    repos.kek_repo.delete_project_entities(
+    kek_repo = get_kek_datum_repository()
+    kek_repo.delete_project_entities(
         project_id, suppress_exception=False, session=session)
-    repos.project_secret_repo.delete_project_entities(
+    project_secret_repo = get_project_secret_repository()
+    project_secret_repo.delete_project_entities(
         project_id, suppress_exception=False, session=session)
-    repos.project_repo.delete_project_entities(
+    project_repo = get_project_repository()
+    project_repo.delete_project_entities(
         project_id, suppress_exception=False, session=session)
-
-
-class Repositories(object):
-    """Convenient way to pass repositories around.
-
-    Selecting a given repository has 3 choices:
-       1) Use a specified repository instance via **kwargs
-       2) Create a repository here if it is specified as None via **kwargs
-       3) Just use None if no repository is specified
-    """
-    def __init__(self, **kwargs):
-        if kwargs:
-            # Enforce that either all arguments are non-None or else all None.
-            test_set = set(kwargs.values())
-            if None in test_set and len(test_set) > 1:
-                raise NotImplementedError(u._LE('No support for mixing None '
-                                                'and non-None repository '
-                                                'instances.'))
-
-            # Only set properties for specified repositories.
-            self._set_repo('project_repo', ProjectRepo, kwargs)
-            self._set_repo('project_secret_repo', ProjectSecretRepo, kwargs)
-            self._set_repo('secret_repo', SecretRepo, kwargs)
-            self._set_repo('datum_repo', EncryptedDatumRepo, kwargs)
-            self._set_repo('kek_repo', KEKDatumRepo, kwargs)
-            self._set_repo('secret_meta_repo', SecretStoreMetadatumRepo,
-                           kwargs)
-            self._set_repo('order_repo', OrderRepo, kwargs)
-            self._set_repo('order_plugin_meta_repo', OrderPluginMetadatumRepo,
-                           kwargs)
-            self._set_repo('order_barbican_meta_repo',
-                           OrderBarbicanMetadatumRepo, kwargs)
-            self._set_repo('transport_key_repo', TransportKeyRepo, kwargs)
-            self._set_repo('container_repo', ContainerRepo, kwargs)
-            self._set_repo('container_secret_repo', ContainerSecretRepo,
-                           kwargs)
-
-    def _set_repo(self, repo_name, repo_cls, specs):
-        if specs and repo_name in specs:
-            setattr(self, repo_name, specs[repo_name] or repo_cls())
 
 
 class BaseRepo(object):

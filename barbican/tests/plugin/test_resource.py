@@ -17,12 +17,13 @@ import base64
 import mock
 import testtools
 
-import barbican.model.repositories as repo
 from barbican.plugin.interface import secret_store
 from barbican.plugin import resources
+from barbican.tests import utils
 
 
-class WhenTestingPluginResource(testtools.TestCase):
+class WhenTestingPluginResource(testtools.TestCase,
+                                utils.MockModelRepositoryMixin):
 
     def setUp(self):
         super(WhenTestingPluginResource, self).setUp()
@@ -57,26 +58,28 @@ class WhenTestingPluginResource(testtools.TestCase):
         self.moc_plugin_patcher.start()
         self.addCleanup(self.moc_plugin_patcher.stop)
 
-        project_repo = mock.MagicMock()
-        secret_repo = mock.MagicMock()
-        secret_repo.create_from.return_value = None
-        container_repo = mock.MagicMock()
-        container_repo.create_from.return_value = None
-        container_secret_repo = mock.MagicMock()
-        container_secret_repo.create_from.return_value = None
-        project_secret_repo = mock.MagicMock()
-        project_secret_repo.create_from.return_value = None
-        secret_meta_repo = mock.MagicMock()
-        secret_meta_repo.create_from.return_value = None
+        self.setup_project_repository_mock()
 
-        self.repos = repo.Repositories(
-            container_repo=container_repo,
-            container_secret_repo=container_secret_repo,
-            project_repo=project_repo,
-            secret_repo=secret_repo,
-            project_secret_repo=project_secret_repo,
-            secret_meta_repo=secret_meta_repo
-        )
+        self.secret_repo = mock.MagicMock()
+        self.secret_repo.create_from.return_value = None
+        self.setup_secret_repository_mock(self.secret_repo)
+
+        self.container_repo = mock.MagicMock()
+        self.container_repo.create_from.return_value = None
+        self.setup_container_repository_mock(self.container_repo)
+
+        self.container_secret_repo = mock.MagicMock()
+        self.container_secret_repo.create_from.return_value = None
+        self.setup_container_secret_repository_mock(
+            self.container_secret_repo)
+
+        self.project_secret_repo = mock.MagicMock()
+        self.project_secret_repo.create_from.return_value = None
+        self.setup_project_secret_repository_mock(self.project_secret_repo)
+
+        self.secret_meta_repo = mock.MagicMock()
+        self.secret_meta_repo.create_from.return_value = None
+        self.setup_secret_meta_repository_mock(self.secret_meta_repo)
 
     def tearDown(self):
         super(WhenTestingPluginResource, self).tearDown()
@@ -91,8 +94,7 @@ class WhenTestingPluginResource(testtools.TestCase):
             'base64',
             spec,
             None,
-            self.project_model,
-            self.repos)
+            self.project_model)
 
         dto = self.moc_plugin.store_secret.call_args_list[0][0][0]
         self.assertEqual("symmetric", dto.type)
@@ -107,15 +109,14 @@ class WhenTestingPluginResource(testtools.TestCase):
             self.spec,
             self.content_type,
             self.project_model,
-            self.repos
         )
 
         self.assertEqual("rsa", secret_container.type)
         self.assertEqual(self.moc_plugin.
                          generate_asymmetric_key.call_count, 1)
-        self.assertEqual(self.repos.container_repo.
+        self.assertEqual(self.container_repo.
                          create_from.call_count, 1)
-        self.assertEqual(self.repos.container_secret_repo.
+        self.assertEqual(self.container_secret_repo.
                          create_from.call_count, 3)
 
     def test_generate_asymmetric_without_passphrase(self):
@@ -126,47 +127,42 @@ class WhenTestingPluginResource(testtools.TestCase):
             self.spec,
             self.content_type,
             self.project_model,
-            self.repos
         )
 
         self.assertEqual("rsa", secret_container.type)
         self.assertEqual(self.moc_plugin.generate_asymmetric_key.
                          call_count, 1)
-        self.assertEqual(self.repos.container_repo.create_from.
+        self.assertEqual(self.container_repo.create_from.
                          call_count, 1)
-        self.assertEqual(self.repos.container_secret_repo.create_from.
+        self.assertEqual(self.container_secret_repo.create_from.
                          call_count, 2)
 
     def test_delete_secret_w_metadata(self):
         project_id = "some_id"
         secret_model = mock.MagicMock()
         secret_meta = mock.MagicMock()
-        self.repos.secret_meta_repo.get_metadata_for_secret.return_value = (
+        self.secret_meta_repo.get_metadata_for_secret.return_value = (
             secret_meta)
         self.plugin_resource.delete_secret(secret_model=secret_model,
-                                           project_id=project_id,
-                                           repos=self.repos)
+                                           project_id=project_id)
 
-        meta_repo = self.repos.secret_meta_repo
-        meta_repo.get_metadata_for_secret.assert_called_once_with(
+        self.secret_meta_repo.get_metadata_for_secret.assert_called_once_with(
             secret_model.id)
 
         self.moc_plugin.delete_secret.assert_called_once_with(secret_meta)
 
-        self.repos.secret_repo.delete_entity_by_id.assert_called_once_with(
+        self.secret_repo.delete_entity_by_id.assert_called_once_with(
             entity_id=secret_model.id, external_project_id=project_id)
 
     def test_delete_secret_w_out_metadata(self):
         project_id = "some_id"
         secret_model = mock.MagicMock()
-        self.repos.secret_meta_repo.get_metadata_for_secret.return_value = None
+        self.secret_meta_repo.get_metadata_for_secret.return_value = None
         self.plugin_resource.delete_secret(secret_model=secret_model,
-                                           project_id=project_id,
-                                           repos=self.repos)
+                                           project_id=project_id)
 
-        meta_repo = self.repos.secret_meta_repo
-        meta_repo.get_metadata_for_secret.assert_called_once_with(
+        self.secret_meta_repo.get_metadata_for_secret.assert_called_once_with(
             secret_model.id)
 
-        self.repos.secret_repo.delete_entity_by_id.assert_called_once_with(
+        self.secret_repo.delete_entity_by_id.assert_called_once_with(
             entity_id=secret_model.id, external_project_id=project_id)

@@ -193,23 +193,6 @@ class WhenTestingBaseRepository(database_utils.RepositoryTestCase):
             exception_result.message)
 
 
-class WhenTestingRepositoriesClass(utils.BaseTestCase):
-
-    def setUp(self):
-        super(WhenTestingRepositoriesClass, self).setUp()
-
-    def test_should_raise_not_implemented_mixed_none_repos(self):
-        exception_result = self.assertRaises(
-            NotImplementedError,
-            repositories.Repositories,
-            repo1=None,
-            repo2='Not-None')
-
-        self.assertEqual(
-            "No support for mixing None and non-None repository instances.",
-            exception_result.message)
-
-
 class WhenTestingWrapDbError(utils.BaseTestCase):
 
     def setUp(self):

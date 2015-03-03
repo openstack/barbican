@@ -148,27 +148,13 @@ class BeginTypeOrder(BaseTask):
     def get_name(self):
         return u._('Process TypeOrder')
 
-    def __init__(self, project_repo=None, order_repo=None,
-                 secret_repo=None, project_secret_repo=None, datum_repo=None,
-                 kek_repo=None, container_repo=None,
-                 container_secret_repo=None, secret_meta_repo=None,
-                 order_plugin_meta_repo=None, order_barbican_meta_repo=None):
-            LOG.debug('Creating BeginTypeOrder task processor')
-            self.repos = rep.Repositories(
-                project_repo=project_repo,
-                project_secret_repo=project_secret_repo,
-                secret_repo=secret_repo,
-                datum_repo=datum_repo,
-                kek_repo=kek_repo,
-                secret_meta_repo=secret_meta_repo,
-                order_repo=order_repo,
-                order_plugin_meta_repo=order_plugin_meta_repo,
-                order_barbican_meta_repo=order_barbican_meta_repo,
-                container_repo=container_repo,
-                container_secret_repo=container_secret_repo)
+    def __init__(self):
+        LOG.debug('Creating BeginTypeOrder task processor')
+        self.order_repo = rep.get_order_repository()
+        self.project_repo = rep.get_project_repository()
 
     def retrieve_entity(self, order_id, external_project_id):
-        return self.repos.order_repo.get(
+        return self.order_repo.get(
             entity_id=order_id,
             external_project_id=external_project_id)
 
@@ -180,7 +166,7 @@ class BeginTypeOrder(BaseTask):
         order.status = models.States.ERROR
         order.error_status_code = status
         order.error_reason = message
-        self.repos.order_repo.save(order)
+        self.order_repo.save(order)
 
     def handle_success(self, order, *args, **kwargs):
         if models.OrderType.CERTIFICATE != order.type:
@@ -191,7 +177,7 @@ class BeginTypeOrder(BaseTask):
             #    order.status = models.States.ACTIVE
             order.status = models.States.ACTIVE
 
-        self.repos.order_repo.save(order)
+        self.order_repo.save(order)
 
     def handle_order(self, order):
         """Handle secret creation using meta info.
@@ -210,7 +196,7 @@ class BeginTypeOrder(BaseTask):
         meta_info = order_info.get('meta')
 
         # Retrieve the project.
-        project = self.repos.project_repo.get(order.project_id)
+        project = self.project_repo.get(order.project_id)
 
         if order_type == models.OrderType.KEY:
             # Create Secret
@@ -218,8 +204,7 @@ class BeginTypeOrder(BaseTask):
                 meta_info,
                 meta_info.get('payload_content_type',
                               'application/octet-stream'),
-                project,
-                self.repos
+                project
             )
             order.secret_id = new_secret.id
             LOG.debug("...done creating keys order's secret.")
@@ -229,13 +214,12 @@ class BeginTypeOrder(BaseTask):
                 meta_info,
                 meta_info.get('payload_content_type',
                               'application/octet-stream'),
-                project, self.repos)
+                project)
             order.container_id = new_container.id
             LOG.debug("...done creating asymmetric order's secret.")
         elif order_type == models.OrderType.CERTIFICATE:
             # Request a certificate
-            new_container = cert.issue_certificate_request(
-                order, project, self.repos)
+            new_container = cert.issue_certificate_request(order, project)
             if new_container:
                 order.container_id = new_container.id
             LOG.debug("...done requesting a certificate.")
@@ -250,25 +234,12 @@ class UpdateOrder(BaseTask):
     def get_name(self):
         return u._('Update Order')
 
-    def __init__(self, project_repo=None, order_repo=None,
-                 secret_repo=None, project_secret_repo=None, datum_repo=None,
-                 kek_repo=None, container_repo=None,
-                 container_secret_repo=None, secret_meta_repo=None):
-            LOG.debug('Creating UpdateOrder task processor')
-            self.repos = rep.Repositories(
-                project_repo=project_repo,
-                order_repo=order_repo,
-                secret_repo=secret_repo,
-                project_secret_repo=project_secret_repo,
-                datum_repo=datum_repo,
-                kek_repo=kek_repo,
-                container_repo=container_repo,
-                container_secret_repo=container_secret_repo,
-                secret_meta_repo=secret_meta_repo
-            )
+    def __init__(self):
+        LOG.debug('Creating UpdateOrder task processor')
+        self.order_repo = rep.get_order_repository()
 
     def retrieve_entity(self, order_id, external_project_id, updated_meta):
-        return self.repos.order_repo.get(
+        return self.order_repo.get(
             entity_id=order_id,
             external_project_id=external_project_id)
 
@@ -281,12 +252,12 @@ class UpdateOrder(BaseTask):
         order.error_status_code = status
         order.error_reason = message
         LOG.exception(u._LE("An error has occurred updating the order."))
-        self.repos.order_repo.save(order)
+        self.order_repo.save(order)
 
     def handle_success(self, order, *args, **kwargs):
         # TODO(chellygel): Handle sub-status on a pending order.
         order.status = models.States.ACTIVE
-        self.repos.order_repo.save(order)
+        self.order_repo.save(order)
 
     def handle_order(self, order, updated_meta):
         """Handle Order Update
@@ -299,7 +270,7 @@ class UpdateOrder(BaseTask):
 
         if order_type == models.OrderType.CERTIFICATE:
             # Update a certificate request
-            cert.modify_certificate_request(order, updated_meta, self.repos)
+            cert.modify_certificate_request(order, updated_meta)
             LOG.debug("...done updating a certificate order.")
         else:
             raise NotImplementedError(

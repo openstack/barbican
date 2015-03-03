@@ -35,11 +35,7 @@ class KeystoneEventConsumer(resources.BaseTask):
     def get_name(self):
         return u._('Project cleanup via Keystone notifications')
 
-    def __init__(self, project_repo=None, order_repo=None,
-                 secret_repo=None, project_secret_repo=None,
-                 datum_repo=None, kek_repo=None, secret_meta_repo=None,
-                 container_repo=None, repositories=None,
-                 db_start=rep.start, db_commit=rep.commit,
+    def __init__(self, db_start=rep.start, db_commit=rep.commit,
                  db_rollback=rep.rollback, db_clear=rep.clear):
         LOG.debug('Creating KeystoneEventConsumer task processor')
 
@@ -47,18 +43,6 @@ class KeystoneEventConsumer(resources.BaseTask):
         self.db_commit = db_commit
         self.db_rollback = db_rollback
         self.db_clear = db_clear
-
-        self.repos = repositories
-        if not repositories:
-            self.repos = rep.Repositories(
-                project_repo=project_repo,
-                order_repo=order_repo,
-                secret_repo=secret_repo,
-                project_secret_repo=project_secret_repo,
-                datum_repo=datum_repo,
-                kek_repo=kek_repo,
-                secret_meta_repo=secret_meta_repo,
-                container_repo=container_repo)
 
     def process(self, *args, **kwargs):
         try:
@@ -77,7 +61,7 @@ class KeystoneEventConsumer(resources.BaseTask):
 
     def retrieve_entity(self, project_id, resource_type=None,
                         operation_type=None):
-        project_repo = self.repos.project_repo
+        project_repo = rep.get_project_repository()
         return project_repo.find_by_external_project_id(
             external_project_id=project_id,
             suppress_exception=True)
@@ -141,7 +125,7 @@ class KeystoneEventConsumer(resources.BaseTask):
         # keystone project id which requires additional project table join.
         project_id = project.id
 
-        rep.delete_all_project_resources(project_id, self.repos)
+        rep.delete_all_project_resources(project_id)
 
         # reached here means there is no error so log the successful
         # cleanup log entry.
