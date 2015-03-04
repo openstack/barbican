@@ -54,7 +54,16 @@ class TestCase(oslotest.BaseTestCase):
         else:
             credentials = BarbicanV2Credentials()
 
-        auth_provider = tempest_manager.get_auth_provider(credentials)
+        # tempest changed how you access the auth_provider so we will
+        # try the "new way" first (a top-level function in the tempest_manager)
+        # If that fails we will fall back on the "old way" calling a method
+        # within tempest_manager.Manager.
+        try:
+            auth_provider = tempest_manager.get_auth_provider(credentials)
+        except AttributeError:
+            mgr = tempest_manager.Manager(credentials=credentials)
+            auth_provider = mgr.get_auth_provider(credentials)
+
         self.client = client.BarbicanClient(auth_provider)
 
     def tearDown(self):
