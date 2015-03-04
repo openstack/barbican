@@ -121,7 +121,7 @@ class ContextMiddleware(BaseContextMiddleware):
 
         kwargs = {
             'user': req.headers.get('X-User-Id'),
-            'project': req.headers.get('X-Tenant-Id'),
+            'project': req.headers.get('X-Project-Id'),
             'roles': roles,
             'is_admin': CONF.admin_role.strip().lower() in roles,
             'auth_tok': req.headers.get('X-Auth-Token', deprecated_token),
