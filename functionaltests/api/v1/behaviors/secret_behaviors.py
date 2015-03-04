@@ -13,8 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-
 from functionaltests.api.v1.behaviors import base_behaviors
 from functionaltests.api.v1.models import secret_models
 
@@ -52,6 +50,20 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
 
     def get_secret(self, secret_ref, payload_content_type,
                    payload_content_encoding=None):
+
+        headers = {'Accept': payload_content_type,
+                   'Accept-Encoding': payload_content_encoding}
+
+        return self.client.get(secret_ref + '/payload',
+                               extra_headers=headers)
+
+    def get_secret_based_on_content_type(self, secret_ref,
+                                         payload_content_type,
+                                         payload_content_encoding=None):
+        """Retrieves a secret's payload based on the content type
+
+        NOTE: This way will be deprecated in subsequent versions of the API.
+        """
 
         headers = {'Accept': payload_content_type,
                    'Accept-Encoding': payload_content_encoding}

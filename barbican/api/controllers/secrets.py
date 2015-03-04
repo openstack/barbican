@@ -134,6 +134,17 @@ class SecretController(object):
 
         return transport_key_model.transport_key
 
+    @pecan.expose()
+    @allow_all_content_types
+    @controllers.handle_exceptions(u._('Secret payload retrieval'))
+    @controllers.enforce_rbac('secret:decrypt')
+    def payload(self, external_project_id, **kwargs):
+        if pecan.request.method != 'GET':
+            pecan.abort(405)
+        return self._on_get_secret_payload(self.secret,
+                                           external_project_id,
+                                           **kwargs)
+
     @index.when(method='PUT')
     @allow_all_content_types
     @controllers.handle_exceptions(u._('Secret update'))
