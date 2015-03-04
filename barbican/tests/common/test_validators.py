@@ -339,16 +339,18 @@ class WhenTestingContainerValidator(utils.BaseTestCase):
     def setUp(self):
         super(WhenTestingContainerValidator, self).setUp()
 
+        validators.CONF.set_override("host_href", "http://localhost:9311")
+
         self.name = 'name'
         self.type = 'generic'
         self.secret_refs = [
             {
                 'name': 'testname',
-                'secret_ref': '1231'
+                'secret_ref': 'http://localhost:9311/1231'
             },
             {
                 'name': 'testname2',
-                'secret_ref': '1232'
+                'secret_ref': 'http://localhost:9311/1232'
             }
         ]
 
@@ -529,26 +531,51 @@ class WhenTestingContainerValidator(utils.BaseTestCase):
 
         self.assertEqual('secret_refs', exception.invalid_property)
 
+    def test_ensure_unconfigured_secret_ref_hostname_cannot_be_passed_in(self):
+        # Attempt to add some bogus secret refs.
+        secret_refs = [
+            {
+                'name': 'super-secret-beer-ingredient',
+                'secret_ref': 'http://kegsarecool.com:9311/1234/secrets/57890'
+            },
+            {
+                'name': 'iShouldNotBeAbleToExist',
+                'secret_ref': 'http://invalid.fqdn:9311/v1/secrets/FAD23'
+            }
+        ]
+        container_req = {
+            'name': 'test-container',
+            'type': 'generic',
+            'secret_refs': secret_refs
+        }
+        self.assertRaises(
+            excep.UnsupportedField,
+            self.validator.validate,
+            container_req,
+        )
+
 
 class WhenTestingRSAContainerValidator(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingRSAContainerValidator, self).setUp()
 
+        validators.CONF.set_override("host_href", "http://localhost:9311")
+
         self.name = 'name'
         self.type = 'rsa'
         self.secret_refs = [
             {
                 'name': 'public_key',
-                'secret_ref': '1231'
+                'secret_ref': 'http://localhost:9311/1231'
             },
             {
                 'name': 'private_key',
-                'secret_ref': '1232'
+                'secret_ref': 'http://localhost:9311/1232'
             },
             {
                 'name': 'private_key_passphrase',
-                'secret_ref': '1233'
+                'secret_ref': 'http://localhost:9311/1233'
             }
         ]
 
@@ -606,10 +633,10 @@ class WhenTestingRSAContainerValidator(utils.BaseTestCase):
 
         self.assertEqual('secret_refs', exception.invalid_property)
 
-    def test_should_raise_more_than_3_secret_refs(self):
+    def test_should_raise_more_than_3_secret_refs_for_rsa_type(self):
         new_secret_ref = {
             'name': 'new secret ref',
-            'secret_ref': '234234'
+            'secret_ref': 'http://localhost:9311/234234'
         }
         self.container_req['secret_refs'].append(new_secret_ref)
 
@@ -627,11 +654,11 @@ class WhenTestingRSAContainerValidator(utils.BaseTestCase):
         secret_refs = [
             {
                 'name': 'private_key',
-                'secret_ref': '123'
+                'secret_ref': 'http://localhost:9311/123'
             },
             {
                 'name': 'private_key_passphrase',
-                'secret_ref': '123'
+                'secret_ref': 'http://localhost:9311/123'
             }
         ]
         container_req = {'name': name, 'type': type,
@@ -648,24 +675,26 @@ class WhenTestingCertificateContainerValidator(utils.BaseTestCase):
     def setUp(self):
         super(WhenTestingCertificateContainerValidator, self).setUp()
 
+        validators.CONF.set_override("host_href", "http://localhost:9311")
+
         self.name = 'name'
         self.type = 'certificate'
         self.secret_refs = [
             {
                 'name': 'certificate',
-                'secret_ref': 'S4dfsdrf'
+                'secret_ref': 'http://localhost:9311/S4dfsdrf'
             },
             {
                 'name': 'private_key',
-                'secret_ref': '1231'
+                'secret_ref': 'http://localhost:9311/1231'
             },
             {
                 'name': 'private_key_passphrase',
-                'secret_ref': '1232'
+                'secret_ref': 'http://localhost:9311/1232'
             },
             {
                 'name': 'intermediates',
-                'secret_ref': '1233'
+                'secret_ref': 'http://localhost:9311/1233'
             }
         ]
 
@@ -678,10 +707,10 @@ class WhenTestingCertificateContainerValidator(utils.BaseTestCase):
     def test_should_validate_all_fields(self):
         self.validator.validate(self.container_req)
 
-    def test_should_raise_more_than_4_secret_refs(self):
+    def test_should_raise_more_than_4_secret_refs_for_cert_type(self):
         new_secret_ref = {
             'name': 'new secret ref',
-            'secret_ref': '234234'
+            'secret_ref': 'http://localhost:9311/234234'
         }
         self.container_req['secret_refs'].append(new_secret_ref)
 

@@ -620,6 +620,20 @@ class ContainerValidator(ValidatorBase):
             u._("Duplicate secret ids are not allowed"),
             "secret_refs")
 
+        # Ensure that our secret refs are valid relative to our config, no
+        # spoofing allowed!
+        configured_host_href = CONF.host_href
+        for secret_ref in secret_refs:
+            if configured_host_href not in secret_ref.get('secret_ref'):
+                raise exception.UnsupportedField(
+                    field='secret_ref',
+                    schema=schema_name,
+                    reason=u._(
+                        "Secret_ref does not match the configured hostname, "
+                        "please try again"
+                    )
+                )
+
         if container_type == 'rsa':
             self._validate_rsa(secret_refs_names, schema_name)
         elif container_type == 'certificate':
