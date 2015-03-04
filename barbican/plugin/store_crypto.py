@@ -81,7 +81,9 @@ class StoreCryptoAdapterPlugin(object):
         kek_datum_model, kek_meta_dto = _find_or_create_kek_objects(
             encrypting_plugin, context.project_model)
 
-        encrypt_dto = crypto.EncryptDTO(secret_dto.secret)
+        # Secrets are base64 encoded before being passed to the secret stores.
+        normalized_secret = base64.b64decode(secret_dto.secret)
+        encrypt_dto = crypto.EncryptDTO(normalized_secret)
 
         # Enhance the context with content_type, This is needed to build
         # datum_model to store

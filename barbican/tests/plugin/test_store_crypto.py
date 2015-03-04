@@ -35,7 +35,8 @@ class TestSecretStoreBase(testtools.TestCase,
 
         self.project_id = '12345'
         self.content_type = 'application/octet-stream'
-        self.secret = 'secret'
+        self.content_encoding = 'base64'
+        self.secret = base64.b64encode('secret')
         self.decrypted_secret = 'decrypted_secret'
         self.cypher_text = 'cypher_text'
         self.kek_meta_extended = 'kek-meta-extended'
@@ -156,7 +157,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         args, kwargs = encrypt_mock.call_args
         test_encrypt_dto, test_kek_meta_dto, test_project_id = tuple(args)
         self.assertIsInstance(test_encrypt_dto, crypto.EncryptDTO)
-        self.assertEqual(self.secret, test_encrypt_dto.unencrypted)
+        self.assertEqual('secret', test_encrypt_dto.unencrypted)
         self.assertEqual(self.kek_meta_dto, test_kek_meta_dto)
         self.assertEqual(self.project_id, test_project_id)
 
