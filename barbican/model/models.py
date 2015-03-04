@@ -220,9 +220,10 @@ class ProjectSecret(BASE, SoftDeleteMixIn, ModelBase):
     role = sa.Column(sa.String(255))
     secret = orm.relationship("Secret", backref="project_assocs")
     project_id = sa.Column(
-        sa.String(36), sa.ForeignKey('projects.id'), primary_key=True)
+        sa.String(36), sa.ForeignKey('projects.id'), index=True,
+        nullable=False)
     secret_id = sa.Column(
-        sa.String(36), sa.ForeignKey('secrets.id'), primary_key=True)
+        sa.String(36), sa.ForeignKey('secrets.id'), index=True, nullable=False)
 
     __table_args__ = (sa.UniqueConstraint(
         'project_id', 'secret_id', name='_project_secret_uc'),)
@@ -235,9 +236,10 @@ class ContainerSecret(BASE, SoftDeleteMixIn, ModelBase):
 
     name = sa.Column(sa.String(255), nullable=True)
     container_id = sa.Column(
-        sa.String(36), sa.ForeignKey('containers.id'), primary_key=True)
+        sa.String(36), sa.ForeignKey('containers.id'), index=True,
+        nullable=False)
     secret_id = sa.Column(
-        sa.String(36), sa.ForeignKey('secrets.id'), primary_key=True)
+        sa.String(36), sa.ForeignKey('secrets.id'), index=True, nullable=False)
 
     # Eager load this relationship via 'lazy=False'.
     container = orm.relationship(
@@ -359,7 +361,7 @@ class SecretStoreMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     key = sa.Column(sa.String(255), nullable=False)
     value = sa.Column(sa.String(255), nullable=False)
     secret_id = sa.Column(
-        sa.String(36), sa.ForeignKey('secrets.id'), nullable=False)
+        sa.String(36), sa.ForeignKey('secrets.id'), index=True, nullable=False)
 
     def __init__(self, key, value):
         super(SecretStoreMetadatum, self).__init__()
@@ -390,9 +392,10 @@ class EncryptedDatum(BASE, SoftDeleteMixIn, ModelBase):
 
     content_type = sa.Column(sa.String(255))
     secret_id = sa.Column(
-        sa.String(36), sa.ForeignKey('secrets.id'), nullable=False)
+        sa.String(36), sa.ForeignKey('secrets.id'), index=True, nullable=False)
     kek_id = sa.Column(
-        sa.String(36), sa.ForeignKey('kek_data.id'), nullable=False)
+        sa.String(36), sa.ForeignKey('kek_data.id'), index=True,
+        nullable=False)
 
     # TODO(jwood) Why LargeBinary on Postgres (BYTEA) not work correctly?
     cypher_text = sa.Column(sa.Text)
@@ -449,7 +452,8 @@ class KEKDatum(BASE, SoftDeleteMixIn, ModelBase):
     kek_label = sa.Column(sa.String(255))
 
     project_id = sa.Column(
-        sa.String(36), sa.ForeignKey('projects.id'), nullable=False)
+        sa.String(36), sa.ForeignKey('projects.id'), index=True,
+        nullable=False)
 
     active = sa.Column(sa.Boolean, nullable=False, default=True)
     bind_completed = sa.Column(sa.Boolean, nullable=False, default=False)
@@ -476,7 +480,7 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
 
     type = sa.Column(sa.String(255), nullable=False, default='key')
     project_id = sa.Column(sa.String(36), sa.ForeignKey('projects.id'),
-                           nullable=False)
+                           index=True, nullable=False)
 
     error_status_code = sa.Column(sa.String(16))
     error_reason = sa.Column(sa.String(255))
@@ -484,9 +488,9 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
     meta = sa.Column(JsonBlob(), nullable=True)
 
     secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
-                          nullable=True)
+                          index=True, nullable=True)
     container_id = sa.Column(sa.String(36), sa.ForeignKey('containers.id'),
-                             nullable=True)
+                             index=True, nullable=True)
     sub_status = sa.Column(sa.String(36), nullable=True)
     sub_status_message = sa.Column(sa.String(255), nullable=True)
 
@@ -552,7 +556,7 @@ class OrderPluginMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     __tablename__ = "order_plugin_metadata"
 
     order_id = sa.Column(sa.String(36), sa.ForeignKey('orders.id'),
-                         nullable=False)
+                         index=True, nullable=False)
     key = sa.Column(sa.String(255), nullable=False)
     value = sa.Column(sa.String(255), nullable=False)
 
@@ -588,7 +592,7 @@ class OrderBarbicanMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     __tablename__ = "order_barbican_metadata"
 
     order_id = sa.Column(sa.String(36), sa.ForeignKey('orders.id'),
-                         nullable=False)
+                         index=True, nullable=False)
     key = sa.Column(sa.String(255), nullable=False)
     value = sa.Column(sa.String(255), nullable=False)
 
@@ -622,7 +626,7 @@ class OrderRetryTask(BASE, SoftDeleteMixIn):
         sa.String(36), primary_key=True, default=utils.generate_uuid,
     )
     order_id = sa.Column(
-        sa.String(36), sa.ForeignKey("orders.id"), nullable=False,
+        sa.String(36), sa.ForeignKey("orders.id"), index=True, nullable=False,
     )
     retry_task = sa.Column(sa.Text, nullable=False)
     retry_at = sa.Column(sa.DateTime, default=None, nullable=False)
@@ -649,7 +653,7 @@ class Container(BASE, SoftDeleteMixIn, ModelBase):
     type = sa.Column(sa.Enum('generic', 'rsa', 'dsa', 'certificate',
                              name='container_types'))
     project_id = sa.Column(sa.String(36), sa.ForeignKey('projects.id'),
-                           nullable=False)
+                           index=True, nullable=False)
     consumers = sa.orm.relationship("ContainerConsumerMetadatum")
 
     def __init__(self, parsed_request=None):
@@ -713,7 +717,7 @@ class ContainerConsumerMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     __tablename__ = 'container_consumer_metadata'
 
     container_id = sa.Column(sa.String(36), sa.ForeignKey('containers.id'),
-                             nullable=False)
+                             index=True, nullable=False)
     name = sa.Column(sa.String(36))
     URL = sa.Column(sa.String(500))
     data_hash = sa.Column(sa.CHAR(64))
@@ -856,11 +860,11 @@ class CertificateAuthorityMetadatum(BASE, ModelBase):
 
     __tablename__ = "certificate_authority_metadata"
 
-    key = sa.Column(sa.String(255), primary_key=True)
+    key = sa.Column(sa.String(255), index=True, nullable=False)
     value = sa.Column(sa.String(255), nullable=False)
     ca_id = sa.Column(
         sa.String(36), sa.ForeignKey('certificate_authorities.id'),
-        primary_key=True)
+        index=True, nullable=False)
 
     __table_args__ = (sa.UniqueConstraint(
         'ca_id', 'key', name='_certificate_authority_metadatum_uc'),)
@@ -898,11 +902,13 @@ class ProjectCertificateAuthority(BASE, SoftDeleteMixIn, ModelBase):
 
     project_id = sa.Column(sa.String(36),
                            sa.ForeignKey('projects.id'),
-                           primary_key=True)
+                           index=True,
+                           nullable=False)
 
     ca_id = sa.Column(sa.String(36),
                       sa.ForeignKey('certificate_authorities.id'),
-                      primary_key=True)
+                      index=True,
+                      nullable=False)
 
     ca = orm.relationship("CertificateAuthority", backref="project_cas")
 
@@ -943,11 +949,13 @@ class PreferredCertificateAuthority(BASE, SoftDeleteMixIn, ModelBase):
 
     project_id = sa.Column(sa.String(36),
                            sa.ForeignKey('projects.id'),
-                           primary_key=True,
-                           unique=True)
+                           index=True,
+                           unique=True,
+                           nullable=False)
 
     ca_id = sa.Column(sa.String(36),
-                      sa.ForeignKey('certificate_authorities.id'))
+                      sa.ForeignKey('certificate_authorities.id'), index=True,
+                      nullable=False)
 
     project = orm.relationship('Project',
                                backref=orm.backref('preferred_ca'),
