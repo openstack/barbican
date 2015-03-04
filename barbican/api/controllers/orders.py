@@ -195,6 +195,8 @@ class OrdersController(object):
         new_order.project_id = project.id
 
         self.order_repo.create_from(new_order)
+        # Force commit to avoid async issues with the workers
+        repo.commit()
 
         self.queue.process_type_order(order_id=new_order.id,
                                       project_id=external_project_id)
