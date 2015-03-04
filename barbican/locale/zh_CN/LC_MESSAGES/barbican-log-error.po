@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-21 06:07+0000\n"
-"PO-Revision-Date: 2015-02-20 06:42+0000\n"
+"POT-Creation-Date: 2015-03-04 06:07+0000\n"
+"PO-Revision-Date: 2015-03-03 20:29+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
@@ -32,11 +32,11 @@ msgstr "JSON请求加载时出错"
 msgid "Webob error seen"
 msgstr "Webob出错"
 
-#: barbican/api/controllers/consumers.py:175
+#: barbican/api/controllers/consumers.py:169
 msgid "Problem deleting consumer"
 msgstr "删除用户时出错"
 
-#: barbican/api/controllers/containers.py:89
+#: barbican/api/controllers/containers.py:84
 msgid "Problem deleting container"
 msgstr "删除容器时出错"
 
@@ -44,24 +44,20 @@ msgstr "删除容器时出错"
 msgid "Problem deleting transport_key"
 msgstr "删除传输密匙时出错"
 
-#: barbican/model/repositories.py:354
-msgid "No support for mixing None and non-None repository instances."
-msgstr "不支持混合None和non-None库的实例"
-
-#: barbican/model/repositories.py:409
+#: barbican/model/repositories.py:350
 #, python-format
 msgid "Not found for %s"
 msgstr "没有找到%s"
 
-#: barbican/model/repositories.py:444
+#: barbican/model/repositories.py:385
 msgid "Problem saving entity for create"
 msgstr "为创建保存实体时出错"
 
-#: barbican/model/repositories.py:577
+#: barbican/model/repositories.py:518
 msgid "Problem finding project related entity to delete"
 msgstr "寻找项目相关的实体来删除时出错"
 
-#: barbican/model/repositories.py:610
+#: barbican/model/repositories.py:551
 #, python-format
 msgid "Problem getting Project %s"
 msgstr "获取项目%s时出错"
@@ -105,7 +101,7 @@ msgstr ""
 msgid "Error opening or writing to client"
 msgstr "打开或者写入客户端错误"
 
-#: barbican/tasks/keystone_consumer.py:91
+#: barbican/tasks/keystone_consumer.py:75
 #, python-format
 msgid ""
 "Error processing Keystone event, project_id=%(project_id)s, event resource="
@@ -135,6 +131,6 @@ msgstr "为任务 '%s' 处理错误时出错，原始异常增加。"
 msgid "Could not process after successfully executing task '%s'."
 msgstr "在成功执行任务 '%s' 后无法处理。"
 
-#: barbican/tasks/resources.py:282
+#: barbican/tasks/resources.py:254
 msgid "An error has occurred updating the order."
 msgstr "更新命令出错。"
