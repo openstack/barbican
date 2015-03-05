@@ -16,6 +16,7 @@ Getting Started
 .. toctree::
    :maxdepth: 1
 
+   api
    contribute/getting_involved
    contribute/dependencies
    contribute/database_migrations
