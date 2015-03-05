@@ -38,6 +38,7 @@ from barbican.common import validators
 import barbican.context
 from barbican.model import models
 from barbican.openstack.common import timeutils
+from barbican.tests import database_utils
 from barbican.tests import utils
 
 
@@ -1512,6 +1513,9 @@ class WhenCreatingOrdersUsingOrdersResource(FunctionalTest):
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
+        database_utils.setup_in_memory_db()
+        self.addCleanup(database_utils.in_memory_cleanup)
+
     @property
     def root(self):
         self._init()
@@ -1663,6 +1667,9 @@ class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
+        database_utils.setup_in_memory_db()
+        self.addCleanup(database_utils.in_memory_cleanup)
+
     @property
     def root(self):
         self._init()
@@ -1778,6 +1785,9 @@ class WhenGettingOrDeletingOrderUsingOrderResource(FunctionalTest):
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
+        database_utils.setup_in_memory_db()
+        self.addCleanup(database_utils.in_memory_cleanup)
+
     @property
     def root(self):
         self._init()
@@ -1848,6 +1858,9 @@ class WhenPuttingOrderWithMetadataUsingOrderResource(FunctionalTest):
         ).setUp()
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
+
+        database_utils.setup_in_memory_db()
+        self.addCleanup(database_utils.in_memory_cleanup)
 
     @property
     def root(self):
@@ -1954,6 +1967,9 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
+        database_utils.setup_in_memory_db()
+        self.addCleanup(database_utils.in_memory_cleanup)
+
     @property
     def root(self):
         self._init()
@@ -2030,6 +2046,9 @@ class WhenPerformingUnallowedOperationsOnOrders(FunctionalTest):
         ).setUp()
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
+
+        database_utils.setup_in_memory_db()
+        self.addCleanup(database_utils.in_memory_cleanup)
 
     @property
     def root(self):
