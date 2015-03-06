@@ -19,6 +19,10 @@ class WhenTestingManager(utils.BaseTestCase):
 
     def test_can_override_enabled_plugins(self):
         """Verify can override default configuration for plugin selection."""
+        # Reset manager singleton otherwise we have test execution
+        # order problems
+        manager._PLUGIN_MANAGER = None
+
         manager.CONF.set_override(
             "enabled_crypto_plugins",
             ['foo_plugin'],
