@@ -18,13 +18,58 @@ from os import path
 import time
 import types
 import urlparse
+import uuid
 
 import mock
 import oslotest.base as oslotest
 import six
+import webtest
+
+from barbican.api import app
+import barbican.context
+from barbican.tests import database_utils
+
+
+class BarbicanAPIBaseTestCase(oslotest.BaseTestCase):
+    """Base TestCase for all tests needing to interact with a Barbican app."""
+    root_controller = None
+
+    def _build_context(self, project_id):
+        context = barbican.context.RequestContext(
+            roles=None,
+            user=None,
+            project=project_id,
+            is_admin=True
+        )
+        context.policy_enforcer = None
+        return context
+
+    def setUp(self):
+        super(BarbicanAPIBaseTestCase, self).setUp()
+        # Make sure we have a test db and session to work with
+        database_utils.setup_in_memory_db()
+
+        # Generic project id to perform actions under
+        self.project_id = str(uuid.uuid4())
+
+        # Build the test app
+        wsgi_app = app.build_wsgi_app(
+            controller=self.root_controller,
+            transactional=True
+        )
+
+        self.app = webtest.TestApp(wsgi_app)
+        self.app.extra_environ = {
+            'barbican.context': self._build_context(self.project_id)
+        }
+
+    def tearDown(self):
+        database_utils.in_memory_cleanup()
+        super(BarbicanAPIBaseTestCase, self).tearDown()
 
 
 class BaseTestCase(oslotest.BaseTestCase):
+    """DEPRECATED - Will remove in future refactoring."""
     def setUp(self):
         super(BaseTestCase, self).setUp()
         self.order_id = 'order1234'

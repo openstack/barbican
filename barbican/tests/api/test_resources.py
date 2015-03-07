@@ -37,7 +37,6 @@ from barbican.common import hrefs
 from barbican.common import validators
 import barbican.context
 from barbican.model import models
-from barbican.openstack.common import timeutils
 from barbican.tests import database_utils
 from barbican.tests import utils
 
@@ -173,19 +172,6 @@ class FunctionalTest(utils.BaseTestCase, utils.MockModelRepositoryMixin,
         return controllers.versions.VersionController()
 
 
-class WhenTestingVersionResource(FunctionalTest):
-
-    def test_should_return_200_on_get(self):
-        resp = self.app.get('/')
-        self.assertEqual(200, resp.status_int)
-
-    def test_should_return_version_json(self):
-        resp = self.app.get('/')
-
-        self.assertTrue('v1' in resp.json)
-        self.assertEqual('current', resp.json['v1'])
-
-
 class BaseSecretsResource(FunctionalTest):
     """Base test class for the Secrets resource."""
 
@@ -285,217 +271,7 @@ class BaseSecretsResource(FunctionalTest):
         self.setup_transport_key_repository_mock()
 
 
-class BaseSecretTestSuite(BaseSecretsResource):
-
-    @mock.patch('barbican.plugin.resources.store_secret')
-    def test_should_add_new_secret_with_expiration(self, mock_store_secret):
-        mock_store_secret.return_value = self.secret, None
-
-        expiration = '2114-02-28 12:14:44.180394-05:00'
-        self.secret_req.update({'expiration': expiration})
-
-        resp = self.app.post_json(
-            '/secrets/',
-            self.secret_req
-        )
-
-        self.assertEqual(resp.status_int, 201)
-
-        # Validation replaces the time.
-        expected = dict(self.secret_req)
-        expiration_raw = expected['expiration']
-        expiration_raw = expiration_raw[:-6].replace('12', '17', 1)
-        expiration_tz = timeutils.parse_isotime(expiration_raw.strip())
-        expected['expiration'] = timeutils.normalize_time(expiration_tz)
-        mock_store_secret.assert_called_once_with(
-            self.secret_req.get('payload'),
-            self.secret_req.get('payload_content_type',
-                                'application/octet-stream'),
-            self.secret_req.get('payload_content_encoding'),
-            expected,
-            None,
-            self.project,
-            transport_key_needed=False,
-            transport_key_id=None
-        )
-
-    @mock.patch('barbican.plugin.resources.store_secret')
-    def test_should_add_new_secret_one_step(self, mock_store_secret,
-                                            check_project_id=True):
-        """Test the one-step secret creation.
-
-        :param check_project_id: True if the retrieved Project id needs to be
-                                 verified, False to skip this check (necessary
-                                 for new-Project flows).
-        """
-        mock_store_secret.return_value = self.secret, None
-
-        resp = self.app.post_json(
-            '/secrets/',
-            self.secret_req
-        )
-        self.assertEqual(resp.status_int, 201)
-
-        expected = dict(self.secret_req)
-        expected['expiration'] = None
-        mock_store_secret.assert_called_once_with(
-            self.secret_req.get('payload'),
-            self.secret_req.get('payload_content_type',
-                                'application/octet-stream'),
-            self.secret_req.get('payload_content_encoding'),
-            expected,
-            None,
-            self.project if check_project_id else mock.ANY,
-            transport_key_needed=False,
-            transport_key_id=None
-        )
-
-    @mock.patch('barbican.plugin.resources.store_secret')
-    def test_should_add_new_secret_one_step_with_tkey_id(
-            self, mock_store_secret, check_project_id=True):
-        """Test the one-step secret creation with transport_key_id set
-
-        :param check_project_id: True if the retrieved Project id needs to be
-                                 verified, False to skip this check (necessary
-                                 for new-Project flows).
-        """
-        mock_store_secret.return_value = self.secret, None
-        self.secret_req['transport_key_id'] = self.transport_key_id
-
-        resp = self.app.post_json('/secrets/', self.secret_req)
-        self.assertEqual(resp.status_int, 201)
-
-        expected = dict(self.secret_req)
-        expected['expiration'] = None
-        mock_store_secret.assert_called_once_with(
-            self.secret_req.get('payload'),
-            self.secret_req.get('payload_content_type',
-                                'application/octet-stream'),
-            self.secret_req.get('payload_content_encoding'),
-            expected,
-            None,
-            self.project if check_project_id else mock.ANY,
-            transport_key_needed=False,
-            transport_key_id=self.transport_key_id
-        )
-
-    def test_should_add_new_secret_if_project_does_not_exist(self):
-        self.project_repo.get.return_value = None
-        self.project_repo.find_by_external_project_id.return_value = None
-
-        self.test_should_add_new_secret_one_step(check_project_id=False)
-
-        args, kwargs = self.project_repo.create_from.call_args
-        project = args[0]
-        self.assertIsInstance(project, models.Project)
-        self.assertEqual(self.external_project_id, project.external_id)
-
-    def test_should_add_new_secret_metadata_without_payload(self):
-        self.app.post_json(
-            '/secrets/',
-            {'name': self.name}
-        )
-
-        args, kwargs = self.secret_repo.create_from.call_args
-        secret = args[0]
-        self.assertIsInstance(secret, models.Secret)
-        self.assertEqual(secret.name, self.name)
-
-        args, kwargs = self.project_secret_repo.create_from.call_args
-        project_secret = args[0]
-        self.assertIsInstance(project_secret, models.ProjectSecret)
-        self.assertEqual(project_secret.project_id, self.project_entity_id)
-        self.assertEqual(project_secret.secret_id, secret.id)
-
-        self.assertFalse(self.datum_repo.create_from.called)
-
-    @mock.patch('barbican.plugin.resources.store_secret')
-    def test_should_add_new_secret_metadata_with_tkey(self, mock_store_secret):
-
-        mock_store_secret.return_value = self.secret, self.transport_key
-        resp = self.app.post_json(
-            '/secrets/',
-            {'name': self.name,
-             'transport_key_needed': 'true'}
-        )
-
-        self.assertTrue('secret_ref' in resp.json)
-        self.assertTrue('transport_key_ref' in resp.json)
-        self.assertEqual(resp.json['transport_key_ref'], self.tkey_url)
-
-    @mock.patch('barbican.plugin.resources.store_secret')
-    def test_should_add_secret_payload_almost_too_large(self,
-                                                        mock_store_secret):
-        mock_store_secret.return_value = self.secret, None
-
-        if validators.DEFAULT_MAX_SECRET_BYTES % 4:
-            raise ValueError('Tests currently require max secrets divides by '
-                             '4 evenly, due to base64 encoding.')
-
-        big_text = ''.join(['A' for x
-                            in moves.range(
-                                validators.DEFAULT_MAX_SECRET_BYTES - 8)
-                            ])
-
-        self.secret_req = {'name': self.name,
-                           'algorithm': self.secret_algorithm,
-                           'bit_length': self.secret_bit_length,
-                           'mode': self.secret_mode,
-                           'payload': big_text,
-                           'payload_content_type': self.payload_content_type}
-
-        payload_encoding = self.payload_content_encoding
-        if payload_encoding:
-            self.secret_req['payload_content_encoding'] = payload_encoding
-        self.app.post_json('/secrets/', self.secret_req)
-
-    def test_should_raise_due_to_payload_too_large(self):
-        big_text = ''.join(['A' for x
-                            in moves.range(
-                                validators.DEFAULT_MAX_SECRET_BYTES + 10)
-                            ])
-
-        self.secret_req = {'name': self.name,
-                           'algorithm': self.secret_algorithm,
-                           'bit_length': self.secret_bit_length,
-                           'mode': self.secret_mode,
-                           'payload': big_text,
-                           'payload_content_type': self.payload_content_type}
-
-        payload_encoding = self.payload_content_encoding
-        if payload_encoding:
-            self.secret_req['payload_content_encoding'] = payload_encoding
-
-        resp = self.app.post_json(
-            '/secrets/',
-            self.secret_req,
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 413)
-
-    def test_should_raise_due_to_empty_payload(self):
-        self.secret_req = {'name': self.name,
-                           'algorithm': self.secret_algorithm,
-                           'bit_length': self.secret_bit_length,
-                           'mode': self.secret_mode,
-                           'payload': ''}
-
-        payload_type = self.payload_content_type
-        payload_encoding = self.payload_content_encoding
-        if payload_type:
-            self.secret_req['payload_content_type'] = payload_type
-        if payload_encoding:
-            self.secret_req['payload_content_encoding'] = payload_encoding
-
-        resp = self.app.post_json(
-            '/secrets/',
-            self.secret_req,
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 400)
-
-
-class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretTestSuite):
+class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretsResource):
 
     def test_should_raise_due_to_unsupported_payload_content_type(self):
         self.secret_req = {'name': self.name,
@@ -513,7 +289,7 @@ class WhenCreatingPlainTextSecretsUsingSecretsResource(BaseSecretTestSuite):
         self.assertEqual(resp.status_int, 400)
 
 
-class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretTestSuite):
+class WhenCreatingBinarySecretsUsingSecretsResource(BaseSecretsResource):
 
     @property
     def root(self):

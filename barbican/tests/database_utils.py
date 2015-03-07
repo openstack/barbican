@@ -17,9 +17,9 @@ Supports database/repositories oriented unit testing.
 Warning: Do not merge this content with the utils.py module, as doing so will
 break the DevStack functional test discovery process.
 """
+import oslotest.base as oslotest
 
 from barbican.model import repositories
-from barbican.tests import utils
 
 
 def setup_in_memory_db():
@@ -40,7 +40,7 @@ def in_memory_cleanup():
     repositories.clear()
 
 
-class RepositoryTestCase(utils.BaseTestCase):
+class RepositoryTestCase(oslotest.BaseTestCase):
     """Base test case class for in-memory database unit tests.
 
     Database/Repository oriented unit tests should *not* modify the global
