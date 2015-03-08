@@ -195,13 +195,17 @@ class OrdersController(object):
         new_order.project_id = project.id
 
         self.order_repo.create_from(new_order)
+
+        # Grab our id before commit due to obj expiration from sqlalchemy
+        order_id = new_order.id
+
         # Force commit to avoid async issues with the workers
         repo.commit()
 
-        self.queue.process_type_order(order_id=new_order.id,
+        self.queue.process_type_order(order_id=order_id,
                                       project_id=external_project_id)
 
-        url = hrefs.convert_order_to_href(new_order.id)
+        url = hrefs.convert_order_to_href(order_id)
 
         pecan.response.status = 202
         pecan.response.headers['Location'] = url
