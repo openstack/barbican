@@ -27,6 +27,7 @@ secrets_repo = repositories.get_secret_repository()
 tkey_repo = repositories.get_transport_key_repository()
 
 
+@utils.parameterized_test_case
 class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
 
     def test_can_create_new_secret_one_step(self):
@@ -156,12 +157,118 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
             transport_key_needed=False
         )
 
+    def test_new_secret_w_unsupported_content_type_should_fail(self):
+        resp, _ = create_secret(
+            self.app,
+            payload=b'something_here',
+            content_type='bogus_content_type',
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 400)
+
+    @utils.parameterized_dataset({
+        'no_encoding': [None, 'application/octet-stream'],
+        'bad_encoding': ['purple', 'application/octet-stream'],
+        'no_content_type': ['base64', None]
+    })
+    def test_new_secret_fails_with_binary_payload_and(self, encoding=None,
+                                                      content_type=None):
+        resp, _ = create_secret(
+            self.app,
+            payload=b'lOtfqHaUUpe6NqLABgquYQ==',
+            content_type=content_type,
+            content_encoding=encoding,
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 400)
+
+    def test_new_secret_fails_with_bad_payload(self):
+        resp, _ = create_secret(
+            self.app,
+            payload='AAAAAAAAA',
+            content_type='application/octet-stream',
+            content_encoding='base64',
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 400)
+
+
+class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
+
+    def test_list_secrets_by_name(self):
+        # Creating a secret to be retrieved later
+        create_resp, _ = create_secret(
+            self.app,
+            name='secret mission'
+        )
+
+        self.assertEqual(create_resp.status_int, 201)
+
+        params = {'name': 'secret mission'}
+
+        get_resp = self.app.get('/secrets/', params)
+
+        self.assertEqual(get_resp.status_int, 200)
+        secret_list = get_resp.json.get('secrets')
+        self.assertEqual(secret_list[0].get('name'), 'secret mission')
+
+    def test_list_secrets(self):
+        # Creating a secret to be retrieved later
+        create_resp, _ = create_secret(
+            self.app,
+            name='James Bond'
+        )
+
+        self.assertEqual(create_resp.status_int, 201)
+
+        get_resp = self.app.get('/secrets/')
+
+        self.assertEqual(get_resp.status_int, 200)
+        self.assertIn('total', get_resp.json)
+        secret_list = get_resp.json.get('secrets')
+        self.assertGreater(len(secret_list), 0)
+
+    def test_pagination_attributes(self):
+        # Create a list of secrets greater than default limit (10)
+        for _ in range(11):
+            create_resp, _ = create_secret(self.app, name='Sterling Archer')
+            self.assertEqual(create_resp.status_int, 201)
+        params = {'limit': '2', 'offset': '2'}
+
+        get_resp = self.app.get('/secrets/', params)
+
+        self.assertEqual(get_resp.status_int, 200)
+        self.assertIn('previous', get_resp.json)
+        self.assertIn('next', get_resp.json)
+
+        previous_ref = get_resp.json.get('previous')
+        next_ref = get_resp.json.get('next')
+
+        self.assertIn('offset=0', previous_ref)
+        self.assertIn('offset=4', next_ref)
+
+    def test_empty_list_of_secrets(self):
+        params = {'name': 'Austin Powers'}
+
+        get_resp = self.app.get('/secrets/', params)
+        self.assertEqual(get_resp.status_int, 200)
+
+        secret_list = get_resp.json.get('secrets')
+        self.assertEqual(len(secret_list), 0)
+
+        # These should never exist in this scenario
+        self.assertNotIn('previous', get_resp.json)
+        self.assertNotIn('next', get_resp.json)
+
 
 # ----------------------- Helper Functions ---------------------------
 def create_secret(app, name=None, algorithm=None, bit_length=None, mode=None,
                   expiration=None, payload=None, content_type=None,
                   content_encoding=None, transport_key_id=None,
                   transport_key_needed=None, expect_errors=False):
+    # TODO(chellygel): Once test resources is split out, refactor this
+    # and similar functions into a generalized helper module and reduce
+    # duplication.
     request = {
         'name': name,
         'algorithm': algorithm,
