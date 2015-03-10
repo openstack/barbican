@@ -13,62 +13,31 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import logging
 import os
 
 import requests
-from requests import auth
 from six.moves import urllib
-from tempest.common.utils import misc as misc_utils
-from tempest import config
-from tempest.openstack.common import log as logging
+from tempest_lib.common.utils import misc as misc_utils
+
+from functionaltests.common import auth
+from functionaltests.common import config
 
 LOG = logging.getLogger(__name__)
 
-CONF = config.CONF
-
-# Use local tempest conf if one is available.
-# This usually means we're running tests outside of devstack.
-if os.path.exists('./etc/dev_tempest.conf'):
-    CONF.set_config_path('./etc/dev_tempest.conf')
-
-
-class BarbicanClientAuth(auth.AuthBase):
-    """Implementation of Requests Auth for Barbican http calls."""
-
-    def __init__(self, auth_provider):
-        credentials = auth_provider.fill_credentials()
-
-        self.username = credentials.username
-        self.password = credentials.password
-
-        if 'v3' in CONF.identity.auth_version:
-            self.project_name = credentials.project_name
-            self.project_id = credentials.project_id
-        else:
-            self.tenant_name = credentials.tenant_name
-            self.project_id = credentials.tenant_id
-
-        try:
-            self.token = auth_provider.get_token()
-        except ValueError:
-            # hockeynut - some auth providers will allow the v3 expiration
-            # date format which includes milliseconds.  This change will retry
-            # the call to get the auth token with the milliseconds included in
-            # the date format string.
-            auth_provider.EXPIRY_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
-            self.token = auth_provider.get_token()
-
-    def __call__(self, r):
-        r.headers['X-Project-Id'] = self.project_id
-        r.headers['X-Auth-Token'] = self.token
-        return r
+CONF = config.get_config()
 
 
 class BarbicanClient(object):
 
-    def __init__(self, auth_provider, api_version='v1'):
-        self._auth = BarbicanClientAuth(auth_provider)
-        self._auth_provider = auth_provider
+    def __init__(self, api_version='v1'):
+        self._auth = auth.FunctionalTestAuth(
+            endpoint=CONF.identity.uri,
+            version=CONF.identity.version,
+            username=CONF.identity.username,
+            password=CONF.identity.password,
+            project_name=CONF.identity.project_name
+        )
         self.timeout = 10
         self.api_version = api_version
         self.default_headers = {
@@ -157,15 +126,23 @@ class BarbicanClient(object):
     def get_base_url(self, include_version=True):
         if CONF.keymanager.override_url:
             return self._get_base_url_from_config(include_version)
-        filters = {
-            'service': 'key-manager',
-            'region': self.region,
-        }
 
-        base_url = self._auth_provider.base_url(filters)
+        endpoint = self._auth.service_catalog.get_endpoints(
+            service_type='key-manager',
+            service_name='barbican',
+            region_name='RegionOne',
+            endpoint_type='public'
+        )
 
-        if include_version:
+        base_url = endpoint['key-manager'][0].get('url')
+
+        # Make sure we handle the edge cases around Keystone providing
+        # endpoints with or without versions
+        if include_version and self.api_version not in base_url:
             base_url = urllib.parse.urljoin(base_url, self.api_version)
+        elif not include_version and self.api_version in base_url:
+            base_url, _ = os.path.split(base_url)
+
         return self._get_url_w_trailing_slash(base_url)
 
     def get_list_of_models(self, item_list, model_type):
@@ -194,7 +171,7 @@ class BarbicanClient(object):
                 use_auth=True, response_model_type=None, request_model=None,
                 params=None):
         """Prepares and sends http request through Requests."""
-        if 'http' not in url:
+        if url and 'http' not in url:
             url = urllib.parse.urljoin(self.get_base_url(), url)
 
         # Duplicate Base headers and add extras (if needed)

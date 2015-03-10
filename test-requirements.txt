@@ -11,6 +11,8 @@ testrepository>=0.0.18
 testtools>=0.9.36,!=1.2.0
 fixtures>=0.3.14
 requests>=2.2.0,!=2.4.0
+python-keystoneclient>=1.1.0
+tempest-lib>=0.3.0
 
 # Documentation build requirements
 sphinx>=1.1.2,!=1.2.0,!=1.3b1,<1.3

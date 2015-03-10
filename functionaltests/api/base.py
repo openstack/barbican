@@ -13,22 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import os
+import logging
 
 import oslotest.base as oslotest
-from tempest import auth
-from tempest import config
-from tempest import manager as tempest_manager
-from tempest.openstack.common import log as logging
 
 from functionaltests.common import client
+from functionaltests.common import config
 
-CONF = config.CONF
-
-# Use local tempest conf if one is available.
-# This usually means we're running tests outside of devstack
-if os.path.exists('./etc/dev_tempest.conf'):
-    CONF.set_config_path('./etc/dev_tempest.conf')
+CONF = config.get_config()
 
 
 class TestCase(oslotest.BaseTestCase):
@@ -48,23 +40,7 @@ class TestCase(oslotest.BaseTestCase):
         self.LOG.info('Starting: %s', self._testMethodName)
         super(TestCase, self).setUp()
 
-        # determine which type of credentials to use
-        if 'v3' in CONF.identity.auth_version:
-            credentials = BarbicanV3Credentials()
-        else:
-            credentials = BarbicanV2Credentials()
-
-        # tempest changed how you access the auth_provider so we will
-        # try the "new way" first (a top-level function in the tempest_manager)
-        # If that fails we will fall back on the "old way" calling a method
-        # within tempest_manager.Manager.
-        try:
-            auth_provider = tempest_manager.get_auth_provider(credentials)
-        except AttributeError:
-            mgr = tempest_manager.Manager(credentials=credentials)
-            auth_provider = mgr.get_auth_provider(credentials)
-
-        self.client = client.BarbicanClient(auth_provider)
+        self.client = client.BarbicanClient()
 
     def tearDown(self):
         super(TestCase, self).tearDown()
@@ -77,31 +53,3 @@ class TestCase(oslotest.BaseTestCase):
             case_name=cls.__name__
         )
         return name
-
-
-class BarbicanV2Credentials(auth.KeystoneV2Credentials):
-
-    def __init__(self):
-        credentials = dict(
-            username=CONF.identity.admin_username,
-            password=CONF.identity.admin_password
-        )
-        # Some identity v2 implementations don't need the tenant name, so
-        # only include it here if the user provided it in the config file.
-        if CONF.identity.admin_tenant_name:
-            credentials['tenant_name'] = CONF.identity.admin_tenant_name
-
-        super(BarbicanV2Credentials, self).__init__(**credentials)
-
-
-class BarbicanV3Credentials(auth.KeystoneV3Credentials):
-
-    def __init__(self):
-        credentials = dict(
-            username=CONF.identity.admin_username,
-            password=CONF.identity.admin_password,
-            project_name=CONF.identity.admin_tenant_name,
-            domain_name=CONF.identity.admin_domain_name,
-        )
-
-        super(BarbicanV3Credentials, self).__init__(**credentials)
