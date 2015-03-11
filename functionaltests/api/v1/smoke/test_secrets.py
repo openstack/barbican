@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import binascii
+import copy
 
 from testtools import testcase
 
@@ -21,7 +22,7 @@ from functionaltests.api import base
 from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import secret_models
 
-secret_create_defaults_data = {
+default_secret_create_data = {
     "name": "AES key",
     "expiration": "2018-02-28T19:14:44.180394",
     "algorithm": "aes",
@@ -36,7 +37,7 @@ secret_create_defaults_data = {
 # but will be omitted in the final request to the server.
 #
 # secret_create_nones_data is effectively an empty json request to the server.
-secret_create_nones_data = {
+default_secret_create_all_none_data = {
     "name": None,
     "expiration": None,
     "algorithm": None,
@@ -47,7 +48,7 @@ secret_create_nones_data = {
     "payload_content_encoding": None,
 }
 
-secret_create_emptystrings_data = {
+default_secret_create_emptystrings_data = {
     "name": '',
     "expiration": '',
     "algorithm": '',
@@ -58,7 +59,7 @@ secret_create_emptystrings_data = {
     "payload_content_encoding": '',
 }
 
-secret_create_two_phase_data = {
+default_secret_create_two_phase_data = {
     "name": "AES key",
     "expiration": "2018-02-28T19:14:44.180394",
     "algorithm": "aes",
@@ -74,16 +75,26 @@ class SecretsTestCase(base.TestCase):
         super(SecretsTestCase, self).setUp()
         self.behaviors = secret_behaviors.SecretBehaviors(self.client)
 
+        # make a local mutable copies of the default data to prevent
+        # possible data contamination if (when?) the data contains
+        # any nested dicts.
+        self.create_default_data = copy.deepcopy(default_secret_create_data)
+        self.create_all_none_data = copy.deepcopy(
+            default_secret_create_all_none_data)
+        self.create_emptystrings = copy.deepcopy(
+            default_secret_create_emptystrings_data)
+        self.create_two_phase_data = copy.deepcopy(
+            default_secret_create_two_phase_data)
+
     def tearDown(self):
         self.behaviors.delete_all_created_secrets()
         super(SecretsTestCase, self).tearDown()
 
     @testcase.attr('positive')
-    def test_secret_create_defaults_no_expiration(self):
+    def test_secret_create_no_expiration(self):
         """Covers creating a secret without an expiration."""
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {"expiration": None}
-        test_model.override_values(**overrides)
+        test_model = secret_models.SecretModel(**self.create_default_data)
+        test_model.expiration = None
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 201)
@@ -101,11 +112,10 @@ class SecretsTestCase(base.TestCase):
         'null': [None]
     })
     @testcase.attr('positive')
-    def test_secret_get_defaults_metadata_w_valid_name(self, name):
+    def test_secret_get_metadata_w_valid_name(self, name):
         """Covers getting and checking a secret's metadata."""
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
-        overrides = {'name': name}
-        test_model.override_values(**overrides)
+        test_model = secret_models.SecretModel(**self.create_default_data)
+        test_model.name = name
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 201)
@@ -119,22 +129,22 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(resp.model.bit_length, test_model.bit_length)
 
     @testcase.attr('positive')
-    def test_secret_create_defaults(self):
+    def test_secret_create(self):
         """Covers single phase secret creation.
 
         Verify that a secret gets created with the correct http
         response code and a secret reference.
         """
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        test_model = secret_models.SecretModel(**self.create_default_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 201)
         self.assertIsNotNone(secret_ref)
 
     @testcase.attr('positive')
-    def test_secret_delete_defaults(self):
+    def test_secret_delete(self):
         """Covers deleting a secret."""
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        test_model = secret_models.SecretModel(**self.create_default_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 201)
@@ -145,7 +155,7 @@ class SecretsTestCase(base.TestCase):
     @testcase.attr('positive')
     def test_secret_delete_minimal_secret_w_no_metadata(self):
         """Covers deleting a secret with nones data."""
-        test_model = secret_models.SecretModel(**secret_create_nones_data)
+        test_model = secret_models.SecretModel(**self.create_all_none_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 201)
@@ -154,9 +164,9 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(del_resp.status_code, 204)
 
     @testcase.attr('positive')
-    def test_secret_get_defaults(self):
+    def test_secret_get(self):
         """Covers getting a secret's payload data."""
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        test_model = secret_models.SecretModel(**self.create_default_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 201)
@@ -168,11 +178,11 @@ class SecretsTestCase(base.TestCase):
                       binascii.b2a_base64(get_resp.content))
 
     @testcase.attr('positive')
-    def test_secret_update_defaults_two_phase(self):
+    def test_secret_update_two_phase(self):
         """Covers updating a secret's payload data."""
 
         # Create
-        test_model = secret_models.SecretModel(**secret_create_two_phase_data)
+        test_model = secret_models.SecretModel(**self.create_two_phase_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 201)
@@ -197,12 +207,12 @@ class SecretsTestCase(base.TestCase):
                       binascii.b2a_base64(sec_resp.content))
 
     @testcase.attr('positive')
-    def test_secrets_get_defaults_multiple_secrets(self):
+    def test_secrets_get_multiple_secrets(self):
         """Covers getting a list of secrets.
 
         Creates 11 secrets then returns a list of 2 secrets
         """
-        test_model = secret_models.SecretModel(**secret_create_defaults_data)
+        test_model = secret_models.SecretModel(**self.create_default_data)
         limit = 2
         offset = 0
 
