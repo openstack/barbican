@@ -15,6 +15,7 @@
 import copy
 import json
 import sys
+import time
 
 from testtools import testcase
 
@@ -67,6 +68,14 @@ class OrdersTestCase(base.TestCase):
     def tearDown(self):
         self.behaviors.delete_all_created_orders()
         super(OrdersTestCase, self).tearDown()
+
+    def wait_for_order(self, order_resp, order_ref):
+        # Make sure we have an active order
+        time_count = 1
+        while order_resp.model.status != "ACTIVE" and time_count <= 4:
+            time.sleep(1)
+            time_count += 1
+            order_resp = self.behaviors.get_order(order_ref)
 
     @testcase.attr('positive')
     def test_create_order_defaults_wout_name(self):
@@ -125,6 +134,10 @@ class OrdersTestCase(base.TestCase):
         self.assertTrue(order_resp.model.status == "ACTIVE" or
                         order_resp.model.status == "PENDING")
 
+        # PENDING orders may take a moment to be processed by the workers
+        # when running tests with queue enabled
+        self.wait_for_order(order_resp, order_ref)
+
         # verify the new secret's name matches the name in the secret ref
         # in the newly created order.
         secret_resp = self.secret_behaviors.get_secret_metadata(
@@ -146,6 +159,10 @@ class OrdersTestCase(base.TestCase):
         self.assertEqual(resp.status_code, 202)
 
         order_resp = self.behaviors.get_order(order_ref)
+
+        # PENDING orders may take a moment to be processed by the workers
+        # when running tests with queue enabled
+        self.wait_for_order(order_resp, order_ref)
 
         secret_ref = order_resp.model.secret_ref
 
