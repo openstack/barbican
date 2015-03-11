@@ -100,6 +100,7 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(resp.status_code, 201)
 
         resp = self.behaviors.get_secret_metadata(secret_ref)
+        self.assertEqual(resp.status_code, 200)
         content_types = resp.model.content_types
         self.assertIsNotNone(content_types)
         self.assertIn('default', content_types)
@@ -381,6 +382,7 @@ class SecretsTestCase(base.TestCase):
             secret_ref,
             payload_content_type=test_model.payload_content_type,
             payload_content_encoding=test_model.payload_content_encoding)
+        self.assertEqual(get_resp.status_code, 200)
         self.assertIn(test_model.payload,
                       binascii.b2a_base64(get_resp.content))
 
@@ -591,6 +593,7 @@ class SecretsTestCase(base.TestCase):
             secret_ref,
             payload_content_type=test_model.payload_content_type,
             payload_content_encoding=payload_content_encoding)
+        self.assertEqual(get_resp.status_code, 200)
 
         if payload_content_encoding == 'base64':
             self.assertIn(test_model.payload,
@@ -630,6 +633,7 @@ class SecretsTestCase(base.TestCase):
             secret_ref,
             payload_content_type=test_model.payload_content_type,
             payload_content_encoding=payload_content_encoding)
+        self.assertEqual(get_resp.status_code, 200)
 
         if payload_content_encoding == 'base64':
             self.assertIn(test_model.payload,

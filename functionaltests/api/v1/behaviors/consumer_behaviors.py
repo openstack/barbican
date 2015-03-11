@@ -36,7 +36,7 @@ class ConsumerBehaviors(base_behaviors.BaseBehaviors):
                                 extra_headers=extra_headers)
 
         returned_data = self.get_json(resp)
-        consumer_data = returned_data['consumers']
+        consumer_data = returned_data.get('consumers')
 
         return resp, consumer_data
 
