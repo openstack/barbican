@@ -159,6 +159,7 @@ class OrdersTestCase(base.TestCase):
         self.assertEqual(resp.status_code, 202)
 
         order_resp = self.behaviors.get_order(order_ref)
+        self.assertEqual(order_resp.status_code, 200)
 
         # PENDING orders may take a moment to be processed by the workers
         # when running tests with queue enabled
@@ -253,7 +254,6 @@ class OrdersTestCase(base.TestCase):
         test_model.meta['payload_content_encoding'] = "blarg!"
 
         resp, order_ref = self.behaviors.create_order(test_model)
-        print(resp.content)
 
         # Make sure we actually get a message back
         error_msg = json.loads(resp.content).get('title')

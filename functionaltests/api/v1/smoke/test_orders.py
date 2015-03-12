@@ -12,6 +12,8 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import time
+
 from testtools import testcase
 
 from barbican.tests import utils
@@ -59,6 +61,14 @@ class OrdersTestCase(base.TestCase):
     def tearDown(self):
         self.behaviors.delete_all_created_orders()
         super(OrdersTestCase, self).tearDown()
+
+    def wait_for_order(self, order_resp, order_ref):
+        # Make sure we have an active order
+        time_count = 1
+        while order_resp.model.status != "ACTIVE" and time_count <= 4:
+            time.sleep(1)
+            time_count += 1
+            order_resp = self.behaviors.get_order(order_ref)
 
     @testcase.attr('positive')
     def test_create_order_defaults(self):
@@ -135,6 +145,8 @@ class OrdersTestCase(base.TestCase):
         # create an order
         test_model = order_models.OrderModel(**order_create_defaults_data)
         create_resp, order_ref = self.behaviors.create_order(test_model)
+        self.assertEqual(create_resp.status_code, 202)
+        self.assertIsNotNone(order_ref)
 
         # delete the order
         delete_resp = self.behaviors.delete_order(order_ref)
