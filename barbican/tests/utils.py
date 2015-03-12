@@ -454,6 +454,11 @@ def generate_test_uuid(tail_value=0):
                                                             pad=12)
 
 
+def get_symmetric_key():
+    s = "MIICdgIBADANBgkqhkiG9w=="
+    return s
+
+
 def get_private_key():
     s = ("-----BEGIN PRIVATE KEY-----"
          "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAMxOUcg4eiBTZnIy"
