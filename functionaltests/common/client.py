@@ -41,7 +41,8 @@ class BarbicanClient(object):
         self.timeout = 10
         self.api_version = api_version
         self.default_headers = {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
         }
         self.region = CONF.identity.region
 

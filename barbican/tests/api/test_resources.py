@@ -32,6 +32,7 @@ from barbican.api import app
 from barbican.api import controllers
 from barbican.common import exception as excep
 from barbican.common import hrefs
+from barbican.common import utils as barbican_utils
 import barbican.context
 from barbican.model import models
 from barbican.tests import database_utils
@@ -126,7 +127,7 @@ class SecretAllowAllMimeTypesDecoratorTest(utils.BaseTestCase):
         self.mimetype_values = set(mimetypes.types_map.values())
 
     @pecan.expose(generic=True)
-    @controllers.secrets.allow_all_content_types
+    @barbican_utils.allow_all_content_types
     def _empty_pecan_exposed_function(self):
         pass
 
@@ -136,7 +137,7 @@ class SecretAllowAllMimeTypesDecoratorTest(utils.BaseTestCase):
     def test_mimetypes_successfully_added_to_mocked_function(self):
         empty_function = mock.MagicMock()
         empty_function._pecan = {}
-        func = controllers.secrets.allow_all_content_types(empty_function)
+        func = barbican_utils.allow_all_content_types(empty_function)
         cfg = func._pecan
         self.assertEqual(len(self.mimetype_values), len(cfg['content_types']))
 
@@ -146,7 +147,7 @@ class SecretAllowAllMimeTypesDecoratorTest(utils.BaseTestCase):
 
     def test_decorator_raises_if_function_not_pecan_exposed(self):
         self.assertRaises(AttributeError,
-                          controllers.secrets.allow_all_content_types,
+                          barbican_utils.allow_all_content_types,
                           self._empty_function)
 
 

@@ -104,6 +104,7 @@ class OrderController(object):
                                 updated_meta=body.get('meta'))
 
     @index.when(method='DELETE')
+    @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('Order deletion'))
     @controllers.enforce_rbac('order:delete')
     def on_delete(self, external_project_id, **kwargs):
