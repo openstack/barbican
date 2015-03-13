@@ -647,51 +647,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         )
 
 
-class WhenPerformingUnallowedOperationsOnSecrets(BaseSecretsResource):
-
-    def test_should_not_allow_put_on_secrets(self):
-        resp = self.app.put_json(
-            '/secrets/',
-            self.secret_req,
-            expect_errors=True
-        )
-
-        self.assertEqual(resp.status_int, 405)
-
-    def test_should_not_allow_delete_on_secrets(self):
-        resp = self.app.delete(
-            '/secrets/',
-            expect_errors=True
-        )
-
-        self.assertEqual(resp.status_int, 405)
-
-    def test_should_only_allow_get_for_secret_payload_uri(self):
-        resp = self.app.post(
-            '/secrets/{0}/payload/'.format(self.secret.id),
-            'plain text',
-            headers={'Accept': 'text/plain'},
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 405)
-
-        resp = self.app.put(
-            '/secrets/{0}/payload/'.format(self.secret.id),
-            'plain text',
-            headers={'Accept': 'text/plain'},
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 405)
-
-        resp = self.app.delete(
-            '/secrets/{0}/payload/'.format(self.secret.id),
-            'plain text',
-            headers={'Accept': 'text/plain'},
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 405)
-
-
 class WhenGettingOrdersListUsingOrdersResource(FunctionalTest):
     def setUp(self):
         super(
