@@ -134,7 +134,10 @@ class BarbicanClient(object):
             endpoint_type='public'
         )
 
-        base_url = endpoint['key-manager'][0].get('url')
+        if self._auth.version.lower() == 'v2':
+            base_url = endpoint['key-manager'][0].get('publicURL')
+        else:
+            base_url = endpoint['key-manager'][0].get('url')
 
         # Make sure we handle the edge cases around Keystone providing
         # endpoints with or without versions
