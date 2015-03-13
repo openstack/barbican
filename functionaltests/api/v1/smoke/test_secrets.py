@@ -89,6 +89,7 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(resp.status_code, 201)
 
         resp = self.behaviors.get_secret_metadata(secret_ref)
+        self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.model.status, "ACTIVE")
         self.assertGreater(resp.model.secret_ref, 0)
 
