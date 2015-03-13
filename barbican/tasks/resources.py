@@ -244,6 +244,8 @@ class BeginTypeOrder(BaseTask):
         order_info = order.to_dict_fields()
         order_type = order_info.get('type')
         meta_info = order_info.get('meta')
+        if order_info.get('creator_id'):
+            meta_info.setdefault('creator_id', order_info.get('creator_id'))
 
         # Retrieve the project.
         project = self.project_repo.get(order.project_id)

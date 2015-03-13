@@ -157,6 +157,10 @@ class ContainersController(object):
         project = res.get_or_create_project(external_project_id)
 
         data = api.load_body(pecan.request, validator=self.validator)
+        ctxt = controllers._get_barbican_context(pecan.request)
+        if ctxt:  # in authenticated pipleline case, always use auth token user
+            data['creator_id'] = ctxt.user
+
         LOG.debug('Start on_post...%s', data)
 
         new_container = models.Container(data)

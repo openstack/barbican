@@ -384,6 +384,7 @@ def _save_container(spec, project_model, private_secret_model,
     container_model.type = spec.get('algorithm', '').lower()
     container_model.status = models.States.ACTIVE
     container_model.project_id = project_model.id
+    container_model.creator_id = spec.get('creator_id')
 
     container_repo = repos.get_container_repository()
     container_repo.create_from(container_model)

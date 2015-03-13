@@ -198,6 +198,7 @@ class BaseSecretsResource(FunctionalTest):
         self.secret_req = {'name': self.name,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
+                           'creator_id': None,
                            'mode': self.secret_mode}
         if payload:
             self.secret_req['payload'] = payload
@@ -319,6 +320,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
                                     encrypted_datum=self.datum,
                                     content_type=self.datum.content_type)
 
+        self.secret.secret_acls = []
+        self.secret.project_assocs = [mock.MagicMock()]
+        secret_project = self.secret.project_assocs[0].projects
+        secret_project.external_id = self.external_project_id
+
         # Set up mocked project
         self.project = models.Project()
         self.project.id = self.project_id
@@ -334,6 +340,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         # Set up mocked secret repo
         self.secret_repo = mock.Mock()
         self.secret_repo.get = mock.Mock(return_value=self.secret)
+        self.secret_repo.get_secret_by_id = mock.Mock(return_value=self.secret)
         self.secret_repo.delete_entity_by_id = mock.Mock(return_value=None)
         self.setup_secret_repository_mock(self.secret_repo)
 
@@ -371,9 +378,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             '/secrets/{0}/'.format(self.secret.id),
             headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'}
         )
-        self.secret_repo.get.assert_called_once_with(
+        self.secret_repo.get_secret_by_id.assert_called_once_with(
             entity_id=self.secret.id,
-            external_project_id=self.external_project_id,
             suppress_exception=True)
         self.assertEqual(resp.status_int, 200)
 
@@ -395,9 +401,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             headers={'Accept': 'text/plain'}
         )
 
-        self.secret_repo.get.assert_called_once_with(
+        self.secret_repo.get_secret_by_id.assert_called_once_with(
             entity_id=self.secret.id,
-            external_project_id=self.external_project_id,
             suppress_exception=True)
         self.assertEqual(resp.status_int, 200)
 
@@ -423,9 +428,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             headers={'Accept': 'text/plain'}
         )
 
-        self.secret_repo.get.assert_called_once_with(
+        self.secret_repo.get_secret_by_id.assert_called_once_with(
             entity_id=self.secret.id,
-            external_project_id=self.external_project_id,
             suppress_exception=True)
         self.assertEqual(resp.status_int, 200)
 
@@ -453,9 +457,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             headers={'Accept': 'text/plain'}
         )
 
-        self.secret_repo.get.assert_called_once_with(
+        self.secret_repo.get_secret_by_id.assert_called_once_with(
             entity_id=self.secret.id,
-            external_project_id=self.external_project_id,
             suppress_exception=True)
         self.assertEqual(resp.status_int, 200)
 
@@ -482,9 +485,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             expect_errors=True
         )
 
-        self.secret_repo.get.assert_called_once_with(
+        self.secret_repo.get_secret_by_id.assert_called_once_with(
             entity_id=self.secret.id,
-            external_project_id=self.external_project_id,
             suppress_exception=True)
         self.assertEqual(resp.status_int, 400)
 
@@ -503,9 +505,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             expect_errors=True
         )
 
-        self.secret_repo.get.assert_called_once_with(
+        self.secret_repo.get_secret_by_id.assert_called_once_with(
             entity_id=self.secret.id,
-            external_project_id=self.external_project_id,
             suppress_exception=True)
         self.assertEqual(resp.status_int, 400)
 
@@ -523,9 +524,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'}
         )
 
-        self.secret_repo.get.assert_called_once_with(
+        self.secret_repo.get_secret_by_id.assert_called_once_with(
             entity_id=self.secret.id,
-            external_project_id=self.external_project_id,
             suppress_exception=True)
 
         self.assertEqual(resp.status_int, 200)
@@ -551,9 +551,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'}
         )
 
-        self.secret_repo.get.assert_called_once_with(
+        self.secret_repo.get_secret_by_id.assert_called_once_with(
             entity_id=self.secret.id,
-            external_project_id=self.external_project_id,
             suppress_exception=True)
 
         self.assertEqual(resp.status_int, 200)

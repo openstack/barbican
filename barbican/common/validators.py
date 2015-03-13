@@ -45,6 +45,8 @@ CONF.register_opts(common_opts)
 
 MYSQL_SMALL_INT_MAX = 32767
 
+ACL_OPERATIONS = ['read', 'write', 'delete', 'list']
+
 
 def secret_too_big(data):
     if isinstance(data, six.text_type):
@@ -586,6 +588,45 @@ class TypeOrderValidator(ValidatorBase):
                                                          "implemented for "
                                                          "'{0}' order type")
                                                     .format(order_type))
+
+
+class ACLValidator(ValidatorBase):
+    """Validate ACL(s)."""
+
+    def __init__(self):
+        self.name = 'ACL'
+
+        self.schema = {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "definitions": {
+                "acl_defintion": {
+                    "type": "object",
+                    "properties": {
+                        "users": {
+                            "type": "array",
+                            "items": [
+                                {"type": "string", "maxLength": 255}
+                            ]
+                        },
+                        "creator-only": {"type": "boolean"}
+                    },
+                }
+            },
+            "type": "object",
+            "properties": {
+                "read": {"$ref": "#/definitions/acl_defintion"},
+                "write": {"$ref": "#/definitions/acl_defintion"},
+                "delete": {"$ref": "#/definitions/acl_defintion"},
+                "list": {"$ref": "#/definitions/acl_defintion"}
+            },
+            "additionalProperties": False
+        }
+
+    def validate(self, json_data, parent_schema=None):
+        schema_name = self._full_name(parent_schema)
+
+        self._assert_schema_is_valid(json_data, schema_name)
+        return json_data
 
 
 class ContainerConsumerValidator(ValidatorBase):

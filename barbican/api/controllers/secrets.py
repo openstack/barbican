@@ -16,6 +16,7 @@ import pecan
 
 from barbican import api
 from barbican.api import controllers
+from barbican.api.controllers import acls
 from barbican.common import exception
 from barbican.common import hrefs
 from barbican.common import resources as res
@@ -59,6 +60,13 @@ class SecretController(object):
         LOG.debug('=== Creating SecretController ===')
         self.secret = secret
         self.transport_key_repo = repo.get_transport_key_repository()
+
+    @pecan.expose()
+    def _lookup(self, sub_resource, *remainder):
+        if sub_resource == 'acls':
+            return acls.SecretACLsController(self.secret), remainder
+        else:
+            pecan.abort(405)  # only 'acl' as sub-resource is supported
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
@@ -197,12 +205,9 @@ class SecretsController(object):
         # check, the execution only gets here if authentication of the user was
         # previously successful.
         controllers.assert_is_valid_uuid_from_uri(secret_id)
-        ctx = controllers._get_barbican_context(pecan.request)
 
-        secret = self.secret_repo.get(
-            entity_id=secret_id,
-            external_project_id=ctx.project,
-            suppress_exception=True)
+        secret = self.secret_repo.get_secret_by_id(
+            entity_id=secret_id, suppress_exception=True)
         if not secret:
             _secret_not_found()
 
@@ -275,6 +280,9 @@ class SecretsController(object):
 
         transport_key_needed = data.get('transport_key_needed',
                                         'false').lower() == 'true'
+        ctxt = controllers._get_barbican_context(pecan.request)
+        if ctxt:  # in authenticated pipleline case, always use auth token user
+            data['creator_id'] = ctxt.user
 
         new_secret, transport_key_model = plugin.store_secret(
             data.get('payload'),
