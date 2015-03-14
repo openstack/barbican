@@ -20,9 +20,9 @@ import testtools
 
 from barbican.common import exception as excep
 from barbican.common import validators
+from barbican.tests import certificate_utils as certs
 from barbican.tests import utils
 
-VALID_PKCS10 = "valid PKCS10"
 VALID_EXTENSIONS = "valid extensions"
 VALID_FULL_CMC = "valid CMC"
 
@@ -966,7 +966,7 @@ class WhenTestingSimpleCMCOrderValidator(utils.BaseTestCase):
         super(WhenTestingSimpleCMCOrderValidator, self).setUp()
         self.type = 'certificate'
         self.meta = {'request_type': 'simple-cmc',
-                     'request_data': VALID_PKCS10,
+                     'request_data': certs.create_good_csr(),
                      'requestor_name': 'Barbican User',
                      'requestor_email': 'barbican_user@example.com',
                      'requestor_phone': '555-1212'}
@@ -1000,9 +1000,22 @@ class WhenTestingSimpleCMCOrderValidator(utils.BaseTestCase):
                           self.validator.validate,
                           self.order_req)
 
-    @testtools.skip("Not yet implemented")
     def test_should_raise_with_bad_pkcs10_data(self):
-        self.meta['request_data'] = 'Bad PKCS#10 Data'
+        self.meta['request_data'] = certs.create_bad_csr()
+        self._set_order()
+        self.assertRaises(excep.InvalidPKCS10Data,
+                          self.validator.validate,
+                          self.order_req)
+
+    def test_should_raise_with_signed_wrong_key_pkcs10_data(self):
+        self.meta['request_data'] = certs.create_csr_signed_with_wrong_key()
+        self._set_order()
+        self.assertRaises(excep.InvalidPKCS10Data,
+                          self.validator.validate,
+                          self.order_req)
+
+    def test_should_raise_with_unsigned_pkcs10_data(self):
+        self.meta['request_data'] = certs.create_csr_that_has_not_been_signed()
         self._set_order()
         self.assertRaises(excep.InvalidPKCS10Data,
                           self.validator.validate,
