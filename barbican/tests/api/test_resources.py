@@ -18,7 +18,6 @@ This test module focuses on typical-flow business logic tests with the API
 resource classes. For RBAC tests of these classes, see the
 'resources_policy_test.py' module.
 """
-import base64
 import logging
 import mimetypes
 
@@ -33,7 +32,6 @@ from barbican.api import app
 from barbican.api import controllers
 from barbican.common import exception as excep
 from barbican.common import hrefs
-from barbican.common import validators
 import barbican.context
 from barbican.model import models
 from barbican.tests import database_utils
@@ -414,31 +412,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         )
 
     @mock.patch('barbican.plugin.resources.get_secret')
-    def test_should_get_secret_as_plain(self, mock_get_secret):
-        data = 'unencrypted_data'
-        mock_get_secret.return_value = data
-
-        resp = self.app.get(
-            '/secrets/{0}/payload/'.format(self.secret.id),
-            headers={'Accept': 'text/plain'}
-        )
-
-        self.secret_repo.get.assert_called_once_with(
-            entity_id=self.secret.id,
-            external_project_id=self.external_project_id,
-            suppress_exception=True)
-        self.assertEqual(resp.status_int, 200)
-
-        self.assertEqual(resp.body, data)
-        mock_get_secret.assert_called_once_with(
-            'text/plain',
-            self.secret,
-            self.project,
-            None,
-            None
-        )
-
-    @mock.patch('barbican.plugin.resources.get_secret')
     def test_should_get_secret_as_plain_with_twsk(self, mock_get_secret):
         data = 'encrypted_data'
         mock_get_secret.return_value = data
@@ -597,32 +570,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
                 self.transport_key_id)
         )
 
-    @mock.patch('barbican.plugin.resources.get_secret')
-    def test_should_get_secret_as_binary(self, mock_get_secret):
-        data = 'unencrypted_data'
-        mock_get_secret.return_value = data
-
-        self.datum.content_type = "application/octet-stream"
-        self.datum.cypher_text = 'aaaa'
-
-        resp = self.app.get(
-            '/secrets/{0}/payload/'.format(self.secret.id),
-            headers={
-                'Accept': 'application/octet-stream',
-                'Accept-Encoding': 'gzip'
-            }
-        )
-
-        self.assertEqual(resp.body, data)
-
-        mock_get_secret.assert_called_once_with(
-            'application/octet-stream',
-            self.secret,
-            self.project,
-            None,
-            None
-        )
-
     @testcase.attr('deprecated')
     @mock.patch('barbican.plugin.resources.get_secret')
     def test_should_get_secret_as_binary_based_on_content_type(
@@ -651,55 +598,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             None
         )
 
-    def test_should_throw_exception_for_get_when_secret_not_found(self):
-        self.secret_repo.get = mock.Mock(return_value=None)
-
-        resp = self.app.get(
-            '/secrets/{0}/'.format(self.secret.id),
-            headers={'Accept': 'application/json', 'Accept-Encoding': 'gzip'},
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 404)
-
-    def test_should_throw_exception_for_get_when_accept_not_supported(self):
-        resp = self.app.get(
-            '/secrets/{0}/payload/'.format(self.secret.id),
-            headers={'Accept': 'bogusaccept', 'Accept-Encoding': 'gzip'},
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 406)
-
-    @testcase.attr('deprecated')
-    def test_should_throw_exception_for_get_when_accept_not_supported_old_way(
-            self):
-        resp = self.app.get(
-            '/secrets/{0}/payload/'.format(self.secret.id),
-            headers={'Accept': 'bogusaccept', 'Accept-Encoding': 'gzip'},
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 406)
-
-    @mock.patch('barbican.plugin.resources.store_secret')
-    def test_should_put_secret_as_plain(self, mock_store_secret):
-        self.secret.encrypted_data = []
-
-        resp = self.app.put(
-            '/secrets/{0}/'.format(self.secret.id),
-            'plain text',
-            headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
-        )
-
-        self.assertEqual(resp.status_int, 204)
-
-        mock_store_secret.assert_called_once_with(
-            'plain text',
-            'text/plain', None,
-            self.secret.to_dict_fields(),
-            self.secret,
-            self.project,
-            transport_key_id=None
-        )
-
     @mock.patch('barbican.plugin.resources.store_secret')
     def test_should_put_secret_as_plain_with_tkey_id(self, mock_store_secret):
         self.secret.encrypted_data = []
@@ -720,31 +618,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             self.secret,
             self.project,
             transport_key_id=self.transport_key_id
-        )
-
-    @mock.patch('barbican.plugin.resources.store_secret')
-    def test_should_put_secret_as_binary(self, mock_store_secret):
-        self.secret.encrypted_data = []
-
-        resp = self.app.put(
-            '/secrets/{0}/'.format(self.secret.id),
-            'plain text',
-            headers={
-                'Accept': 'text/plain',
-                'Content-Type': 'application/octet-stream'
-            },
-        )
-
-        self.assertEqual(resp.status_int, 204)
-
-        mock_store_secret.assert_called_once_with(
-            'plain text',
-            'application/octet-stream',
-            None,
-            self.secret.to_dict_fields(),
-            self.secret,
-            self.project,
-            transport_key_id=None
         )
 
     @mock.patch('barbican.plugin.resources.store_secret')
@@ -772,169 +645,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             self.project,
             transport_key_id=self.transport_key_id
         )
-
-    @mock.patch('barbican.plugin.resources.store_secret')
-    def test_should_put_encoded_secret_as_binary(self, mock_store_secret):
-        self.secret.encrypted_data = []
-        payload = base64.b64encode('plain text')
-        resp = self.app.put(
-            '/secrets/{0}/'.format(self.secret.id),
-            payload,
-            headers={
-                'Accept': 'text/plain',
-                'Content-Type': 'application/octet-stream',
-                'Content-Encoding': 'base64'
-            },
-        )
-
-        self.assertEqual(resp.status_int, 204)
-
-        mock_store_secret.assert_called_once_with(
-            payload,
-            'application/octet-stream',
-            'base64', self.secret.to_dict_fields(),
-            self.secret,
-            self.project,
-            transport_key_id=None
-        )
-
-    def test_should_raise_to_put_secret_with_unsupported_encoding(self):
-        self.secret.encrypted_data = []
-        self.secret.secret_store_metadata.clear()
-        resp = self.app.put(
-            '/secrets/{0}/'.format(self.secret.id),
-            'plain text',
-            headers={
-                'Accept': 'text/plain',
-                'Content-Type': 'application/octet-stream',
-                'Content-Encoding': 'bogusencoding'
-            },
-            expect_errors=True
-        )
-
-        self.assertEqual(resp.status_int, 400)
-
-    def test_should_raise_put_secret_as_json(self):
-        self.secret.encrypted_data = []
-        resp = self.app.put(
-            '/secrets/{0}/'.format(self.secret.id),
-            'plain text',
-            headers={
-                'Accept': 'text/plain',
-                'Content-Type': 'application/json'
-            },
-            expect_errors=True
-        )
-
-        self.assertEqual(resp.status_int, 415)
-
-    def test_should_raise_put_secret_no_content_type(self):
-        self.secret.encrypted_data = []
-        resp = self.app.put(
-            '/secrets/{0}/'.format(self.secret.id),
-            'plain text',
-            headers={
-                'Accept': 'text/plain',
-                'Content-Type': ''
-            },
-            expect_errors=True
-        )
-
-        self.assertEqual(resp.status_int, 415)
-
-    def test_should_raise_put_secret_not_found(self):
-        # Force error, due to secret not found.
-        self.secret_repo.get.return_value = None
-
-        self.secret.encrypted_data = []
-        resp = self.app.put(
-            '/secrets/{0}/'.format(self.secret.id),
-            'plain text',
-            headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
-            expect_errors=True
-        )
-
-        self.assertEqual(resp.status_int, 404)
-
-    def test_should_raise_put_secret_no_payload(self):
-        self.secret.encrypted_data = []
-        resp = self.app.put(
-            '/secrets/{0}/'.format(self.secret.id),
-            # response.body = None
-            headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
-            expect_errors=True
-        )
-
-        self.assertEqual(resp.status_int, 400)
-
-    def test_should_raise_put_secret_with_existing_datum(self):
-        # Force error due to secret already having data
-        self.secret.encrypted_data = [self.datum]
-
-        resp = self.app.put(
-            '/secrets/{0}/'.format(self.secret.id),
-            'plain text',
-            headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 409)
-
-    def test_should_raise_due_to_empty_payload(self):
-        self.secret.encrypted_data = []
-
-        resp = self.app.put(
-            '/secrets/{0}/'.format(self.secret.id),
-            '',
-            headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 400)
-
-    def test_should_raise_due_to_plain_text_too_large(self):
-        big_text = ''.join(['A' for x in moves.range(
-            2 * validators.DEFAULT_MAX_SECRET_BYTES)])
-
-        self.secret.encrypted_data = []
-
-        resp = self.app.put(
-            '/secrets/{0}/'.format(self.secret.id),
-            big_text,
-            headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 413)
-
-    @mock.patch('barbican.plugin.resources.delete_secret')
-    def test_should_delete_secret(self, mock_delete_secret):
-        self.app.delete(
-            '/secrets/{0}/'.format(self.secret.id)
-        )
-
-        mock_delete_secret.assert_called_once_with(self.secret,
-                                                   self.external_project_id)
-
-    @mock.patch('barbican.plugin.resources.delete_secret')
-    def test_should_delete_with_accept_header_application_json(
-            self, mock_delete_secret):
-        """Covers Launchpad Bug: 1326481."""
-        self.app.delete(
-            '/secrets/{0}/'.format(self.secret.id),
-            headers={'Accept': 'application/json'}
-        )
-
-        mock_delete_secret.assert_called_once_with(self.secret,
-                                                   self.external_project_id)
-
-    def test_should_throw_exception_for_delete_when_secret_not_found(self):
-        self.secret_repo.get.return_value = None
-
-        resp = self.app.delete(
-            '/secrets/{0}/'.format(self.secret.id),
-            expect_errors=True
-        )
-        self.assertEqual(resp.status_int, 404)
-        # Error response should have json content type
-        self.assertEqual(resp.content_type, "application/json")
 
 
 class WhenPerformingUnallowedOperationsOnSecrets(BaseSecretsResource):

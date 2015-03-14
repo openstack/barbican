@@ -12,6 +12,7 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import base64
 import os
 
 import mock
@@ -37,12 +38,12 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
             content_type='text/plain'
         )
 
-        self.assertEqual(resp.status_int, 201)
+        self.assertEqual(201, resp.status_int)
         self.assertIsNotNone(secret_uuid)
 
     def test_can_create_new_secret_without_payload(self):
         resp, secret_uuid = create_secret(self.app, name='test')
-        self.assertEqual(resp.status_int, 201)
+        self.assertEqual(201, resp.status_int)
 
         secret = secrets_repo.get(secret_uuid, self.project_id)
         self.assertEqual(secret.name, 'test')
@@ -55,7 +56,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
 
         # Create a generic secret
         resp, _ = create_secret(self.app, name='test_secret')
-        self.assertEqual(resp.status_int, 201)
+        self.assertEqual(201, resp.status_int)
 
         # Verify the new project was created
         project = project_repo.find_by_external_project_id('test_project_id')
@@ -69,7 +70,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
             content_type='text/plain'
         )
 
-        self.assertEqual(resp.status_int, 201)
+        self.assertEqual(201, resp.status_int)
 
     def test_creating_new_secret_with_oversized_payload_should_fail(self):
         oversized_payload = b'A' * (validators.DEFAULT_MAX_SECRET_BYTES + 10)
@@ -79,7 +80,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
             content_type='text/plain',
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 413)
+        self.assertEqual(413, resp.status_int)
 
     def test_create_new_secret_with_empty_payload_should_fail(self):
         resp, _ = create_secret(
@@ -88,7 +89,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
             content_type='text/plain',
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 400)
+        self.assertEqual(400, resp.status_int)
 
     def test_expiration_should_be_normalized_with_new_secret(self):
         target_expiration = '2114-02-28 12:14:44.180394-05:00'
@@ -97,7 +98,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
             expiration=target_expiration
         )
 
-        self.assertEqual(resp.status_int, 201)
+        self.assertEqual(201, resp.status_int)
 
         # Verify that the system normalizes time to UTC
         secret = secrets_repo.get(secret_uuid, self.project_id)
@@ -122,7 +123,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
             name='test',
             transport_key_needed='true'
         )
-        self.assertEqual(resp.status_int, 201)
+        self.assertEqual(201, resp.status_int)
         self.assertIsNotNone(secret_uuid)
         self.assertIn(transport_key_id, resp.json.get('transport_key_ref'))
 
@@ -144,7 +145,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
             transport_key_id=transport_key_id
         )
 
-        self.assertEqual(resp.status_int, 201)
+        self.assertEqual(201, resp.status_int)
         # We're interested in the transport key values
         mocked_store.assert_called_once_with(
             'not-encrypted',
@@ -164,7 +165,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
             content_type='bogus_content_type',
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 400)
+        self.assertEqual(400, resp.status_int)
 
     @utils.parameterized_dataset({
         'no_encoding': [None, 'application/octet-stream'],
@@ -180,7 +181,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
             content_encoding=encoding,
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 400)
+        self.assertEqual(400, resp.status_int)
 
     def test_new_secret_fails_with_bad_payload(self):
         resp, _ = create_secret(
@@ -190,7 +191,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
             content_encoding='base64',
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 400)
+        self.assertEqual(400, resp.status_int)
 
 
 class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
@@ -208,7 +209,7 @@ class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
 
         get_resp = self.app.get('/secrets/', params)
 
-        self.assertEqual(get_resp.status_int, 200)
+        self.assertEqual(200, get_resp.status_int)
         secret_list = get_resp.json.get('secrets')
         self.assertEqual(secret_list[0].get('name'), 'secret mission')
 
@@ -219,11 +220,11 @@ class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
             name='James Bond'
         )
 
-        self.assertEqual(create_resp.status_int, 201)
+        self.assertEqual(201, create_resp.status_int)
 
         get_resp = self.app.get('/secrets/')
 
-        self.assertEqual(get_resp.status_int, 200)
+        self.assertEqual(200, get_resp.status_int,)
         self.assertIn('total', get_resp.json)
         secret_list = get_resp.json.get('secrets')
         self.assertGreater(len(secret_list), 0)
@@ -232,12 +233,12 @@ class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
         # Create a list of secrets greater than default limit (10)
         for _ in range(11):
             create_resp, _ = create_secret(self.app, name='Sterling Archer')
-            self.assertEqual(create_resp.status_int, 201)
+            self.assertEqual(201, create_resp.status_int)
         params = {'limit': '2', 'offset': '2'}
 
         get_resp = self.app.get('/secrets/', params)
 
-        self.assertEqual(get_resp.status_int, 200)
+        self.assertEqual(200, get_resp.status_int)
         self.assertIn('previous', get_resp.json)
         self.assertIn('next', get_resp.json)
 
@@ -251,7 +252,7 @@ class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
         params = {'name': 'Austin Powers'}
 
         get_resp = self.app.get('/secrets/', params)
-        self.assertEqual(get_resp.status_int, 200)
+        self.assertEqual(200, get_resp.status_int)
 
         secret_list = get_resp.json.get('secrets')
         self.assertEqual(len(secret_list), 0)
@@ -259,6 +260,318 @@ class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
         # These should never exist in this scenario
         self.assertNotIn('previous', get_resp.json)
         self.assertNotIn('next', get_resp.json)
+
+
+class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
+
+    def test_get_secret_as_plain(self):
+        payload = 'this message will self destruct in 10 seconds'
+        resp, secret_uuid = create_secret(
+            self.app,
+            payload=payload,
+            content_type='text/plain'
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        headers = {'Accept': 'text/plain'}
+        get_resp = self.app.get(
+            '/secrets/{0}'.format(secret_uuid), headers=headers
+        )
+        self.assertEqual(200, get_resp.status_int)
+        self.assertEqual(payload, get_resp.body)
+
+    def test_get_secret_is_decoded_for_binary(self):
+        payload = 'a123'
+        resp, secret_uuid = create_secret(
+            self.app,
+            payload=payload,
+            content_type='application/octet-stream',
+            content_encoding='base64'
+        )
+        headers = {
+            'Accept': 'application/octet-stream',
+        }
+        get_resp = self.app.get(
+            '/secrets/{0}'.format(secret_uuid), headers=headers
+        )
+        decoded = 'k]\xb7'
+
+        self.assertEqual(get_resp.body, decoded)
+
+    def test_returns_404_on_get_when_not_found(self):
+        get_resp = self.app.get(
+            '/secrets/98c876d9-aaac-44e4-8ea8-441932962b05',
+            headers={'Accept': 'application/json'},
+            expect_errors=True
+        )
+
+        self.assertEqual(404, get_resp.status_int)
+
+    def test_returns_406_with_get_bad_accept_header(self):
+        resp, secret_uuid = create_secret(
+            self.app,
+            payload='blah',
+            content_type='text/plain'
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        get_resp = self.app.get(
+            '/secrets/{0}'.format(secret_uuid),
+            headers={'Accept': 'golden gun', 'Accept-Encoding': 'gzip'},
+            expect_errors=True
+        )
+
+        self.assertEqual(406, get_resp.status_int)
+
+    def test_put_plain_text_secret(self):
+        resp, secret_uuid = create_secret(
+            self.app
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        message = 'Babou! Serpentine!'
+
+        put_resp = self.app.put(
+            '/secrets/{0}'.format(secret_uuid),
+            message,
+            headers={'Content-Type': 'text/plain'}
+        )
+
+        self.assertEqual(204, put_resp.status_int)
+
+        get_resp = self.app.get(
+            '/secrets/{0}'.format(secret_uuid),
+            headers={'Accept': 'text/plain'}
+        )
+
+        self.assertEqual(200, get_resp.status_int)
+        self.assertEqual(message, get_resp.body)
+
+    def test_put_binary_secret(self):
+        resp, secret_uuid = create_secret(
+            self.app
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        binary_string = b'a binary string'
+        put_resp = self.app.put(
+            '/secrets/{0}'.format(secret_uuid),
+            binary_string,
+            headers={'Content-Type': 'application/octet-stream'}
+        )
+
+        self.assertEqual(204, put_resp.status_int)
+
+        get_resp = self.app.get(
+            '/secrets/{0}'.format(secret_uuid),
+            headers={'Accept': 'application/octet-stream'}
+        )
+
+        self.assertEqual(200, get_resp.status_int)
+        self.assertEqual(binary_string, get_resp.body)
+
+    def test_put_base64_secret(self):
+        resp, secret_uuid = create_secret(
+            self.app
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        payload = base64.b64encode('I had something for this')
+        put_resp = self.app.put(
+            '/secrets/{0}'.format(secret_uuid),
+            payload,
+            headers={
+                'Content-Type': 'application/octet-stream',
+                'Content-Encoding': 'base64'
+            }
+        )
+
+        self.assertEqual(204, put_resp.status_int)
+
+        get_resp = self.app.get(
+            '/secrets/{0}'.format(secret_uuid),
+            headers={
+                'Accept': 'application/octet-stream',
+                'Content-Encoding': 'base64'
+            }
+        )
+
+        self.assertEqual(200, get_resp.status_int)
+        self.assertEqual(base64.b64decode(payload), get_resp.body)
+
+    def test_returns_400_with_put_unknown_encoding(self):
+        resp, secret_uuid = create_secret(
+            self.app
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        payload = base64.b64encode('I had something for this')
+        put_resp = self.app.put(
+            '/secrets/{0}'.format(secret_uuid),
+            payload,
+            headers={
+                'Accept': 'text/plain',
+                'Content-Type': 'application/octet-stream',
+                'Content-Encoding': 'unknownencoding'
+            },
+            expect_errors=True
+        )
+
+        self.assertEqual(400, put_resp.status_int)
+
+    def test_returns_415_with_put_unsupported_media_type(self):
+        resp, secret_uuid = create_secret(
+            self.app
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        put_resp = self.app.put(
+            '/secrets/{0}'.format(secret_uuid),
+            'rampage',
+            headers={
+                'Content-Type': 'application/json'
+            },
+            expect_errors=True
+        )
+
+        self.assertEqual(415, put_resp.status_int)
+
+    def test_returns_415_with_put_no_media_type(self):
+        resp, secret_uuid = create_secret(
+            self.app
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        put_resp = self.app.put(
+            '/secrets/{0}'.format(secret_uuid),
+            'rampage again',
+            headers={
+                'Content-Type': ''
+            },
+            expect_errors=True
+        )
+
+        self.assertEqual(415, put_resp.status_int)
+
+    def test_returns_404_put_secret_not_found(self):
+        put_resp = self.app.put(
+            '/secrets/98c876d9-aaac-44e4-8ea8-441932962b05',
+            'some text',
+            headers={'Content-Type': 'text/plain'},
+            expect_errors=True
+        )
+
+        self.assertEqual(404, put_resp.status_int)
+
+    def test_returns_409_put_to_existing_secret(self):
+        resp, secret_uuid = create_secret(
+            self.app,
+            payload='blah',
+            content_type='text/plain'
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        put_resp = self.app.put(
+            '/secrets/{0}'.format(secret_uuid),
+            'do not want',
+            headers={'Content-Type': 'text/plain'},
+            expect_errors=True
+        )
+
+        self.assertEqual(409, put_resp.status_int)
+
+    def test_returns_400_put_no_payload(self):
+        resp, secret_uuid = create_secret(
+            self.app
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        put_resp = self.app.put(
+            '/secrets/{0}'.format(secret_uuid),
+            headers={'Content-Type': 'text/plain'},
+            expect_errors=True
+        )
+
+        self.assertEqual(400, put_resp.status_int)
+
+    def test_returns_400_put_with_empty_payload(self):
+        resp, secret_uuid = create_secret(
+            self.app
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        put_resp = self.app.put(
+            '/secrets/{0}'.format(secret_uuid),
+            '',
+            headers={'Content-Type': 'text/plain'},
+            expect_errors=True
+        )
+
+        self.assertEqual(400, put_resp.status_int)
+
+    def test_returns_413_put_with_text_too_large(self):
+        resp, secret_uuid = create_secret(
+            self.app
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        text_too_big = 'x' * 10050
+        put_resp = self.app.put(
+            '/secrets/{0}'.format(secret_uuid),
+            text_too_big,
+            headers={'Content-Type': 'text/plain'},
+            expect_errors=True
+        )
+
+        self.assertEqual(413, put_resp.status_int)
+
+    def test_delete_secret(self):
+        resp, secret_uuid = create_secret(
+            self.app
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        delete_resp = self.app.delete(
+            '/secrets/{0}/'.format(secret_uuid)
+        )
+
+        self.assertEqual(204, delete_resp.status_int)
+
+    def test_raise_404_for_delete_secret_not_found(self):
+        delete_resp = self.app.delete(
+            '/secrets/98c876d9-aaac-44e4-8ea8-441932962b05',
+            expect_errors=True
+        )
+
+        self.assertEqual(404, delete_resp.status_int)
+        self.assertEqual(delete_resp.content_type, 'application/json')
+
+    def test_delete_with_json_accept_header(self):
+        resp, secret_uuid = create_secret(
+            self.app
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        delete_resp = self.app.delete(
+            '/secrets/{0}/'.format(secret_uuid),
+            headers={'Accept': 'application/json'}
+        )
+
+        self.assertEqual(204, delete_resp.status_int)
 
 
 # ----------------------- Helper Functions ---------------------------
