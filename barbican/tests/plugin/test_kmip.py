@@ -58,7 +58,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
             'cryptographic_length': 128
         }
 
-        self.sample_secret = secrets.SecretFactory().create_secret(
+        self.sample_secret = secrets.SecretFactory().create(
             enums.ObjectType.SYMMETRIC_KEY,
             self.sample_secret_features)
 
@@ -284,17 +284,21 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         self.kmipclient_mock.get.assert_called_once_with('uuid',
                                                          self.credential)
 
-    def test_get_secret_symmetric_return_value_key_value_struct(self):
+    def test_get_secret_symmetric_return_value_key_material_struct(self):
         metadata = {kss.KMIPSecretStore.KEY_UUID: 'uuid'}
         return_value = self.secret_store.get_secret(metadata)
         self.assertEqual(secret_store.SecretDTO, type(return_value))
         self.assertEqual(secret_store.SecretType.SYMMETRIC, return_value.type)
-        self.assertEqual(return_value.secret, "AAAA")
+        # The plugin returns a base64 string for the secret
+        self.assertEqual(
+            return_value.secret,
+            'eydieXRlcyc6IGJ5dGVhcnJheShiJ1x4MDBceDAwXHgwMCcpfQ=='
+        )
 
-    def test_get_secret_symmetric_return_value_key_value_string(self):
+    def test_get_secret_symmetric_return_value_key_material(self):
         sample_secret = self.sample_secret
-        sample_secret.key_block.key_value.key_value = (
-            objects.KeyValueString(value=bytearray(b'\x00\x00\x00')))
+        sample_secret.key_block.key_material = (
+            objects.KeyMaterial(value=bytearray(b'\x00\x00\x00')))
         self.secret_store.client.get = mock.create_autospec(
             proxy.KMIPProxy.get, return_value=results.GetResult(
                 contents.ResultStatus(enums.ResultStatus.SUCCESS),
@@ -305,11 +309,15 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         return_value = self.secret_store.get_secret(metadata)
         self.assertEqual(secret_store.SecretDTO, type(return_value))
         self.assertEqual(secret_store.SecretType.SYMMETRIC, return_value.type)
-        self.assertEqual(return_value.secret, "AAAA")
+        # The plugin returns a base64 string for the secret
+        self.assertEqual(
+            return_value.secret,
+            'eydieXRlcyc6IGJ5dGVhcnJheShiJ1x4MDBceDAwXHgwMCcpfQ=='
+        )
 
-    def test_get_secret_symmetric_return_value_invalid_key_value_type(self):
+    def test_get_secret_symmetric_return_value_invalid_key_material_type(self):
         sample_secret = self.sample_secret
-        sample_secret.key_block.key_value.key_value = 'invalid_key_value_type'
+        sample_secret.key_block.key_value.key_material = 'invalid_type'
         self.secret_store.client.get = mock.create_autospec(
             proxy.KMIPProxy.get, return_value=results.GetResult(
                 contents.ResultStatus(enums.ResultStatus.SUCCESS),

@@ -223,8 +223,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
             'cryptographic_length': secret_dto.key_spec.bit_length
         }
 
-        secret = secrets.SecretFactory().create_secret(object_type,
-                                                       secret_features)
+        secret = secrets.SecretFactory().create(object_type, secret_features)
         LOG.debug("Created secret object to be stored: %s, %s, %s",
                   secret_features.get('key_format_type'),
                   secret_features.get('cryptographic_algorithm'),
@@ -277,14 +276,14 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 secret_type = self._map_type_kmip_to_ss(
                     result.object_type.enum)
 
-                key_value_type = type(secret_block.key_value.key_value)
-                if key_value_type == kmip_objects.KeyValueStruct:
+                key_value_type = type(secret_block.key_value.key_material)
+                if key_value_type == kmip_objects.KeyMaterialStruct:
                     secret_value = self._convert_byte_array_to_base64(
-                        secret_block.key_value.key_value.key_material.value)
+                        secret_block.key_value.key_material.value)
 
-                elif key_value_type == kmip_objects.KeyValueString:
+                elif key_value_type == kmip_objects.KeyMaterial:
                     secret_value = self._convert_byte_array_to_base64(
-                        secret_block.key_value.key_value.value)
+                        secret_block.key_value.key_material.value)
 
                 else:
                     msg = u._(
@@ -292,8 +291,8 @@ class KMIPSecretStore(ss.SecretStoreBase):
                         "server, expected {key_value_struct} or "
                         "{key_value_string}, received: {key_value_type}"
                     ).format(
-                        key_value_struct=kmip_objects.KeyValueStruct,
-                        key_value_string=kmip_objects.KeyValueString,
+                        key_value_struct=kmip_objects.KeyValue,
+                        key_value_string=kmip_objects.KeyMaterial,
                         key_value_type=key_value_type
                     )
                     LOG.exception(msg)
