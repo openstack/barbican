@@ -17,11 +17,13 @@
 Common utilities for Barbican.
 """
 
+import mimetypes
 import time
 import uuid
 
 from oslo_config import cfg
 from oslo_log import log
+import pecan
 
 from barbican import i18n as u
 
@@ -36,6 +38,15 @@ CONF.register_opts(host_opts)
 
 # Current API version
 API_VERSION = 'v1'
+
+
+def allow_all_content_types(f):
+    # Pecan decorator to not limit content types for controller routes
+    cfg = pecan.util._cfg(f)
+    cfg.setdefault('content_types', {})
+    cfg['content_types'].update((value, '')
+                                for value in mimetypes.types_map.values())
+    return f
 
 
 def hostname_for_refs(resource=None):

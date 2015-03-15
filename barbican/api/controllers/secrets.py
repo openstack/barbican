@@ -10,7 +10,6 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
-import mimetypes
 import urllib
 
 import pecan
@@ -29,14 +28,6 @@ from barbican.plugin import util as putil
 
 
 LOG = utils.getLogger(__name__)
-
-
-def allow_all_content_types(f):
-    cfg = pecan.util._cfg(f)
-    cfg.setdefault('content_types', {})
-    cfg['content_types'].update((value, '')
-                                for value in mimetypes.types_map.values())
-    return f
 
 
 def _secret_not_found():
@@ -74,7 +65,7 @@ class SecretController(object):
         pecan.abort(405)  # HTTP 405 Method Not Allowed as default
 
     @index.when(method='GET')
-    @allow_all_content_types
+    @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('Secret retrieval'))
     @controllers.enforce_rbac('secret:get')
     def on_get(self, external_project_id, **kwargs):
@@ -135,7 +126,7 @@ class SecretController(object):
         return transport_key_model.transport_key
 
     @pecan.expose()
-    @allow_all_content_types
+    @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('Secret payload retrieval'))
     @controllers.enforce_rbac('secret:decrypt')
     def payload(self, external_project_id, **kwargs):
@@ -146,7 +137,7 @@ class SecretController(object):
                                            **kwargs)
 
     @index.when(method='PUT')
-    @allow_all_content_types
+    @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('Secret update'))
     @controllers.enforce_rbac('secret:put')
     @controllers.enforce_content_types(['application/octet-stream',
@@ -182,7 +173,7 @@ class SecretController(object):
                             transport_key_id=transport_key_id)
 
     @index.when(method='DELETE')
-    @allow_all_content_types
+    @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('Secret deletion'))
     @controllers.enforce_rbac('secret:delete')
     def on_delete(self, external_project_id, **kwargs):

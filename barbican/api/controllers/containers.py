@@ -67,7 +67,8 @@ class ContainerController(object):
             hrefs.convert_to_hrefs(dict_fields)
         )
 
-    @index.when(method='DELETE', template='')
+    @index.when(method='DELETE')
+    @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('Container deletion'))
     @controllers.enforce_rbac('container:delete')
     def on_delete(self, external_project_id, **kwargs):
