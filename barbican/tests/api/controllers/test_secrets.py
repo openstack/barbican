@@ -574,6 +574,68 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(204, delete_resp.status_int)
 
 
+@utils.parameterized_test_case
+class WhenPerformingUnallowedOperations(utils.BarbicanAPIBaseTestCase):
+
+    def test_returns_405_for_put_json_on_secrets(self):
+        test_json = {
+            'name': 'Barry',
+            'algorithm': 'AES',
+            'bit_length': 256,
+            'mode': 'CBC'
+        }
+        resp = self.app.put_json(
+            '/secrets/',
+            test_json,
+            expect_errors=True
+        )
+
+        self.assertEqual(405, resp.status_int)
+
+    def test_returns_405_for_delete_on_secrets(self):
+        resp = self.app.delete(
+            '/secrets/',
+            expect_errors=True
+        )
+
+        self.assertEqual(405, resp.status_int)
+
+    def test_returns_405_for_get_payload(self):
+        created_resp, secret_uuid = create_secret(
+            self.app
+        )
+        resp = self.app.post(
+            '/secrets/{0}/payload'.format(secret_uuid),
+            'Do you want ants? This is how you get ants!',
+            headers={'Content-Type': 'text/plain'},
+            expect_errors=True
+        )
+
+        self.assertEqual(405, resp.status_int)
+
+    @utils.parameterized_dataset({
+        'delete': ['delete'],
+        'put': ['put'],
+        'post': ['post']
+    })
+    def test_returns_405_for_calling_secret_payload_uri_with(
+            self, http_verb=None
+    ):
+        created_resp, secret_uuid = create_secret(
+            self.app
+        )
+
+        self.assertEqual(201, created_resp.status_int)
+        operation = getattr(self.app, http_verb)
+        resp = operation(
+            '/secrets/{0}/payload'.format(secret_uuid),
+            'boop',
+            expect_errors=True
+        )
+
+        self.assertEqual(405, resp.status_int)
+
+
 # ----------------------- Helper Functions ---------------------------
 def create_secret(app, name=None, algorithm=None, bit_length=None, mode=None,
                   expiration=None, payload=None, content_type=None,
