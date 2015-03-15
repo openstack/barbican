@@ -81,6 +81,8 @@ class SecretController(object):
         if controllers.is_json_request_accept(pecan.request):
             return self._on_get_secret_metadata(self.secret, **kwargs)
         else:
+            LOG.warning('Decrypted secret %s requested using deprecated '
+                        'API call.', self.secret.id)
             return self._on_get_secret_payload(self.secret,
                                                external_project_id,
                                                **kwargs)

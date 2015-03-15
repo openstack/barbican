@@ -311,8 +311,10 @@ list.
 GET - Decrypted Secret Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To retrieve the decrypted secret information, perform a GET with the `Accept`
-header set to one of the `content_types` specified in the GET metadata call.
+To retrieve the decrypted secret information, one must append 'payload' to the
+path of the desired secret, and  perform a GET with the `Accept` header set to
+one of the `content_types` specified in the GET metadata call.
+
 Note that even if a binary secret is provided in the `base64` format, it is
 converted to binary by Barbican prior to encryption and storage. _Thereafter
 the secret will only be decrypted and returned as raw binary._ See examples
@@ -343,15 +345,26 @@ Secrets Summary
 +========+===================================================================+
 | GET    | Gets the information for the specified secret. For the            |
 |        | `application/json` accept type, only metadata about the secret is |
-|        | returned. If one of the 'content_types' accept types is specified |
-|        | instead, that portion of the secret will be decrypted and         |
 |        | returned.                                                         |
+|        |  _The following is deprecated:_ If one of the 'content_types'     |
+|        | accept types is specified, that portion of the secret will be     |
+|        | be decrypted and returned.                                        |
 +--------+-------------------------------------------------------------------+
 | PUT    | Allows the user to upload secret data for a specified secret _(if |
 |        | the secret does not already have data associated with it)_.       |
 |        | Returns 200 on a successful request.                              |
 +--------+-------------------------------------------------------------------+
 | DELETE | Deletes the secret.                                               |
++--------+-------------------------------------------------------------------+
+
+> https://.../v1/secrets/{secret_uuid}/payload/
+
++--------+-------------------------------------------------------------------+
+| Method | Description                                                       |
++========+===================================================================+
+| GET    | Will decrypt a secret using the specified accept type. The accept |
+|        | type must be one of the 'content_types' available from the secret |
+|        | metadata                                                          |
 +--------+-------------------------------------------------------------------+
 
 Error Responses
