@@ -304,3 +304,143 @@ class RSAContainersTestCase(BaseContainerTestCase):
         # malicious one.
         regex = '.*{0}.*'.format(malicious_hostname)
         self.assertNotRegexpMatches(resp.headers['location'], regex)
+
+
+class ContainersUnauthedTestCase(BaseContainerTestCase):
+
+    def setUp(self):
+        super(ContainersUnauthedTestCase, self).setUp()
+
+        self.dummy_project_id = 'dummy123'
+        self.dummy_container_ref = (
+            'containers/dummy123-3416-4b53-8875-e6af3e0af8c3'
+        )
+
+    def tearDown(self):
+        self.secret_behaviors.delete_all_created_secrets()
+        super(ContainersUnauthedTestCase, self).tearDown()
+
+    @testcase.attr('negative', 'security')
+    def test_unauthed_create_huge_dummy_token_no_proj_id(self):
+        """Attempt to create a container with a dummy token, and no project id
+
+        Should return 401
+        """
+
+        model = container_models.ContainerModel(
+            **create_container_data
+        )
+        headers = {'X-Auth-Token': 'a' * 3500}
+        resp = self.client.post(
+            'containers', request_model=model, use_auth=False,
+            extra_headers=headers
+        )
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_unauthed_create_no_proj_id(self):
+        """Attempt to create a container without a token or project id
+
+        Should return 401
+        """
+
+        model = container_models.ContainerModel(
+            **create_container_data
+        )
+        resp = self.client.post(
+            'containers', request_model=model, use_auth=False
+        )
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_unauthed_get_no_proj_id(self):
+        """Attempt to get a container without a token or project id
+
+        Should return 401
+        """
+
+        headers = {
+            'Accept': '*/*',
+            'Accept-Encoding': '*/*'
+        }
+        resp = self.client.get(
+            self.dummy_container_ref, extra_headers=headers, use_auth=False
+        )
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_unauthed_delete_no_proj_id(self):
+        """Attempt to delete a container without a token or project id
+
+        Should return 401
+        """
+
+        resp = self.client.delete(self.dummy_container_ref, use_auth=False)
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_unauthed_huge_dummy_token_with_proj_id(self):
+        """Attempt to create a container with a dummy token and project id
+
+        Should return 401
+        """
+
+        model = container_models.ContainerModel(
+            **create_container_data
+        )
+        headers = {
+            'X-Auth-Token': 'a' * 3500,
+            'X-Project-Id': self.dummy_project_id
+        }
+        resp = self.client.post(
+            'containers', request_model=model, use_auth=False,
+            extra_headers=headers
+        )
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_unauthed_create_with_proj_id(self):
+        """Attempt to create a container with a project id, but not a token
+
+        Should return 401
+        """
+
+        model = container_models.ContainerModel(
+            **create_container_data
+        )
+        headers = {'X-Project-Id': self.dummy_project_id}
+        resp = self.client.post(
+            'containers', request_model=model, use_auth=False,
+            extra_headers=headers
+        )
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_unauthed_get_with_proj_id(self):
+        """Attempt to get a container with a project id, but not a token
+
+        Should return 401
+        """
+
+        headers = {
+            'Accept': '*/*',
+            'Accept-Encoding': '*/*',
+            'X-Project-Id': self.dummy_project_id
+        }
+        resp = self.client.get(
+            self.dummy_container_ref, extra_headers=headers, use_auth=False
+        )
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_unauthed_delete_with_proj_id(self):
+        """Attempt to delete a container with a project id, but not a token
+
+        Should return 401
+        """
+
+        headers = {'X-Project-Id': self.dummy_project_id}
+        resp = self.client.delete(
+            self.dummy_container_ref, use_auth=False, extra_headers=headers
+        )
+        self.assertEqual(401, resp.status_code)
