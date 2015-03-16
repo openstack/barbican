@@ -117,7 +117,6 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
     ALG = "alg"
     BIT_LENGTH = "bit_length"
     KEY_ID = "key_id"
-    SECRET_TYPE = "secret_type"
     SECRET_MODE = "secret_mode"
     PASSPHRASE_KEY_ID = "passphrase_key_id"
     CONVERT_TO_PEM = "convert_to_pem"
@@ -199,7 +198,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         self._store_secret_attributes(meta_dict, secret_dto)
         return meta_dict
 
-    def get_secret(self, secret_metadata):
+    def get_secret(self, secret_type, secret_metadata):
         """Retrieve a secret from the KRA
 
         The secret_metadata is simply the dict returned by a store_secret() or
@@ -233,7 +232,6 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         PEM format, is returned
         """
         key_id = secret_metadata[DogtagKRAPlugin.KEY_ID]
-        secret_type = secret_metadata.get(DogtagKRAPlugin.SECRET_TYPE, None)
 
         key_spec = sstore.KeySpec(
             alg=secret_metadata.get(DogtagKRAPlugin.ALG, None),
@@ -243,10 +241,11 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         )
 
         passphrase = self._get_passphrase_for_a_private_key(
-            secret_metadata, key_spec)
+            secret_type, secret_metadata, key_spec)
 
         recovered_key = None
-        twsk = DogtagKRAPlugin._get_trans_wrapped_session_key(secret_metadata)
+        twsk = DogtagKRAPlugin._get_trans_wrapped_session_key(secret_type,
+                                                              secret_metadata)
 
         if DogtagKRAPlugin.CONVERT_TO_PEM in secret_metadata:
             # Case for returning the asymmetric keys generated in KRA.
@@ -367,7 +366,6 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         return {DogtagKRAPlugin.ALG: key_spec.alg,
                 DogtagKRAPlugin.BIT_LENGTH: key_spec.bit_length,
                 DogtagKRAPlugin.SECRET_MODE: key_spec.mode,
-                DogtagKRAPlugin.SECRET_TYPE: sstore.SecretType.SYMMETRIC,
                 DogtagKRAPlugin.KEY_ID: response.get_key_id()}
 
     def generate_asymmetric_key(self, key_spec):
@@ -411,7 +409,6 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         public_key_metadata = {
             DogtagKRAPlugin.ALG: key_spec.alg,
             DogtagKRAPlugin.BIT_LENGTH: key_spec.bit_length,
-            DogtagKRAPlugin.SECRET_TYPE: sstore.SecretType.PUBLIC,
             DogtagKRAPlugin.KEY_ID: response.get_key_id(),
             DogtagKRAPlugin.CONVERT_TO_PEM: "true"
         }
@@ -419,7 +416,6 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         private_key_metadata = {
             DogtagKRAPlugin.ALG: key_spec.alg,
             DogtagKRAPlugin.BIT_LENGTH: key_spec.bit_length,
-            DogtagKRAPlugin.SECRET_TYPE: sstore.SecretType.PRIVATE,
             DogtagKRAPlugin.KEY_ID: response.get_key_id(),
             DogtagKRAPlugin.CONVERT_TO_PEM: "true"
         }
@@ -489,12 +485,10 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
                 meta_dict[DogtagKRAPlugin.BIT_LENGTH] = key_spec.bit_length
             if key_spec.mode is not None:
                 meta_dict[DogtagKRAPlugin.SECRET_MODE] = key_spec.mode
-        if secret_dto.type is not None:
-            meta_dict[DogtagKRAPlugin.SECRET_TYPE] = secret_dto.type
 
-    def _get_passphrase_for_a_private_key(self, secret_metadata, key_spec):
+    def _get_passphrase_for_a_private_key(self, secret_type, secret_metadata,
+                                          key_spec):
         """Retrieve the passphrase for the private key stored in the KRA."""
-        secret_type = secret_metadata.get(DogtagKRAPlugin.SECRET_TYPE, None)
         if secret_type is None:
             return None
         if key_spec.alg is None:
@@ -520,9 +514,8 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         return passphrase
 
     @staticmethod
-    def _get_trans_wrapped_session_key(secret_metadata):
+    def _get_trans_wrapped_session_key(secret_type, secret_metadata):
         twsk = secret_metadata.get('trans_wrapped_session_key', None)
-        secret_type = secret_metadata.get(DogtagKRAPlugin.SECRET_TYPE, None)
         if secret_type in [sstore.SecretType.PUBLIC,
                            sstore.SecretType.PRIVATE]:
             if twsk:

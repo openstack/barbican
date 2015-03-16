@@ -22,7 +22,37 @@ from barbican.model import models
 from barbican.plugin.crypto import crypto
 from barbican.plugin.interface import secret_store
 from barbican.plugin import store_crypto
+from barbican.plugin.util import translations
 from barbican.tests import utils as test_utils
+
+
+def get_private_dto():
+    spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 1024)
+    return secret_store.SecretDTO(secret_store.SecretType.PRIVATE,
+                                  test_utils.get_private_key(),
+                                  spec,
+                                  'application/pkcs8')
+
+
+def get_public_dto():
+    spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 1024)
+    return secret_store.SecretDTO(secret_store.SecretType.PUBLIC,
+                                  test_utils.get_public_key(),
+                                  spec,
+                                  'application/octet-stream')
+
+
+def get_certificate_dto():
+    spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 1024)
+    return secret_store.SecretDTO(secret_store.SecretType.CERTIFICATE,
+                                  test_utils.get_certificate(),
+                                  spec,
+                                  'application/pkix-cert')
+
+
+def get_pem_content(pem):
+    b64_content = translations.get_pem_components(pem)[1]
+    return base64.b64decode(b64_content)
 
 
 class TestSecretStoreBase(testtools.TestCase,
@@ -48,7 +78,7 @@ class TestSecretStoreBase(testtools.TestCase,
         self.project_model.id = 'project-model-id'
         self.project_model.external_id = self.project_id
         self.secret_dto = secret_store.SecretDTO(
-            secret_store.SecretType.SYMMETRIC,
+            secret_store.SecretType.OPAQUE,
             self.secret,
             secret_store.KeySpec(),
             self.content_type
@@ -132,7 +162,14 @@ class TestSecretStoreBase(testtools.TestCase,
         self.setup_kek_datum_repository_mock(self.kek_repo)
 
 
+@test_utils.parameterized_test_case
 class WhenTestingStoreCrypto(TestSecretStoreBase):
+
+    dataset_for_pem = {
+        'private': [get_private_dto()],
+        'public': [get_public_dto()],
+        'certificate': [get_certificate_dto()]
+    }
 
     def setUp(self):
         super(WhenTestingStoreCrypto, self).setUp()
@@ -170,17 +207,41 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
 
         self.assertEqual(self.content_type, self.context.content_type)
 
+    @test_utils.parameterized_dataset(dataset_for_pem)
+    def test_store_pem_secret(self, secret_dto):
+        """Test storing a secret that is PEM encoded."""
+
+        response_dict = self.plugin_to_test.store_secret(
+            secret_dto, self.context)
+
+        self.assertEqual(None, response_dict)
+
+        content = translations.get_pem_components(secret_dto.secret)[1]
+        raw_content = base64.b64decode(content)
+
+        # Verify encrypt plugin and method where invoked.
+        encrypt_mock = self.encrypting_plugin.encrypt
+        self.assertEqual(encrypt_mock.call_count, 1)
+        args, kwargs = encrypt_mock.call_args
+        test_encrypt_dto, test_kek_meta_dto, test_project_id = tuple(args)
+        self.assertIsInstance(test_encrypt_dto, crypto.EncryptDTO)
+        self.assertEqual(raw_content, test_encrypt_dto.unencrypted)
+        self.assertEqual(self.kek_meta_dto, test_kek_meta_dto)
+        self.assertEqual(self.project_id, test_project_id)
+
     def test_get_secret(self):
         """Test getting a secret."""
 
         secret_dto = self.plugin_to_test.get_secret(
+            secret_store.SecretType.OPAQUE,
             None,  # Secret metadata is not relevant to store_crypto process.
             self.context)
 
         # Verify response.
         self.assertIsInstance(secret_dto, secret_store.SecretDTO)
-        self.assertEqual(secret_store.SecretType.SYMMETRIC, secret_dto.type)
-        self.assertEqual(self.decrypted_secret, secret_dto.secret)
+        self.assertEqual(secret_store.SecretType.OPAQUE, secret_dto.type)
+        self.assertEqual(base64.b64encode(self.decrypted_secret),
+                         secret_dto.secret)
         self.assertEqual(
             self.encrypted_datum_model.content_type, secret_dto.content_type)
         self.assertIsInstance(secret_dto.key_spec, secret_store.KeySpec)
@@ -216,6 +277,39 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
             test_kek_meta_extended)
 
         self.assertEqual(self.project_id, test_project_id)
+
+    @test_utils.parameterized_dataset(dataset_for_pem)
+    def test_get_secret_encoding(self, input_secret_dto):
+        """Test getting a secret that should be returend in PEM format."""
+        secret = input_secret_dto.secret
+        key_spec = input_secret_dto.key_spec
+        secret_type = input_secret_dto.type
+
+        decrypt_mock = self.retrieving_plugin.decrypt
+        content = translations.get_pem_components(secret)[1]
+        decrypt_mock.return_value = base64.b64decode(content)
+
+        secret_model = self.context.secret_model
+        secret_model.algorithm = key_spec.alg
+        secret_model.bit_length = key_spec.bit_length
+        secret_model.mode = key_spec.mode
+
+        secret_dto = self.plugin_to_test.get_secret(
+            secret_type,
+            None,  # Secret metadata is not relevant to store_crypto process.
+            self.context)
+
+        # Verify response.
+        self.assertIsInstance(secret_dto, secret_store.SecretDTO)
+        self.assertEqual(secret_type, secret_dto.type)
+        self.assertEqual(secret, secret_dto.secret)
+        self.assertIsInstance(secret_dto.key_spec, secret_store.KeySpec)
+        self.assertEqual(
+            secret_model.algorithm, secret_dto.key_spec.alg)
+        self.assertEqual(
+            secret_model.bit_length, secret_dto.key_spec.bit_length)
+        self.assertEqual(
+            secret_model.mode, secret_dto.key_spec.mode)
 
     def test_generate_symmetric_key(self):
         """test symmetric secret generation."""
@@ -289,6 +383,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         self.assertRaises(
             secret_store.SecretNotFoundException,
             self.plugin_to_test.get_secret,
+            secret_store.SecretType.OPAQUE,
             None,  # get_secret() doesn't use the secret metadata argument
             self.context
         )
@@ -299,6 +394,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         self.assertRaises(
             secret_store.SecretNotFoundException,
             self.plugin_to_test.get_secret,
+            secret_store.SecretType.OPAQUE,
             None,  # get_secret() doesn't use the secret metadata argument
             self.context
         )

@@ -27,6 +27,53 @@ VALID_EXTENSIONS = "valid extensions"
 VALID_FULL_CMC = "valid CMC"
 
 
+def get_symmetric_key_req():
+    return {'name': 'mysymmetrickey',
+            'payload_content_type': 'application/octet-stream',
+            'payload_content_encoding': 'base64',
+            'algorithm': 'aes',
+            'bit_length': 256,
+            'secret_type': 'symmetric',
+            'payload': 'gF6+lLoF3ohA9aPRpt+6bQ=='}
+
+
+def get_private_key_req():
+    return {'name': 'myprivatekey',
+            'payload_content_type': 'application/pkcs8',
+            'payload_content_encoding': 'base64',
+            'algorithm': 'rsa',
+            'bit_length': 1024,
+            'secret_type': 'private',
+            'payload': utils.get_private_key()}
+
+
+def get_public_key_req():
+    return {'name': 'mypublickey',
+            'payload_content_type': 'application/octet-stream',
+            'payload_content_encoding': 'base64',
+            'algorithm': 'rsa',
+            'bit_length': 1024,
+            'secret_type': 'public',
+            'payload': utils.get_public_key()}
+
+
+def get_certificate_req():
+    return {'name': 'mycertificate',
+            'payload_content_type': 'application/pkix-cert',
+            'payload_content_encoding': 'base64',
+            'algorithm': 'rsa',
+            'bit_length': 1024,
+            'secret_type': 'certificate',
+            'payload': utils.get_certificate()}
+
+
+def get_passphrase_req():
+    return {'name': 'mypassphrase',
+            'payload_content_type': 'text/plain',
+            'secret_type': 'passphrase',
+            'payload': 'mysecretpassphrase'}
+
+
 def suite():
     suite = unittest.TestSuite()
 
@@ -62,6 +109,7 @@ class WhenTestingValidatorsFunctions(utils.BaseTestCase):
         self.assertTrue(is_too_big)
 
 
+@utils.parameterized_test_case
 class WhenTestingSecretValidator(utils.BaseTestCase):
 
     def setUp(self):
@@ -72,12 +120,14 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         self.payload_content_type = 'text/plain'
         self.secret_algorithm = 'algo'
         self.secret_bit_length = 512
+        self.secret_type = 'opaque'
         self.secret_mode = 'cytype'
 
         self.secret_req = {'name': self.name,
                            'payload_content_type': self.payload_content_type,
                            'algorithm': self.secret_algorithm,
                            'bit_length': self.secret_bit_length,
+                           'secret_type': self.secret_type,
                            'mode': self.secret_mode,
                            'payload': self.payload}
 
@@ -332,6 +382,59 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('payload', exception.invalid_property)
+
+    def test_should_pass_with_no_secret_type(self):
+        request = dict(self.secret_req)
+        del request['secret_type']
+        self.validator.validate(request)
+
+    def test_should_fail_with_unknown_secret_type(self):
+        self.secret_req['secret_type'] = 'unknown_type'
+        self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.secret_req,
+        )
+
+    @utils.parameterized_dataset({
+        'symmetric': [get_symmetric_key_req()],
+        'private': [get_private_key_req()],
+        'public': [get_public_key_req()],
+        'certificate': [get_certificate_req()],
+        'passphrase': [get_passphrase_req()],
+    })
+    def test_should_pass_with_secret_type(self, request):
+        self.validator.validate(request)
+
+    @utils.parameterized_dataset({
+        'symmetric': [get_symmetric_key_req(), 'foo'],
+        'private': [get_private_key_req(), 'foo'],
+        'public': [get_public_key_req(), 'foo'],
+        'certificate': [get_certificate_req(), 'foo'],
+        'passphrase': [get_passphrase_req(), 'base64'],
+    })
+    def test_should_fail_with_bad_encoding(self, request, content_encoding):
+        request['payload_content_encoding'] = content_encoding
+        self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            request,
+        )
+
+    @utils.parameterized_dataset({
+        'symmetric': [get_symmetric_key_req(), 'text/plain'],
+        'private': [get_private_key_req(), 'text/plain'],
+        'public': [get_public_key_req(), 'text/plain'],
+        'certificate': [get_certificate_req(), 'text/plain'],
+        'passphrase': [get_passphrase_req(), 'application/octet-stream'],
+    })
+    def test_should_fail_with_bad_content_type(self, request, content_type):
+        request['payload_content_type'] = content_type
+        self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            request,
+        )
 
 
 class WhenTestingContainerValidator(utils.BaseTestCase):
@@ -1181,6 +1284,7 @@ class WhenTestingStoredKeyOrderValidator(utils.BaseTestCase):
         self.assertRaises(excep.InvalidContainer,
                           self.validator.validate,
                           self.order_req)
+
 
 if __name__ == '__main__':
     unittest.main()

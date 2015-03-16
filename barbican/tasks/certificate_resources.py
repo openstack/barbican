@@ -330,7 +330,7 @@ def _save_plugin_metadata(order_model, plugin_meta):
 def _save_secrets(result, project_model):
     cert_secret_model, transport_key_model = plugin.store_secret(
         unencrypted_raw=result.certificate,
-        content_type_raw='text/plain',
+        content_type_raw='application/pkix-cert',
         content_encoding='base64',
         spec={},
         secret_model=None,
@@ -340,7 +340,7 @@ def _save_secrets(result, project_model):
     if result.intermediates:
         intermediates_secret_model, transport_key_model = plugin.store_secret(
             unencrypted_raw=result.intermediates,
-            content_type_raw='text/plain',
+            content_type_raw='application/pkix-cert',
             content_encoding='base64',
             spec={},
             secret_model=None,

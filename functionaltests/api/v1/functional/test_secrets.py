@@ -21,10 +21,53 @@ import time
 
 from testtools import testcase
 
+from barbican.plugin.util import translations
 from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import secret_models
+
+
+def get_pem_content(pem):
+    b64_content = translations.get_pem_components(pem)[1]
+    return base64.b64decode(b64_content)
+
+
+def get_private_key_req():
+    return {'name': 'myprivatekey',
+            'payload_content_type': 'application/octet-stream',
+            'payload_content_encoding': 'base64',
+            'algorithm': 'rsa',
+            'bit_length': 1024,
+            'secret_type': 'private',
+            'payload': utils.get_private_key()}
+
+
+def get_public_key_req():
+    return {'name': 'mypublickey',
+            'payload_content_type': 'application/octet-stream',
+            'payload_content_encoding': 'base64',
+            'algorithm': 'rsa',
+            'bit_length': 1024,
+            'secret_type': 'public',
+            'payload': utils.get_public_key()}
+
+
+def get_certificate_req():
+    return {'name': 'mycertificate',
+            'payload_content_type': 'application/octet-stream',
+            'payload_content_encoding': 'base64',
+            'algorithm': 'rsa',
+            'bit_length': 1024,
+            'secret_type': 'certificate',
+            'payload': utils.get_certificate()}
+
+
+def get_passphrase_req():
+    return {'name': 'mypassphrase',
+            'payload_content_type': 'text/plain',
+            'secret_type': 'passphrase',
+            'payload': 'mysecretpassphrase'}
 
 # TODO(tdink) Move to a config file
 secret_create_defaults_data = {
@@ -401,7 +444,7 @@ class SecretsTestCase(base.TestCase):
 
         self.assertIn(
             "Provided object does not match schema 'Secret': "
-            "payload_content_type is not one of ['text/plain', "
+            "payload_content_type plain-text is not one of ['text/plain', "
             "'text/plain;charset=utf-8', 'text/plain; charset=utf-8', "
             "'application/octet-stream'", resp_dict['description'])
         self.assertIn("Bad Request", resp_dict['title'])
@@ -815,3 +858,40 @@ class SecretsTestCase(base.TestCase):
         # malicious one.
         regex = '.*{0}.*'.format(malicious_hostname)
         self.assertNotRegexpMatches(resp.headers['location'], regex)
+
+    @utils.parameterized_dataset({
+        'symmetric': ['symmetric',
+                      base64.b64decode(secret_create_defaults_data['payload']),
+                      secret_create_defaults_data],
+        'private': ['private',
+                    get_pem_content(utils.get_private_key()),
+                    get_private_key_req()],
+        'public': ['public',
+                   get_pem_content(utils.get_public_key()),
+                   get_public_key_req()],
+        'certificate': ['certificate',
+                        get_pem_content(utils.get_certificate()),
+                        get_certificate_req()],
+        'passphrase': ['passphrase',
+                       'mysecretpassphrase',
+                       get_passphrase_req()]
+    })
+    @testcase.attr('positive')
+    def test_secret_create_with_secret_type(self, secret_type, expected, spec):
+        """Create secrets with various secret types."""
+        test_model = secret_models.SecretModel(**spec)
+        overrides = {"secret_type": secret_type}
+        test_model.override_values(**overrides)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(201, resp.status_code)
+
+        resp = self.behaviors.get_secret_metadata(secret_ref)
+        secret_type_response = resp.model.secret_type
+        self.assertIsNotNone(secret_type_response)
+        self.assertEqual(secret_type, secret_type_response)
+
+        content_type = spec['payload_content_type']
+        get_resp = self.behaviors.get_secret(secret_ref,
+                                             content_type)
+        self.assertEqual(expected, get_resp.content)

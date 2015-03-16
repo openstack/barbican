@@ -17,11 +17,14 @@ import base64
 import mock
 import testtools
 
+from barbican.model import models
 from barbican.plugin.interface import secret_store
 from barbican.plugin import resources
+from barbican.plugin import store_crypto
 from barbican.tests import utils
 
 
+@utils.parameterized_test_case
 class WhenTestingPluginResource(testtools.TestCase,
                                 utils.MockModelRepositoryMixin):
 
@@ -51,11 +54,10 @@ class WhenTestingPluginResource(testtools.TestCase,
         }
 
         self.moc_plugin_patcher = mock.patch(
-            'barbican.plugin.interface.secret_store'
-            '.get_manager',
+            'barbican.plugin.interface.secret_store.get_manager',
             **moc_plugin_config
         )
-        self.moc_plugin_patcher.start()
+        self.moc_plugin_manager = self.moc_plugin_patcher.start()
         self.addCleanup(self.moc_plugin_patcher.stop)
 
         self.setup_project_repository_mock()
@@ -85,7 +87,8 @@ class WhenTestingPluginResource(testtools.TestCase,
         super(WhenTestingPluginResource, self).tearDown()
 
     def test_store_secret_dto(self):
-        spec = {'algorithm': 'AES', 'bit_length': 256}
+        spec = {'algorithm': 'AES', 'bit_length': 256,
+                'secret_type': 'symmetric'}
         secret = base64.b64encode('ABCDEFABCDEFABCDEFABCDEF')
 
         self.plugin_resource.store_secret(
@@ -102,6 +105,67 @@ class WhenTestingPluginResource(testtools.TestCase,
         self.assertEqual(spec['algorithm'], dto.key_spec.alg)
         self.assertEqual(spec['bit_length'], dto.key_spec.bit_length)
         self.assertEqual(self.content_type, dto.content_type)
+
+    @utils.parameterized_dataset({
+        'general_secret_store': {
+            'moc_plugin': None
+        },
+        'store_crypto': {
+            'moc_plugin': mock.MagicMock(store_crypto.StoreCryptoAdapterPlugin)
+        }
+    })
+    def test_get_secret_dto(self, moc_plugin):
+
+        def mock_secret_store_store_secret(dto):
+            self.secret_dto = dto
+
+        def mock_secret_store_get_secret(secret_type, secret_metadata):
+            return self.secret_dto
+
+        def mock_store_crypto_store_secret(dto, context):
+            self.secret_dto = dto
+
+        def mock_store_crypto_get_secret(
+                secret_type, secret_metadata, context):
+            return self.secret_dto
+
+        if moc_plugin:
+            self.moc_plugin = moc_plugin
+            self.moc_plugin.store_secret.return_value = {}
+            self.moc_plugin.store_secret.side_effect = (
+                mock_store_crypto_store_secret)
+            self.moc_plugin.get_secret.side_effect = (
+                mock_store_crypto_get_secret)
+
+            moc_plugin_config = {
+                'return_value.get_plugin_store.return_value':
+                self.moc_plugin,
+                'return_value.get_plugin_retrieve_delete.return_value':
+                self.moc_plugin
+            }
+            self.moc_plugin_manager.configure_mock(**moc_plugin_config)
+        else:
+            self.moc_plugin.store_secret.side_effect = (
+                mock_secret_store_store_secret)
+            self.moc_plugin.get_secret.side_effect = (
+                mock_secret_store_get_secret)
+
+        raw_secret = 'ABCDEFABCDEFABCDEFABCDEF'
+        spec = {'name': 'testsecret', 'algorithm': 'AES', 'bit_length': 256,
+                'secret_type': 'symmetric'}
+
+        self.plugin_resource.store_secret(
+            base64.b64encode(raw_secret),
+            self.content_type,
+            'base64',
+            spec,
+            None,
+            self.project_model)
+        secret = self.plugin_resource.get_secret(
+            'application/octet-stream',
+            models.Secret(spec),
+            None)
+        self.assertEqual(raw_secret, secret)
 
     def test_generate_asymmetric_with_passphrase(self):
         """test asymmetric secret generation with passphrase."""

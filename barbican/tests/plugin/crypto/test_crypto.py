@@ -370,9 +370,7 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
                                           mock.MagicMock())
 
         prv_seq = asn1.DerSequence()
-        data = "\n".join(private_dto.strip().split("\n")
-                         [1:-1]).decode("base64")
-        prv_seq.decode(data)
+        prv_seq.decode(private_dto)
         p, q, g, y, x = prv_seq[1:]
 
         private_dto = DSA.construct((y, g, p, q, x))
