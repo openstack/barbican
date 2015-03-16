@@ -19,16 +19,21 @@ from functionaltests.api.v1.models import secret_models
 
 class SecretBehaviors(base_behaviors.BaseBehaviors):
 
-    def create_secret(self, model, headers=None):
+    def create_secret(self, model, headers=None, use_auth=True):
         """Create a secret from the data in the model.
 
         :param model: The metadata used to create the secret
+        :param use_auth: Boolean for whether to send authentication headers
         :return: A tuple containing the response from the create
         and the href to the newly created secret
         """
 
         resp = self.client.post('secrets', request_model=model,
-                                extra_headers=headers)
+                                extra_headers=headers, use_auth=use_auth)
+
+        # handle expected JSON parsing errors for unauthenticated requests
+        if resp.status_code == 401 and not use_auth:
+            return resp, None
 
         returned_data = self.get_json(resp)
         secret_ref = returned_data.get('secret_ref')
@@ -37,13 +42,16 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
         return resp, secret_ref
 
     def update_secret_payload(self, secret_ref, payload, payload_content_type,
-                              payload_content_encoding=None):
+                              payload_content_encoding=None,
+                              extra_headers=None, use_auth=True):
         """Updates a secret's payload data.
 
         :param secret_ref: HATEOS ref of the secret to be updated
         :param payload: new payload to be sent to server
         :param payload_content_type: value for the Content-Type header
         :param payload_content_encoding: value for the Content-Encoding header
+        :param extra_headers: Optional HTTP headers to add to the request
+        :param use_auth: Boolean for whether to send authentication headers
         :return: the response from the PUT update
         """
 
@@ -53,16 +61,24 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
             headers = {'Content-Type': payload_content_type,
                        'Content-Encoding': payload_content_encoding}
 
-        return self.client.put(secret_ref, data=payload, extra_headers=headers)
+        if extra_headers:
+            headers.update(extra_headers)
+
+        return self.client.put(secret_ref, data=payload, extra_headers=headers,
+                               use_auth=use_auth)
 
     def get_secret(self, secret_ref, payload_content_type,
-                   payload_content_encoding=None):
+                   payload_content_encoding=None, extra_headers=None,
+                   use_auth=True):
 
         headers = {'Accept': payload_content_type,
                    'Accept-Encoding': payload_content_encoding}
 
+        if extra_headers:
+            headers.update(extra_headers)
+
         return self.client.get(secret_ref + '/payload',
-                               extra_headers=headers)
+                               extra_headers=headers, use_auth=use_auth)
 
     def get_secret_based_on_content_type(self, secret_ref,
                                          payload_content_type,
@@ -77,17 +93,19 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
 
         return self.client.get(secret_ref, extra_headers=headers)
 
-    def get_secret_metadata(self, secret_ref):
+    def get_secret_metadata(self, secret_ref, use_auth=True):
         """Retrieves a secret's metadata.
 
         :param secret_ref: HATEOS ref of the secret to be retrieved
+        :param use_auth: Boolean for whether to send authentication headers
         :return: A request response object
         """
         return self.client.get(
-            secret_ref, response_model_type=secret_models.SecretModel)
+            secret_ref, response_model_type=secret_models.SecretModel,
+            use_auth=use_auth)
 
     def get_secrets(self, limit=10, offset=0, name_filter=None,
-                    extra_headers=None):
+                    extra_headers=None, use_auth=True):
         """Handles getting a list of secrets.
 
         :param limit: limits number of returned secrets
@@ -96,12 +114,17 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
         :param name_filter: optional filter to limit the returned secrets to
                         those whose name matches the filter.
         :param extra_headers: Optional HTTP headers to add to the request
+        :param use_auth: Boolean for whether to send authentication headers
         """
         params = {'limit': limit, 'offset': offset}
         if name_filter:
             params['name'] = name_filter
         resp = self.client.get('secrets', params=params,
-                               extra_headers=extra_headers)
+                               extra_headers=extra_headers, use_auth=use_auth)
+
+        # handle expected JSON parsing errors for unauthenticated requests
+        if resp.status_code == 401 and not use_auth:
+            return resp, None, None, None
 
         secrets_list = self.get_json(resp)
 
@@ -111,15 +134,17 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
         return resp, secrets, next_ref, prev_ref
 
     def delete_secret(self, secret_ref, extra_headers=None,
-                      expected_fail=False):
+                      expected_fail=False, use_auth=True):
         """Delete a secret.
 
         :param secret_ref: HATEOS ref of the secret to be deleted
         :param extra_headers: Optional HTTP headers to add to the request
         :param expected_fail: If test is expected to fail the deletion
+        :param use_auth: Boolean for whether to send authentication headers
         :return A request response object
         """
-        resp = self.client.delete(secret_ref, extra_headers=extra_headers)
+        resp = self.client.delete(secret_ref, extra_headers=extra_headers,
+                                  use_auth=use_auth)
 
         if not expected_fail:
             self.created_entities.remove(secret_ref)
