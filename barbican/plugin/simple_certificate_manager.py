@@ -24,6 +24,15 @@ LOG = utils.getLogger(__name__)
 class SimpleCertificatePlugin(cert.CertificatePluginBase):
     """Simple/default certificate plugin."""
 
+    def get_default_ca_name(self):
+        return "Simple CA"
+
+    def get_default_signing_cert(self):
+        return "XXXXXXXXXXXXXXXXX"
+
+    def get_default_intermediates(self):
+        return "YYYYYYYYYYYYYYYY"
+
     def issue_certificate_request(self, order_id, order_meta, plugin_meta,
                                   barbican_meta_dto):
         """Create the initial order with CA

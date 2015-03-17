@@ -260,6 +260,42 @@ class MockModelRepositoryMixin(object):
             mock_repo_obj=mock_transport_key_repo,
             patcher_obj=self.mock_transport_key_repo_patcher)
 
+    def setup_ca_repository_mock(self, mock_ca_repo=mock.MagicMock()):
+        """Mocks the project repository factory function
+
+        :param mock_ca_repo: The pre-configured mock ca repo to be returned.
+        """
+        self.mock_ca_repo_patcher = None
+        self._setup_repository_mock(repo_factory='get_ca_repository',
+                                    mock_repo_obj=mock_ca_repo,
+                                    patcher_obj=self.mock_ca_repo_patcher)
+
+    def setup_preferred_ca_repository_mock(
+            self, mock_preferred_ca_repo=mock.MagicMock()):
+        """Mocks the project repository factory function
+
+        :param mock_preferred_ca_repo: The pre-configured mock project ca repo
+                                     to be returned.
+        """
+        self.mock_preferred_ca_repo_patcher = None
+        self._setup_repository_mock(
+            repo_factory='get_preferred_ca_repository',
+            mock_repo_obj=mock_preferred_ca_repo,
+            patcher_obj=self.mock_preferred_ca_repo_patcher)
+
+    def setup_project_ca_repository_mock(
+            self, mock_project_ca_repo=mock.MagicMock()):
+        """Mocks the project repository factory function
+
+        :param mock_project_ca_repo: The pre-configured mock project ca repo
+                                     to be returned.
+        """
+        self.mock_project_ca_repo_patcher = None
+        self._setup_repository_mock(
+            repo_factory='get_project_ca_repository',
+            mock_repo_obj=mock_project_ca_repo,
+            patcher_obj=self.mock_project_ca_repo_patcher)
+
     def _setup_repository_mock(self, repo_factory, mock_repo_obj, patcher_obj):
         patcher_obj = mock.patch(
             'barbican.model.repositories.' + repo_factory,

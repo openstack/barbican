@@ -86,6 +86,8 @@ class OrderController(object):
     def on_put(self, external_project_id, **kwargs):
         body = api.load_body(pecan.request,
                              validator=self.type_order_validator)
+
+        project = res.get_or_create_project(external_project_id)
         order_type = body.get('type')
 
         if self.order.type != order_type:
@@ -97,11 +99,14 @@ class OrderController(object):
         if models.States.PENDING != self.order.status:
             _order_cannot_be_updated_if_not_pending(self.order.status)
 
+        updated_meta = body.get('meta')
+        validators.validate_ca_id(project.id, updated_meta)
+
         # TODO(chellygel): Put 'meta' into a separate order association
         # entity.
         self.queue.update_order(order_id=self.order.id,
                                 project_id=external_project_id,
-                                updated_meta=body.get('meta'))
+                                updated_meta=updated_meta)
 
     @index.when(method='DELETE')
     @utils.allow_all_content_types
@@ -189,6 +194,9 @@ class OrdersController(object):
                              validator=self.type_order_validator)
         order_type = body.get('type')
         LOG.debug('Processing order type %s', order_type)
+
+        if order_type == models.OrderType.CERTIFICATE:
+            validators.validate_ca_id(project.id, body.get('meta'))
 
         new_order = models.Order()
         new_order.meta = body.get('meta')

@@ -999,6 +999,51 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         self.queue_resource = mock.MagicMock()
         self.queue_resource.process_type_order.return_value = None
 
+        self.ca_repo = mock.MagicMock()
+        self.setup_ca_repository_mock(self.ca_repo)
+
+        self.project_ca_repo = mock.MagicMock()
+        self.setup_project_ca_repository_mock(self.project_ca_repo)
+
+        self.cert_type = 'certificate'
+        self.cert_meta = {'request': 'XXXXXXX'}
+
+        self.cert_order_req = {'type': self.cert_type,
+                               'meta': self.cert_meta}
+
+        self.ca_id = "ca_id1"
+        parsed_ca = {
+            'plugin_name': 'plugin_name',
+            'plugin_ca_id': 'plugin_name ca_id1',
+            'name': 'plugin name',
+            'description': 'Master CA for default plugin',
+            'ca_signing_certificate': 'XXXXX',
+            'intermediates': 'YYYYY'
+        }
+
+        self.ca = models.CertificateAuthority(parsed_ca)
+        self.ca.id = self.ca_id
+        self.ca_repo.get.return_value = self.ca
+
+        self.ca_id2 = "ca_id2"
+        parsed_ca2 = {
+            'plugin_name': 'plugin_name',
+            'plugin_ca_id': 'plugin_name ca_id2',
+            'name': 'plugin name',
+            'description': 'Master CA for default plugin',
+            'ca_signing_certificate': 'XXXXX',
+            'intermediates': 'YYYYY'
+        }
+
+        self.ca2 = models.CertificateAuthority(parsed_ca2)
+        self.ca2.id = self.ca_id2
+
+        self.project_ca_repo.get_by_create_date.return_value = (
+            [], 0, 4, 0)
+
+        self.project_ca = models.ProjectCertificateAuthority(
+            self.project.id, self.ca_id)
+
     def test_should_add_new_order(self):
         resp = self.app.post_json(
             '/orders/', self.key_order_req
@@ -1011,6 +1056,78 @@ class WhenCreatingTypeOrdersUsingOrdersResource(FunctionalTest):
         args, kwargs = self.order_repo.create_from.call_args
         order = args[0]
         self.assertIsInstance(order, models.Order)
+
+    def test_should_add_new_cert_order(self):
+        resp = self.app.post_json(
+            '/orders/',
+            self.cert_order_req
+        )
+        self.assertEqual(resp.status_int, 202)
+
+        self.queue_resource.process_type_order.assert_called_once_with(
+            order_id=None, project_id=self.external_project_id)
+
+        args, kwargs = self.order_repo.create_from.call_args
+        order = args[0]
+        self.assertIsInstance(order, models.Order)
+
+    def test_should_add_new_cert_order_with_ca_id(self):
+        self.cert_meta['ca_id'] = self.ca_id
+
+        resp = self.app.post_json(
+            '/orders/',
+            self.cert_order_req
+        )
+        self.assertEqual(resp.status_int, 202)
+
+        self.queue_resource.process_type_order.assert_called_once_with(
+            order_id=None, project_id=self.external_project_id)
+
+        args, kwargs = self.order_repo.create_from.call_args
+        order = args[0]
+        self.assertIsInstance(order, models.Order)
+
+    def test_should_add_new_cert_order_with_ca_id_project_ca_defined(self):
+        self.cert_meta['ca_id'] = self.ca_id
+        self.project_ca_repo.get_by_create_date.return_value = (
+            [self.project_ca], 0, 4, 1)
+
+        resp = self.app.post_json(
+            '/orders/',
+            self.cert_order_req
+        )
+        self.assertEqual(resp.status_int, 202)
+
+        self.queue_resource.process_type_order.assert_called_once_with(
+            order_id=None, project_id=self.external_project_id)
+
+        args, kwargs = self.order_repo.create_from.call_args
+        order = args[0]
+        self.assertIsInstance(order, models.Order)
+
+    def test_should_fail_invalid_ca_id(self):
+        self.cert_meta['ca_id'] = 'bogus_ca_id'
+        self.ca_repo.get.return_value = None
+
+        resp = self.app.post_json(
+            '/orders/',
+            self.cert_order_req,
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 400)
+
+    def test_should_fail_ca_not_in_defined_project_ca_ids(self):
+        self.cert_meta['ca_id'] = self.ca_id2
+        self.ca_repo.get.return_value = self.ca2
+        self.project_ca_repo.get_by_create_date.return_value = (
+            [self.project_ca], 0, 4, 1)
+
+        resp = self.app.post_json(
+            '/orders/',
+            self.cert_order_req,
+            expect_errors=True
+        )
+        self.assertEqual(resp.status_int, 403)
 
     def test_should_fail_add_new_order_no_secret_json(self):
         resp = self.app.post_json(

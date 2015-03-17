@@ -26,6 +26,7 @@ from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
 from barbican.model import models
+from barbican.model import repositories as repo
 from barbican.openstack.common import timeutils
 from barbican.plugin.interface import secret_store
 from barbican.plugin.util import mime_types
@@ -56,6 +57,33 @@ def get_invalid_property(validation_error):
     # we are interested in the second item which is the failed propertyName.
     if validation_error.schema_path and len(validation_error.schema_path) > 1:
         return validation_error.schema_path[1]
+
+
+def validate_ca_id(project_id, order_meta):
+    ca_id = order_meta.get('ca_id')
+    if not ca_id:
+        return
+
+    ca_repo = repo.get_ca_repository()
+    ca = ca_repo.get(ca_id, suppress_exception=True)
+    if not ca:
+        raise exception.InvalidCAID(ca_id=ca_id)
+
+    project_ca_repo = repo.get_project_ca_repository()
+    project_cas, offset, limit, total = project_ca_repo.get_by_create_date(
+        project_id=project_id,
+        suppress_exception=True
+    )
+    if total < 1:
+        return
+
+    for project_ca in project_cas:
+        if ca.id == project_ca.ca_id:
+            return
+
+    raise exception.CANotDefinedForProject(
+        ca_id=ca_id,
+        project_id=project_id)
 
 
 @six.add_metaclass(abc.ABCMeta)

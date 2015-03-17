@@ -21,6 +21,7 @@ implementations. Hence do not place vendor-specific content in this module.
 """
 
 import abc
+import datetime
 
 from oslo_config import cfg
 import six
@@ -29,6 +30,8 @@ from stevedore import named
 from barbican.common import exception
 import barbican.common.utils as utils
 from barbican import i18n as u
+from barbican.model import models
+from barbican.model import repositories as repos
 
 
 CONF = cfg.CONF
@@ -75,6 +78,7 @@ CONF.register_opts(cert_event_opts, group=cert_event_opt_group)
 
 ERROR_RETRY_MSEC = 300000
 RETRY_MSEC = 3600000
+CA_INFO_DEFAULT_EXPIRATION_DAYS = 1
 
 CA_PLUGIN_TYPE_DOGTAG = "dogtag"
 CA_PLUGIN_TYPE_SYMANTEC = "symantec"
@@ -85,6 +89,17 @@ CA_SUBJECT_KEY_IDENTIFIER = "ca_subject_key_identifier"
 
 # field to get the certificate request type
 REQUEST_TYPE = "request_type"
+
+# fields for the ca_id, plugin_ca_id
+CA_ID = "ca_id"
+PLUGIN_CA_ID = "plugin_ca_id"
+
+# fields for ca_info dict keys
+INFO_NAME = "name"
+INFO_DESCRIPTION = "description"
+INFO_CA_SIGNING_CERT = "ca_signing_cert"
+INFO_INTERMEDIATES = "intermediates"
+INFO_EXPIRATION = "expiration"
 
 
 class CertificateRequestType(object):
@@ -105,6 +120,14 @@ class CertificatePluginNotFound(exception.BarbicanException):
         else:
             message = u._("Certificate plugin not found or configured.")
         super(CertificatePluginNotFound, self).__init__(message)
+
+
+class CertificatePluginNotFoundForCAID(exception.BarbicanException):
+    """Raised when no certificate plugin is available for a CA_ID."""
+    def __init__(self, ca_id):
+        message = u._(
+            'Certificate plugin not found for "{ca_id}".').format(ca_id=ca_id)
+        super(CertificatePluginNotFoundForCAID, self).__init__(message)
 
 
 class CertificateEventPluginNotFound(exception.BarbicanException):
@@ -209,6 +232,52 @@ class CertificatePluginBase(object):
 
     This class is the base plugin contract for certificates.
     """
+
+    @abc.abstractmethod
+    def get_default_ca_name(self):
+        """Get the default CA name
+
+        Provides a default CA name to be returned in the default
+        get_ca_info() method.  If get_ca_info() is overridden (to
+        support multiple CAs for instance), then this method may not
+        be called.  In that case, just implement this method to return
+        a dummy variable.
+
+        If this value is used, it should be unique amongst all the CA
+        plugins.
+
+        :return: The default CA name
+        :rtype: str
+        """
+        raise NotImplementedError   # pragma: no cover
+
+    @abc.abstractmethod
+    def get_default_signing_cert(self):
+        """Get the default CA signing cert
+
+        Provides a default CA signing cert to be returned in the default
+        get_ca_info() method.  If get_ca_info() is overridden (to
+        support multiple CAs for instance), then this method may not
+        be called.  In that case, just implement this method to return
+        a dummy variable.
+        :return: The default CA signing cert
+        :rtype: str
+        """
+        raise NotImplementedError   # pragma: no cover
+
+    @abc.abstractmethod
+    def get_default_intermediates(self):
+        """Get the default CA certificate chain
+
+        Provides a default CA certificate to be returned in the default
+        get_ca_info() method.  If get_ca_info() is overridden (to
+        support multiple CAs for instance), then this method may not
+        be called.  In that case, just implement this method to return
+        a dummy variable.
+        :return: The default CA certificate chain
+        :rtype: str
+        """
+        raise NotImplementedError   # pragma: no cover
 
     @abc.abstractmethod
     def issue_certificate_request(self, order_id, order_meta, plugin_meta,
@@ -317,6 +386,46 @@ class CertificatePluginBase(object):
         """
         return [CertificateRequestType.CUSTOM_REQUEST]  # pragma: no cover
 
+    def get_ca_info(self):
+        """Returns information about the CA(s) supported by this plugin.
+
+        :returns: dictionary indexed by plugin_ca_id.  Each entry consists
+                  of a dictionary of key-value pairs.
+
+        An example dictionary containing the current supported attributes
+        is shown below::
+
+            { "plugin_ca_id1": {
+                INFO_NAME : "CA name",
+                INFO_DESCRIPTION : "CA user friendly description",
+                INFO_CA_SIGNING_CERT : "base 64 encoded signing cert",
+                INFO_INTERMEDIATES = "base 64 encoded certificate chain"
+                INFO_EXPIRATION = "ISO formatted UTC datetime for when this"
+                                  "data will become stale"
+                }
+            }
+
+        """
+        name = self.get_default_ca_name()
+        expiration = (datetime.datetime.utcnow() +
+                      datetime.timedelta(days=CA_INFO_DEFAULT_EXPIRATION_DAYS))
+
+        default_info = {
+            INFO_NAME: name,
+            INFO_DESCRIPTION: "Certificate Authority - {0}".format(name),
+            INFO_EXPIRATION: expiration.isoformat()
+        }
+
+        signing_cert = self.get_default_signing_cert()
+        if signing_cert is not None:
+            default_info[INFO_CA_SIGNING_CERT] = signing_cert
+
+        intermediates = self.get_default_intermediates()
+        if intermediates is not None:
+            default_info[INFO_INTERMEDIATES] = intermediates
+
+        return {name: default_info}
+
 
 class CertificateStatus(object):
     """Defines statuses for certificate request process.
@@ -394,6 +503,7 @@ class BarbicanMetaDTO(object):
 class CertificatePluginManager(named.NamedExtensionManager):
     def __init__(self, conf=CONF, invoke_on_load=True,
                  invoke_args=(), invoke_kwargs={}):
+        self.ca_repo = repos.get_ca_repository()
         super(CertificatePluginManager, self).__init__(
             conf.certificate.namespace,
             conf.certificate.enabled_certificate_plugins,
@@ -433,6 +543,71 @@ class CertificatePluginManager(named.NamedExtensionManager):
             if utils.generate_fullname_for(ext.obj) == plugin_name:
                 return ext.obj
         raise CertificatePluginNotFound(plugin_name)
+
+    def get_plugin_by_ca_id(self, ca_id):
+        """Gets a plugin based on the ca_id.
+
+        :param ca_id: id for CA in the CertificateAuthorities table
+        :returns: CertificatePluginBase plugin implementation
+        """
+        ca = self.ca_repo.get(ca_id, suppress_exception=True)
+        if not ca:
+            raise CertificatePluginNotFoundForCAID(ca_id)
+
+        return self.get_plugin_by_name(ca.plugin_name)
+
+    def refresh_ca_table(self):
+        """Refreshes the CertificateAuthority table."""
+        for ext in self.extensions:
+            plugin_name = utils.generate_fullname_for(ext.obj)
+            cas, offset, limit, total = self.ca_repo.get_by_create_date(
+                plugin_name=plugin_name,
+                suppress_exception=True)
+            if total < 1:
+                # if no entries are found, then the plugin has not yet been
+                # queried or that plugin's entries have expired.
+                # Most of the time, this will be a no-op for plugins.
+                self.update_ca_info(ext.obj)
+
+    def update_ca_info(self, cert_plugin):
+        """Update the CA info for a particular plugin."""
+
+        plugin_name = utils.generate_fullname_for(cert_plugin)
+        new_ca_infos = cert_plugin.get_ca_info()
+
+        old_cas, offset, limit, total = self.ca_repo.get_by_create_date(
+            plugin_name=plugin_name,
+            suppress_exception=True,
+            show_expired=True)
+
+        for old_ca in old_cas:
+            plugin_ca_id = old_ca.plugin_ca_id
+            if plugin_ca_id not in new_ca_infos.keys():
+                # remove CAs that no longer exist
+                self._delete_ca(old_ca)
+            else:
+                # update those that still exist
+                self.ca_repo.update_entity(
+                    old_ca,
+                    new_ca_infos[plugin_ca_id])
+
+        old_ids = set([ca.plugin_ca_id for ca in old_cas])
+        new_ids = set(new_ca_infos.keys())
+
+        # add new CAs
+        add_ids = new_ids - old_ids
+        for add_id in add_ids:
+            self._add_ca(plugin_name, add_id, new_ca_infos[add_id])
+
+    def _add_ca(self, plugin_name, plugin_ca_id, ca_info):
+        parsed_ca = dict(ca_info)
+        parsed_ca['plugin_name'] = plugin_name
+        parsed_ca['plugin_ca_id'] = plugin_ca_id
+        new_ca = models.CertificateAuthority(parsed_ca)
+        self.ca_repo.create_from(new_ca)
+
+    def _delete_ca(self, ca):
+        self.ca_repo.delete_entity_by_id(ca.id, None)
 
 
 class _CertificateEventPluginManager(named.NamedExtensionManager,

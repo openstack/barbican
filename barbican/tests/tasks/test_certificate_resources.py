@@ -173,6 +173,16 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
         # Set up mocked repos
         self.container_repo = mock.MagicMock()
         self.secret_repo = mock.MagicMock()
+        self.ca_repo = mock.MagicMock()
+        self.preferred_ca_repo = mock.MagicMock()
+
+        self.preferred_ca_repo.get_by_create_date.return_value = (
+            None, 0, 10, 0)
+        self.preferred_ca_repo.get_global_preferred_ca.return_value = None
+
+        self.pref_ca = models.PreferredCertificateAuthority(
+            self.project_id,
+            "ca_id")
 
         # Set up mocked repositories
         self.setup_container_repository_mock(self.container_repo)
@@ -180,6 +190,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
         self.setup_order_plugin_meta_repository_mock()
         self.setup_project_secret_repository_mock()
         self.setup_secret_repository_mock(self.secret_repo)
+        self.setup_ca_repository_mock(self.ca_repo)
+        self.setup_preferred_ca_repository_mock(self.preferred_ca_repo)
 
     def stored_key_side_effect(self, *args, **kwargs):
         if args[0] == self.private_key_secret_id:
@@ -225,7 +237,7 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
             self.project_model
         )
 
-    def test_should_return_for_pyopenssl_stored_key(self):
+    def _do_pyopenssl_stored_key_request(self):
         self.container = models.Container(
             self.parsed_container_without_passphrase)
         self.container_repo.get.return_value = self.container
@@ -244,12 +256,38 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
         cert_res.issue_certificate_request(self.order_model,
                                            self.project_model)
 
+    def test_should_return_for_pyopenssl_stored_key(self):
+        self._do_pyopenssl_stored_key_request()
         self._verify_issue_certificate_plugins_called()
         self.assertIsNotNone(
             self.order_model.order_barbican_metadata['generated_csr'])
 
         # TODO(alee-3) Add tests to validate the request based on the validator
         # code that dave-mccowan is adding.
+
+    def test_should_return_for_openssl_stored_key_ca_id_passed_in(self):
+        self.stored_key_meta['ca_id'] = "ca1"
+        self._do_pyopenssl_stored_key_request()
+        self._verify_issue_certificate_plugins_called()
+        self.assertIsNotNone(
+            self.order_model.order_barbican_metadata['generated_csr'])
+
+    def test_should_return_for_openssl_stored_key_pref_ca_defined(self):
+        self.preferred_ca_repo.get_by_create_date.return_value = (
+            [self.pref_ca], 0, 10, 1)
+        self._do_pyopenssl_stored_key_request()
+        self._verify_issue_certificate_plugins_called()
+        self.assertIsNotNone(
+            self.order_model.order_barbican_metadata['generated_csr'])
+
+    def test_should_return_for_openssl_stored_key_global_ca_defined(self):
+        self.preferred_ca_repo.get_global_preferred_ca.return_value = (
+            self.pref_ca
+        )
+        self._do_pyopenssl_stored_key_request()
+        self._verify_issue_certificate_plugins_called()
+        self.assertIsNotNone(
+            self.order_model.order_barbican_metadata['generated_csr'])
 
     def test_should_return_for_pyopenssl_stored_key_with_passphrase(self):
         self.container = models.Container(
@@ -455,7 +493,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
     def _config_cert_plugin(self):
         """Mock the certificate plugin manager."""
         cert_plugin_config = {
-            'return_value.get_plugin.return_value': self.cert_plugin
+            'return_value.get_plugin.return_value': self.cert_plugin,
+            'return_value.get_plugin_by_ca_id.return_value': self.cert_plugin
         }
         self.cert_plugin_patcher = mock.patch(
             'barbican.plugin.interface.certificate_manager'

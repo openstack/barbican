@@ -604,6 +604,17 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
         except pki.CertNotFoundException:
             return None
 
+    def get_default_ca_name(self):
+        return "Dogtag CA"
+
+    def get_default_signing_cert(self):
+        # TODO(alee) Add code to get the signing cert
+        return None
+
+    def get_default_intermediates(self):
+        # TODO(alee) Add code to get the cert chain
+        return None
+
     def check_certificate_status(self, order_id, order_meta, plugin_meta,
                                  barbican_meta_dto):
         """Check the status of a certificate request.
