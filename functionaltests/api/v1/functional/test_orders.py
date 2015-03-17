@@ -21,10 +21,15 @@ from testtools import testcase
 
 from barbican.tests import utils
 from functionaltests.api import base
+from functionaltests.api.v1.behaviors import container_behaviors
 from functionaltests.api.v1.behaviors import order_behaviors
 from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import order_models
 
+from cryptography.hazmat import backends
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
 
 order_create_defaults_data = {
     'type': 'key',
@@ -54,6 +59,17 @@ order_create_nones_data = {
     }
 }
 
+order_create_asymmetric_data = {
+    'type': 'asymmetric',
+    "meta": {
+        "name": "barbican functional test asymmetric secret name",
+        "algorithm": "rsa",
+        "bit_length": 1024,
+        "mode": "cbc",
+        "payload_content_type": "application/octet-stream",
+    }
+}
+
 
 @utils.parameterized_test_case
 class OrdersTestCase(base.TestCase):
@@ -61,9 +77,12 @@ class OrdersTestCase(base.TestCase):
     def setUp(self):
         super(OrdersTestCase, self).setUp()
         self.behaviors = order_behaviors.OrderBehaviors(self.client)
+        self.container_behaviors = container_behaviors.ContainerBehaviors(
+            self.client)
         self.secret_behaviors = secret_behaviors.SecretBehaviors(self.client)
         self.default_data = copy.deepcopy(order_create_defaults_data)
         self.nones_data = copy.deepcopy(order_create_nones_data)
+        self.asymmetric_data = copy.deepcopy(order_create_asymmetric_data)
 
     def tearDown(self):
         self.behaviors.delete_all_created_orders()
@@ -491,3 +510,57 @@ class OrdersTestCase(base.TestCase):
         # malicious one.
         regex = '.*{0}.*'.format(malicious_hostname)
         self.assertNotRegexpMatches(resp.headers['location'], regex)
+
+    @testcase.attr('positive')
+    def test_encryption_using_generated_key(self):
+        """Tests functionality of a generated asymmetric key pair."""
+        test_model = order_models.OrderModel(**self.asymmetric_data)
+        create_resp, order_ref = self.behaviors.create_order(test_model)
+        self.assertEqual(create_resp.status_code, 202)
+
+        order_resp = self.behaviors.get_order(order_ref)
+        self.assertEqual(order_resp.status_code, 200)
+
+        container_resp = self.container_behaviors.get_container(
+            order_resp.model.container_ref)
+        self.assertEqual(container_resp.status_code, 200)
+
+        secret_dict = {}
+        for secret in container_resp.model.secret_refs:
+            self.assertIsNotNone(secret.secret_ref)
+            secret_resp = self.secret_behaviors.get_secret(
+                secret.secret_ref, "application/octet-stream")
+            self.assertIsNotNone(secret_resp)
+            secret_dict[secret.name] = secret_resp.content
+
+        private_key = serialization.load_der_private_key(
+            secret_dict['private_key'],
+            password=None,
+            backend=backends.default_backend()
+        )
+        public_key = serialization.load_der_public_key(
+            secret_dict['public_key'],
+            backend=backends.default_backend()
+        )
+
+        self.assertIsNotNone(private_key)
+        self.assertIsNotNone(public_key)
+
+        message = b'plaintext message'
+        ciphertext = public_key.encrypt(
+            message,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA1()),
+                algorithm=hashes.SHA1(),
+                label=None
+            )
+        )
+        plaintext = private_key.decrypt(
+            ciphertext,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA1()),
+                algorithm=hashes.SHA1(),
+                label=None
+            )
+        )
+        self.assertEqual(message, plaintext)
