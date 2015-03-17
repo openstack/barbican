@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2015.1.dev119\n"
+"Project-Id-Version: barbican 2015.1.dev178\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-04 06:07+0000\n"
+"POT-Creation-Date: 2015-03-17 06:42+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -47,6 +47,62 @@ msgstr ""
 msgid "Unexpected content type: {type}.  Expected content types are: {expected}"
 msgstr ""
 
+#: barbican/api/controllers/cas.py:32
+msgid "Not Found. CA not found."
+msgstr ""
+
+#: barbican/api/controllers/cas.py:39
+msgid "Cannot set CA as a preferred CA as it is not a project CA."
+msgstr ""
+
+#: barbican/api/controllers/cas.py:71
+msgid "Certificate Authority retrieval"
+msgstr ""
+
+#: barbican/api/controllers/cas.py:78
+msgid "CA Signing Cert retrieval"
+msgstr ""
+
+#: barbican/api/controllers/cas.py:86
+msgid "CA Cert Chain retrieval"
+msgstr ""
+
+#: barbican/api/controllers/cas.py:94
+msgid "CA projects retrieval"
+msgstr ""
+
+#: barbican/api/controllers/cas.py:111
+msgid "Add CA to project"
+msgstr ""
+
+#: barbican/api/controllers/cas.py:139
+msgid "Remove CA from project"
+msgstr ""
+
+#: barbican/api/controllers/cas.py:161
+msgid "Set preferred project CA"
+msgstr ""
+
+#: barbican/api/controllers/cas.py:192
+msgid "Set global preferred CA"
+msgstr ""
+
+#: barbican/api/controllers/cas.py:207
+msgid "Unset global preferred CA"
+msgstr ""
+
+#: barbican/api/controllers/cas.py:255
+msgid "Certificate Authorities retrieval"
+msgstr ""
+
+#: barbican/api/controllers/cas.py:298
+msgid "Retrieve global preferred CA"
+msgstr ""
+
+#: barbican/api/controllers/cas.py:312
+msgid "Retrieve project preferred CA"
+msgstr ""
+
 #: barbican/api/controllers/consumers.py:31
 msgid "Not Found. Sorry but your consumer is in another castle."
 msgstr ""
@@ -75,19 +131,19 @@ msgstr ""
 msgid "Container retrieval"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:71
+#: barbican/api/controllers/containers.py:72
 msgid "Container deletion"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:113
+#: barbican/api/controllers/containers.py:114
 msgid "Containers(s) retrieval"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:151
+#: barbican/api/controllers/containers.py:152
 msgid "Container creation"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:175
+#: barbican/api/controllers/containers.py:176
 msgid "Secret provided for '{secret_name}' doesn't exist."
 msgstr ""
 
@@ -119,57 +175,61 @@ msgstr ""
 msgid "Order retrieval"
 msgstr ""
 
-#: barbican/api/controllers/orders.py:83 barbican/api/controllers/orders.py:174
+#: barbican/api/controllers/orders.py:83 barbican/api/controllers/orders.py:175
 msgid "Order update"
 msgstr ""
 
-#: barbican/api/controllers/orders.py:107
+#: barbican/api/controllers/orders.py:108
 msgid "Order deletion"
 msgstr ""
 
-#: barbican/api/controllers/orders.py:147
+#: barbican/api/controllers/orders.py:148
 msgid "Order(s) retrieval"
 msgstr ""
 
-#: barbican/api/controllers/orders.py:180
+#: barbican/api/controllers/orders.py:181
 msgid "Order creation"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:44
+#: barbican/api/controllers/secrets.py:35
 msgid "Not Found. Sorry but your secret is in another castle."
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:50
+#: barbican/api/controllers/secrets.py:41
 msgid "Secret already has data, cannot modify it."
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:59
+#: barbican/api/controllers/secrets.py:50
 msgid ""
 "Transport key wrapped session key has been provided to wrap secrets for "
 "retrieval, but the transport key id has not been provided."
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:78
+#: barbican/api/controllers/secrets.py:69
 msgid "Secret retrieval"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:139
+#: barbican/api/controllers/secrets.py:130
+msgid "Secret payload retrieval"
+msgstr ""
+
+#: barbican/api/controllers/secrets.py:141
 msgid "Secret update"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:149
+#: barbican/api/controllers/secrets.py:151
 msgid "Content-Type of '{content_type}' is not supported for PUT."
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:175
+#: barbican/api/controllers/secrets.py:177
 msgid "Secret deletion"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:212
+#: barbican/api/controllers/secrets.py:214
 msgid "Secret(s) retrieval"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:263
+#: barbican/api/controllers/secrets.py:265
 msgid "Secret creation"
 msgstr ""
 
@@ -261,7 +321,7 @@ msgid "Invalid CMC Data"
 msgstr ""
 
 #: barbican/common/exception.py:100
-msgid "Invalid PKCS10 Data"
+msgid "Invalid PKCS10 Data: %(reason)"
 msgstr ""
 
 #: barbican/common/exception.py:104
@@ -555,208 +615,216 @@ msgstr ""
 msgid "The provided UUID in the URI is malformed."
 msgstr ""
 
-#: barbican/common/utils.py:113
+#: barbican/common/utils.py:124
 msgid "Cannot generate a fullname for a null instance"
 msgstr ""
 
-#: barbican/common/validators.py:84
+#: barbican/common/validators.py:87
 msgid "{schema_name}' within '{parent_schema_name}"
 msgstr ""
 
-#: barbican/common/validators.py:168
+#: barbican/common/validators.py:181
 msgid "If 'payload' specified, must be non empty"
 msgstr ""
 
-#: barbican/common/validators.py:176
+#: barbican/common/validators.py:189
 msgid "payload must be provided when payload_content_type is specified"
 msgstr ""
 
-#: barbican/common/validators.py:205 barbican/common/validators.py:508
-msgid "Invalid date for 'expiration'"
-msgstr ""
-
-#: barbican/common/validators.py:219
-msgid "'expiration' is before current time"
-msgstr ""
-
-#: barbican/common/validators.py:232
-msgid "If 'payload' is supplied, 'payload_content_type' must also be supplied."
-msgstr ""
-
-#: barbican/common/validators.py:243
-msgid ""
-"payload_content_encoding must be specified when payload_content_type is "
-"application/octet-stream."
-msgstr ""
-
-#: barbican/common/validators.py:251
-msgid ""
-"payload_content_encoding must not be specified when payload_content_type "
-"is text/plain"
-msgstr ""
-
-#: barbican/common/validators.py:260
+#: barbican/common/validators.py:197
 msgid "payload_content_type is not one of {supported}"
 msgstr ""
 
-#: barbican/common/validators.py:272
+#: barbican/common/validators.py:223 barbican/common/validators.py:529
+msgid "Invalid date for 'expiration'"
+msgstr ""
+
+#: barbican/common/validators.py:237
+msgid "'expiration' is before current time"
+msgstr ""
+
+#: barbican/common/validators.py:250
+msgid "If 'payload' is supplied, 'payload_content_type' must also be supplied."
+msgstr ""
+
+#: barbican/common/validators.py:257
+msgid "payload_content_type {supplied} is not one of {supported}"
+msgstr ""
+
+#: barbican/common/validators.py:267
+msgid "payload_content_encoding is not one of {supported}"
+msgstr ""
+
+#: barbican/common/validators.py:283
 msgid "Invalid payload for payload_content_encoding"
 msgstr ""
 
-#: barbican/common/validators.py:345
+#: barbican/common/validators.py:356
 msgid "'payload' not allowed for key type order"
 msgstr ""
 
-#: barbican/common/validators.py:364
+#: barbican/common/validators.py:375
 msgid "Only 'application/octet-stream' supported"
 msgstr ""
 
-#: barbican/common/validators.py:491
+#: barbican/common/validators.py:453
+msgid "Bad format"
+msgstr ""
+
+#: barbican/common/validators.py:460
+msgid "Signing key incorrect"
+msgstr ""
+
+#: barbican/common/validators.py:512
 msgid "'algorithm' is required field for {0} type order"
 msgstr ""
 
-#: barbican/common/validators.py:520
+#: barbican/common/validators.py:541
 msgid "Must have non-zero positive bit_length to generate secret"
 msgstr ""
 
-#: barbican/common/validators.py:528
+#: barbican/common/validators.py:549
 msgid "Must be a positive integer that is a multiple of 8"
 msgstr ""
 
-#: barbican/common/validators.py:536
+#: barbican/common/validators.py:557
 msgid "Feature not implemented for '{0}' order type"
 msgstr ""
 
-#: barbican/common/validators.py:608
+#: barbican/common/validators.py:629
 msgid "Duplicate reference names are not allowed"
 msgstr ""
 
-#: barbican/common/validators.py:620
+#: barbican/common/validators.py:641
 msgid "Duplicate secret ids are not allowed"
 msgstr ""
 
-#: barbican/common/validators.py:638
+#: barbican/common/validators.py:652
+msgid "Secret_ref does not match the configured hostname, please try again"
+msgstr ""
+
+#: barbican/common/validators.py:673
 msgid ""
 "only 'private_key', 'public_key' and 'private_key_passphrase' reference "
 "names are allowed for RSA type"
 msgstr ""
 
-#: barbican/common/validators.py:646
+#: barbican/common/validators.py:681
 msgid ""
 "The minimum required reference names are 'public_key' and'private_key' "
 "for RSA type"
 msgstr ""
 
-#: barbican/common/validators.py:659
+#: barbican/common/validators.py:694
 msgid ""
 "only 'private_key', 'certificate' , 'private_key_passphrase',  or "
 "'intermediates' reference names are allowed for Certificate type"
 msgstr ""
 
-#: barbican/common/validators.py:667
+#: barbican/common/validators.py:702
 msgid "The minimum required reference name is 'certificate' for Certificate type"
 msgstr ""
 
-#: barbican/common/validators.py:713
+#: barbican/common/validators.py:748
 msgid "plugin_name must be provided"
 msgstr ""
 
-#: barbican/common/validators.py:720
+#: barbican/common/validators.py:755
 msgid "transport_key must be provided"
 msgstr ""
 
-#: barbican/model/models.py:367
+#: barbican/model/models.py:369
 msgid "Must supply non-None {0} argument for SecretStoreMetadatum entry."
 msgstr ""
 
-#: barbican/model/models.py:562
+#: barbican/model/models.py:566
 msgid "Must supply non-None {0} argument for OrderPluginMetadatum entry."
 msgstr ""
 
-#: barbican/model/models.py:598
+#: barbican/model/models.py:602
 msgid "Must supply non-None {0} argument for OrderBarbicanMetadatum entry."
 msgstr ""
 
-#: barbican/model/models.py:763
+#: barbican/model/models.py:767
 msgid "Must supply non-None {0} argument for TransportKey entry."
 msgstr ""
 
-#: barbican/model/models.py:805
+#: barbican/model/models.py:809
 msgid "Must supply Non-None {0} argument for CertificateAuthority entry."
 msgstr ""
 
-#: barbican/model/models.py:871
+#: barbican/model/models.py:875
 msgid "Must supply non-None {0} argument for CertificateAuthorityMetadatum entry."
 msgstr ""
 
-#: barbican/model/models.py:916
+#: barbican/model/models.py:922
 msgid "Must supply non-None {0} argument for ProjectCertificateAuthority entry."
 msgstr ""
 
-#: barbican/model/models.py:963
+#: barbican/model/models.py:971
 msgid "Must supply non-None {0} argument for PreferredCertificateAuthority entry."
 msgstr ""
 
-#: barbican/model/repositories.py:164
+#: barbican/model/repositories.py:166
 msgid "No SQL connection configured"
 msgstr ""
 
-#: barbican/model/repositories.py:178
+#: barbican/model/repositories.py:180
 msgid ""
 "Error configuring registry database with supplied sql_connection. Got "
 "error: {error}"
 msgstr ""
 
-#: barbican/model/repositories.py:360
+#: barbican/model/repositories.py:363
 msgid "Must supply non-None {entity_name}."
 msgstr ""
 
-#: barbican/model/repositories.py:366
+#: barbican/model/repositories.py:369
 msgid "Must supply {entity_name} with id=None (i.e. new entity)."
 msgstr ""
 
-#: barbican/model/repositories.py:444
+#: barbican/model/repositories.py:447
 msgid "{entity_name} status is required."
 msgstr ""
 
-#: barbican/model/repositories.py:449
+#: barbican/model/repositories.py:452
 msgid "Invalid status '{status}' for {entity_name}."
 msgstr ""
 
-#: barbican/model/repositories.py:469
+#: barbican/model/repositories.py:472
 msgid "{entity_name} is missing query build method for get project entities."
 msgstr ""
 
-#: barbican/model/repositories.py:521
+#: barbican/model/repositories.py:524
 #, python-format
 msgid "Error deleting project entities for project_id=%s"
 msgstr ""
 
-#: barbican/model/repositories.py:553
+#: barbican/model/repositories.py:556
 msgid "No {entity_name} found with keystone-ID {id}"
 msgstr ""
 
-#: barbican/model/repositories.py:750
+#: barbican/model/repositories.py:753
 msgid "Tried to register crypto plugin with null or empty name."
 msgstr ""
 
-#: barbican/model/repositories.py:1141
+#: barbican/model/repositories.py:1144
 msgid "Could not find {entity_name}"
 msgstr ""
 
-#: barbican/model/repositories.py:1332
+#: barbican/model/repositories.py:1645
 msgid "No {entity} found with ID {id}"
 msgstr ""
 
-#: barbican/model/repositories.py:1338
+#: barbican/model/repositories.py:1651
 msgid "Entity ID {entity_id} not found"
 msgstr ""
 
-#: barbican/model/repositories.py:1344
+#: barbican/model/repositories.py:1657
 msgid "No entities of type {entity_name} found"
 msgstr ""
 
-#: barbican/model/repositories.py:1350
+#: barbican/model/repositories.py:1663
 msgid "Entity '{entity_name}' already exists"
 msgstr ""
 
@@ -911,81 +979,81 @@ msgstr ""
 msgid "Operation not supported by Dogtag Plugin"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:359
+#: barbican/plugin/dogtag.py:358
 msgid ""
 "Passphrase encryption is not supported for symmetric key generating "
 "algorithms."
 msgstr ""
 
-#: barbican/plugin/dogtag.py:391
+#: barbican/plugin/dogtag.py:389
 msgid "Passphrase encryption is not supported for DSA algorithm"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:512
+#: barbican/plugin/dogtag.py:506
 msgid ""
 "DSA keys should not have a passphrase in the database, for being used "
 "during retrieval."
 msgstr ""
 
-#: barbican/plugin/dogtag.py:516
+#: barbican/plugin/dogtag.py:510
 msgid ""
 "Secrets of type {secret_type} should not have a passphrase in the "
 "database, for being used during retrieval."
 msgstr ""
 
-#: barbican/plugin/dogtag.py:530
+#: barbican/plugin/dogtag.py:523
 msgid ""
 "Encryption using session key is not supported when retrieving a "
 "{secret_type} key."
 msgstr ""
 
-#: barbican/plugin/dogtag.py:559
+#: barbican/plugin/dogtag.py:552
 msgid "Exception thrown by enroll_cert: {message}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:589
+#: barbican/plugin/dogtag.py:582
 msgid "{request} not found for {operation} for order_id {order_id}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:630
+#: barbican/plugin/dogtag.py:623
 msgid "No request found for request_id {request_id} for order {order_id}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:656
+#: barbican/plugin/dogtag.py:649
 msgid ""
 "Request {request_id} reports status_complete, but no cert_id has been "
 "returned"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:667
+#: barbican/plugin/dogtag.py:660
 msgid "Certificate not found for cert_id: {cert_id}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:677
+#: barbican/plugin/dogtag.py:670
 msgid "Invalid request_status returned by CA"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:800
+#: barbican/plugin/dogtag.py:793
 msgid "No profile_id specified"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:826
+#: barbican/plugin/dogtag.py:819
 msgid "No request returned in enrollment_results"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:844
+#: barbican/plugin/dogtag.py:837
 msgid "request_id {req_id} returns COMPLETE but no cert returned"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:848
+#: barbican/plugin/dogtag.py:841
 msgid "Invalid request_status {status} for request_id {request_id}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:884
+#: barbican/plugin/dogtag.py:877
 msgid "Modify request: unable to cancel: {message}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:915
+#: barbican/plugin/dogtag.py:908
 msgid "no request found for this order"
 msgstr ""
 
@@ -1025,17 +1093,17 @@ msgstr ""
 msgid "Feature not yet implemented by KMIP Secret Store plugin"
 msgstr ""
 
-#: barbican/plugin/kmip_secret_store.py:290
+#: barbican/plugin/kmip_secret_store.py:287
 msgid ""
 "Unknown key value type received from KMIP server, expected "
 "{key_value_struct} or {key_value_string}, received: {key_value_type}"
 msgstr ""
 
-#: barbican/plugin/kmip_secret_store.py:509
+#: barbican/plugin/kmip_secret_store.py:493
 msgid "Status: {status}, Reason: {reason}, Message: {message}"
 msgstr ""
 
-#: barbican/plugin/kmip_secret_store.py:533
+#: barbican/plugin/kmip_secret_store.py:517
 msgid "Bad key file permissions found, expected 400 for path: {file_path}"
 msgstr ""
 
