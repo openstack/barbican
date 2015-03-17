@@ -18,6 +18,7 @@ import base64
 
 import jsonschema as schema
 import ldap
+from OpenSSL import crypto
 from oslo_config import cfg
 import six
 
@@ -440,14 +441,24 @@ class TypeOrderValidator(ValidatorBase):
         pass
 
     def _validate_pkcs10_data(self, request_data):
-        """Confirm that the request_data is valid PKCS#10."""
-        """
-        TODO(alee-3) complete this function
+        """Confirm that the request_data is valid PKCS#10.
 
         Parse data into the ASN.1 structure defined by PKCS10.
         If parsing fails, raise InvalidPKCS10Data
         """
-        pass
+        try:
+            csr = crypto.load_certificate_request(crypto.FILETYPE_PEM,
+                                                  request_data)
+        except Exception:
+            reason = u._("Bad format")
+            raise exception.InvalidPKCS10Data(reason=reason)
+
+        try:
+            pubkey = csr.get_pubkey()
+            csr.verify(pubkey)
+        except Exception:
+            reason = u._("Signing key incorrect")
+            raise exception.InvalidPKCS10Data(reason=reason)
 
     def _validate_full_cmc_data(self, request_data):
         """Confirm that request_data is valid Full CMC data."""

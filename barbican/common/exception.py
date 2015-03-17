@@ -97,7 +97,7 @@ class InvalidCMCData(BarbicanException):
 
 
 class InvalidPKCS10Data(BarbicanException):
-    message = u._("Invalid PKCS10 Data")
+    message = u._("Invalid PKCS10 Data: %(reason)")
 
 
 class InvalidCertificateRequestType(BarbicanException):
