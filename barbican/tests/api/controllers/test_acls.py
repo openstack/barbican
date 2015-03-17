@@ -643,6 +643,625 @@ class WhenTestingSecretACLResource(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(resp.status_int, 405)
 
 
+class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
+
+    def test_can_create_new_container_acls(self):
+        """Create container acls and compare db values with request data."""
+        container_id, _ = create_container(self.app)
+
+        resp, acls = create_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u2'],
+            list_user_ids=['u1', 'u3', 'u4'])
+        self.assertEqual(resp.status_int, 201)
+        self.assertIsNotNone(acls)
+        self.assertTrue(2, len(acls))
+        for acl_ref in resp.json:
+            self.assertIn('/containers/{0}/acls'.format(container_id),
+                          acl_ref['acl_ref'])
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        # Check creator_only is False when not provided
+        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertFalse(acl_map['list']['creator_only'])
+
+    def test_create_new_container_acls_with_creator_only_values(self):
+        """Should allow creating acls for a new container with creator-only."""
+        container_id, _ = create_container(self.app)
+
+        resp, acls = create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=False,
+            list_user_ids=['u1', 'u3', 'u4'],
+            list_creator_only=None,
+            write_creator_only=True)
+        self.assertEqual(resp.status_int, 201)
+        self.assertIsNotNone(acls)
+        self.assertTrue(3, len(acls))
+        for acl_ref in resp.json:
+            self.assertIn('/containers/{0}/acls'.format(container_id),
+                          acl_ref['acl_ref'])
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertFalse(acl_map['list']['creator_only'])
+        self.assertTrue(acl_map['write']['creator_only'])
+
+    def test_new_container_acls_with_invalid_creator_should_fail(self):
+        """Should fail if creator-only flag is provided as string value."""
+        container_id, _ = create_container(self.app)
+
+        resp, acls = create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only="False",
+            read_user_ids=['u1', 'u3', 'u4'],
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 400)
+        self.assertIsNone(acls)
+
+        resp, acls = create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only="None",
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 400)
+        self.assertIsNone(acls)
+
+    def test_new_container_acls_with_missing_container_id_should_fail(self):
+        """Create acls request should fail for invalid container id."""
+        resp, acls = create_acls(
+            self.app, 'containers', uuid.uuid4().hex,
+            read_creator_only="False",
+            read_user_ids=['u1', 'u3', 'u4'],
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 404)
+        self.assertIsNone(acls)
+
+    def test_existing_acl_post_request_should_fail(self):
+        """Should fail when adding acls for container with existing acls."""
+        container_id, _ = create_container(self.app)
+        resp, acls = create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=False,
+            read_user_ids=['u1', 'u3', 'u4'])
+        self.assertEqual(resp.status_int, 201)
+        self.assertIsNotNone(acls)
+
+        resp, acls = create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=False,
+            read_user_ids=['u1', 'u3', 'u4'],
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 400)
+        self.assertIsNone(acls)
+        self.assertIn("Existing ACL cannot be updated",
+                      resp.json['description'])
+
+    def test_get_container_acls_with_valid_container_id(self):
+        """Read existing acls for a given valid container id."""
+        container_id, _ = create_container(self.app)
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=False,
+            list_user_ids=['u1', 'u3', 'u4'],
+            list_creator_only=None,
+            write_creator_only=True)
+
+        resp = self.app.get(
+            '/containers/{0}/acls'.format(container_id),
+            expect_errors=False)
+        acls = resp.json
+        self.assertEqual(resp.status_int, 200)
+        self.assertTrue(3, len(acls))
+        for acl_ref in acls:
+            self.assertIn('/containers/{0}/acls'.format(container_id),
+                          acl_ref['acl_ref'])
+
+    def test_get_container_acls_invalid_container_should_fail(self):
+        """Get container acls should fail for invalid secret id."""
+        container_id, _ = create_container(self.app)
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=False,
+            list_user_ids=['u1', 'u3', 'u4'],
+            list_creator_only=None,
+            write_creator_only=True)
+
+        resp = self.app.get(
+            '/containers/{0}/acls'.format(uuid.uuid4().hex),
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 404)
+
+    def test_get_container_acls_no_acls_defined_should_fail(self):
+        """Get container acls should fail when no acls defined for a secret."""
+        container_id, _ = create_container(self.app)
+
+        resp = self.app.get(
+            '/containers/{0}/acls'.format(container_id),
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 404)
+
+    def test_update_container_acls_modify_all_acls(self):
+        """Acls update where only user ids list is modified."""
+        container_id, _ = create_container(self.app)
+
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u2'],
+            list_user_ids=['u1', 'u3', 'u4'])
+
+        resp, acls = update_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u2', 'u5'],
+            list_user_ids=['u1', 'u3', 'u4'])
+
+        self.assertEqual(resp.status_int, 200)
+        self.assertIsNotNone(acls)
+        self.assertTrue(2, len(acls))
+        for acl_ref in resp.json:
+            self.assertIn('/containers/{0}/acls'.format(container_id),
+                          acl_ref['acl_ref'])
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        # Check creator_only is False when not provided
+        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertFalse(acl_map['list']['creator_only'])
+        self.assertIn('u5', acl_map['read'].to_dict_fields()['users'])
+
+    def test_update_container_acls_modify_creator_only_values(self):
+        """Acls update where user ids and creator-only flag is modified."""
+        container_id, _ = create_container(self.app)
+
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u2'],
+            list_user_ids=['u1', 'u3', 'u4'])
+
+        resp, acls = update_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=False,
+            list_user_ids=['u1', 'u3'],
+            list_creator_only=None,
+            write_creator_only=True)
+        self.assertEqual(resp.status_int, 200)
+        self.assertIsNotNone(acls)
+        self.assertTrue(3, len(acls))
+        for acl_ref in resp.json:
+            self.assertIn('/containers/{0}/acls'.format(container_id),
+                          acl_ref['acl_ref'])
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertFalse(acl_map['list']['creator_only'])
+        self.assertTrue(acl_map['write']['creator_only'])
+        self.assertIn('u3', acl_map['list'].to_dict_fields()['users'])
+        self.assertNotIn('u4', acl_map['list'].to_dict_fields()['users'])
+
+    def test_update_container_acls_partial_modify_read_users_only(self):
+        """Acls update where specific operation acl is modified."""
+        container_id, _ = create_container(self.app)
+
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u2'],
+            list_user_ids=['u1', 'u3', 'u4'])
+
+        resp, acls = update_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u3', 'u5'])
+
+        self.assertEqual(resp.status_int, 200)
+        self.assertIsNotNone(acls)
+        self.assertTrue(2, len(acls))
+        for acl_ref in resp.json:
+            self.assertIn('/containers/{0}/acls'.format(container_id),
+                          acl_ref['acl_ref'])
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        # Check creator_only is False when not provided
+        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertIn('u3', acl_map['read'].to_dict_fields()['users'])
+        self.assertIn('u5', acl_map['read'].to_dict_fields()['users'])
+        self.assertNotIn('u2', acl_map['read'].to_dict_fields()['users'])
+
+    def test_update_container_acls_invalid_secret_should_fail(self):
+        """Acls update should fail when invalid container is provided."""
+        container_id, _ = create_container(self.app)
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u2'],
+            list_user_ids=['u1', 'u3', 'u4'])
+
+        resp, acls = update_acls(
+            self.app, 'containers', uuid.uuid4().hex,
+            read_user_ids=['u1', 'u3', 'u5'], expect_errors=True)
+
+        self.assertEqual(resp.status_int, 404)
+        self.assertIsNone(acls)
+
+    def test_update_container_acls_when_no_acls_defined_should_fail(self):
+        """Acls update should fail when acls are defined for a container."""
+        container_id, _ = create_container(self.app)
+
+        resp, acls = update_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u3', 'u5'], expect_errors=True)
+
+        self.assertEqual(resp.status_int, 404)
+        self.assertIsNone(acls)
+
+    def test_delete_container_acls_with_valid_container_id(self):
+        """Delete existing acls for a given container."""
+        container_id, _ = create_container(self.app)
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=False,
+            list_user_ids=['u1', 'u3', 'u4'],
+            list_creator_only=None,
+            write_creator_only=True)
+
+        resp = self.app.delete(
+            '/containers/{0}/acls'.format(container_id),
+            expect_errors=False)
+        content = resp.json
+        self.assertIsNone(content)  # make sure there is no response
+        self.assertEqual(resp.status_int, 200)
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        self.assertFalse(acl_map)
+
+    def test_delete_container_acls_invalid_container_should_fail(self):
+        """Delete acls should fail when invalid container id is provided."""
+        container_id, _ = create_container(self.app)
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=False,
+            list_user_ids=['u1', 'u3', 'u4'],
+            list_creator_only=None,
+            write_creator_only=True)
+
+        resp = self.app.delete(
+            '/containers/{0}/acls'.format(uuid.uuid4().hex),
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 404)
+
+    def test_delete_container_acls_no_acl_defined_should_fail(self):
+        """Delete acls should fail when no acls are defined for a container."""
+        container_id, _ = create_container(self.app)
+        resp = self.app.delete(
+            '/containers/{0}/acls'.format(container_id),
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 404)
+
+    def test_invoke_container_acls_put_should_fail(self):
+        """PUT request to container acls URI is not supported."""
+        container_id, _ = create_container(self.app)
+        resp = self.app.put(
+            '/containers/{0}/acls'.format(container_id),
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 405)
+
+
+class WhenTestingContainerAclResource(utils.BarbicanAPIBaseTestCase):
+
+    def test_get_container_acl_with_valid_acl_id(self):
+        """Read a specific acl by id and compare with request values."""
+        container_id, _ = create_container(self.app)
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=False,
+            list_user_ids=['u1', 'u3', 'u4'],
+            list_creator_only=None,
+            write_creator_only=True)
+
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        resp = self.app.get(
+            '/containers/{0}/acls/{1}'.format(container_id,
+                                              acl_map['read']['id']),
+            expect_errors=False)
+        acl = resp.json
+        self.assertEqual(resp.status_int, 200)
+        self.assertEqual('read', acl['operation'])
+        self.assertFalse(acl['creator-only'])
+        self.assertIsNone(acl.get('users'))
+
+        resp = self.app.get(
+            '/containers/{0}/acls/{1}'.format(container_id,
+                                              acl_map['list']['id']),
+            expect_errors=False)
+        acl = resp.json
+        self.assertEqual(resp.status_int, 200)
+        self.assertEqual('list', acl['operation'])
+        self.assertFalse(acl['creator-only'])
+        self.assertEqual(set(['u1', 'u3', 'u4']), set(acl['users']))
+
+    def test_get_container_acl_invalid_acl_should_fail(self):
+        """Get acl request should fail with invalid acl id."""
+        container_id, _ = create_container(self.app)
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=False,
+            list_user_ids=['u1', 'u3', 'u4'],
+            list_creator_only=None,
+            write_creator_only=True)
+        resp = self.app.get(
+            '/containers/{0}/acls/{1}'.format(container_id,
+                                              uuid.uuid4().hex),
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 404)
+
+    def test_get_container_acl_no_acl_defined_should_fail(self):
+        """Get acl request should fail with no acls defined for container."""
+        container_id, _ = create_container(self.app)
+        resp = self.app.get(
+            '/containers/{0}/acls/{1}'.format(container_id,
+                                              uuid.uuid4().hex),
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 404)
+
+    def test_update_container_acl_modify_all(self):
+        """Modify existing ACL users by using specific acl id."""
+        container_id, _ = create_container(self.app)
+
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u2'],
+            list_user_ids=['u1', 'u3', 'u4'])
+
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        acl_id = acl_map['read']['id']
+
+        resp = update_acl(
+            self.app, 'containers', container_id, acl_id,
+            read_user_ids=['u1', 'u2', 'u5'], read_creator_only=True)
+
+        self.assertEqual(resp.status_int, 200)
+
+        resp = self.app.get(
+            '/containers/{0}/acls/{1}'.format(container_id,
+                                              acl_id),
+            expect_errors=False)
+        acl = resp.json
+        self.assertIsNotNone(acl)
+        self.assertIn('/containers/{0}/acls/{1}'.format(container_id, acl_id),
+                      acl['acl_ref'])
+        # Check creator_only is False when not provided
+        self.assertTrue(acl['creator-only'])
+        self.assertEqual('read', acl['operation'])
+        self.assertEqual(set(['u1', 'u2', 'u5']), set(acl['users']))
+
+    def test_update_container_acl_with_duplicate_user_ids(self):
+        """Modify existing ACL users by using specific acl id."""
+        container_id, _ = create_container(self.app)
+
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u2'],
+            list_user_ids=['u1', 'u3', 'u4'])
+
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        acl_id = acl_map['read']['id']
+
+        resp = update_acl(
+            self.app, 'containers', container_id, acl_id,
+            read_user_ids=['u1', 'u2', 'u1', 'u5'], read_creator_only=True)
+
+        self.assertEqual(resp.status_int, 200)
+
+        resp = self.app.get(
+            '/containers/{0}/acls/{1}'.format(container_id,
+                                              acl_id),
+            expect_errors=False)
+        acl = resp.json
+        self.assertIsNotNone(acl)
+        self.assertIn('/containers/{0}/acls/{1}'.format(container_id, acl_id),
+                      acl['acl_ref'])
+        # Check creator_only is False when not provided
+        self.assertTrue(acl['creator-only'])
+        self.assertEqual('read', acl['operation'])
+        self.assertEqual(set(['u1', 'u2', 'u5']), set(acl['users']))
+
+    def test_update_container_acl_modify_only_related_operation(self):
+        """Only modify the acl for matching operation and ignore others."""
+        container_id, _ = create_container(self.app)
+
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u2'],
+            list_user_ids=['u1', 'u3', 'u4'])
+
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        acl_id = acl_map['read']['id']
+
+        # updating read, list operation and adding write operation acl
+        # Update should be for 'read' operation ACL only. Others are ignored.
+        resp = update_acl(
+            self.app, 'containers', container_id, acl_id,
+            read_user_ids=['u1', 'u2', 'u5'], read_creator_only=True,
+            list_user_ids=['u1', 'u3'], list_creator_only=True,
+            write_creator_only=True)
+
+        self.assertEqual(resp.status_int, 200)
+
+        resp = self.app.get(
+            '/containers/{0}/acls/{1}'.format(container_id,
+                                              acl_id),
+            expect_errors=False)
+        acl = resp.json
+        self.assertIsNotNone(acl)
+        self.assertIn('/containers/{0}/acls/{1}'.format(container_id, acl_id),
+                      acl['acl_ref'])
+        self.assertTrue(acl['creator-only'])  # read operation value is changed
+        self.assertEqual('read', acl['operation'])
+        self.assertEqual(set(['u1', 'u2', 'u5']), set(acl['users']))
+
+        acl_map = _get_acl_map(container_id, is_secret=False)
+
+        # list, write operation should not be changed
+        self.assertIsNone(acl_map.get('write'))
+        self.assertFalse(acl_map['list']['creator_only'])
+        list_users = acl_map['list'].to_dict_fields()['users']
+        self.assertEqual(set(['u1', 'u3', 'u4']), set(list_users))
+
+    def test_update_container_acl_modify_different_operation_should_fail(self):
+        """Should fail as modifying existing acl's operation is not allowed."""
+        container_id, _ = create_container(self.app)
+
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u2'],
+            list_user_ids=['u1', 'u3', 'u4'])
+
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        acl_id = acl_map['read']['id']
+
+        # updating with list ACL  should fail as originally read operation
+        # ACL is associated with acl_id and cannot be modified.
+        resp = update_acl(
+            self.app, 'containers', container_id, acl_id,
+            list_user_ids=['u1', 'u3'], list_creator_only=True,
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 400)
+
+    def test_update_container_acl_modify_only_users(self):
+        """Modifying existing acl's user list and creator-only flag."""
+        container_id, _ = create_container(self.app)
+
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u2'],
+            read_creator_only=True,
+            list_user_ids=['u1', 'u3', 'u4'])
+
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        acl_id = acl_map['read']['id']
+
+        # updating read, list operation and adding write operation acl
+        # Update should be for 'read' operation ACL only. Others are ignored.
+        resp = update_acl(
+            self.app, 'containers', container_id, acl_id,
+            read_user_ids=['u1', 'u2', 'u5'])
+
+        self.assertEqual(resp.status_int, 200)
+
+        resp = self.app.get(
+            '/containers/{0}/acls/{1}'.format(container_id,
+                                              acl_id),
+            expect_errors=False)
+        acl = resp.json
+        self.assertIsNotNone(acl)
+        self.assertEqual(set(['u1', 'u2', 'u5']), set(acl['users']))
+        self.assertTrue(acl['creator-only'])
+
+        # Now remove existing all users from ACL list
+        resp = update_acl(
+            self.app, 'containers', container_id, acl_id,
+            read_user_ids=[])
+        self.assertEqual(resp.status_int, 200)
+
+        resp = self.app.get(
+            '/containers/{0}/acls/{1}'.format(container_id,
+                                              acl_id),
+            expect_errors=False)
+        acl = resp.json
+        self.assertIsNone(acl.get('users'))
+        self.assertTrue(acl['creator-only'])
+
+    def test_update_container_acl_modify_creator_only(self):
+        """Modifying only creator_only flag for existing acl by its id."""
+        container_id, _ = create_container(self.app)
+
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u2'],
+            read_creator_only=True,
+            list_user_ids=['u1', 'u3', 'u4'])
+
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        acl_id = acl_map['read']['id']
+
+        # updating read, list operation and adding write operation acl
+        # Update should be for 'read' operation ACL only. Others are ignored.
+        resp = update_acl(
+            self.app, 'containers', container_id, acl_id,
+            read_creator_only=False)
+
+        self.assertEqual(resp.status_int, 200)
+
+        resp = self.app.get(
+            '/containers/{0}/acls/{1}'.format(container_id,
+                                              acl_id),
+            expect_errors=False)
+        acl = resp.json
+        self.assertIsNotNone(acl)
+        self.assertEqual(set(['u1', 'u2']), set(acl['users']))
+        self.assertFalse(acl['creator-only'])
+
+    def test_update_container_acl_invalid_acl_should_fail(self):
+        """Update should fail when invalid acl id is provided."""
+        container_id, _ = create_container(self.app)
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=False,
+            list_user_ids=['u1', 'u3', 'u4'],
+            list_creator_only=None,
+            write_creator_only=True)
+
+        resp = update_acl(
+            self.app, 'containers', container_id, uuid.uuid4().hex,
+            read_creator_only=False, expect_errors=True)
+
+        self.assertEqual(resp.status_int, 404)
+
+    def test_update_container_acl_when_no_acls_defined_should_fail(self):
+        """Update should fail when no container acls are defined."""
+        container_id, _ = create_container(self.app)
+        resp = update_acl(
+            self.app, 'containers', container_id, uuid.uuid4().hex,
+            read_creator_only=False, expect_errors=True)
+
+        self.assertEqual(resp.status_int, 404)
+
+    def test_delete_secret_acl_with_valid_acl_id(self):
+        """Delete existing acls for a given container."""
+        container_id, _ = create_container(self.app)
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=False,
+            list_user_ids=['u1', 'u3', 'u4'],
+            list_creator_only=None,
+            write_creator_only=True)
+
+        acl_map = _get_acl_map(container_id, is_secret=False)
+
+        list_acl_id = acl_map['list'].id
+
+        resp = self.app.delete(
+            '/containers/{0}/acls/{1}'.format(container_id, list_acl_id),
+            expect_errors=False)
+        content = resp.json
+        self.assertIsNone(content)  # make sure there is no response
+        self.assertEqual(resp.status_int, 200)
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        self.assertIsNone(acl_map.get('list'))  # list acl should be deleted
+
+    def test_delete_secret_acls_invalid_secret_should_fail(self):
+        """Delete acls should fail when invalid secret id is provided."""
+        container_id, _ = create_container(self.app)
+        _, _ = create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=False,
+            list_user_ids=['u1', 'u3', 'u4'],
+            list_creator_only=None,
+            write_creator_only=True)
+
+        resp = self.app.delete(
+            '/containers/{0}/acls/{1}'.format(container_id, uuid.uuid4().hex),
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 404)
+
+    def test_invoke_container_acl_put_should_fail(self):
+        """PUT for specific acl id is not supported."""
+        container_id, _ = create_container(self.app)
+        resp = self.app.put(
+            '/containers/{0}/acls/{1}'.format(container_id, uuid.uuid4().hex),
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 405)
+
+
 # ----------------------- Helper Functions ---------------------------
 def create_secret(app, name=None, algorithm=None, bit_length=None, mode=None,
                   expiration=None, payload=b'not-encrypted',
@@ -673,6 +1292,32 @@ def create_secret(app, name=None, algorithm=None, bit_length=None, mode=None,
     if resp.status_int == 201:
         secret_ref = resp.json.get('secret_ref', '')
         _, created_uuid = os.path.split(secret_ref)
+
+    return created_uuid, resp
+
+
+def create_container(app):
+    _, resp = create_secret(app)
+    secret_ref = resp.json['secret_ref']
+    request = {
+        "name": "container name",
+        "type": "generic",
+        "secret_refs": [
+            {
+                "name": "any_key",
+                "secret_ref": secret_ref
+            }
+        ]
+    }
+    resp = app.post_json(
+        '/containers/',
+        request,
+        expect_errors=False
+    )
+    created_uuid = None
+    if resp.status_int == 201:
+        container_ref = resp.json.get('container_ref', '')
+        _, created_uuid = os.path.split(container_ref)
 
     return created_uuid, resp
 

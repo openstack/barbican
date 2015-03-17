@@ -58,6 +58,12 @@ def convert_secret_acl_to_href(secret_id, acl_id):
     return secret_href + '/acls/' + acl_id
 
 
+def convert_container_acl_to_href(container_id, acl_id):
+    """Convert the container acl ID to a HATEOS-style href."""
+    container_href = convert_container_to_href(container_id)
+    return container_href + '/acls/' + acl_id
+
+
 def convert_acl_to_hrefs(fields):
     acl_id = fields['acl_id']
     if 'secret_id' in fields:
@@ -66,6 +72,14 @@ def convert_acl_to_hrefs(fields):
         del fields['acl_id']
         fields['secret_ref'] = convert_secret_to_href(fields['secret_id'])
         del fields['secret_id']
+
+    if 'container_id' in fields:
+        fields['acl_ref'] = convert_container_acl_to_href(
+            fields['container_id'], acl_id)
+        del fields['acl_id']
+        fields['container_ref'] = convert_container_to_href(
+            fields['container_id'])
+        del fields['container_id']
 
     if 'creator_only' in fields:
         fields['creator-only'] = fields['creator_only']
