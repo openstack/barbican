@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-04 06:07+0000\n"
-"PO-Revision-Date: 2015-03-03 20:29+0000\n"
-"Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
+"POT-Creation-Date: 2015-03-17 06:42+0000\n"
+"PO-Revision-Date: 2015-03-16 13:29+0000\n"
+"Last-Translator: DuanXin <1145833162@qq.com>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
 "Language: zh_CN\n"
@@ -36,7 +36,7 @@ msgstr "Webob出错"
 msgid "Problem deleting consumer"
 msgstr "删除用户时出错"
 
-#: barbican/api/controllers/containers.py:84
+#: barbican/api/controllers/containers.py:85
 msgid "Problem deleting container"
 msgstr "删除容器时出错"
 
@@ -44,20 +44,20 @@ msgstr "删除容器时出错"
 msgid "Problem deleting transport_key"
 msgstr "删除传输密匙时出错"
 
-#: barbican/model/repositories.py:350
+#: barbican/model/repositories.py:353
 #, python-format
 msgid "Not found for %s"
 msgstr "没有找到%s"
 
-#: barbican/model/repositories.py:385
+#: barbican/model/repositories.py:388
 msgid "Problem saving entity for create"
 msgstr "为创建保存实体时出错"
 
-#: barbican/model/repositories.py:518
+#: barbican/model/repositories.py:521
 msgid "Problem finding project related entity to delete"
 msgstr "寻找项目相关的实体来删除时出错"
 
-#: barbican/model/repositories.py:551
+#: barbican/model/repositories.py:554
 #, python-format
 msgid "Problem getting Project %s"
 msgstr "获取项目%s时出错"
@@ -74,11 +74,11 @@ msgstr "意想不到的异常发生%d time(s)...重试。"
 
 #: barbican/openstack/common/loopingcall.py:95
 msgid "in fixed duration looping call"
-msgstr ""
+msgstr "在固定的时间循环调用"
 
 #: barbican/openstack/common/loopingcall.py:138
 msgid "in dynamic looping call"
-msgstr ""
+msgstr "动态循环调用"
 
 #: barbican/openstack/common/policy.py:563
 #: barbican/openstack/common/policy.py:843
@@ -93,11 +93,11 @@ msgstr "没有匹配的 %s 的处理程序"
 
 #: barbican/openstack/common/service.py:268
 msgid "Unhandled exception"
-msgstr ""
+msgstr "未处理的异常"
 
-#: barbican/plugin/kmip_secret_store.py:241
+#: barbican/plugin/kmip_secret_store.py:240
 #: barbican/plugin/kmip_secret_store.py:271
-#: barbican/plugin/kmip_secret_store.py:355
+#: barbican/plugin/kmip_secret_store.py:352
 msgid "Error opening or writing to client"
 msgstr "打开或者写入客户端错误"
 
