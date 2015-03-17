@@ -59,7 +59,7 @@ def order_cannot_modify_order_type():
     pecan.abort(400, u._("Cannot modify order type."))
 
 
-class OrderController(object):
+class OrderController(controllers.ACLMixin):
 
     """Handles Order retrieval and deletion requests."""
 
@@ -118,7 +118,7 @@ class OrderController(object):
             external_project_id=external_project_id)
 
 
-class OrdersController(object):
+class OrdersController(controllers.ACLMixin):
     """Handles Order requests for Secret creation."""
 
     def __init__(self, queue_resource=None):

@@ -32,7 +32,7 @@ def _consumer_not_found():
                          'another castle.'))
 
 
-class ContainerConsumerController(object):
+class ContainerConsumerController(controllers.ACLMixin):
     """Handles Consumer entity retrieval and deletion requests."""
 
     def __init__(self, consumer_id):
@@ -62,7 +62,7 @@ class ContainerConsumerController(object):
         )
 
 
-class ContainerConsumersController(object):
+class ContainerConsumersController(controllers.ACLMixin):
     """Handles Consumer creation requests."""
 
     def __init__(self, container_id):

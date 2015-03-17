@@ -34,7 +34,7 @@ def _transport_key_not_found():
     pecan.abort(404, u._('Not Found. Transport Key not found.'))
 
 
-class TransportKeyController(object):
+class TransportKeyController(controllers.ACLMixin):
     """Handles transport key retrieval requests."""
 
     def __init__(self, transport_key_id, transport_key_repo=None):
@@ -74,7 +74,7 @@ class TransportKeyController(object):
             _transport_key_not_found()
 
 
-class TransportKeysController(object):
+class TransportKeysController(controllers.ACLMixin):
     """Handles transport key list requests."""
 
     def __init__(self, transport_key_repo=None):

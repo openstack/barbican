@@ -40,7 +40,7 @@ def _requested_preferred_ca_not_a_project_ca():
     )
 
 
-class CertificateAuthorityController(object):
+class CertificateAuthorityController(controllers.ACLMixin):
     """Handles certificate authority retrieval requests."""
 
     def __init__(self, ca):
@@ -222,7 +222,7 @@ class CertificateAuthorityController(object):
                 external_project_id)
 
 
-class CertificateAuthoritiesController(object):
+class CertificateAuthoritiesController(controllers.ACLMixin):
     """Handles certificate authority list requests."""
 
     def __init__(self):
