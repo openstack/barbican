@@ -1,12 +1,35 @@
 # Barbican
 
-Barbican is a ReST API designed for the secure storage, provisioning and
+Barbican is a REST API designed for the secure storage, provisioning and
 management of secrets. It is aimed at being useful for all environments,
-including large ephemeral Clouds. The project is supported by [Rackspace
-Hosting](http://www.rackspace.com).
+including large ephemeral Clouds.
 
-Barbican is part of a set of applications that make up the CloudKeep ecosystem.
-The other systems are:
+Barbican is an OpenStack project developed by the [Barbican Project Team
+](https://wiki.openstack.org/wiki/Barbican) with support from
+[Rackspace Hosting](http://www.rackspace.com/), EMC, Ericsson,
+Johns Hopkins University, HP, Red Hat, Cisco Systems, and many more.
+
+The full documentation can be found on the [Barbican Developer Documentation
+Site](http://docs.openstack.org/developer/barbican/).
+
+If you have a technical question, you can ask it at [Ask OpenStack](
+https://ask.openstack.org/en/questions/) with the `barbican` tag, or you can
+send an email to the [OpenStack General mailing list](
+http://lists.openstack.org/pipermail/openstack/) at
+`openstack@lists.openstack.org` with the prefix `[barbican]` in the
+subject.
+
+To file a bug, use our bug tracker on [Launchpad](
+https://bugs.launchpad.net/barbican/).
+
+For development questions or discussion, hop on the [OpenStack-dev mailing list
+](http://lists.openstack.org/pipermail/openstack-dev/)
+at `openstack-dev@lists.openstack.org` and let us know what you think, just add
+`[barbican]` to the subject. You can also join our IRC channel
+`#openstack-barbican` on Freenode.
+
+Barbican began as part of a set of applications that make up the CloudKeep
+ecosystem.  The other systems are:
 
 * [Postern](https://github.com/cloudkeep/postern) - Go based agent that
   provides access to secrets from the Barbican API.
@@ -14,14 +37,6 @@ The other systems are:
   for the Barbican API.
 * [Python-barbicanclient](https://github.com/openstack/python-barbicanclient) -
   A convenient Python-based library to interact with the Barbican API.
-
-Additional documentation can be found on the [Github
-Wiki](https://github.com/cloudkeep/barbican/wiki). For questions, comments or
-concerns, hop on the OpenStack dev mailing list at
-`openstack-dev@lists.openstack.org` and let us know what you think, just add
-`[barbican]` to the subject. You can also join our Freenode IRC at
-`#openstack-barbican`. To file a bug, use our bug tracker on
-[Launchpad](https://bugs.launchpad.net/barbican/).
 
 ## Getting Started
 
