@@ -1,3 +1,5 @@
+# Copyright (c) 2015 Rackspace, Inc.
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -16,6 +18,7 @@ import mock
 from barbican import i18n as u
 from barbican.model import models
 from barbican.openstack.common import timeutils
+from barbican.tasks import common
 from barbican.tasks import resources
 from barbican.tests import utils
 
@@ -91,7 +94,7 @@ class WhenUsingOrderTaskHelper(BaseOrderTestCase):
     def setUp(self):
         super(WhenUsingOrderTaskHelper, self).setUp()
 
-        self.result = resources.FollowOnProcessingStatusDTO()
+        self.result = common.FollowOnProcessingStatusDTO()
 
         self.helper = resources._OrderTaskHelper()
 
@@ -130,13 +133,13 @@ class WhenUsingOrderTaskHelper(BaseOrderTestCase):
         self.order_repo.save.assert_called_once_with(self.order)
 
     def test_should_handle_success_result_follow_on_needed(self):
-        self.result.retry_method = 'bogus_method_here'
+        self.result.retry_task = common.RetryTasks.INVOKE_SAME_TASK
         self.result.status = 'status'
         self.result.status_message = 'status_message'
 
         self.helper.handle_success(self.order, self.result)
 
-        self.assertNotEqual(models.States.ACTIVE, self.order.status)
+        self.assertEqual(models.States.PENDING, self.order.status)
         self.assertEqual('status', self.order.sub_status)
         self.assertEqual('status_message', self.order.sub_status_message)
         self.order_repo.save.assert_called_once_with(self.order)

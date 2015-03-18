@@ -16,6 +16,7 @@ import mock
 
 from barbican import queue
 from barbican.queue import server
+from barbican.tasks import common
 from barbican.tests import utils
 
 
@@ -98,6 +99,109 @@ class WhenUsingTransactionalDecorator(utils.BaseTestCase):
         self.assertEqual(self.commit_mock.call_count, 0)
         self.assertEqual(self.rollback_mock.call_count, 1)
         self.assertEqual(self.clear_mock.call_count, 1)
+
+
+class WhenUsingRetryableDecorator(utils.BaseTestCase):
+    """Test using the 'retryable' decorator in server.py."""
+
+    def setUp(self):
+        super(WhenUsingRetryableDecorator, self).setUp()
+
+        self.schedule_retry_tasks_patcher = mock.patch(
+            'barbican.queue.server.schedule_retry_tasks'
+        )
+        self.schedule_retry_tasks_mock = (
+            self.schedule_retry_tasks_patcher.start()
+        )
+
+        self.args = ('foo', 'bar')
+        self.kwargs = {'k_foo': 1, 'k_bar': 2}
+
+        # Class/decorator under test.
+        class TestClass(object):
+            my_args = None
+            my_kwargs = None
+            is_exception_needed = False
+            result = common.FollowOnProcessingStatusDTO()
+
+            @server.retryable
+            def test_method(self, *args, **kwargs):
+                if self.is_exception_needed:
+                    raise ValueError()
+                self.my_args = args
+                self.my_kwargs = kwargs
+                return self.result
+        self.test_object = TestClass()
+        self.test_method = TestClass.test_method
+
+    def tearDown(self):
+        super(WhenUsingRetryableDecorator, self).tearDown()
+        self.schedule_retry_tasks_patcher.stop()
+
+    def test_should_successfully_schedule_a_task_for_retry(self):
+        self.test_object.test_method(*self.args, **self.kwargs)
+
+        self.assertEqual(self.args, self.test_object.my_args)
+        self.assertEqual(self.kwargs, self.test_object.my_kwargs)
+
+        self.assertEqual(self.schedule_retry_tasks_mock.call_count, 1)
+        self.schedule_retry_tasks_mock.assert_called_with(
+            mock.ANY,
+            self.test_object.result,
+            *self.args,
+            **self.kwargs)
+
+    def test_retry_should_not_be_scheduled_if_exception_is_raised(self):
+        self.test_object.is_exception_needed = True
+
+        self.assertRaises(
+            ValueError,
+            self.test_object.test_method,
+            self.args,
+            self.kwargs,
+        )
+
+        self.assertEqual(self.schedule_retry_tasks_mock.call_count, 0)
+
+
+class WhenCallingScheduleRetryTasks(utils.BaseTestCase):
+    """Test calling schedule_retry_tasks() in server.py."""
+
+    def setUp(self):
+        super(WhenCallingScheduleRetryTasks, self).setUp()
+
+        self.result = common.FollowOnProcessingStatusDTO()
+
+    def test_should_not_schedule_task_due_to_no_result(self):
+        retry_rpc_method = server.schedule_retry_tasks(None, None)
+
+        self.assertIsNone(retry_rpc_method)
+
+    def test_should_not_schedule_task_due_to_no_action_required_result(self):
+        self.result.retry_task = common.RetryTasks.NO_ACTION_REQUIRED
+
+        retry_rpc_method = server.schedule_retry_tasks(None, self.result)
+
+        self.assertIsNone(retry_rpc_method)
+
+    def test_should_schedule_invoking_task_for_retry(self):
+        self.result.retry_task = common.RetryTasks.INVOKE_SAME_TASK
+
+        retry_rpc_method = server.schedule_retry_tasks(
+            self.test_should_schedule_invoking_task_for_retry, self.result)
+
+        self.assertEqual(
+            'test_should_schedule_invoking_task_for_retry', retry_rpc_method)
+
+    def test_should_schedule_certificate_status_task_for_retry(self):
+        self.result.retry_task = (
+            common.RetryTasks.INVOKE_CERT_STATUS_CHECK_TASK
+        )
+
+        retry_rpc_method = server.schedule_retry_tasks(None, self.result)
+
+        self.assertEqual(
+            'check_certificate_status', retry_rpc_method)
 
 
 class WhenUsingBeginTypeOrderTask(utils.BaseTestCase):
