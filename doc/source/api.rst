@@ -346,7 +346,7 @@ Secrets Summary
 | GET    | Gets the information for the specified secret. For the            |
 |        | `application/json` accept type, only metadata about the secret is |
 |        | returned.                                                         |
-|        |  _The following is deprecated:_ If one of the 'content_types'     |
+|        | _The following is deprecated:_ If one of the 'content_types'      |
 |        | accept types is specified, that portion of the secret will be     |
 |        | be decrypted and returned.                                        |
 +--------+-------------------------------------------------------------------+
