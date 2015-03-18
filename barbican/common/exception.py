@@ -380,3 +380,17 @@ class InvalidUUIDInURI(BarbicanHTTPException):
                   "malformed.")
     client_message = u._("The provided UUID in the URI is malformed.")
     status_code = 404
+
+
+class InvalidCAID(BarbicanHTTPException):
+    message = u._("Invalid CA_ID: %(ca_id)")
+    client_message = u._("The ca_id provided in the request is invalid")
+    status_code = 400
+
+
+class CANotDefinedForProject(BarbicanHTTPException):
+    message = u._("CA specified by ca_id %(ca_id) not defined for project: "
+                  "%(project_id)")
+    client_message = u._("The ca_id provided in the request is not defined "
+                         "for this project")
+    status_code = 403

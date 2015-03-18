@@ -48,6 +48,14 @@ class WhenTestingSimpleCertificateManagerPlugin(testtools.TestCase):
 
         self.assertTrue(result)
 
+    def test_get_ca_info(self):
+        result = self.plugin.get_ca_info()
+        name = self.plugin.get_default_ca_name()
+        self.assertIn(name, result)
+        self.assertEqual(name, result[name][cm.INFO_NAME])
+        self.assertEqual(self.plugin.get_default_signing_cert(),
+                         result[name][cm.INFO_CA_SIGNING_CERT])
+
     def test_supported_request_types(self):
         result = self.plugin.supported_request_types()
         supported_list = [cm.CertificateRequestType.CUSTOM_REQUEST,

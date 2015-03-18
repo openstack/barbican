@@ -77,8 +77,18 @@ def issue_certificate_request(order_model, project_model):
     plugin_meta = _get_plugin_meta(order_model)
     barbican_meta_dto = cert.BarbicanMetaDTO()
 
-    # Locate a suitable plugin to issue a certificate.
-    cert_plugin = cert.CertificatePluginManager().get_plugin(order_model.meta)
+    # refresh the CA table.  This is mostly a no-op unless the entries
+    # for a plugin are expired.
+    cert.CertificatePluginManager(repos).refresh_ca_table()
+
+    ca_id = _get_ca_id(order_model.meta, project_model.id)
+    if ca_id:
+        barbican_meta_dto.plugin_ca_id = ca_id
+        cert_plugin = cert.CertificatePluginManager().get_plugin_by_ca_id(
+            ca_id)
+    else:
+        cert_plugin = cert.CertificatePluginManager().get_plugin(
+            order_model.meta)
 
     request_type = order_model.meta.get(cert.REQUEST_TYPE)
     if request_type == cert.CertificateRequestType.STORED_KEY_REQUEST:
@@ -186,6 +196,24 @@ def modify_certificate_request(order_model, updated_meta):
     # TODO(chellygel): Add the modify certificate request logic.
     LOG.debug('in modify_certificate_request')
     raise NotImplementedError  # pragma: no cover
+
+
+def _get_ca_id(order_meta, project_id):
+    ca_id = order_meta.get(cert.CA_ID)
+    if ca_id:
+        return ca_id
+
+    preferred_ca_repository = repos.get_preferred_ca_repository()
+    cas, offset, limit, total = preferred_ca_repository.get_by_create_date(
+        project_id=project_id)
+    if total > 0:
+        return cas[0].ca_id
+
+    global_ca = preferred_ca_repository.get_global_preferred_ca()
+    if global_ca:
+        return global_ca.ca_id
+
+    return None
 
 
 def _schedule_cert_retry_task(cert_result_dto, cert_plugin, order_model,

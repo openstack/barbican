@@ -59,6 +59,17 @@ class SymantecCertificatePlugin(cert.CertificatePluginBase):
         if self.url == None:
             raise ValueError(u._("url is required"))
 
+    def get_default_ca_name(self):
+        return "Symantec CA"
+
+    def get_default_signing_cert(self):
+        # TODO(chellygel) Add code to get the signing cert
+        return None
+
+    def get_default_intermediates(self):
+        # TODO(chellygel) Add code to get the cert chain
+        return None
+
     def issue_certificate_request(self, order_id, order_meta, plugin_meta,
                                   barbican_meta_dto):
         """Create the initial order with CA
