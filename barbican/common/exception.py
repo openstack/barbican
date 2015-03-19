@@ -81,11 +81,11 @@ class MissingMetadataField(BarbicanException):
 
 
 class InvalidSubjectDN(BarbicanException):
-    message = u._("Invalid subject DN: %(subject_dn)")
+    message = u._("Invalid subject DN: %(subject_dn)s")
 
 
 class InvalidContainer(BarbicanException):
-    message = u._("Invalid container: %(reason)")
+    message = u._("Invalid container: %(reason)s")
 
 
 class InvalidExtensionsData(BarbicanException):
@@ -97,7 +97,7 @@ class InvalidCMCData(BarbicanException):
 
 
 class InvalidPKCS10Data(BarbicanException):
-    message = u._("Invalid PKCS10 Data: %(reason)")
+    message = u._("Invalid PKCS10 Data: %(reason)s")
 
 
 class InvalidCertificateRequestType(BarbicanException):
@@ -366,17 +366,17 @@ class ImageSizeLimitExceeded(BarbicanException):
 
 
 class StoredKeyContainerNotFound(BarbicanException):
-    message = u._("Container %(container_id) does not exist for stored "
+    message = u._("Container %(container_id)s does not exist for stored "
                   "key certificate generation.")
 
 
 class StoredKeyPrivateKeyNotFound(BarbicanException):
-    message = u._("Container %(container_id) does not reference a private "
+    message = u._("Container %(container_id)s does not reference a private "
                   "key needed for stored key certificate generation.")
 
 
 class InvalidUUIDInURI(BarbicanHTTPException):
-    message = u._("The provided UUID in the URI (%(uuid_string)) is "
+    message = u._("The provided UUID in the URI (%(uuid_string)s) is "
                   "malformed.")
     client_message = u._("The provided UUID in the URI is malformed.")
     status_code = 404
