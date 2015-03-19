@@ -250,14 +250,6 @@ class KeyAlgorithm(object):
     SYMMETRIC_ALGORITHMS = [AES, DES, DESEDE, HMACSHA1,
                             HMACSHA256, HMACSHA348, HMACSHA512]
 
-    def get_secret_type(self, alg):
-        if alg and isinstance(alg, six.string_types):
-            alg = alg.lower()
-            if alg in self.SYMMETRIC_ALGORITHMS:
-                return SecretType.SYMMETRIC
-            else:
-                return None
-
 
 class KeySpec(object):
     """This object specifies the algorithm and bit length for a key."""

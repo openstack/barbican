@@ -370,9 +370,6 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :param key_spec: KeySpec of secret to be stored
         :returns: boolean indicating if secret can be stored
         """
-        key_type = ss.KeyAlgorithm().get_secret_type(key_spec.alg.lower())
-        if key_type is None or self._map_type_ss_to_kmip(key_type) is None:
-            return False
         return self.generate_supports(key_spec)
 
     def _convert_base64_to_byte_array(self, base64_secret):
