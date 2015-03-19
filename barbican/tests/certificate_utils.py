@@ -24,19 +24,19 @@ def create_key_pair(type, bits):
 
 def create_good_csr():
     """For testing, generate a CSR that will pass validation."""
-    key_pair = create_key_pair(crypto.TYPE_RSA, 1024)
+    key_pair = create_key_pair(crypto.TYPE_RSA, 2048)
     csr = crypto.X509Req()
     subject = csr.get_subject()
     setattr(subject, "CN", "host.example.net")
     csr.set_pubkey(key_pair)
-    csr.sign(key_pair, "md5")
+    csr.sign(key_pair, "sha256")
     pem = crypto.dump_certificate_request(crypto.FILETYPE_PEM, csr)
     return pem
 
 
 def create_csr_that_has_not_been_signed():
     """For testing, generate a CSR that has not been signed."""
-    key_pair = create_key_pair(crypto.TYPE_RSA, 1024)
+    key_pair = create_key_pair(crypto.TYPE_RSA, 2048)
     csr = crypto.X509Req()
     subject = csr.get_subject()
     setattr(subject, "CN", "host.example.net")
@@ -47,15 +47,15 @@ def create_csr_that_has_not_been_signed():
 
 def create_csr_signed_with_wrong_key():
     """For testing, generate a CSR that has been signed by the wrong key."""
-    key_pair1 = create_key_pair(crypto.TYPE_RSA, 1024)
-    key_pair2 = create_key_pair(crypto.TYPE_RSA, 1024)
+    key_pair1 = create_key_pair(crypto.TYPE_RSA, 2048)
+    key_pair2 = create_key_pair(crypto.TYPE_RSA, 2048)
     csr = crypto.X509Req()
     subject = csr.get_subject()
     setattr(subject, "CN", "host.example.net")
     # set public key from key pair 1
     csr.set_pubkey(key_pair1)
     # sign with public key from key pair 2
-    csr.sign(key_pair2, "md5")
+    csr.sign(key_pair2, "sha256")
     pem = crypto.dump_certificate_request(crypto.FILETYPE_PEM, csr)
     return pem
 
