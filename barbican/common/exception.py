@@ -383,14 +383,14 @@ class InvalidUUIDInURI(BarbicanHTTPException):
 
 
 class InvalidCAID(BarbicanHTTPException):
-    message = u._("Invalid CA_ID: %(ca_id)")
+    message = u._("Invalid CA_ID: %(ca_id)s")
     client_message = u._("The ca_id provided in the request is invalid")
     status_code = 400
 
 
 class CANotDefinedForProject(BarbicanHTTPException):
-    message = u._("CA specified by ca_id %(ca_id) not defined for project: "
-                  "%(project_id)")
+    message = u._("CA specified by ca_id %(ca_id)s not defined for project: "
+                  "%(project_id)s")
     client_message = u._("The ca_id provided in the request is not defined "
                          "for this project")
     status_code = 403
