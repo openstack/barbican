@@ -337,7 +337,7 @@ class SecretStoreBase(object):
         if the SecretStore does not require it.
 
         :param key_spec: KeySpec that contains details on the type of key to
-        generate
+            generate
         :returns: an optional dictionary containing metadata about the key
         """
         raise NotImplementedError  # pragma: no cover
@@ -355,9 +355,9 @@ class SecretStoreBase(object):
         key pairs in the future.
 
         :param key_spec: KeySpec that contains details on the type of key to
-        generate
+            generate
         :returns: An object of type AsymmetricKeyMetadataDTO containing
-        metadata about the key pair.
+            metadata about the key pair.
         """
         raise NotImplementedError  # pragma: no cover
 
@@ -409,7 +409,7 @@ class SecretStoreBase(object):
         is supported before trying to generate it.
 
         :param key_spec: KeySpec that contains details on the algorithm and bit
-        length
+            length
         :returns: boolean indicating if the algorithm is supported
         """
         raise NotImplementedError  # pragma: no cover

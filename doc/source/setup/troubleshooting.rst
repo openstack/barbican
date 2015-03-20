@@ -354,7 +354,7 @@ How to avoid
 
 Make sure you are running from your virtual env, and that pip was executed
 **after** you activated your virtual environment. This especially includes the
-``pip install -e `` command. Also, it is possible that your virtual env gets
+``pip install -e`` command. Also, it is possible that your virtual env gets
 corrupted, so you might need to rebuild it.
 
 
