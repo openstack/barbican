@@ -16,7 +16,6 @@
 import datetime
 
 from barbican.model import models
-from barbican.openstack.common import jsonutils as json
 from barbican.plugin.interface import secret_store
 from barbican.tests import utils
 
@@ -201,35 +200,23 @@ class WhenCreatingOrderRetryTask(utils.BaseTestCase):
             'sub_status_message': 'Waiting for instructions...'
         })
         at = datetime.datetime.utcnow()
-        order_retry_task = models.OrderRetryTask(
-            order_id=order.id,
-            retry_task="foobar",
-            retry_at=at,
-            retry_args=json.dumps(["one", "two"]),
-            retry_kwargs=json.dumps({"three": "four"}),
-        )
+        order_retry_task = models.OrderRetryTask()
+        order_retry_task.order_id = order.id
+        order_retry_task.retry_task = "foobar"
+        order_retry_task.retry_at = at
+        order_retry_task.retry_args = ["one", "two"]
+        order_retry_task.retry_kwargs = {"three": "four"}
 
         self.assertEqual(order_retry_task.order_id, order.id)
         self.assertEqual(order_retry_task.retry_task, "foobar")
         self.assertEqual(order_retry_task.retry_at, at)
         self.assertEqual(
+            ["one", "two"],
             order_retry_task.retry_args,
-            json.dumps(["one", "two"]),
         )
         self.assertEqual(
+            {"three": "four"},
             order_retry_task.retry_kwargs,
-            json.dumps({"three": "four"}),
-        )
-
-    def test_get_retry_params(self):
-        order_retry_task = models.OrderRetryTask(
-            retry_args=json.dumps(["one", "two"]),
-            retry_kwargs=json.dumps({"three": "four"}),
-        )
-
-        self.assertEqual(
-            order_retry_task.get_retry_params(),
-            (["one", "two"], {"three": "four"}),
         )
 
 

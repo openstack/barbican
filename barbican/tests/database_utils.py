@@ -19,6 +19,7 @@ break the DevStack functional test discovery process.
 """
 import oslotest.base as oslotest
 
+from barbican.model import models
 from barbican.model import repositories
 
 
@@ -38,6 +39,26 @@ def setup_in_memory_db():
 
 def in_memory_cleanup():
     repositories.clear()
+
+
+def get_session():
+    return repositories.get_session()
+
+
+def create_project(external_id="my keystone id", session=None):
+    project = models.Project()
+    project.external_id = external_id
+    project_repo = repositories.get_project_repository()
+    project_repo.create_from(project, session=session)
+    return project
+
+
+def create_order(project, session=None):
+    order = models.Order()
+    order.project_id = project.id
+    order_repo = repositories.get_order_repository()
+    order_repo.create_from(order, session=session)
+    return order
 
 
 class RepositoryTestCase(oslotest.BaseTestCase):
