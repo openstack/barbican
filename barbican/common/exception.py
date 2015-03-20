@@ -67,6 +67,20 @@ class BarbicanHTTPException(BarbicanException):
     client_message = u._("failure seen - please contact site administrator.")
     status_code = 500
 
+    def __init__(self, message_arg=None, client_message=None, *args, **kwargs):
+        if not client_message:
+            client_message = self.client_message
+        try:
+            self.client_message = client_message % kwargs
+        except Exception as e:
+            if _FATAL_EXCEPTION_FORMAT_ERRORS:
+                raise e
+            else:
+                # at least get the core message out if something happened
+                pass
+        super(BarbicanHTTPException, self).__init__(
+            message_arg, self.client_message, *args, **kwargs)
+
 
 class MissingArgumentError(BarbicanException):
     message = u._("Missing required argument.")
