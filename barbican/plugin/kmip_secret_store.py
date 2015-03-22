@@ -27,12 +27,14 @@ from kmip.core import enums
 from kmip.core.factories import attributes
 from kmip.core.factories import credentials
 from kmip.core.factories import secrets
+from kmip.core import misc
 from kmip.core import objects as kmip_objects
 from oslo_config import cfg
 from oslo_log import log
 
 from barbican import i18n as u  # noqa
 from barbican.plugin.interface import secret_store as ss
+from barbican.plugin.util import translations
 
 LOG = log.getLogger(__name__)
 
@@ -41,19 +43,19 @@ CONF = cfg.CONF
 kmip_opt_group = cfg.OptGroup(name='kmip_plugin', title='KMIP Plugin')
 kmip_opts = [
     cfg.StrOpt('username',
-               default='admin',
-               help=u._('The default username for authenticating with KMIP')
+               default=None,
+               help=u._('Username for authenticating with KMIP server')
                ),
     cfg.StrOpt('password',
-               default='password',
-               help=u._('The default password for authenticating with KMIP')
+               default=None,
+               help=u._('Password for authenticating with KMIP server')
                ),
     cfg.StrOpt('host',
                default='localhost',
                help=u._('Address of the KMIP server')
                ),
     cfg.StrOpt('port',
-               default='9090',
+               default='5696',
                help=u._('Port for the KMIP server'),
                ),
     cfg.StrOpt('ssl_version',
@@ -112,18 +114,34 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 KMIPSecretStore.VALID_BIT_LENGTHS:
                 [56, 64, 112, 128, 168, 192],
                 KMIPSecretStore.KMIP_ALGORITHM_ENUM:
-                enums.CryptographicAlgorithm.TRIPLE_DES}
+                enums.CryptographicAlgorithm.TRIPLE_DES},
+            ss.KeyAlgorithm.DSA: {
+                KMIPSecretStore.VALID_BIT_LENGTHS:
+                [1024, 2048, 3072],
+                KMIPSecretStore.KMIP_ALGORITHM_ENUM:
+                enums.CryptographicAlgorithm.DSA},
+            ss.KeyAlgorithm.RSA: {
+                KMIPSecretStore.VALID_BIT_LENGTHS:
+                [1024, 2048, 3072, 4096],
+                KMIPSecretStore.KMIP_ALGORITHM_ENUM:
+                enums.CryptographicAlgorithm.RSA},
         }
 
         if conf.kmip_plugin.keyfile is not None:
             self._validate_keyfile_permissions(conf.kmip_plugin.keyfile)
 
-        credential_type = credentials.CredentialType.USERNAME_AND_PASSWORD
-        credential_value = {'Username': conf.kmip_plugin.username,
-                            'Password': conf.kmip_plugin.password}
-        self.credential = credentials.CredentialFactory().create_credential(
-            credential_type,
-            credential_value)
+        if (conf.kmip_plugin.username is None) and (
+                conf.kmip_plugin.password is None):
+            self.credential = None
+        else:
+            credential_type = credentials.CredentialType.USERNAME_AND_PASSWORD
+            credential_value = {'Username': conf.kmip_plugin.username,
+                                'Password': conf.kmip_plugin.password}
+            self.credential = (
+                credentials.CredentialFactory().create_credential(
+                    credential_type,
+                    credential_value))
+
         self.client = kmip_client.KMIPProxy(
             host=conf.kmip_plugin.host,
             port=int(conf.kmip_plugin.port),
@@ -149,6 +167,12 @@ class KMIPSecretStore(ss.SecretStoreBase):
             raise ss.SecretAlgorithmNotSupportedException(
                 key_spec.alg)
 
+        if key_spec.alg.lower() not in ss.KeyAlgorithm.SYMMETRIC_ALGORITHMS:
+            raise KMIPSecretStoreError(
+                u._("An unsupported algorithm {algorithm} was passed to the "
+                    "'generate_symmetric_key' method").format(
+                        algorithm=key_spec.alg))
+
         object_type = enums.ObjectType.SYMMETRIC_KEY
 
         algorithm = self._create_cryptographic_algorithm_attribute(
@@ -167,9 +191,9 @@ class KMIPSecretStore(ss.SecretStoreBase):
             self.client.open()
             LOG.debug("Opened connection to KMIP client for secret " +
                       "generation")
-            result = self.client.create(object_type,
-                                        template_attribute,
-                                        self.credential)
+            result = self.client.create(object_type=object_type,
+                                        template_attribute=template_attribute,
+                                        credential=self.credential)
         except Exception as e:
             LOG.exception("Error opening or writing to client")
             raise ss.SecretGeneralException(str(e))
@@ -186,8 +210,76 @@ class KMIPSecretStore(ss.SecretStoreBase):
                       "generation")
 
     def generate_asymmetric_key(self, key_spec):
-        raise NotImplementedError(
-            u._("Feature not yet implemented by KMIP Secret Store plugin"))
+        """Generate an asymmetric key pair.
+
+        Creates KMIP attribute objects based on the given KeySpec to send to
+        the server. The KMIP Secret Store currently does not support
+        protecting the private key with a passphrase.
+
+        :param key_spec: KeySpec with asymmetric algorithm and bit_length
+        :returns: AsymmetricKeyMetadataDTO with the key UUIDs
+        :raises: SecretGeneralException, SecretAlgorithmNotSupportedException
+        """
+        LOG.debug("Starting asymmetric key generation with KMIP plugin")
+        if not self.generate_supports(key_spec):
+            raise ss.SecretAlgorithmNotSupportedException(
+                key_spec.alg)
+
+        if key_spec.alg.lower() not in ss.KeyAlgorithm.ASYMMETRIC_ALGORITHMS:
+            raise KMIPSecretStoreError(
+                u._("An unsupported algorithm {algorithm} was passed to "
+                    "the 'generate_asymmetric_key' method").format(
+                        algorithm=key_spec.alg))
+
+        if key_spec.passphrase:
+            raise KMIPSecretStoreError(
+                u._('KMIP plugin does not currently support protecting the '
+                    'private key with a passphrase'))
+
+        algorithm = self._create_cryptographic_algorithm_attribute(
+            key_spec.alg)
+
+        usage_mask = self._create_usage_mask_attribute()
+
+        length = self._create_cryptographic_length_attribute(
+            key_spec.bit_length)
+
+        attributes = [algorithm, usage_mask, length]
+        common = kmip_objects.CommonTemplateAttribute(
+            attributes=attributes)
+
+        try:
+            self.client.open()
+            LOG.debug("Opened connection to KMIP client for asymmetric " +
+                      "secret generation")
+            result = self.client.create_key_pair(
+                common_template_attribute=common,
+                credential=self.credential)
+        except Exception as e:
+            LOG.exception("Error opening or writing to client")
+            raise ss.SecretGeneralException(str(e))
+        else:
+            if result.result_status.enum == enums.ResultStatus.SUCCESS:
+                LOG.debug("SUCCESS: Asymmetric key pair generated with "
+                          "public key uuid: %s and private key uuid: %s",
+                          result.public_key_uuid.value,
+                          result.private_key_uuid.value)
+                private_key_metadata = {
+                    KMIPSecretStore.KEY_UUID:
+                    result.private_key_uuid.value}
+                public_key_metadata = {
+                    KMIPSecretStore.KEY_UUID:
+                    result.public_key_uuid.value}
+                passphrase_metadata = None
+                return ss.AsymmetricKeyMetadataDTO(private_key_metadata,
+                                                   public_key_metadata,
+                                                   passphrase_metadata)
+            else:
+                self._raise_secret_general_exception(result)
+        finally:
+            self.client.close()
+            LOG.debug("Closed connection to KMIP client for asymmetric "
+                      "secret generation")
 
     def store_secret(self, secret_dto):
         """Stores a secret
@@ -203,7 +295,15 @@ class KMIPSecretStore(ss.SecretStoreBase):
             raise ss.SecretAlgorithmNotSupportedException(
                 secret_dto.key_spec.alg)
 
-        object_type = self._map_type_ss_to_kmip(secret_dto.type)
+        secret_type = secret_dto.type
+
+        object_type, key_format_type = (
+            self._map_type_ss_to_kmip(secret_type))
+
+        if object_type is None:
+            raise KMIPSecretStoreError(
+                u._('Secret object type {object_type} is '
+                    'not supported').format(object_type=object_type))
 
         algorithm_value = self._map_algorithm_ss_to_kmip(
             secret_dto.key_spec.alg)
@@ -214,10 +314,18 @@ class KMIPSecretStore(ss.SecretStoreBase):
         template_attribute = kmip_objects.TemplateAttribute(
             attributes=attribute_list)
 
+        normalized_secret = secret_dto.secret
+        if (secret_type == ss.SecretType.PRIVATE or
+                secret_type == ss.SecretType.PUBLIC or
+                secret_type == ss.SecretType.CERTIFICATE):
+            normalized_secret = translations.get_pem_components(
+                normalized_secret)[1]
+        normalized_secret = base64.b64decode(normalized_secret)
+
         secret_features = {
-            'key_format_type': enums.KeyFormatType.RAW,
+            'key_format_type': key_format_type,
             'key_value': {
-                'bytes': self._convert_base64_to_byte_array(secret_dto.secret)
+                'bytes': normalized_secret
             },
             'cryptographic_algorithm': algorithm_value,
             'cryptographic_length': secret_dto.key_spec.bit_length
@@ -232,10 +340,11 @@ class KMIPSecretStore(ss.SecretStoreBase):
         try:
             self.client.open()
             LOG.debug("Opened connection to KMIP client for secret storage")
-            result = self.client.register(object_type,
-                                          template_attribute,
-                                          secret,
-                                          self.credential)
+            result = self.client.register(
+                object_type=object_type,
+                template_attribute=template_attribute,
+                secret=secret,
+                credential=self.credential)
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
             raise ss.SecretGeneralException(str(e))
@@ -261,12 +370,18 @@ class KMIPSecretStore(ss.SecretStoreBase):
         """
         LOG.debug("Starting secret retrieval with KMIP plugin")
         uuid = str(secret_metadata[KMIPSecretStore.KEY_UUID])
-
+        object_type, key_format_enum = self._map_type_ss_to_kmip(secret_type)
+        if key_format_enum is not None:
+            key_format_type = misc.KeyFormatType(key_format_enum)
+        else:
+            key_format_type = None
         try:
             self.client.open()
             LOG.debug("Opened connection to KMIP client for secret " +
                       "retrieval")
-            result = self.client.get(uuid, self.credential)
+            result = self.client.get(uuid=uuid,
+                                     key_format_type=key_format_type,
+                                     credential=self.credential)
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
             raise ss.SecretGeneralException(str(e))
@@ -275,14 +390,10 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 secret_block = result.secret.key_block
 
                 key_value_type = type(secret_block.key_value.key_material)
-                if key_value_type == kmip_objects.KeyMaterialStruct:
-                    secret_value = self._convert_byte_array_to_base64(
+                if (key_value_type == kmip_objects.KeyMaterialStruct or
+                        key_value_type == kmip_objects.KeyMaterial):
+                    secret_value = base64.b64encode(
                         secret_block.key_value.key_material.value)
-
-                elif key_value_type == kmip_objects.KeyMaterial:
-                    secret_value = self._convert_byte_array_to_base64(
-                        secret_block.key_value.key_material.value)
-
                 else:
                     msg = u._(
                         "Unknown key value type received from KMIP "
@@ -296,6 +407,12 @@ class KMIPSecretStore(ss.SecretStoreBase):
                     LOG.exception(msg)
                     raise ss.SecretGeneralException(msg)
 
+                if(secret_type == ss.SecretType.PRIVATE or
+                        secret_type == ss.SecretType.PUBLIC or
+                        secret_type == ss.SecretType.CERTIFICATE):
+                    secret_value = translations.to_pem(
+                        secret_type, secret_value, True)
+
                 secret_alg = self._map_algorithm_kmip_to_ss(
                     secret_block.cryptographic_algorithm.value)
                 secret_bit_length = secret_block.cryptographic_length.value
@@ -303,9 +420,8 @@ class KMIPSecretStore(ss.SecretStoreBase):
                     secret_type,
                     secret_value,
                     ss.KeySpec(secret_alg, secret_bit_length),
-                    'content_type',
+                    content_type=None,
                     transport_key=None)
-                # TODO(kaitlin-farr) remove 'content-type'
                 LOG.debug("SUCCESS: Key retrieved with uuid: %s",
                           uuid)
                 return ret_secret_dto
@@ -314,13 +430,14 @@ class KMIPSecretStore(ss.SecretStoreBase):
         finally:
             self.client.close()
             LOG.debug("Closed connection to KMIP client for secret " +
-                      "retreival")
+                      "retrieval")
 
     def generate_supports(self, key_spec):
         """Key generation supported?
 
         Specifies whether the plugin supports key generation with the
-        given key_spec.
+        given key_spec. Currently, asymmetric key pair generation does not
+        support encrypting the private key with a passphrase.
 
         Checks both the algorithm and the bit length. Only symmetric
         algorithms are currently supported.
@@ -347,7 +464,8 @@ class KMIPSecretStore(ss.SecretStoreBase):
         try:
             self.client.open()
             LOG.debug("Opened connection to KMIP client for secret deletion")
-            result = self.client.destroy(uuid, self.credential)
+            result = self.client.destroy(uuid=uuid,
+                                         credential=self.credential)
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
             raise ss.SecretGeneralException(str(e))
@@ -366,31 +484,11 @@ class KMIPSecretStore(ss.SecretStoreBase):
         Specifies whether the plugin supports storage of the secret given
         the attributes included in the KeySpec.
 
-        For now, only symmetric keys are supported.
+        For now, only symmetric and asymmetric keys are supported.
         :param key_spec: KeySpec of secret to be stored
         :returns: boolean indicating if secret can be stored
         """
         return self.generate_supports(key_spec)
-
-    def _convert_base64_to_byte_array(self, base64_secret):
-        """Converts a base64 string to a byte array.
-
-        KMIP transports secret values as byte arrays, so the key values
-        must be converted to a byte array for storage.
-        :param base64_secret: base64 value of key
-        :returns: bytearray of secret
-        """
-        return bytearray(base64.b64decode(base64_secret))
-
-    def _convert_byte_array_to_base64(self, byte_array):
-        """Converts a byte array to a base64 string.
-
-        KMIP transports secret values as byte arrays, so the key values
-        must be converted to base64 strings upon getting a stored secret.
-        :param byte_array: bytearray of key value
-        :returns: base64 string
-        """
-        return base64.b64encode(str(byte_array))
 
     def _create_cryptographic_algorithm_attribute(self, alg):
         """Creates a KMIP Cryptographic Algorithm attribute.
@@ -450,14 +548,18 @@ class KMIPSecretStore(ss.SecretStoreBase):
         """Map SecretType to KMIP type enum
 
         Returns None if the type is not supported. The KMIP plugin only
-        supports symmetric keys for now.
+        supports symmetric and asymmetric keys for now.
         :param object_type: SecretType enum value
-        :returns: KMIP type enum if supported, None if not supported
+        :returns: KMIP type enums if supported, None if not supported
         """
         if object_type == ss.SecretType.SYMMETRIC:
-            return enums.ObjectType.SYMMETRIC_KEY
+            return enums.ObjectType.SYMMETRIC_KEY, enums.KeyFormatType.RAW
+        elif object_type == ss.SecretType.PRIVATE:
+            return enums.ObjectType.PRIVATE_KEY, enums.KeyFormatType.PKCS_8
+        elif object_type == ss.SecretType.PUBLIC:
+            return enums.ObjectType.PUBLIC_KEY, enums.KeyFormatType.X_509
         else:
-            return None
+            return None, None
 
     def _map_algorithm_ss_to_kmip(self, algorithm):
         """Map SecretStore enum value to the KMIP algorithm enum
