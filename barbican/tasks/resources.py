@@ -32,6 +32,34 @@ from barbican.tasks import certificate_resources as cert
 LOG = utils.getLogger(__name__)
 
 
+RETRY_MSEC = 60 * 1000
+
+
+class FollowOnProcessingStatusDTO(object):
+    """Follow On Processing status data transfer object (DTO).
+
+    An object of this type is optionally returned by the
+    BaseTask.handle_processing() method defined below, and is used to guide
+    follow on processing and to provide status feedback to clients.
+    """
+    def __init__(self, status=u._('Unknown'), status_message=u._('Unknown'),
+                 retry_method=None, retry_msec=RETRY_MSEC):
+        """Creates a new FollowOnProcessingStatusDTO.
+
+        :param status: Status for cert order
+        :param status_message: Message to explain status type.
+        :param retry_method: Method to retry
+        :param retry_msec: Number of milliseconds to wait for retry
+        """
+        self.status = status
+        self.status_message = status_message
+        self.retry_method = retry_method
+        self.retry_msec = int(retry_msec)
+
+    def is_follow_on_needed(self):
+        return self.retry_method
+
+
 @six.add_metaclass(abc.ABCMeta)
 class BaseTask(object):
     """Base asynchronous task."""
@@ -68,7 +96,7 @@ class BaseTask(object):
 
         # Process the target entity.
         try:
-            self.handle_processing(entity, *args, **kwargs)
+            result = self.handle_processing(entity, *args, **kwargs)
         except Exception as e_orig:
             LOG.exception(u._LE("Could not perform processing for "
                                 "task '%s'."), name)
@@ -87,7 +115,7 @@ class BaseTask(object):
 
         # Handle successful conclusion of processing.
         try:
-            self.handle_success(entity, *args, **kwargs)
+            self.handle_success(entity, result, *args, **kwargs)
         except Exception as e:
             LOG.exception(u._LE("Could not process after successfully "
                                 "executing task '%s'."), name)
@@ -108,7 +136,9 @@ class BaseTask(object):
 
         :param args: List of arguments passed in from the client.
         :param kwargs: Dict of arguments passed in from the client.
-        :return: None
+        :return: None if no follow on processing is needed for this task,
+                 otherwise a :class:`FollowOnProcessingStatusDTO` instance
+                 with information on how to process this task into the future.
         """
 
     @abc.abstractmethod
@@ -129,17 +159,71 @@ class BaseTask(object):
         """
 
     @abc.abstractmethod
-    def handle_success(self, entity, *args, **kwargs):
+    def handle_success(self, entity, result, *args, **kwargs):
         """A hook method to post-process after successful entity processing.
 
         This method could be used to mark entity as being active, or to
         add information/references to the entity.
 
         :param entity: Entity retrieved from _retrieve_entity() above.
+        :param result: A :class:`FollowOnProcessingStatusDTO` instance
+                       representing processing result status, None implies
+                       that no follow on processing is required.
         :param args: List of arguments passed in from the client.
         :param kwargs: Dict of arguments passed in from the client.
         :return: None
         """
+
+
+class _OrderTaskHelper(object):
+    """Supports order-related BaseTask operations.
+
+    BaseTask sub-classes can delegate to an instance of this class to perform
+    common order-related operations.
+    """
+    def __init__(self):
+        self.order_repo = rep.get_order_repository()
+
+    def retrieve_entity(self, order_id, external_project_id, *args, **kwargs):
+        """Retrieve an order entity by its PK ID."""
+        return self.order_repo.get(
+            entity_id=order_id,
+            external_project_id=external_project_id)
+
+    def handle_error(self, order, status, message, exception,
+                     *args, **kwargs):
+        """Stamp the order entity as terminated due to an error."""
+        order.status = models.States.ERROR
+        order.error_status_code = status
+        order.set_error_reason_safely(message)
+        self.order_repo.save(order)
+
+    def handle_success(self, order, result, *args, **kwargs):
+        """Handle if the order entity is terminated or else long running.
+
+        The 'result' argument (if present) indicates if a order should now be
+        terminated due to it being completed, or else should be held in the
+        PENDING state due to follow on workflow processing. If 'result' is not
+        provided, the order is presumed completed.
+        """
+        is_follow_on_needed = False
+        sub_status = None
+        sub_status_message = None
+        if result:
+            is_follow_on_needed = result.is_follow_on_needed()
+            sub_status = result.status
+            sub_status_message = result.status_message
+
+        if not is_follow_on_needed:
+            order.status = models.States.ACTIVE
+
+        if sub_status:
+            order.set_sub_status_safely(sub_status)
+
+        if sub_status_message:
+            order.set_sub_status_message_safely(sub_status_message)
+
+        self.order_repo.save(order)
 
 
 class BeginTypeOrder(BaseTask):
@@ -150,34 +234,14 @@ class BeginTypeOrder(BaseTask):
 
     def __init__(self):
         LOG.debug('Creating BeginTypeOrder task processor')
-        self.order_repo = rep.get_order_repository()
         self.project_repo = rep.get_project_repository()
+        self.helper = _OrderTaskHelper()
 
-    def retrieve_entity(self, order_id, external_project_id):
-        return self.order_repo.get(
-            entity_id=order_id,
-            external_project_id=external_project_id)
+    def retrieve_entity(self, *args, **kwargs):
+        return self.helper.retrieve_entity(*args, **kwargs)
 
     def handle_processing(self, order, *args, **kwargs):
         self.handle_order(order)
-
-    def handle_error(self, order, status, message, exception,
-                     *args, **kwargs):
-        order.status = models.States.ERROR
-        order.error_status_code = status
-        order.error_reason = message
-        self.order_repo.save(order)
-
-    def handle_success(self, order, *args, **kwargs):
-        if models.OrderType.CERTIFICATE != order.type:
-            order.status = models.States.ACTIVE
-        else:
-            # TODO(alee-3): enable the code below when sub status is added
-            # if cert.ORDER_STATUS_CERT_GENERATED.id == order.sub_status:
-            #    order.status = models.States.ACTIVE
-            order.status = models.States.ACTIVE
-
-        self.order_repo.save(order)
 
     def handle_order(self, order):
         """Handle secret creation using meta info.
@@ -228,6 +292,15 @@ class BeginTypeOrder(BaseTask):
                 u._('Order type "{order_type}" not implemented.').format(
                     order_type=order_type))
 
+    def handle_error(self, order, status, message, exception,
+                     *args, **kwargs):
+        self.helper.handle_error(
+            order, status, message, exception, *args, **kwargs)
+
+    def handle_success(self, order, result, *args, **kwargs):
+        self.helper.handle_success(
+            order, result, *args, **kwargs)
+
 
 class UpdateOrder(BaseTask):
     """Handles updating an order."""
@@ -236,28 +309,14 @@ class UpdateOrder(BaseTask):
 
     def __init__(self):
         LOG.debug('Creating UpdateOrder task processor')
-        self.order_repo = rep.get_order_repository()
+        self.helper = _OrderTaskHelper()
 
-    def retrieve_entity(self, order_id, external_project_id, updated_meta):
-        return self.order_repo.get(
-            entity_id=order_id,
-            external_project_id=external_project_id)
+    def retrieve_entity(self, *args, **kwargs):
+        return self.helper.retrieve_entity(*args, **kwargs)
 
-    def handle_processing(self, order, order_id, keystone_id, updated_meta):
+    def handle_processing(
+            self, order, order_id, external_project_id, updated_meta):
         self.handle_order(order, updated_meta)
-
-    def handle_error(self, order, status, message, exception,
-                     *args, **kwargs):
-        order.status = models.States.ERROR
-        order.error_status_code = status
-        order.error_reason = message
-        LOG.exception(u._LE("An error has occurred updating the order."))
-        self.order_repo.save(order)
-
-    def handle_success(self, order, *args, **kwargs):
-        # TODO(chellygel): Handle sub-status on a pending order.
-        order.status = models.States.ACTIVE
-        self.order_repo.save(order)
 
     def handle_order(self, order, updated_meta):
         """Handle Order Update
@@ -278,3 +337,12 @@ class UpdateOrder(BaseTask):
                     order_type=order_type))
 
         LOG.debug("...done updating order.")
+
+    def handle_error(self, order, status, message, exception,
+                     *args, **kwargs):
+        self.helper.handle_error(
+            order, status, message, exception, *args, **kwargs)
+
+    def handle_success(self, order, result, *args, **kwargs):
+        self.helper.handle_success(
+            order, result, *args, **kwargs)

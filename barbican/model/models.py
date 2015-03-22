@@ -35,6 +35,9 @@ from barbican.plugin.interface import secret_store
 
 LOG = utils.getLogger(__name__)
 BASE = declarative.declarative_base()
+ERROR_REASON_LENGTH = 255
+SUB_STATUS_LENGTH = 36
+SUB_STATUS_MESSAGE_LENGTH = 255
 
 
 # Allowed entity states
@@ -483,7 +486,7 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
                            index=True, nullable=False)
 
     error_status_code = sa.Column(sa.String(16))
-    error_reason = sa.Column(sa.String(255))
+    error_reason = sa.Column(sa.String(ERROR_REASON_LENGTH))
 
     meta = sa.Column(JsonBlob(), nullable=True)
 
@@ -491,8 +494,9 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
                           index=True, nullable=True)
     container_id = sa.Column(sa.String(36), sa.ForeignKey('containers.id'),
                              index=True, nullable=True)
-    sub_status = sa.Column(sa.String(36), nullable=True)
-    sub_status_message = sa.Column(sa.String(255), nullable=True)
+    sub_status = sa.Column(sa.String(SUB_STATUS_LENGTH), nullable=True)
+    sub_status_message = sa.Column(sa.String(SUB_STATUS_MESSAGE_LENGTH),
+                                   nullable=True)
 
     order_plugin_metadata = orm.relationship(
         "OrderPluginMetadatum",
@@ -516,6 +520,20 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
                 self.sub_status = parsed_request.get('sub_status')
                 self.sub_status_message = parsed_request.get(
                     'sub_status_message')
+
+    def set_error_reason_safely(self, error_reason_raw):
+        """Ensure error reason does not raise database attribute exceptions."""
+        self.error_reason = error_reason_raw[:ERROR_REASON_LENGTH]
+
+    def set_sub_status_safely(self, sub_status_raw):
+        """Ensure sub-status does not raise database attribute exceptions."""
+        self.sub_status = sub_status_raw[:SUB_STATUS_LENGTH]
+
+    def set_sub_status_message_safely(self, sub_status_message_raw):
+        """Ensure status message doesn't raise database attrib. exceptions."""
+        self.sub_status_message = sub_status_message_raw[
+            :SUB_STATUS_MESSAGE_LENGTH
+        ]
 
     def _do_delete_children(self, session):
         """Sub-class hook: delete children relationships."""
