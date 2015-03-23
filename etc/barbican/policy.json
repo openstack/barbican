@@ -31,5 +31,17 @@
     "transport_key:get": "rule:all_users",
     "transport_key:delete": "rule:admin",
     "transport_keys:get": "rule:all_users",
-    "transport_keys:post": "rule:admin"
+    "transport_keys:post": "rule:admin",
+    "certificate_authorities:get": "rule:all_but_audit",
+    "certificate_authority:get": "rule:all_users",
+    "certificate_authority:get_cacert": "rule:all_users",
+    "certificate_authority:get_ca_cert_chain": "rule:all_users",
+    "certificate_authority:get_projects": "rule:admin",
+    "certificate_authority:add_to_project": "role:admin",
+    "certificate_authority:remove_from_project": "role:admin",
+    "certificate_authority:set_preferred": "role:admin",
+    "certificate_authority:set_global_preferred": "rule:admin",
+    "certificate_authority:unset_global_preferred": "rule:admin",
+    "certificate_authority:get_global_preferred": "rule:all_users",
+    "certificate_authority:get_preferred_ca": "rule:all_users"
 }
