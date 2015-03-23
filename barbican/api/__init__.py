@@ -76,7 +76,7 @@ def load_body(req, resp=None, validator=None):
             parsed_body = validator.validate(parsed_body)
         except exception.BarbicanHTTPException as e:
             LOG.exception(e.message)
-            pecan.abort(e.status_code, str(e.client_message))
+            pecan.abort(e.status_code, e.client_message)
 
     return parsed_body
 

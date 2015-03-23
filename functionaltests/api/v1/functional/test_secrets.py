@@ -961,6 +961,33 @@ class SecretsTestCase(base.TestCase):
         resp, secret_ref = self.behaviors.create_secret(test_model, headers)
         self.assertEqual(resp.status_code, 415)
 
+    @utils.parameterized_dataset({
+        'invalid_http_content_type_characaters_latin': {
+            'payload_content_type': u'\u00c4'.encode('utf-8')},
+
+        'invalid_http_content_type_characaters_arabic': {
+            'payload_content_type': u'\u060f'.encode('utf-8')},
+
+        'invalid_http_content_type_characaters_cyrillic': {
+            'payload_content_type': u'\u0416'.encode('utf-8')},
+
+        'invalid_http_content_type_characaters_replacement_character': {
+            'payload_content_type': u'\ufffd'.encode('utf-8')},
+    })
+    @testcase.attr('negative')
+    def test_secret_create_with_invalid_payload_content_type_characters(
+            self, payload_content_type):
+        """Attempt to create secrets with non-ascii characters in the
+
+        payload's content type attribute. Should return a 400.
+        """
+        test_model = secret_models.SecretModel(
+            **self.default_secret_create_data)
+        test_model.payload_content_type = payload_content_type
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 400)
+
 
 class SecretsPagingTestCase(base.PagingTestCase):
 
