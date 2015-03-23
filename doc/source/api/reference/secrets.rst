@@ -8,8 +8,11 @@ Lists a project's secrets.
 
 The list of secrets can be filtered by the parameters passed in via the URL.
 
+
 The actual secret payload data will not be listed here. Clients must instead
 make a separate call to get the secret details to view the secret.
+
+.. _secret_parameters:
 
 Parameters
 **********
@@ -32,6 +35,8 @@ Parameters
 | mode   | string  | Selects all secrets with mode equal to this value.             |
 +--------+---------+----------------------------------------------------------------+
 
+.. _secret_response_attributes:
+
 Response Attributes
 *******************
 
@@ -53,6 +58,8 @@ Response Attributes
 +----------+---------+--------------------------------------------------------------+
 
 
+.. _secret_status_codes:
+
 HTTP Status Codes
 *****************
 
@@ -64,6 +71,8 @@ HTTP Status Codes
 | 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource |
 +------+-----------------------------------------------------------------------------+
 
+
+.. _post_secrets:
 
 POST /v1/secrets
 ################
@@ -250,6 +259,8 @@ HTTP Status Codes
 | 406  | Not Acceptable                                                              |
 +------+-----------------------------------------------------------------------------+
 
+.. _put_secrets:
+
 PUT /v1/secrets/{uuid}
 ######################
 
@@ -307,6 +318,7 @@ HTTP Status Codes
 | 404  | Not Found                                                                   |
 +------+-----------------------------------------------------------------------------+
 
+.. _delete_secrets:
 
 DELETE /v1/secrets/{uuid}
 #########################
