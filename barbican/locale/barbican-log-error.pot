@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2015.1.dev119\n"
+"Project-Id-Version: barbican 2015.1.dev14\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-04 06:07+0000\n"
+"POT-Creation-Date: 2015-03-23 06:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,7 +33,7 @@ msgstr ""
 msgid "Problem deleting consumer"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:84
+#: barbican/api/controllers/containers.py:85
 msgid "Problem deleting container"
 msgstr ""
 
@@ -41,20 +41,20 @@ msgstr ""
 msgid "Problem deleting transport_key"
 msgstr ""
 
-#: barbican/model/repositories.py:350
+#: barbican/model/repositories.py:353
 #, python-format
 msgid "Not found for %s"
 msgstr ""
 
-#: barbican/model/repositories.py:385
+#: barbican/model/repositories.py:388
 msgid "Problem saving entity for create"
 msgstr ""
 
-#: barbican/model/repositories.py:518
+#: barbican/model/repositories.py:521
 msgid "Problem finding project related entity to delete"
 msgstr ""
 
-#: barbican/model/repositories.py:551
+#: barbican/model/repositories.py:554
 #, python-format
 msgid "Problem getting Project %s"
 msgstr ""
@@ -92,10 +92,15 @@ msgstr ""
 msgid "Unhandled exception"
 msgstr ""
 
-#: barbican/plugin/kmip_secret_store.py:241
-#: barbican/plugin/kmip_secret_store.py:271
-#: barbican/plugin/kmip_secret_store.py:355
+#: barbican/plugin/kmip_secret_store.py:349
+#: barbican/plugin/kmip_secret_store.py:386
+#: barbican/plugin/kmip_secret_store.py:470
 msgid "Error opening or writing to client"
+msgstr ""
+
+#: barbican/queue/server.py:69
+#, python-format
+msgid "Problem seen processing worker task: '%s'"
 msgstr ""
 
 #: barbican/tasks/keystone_consumer.py:75
@@ -106,27 +111,23 @@ msgid ""
 "error message=%(message)s"
 msgstr ""
 
-#: barbican/tasks/resources.py:65
+#: barbican/tasks/resources.py:93
 #, python-format
 msgid "Could not retrieve information needed to process task '%s'."
 msgstr ""
 
-#: barbican/tasks/resources.py:73
+#: barbican/tasks/resources.py:101
 #, python-format
 msgid "Could not perform processing for task '%s'."
 msgstr ""
 
-#: barbican/tasks/resources.py:83
+#: barbican/tasks/resources.py:111
 #, python-format
 msgid "Problem handling an error for task '%s', raising original exception."
 msgstr ""
 
-#: barbican/tasks/resources.py:92
+#: barbican/tasks/resources.py:120
 #, python-format
 msgid "Could not process after successfully executing task '%s'."
-msgstr ""
-
-#: barbican/tasks/resources.py:254
-msgid "An error has occurred updating the order."
 msgstr ""
 

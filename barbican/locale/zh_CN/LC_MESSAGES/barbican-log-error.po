@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-17 06:42+0000\n"
-"PO-Revision-Date: 2015-03-16 13:29+0000\n"
-"Last-Translator: DuanXin <1145833162@qq.com>\n"
+"POT-Creation-Date: 2015-03-23 06:06+0000\n"
+"PO-Revision-Date: 2015-03-22 20:12+0000\n"
+"Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
 "Language: zh_CN\n"
@@ -95,11 +95,16 @@ msgstr "没有匹配的 %s 的处理程序"
 msgid "Unhandled exception"
 msgstr "未处理的异常"
 
-#: barbican/plugin/kmip_secret_store.py:240
-#: barbican/plugin/kmip_secret_store.py:271
-#: barbican/plugin/kmip_secret_store.py:352
+#: barbican/plugin/kmip_secret_store.py:349
+#: barbican/plugin/kmip_secret_store.py:386
+#: barbican/plugin/kmip_secret_store.py:470
 msgid "Error opening or writing to client"
 msgstr "打开或者写入客户端错误"
+
+#: barbican/queue/server.py:69
+#, python-format
+msgid "Problem seen processing worker task: '%s'"
+msgstr ""
 
 #: barbican/tasks/keystone_consumer.py:75
 #, python-format
@@ -111,26 +116,22 @@ msgstr ""
 "处理 Keystone 事件错误，项目id=%(project_id)s，事件资源=%(resource)s，事件操"
 "作=%(operation)s，状态=%(status)s，错误信息=%(message)s"
 
-#: barbican/tasks/resources.py:65
+#: barbican/tasks/resources.py:93
 #, python-format
 msgid "Could not retrieve information needed to process task '%s'."
 msgstr "无法检索到所需的信息来处理任务 '%s'。"
 
-#: barbican/tasks/resources.py:73
+#: barbican/tasks/resources.py:101
 #, python-format
 msgid "Could not perform processing for task '%s'."
 msgstr "无法为任务 '%s' 执行处理。"
 
-#: barbican/tasks/resources.py:83
+#: barbican/tasks/resources.py:111
 #, python-format
 msgid "Problem handling an error for task '%s', raising original exception."
 msgstr "为任务 '%s' 处理错误时出错，原始异常增加。"
 
-#: barbican/tasks/resources.py:92
+#: barbican/tasks/resources.py:120
 #, python-format
 msgid "Could not process after successfully executing task '%s'."
 msgstr "在成功执行任务 '%s' 后无法处理。"
-
-#: barbican/tasks/resources.py:254
-msgid "An error has occurred updating the order."
-msgstr "更新命令出错。"
