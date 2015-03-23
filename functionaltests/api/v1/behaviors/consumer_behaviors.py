@@ -19,12 +19,14 @@ from functionaltests.api.v1.models import consumer_model
 
 class ConsumerBehaviors(base_behaviors.BaseBehaviors):
 
-    def create_consumer(self, model, container_ref, extra_headers=None):
+    def create_consumer(self, model, container_ref, extra_headers=None,
+                        use_auth=True):
         """Register a consumer to a container.
 
         :param model: The metadata for the consumer
         :param container_ref: Full reference to a container
         :param extra_headers: Any additional headers to pass to the request
+        :param use_auth: Boolean for whether to send authentication headers
 
         :return: A tuple containing the response from the create
         and the href to the newly registered consumer
@@ -33,20 +35,26 @@ class ConsumerBehaviors(base_behaviors.BaseBehaviors):
         url = '{0}/consumers'.format(container_ref)
 
         resp = self.client.post(url, request_model=model,
-                                extra_headers=extra_headers)
+                                extra_headers=extra_headers, use_auth=use_auth)
+
+        if resp.status_code == 401 and not use_auth:
+            return resp, None
 
         returned_data = self.get_json(resp)
         consumer_data = returned_data.get('consumers')
 
         return resp, consumer_data
 
-    def get_consumers(self, container_ref, limit=10, offset=0):
+    def get_consumers(self, container_ref, limit=10, offset=0,
+                      extra_headers=None, use_auth=True):
         """Gets a list of consumers on a container.
 
         :param container_ref: Full reference to a container
         :param limit: limits number of returned consumers
         :param offset: represents how many records to skip before retrieving
             the list
+        :param extra_headers: Any additional headers to pass to the request
+        :param use_auth: Boolean for whether to send authentication headers
 
         :return: The response from the get and refs to the next/previous list
             of consumers
@@ -55,7 +63,11 @@ class ConsumerBehaviors(base_behaviors.BaseBehaviors):
         url = '{0}/consumers'.format(container_ref)
 
         params = {'limit': limit, 'offset': offset}
-        resp = self.client.get(url, params=params)
+        resp = self.client.get(url, params=params, extra_headers=extra_headers,
+                               use_auth=use_auth)
+
+        if resp.status_code == 401 and not use_auth:
+            return resp, None, None, None
 
         consumer_list = self.get_json(resp)
 
@@ -64,17 +76,26 @@ class ConsumerBehaviors(base_behaviors.BaseBehaviors):
 
         return resp, consumers, next_ref, prev_ref
 
-    def delete_consumer(self, model, container_ref):
+    def delete_consumer(self, model, container_ref, extra_headers=None,
+                        use_auth=True):
         """Deletes a consumer from a container.
 
         :param model: The metadata for the consumer
         :param container_ref: Full reference to a container
+        :param extra_headers: Any additional headers to pass to the request
+        :param use_auth: Boolean for whether to send authentication headers
 
         :return: The response from the delete
         """
         url = '{0}/consumers'.format(container_ref)
 
-        resp = self.client.delete(url, request_model=model)
+        resp = self.client.delete(url, request_model=model,
+                                  extra_headers=extra_headers,
+                                  use_auth=use_auth)
+
+        if resp.status_code == 401 and not use_auth:
+            return resp, None
+
         returned_data = self.get_json(resp)
         consumer_data = returned_data['consumers']
 
