@@ -2,11 +2,14 @@
 Secrets API - Reference
 ***********************
 
-GET /secrets
-############
+GET /v1/secrets
+###############
 Lists a project's secrets.
 
 The list of secrets can be filtered by the parameters passed in via the URL.
+
+The actual secret payload data will not be listed here. Clients must instead
+make a separate call to get the secret details to view the secret.
 
 Parameters
 **********
@@ -62,8 +65,8 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 
 
-POST /secrets
-#############
+POST /v1/secrets
+################
 Creates a secret
 
 Attributes
@@ -76,13 +79,16 @@ Attributes
 |                            |         | user.                                        |            |
 +----------------------------+---------+----------------------------------------------+------------+
 | expiration                 | string  | (optional) This is a timestamp in ISO 8601   | None       |
-|                            |         | format ``YYYY-MM-DDTHH:MM:SSZ.``             |            |
+|                            |         | format ``YYYY-MM-DDTHH:MM:SSZ``. Once this   |            |
+|                            |         | time has past, the secret will no longer be  |            |
+|                            |         | available.                                   |            |
 +----------------------------+---------+----------------------------------------------+------------+
 | algorithm                  | string  | (optional) Metadata provided by a user or    | None       |
 |                            |         | system for informational purposes.           |            |
 +----------------------------+---------+----------------------------------------------+------------+
 | bit_length                 | integer | (optional) Metadata provided by a user or    | None       |
-|                            |         | system for informational purposes.           |            |
+|                            |         | system for informational purposes. Value     |            |
+|                            |         | must be greater than zero.                   |            |
 +----------------------------+---------+----------------------------------------------+------------+
 | mode                       | string  | (optional) Metadata provided by a user or    | None       |
 |                            |         | system for informational purposes.           |            |
@@ -109,29 +115,242 @@ Attributes
 |                            |         | encoding.                                    |            |
 +----------------------------+---------+----------------------------------------------+------------+
 
-TODO(jvrbanac): Finish this section
+Request:
+********
 
-GET /secrets/{uuid}
-###################
-Retrieves a secret's metadata by uuid
+.. code-block:: javascript
 
-TODO(jvrbanac): Finish this section
+    POST /v1/secrets
+    Headers:
+        Content-Type: application/json
+        X-Project-Id: {project_id}
 
-DELETE /secrets/{uuid}
+    Content:
+    {
+        "name": "AES key",
+        "expiration": "2015-12-28T19:14:44.180394",
+        "algorithm": "aes",
+        "bit_length": 256,
+        "mode": "cbc",
+        "payload": "YmVlcg==",
+        "payload_content_type": "application/octet-stream",
+        "payload_content_encoding": "base64"
+    }
+
+Response:
+*********
+
+.. code-block:: javascript
+
+    201 Created
+
+    {
+        "secret_ref": "https://{barbican_host}/v1/secrets/{secret_uuid}"
+    }
+
+
+HTTP Status Codes
+*****************
+
++------+-----------------------------------------------------------------------------+
+| Code | Description                                                                 |
++======+=============================================================================+
+| 201  | Successfully created a Secret                                               |
++------+-----------------------------------------------------------------------------+
+| 400  | Bad Request                                                                 |
++------+-----------------------------------------------------------------------------+
+| 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource |
++------+-----------------------------------------------------------------------------+
+| 415  | Unsupported media-type                                                      |
++------+-----------------------------------------------------------------------------+
+
+
+GET /v1/secrets/{uuid}
 ######################
+Retrieves a secret's metadata or payload via uuid.
+
+The return type of content, metadata or payload, is controlled by the Accept
+header.
+
+Accept Header Options:
+**********************
+
+* application/json - Returns secret metadata
+* application/octet-stream - Returns secret payload
+* text/plain - Returns secret payload
+
+
+Metadata Request:
+*****************
+
+.. code-block:: javascript
+
+    GET /v1/secrets/{uuid}
+    Headers:
+        Accept: application/json
+        X-Project-Id: {project_id}
+
+
+Metadata Response:
+******************
+
+.. code-block:: javascript
+
+    200 OK
+
+    {
+        "status": "ACTIVE",
+        "created": "2015-03-23T20:46:51.650515",
+        "updated": "2015-03-23T20:46:51.654116",
+        "expiration": "2015-12-28T19:14:44.180394",
+        "algorithm": "aes",
+        "bit_length": 256,
+        "mode": "cbc",
+        "name": "AES key",
+        "secret_ref": "https://{barbican_host}/v1/secrets/{secret_uuid}",
+        "secret_type": "opaque",
+        "content_types": {
+            "default": "application/octet-stream"
+        }
+    }
+
+Payload Request:
+****************
+
+.. code-block:: javascript
+
+    GET /v1/secrets/{uuid}
+    Headers:
+        Accept: application/octet-stream
+        X-Project-Id: {project_id}
+
+
+Payload Response:
+*****************
+
+.. code-block:: javascript
+
+    200 OK
+
+    beer
+
+
+HTTP Status Codes
+*****************
+
++------+-----------------------------------------------------------------------------+
+| Code | Description                                                                 |
++======+=============================================================================+
+| 200  | Successful request                                                          |
++------+-----------------------------------------------------------------------------+
+| 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource |
++------+-----------------------------------------------------------------------------+
+| 404  | Not Found                                                                   |
++------+-----------------------------------------------------------------------------+
+| 406  | Not Acceptable                                                              |
++------+-----------------------------------------------------------------------------+
+
+PUT /v1/secrets/{uuid}
+######################
+
+Update a secret's payload by uuid
+
+.. note::
+
+    This action can only be done for a secret that doesn't have a payload already
+    set.
+
+Required Headers
+****************
+
++------------------+---------------------------------------------------+------------+
+| Name             | Description                                       | Default    |
++==================+===================================================+============+
+| Content-Type     | Corresponds with the payload_content_type         | text/plain |
+|                  | attribute of a normal secret creation request.    |            |
++------------------+---------------------------------------------------+------------+
+| Content-Encoding | Corresponds with the payload_content_encoding     | None       |
+|                  | attribute of a normal secret creation request.    |            |
++------------------+---------------------------------------------------+------------+
+
+Request:
+********
+
+.. code-block:: javascript
+
+    PUT /v1/secrets/{uuid}
+    Headers:
+        X-Project-Id: {project_id}
+        Content-Type: application/octet-stream
+        Content-Encoding: base64
+
+    Content:
+    YmxhaA==
+
+Response:
+*********
+
+.. code-block:: javascript
+
+    204 No Content
+
+HTTP Status Codes
+*****************
+
++------+-----------------------------------------------------------------------------+
+| Code | Description                                                                 |
++======+=============================================================================+
+| 204  | Successful request                                                          |
++------+-----------------------------------------------------------------------------+
+| 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource |
++------+-----------------------------------------------------------------------------+
+| 404  | Not Found                                                                   |
++------+-----------------------------------------------------------------------------+
+
+
+DELETE /v1/secrets/{uuid}
+#########################
 
 Delete a secret by uuid
 
-TODO(jvrbanac): Finish this section
+Request:
+****************
 
-GET /secrets/{uuid}/payload
-###########################
+.. code-block:: javascript
+
+    DELETE /v1/secrets/{uuid}
+    Headers:
+        X-Project-Id: {project_id}
+
+Response:
+****************
+
+.. code-block:: javascript
+
+    204 No Content
+
+HTTP Status Codes
+*****************
+
++------+-----------------------------------------------------------------------------+
+| Code | Description                                                                 |
++======+=============================================================================+
+| 204  | Successful request                                                          |
++------+-----------------------------------------------------------------------------+
+| 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource |
++------+-----------------------------------------------------------------------------+
+| 404  | Not Found                                                                   |
++------+-----------------------------------------------------------------------------+
+
+
+GET /v1/secrets/{uuid}/payload
+##############################
 Retrieve a secret's payload
 
 TODO(jvrbanac): Finish this section
 
-PUT /secrets/{uuid}/payload
-###########################
+PUT /v1/secrets/{uuid}/payload
+##############################
 Update a secret's payload
 
 TODO(jvrbanac): Finish this section
