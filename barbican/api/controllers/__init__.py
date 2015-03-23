@@ -10,10 +10,10 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
+import uuid
+
 import pecan
 from webob import exc
-
-import uuid
 
 from barbican import api
 from barbican.common import exception
