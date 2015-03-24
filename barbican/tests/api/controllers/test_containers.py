@@ -23,7 +23,7 @@ from barbican.tests import utils
 containers_repo = repositories.get_container_repository()
 
 
-class SuccessfulContainerCreateMixin():
+class SuccessfulContainerCreateMixin(object):
     def _assert_successful_container_create(self, resp, container_uuid):
         self.assertEqual(201, resp.status_int)
         # this will raise if the container uuid is not proper
