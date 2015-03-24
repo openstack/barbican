@@ -113,7 +113,7 @@ class WhenCreatingOrdersUsingOrdersResource(utils.BarbicanAPIBaseTestCase):
     def test_order_creation_should_fail_without_content_type_header(self):
         resp = self.app.post(
             '/orders/',
-            'doesnt matter. headers are validated first',
+            'doesn\'t matter. headers are validated first',
             expect_errors=True,
         )
         self.assertEqual(resp.status_int, 415)
