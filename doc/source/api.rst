@@ -657,11 +657,11 @@ Below is an example of a `container` POST request.
         },
         {
            "name": "public_key",
-           "secret_ref":"http://localhost:9311/v1/secrets/05a47308-d045-43d6-bfe3-1dbcd0c3a97b"
+           "secret_ref":"http://localhost:9311/v1/secrets/8b9ea25d-2324-4ef3-891f-2a821ad88ed1"
         },
         {
            "name": "private_key_passphrase",
-           "secret_ref":"http://localhost:9311/v1/secrets/05a47308-d045-43d6-bfe3-1dbcd0c3a97b"
+           "secret_ref":"http://localhost:9311/v1/secrets/c39c04dd-e423-457e-8993-063d8a0a187c"
         }
       ]
     }
