@@ -134,7 +134,7 @@ def monitored(fn):  # pragma: no cover
 
 
 def schedule_order_retry_tasks(
-        invoked_task, retry_result, order_id, *args, **kwargs):
+        invoked_task, retry_result, context, *args, **kwargs):
     """Schedules an Order-related task for retry.
 
     :param invoked_task: The RPC method that was just invoked.
@@ -142,6 +142,7 @@ def schedule_order_retry_tasks(
                          processing (such as retrying this or another task) is
                          required, otherwise None indicates no such follow-on
                          processing is required.
+    :param context: Queue context, not used.
     :param order_id: ID of the Order entity the task to retry is for.
     :param args: List of arguments passed in to the just-invoked task.
     :param kwargs: Dict of arguments passed in to the just-invoked task.
@@ -150,6 +151,7 @@ def schedule_order_retry_tasks(
     """
 
     retry_rpc_method = None
+    order_id = kwargs.get('order_id')
 
     if not retry_result or not order_id:
         pass
@@ -166,7 +168,7 @@ def schedule_order_retry_tasks(
         LOG.debug(
             'Scheduling RPC method for retry: {0}'.format(retry_rpc_method))
 
-        date_to_retry_at = datetime.datetime.now() + datetime.timedelta(
+        date_to_retry_at = datetime.datetime.utcnow() + datetime.timedelta(
             milliseconds=retry_result.retry_msec)
 
         retry_model = models.OrderRetryTask()
@@ -220,6 +222,19 @@ class Tasks(object):
         )
         return resources.UpdateOrder().process(
             order_id, project_id, updated_meta)
+
+    @monitored
+    @transactional
+    @retryable_order
+    def check_certificate_status(self, context, order_id, project_id):
+        """Check the status of a certificate order."""
+        LOG.info(
+            u._LI("Processing check certificate status on order: order ID is "
+                  "'%s'"),
+            order_id
+        )
+        return resources.CheckCertificateStatusOrder().process(
+            order_id, project_id)
 
 
 class TaskServer(Tasks, service.Service):

@@ -53,7 +53,10 @@ def create_project(external_id="my keystone id", session=None):
     return project
 
 
-def create_order(project, session=None):
+def create_order(project=None, session=None):
+    if not project:
+        project = create_project(session=session)
+
     order = models.Order()
     order.project_id = project.id
     order_repo = repositories.get_order_repository()

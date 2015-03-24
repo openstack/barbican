@@ -21,11 +21,14 @@ class OrderModel(BaseModel):
     def __init__(self, type=None, name=None, status=None, secret_ref=None,
                  expiration=None, updated=None, created=None, meta=None,
                  payload_content_type=None, order_ref=None, container_ref=None,
-                 error_status_code=None, error_reason=None):
+                 error_status_code=None, error_reason=None,
+                 sub_status=None, sub_status_message=None):
         super(OrderModel, self).__init__()
         self.type = type
         self.name = name
         self.status = status
+        self.sub_status = sub_status
+        self.sub_status_message = sub_status_message
         self.secret_ref = secret_ref
         self.expiration = expiration
         self.updated = updated

@@ -28,7 +28,7 @@ class WhenTestingOrderRetryTaskRepository(database_utils.RepositoryTestCase):
     def setUp(self):
         super(WhenTestingOrderRetryTaskRepository, self).setUp()
 
-        self.date_time_now = datetime.datetime.now()
+        self.date_time_now = datetime.datetime.utcnow()
         self.test_args = ['test', 'args']
         self.test_kwargs = {'test': 1, 'kwargs': 2}
 
@@ -79,7 +79,7 @@ class WhenTestingOrderRetryTaskRepository(database_utils.RepositoryTestCase):
 
         # Now, a retrieve by the current time should return our entry.
         entities, offset, limit, total = self.repo.get_by_create_date(
-            only_at_or_before_this_date=datetime.datetime.now(),
+            only_at_or_before_this_date=datetime.datetime.utcnow(),
             session=session,
             suppress_exception=True
         )

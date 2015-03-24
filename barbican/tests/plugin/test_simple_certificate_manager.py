@@ -31,7 +31,8 @@ class WhenTestingSimpleCertificateManagerPlugin(testtools.TestCase):
     def test_check_certificate_status(self):
         result = self.plugin.check_certificate_status(None, None, None, None)
 
-        self.assertEqual(cm.CertificateStatus.WAITING_FOR_CA, result.status)
+        self.assertEqual(
+            cm.CertificateStatus.CERTIFICATE_GENERATED, result.status)
 
     def test_modify_certificate_request(self):
         result = self.plugin.modify_certificate_request(None, None, None, None)

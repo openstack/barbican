@@ -23,6 +23,7 @@ from barbican.model import models
 from barbican.model import repositories as repos
 from barbican.plugin.interface import certificate_manager as cert
 from barbican.plugin import resources as plugin
+from barbican.tasks import common
 
 LOG = utils.getLogger(__name__)
 
@@ -64,128 +65,154 @@ ORDER_STATUS_CA_UNAVAIL_FOR_CHECK = models.OrderStatus(
 )
 
 
-def issue_certificate_request(order_model, project_model):
+def issue_certificate_request(order_model, project_model, result_follow_on):
     """Create the initial order with CA.
+
+    Note that this method may be called more than once if retries are
+    required. Barbican metadata is used to store intermediate information,
+    including selected plugins by name, to support such retries.
 
     :param: order_model - order associated with this cert request
     :param: project_model - project associated with this request
+    :param: result_follow_on - A :class:`FollowOnProcessingStatusDTO` instance
+        instantiated by the client that this function may optionally update
+        with information on how to process this task into the future.
     :returns: container_model - container with the relevant cert if
         the request has been completed.  None otherwise
     """
     container_model = None
 
     plugin_meta = _get_plugin_meta(order_model)
-    barbican_meta_dto = cert.BarbicanMetaDTO()
+    barbican_meta = _get_barbican_meta(order_model)
+
+    # TODO(john-wood-w) We need to de-conflict barbican_meta (stored with order
+    # and not shown to plugins) with barbican_meta_dto (shared with plugins).
+    # As a minimum we should change the name of the DTO to something like
+    # 'extended_meta_dto' or some such.
+    barbican_meta_for_plugins_dto = cert.BarbicanMetaDTO()
 
     # refresh the CA table.  This is mostly a no-op unless the entries
     # for a plugin are expired.
     cert.CertificatePluginManager().refresh_ca_table()
 
-    ca_id = _get_ca_id(order_model.meta, project_model.id)
-    if ca_id:
-        barbican_meta_dto.plugin_ca_id = ca_id
-        cert_plugin = cert.CertificatePluginManager().get_plugin_by_ca_id(
-            ca_id)
+    # Locate the required certificate plugin.
+    cert_plugin_name = barbican_meta.get('plugin_name')
+    if cert_plugin_name:
+        cert_plugin = cert.CertificatePluginManager().get_plugin_by_name(
+            cert_plugin_name)
     else:
-        cert_plugin = cert.CertificatePluginManager().get_plugin(
-            order_model.meta)
+        ca_id = _get_ca_id(order_model.meta, project_model.id)
+        if ca_id:
+            barbican_meta_for_plugins_dto.plugin_ca_id = ca_id
+            cert_plugin = cert.CertificatePluginManager().get_plugin_by_ca_id(
+                ca_id)
+        else:
+            cert_plugin = cert.CertificatePluginManager().get_plugin(
+                order_model.meta)
+    barbican_meta['plugin_name'] = utils.generate_fullname_for(cert_plugin)
 
+    # Generate CSR if needed.
     request_type = order_model.meta.get(cert.REQUEST_TYPE)
     if request_type == cert.CertificateRequestType.STORED_KEY_REQUEST:
-        csr = order_model.order_barbican_metadata.get('generated_csr')
+        csr = barbican_meta.get('generated_csr')
         if csr is None:
             csr = _generate_csr(order_model)
-            order_model.order_barbican_metadata['generated_csr'] = csr
-            order_model.save()
-        barbican_meta_dto.generated_csr = csr
+            barbican_meta['generated_csr'] = csr
+        barbican_meta_for_plugins_dto.generated_csr = csr
 
-    result = cert_plugin.issue_certificate_request(order_model.id,
-                                                   order_model.meta,
-                                                   plugin_meta,
-                                                   barbican_meta_dto)
+    result = cert_plugin.issue_certificate_request(
+        order_model.id, order_model.meta,
+        plugin_meta, barbican_meta_for_plugins_dto)
 
-    # Save plugin order plugin state
+    # Save plugin and barbican metadata for this order.
     _save_plugin_metadata(order_model, plugin_meta)
+    _save_barbican_metadata(order_model, barbican_meta)
 
     # Handle result
     if cert.CertificateStatus.WAITING_FOR_CA == result.status:
-        # TODO(alee-3): Add code to set sub status of "waiting for CA"
-        _update_order_status(ORDER_STATUS_REQUEST_PENDING)
-        _schedule_check_cert_request(cert_plugin, order_model, plugin_meta,
-                                     result, project_model, cert.RETRY_MSEC)
+        _update_result_follow_on(
+            result_follow_on,
+            order_status=ORDER_STATUS_REQUEST_PENDING,
+            retry_task=common.RetryTasks.INVOKE_CERT_STATUS_CHECK_TASK,
+            retry_msec=result.retry_msec)
     elif cert.CertificateStatus.CERTIFICATE_GENERATED == result.status:
-        _update_order_status(ORDER_STATUS_CERT_GENERATED)
+        _update_result_follow_on(
+            result_follow_on,
+            order_status=ORDER_STATUS_CERT_GENERATED)
         container_model = _save_secrets(result, project_model)
     elif cert.CertificateStatus.CLIENT_DATA_ISSUE_SEEN == result.status:
-        _update_order_status(ORDER_STATUS_DATA_INVALID)
         raise cert.CertificateStatusClientDataIssue(result.status_message)
     elif cert.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST == result.status:
-        # TODO(alee-3): set retry counter and error out if retries are exceeded
-        _update_order_status(ORDER_STATUS_CA_UNAVAIL_FOR_ISSUE)
-
-        _schedule_issue_cert_request(cert_plugin, order_model, plugin_meta,
-                                     result, project_model,
-                                     cert.ERROR_RETRY_MSEC)
+        _update_result_follow_on(
+            result_follow_on,
+            order_status=ORDER_STATUS_CA_UNAVAIL_FOR_ISSUE,
+            retry_task=common.RetryTasks.INVOKE_SAME_TASK,
+            retry_msec=cert.ERROR_RETRY_MSEC)
         _notify_ca_unavailable(order_model, result)
     elif cert.CertificateStatus.INVALID_OPERATION == result.status:
-        _update_order_status(ORDER_STATUS_INVALID_OPERATION)
-
         raise cert.CertificateStatusInvalidOperation(result.status_message)
     else:
-        _update_order_status(ORDER_STATUS_INTERNAL_ERROR)
         raise cert.CertificateStatusNotSupported(result.status)
 
     return container_model
 
 
-def check_certificate_request(order_model, project_model, plugin_name):
+def check_certificate_request(order_model, project_model, result_follow_on):
     """Check the status of a certificate request with the CA.
+
+    Note that this method may be called more than once if retries are
+    required. Barbican metadata is used to store intermediate information,
+    including selected plugins by name, to support such retries.
 
     :param: order_model - order associated with this cert request
     :param: project_model - project associated with this request
-    :param: plugin_name - plugin the issued the certificate request
+    :param: result_follow_on - A :class:`FollowOnProcessingStatusDTO` instance
+        instantiated by the client that this function may optionally update
+        with information on how to process this task into the future.
     :returns: container_model - container with the relevant cert if the
         request has been completed.  None otherwise.
     """
     container_model = None
     plugin_meta = _get_plugin_meta(order_model)
-    barbican_meta_dto = cert.BarbicanMetaDTO()
+    barbican_meta = _get_barbican_meta(order_model)
+
+    # TODO(john-wood-w) See note above about DTO's name.
+    barbican_meta_for_plugins_dto = cert.BarbicanMetaDTO()
 
     cert_plugin = cert.CertificatePluginManager().get_plugin_by_name(
-        plugin_name)
+        barbican_meta.get('plugin_name'))
 
-    result = cert_plugin.check_certificate_request(order_model.id,
-                                                   order_model.meta,
-                                                   plugin_meta,
-                                                   barbican_meta_dto)
+    result = cert_plugin.check_certificate_status(
+        order_model.id, order_model.meta,
+        plugin_meta, barbican_meta_for_plugins_dto)
 
     # Save plugin order plugin state
     _save_plugin_metadata(order_model, plugin_meta)
 
     # Handle result
     if cert.CertificateStatus.WAITING_FOR_CA == result.status:
-        _update_order_status(ORDER_STATUS_REQUEST_PENDING)
-        _schedule_check_cert_request(cert_plugin, order_model, plugin_meta,
-                                     result, project_model,
-                                     cert.RETRY_MSEC)
+        _update_result_follow_on(
+            result_follow_on,
+            order_status=ORDER_STATUS_REQUEST_PENDING,
+            retry_task=common.RetryTasks.INVOKE_CERT_STATUS_CHECK_TASK,
+            retry_msec=result.retry_msec)
     elif cert.CertificateStatus.CERTIFICATE_GENERATED == result.status:
-        _update_order_status(ORDER_STATUS_CERT_GENERATED)
+        _update_result_follow_on(
+            result_follow_on,
+            order_status=ORDER_STATUS_CERT_GENERATED)
         container_model = _save_secrets(result, project_model)
     elif cert.CertificateStatus.CLIENT_DATA_ISSUE_SEEN == result.status:
-        _update_order_status(cert.ORDER_STATUS_DATA_INVALID)
         raise cert.CertificateStatusClientDataIssue(result.status_message)
     elif cert.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST == result.status:
-        # TODO(alee-3): decide what to do about retries here
-        _update_order_status(ORDER_STATUS_CA_UNAVAIL_FOR_CHECK)
-        _schedule_check_cert_request(cert_plugin, order_model, plugin_meta,
-                                     result, project_model,
-                                     cert.ERROR_RETRY_MSEC)
-
+        _update_result_follow_on(
+            result_follow_on,
+            order_status=ORDER_STATUS_CA_UNAVAIL_FOR_CHECK,
+            retry_task=common.RetryTasks.INVOKE_SAME_TASK,
+            retry_msec=cert.ERROR_RETRY_MSEC)
+        _notify_ca_unavailable(order_model, result)
     elif cert.CertificateStatus.INVALID_OPERATION == result.status:
-        _update_order_status(ORDER_STATUS_INVALID_OPERATION)
         raise cert.CertificateStatusInvalidOperation(result.status_message)
     else:
-        _update_order_status(ORDER_STATUS_INTERNAL_ERROR)
         raise cert.CertificateStatusNotSupported(result.status)
 
     return container_model
@@ -216,63 +243,31 @@ def _get_ca_id(order_meta, project_id):
     return None
 
 
-def _schedule_cert_retry_task(cert_result_dto, cert_plugin, order_model,
-                              plugin_meta,
-                              retry_method=None,
-                              retry_object=None,
-                              retry_time=None,
-                              retry_args=None):
-    if cert_result_dto.retry_msec > 0:
-        retry_time = cert_result_dto.retry_msec
-
-    if cert_result_dto.retry_method:
-        retry_method = cert_result_dto.retry_method
-        retry_object = utils.generate_fullname_for(cert_plugin)
-        retry_args = [order_model.id, order_model.meta, plugin_meta]
-
-    _schedule_retry_task(retry_object, retry_method, retry_time, retry_args)
-
-
-def _schedule_issue_cert_request(cert_plugin, order_model, plugin_meta,
-                                 cert_result_dto, project_model, retry_time):
-    retry_args = [order_model,
-                  project_model]
-    _schedule_cert_retry_task(
-        cert_result_dto, cert_plugin, order_model, plugin_meta,
-        retry_method="issue_certificate_request",
-        retry_object="barbican.tasks.certificate_resources",
-        retry_time=retry_time,
-        retry_args=retry_args)
-
-
-def _schedule_check_cert_request(cert_plugin, order_model, plugin_meta,
-                                 cert_result_dto, project_model, retry_time):
-    retry_args = [order_model,
-                  project_model,
-                  utils.generate_fullname_for(cert_plugin)]
-    _schedule_cert_retry_task(
-        cert_result_dto, cert_plugin, order_model, plugin_meta,
-        retry_method="check_certificate_request",
-        retry_object="barbican.tasks.certificate_resources",
-        retry_time=retry_time,
-        retry_args=retry_args)
-
-
-def _update_order_status(order_status):
-    # TODO(alee-3): add code to set order substatus, substatus message
-    # and save the order.  most likely this call methods defined in Order.
-    pass
-
-
-def _schedule_retry_task(retry_object, retry_method, retry_time, args):
-    # TODO(alee-3): Implement this method - here or elsewhere .
-    pass
+def _update_result_follow_on(
+        result_follow_on,
+        order_status=None,
+        retry_task=common.RetryTasks.NO_ACTION_REQUIRED,
+        retry_msec=common.RETRY_MSEC_DEFAULT):
+    if order_status:
+        result_follow_on.status = order_status.id
+        result_follow_on.status_message = order_status.message
+    result_follow_on.retry_task = retry_task
+    if retry_msec and retry_msec >= 0:
+        result_follow_on.retry_msec = retry_msec
 
 
 def _get_plugin_meta(order_model):
     if order_model:
         order_plugin_meta_repo = repos.get_order_plugin_meta_repository()
         return order_plugin_meta_repo.get_metadata_for_order(order_model.id)
+    else:
+        return {}
+
+
+def _get_barbican_meta(order_model):
+    if order_model:
+        order_barbican_meta_repo = repos.get_order_barbican_meta_repository()
+        return order_barbican_meta_repo.get_metadata_for_order(order_model.id)
     else:
         return {}
 
@@ -353,6 +348,16 @@ def _save_plugin_metadata(order_model, plugin_meta):
 
     order_plugin_meta_repo = repos.get_order_plugin_meta_repository()
     order_plugin_meta_repo.save(plugin_meta, order_model)
+
+
+def _save_barbican_metadata(order_model, barbican_meta):
+    """Add barbican metadata to an order."""
+
+    if not isinstance(barbican_meta, dict):
+        barbican_meta = {}
+
+    order_barbican_meta_repo = repos.get_order_barbican_meta_repository()
+    order_barbican_meta_repo.save(barbican_meta, order_model)
 
 
 def _save_secrets(result, project_model):
