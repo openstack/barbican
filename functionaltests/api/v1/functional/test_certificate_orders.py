@@ -18,13 +18,19 @@ import time
 
 import testtools
 
+from barbican.plugin.interface import secret_store as s
+
 from barbican.tests import certificate_utils as certutil
+from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import ca_behaviors
 from functionaltests.api.v1.behaviors import container_behaviors
 from functionaltests.api.v1.behaviors import order_behaviors
 from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import order_models
+from functionaltests.api.v1.models import secret_models
+from functionaltests.api.v1.models import container_models
+
 
 try:
     import pki  # flake8: noqa
@@ -32,6 +38,11 @@ try:
 except ImportError:
     # dogtag libraries not available, assume dogtag not installed
     dogtag_imports_ok = False
+
+
+NOT_FOUND_CONTAINER_REF = "http://localhost:9311/v1/containers/not_found"
+INVALID_CONTAINER_REF = "invalid"
+
 
 order_simple_cmc_request_data = {
     'type': 'certificate',
@@ -73,6 +84,58 @@ order_dogtag_custom_request_data = {
     }
 }
 
+create_container_rsa_data = {
+    "name": "rsacontainer",
+    "type": "rsa",
+    "secret_refs": [
+        {
+            "name": "public_key",
+        },
+        {
+            "name": "private_key",
+        },
+        {
+            "name": "private_key_passphrase"
+        }
+    ]
+}
+
+def get_private_key_req():
+    return {'name': 'myprivatekey',
+            'payload_content_type': 'application/octet-stream',
+            'payload_content_encoding': 'base64',
+            'algorithm': 'rsa',
+            'bit_length': 1024,
+            'secret_type': s.SecretType.PRIVATE,
+            'payload': utils.get_private_key()}
+
+
+def get_public_key_req():
+    return {'name': 'mypublickey',
+            'payload_content_type': 'application/octet-stream',
+            'payload_content_encoding': 'base64',
+            'algorithm': 'rsa',
+            'bit_length': 1024,
+            'secret_type': s.SecretType.PUBLIC,
+            'payload': utils.get_public_key()}
+
+
+create_generic_container_data = {
+    "name": "containername",
+    "type": "generic",
+    "secret_refs": [
+        {
+            "name": "secret1",
+        },
+        {
+            "name": "secret2",
+        },
+        {
+            "name": "secret3"
+        }
+    ]
+}
+
 
 class CertificatesTestCase(base.TestCase):
 
@@ -107,16 +170,39 @@ class CertificatesTestCase(base.TestCase):
         return order_resp
 
     def create_asymmetric_key_container(self):
-        # TODO(alee) Complete this
-        return "valid_container_ref"
+        secret_model = secret_models.SecretModel(**get_private_key_req())
+        secret_model.secret_type = s.SecretType.PRIVATE
+        resp, secret_ref_priv = self.secret_behaviors.create_secret(secret_model)
+        self.assertEqual(201, resp.status_code)
+
+        secret_model = secret_models.SecretModel(**get_public_key_req())
+        secret_model.secret_type = s.SecretType.PUBLIC
+        resp, secret_ref_pub = self.secret_behaviors.create_secret(secret_model)
+        self.assertEqual(201, resp.status_code)
+
+        pub_key_ref = {'name': 'public_key', 'secret_ref': secret_ref_pub}
+        priv_key_ref = {'name': 'private_key', 'secret_ref': secret_ref_priv}
+        test_model = container_models.ContainerModel(**create_container_rsa_data)
+        test_model.secret_refs = [pub_key_ref, priv_key_ref]
+        resp, container_ref = self.container_behaviors.create_container(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        return container_ref
 
     def create_generic_container(self):
-        # TODO(alee) Complete this.
-        return "valid_non_asymmetric_container_ref"
+        secret_model = secret_models.SecretModel(**get_private_key_req())
+        secret_model.secret_type = s.SecretType.PRIVATE
+        resp, secret_ref = self.secret_behaviors.create_secret(secret_model)
+        self.assertEqual(201, resp.status_code)
 
-    def create_asymmetric_key_container_without_secrets(self):
-        # TODO(alee) Complete this.
-        return "asym_container_without_secrets"
+        test_model = container_models.ContainerModel(**create_generic_container_data)
+        test_model.secret_refs = [{
+            'name': 'my_secret',
+            'secret_ref': secret_ref
+        }]
+        resp, container_ref = self.container_behaviors.create_container(test_model)
+        self.assertEqual(resp.status_code, 201)
+        return container_ref
 
     def get_dogtag_ca_id(self):
         (resp, cas, total, next_ref, prev_ref) = self.ca_behaviors.get_cas()
@@ -392,15 +478,31 @@ class CertificatesTestCase(base.TestCase):
         self.verify_cert_returned(order_resp)
 
     @testtools.testcase.attr('negative')
-    @testtools.skip("broken pending dave's validator code")
     def test_create_stored_key_order_with_invalid_container_ref(self):
-        # TODO(alee) Now returns 204, pending Dave's code changes
         test_model = order_models.OrderModel(**self.stored_key_data)
-        test_model.meta['container_ref'] = "invalid"
+        test_model.meta['container_ref'] = INVALID_CONTAINER_REF
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(400, create_resp.status_code)
-        # confirm error message
+        self.confirm_error_message(
+            create_resp,
+            "Order creation issue seen - "
+            "Invalid container: Bad Container Reference "
+            + INVALID_CONTAINER_REF + "."
+        )
+
+    @testtools.testcase.attr('negative')
+    def test_create_stored_key_order_with_not_found_container_ref(self):
+        test_model = order_models.OrderModel(**self.stored_key_data)
+        test_model.meta['container_ref'] = NOT_FOUND_CONTAINER_REF
+
+        create_resp, order_ref = self.behaviors.create_order(test_model)
+        self.assertEqual(400, create_resp.status_code)
+        self.confirm_error_message(
+            create_resp,
+            "Order creation issue seen - "
+            "Invalid container: Container Not Found."
+        )
 
     @testtools.testcase.attr('negative')
     def test_create_stored_key_order_with_missing_container_ref(self):
@@ -419,27 +521,17 @@ class CertificatesTestCase(base.TestCase):
         pass
 
     @testtools.testcase.attr('negative')
-    @testtools.skip("broken pending dave's validator code")
     def test_create_stored_key_order_with_invalid_container_type(self):
-        # TODO(alee) Now returns 204, pending Dave's code changes
         test_model = order_models.OrderModel(**self.stored_key_data)
         test_model.meta['container_ref'] = (self.create_generic_container())
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(400, create_resp.status_code)
-        # confirm error message
-
-    @testtools.testcase.attr('negative')
-    @testtools.skip("broken pending dave's validator code")
-    def test_create_stored_key_order_with_container_secrets_missing(self):
-        # TODO(alee) Now returns 204, pending Dave's code changes
-        test_model = order_models.OrderModel(**self.stored_key_data)
-        test_model.meta['container_ref'] = (
-            self.create_asymmetric_key_container_without_secrets())
-
-        create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(400, create_resp.status_code)
-        # confirm error message
+        self.confirm_error_message(
+            create_resp,
+            "Order creation issue seen - "
+            "Invalid container: Container Wrong Type."
+        )
 
     @testtools.testcase.attr('negative')
     def test_create_stored_key_order_with_container_secrets_inaccessible(self):

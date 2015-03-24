@@ -16,6 +16,7 @@ import os
 import uuid
 
 import mock
+import testtools
 
 from barbican.common import resources
 from barbican.model import models
@@ -26,6 +27,7 @@ order_repo = repositories.get_order_repository()
 project_repo = repositories.get_project_repository()
 ca_repo = repositories.get_ca_repository()
 project_ca_repo = repositories.get_project_ca_repository()
+container_repo = repositories.get_container_repository()
 
 generic_key_meta = {
     'name': 'secretname',
@@ -340,7 +342,6 @@ class WhenCreatingCertificateOrders(utils.BarbicanAPIBaseTestCase):
             ca_model = models.CertificateAuthority(ca_information)
             ca = ca_repo.create_from(ca_model)
             self.available_ca_ids.append(ca.id)
-
         repositories.commit()
 
     def test_can_create_new_cert_order(self):
@@ -426,6 +427,105 @@ class WhenCreatingCertificateOrders(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(403, create_resp.status_int)
 
 
+class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase):
+    def setUp(self):
+        super(WhenCreatingStoredKeyOrders, self).setUp()
+
+        # Make sure we have a project
+        self.project = resources.get_or_create_project(self.project_id)
+
+    def test_can_create_new_stored_key_order(self):
+        container_name = 'rsa container name'
+        container_type = 'rsa'
+        secret_refs = []
+        resp, container_id = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type,
+            secret_refs=secret_refs
+        )
+        stored_key_meta = {
+            'request_type': 'stored-key',
+            'subject_dn': 'cn=barbican-server,o=example.com',
+            'container_ref': 'https://localhost/v1/containers/' + container_id
+        }
+        create_resp, order_uuid = create_order(
+            self.app,
+            order_type='certificate',
+            meta=stored_key_meta
+        )
+        self.assertEqual(202, create_resp.status_int)
+
+        order = order_repo.get(order_uuid, self.project_id)
+        self.assertIsInstance(order, models.Order)
+
+    def test_should_raise_with_bad_container_ref(self):
+        stored_key_meta = {
+            'request_type': 'stored-key',
+            'subject_dn': 'cn=barbican-server,o=example.com',
+            'container_ref': 'bad_ref'
+        }
+        create_resp, order_uuid = create_order(
+            self.app,
+            order_type='certificate',
+            meta=stored_key_meta,
+            expect_errors=True
+        )
+        self.assertEqual(400, create_resp.status_int)
+
+    def test_should_raise_with_container_not_found(self):
+        stored_key_meta = {
+            'request_type': 'stored-key',
+            'subject_dn': 'cn=barbican-server,o=example.com',
+            'container_ref': 'https://localhost/v1/containers/not_found'
+        }
+        create_resp, order_uuid = create_order(
+            self.app,
+            order_type='certificate',
+            meta=stored_key_meta,
+            expect_errors=True
+        )
+        self.assertEqual(400, create_resp.status_int)
+
+    def test_should_raise_with_container_wrong_type(self):
+        container_name = 'generic container name'
+        container_type = 'generic'
+        secret_refs = []
+        resp, container_id = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type,
+            secret_refs=secret_refs
+        )
+        stored_key_meta = {
+            'request_type': 'stored-key',
+            'subject_dn': 'cn=barbican-server,o=example.com',
+            'container_ref': 'https://localhost/v1/containers/' + container_id
+        }
+        create_resp, order_uuid = create_order(
+            self.app,
+            order_type='certificate',
+            meta=stored_key_meta,
+            expect_errors=True
+        )
+        self.assertEqual(400, create_resp.status_int)
+
+    @testtools.skip("TODO(dave) Not yet implemented")
+    def test_should_raise_with_container_no_access(self):
+        stored_key_meta = {
+            'request_type': 'stored-key',
+            'subject_dn': 'cn=barbican-server,o=example.com',
+            'container_ref': 'https://localhost/v1/containers/no_access'
+        }
+        create_resp, order_uuid = create_order(
+            self.app,
+            order_type='certificate',
+            meta=stored_key_meta,
+            expect_errors=True
+        )
+        self.assertEqual(400, create_resp.status_int)
+
+
 class WhenPerformingUnallowedOperations(utils.BarbicanAPIBaseTestCase):
     def test_should_not_allow_put_orders(self):
         resp = self.app.put_json('/orders/', expect_errors=True)
@@ -453,6 +553,7 @@ class WhenPerformingUnallowedOperations(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(405, resp.status_int)
 
 
+# ----------------------- Helper Functions ---------------------------
 def create_order(app, order_type=None, meta=None, expect_errors=False):
     # TODO(jvrbanac): Once test resources is split out, refactor this
     # and similar functions into a generalized helper module and reduce
@@ -474,5 +575,30 @@ def create_order(app, order_type=None, meta=None, expect_errors=False):
     if resp.status_int == 202:
         order_ref = resp.json.get('order_ref', '')
         _, created_uuid = os.path.split(order_ref)
+
+    return (resp, created_uuid)
+
+
+def create_container(app, name=None, container_type=None, secret_refs=None,
+                     expect_errors=False, headers=None):
+    request = {
+        'name': name,
+        'type': container_type,
+        'secret_refs': secret_refs if secret_refs else []
+    }
+    cleaned_request = {key: val for key, val in request.items()
+                       if val is not None}
+
+    resp = app.post_json(
+        '/containers/',
+        cleaned_request,
+        expect_errors=expect_errors,
+        headers=headers
+    )
+
+    created_uuid = None
+    if resp.status_int == 201:
+        container_ref = resp.json.get('container_ref', '')
+        _, created_uuid = os.path.split(container_ref)
 
     return (resp, created_uuid)

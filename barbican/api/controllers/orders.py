@@ -192,11 +192,21 @@ class OrdersController(object):
 
         body = api.load_body(pecan.request,
                              validator=self.type_order_validator)
+
         order_type = body.get('type')
-        LOG.debug('Processing order type %s', order_type)
+        order_meta = body.get('meta')
+        request_type = order_meta.get('request_type')
+
+        LOG.debug('Processing order type %s, request type %s',
+                  order_type, request_type)
 
         if order_type == models.OrderType.CERTIFICATE:
             validators.validate_ca_id(project.id, body.get('meta'))
+            if request_type == 'stored-key':
+                container_ref = order_meta.get('container_ref')
+                validators.validate_stored_key_rsa_container(
+                    external_project_id,
+                    container_ref)
 
         new_order = models.Order()
         new_order.meta = body.get('meta')

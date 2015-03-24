@@ -1195,7 +1195,8 @@ class WhenTestingStoredKeyOrderValidator(utils.BaseTestCase):
         super(WhenTestingStoredKeyOrderValidator, self).setUp()
         self.type = 'certificate'
         self.meta = {'request_type': 'stored-key',
-                     'container_ref': 'good_container_ref',
+                     'container_ref':
+                         'https://localhost/v1/containers/good_container_ref',
                      'subject_dn': 'cn=barbican-server,o=example.com',
                      'extensions': VALID_EXTENSIONS,
                      'requestor_name': 'Barbican User',
@@ -1253,48 +1254,6 @@ class WhenTestingStoredKeyOrderValidator(utils.BaseTestCase):
     def test_should_raise_with_bad_subject_dn(self):
         self.meta['subject_dn'] = "Bad subject DN data"
         self.assertRaises(excep.InvalidSubjectDN,
-                          self.validator.validate,
-                          self.order_req)
-
-    @testtools.skip("Not yet implemented")
-    def test_should_raise_with_missing_container(self):
-        self.meta['container_ref'] = 'missing_container_ref'
-        self.assertRaises(excep.InvalidContainer,
-                          self.validator.validate,
-                          self.order_req)
-
-    @testtools.skip("Not yet implemented")
-    def test_should_raise_with_container_not_cert_type(self):
-        self.meta['container_ref'] = 'bad_type_container_ref'
-        self.assertRaises(excep.InvalidContainer,
-                          self.validator.validate,
-                          self.order_req)
-
-    @testtools.skip("Not yet implemented")
-    def test_should_raise_with_inaccessible_container(self):
-        self.meta['container_ref'] = 'inaccessible_container_ref'
-        self.assertRaises(excep.InvalidContainer,
-                          self.validator.validate,
-                          self.order_req)
-
-    @testtools.skip("Not yet implemented")
-    def test_should_raise_with_missing_public_key(self):
-        self.meta['container_ref'] = 'missing_public_key_ref'
-        self.assertRaises(excep.InvalidContainer,
-                          self.validator.validate,
-                          self.order_req)
-
-    @testtools.skip("Not yet implemented")
-    def test_should_raise_with_inaccessible_public_key(self):
-        self.meta['container_ref'] = 'inaccessible_public_key_ref'
-        self.assertRaises(excep.InvalidContainer,
-                          self.validator.validate,
-                          self.order_req)
-
-    @testtools.skip("Not yet implemented")
-    def test_should_raise_with_missing_private_key(self):
-        self.meta['container_ref'] = 'missing_private_key_ref'
-        self.assertRaises(excep.InvalidContainer,
                           self.validator.validate,
                           self.order_req)
 

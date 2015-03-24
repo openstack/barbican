@@ -283,7 +283,7 @@ def _generate_csr(order_model):
     container_ref = order_model.meta.get('container_ref')
 
     # extract container_id as the last part of the URL
-    container_id = container_ref.rsplit('/', 1)[1]
+    container_id = hrefs.get_container_id_from_ref(container_ref)
 
     container_repo = repos.get_container_repository()
     container = container_repo.get(container_id)
