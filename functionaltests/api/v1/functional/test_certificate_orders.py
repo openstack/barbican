@@ -21,6 +21,7 @@ import testtools
 from barbican.tests import certificate_utils as certutil
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import ca_behaviors
+from functionaltests.api.v1.behaviors import container_behaviors
 from functionaltests.api.v1.behaviors import order_behaviors
 from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import order_models
@@ -66,7 +67,9 @@ order_stored_key_request_data = {
 order_dogtag_custom_request_data = {
     'type': 'certificate',
     'meta': {
-        'request_type': 'custom'
+        'request_type': 'custom',
+        'cert_request_type': 'pkcs10',
+        'profile_id': 'caServerCert'
     }
 }
 
@@ -77,6 +80,8 @@ class CertificatesTestCase(base.TestCase):
         super(CertificatesTestCase, self).setUp()
         self.behaviors = order_behaviors.OrderBehaviors(self.client)
         self.ca_behaviors = ca_behaviors.CABehaviors(self.client)
+        self.container_behaviors = container_behaviors.ContainerBehaviors(
+            self.client)
         self.secret_behaviors = secret_behaviors.SecretBehaviors(self.client)
         self.simple_cmc_data = copy.deepcopy(order_simple_cmc_request_data)
         self.full_cmc_data = copy.deepcopy(order_full_cmc_request_data)
@@ -121,6 +126,25 @@ class CertificatesTestCase(base.TestCase):
                     'barbican.plugin.dogtag.DogtagCAPlugin'):
                 return ca.model.ca_id
         return None
+
+    def verify_cert_returned(self, order_resp):
+        container_ref = order_resp.model.container_ref
+        self.assertIsNotNone(container_ref, "no cert container returned")
+
+        container_resp = self.container_behaviors.get_container(container_ref)
+        self.assertIsNotNone(container_resp, "Cert container returns None")
+        self.assertEqual('certificate', container_resp.model.type)
+
+        secret_refs = container_resp.model.secret_refs
+        self.assertIsNotNone(secret_refs, "container has no secret refs")
+
+        contains_cert = False
+        for secret in secret_refs:
+            if secret.name == 'certificate':
+                contains_cert = True
+                self.assertIsNotNone(secret.secret_ref)
+
+        self.assertTrue(contains_cert)
 
     def confirm_error_message(self, resp, message):
         resp_dict = json.loads(resp.content)
@@ -177,7 +201,7 @@ class CertificatesTestCase(base.TestCase):
         order_resp = self.wait_for_order(order_ref)
 
         self.assertEqual('ACTIVE', order_resp.model.status)
-        self.assertIsNotNone(order_resp.model.meta['certificate'])
+        self.verify_cert_returned(order_resp)
 
     @testtools.testcase.attr('negative')
     def test_create_simple_cmc_with_profile_and_no_ca_id(self):
@@ -195,8 +219,6 @@ class CertificatesTestCase(base.TestCase):
 
     @testtools.testcase.attr('negative')
     def test_create_simple_cmc_with_profile_and_incorrect_ca_id(self):
-        # TODO(alee) Exceptions are broken.  Should be return 400 not 204
-
         test_model = order_models.OrderModel(**self.simple_cmc_data)
         test_model.meta['request_data'] = certutil.create_good_csr()
         test_model.meta['profile'] = 'caServerCert'
@@ -215,7 +237,8 @@ class CertificatesTestCase(base.TestCase):
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
     def test_create_simple_cmc_with_dogtag_and_invalid_subject_dn(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
-        test_model.meta['request_data'] = certutil.create_good_csr()
+        test_model.meta['request_data'] = (
+            certutil.create_csr_with_bad_subject_dn())
         test_model.meta['profile'] = 'caServerCert'
         test_model.meta['ca_id'] = self.get_dogtag_ca_id()
 
@@ -286,7 +309,7 @@ class CertificatesTestCase(base.TestCase):
     def test_create_simple_cmc_order_with_non_approved_dogtag_profile(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
         test_model.meta['request_data'] = certutil.create_good_csr()
-        test_model.meta['profile'] = 'caSigningCert'
+        test_model.meta['profile'] = 'caTPSCert'
         test_model.meta['ca_id'] = self.get_dogtag_ca_id()
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -366,7 +389,7 @@ class CertificatesTestCase(base.TestCase):
 
         order_resp = self.wait_for_order(order_ref)
         self.assertEqual('ACTIVE', order_resp.model.status)
-        self.assertIsNotNone(order_resp.model.meta['certificate'])
+        self.verify_cert_returned(order_resp)
 
     @testtools.testcase.attr('negative')
     @testtools.skip("broken pending dave's validator code")
@@ -517,10 +540,9 @@ class CertificatesTestCase(base.TestCase):
     @testtools.testcase.attr('positive')
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
     def test_create_custom_order_with_valid_dogtag_data(self):
-        # TODO(alee) Set correct custom cert data
         # defaults to 'custom' type
         test_model = order_models.OrderModel(**self.dogtag_custom_data)
-        test_model.meta['request_data'] = certutil.create_good_csr()
+        test_model.meta['cert_request'] = certutil.create_good_csr()
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(create_resp.status_code, 202)
@@ -528,7 +550,7 @@ class CertificatesTestCase(base.TestCase):
 
         order_resp = self.wait_for_order(order_ref)
         self.assertEqual('ACTIVE', order_resp.model.status)
-        self.assertIsNotNone(order_resp.model.meta['certificate'])
+        self.verify_cert_returned(order_resp)
 
     @testtools.testcase.attr('negative')
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
