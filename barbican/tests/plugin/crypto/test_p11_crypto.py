@@ -37,6 +37,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.lib = mock.Mock()
         self.lib.C_Initialize.return_value = p11_crypto.CKR_OK
         self.lib.C_OpenSession.return_value = p11_crypto.CKR_OK
+        self.lib.C_CloseSession.return_value = p11_crypto.CKR_OK
         self.lib.C_FindObjectsInit.return_value = p11_crypto.CKR_OK
         self.lib.C_FindObjects.return_value = p11_crypto.CKR_OK
         self.lib.C_FindObjectsFinal.return_value = p11_crypto.CKR_OK
@@ -53,6 +54,8 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.plugin = p11_crypto.P11CryptoPlugin(
             ffi=self.ffi, conf=self.cfg_mock
         )
+
+        self.test_session = self.plugin._create_working_session()
 
     def test_generate_calls_generate_random(self):
         with mock.patch.object(self.plugin, 'encrypt') as encrypt_mock:
@@ -101,10 +104,11 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
             p11_crypto.P11CryptoPluginKeyException,
             self.plugin._get_key_handle,
             'mylabel',
+            self.test_session
         )
 
     def test_get_key_handle_with_no_keys(self):
-        result = self.plugin._get_key_handle('mylabel')
+        result = self.plugin._get_key_handle('mylabel', self.test_session)
         self.assertIsNone(result)
 
     def test_get_key_handle_with_one_key(self):
@@ -115,7 +119,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
 
         self.lib.C_FindObjects.side_effect = one_key
 
-        key = self.plugin._get_key_handle('mylabel')
+        key = self.plugin._get_key_handle('mylabel', self.test_session)
         self.assertEqual(key, 50)
 
     def test_encrypt(self):
@@ -156,7 +160,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.lib.C_WrapKey.return_value = p11_crypto.CKR_OK
         self.lib.C_SignInit.return_value = p11_crypto.CKR_OK
         self.lib.C_Sign.return_value = p11_crypto.CKR_OK
-        self.plugin._generate_wrapped_kek("label", 32)
+        self.plugin._generate_wrapped_kek("label", 32, self.test_session)
         self.assertEqual(self.lib.C_WrapKey.call_count, 1)
         self.assertEqual(self.lib.C_SignInit.call_count, 1)
         self.assertEqual(self.lib.C_Sign.call_count, 1)
@@ -175,7 +179,8 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
             genmock.return_value = self.ffi.new("CK_BYTE[100]")
             self.assertRaises(
                 p11_crypto.P11CryptoPluginException,
-                self.plugin._perform_rng_self_test
+                self.plugin._perform_rng_self_test,
+                self.test_session
             )
 
     def test_check_error(self):
@@ -198,7 +203,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.lib.C_UnwrapKey.return_value = p11_crypto.CKR_OK
         self.lib.C_VerifyInit.return_value = p11_crypto.CKR_OK
         self.lib.C_Verify.return_value = p11_crypto.CKR_OK
-        self.plugin._unwrap_key(json.dumps(plugin_meta))
+        self.plugin._unwrap_key(json.dumps(plugin_meta), self.test_session)
         self.assertEqual(self.lib.C_UnwrapKey.call_count, 1)
         self.assertEqual(self.lib.C_Verify.call_count, 1)
 
