@@ -187,9 +187,15 @@ class SecretStorePluginsNotConfigured(exception.BarbicanException):
 
 
 class StorePluginNotAvailableOrMisconfigured(exception.BarbicanException):
-    message = u._("The requested Store Plugin %(plugin_name) is not "
-                  "currently available. This is probably a server "
-                  "misconfiguration.")
+    """Raised when a plugin that was previously used can not be found"""
+    def __init__(self, plugin_name):
+        super(StorePluginNotAvailableOrMisconfigured, self).__init__(
+            u._("The requested Store Plugin {plugin_name} is not "
+                "currently available. This is probably a server "
+                "misconfiguration.").format(
+                plugin_name=plugin_name)
+        )
+        self.plugin_name = plugin_name
 
 
 class SecretType(object):
