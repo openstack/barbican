@@ -63,3 +63,16 @@ def create_csr_signed_with_wrong_key():
 def create_bad_csr():
     """For testing, generate a CSR that will not parse."""
     return "Bad PKCS10 Data"
+
+
+def create_csr_with_bad_subject_dn():
+    """For testing, generate a CSR that has a bad subject dn."""
+    key_pair = create_key_pair(crypto.TYPE_RSA, 2048)
+    csr = crypto.X509Req()
+    subject = csr.get_subject()
+    # server certs require attribute 'CN'
+    setattr(subject, "UID", "bar")
+    csr.set_pubkey(key_pair)
+    csr.sign(key_pair, "sha256")
+    pem = crypto.dump_certificate_request(crypto.FILETYPE_PEM, csr)
+    return pem
