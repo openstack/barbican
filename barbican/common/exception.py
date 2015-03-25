@@ -90,32 +90,46 @@ class MissingCredentialError(BarbicanException):
     message = u._("Missing required credential: %(required)s")
 
 
-class MissingMetadataField(BarbicanException):
+class MissingMetadataField(BarbicanHTTPException):
     message = u._("Missing required metadata field for %(required)s")
+    client_message = message
+    status_code = 400
 
 
-class InvalidSubjectDN(BarbicanException):
+class InvalidSubjectDN(BarbicanHTTPException):
     message = u._("Invalid subject DN: %(subject_dn)s")
+    client_message = message
+    status_code = 400
 
 
-class InvalidContainer(BarbicanException):
+class InvalidContainer(BarbicanHTTPException):
     message = u._("Invalid container: %(reason)s")
+    client_message = message
+    status_code = 400
 
 
-class InvalidExtensionsData(BarbicanException):
+class InvalidExtensionsData(BarbicanHTTPException):
     message = u._("Invalid extensions data.")
+    client_message = message
+    status_code = 400
 
 
-class InvalidCMCData(BarbicanException):
+class InvalidCMCData(BarbicanHTTPException):
     message = u._("Invalid CMC Data")
+    client_message = message
+    status_code = 400
 
 
-class InvalidPKCS10Data(BarbicanException):
+class InvalidPKCS10Data(BarbicanHTTPException):
     message = u._("Invalid PKCS10 Data: %(reason)s")
+    client_message = message
+    status_code = 400
 
 
-class InvalidCertificateRequestType(BarbicanException):
+class InvalidCertificateRequestType(BarbicanHTTPException):
     message = u._("Invalid Certificate Request Type")
+    client_message = message
+    status_code = 400
 
 
 class BadAuthStrategy(BarbicanException):

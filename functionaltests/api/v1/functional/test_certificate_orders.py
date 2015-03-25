@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import copy
+import json
 import time
 
 import testtools
@@ -114,6 +115,10 @@ class CertificatesTestCase(base.TestCase):
         # TODO(alee) implement this to get the right ca_id
         return "dummy_ca_id"
 
+    def confirm_error_message(self, resp, message):
+        resp_dict = json.loads(resp.content)
+        self.assertEqual(message, resp_dict['description'])
+
     @testtools.testcase.attr('positive')
     @testtools.skip("broken till state machine fixed")
     def test_create_simple_cmc_order(self):
@@ -168,11 +173,7 @@ class CertificatesTestCase(base.TestCase):
         self.assertIsNotNone(order_resp.model.meta['certificate'])
 
     @testtools.testcase.attr('negative')
-    @testtools.skip("broken till exceptions fixed")
     def test_create_simple_cmc_with_profile_and_no_ca_id(self):
-        # TODO(alee) currently exceptions are broken.  Should be returning
-        # 400 not 500
-
         test_model = order_models.OrderModel(**self.simple_cmc_data)
         test_model.meta['request_data'] = certutil.create_good_csr()
         test_model.meta['profile'] = 'caServerCert'
@@ -180,7 +181,10 @@ class CertificatesTestCase(base.TestCase):
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(400, create_resp.status_code)
         self.assertIsNone(order_ref)
-        # TODO(alee) validate exception message
+        self.confirm_error_message(
+            create_resp,
+            "Missing required metadata field for ca_id"
+        )
 
     @testtools.testcase.attr('negative')
     @testtools.skip("broken till exceptions fixed")
@@ -214,21 +218,18 @@ class CertificatesTestCase(base.TestCase):
         # TODO(alee) confirm error substatus/message
 
     @testtools.testcase.attr('negative')
-    @testtools.skip("broken till exceptions fixed")
-    def test_create_simple_csc_order_with_invalid_pkcs10(self):
-        # TODO(alee) Exceptions are now broken, should return 400 not 500
+    def test_create_simple_cmc_order_with_invalid_pkcs10(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
         test_model.meta['request_data'] = certutil.create_bad_csr()
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(400, create_resp.status_code)
         self.assertIsNone(order_ref)
-        # confirm error message
+        self.confirm_error_message(create_resp,
+                                   "Invalid PKCS10 Data: Bad format")
 
     @testtools.testcase.attr('negative')
-    @testtools.skip("broken till exceptions fixed")
     def test_create_simple_csc_order_with_unsigned_pkcs10(self):
-        # TODO(alee) Exceptions are now broken. Should return 400 not 500
         test_model = order_models.OrderModel(**self.simple_cmc_data)
         test_model.meta['request_data'] = (
             certutil.create_csr_that_has_not_been_signed())
@@ -236,19 +237,23 @@ class CertificatesTestCase(base.TestCase):
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(400, create_resp.status_code)
         self.assertIsNone(order_ref)
-        # confirm error message
+        self.confirm_error_message(
+            create_resp,
+            "Invalid PKCS10 Data: Signing key incorrect"
+        )
 
     @testtools.testcase.attr('negative')
-    @testtools.skip("broken till exceptions fixed")
     def test_create_simple_csc_order_with_pkcs10_signed_by_wrong_key(self):
-        # TODO(alee) Exceptions are now broken. Should return 400 not 500
         test_model = order_models.OrderModel(**self.simple_cmc_data)
         test_model.meta['request_data'] = (
             certutil.create_csr_signed_with_wrong_key())
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(400, create_resp.status_code)
-        # confirm error message
+        self.confirm_error_message(
+            create_resp,
+            "Invalid PKCS10 Data: Signing key incorrect"
+        )
 
     @testtools.testcase.attr('negative')
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
@@ -282,15 +287,16 @@ class CertificatesTestCase(base.TestCase):
         self.assertEqual('PENDING', order_resp.model.status)
 
     @testtools.testcase.attr('negative')
-    @testtools.skip("broken till exceptions fixed")
     def test_create_simple_cmc_order_with_missing_request(self):
-        # TODO(alee) Exceptions are now broken. Should return 400 not 500
         test_model = order_models.OrderModel(**self.simple_cmc_data)
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(create_resp.status_code, 400)
         self.assertIsNone(order_ref)
-        # confirm error message
+        self.confirm_error_message(
+            create_resp,
+            "Missing required metadata field for request_data"
+        )
 
     @testtools.testcase.attr('negative')
     @testtools.skip("broken till we handle this better")
@@ -305,16 +311,17 @@ class CertificatesTestCase(base.TestCase):
         # confirm error message, should have not implemented
 
     @testtools.testcase.attr('negative')
-    @testtools.skip("broken till exceptions fixed")
     def test_create_cert_order_with_invalid_type(self):
-        # TODO(alee)  Exceptions are now broken. Should return 400 not 500
         test_model = order_models.OrderModel(**self.simple_cmc_data)
         test_model.meta['request_data'] = certutil.create_good_csr()
         test_model.meta['request_type'] = "invalid_type"
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(400, create_resp.status_code)
-        # confirm error message
+        self.confirm_error_message(
+            create_resp,
+            "Invalid Certificate Request Type"
+        )
 
     @testtools.testcase.attr('positive')
     @testtools.skip("broken till container code written, state machine fixed")
@@ -363,14 +370,15 @@ class CertificatesTestCase(base.TestCase):
         # confirm error message
 
     @testtools.testcase.attr('negative')
-    @testtools.skip("broken till exceptions fixed")
     def test_create_stored_key_order_with_missing_container_ref(self):
-        # TODO(alee) Exceptions are now broken. Should return 400 not 500
         test_model = order_models.OrderModel(**self.stored_key_data)
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(400, create_resp.status_code)
-        # confirm error message
+        self.confirm_error_message(
+            create_resp,
+            "Missing required metadata field for container_ref"
+        )
 
     @testtools.testcase.attr('negative')
     def test_create_stored_key_order_with_unauthorized_container_ref(self):
@@ -406,9 +414,7 @@ class CertificatesTestCase(base.TestCase):
         pass
 
     @testtools.testcase.attr('negative')
-    @testtools.skip("broken till exceptions fixed")
     def test_create_stored_key_order_with_subject_dn_missing(self):
-        # TODO(alee) Exceptions are now broken. Should return 400 not 500
         test_model = order_models.OrderModel(**self.stored_key_data)
         test_model.meta['container_ref'] = (
             self.create_asymmetric_key_container())
@@ -416,12 +422,13 @@ class CertificatesTestCase(base.TestCase):
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(400, create_resp.status_code)
-        # confirm error message
+        self.confirm_error_message(
+            create_resp,
+            "Missing required metadata field for subject_dn"
+        )
 
     @testtools.testcase.attr('negative')
-    @testtools.skip("broken till exceptions fixed")
     def test_create_stored_key_order_with_subject_dn_invalid(self):
-        # TODO(alee) Exceptions are now broken. Should return 400 not 500
         test_model = order_models.OrderModel(**self.stored_key_data)
         test_model.meta['container_ref'] = (
             self.create_asymmetric_key_container())
@@ -429,7 +436,10 @@ class CertificatesTestCase(base.TestCase):
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(400, create_resp.status_code)
-        # confirm error message
+        self.confirm_error_message(
+            create_resp,
+            "Invalid subject DN: invalid_subject_dn"
+        )
 
     @testtools.testcase.attr('positive')
     def test_create_stored_key_order_with_extensions(self):
