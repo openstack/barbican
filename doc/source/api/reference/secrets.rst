@@ -149,7 +149,7 @@ Request:
 Response:
 *********
 
-.. code-block:: javascript
+.. code-block:: none
 
     201 Created
 
@@ -192,7 +192,7 @@ Accept Header Options:
 Metadata Request:
 *****************
 
-.. code-block:: javascript
+.. code-block:: none
 
     GET /v1/secrets/{uuid}
     Headers:
@@ -226,7 +226,7 @@ Metadata Response:
 Payload Request:
 ****************
 
-.. code-block:: javascript
+.. code-block:: none
 
     GET /v1/secrets/{uuid}
     Headers:
@@ -237,7 +237,7 @@ Payload Request:
 Payload Response:
 *****************
 
-.. code-block:: javascript
+.. code-block:: none
 
     200 OK
 
@@ -287,7 +287,7 @@ Required Headers
 Request:
 ********
 
-.. code-block:: javascript
+.. code-block:: none
 
     PUT /v1/secrets/{uuid}
     Headers:
@@ -301,7 +301,7 @@ Request:
 Response:
 *********
 
-.. code-block:: javascript
+.. code-block:: none
 
     204 No Content
 
@@ -328,7 +328,7 @@ Delete a secret by uuid
 Request:
 ****************
 
-.. code-block:: javascript
+.. code-block:: none
 
     DELETE /v1/secrets/{uuid}
     Headers:
@@ -337,7 +337,7 @@ Request:
 Response:
 ****************
 
-.. code-block:: javascript
+.. code-block:: none
 
     204 No Content
 
@@ -359,10 +359,42 @@ GET /v1/secrets/{uuid}/payload
 ##############################
 Retrieve a secret's payload
 
-TODO(jvrbanac): Finish this section
+Accept Header Options:
+**********************
 
-PUT /v1/secrets/{uuid}/payload
-##############################
-Update a secret's payload
+* application/octet-stream - Returns secret payload
+* text/plain - Returns secret payload
 
-TODO(jvrbanac): Finish this section
+Request:
+********
+
+.. code-block:: none
+
+    GET /v1/secrets/{uuid}/payload
+    Headers:
+        Accept: text/plain
+        X-Project-Id: {project_id}
+
+Response:
+*********
+
+.. code-block:: none
+
+    200 OK
+
+    beer
+
+HTTP Status Codes
+*****************
+
++------+-----------------------------------------------------------------------------+
+| Code | Description                                                                 |
++======+=============================================================================+
+| 200  | Successful request                                                          |
++------+-----------------------------------------------------------------------------+
+| 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource |
++------+-----------------------------------------------------------------------------+
+| 404  | Not Found                                                                   |
++------+-----------------------------------------------------------------------------+
+| 406  | Not Acceptable                                                              |
++------+-----------------------------------------------------------------------------+
