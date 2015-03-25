@@ -78,6 +78,31 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
         self.assertEqual(limit, 10)
         self.assertEqual(total, 1)
 
+    def test_get_secret_by_id(self):
+        session = self.repo.get_session()
+
+        secret = self.repo.create_from(models.Secret(), session=session)
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        project_secret = models.ProjectSecret()
+        project_secret.secret_id = secret.id
+        project_secret.project_id = project.id
+        project_secret.save(session=session)
+        session.commit()
+
+        db_secret = self.repo.get_secret_by_id(secret.id)
+        self.assertIsNotNone(db_secret)
+
+    def test_should_raise_notfound_exception(self):
+        self.assertRaises(exception.NotFound, self.repo.get_secret_by_id,
+                          "invalid_id", suppress_exception=False)
+
+    def test_should_suppress_notfound_exception(self):
+        self.assertIsNone(self.repo.get_secret_by_id("invalid_id",
+                                                     suppress_exception=True))
+
     @utils.parameterized_dataset(dataset_for_filter_tests)
     def test_get_by_create_date_with_filter(
             self, secret_1_dict, secret_2_dict, query_dict):
