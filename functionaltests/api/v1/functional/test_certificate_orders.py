@@ -20,6 +20,7 @@ import testtools
 
 from barbican.tests import certificate_utils as certutil
 from functionaltests.api import base
+from functionaltests.api.v1.behaviors import ca_behaviors
 from functionaltests.api.v1.behaviors import order_behaviors
 from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import order_models
@@ -75,6 +76,7 @@ class CertificatesTestCase(base.TestCase):
     def setUp(self):
         super(CertificatesTestCase, self).setUp()
         self.behaviors = order_behaviors.OrderBehaviors(self.client)
+        self.ca_behaviors = ca_behaviors.CABehaviors(self.client)
         self.secret_behaviors = secret_behaviors.SecretBehaviors(self.client)
         self.simple_cmc_data = copy.deepcopy(order_simple_cmc_request_data)
         self.full_cmc_data = copy.deepcopy(order_full_cmc_request_data)
@@ -112,8 +114,13 @@ class CertificatesTestCase(base.TestCase):
         return "asym_container_without_secrets"
 
     def get_dogtag_ca_id(self):
-        # TODO(alee) implement this to get the right ca_id
-        return "dummy_ca_id"
+        (resp, cas, total, next_ref, prev_ref) = self.ca_behaviors.get_cas()
+        for item in cas:
+            ca = self.ca_behaviors.get_ca(item)
+            if ca.model.plugin_name == (
+                    'barbican.plugin.dogtag.DogtagCAPlugin'):
+                return ca.model.ca_id
+        return None
 
     def confirm_error_message(self, resp, message):
         resp_dict = json.loads(resp.content)
@@ -187,7 +194,6 @@ class CertificatesTestCase(base.TestCase):
         )
 
     @testtools.testcase.attr('negative')
-    @testtools.skip("broken till exceptions fixed")
     def test_create_simple_cmc_with_profile_and_incorrect_ca_id(self):
         # TODO(alee) Exceptions are broken.  Should be return 400 not 204
 
@@ -199,7 +205,11 @@ class CertificatesTestCase(base.TestCase):
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(400, create_resp.status_code)
         self.assertIsNone(order_ref)
-        # TODO(alee) validate exception message
+        self.confirm_error_message(
+            create_resp,
+            "Order creation issue seen - The ca_id provided "
+            "in the request is invalid."
+        )
 
     @testtools.testcase.attr('negative')
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")

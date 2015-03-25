@@ -79,7 +79,7 @@ def issue_certificate_request(order_model, project_model):
 
     # refresh the CA table.  This is mostly a no-op unless the entries
     # for a plugin are expired.
-    cert.CertificatePluginManager(repos).refresh_ca_table()
+    cert.CertificatePluginManager().refresh_ca_table()
 
     ca_id = _get_ca_id(order_model.meta, project_model.id)
     if ca_id:
@@ -205,7 +205,7 @@ def _get_ca_id(order_meta, project_id):
 
     preferred_ca_repository = repos.get_preferred_ca_repository()
     cas, offset, limit, total = preferred_ca_repository.get_by_create_date(
-        project_id=project_id)
+        project_id=project_id, suppress_exception=True)
     if total > 0:
         return cas[0].ca_id
 

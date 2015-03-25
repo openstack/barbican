@@ -205,7 +205,7 @@ class CertificateAuthorityController(object):
 
     @pecan.expose()
     @controllers.handle_exceptions(u._('Unset global preferred CA'))
-    @controllers.enforce_rbac('certificate_authority:remove_from_project')
+    @controllers.enforce_rbac('certificate_authority:unset_global_preferred')
     def unset_global_preferred(self, external_project_id):
         if pecan.request.method != 'POST':
             pecan.abort(405)
