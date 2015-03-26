@@ -18,4 +18,4 @@ API Reference
     :maxdepth: 1
 
     ./reference/secrets
-
+    ./reference/containers
