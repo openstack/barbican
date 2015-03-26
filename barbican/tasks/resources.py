@@ -46,6 +46,25 @@ class BaseTask(object):
             u._('Create Secret')
         """
 
+    def process_and_suppress_exceptions(self, *args, **kwargs):
+        """Invokes the process() template method, suppressing all exceptions.
+
+        TODO(john-wood-w) This method suppresses exceptions for flows that
+        do not want to rollback database modifications in reaction to such
+        exceptions, as this could also rollback the marking of the entity
+        (eg. order) in the ERROR status via the handle_error() call below.
+        For Liberty, we might want to consider a workflow manager instead of
+        these process_xxxx() method as shown here:
+        https://gist.github.com/jfwood/a8130265b0db3c793ec8
+        """
+        try:
+            self.process(*args, **kwargs)
+        except Exception:
+            LOG.exception(
+                u._LE(
+                    "Suppressing exception while trying to "
+                    "process task '%s'."), self.get_name())
+
     def process(self, *args, **kwargs):
         """A template method for all asynchronous tasks.
 
@@ -214,6 +233,7 @@ class BeginTypeOrder(BaseTask):
         return u._('Process TypeOrder')
 
     def __init__(self):
+        super(BeginTypeOrder, self).__init__()
         LOG.debug('Creating BeginTypeOrder task processor')
         self.project_repo = rep.get_project_repository()
         self.helper = _OrderTaskHelper()
@@ -297,6 +317,7 @@ class UpdateOrder(BaseTask):
         return u._('Update Order')
 
     def __init__(self):
+        super(UpdateOrder, self).__init__()
         LOG.debug('Creating UpdateOrder task processor')
         self.helper = _OrderTaskHelper()
 

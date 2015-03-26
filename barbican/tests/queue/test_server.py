@@ -13,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import datetime
-
 import mock
+import six
 
+from barbican.model import models
 from barbican.model import repositories
-from barbican import queue
 from barbican.queue import server
 from barbican.tasks import common
 from barbican.tests import database_utils
@@ -222,8 +222,6 @@ class WhenCallingScheduleOrderRetryTasks(database_utils.RepositoryTestCase):
 
         self.assertEqual(
             'test_should_schedule_invoking_task_for_retry', retry_rpc_method)
-        self._verify_retry_task_entity(
-            'test_should_schedule_invoking_task_for_retry')
 
     def test_should_schedule_certificate_status_task_for_retry(self):
         self.result.retry_task = (
@@ -290,23 +288,26 @@ class WhenCallingTasksMethod(utils.BaseTestCase):
         self.is_server_side_patcher.stop()
 
     @mock.patch('barbican.tasks.resources.BeginTypeOrder')
-    def test_should_process_order(self, mock_begin_order):
+    def test_should_process_begin_order(self, mock_begin_order):
         mock_begin_order.return_value.process.return_value = None
 
         self.tasks.process_type_order(
             None, self.order_id, self.external_project_id)
 
-        mock_begin_order.return_value.process.assert_called_with(
+        mock_process = mock_begin_order.return_value
+        mock_process.process_and_suppress_exceptions.assert_called_with(
             self.order_id, self.external_project_id)
 
     @mock.patch('barbican.tasks.resources.UpdateOrder')
-    def test_should_update_order(self, mock_update_order):
+    def test_should_process_update_order(self, mock_update_order):
         mock_update_order.return_value.process.return_value = None
         updated_meta = {}
 
         self.tasks.update_order(
             None, self.order_id, self.external_project_id, updated_meta)
-        mock_update_order.return_value.process.assert_called_with(
+
+        mock_process = mock_update_order.return_value
+        mock_process.process_and_suppress_exceptions.assert_called_with(
             self.order_id, self.external_project_id, updated_meta
         )
 
@@ -316,7 +317,9 @@ class WhenCallingTasksMethod(utils.BaseTestCase):
 
         self.tasks.check_certificate_status(
             None, self.order_id, self.external_project_id)
-        mock_check_cert_order.return_value.process.assert_called_with(
+
+        mock_process = mock_check_cert_order.return_value
+        mock_process.process_and_suppress_exceptions.assert_called_with(
             self.order_id, self.external_project_id
         )
 
@@ -329,33 +332,112 @@ class WhenCallingTasksMethod(utils.BaseTestCase):
                                       self.external_project_id)
 
 
-class WhenUsingTaskServer(utils.BaseTestCase):
-    """Test using the asynchronous task client."""
+class WhenUsingTaskServer(database_utils.RepositoryTestCase):
+    """Test using the asynchronous task client.
+
+    This test suite performs a full-stack test of worker-side task
+    processing (except for queue interactions, which are mocked). This
+    includes testing database commit and session close behaviors.
+    """
 
     def setUp(self):
         super(WhenUsingTaskServer, self).setUp()
 
+        # Queue target mocking setup.
         self.target = 'a target value here'
-        queue.get_target = mock.MagicMock(return_value=self.target)
+        queue_get_target_config = {
+            'return_value': self.target
+        }
+        self.queue_get_target_patcher = mock.patch(
+            'barbican.queue.get_target',
+            **queue_get_target_config
+        )
+        self.queue_get_target_mock = self.queue_get_target_patcher.start()
 
+        # Queue server mocking setup.
         self.server_mock = mock.MagicMock()
         self.server_mock.start.return_value = None
         self.server_mock.stop.return_value = None
-
-        queue.get_server = mock.MagicMock(return_value=self.server_mock)
+        queue_get_server_config = {
+            'return_value': self.server_mock
+        }
+        self.queue_get_server_patcher = mock.patch(
+            'barbican.queue.get_server',
+            **queue_get_server_config
+        )
+        self.queue_get_server_mock = self.queue_get_server_patcher.start()
 
         self.server = server.TaskServer()
 
+        # Add an order to the in-memory database.
+        self.external_id = 'keystone-id'
+        project = database_utils.create_project(
+            external_id=self.external_id)
+        self.order = database_utils.create_order(
+            project=project)
+
+    def tearDown(self):
+        super(WhenUsingTaskServer, self).tearDown()
+        self.queue_get_target_patcher.stop()
+        self.queue_get_server_patcher.stop()
+
     def test_should_start(self):
         self.server.start()
-        queue.get_target.assert_called_with()
-        queue.get_server.assert_called_with(target=self.target,
-                                            endpoints=[self.server])
+
+        self.queue_get_target_mock.assert_called_with()
+        self.queue_get_server_mock.assert_called_with(
+            target=self.target, endpoints=[self.server])
         self.server_mock.start.assert_called_with()
 
     def test_should_stop(self):
         self.server.stop()
-        queue.get_target.assert_called_with()
-        queue.get_server.assert_called_with(target=self.target,
-                                            endpoints=[self.server])
+        self.queue_get_target_mock.assert_called_with()
+        self.queue_get_server_mock.assert_called_with(
+            target=self.target, endpoints=[self.server])
         self.server_mock.stop.assert_called_with()
+
+    def test_process_bogus_begin_type_order_should_not_rollback(self):
+        order_id = self.order.id
+        self.order.type = 'bogus-type'  # Force error out of business logic.
+
+        # Invoke process, including the transactional decorator that terminates
+        # the session when it is done. Hence we must re-retrieve the order for
+        # verification afterwards.
+        self.server.process_type_order(
+            None, self.order.id, self.external_id)
+
+        order_repo = repositories.get_order_repository()
+        order_result = order_repo.get(order_id, self.external_id)
+
+        self.assertEqual(models.States.ERROR, order_result.status)
+        self.assertEqual(
+            six.u(
+                'Process TypeOrder failure seen - '
+                'please contact site administrator.'),
+            order_result.error_reason)
+        self.assertEqual(
+            six.u('500'),
+            order_result.error_status_code)
+
+    def test_process_bogus_update_type_order_should_not_rollback(self):
+        order_id = self.order.id
+        self.order.type = 'bogus-type'  # Force error out of business logic.
+
+        # Invoke process, including the transactional decorator that terminates
+        # the session when it is done. Hence we must re-retrieve the order for
+        # verification afterwards.
+        self.server.update_order(
+            None, self.order.id, self.external_id, None)
+
+        order_repo = repositories.get_order_repository()
+        order_result = order_repo.get(order_id, self.external_id)
+
+        self.assertEqual(models.States.ERROR, order_result.status)
+        self.assertEqual(
+            six.u(
+                'Update Order failure seen - '
+                'please contact site administrator.'),
+            order_result.error_reason)
+        self.assertEqual(
+            six.u('500'),
+            order_result.error_status_code)
