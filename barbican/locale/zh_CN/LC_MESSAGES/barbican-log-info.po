@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-23 06:06+0000\n"
-"PO-Revision-Date: 2015-03-22 20:12+0000\n"
+"POT-Creation-Date: 2015-03-26 06:07+0000\n"
+"PO-Revision-Date: 2015-03-25 21:43+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
@@ -35,6 +35,16 @@ msgstr "自动创建 barbican 注册表数据库"
 #: barbican/openstack/common/eventlet_backdoor.py:146
 #, python-format
 msgid "Eventlet backdoor listening on %(port)s for process %(pid)d"
+msgstr ""
+
+#: barbican/openstack/common/periodic_task.py:120
+#, python-format
+msgid "Skipping periodic task %(task)s because its interval is negative"
+msgstr ""
+
+#: barbican/openstack/common/periodic_task.py:125
+#, python-format
+msgid "Skipping periodic task %(task)s because it is disabled"
 msgstr ""
 
 #: barbican/openstack/common/policy.py:275

@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2015.1.dev14\n"
+"Project-Id-Version: barbican 2015.1.dev44\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-23 06:06+0000\n"
+"POT-Creation-Date: 2015-03-26 06:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -304,141 +304,141 @@ msgstr ""
 msgid "Missing required metadata field for %(required)s"
 msgstr ""
 
-#: barbican/common/exception.py:98
+#: barbican/common/exception.py:100
 #, python-format
 msgid "Invalid subject DN: %(subject_dn)s"
 msgstr ""
 
-#: barbican/common/exception.py:102
+#: barbican/common/exception.py:106
 #, python-format
 msgid "Invalid container: %(reason)s"
 msgstr ""
 
-#: barbican/common/exception.py:106
+#: barbican/common/exception.py:112
 msgid "Invalid extensions data."
 msgstr ""
 
-#: barbican/common/exception.py:110
+#: barbican/common/exception.py:118
 msgid "Invalid CMC Data"
 msgstr ""
 
-#: barbican/common/exception.py:114
+#: barbican/common/exception.py:124
 #, python-format
 msgid "Invalid PKCS10 Data: %(reason)s"
 msgstr ""
 
-#: barbican/common/exception.py:118
+#: barbican/common/exception.py:130
 msgid "Invalid Certificate Request Type"
 msgstr ""
 
-#: barbican/common/exception.py:122
+#: barbican/common/exception.py:136
 #, python-format
 msgid ""
 "Incorrect auth strategy, expected \"%(expected)s\" but received "
 "\"%(received)s\""
 msgstr ""
 
-#: barbican/common/exception.py:127
+#: barbican/common/exception.py:141
 msgid "An object with the specified identifier was not found."
 msgstr ""
 
-#: barbican/common/exception.py:131
+#: barbican/common/exception.py:145
 #, python-format
 msgid "Unknown scheme '%(scheme)s' found in URI"
 msgstr ""
 
-#: barbican/common/exception.py:135
+#: barbican/common/exception.py:149
 msgid "The Store URI was malformed."
 msgstr ""
 
-#: barbican/common/exception.py:139
+#: barbican/common/exception.py:153
 msgid "An object with the same identifier already exists."
 msgstr ""
 
-#: barbican/common/exception.py:143
+#: barbican/common/exception.py:157
 msgid "There is not enough disk space on the image storage media."
 msgstr ""
 
-#: barbican/common/exception.py:147
+#: barbican/common/exception.py:161
 msgid "Permission to write image storage media denied."
 msgstr ""
 
-#: barbican/common/exception.py:151
+#: barbican/common/exception.py:165
 #, python-format
 msgid "Connect error/bad request to Auth service at URL %(url)s."
 msgstr ""
 
-#: barbican/common/exception.py:155
+#: barbican/common/exception.py:169
 #, python-format
 msgid "Auth service at URL %(url)s not found."
 msgstr ""
 
-#: barbican/common/exception.py:159
+#: barbican/common/exception.py:173
 msgid "Authorization failed."
 msgstr ""
 
-#: barbican/common/exception.py:163
+#: barbican/common/exception.py:177
 msgid "You are not authenticated."
 msgstr ""
 
-#: barbican/common/exception.py:167 barbican/common/exception.py:175
-#: barbican/common/exception.py:184
+#: barbican/common/exception.py:181 barbican/common/exception.py:189
+#: barbican/common/exception.py:198
 msgid "You are not authorized to complete this action."
 msgstr ""
 
-#: barbican/common/exception.py:171
+#: barbican/common/exception.py:185
 msgid "Operation is not supported."
 msgstr ""
 
-#: barbican/common/exception.py:179
+#: barbican/common/exception.py:193
 #, python-format
 msgid "Image %(image_id)s is protected and cannot be deleted."
 msgstr ""
 
-#: barbican/common/exception.py:188
+#: barbican/common/exception.py:202
 msgid "Data supplied was not valid."
 msgstr ""
 
-#: barbican/common/exception.py:192
+#: barbican/common/exception.py:206
 msgid "No data supplied to process."
 msgstr ""
 
-#: barbican/common/exception.py:198
+#: barbican/common/exception.py:212
 msgid "Sort key supplied was not valid."
 msgstr ""
 
-#: barbican/common/exception.py:202
+#: barbican/common/exception.py:216
 msgid "Unable to filter using the specified range."
 msgstr ""
 
-#: barbican/common/exception.py:206
+#: barbican/common/exception.py:220
 #, python-format
 msgid "Attribute '%(property)s' is read-only."
 msgstr ""
 
-#: barbican/common/exception.py:210
+#: barbican/common/exception.py:224
 #, python-format
 msgid "Attribute '%(property)s' is reserved."
 msgstr ""
 
-#: barbican/common/exception.py:214
+#: barbican/common/exception.py:228
 #, python-format
 msgid "Redirecting to %(uri)s for authorization."
 msgstr ""
 
-#: barbican/common/exception.py:218
+#: barbican/common/exception.py:232
 msgid "There was an error migrating the database."
 msgstr ""
 
-#: barbican/common/exception.py:222
+#: barbican/common/exception.py:236
 msgid "There was an error connecting to a server"
 msgstr ""
 
-#: barbican/common/exception.py:226
+#: barbican/common/exception.py:240
 msgid "There was an error configuring the client."
 msgstr ""
 
-#: barbican/common/exception.py:230
+#: barbican/common/exception.py:244
 #, python-format
 msgid ""
 "The request returned a 302 Multiple Choices. This generally means that "
@@ -448,7 +448,7 @@ msgid ""
 "%(body)s"
 msgstr ""
 
-#: barbican/common/exception.py:237
+#: barbican/common/exception.py:251
 #, python-format
 msgid ""
 "The request returned a 413 Request Entity Too Large. This generally means"
@@ -458,21 +458,21 @@ msgid ""
 "%(body)s"
 msgstr ""
 
-#: barbican/common/exception.py:240
+#: barbican/common/exception.py:254
 msgid "Provided information too large to process"
 msgstr ""
 
-#: barbican/common/exception.py:250
+#: barbican/common/exception.py:264
 msgid ""
 "The request returned 503 Service Unavilable. This generally occurs on "
 "service overload or other transient outage."
 msgstr ""
 
-#: barbican/common/exception.py:261
+#: barbican/common/exception.py:275
 msgid "The request returned 500 Internal Server Error."
 msgstr ""
 
-#: barbican/common/exception.py:265
+#: barbican/common/exception.py:279
 #, python-format
 msgid ""
 "The request returned an unexpected status: %(status)s.\n"
@@ -481,163 +481,163 @@ msgid ""
 "%(body)s"
 msgstr ""
 
-#: barbican/common/exception.py:270
+#: barbican/common/exception.py:284
 #, python-format
 msgid "Invalid content type %(content_type)s"
 msgstr ""
 
-#: barbican/common/exception.py:274
+#: barbican/common/exception.py:288
 #, python-format
 msgid "Invalid content encoding %(content_encoding)s"
 msgstr ""
 
-#: barbican/common/exception.py:278
+#: barbican/common/exception.py:292
 msgid "Error while attempting to decode payload."
 msgstr ""
 
-#: barbican/common/exception.py:282
+#: barbican/common/exception.py:296
 #, python-format
 msgid "Registry was not configured correctly on API server. Reason: %(reason)s"
 msgstr ""
 
-#: barbican/common/exception.py:287
+#: barbican/common/exception.py:301
 #, python-format
 msgid "Store %(store_name)s could not be configured correctly. Reason: %(reason)s"
 msgstr ""
 
-#: barbican/common/exception.py:292
+#: barbican/common/exception.py:306
 #, python-format
 msgid ""
 "Driver %(driver_name)s could not be configured correctly. Reason: "
 "%(reason)s"
 msgstr ""
 
-#: barbican/common/exception.py:297
+#: barbican/common/exception.py:311
 msgid "Deleting images from this store is not supported."
 msgstr ""
 
-#: barbican/common/exception.py:301
+#: barbican/common/exception.py:315
 msgid "Configuration for store failed. Adding images to this store is disabled."
 msgstr ""
 
-#: barbican/common/exception.py:306
+#: barbican/common/exception.py:320
 #, python-format
 msgid "'%(strategy)s' is not an available notifier strategy."
 msgstr ""
 
-#: barbican/common/exception.py:310
+#: barbican/common/exception.py:324
 #, python-format
 msgid "Maximum redirects (%(redirects)s) was exceeded."
 msgstr ""
 
-#: barbican/common/exception.py:314
+#: barbican/common/exception.py:328
 msgid "Received invalid HTTP redirect."
 msgstr ""
 
-#: barbican/common/exception.py:318
+#: barbican/common/exception.py:332
 msgid "Response from Keystone does not contain a Barbican endpoint."
 msgstr ""
 
-#: barbican/common/exception.py:323
+#: barbican/common/exception.py:337
 #, python-format
 msgid ""
 "Multiple 'image' service matches for region %(region)s. This generally "
 "means that a region is required and you have not supplied one."
 msgstr ""
 
-#: barbican/common/exception.py:329
+#: barbican/common/exception.py:343
 #, python-format
 msgid "Server worker creation failed: %(reason)s."
 msgstr ""
 
-#: barbican/common/exception.py:333
+#: barbican/common/exception.py:347
 #, python-format
 msgid "Unable to load schema: %(reason)s"
 msgstr ""
 
-#: barbican/common/exception.py:341
+#: barbican/common/exception.py:355
 msgid "Failed to validate JSON information: "
 msgstr ""
 
-#: barbican/common/exception.py:342
+#: barbican/common/exception.py:356
 msgid "Provided object does not match schema '{schema}': {reason}"
 msgstr ""
 
-#: barbican/common/exception.py:350
+#: barbican/common/exception.py:364
 #, python-format
 msgid ""
 "No support for value set on field '%(field)s' on schema '%(schema)s': "
 "%(reason)s"
 msgstr ""
 
-#: barbican/common/exception.py:352
+#: barbican/common/exception.py:366
 msgid "Provided field value is not supported"
 msgstr ""
 
-#: barbican/common/exception.py:361
+#: barbican/common/exception.py:375
 #, python-format
 msgid ""
 "Feature not implemented for value set on field '%(field)s' on schema "
 "'%(schema)s': %(reason)s"
 msgstr ""
 
-#: barbican/common/exception.py:370
+#: barbican/common/exception.py:384
 #, python-format
 msgid "Provided header feature is unsupported: %(feature)s"
 msgstr ""
 
-#: barbican/common/exception.py:374
+#: barbican/common/exception.py:388
 msgid ""
 "The image cannot be deleted because it is in use through the backend "
 "store outside of Barbican."
 msgstr ""
 
-#: barbican/common/exception.py:379
+#: barbican/common/exception.py:393
 msgid "The provided image is too large."
 msgstr ""
 
-#: barbican/common/exception.py:383
+#: barbican/common/exception.py:397
 #, python-format
 msgid ""
 "Container %(container_id)s does not exist for stored key certificate "
 "generation."
 msgstr ""
 
-#: barbican/common/exception.py:388
+#: barbican/common/exception.py:402
 #, python-format
 msgid ""
 "Container %(container_id)s does not reference a private key needed for "
 "stored key certificate generation."
 msgstr ""
 
-#: barbican/common/exception.py:393
+#: barbican/common/exception.py:407
 #, python-format
 msgid "The provided UUID in the URI (%(uuid_string)s) is malformed."
 msgstr ""
 
-#: barbican/common/exception.py:395
+#: barbican/common/exception.py:409
 msgid "The provided UUID in the URI is malformed."
 msgstr ""
 
-#: barbican/common/exception.py:400
+#: barbican/common/exception.py:414
 #, python-format
 msgid "Invalid CA_ID: %(ca_id)s"
 msgstr ""
 
-#: barbican/common/exception.py:401
+#: barbican/common/exception.py:415
 msgid "The ca_id provided in the request is invalid"
 msgstr ""
 
-#: barbican/common/exception.py:406
+#: barbican/common/exception.py:420
 #, python-format
 msgid "CA specified by ca_id %(ca_id)s not defined for project: %(project_id)s"
 msgstr ""
 
-#: barbican/common/exception.py:408
+#: barbican/common/exception.py:422
 msgid "The ca_id provided in the request is not defined for this project"
 msgstr ""
 
-#: barbican/common/utils.py:124
+#: barbican/common/utils.py:123
 msgid "Cannot generate a fullname for a null instance"
 msgstr ""
 
@@ -860,6 +860,11 @@ msgid ""
 "characters. Please use unicode() or translate() instead."
 msgstr ""
 
+#: barbican/openstack/common/periodic_task.py:46
+#, python-format
+msgid "Unexpected argument for periodic task creation: %(arg)s."
+msgstr ""
+
 #: barbican/openstack/common/policy.py:111
 msgid "The JSON file that defines policies."
 msgstr ""
@@ -985,97 +990,101 @@ msgstr ""
 msgid "Profile for simple CMC requests"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:70
+#: barbican/plugin/dogtag.py:59
+msgid "List of automatically approved enrollment profiles"
+msgstr ""
+
+#: barbican/plugin/dogtag.py:73
 msgid "nss_password is required"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:85
+#: barbican/plugin/dogtag.py:88
 msgid "pem_path is required"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:96
+#: barbican/plugin/dogtag.py:99
 msgid "Invalid algorithm passed in"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:100
+#: barbican/plugin/dogtag.py:103
 msgid "Operation not supported by Dogtag Plugin"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:358
+#: barbican/plugin/dogtag.py:361
 msgid ""
 "Passphrase encryption is not supported for symmetric key generating "
 "algorithms."
 msgstr ""
 
-#: barbican/plugin/dogtag.py:389
+#: barbican/plugin/dogtag.py:392
 msgid "Passphrase encryption is not supported for DSA algorithm"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:506
+#: barbican/plugin/dogtag.py:509
 msgid ""
 "DSA keys should not have a passphrase in the database, for being used "
 "during retrieval."
 msgstr ""
 
-#: barbican/plugin/dogtag.py:510
+#: barbican/plugin/dogtag.py:513
 msgid ""
 "Secrets of type {secret_type} should not have a passphrase in the "
 "database, for being used during retrieval."
 msgstr ""
 
-#: barbican/plugin/dogtag.py:523
+#: barbican/plugin/dogtag.py:526
 msgid ""
 "Encryption using session key is not supported when retrieving a "
 "{secret_type} key."
 msgstr ""
 
-#: barbican/plugin/dogtag.py:552
+#: barbican/plugin/dogtag.py:555
 msgid "Exception thrown by enroll_cert: {message}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:582
+#: barbican/plugin/dogtag.py:586
 msgid "{request} not found for {operation} for order_id {order_id}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:634
+#: barbican/plugin/dogtag.py:638
 msgid "No request found for request_id {request_id} for order {order_id}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:660
+#: barbican/plugin/dogtag.py:664
 msgid ""
 "Request {request_id} reports status_complete, but no cert_id has been "
 "returned"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:671
+#: barbican/plugin/dogtag.py:675
 msgid "Certificate not found for cert_id: {cert_id}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:681
+#: barbican/plugin/dogtag.py:685
 msgid "Invalid request_status returned by CA"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:804
+#: barbican/plugin/dogtag.py:802
 msgid "No profile_id specified"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:830
+#: barbican/plugin/dogtag.py:854
 msgid "No request returned in enrollment_results"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:848
+#: barbican/plugin/dogtag.py:904
 msgid "request_id {req_id} returns COMPLETE but no cert returned"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:852
+#: barbican/plugin/dogtag.py:916
 msgid "Invalid request_status {status} for request_id {request_id}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:888
+#: barbican/plugin/dogtag.py:949
 msgid "Modify request: unable to cancel: {message}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:919
+#: barbican/plugin/dogtag.py:980
 msgid "no request found for this order"
 msgstr ""
 
@@ -1201,39 +1210,39 @@ msgstr ""
 msgid "List of crypto plugins to load."
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:138
+#: barbican/plugin/crypto/p11_crypto.py:137
 msgid "Path to vendor PKCS11 library"
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:140
+#: barbican/plugin/crypto/p11_crypto.py:139
 msgid "Password to login to PKCS11 session"
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:142
+#: barbican/plugin/crypto/p11_crypto.py:141
 msgid "Master KEK label (used in the HSM)"
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:144
+#: barbican/plugin/crypto/p11_crypto.py:143
 msgid "Master KEK length in bytes."
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:146
+#: barbican/plugin/crypto/p11_crypto.py:145
 msgid "HMAC label (used in the HSM)"
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:236
+#: barbican/plugin/crypto/p11_crypto.py:235
 msgid "More than one key found for label"
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:240
+#: barbican/plugin/crypto/p11_crypto.py:239
 msgid "General exception"
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:261
+#: barbican/plugin/crypto/p11_crypto.py:258
 msgid "library_path is required"
 msgstr ""
 
-#: barbican/plugin/crypto/p11_crypto.py:654
+#: barbican/plugin/crypto/p11_crypto.py:676
 msgid "Feature not implemented for PKCS11"
 msgstr ""
 
@@ -1443,6 +1452,14 @@ msgstr ""
 msgid ""
 "Define the number of max threads to be used for notification server "
 "processing functionality."
+msgstr ""
+
+#: barbican/queue/retry_scheduler.py:36
+msgid "Seconds (float) to wait before starting retry scheduler"
+msgstr ""
+
+#: barbican/queue/retry_scheduler.py:39
+msgid "Seconds (float) to wait between periodic schedule events"
 msgstr ""
 
 #: barbican/tasks/keystone_consumer.py:36

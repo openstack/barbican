@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-23 06:06+0000\n"
-"PO-Revision-Date: 2015-03-22 20:12+0000\n"
+"POT-Creation-Date: 2015-03-26 06:07+0000\n"
+"PO-Revision-Date: 2015-03-25 21:44+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
@@ -79,6 +79,11 @@ msgstr "在固定的时间循环调用"
 #: barbican/openstack/common/loopingcall.py:138
 msgid "in dynamic looping call"
 msgstr "动态循环调用"
+
+#: barbican/openstack/common/periodic_task.py:228
+#, python-format
+msgid "Error during %(full_task_name)s: %(e)s"
+msgstr ""
 
 #: barbican/openstack/common/policy.py:563
 #: barbican/openstack/common/policy.py:843
