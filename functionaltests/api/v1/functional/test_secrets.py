@@ -932,3 +932,31 @@ class SecretsTestCase(base.TestCase):
         get_resp = self.behaviors.get_secret(secret_ref,
                                              content_type)
         self.assertEqual(expected, get_resp.content)
+
+    @utils.parameterized_dataset({
+        'invalid_http_content_type_characaters_latin': {
+            'http_content_type': u'\u00c4'.encode('utf-8')},
+
+        'invalid_http_content_type_characaters_arabic': {
+            'http_content_type': u'\u060f'.encode('utf-8')},
+
+        'invalid_http_content_type_characaters_cyrillic': {
+            'http_content_type': u'\u0416'.encode('utf-8')},
+
+        'invalid_http_content_type_characaters_replacement_character': {
+            'http_content_type': u'\ufffd'.encode('utf-8')},
+    })
+    @testcase.attr('negative')
+    def test_secret_create_with_invalid_http_content_type_characters(
+            self, http_content_type):
+        """Attempt to create secrets with invalid unicode characters in the
+
+        HTTP request's Content-Type header. Should return a 415.
+        """
+        test_model = secret_models.SecretModel(
+            **self.default_secret_create_data)
+
+        headers = {"Content-Type": http_content_type}
+
+        resp, secret_ref = self.behaviors.create_secret(test_model, headers)
+        self.assertEqual(resp.status_code, 415)

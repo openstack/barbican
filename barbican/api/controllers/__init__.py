@@ -121,10 +121,10 @@ def _do_enforce_content_types(pecan_req, valid_content_types):
     """
     if pecan_req.content_type not in valid_content_types:
         m = u._(
-            "Unexpected content type: {type}.  Expected content types "
+            "Unexpected content type: {type}. Expected content types "
             "are: {expected}"
         ).format(
-            type=pecan_req.content_type,
+            type=pecan_req.content_type.decode('utf-8'),
             expected=valid_content_types
         )
         pecan.abort(415, m)
