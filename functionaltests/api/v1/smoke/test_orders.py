@@ -22,16 +22,17 @@ from functionaltests.api.v1.behaviors import order_behaviors
 from functionaltests.api.v1.models import order_models
 
 
-order_create_defaults_data = {
-    'type': 'key',
-    "meta": {
-        "name": "barbican functional test secret name",
-        "algorithm": "aes",
-        "bit_length": 256,
-        "mode": "cbc",
-        "payload_content_type": "application/octet-stream",
-    }
-}
+def get_default_order_create_data():
+    return {'type': 'key',
+            "meta": {
+                "name": "barbican functional test secret name",
+                "algorithm": "aes",
+                "bit_length": 256,
+                "mode": "cbc",
+                "payload_content_type": "application/octet-stream",
+            }
+            }
+
 
 # Any field with None will be created in the model with None as the value
 # but will be omitted in the final request (via the requests package)
@@ -39,16 +40,18 @@ order_create_defaults_data = {
 #
 # Given that fact, order_create_nones_data is effectively an empty json request
 # to the server.
-order_create_nones_data = {
-    'type': None,
-    "meta": {
-        "name": None,
-        "algorithm": None,
-        "bit_length": None,
-        "mode": None,
-        "payload_content_type": None,
+
+def get_default_order_create_all_none_data():
+    return {
+        'type': None,
+        "meta": {
+            "name": None,
+            "algorithm": None,
+            "bit_length": None,
+            "mode": None,
+            "payload_content_type": None,
+        }
     }
-}
 
 
 @utils.parameterized_test_case
@@ -57,6 +60,9 @@ class OrdersTestCase(base.TestCase):
     def setUp(self):
         super(OrdersTestCase, self).setUp()
         self.behaviors = order_behaviors.OrderBehaviors(self.client)
+
+        self.create_default_data = get_default_order_create_data()
+        self.create_all_none_data = get_default_order_create_all_none_data()
 
     def tearDown(self):
         self.behaviors.delete_all_created_orders()
@@ -71,11 +77,11 @@ class OrdersTestCase(base.TestCase):
             order_resp = self.behaviors.get_order(order_ref)
 
     @testcase.attr('positive')
-    def test_create_order_defaults(self):
+    def test_order_create(self):
         """Covers simple order creation."""
 
         # first create an order
-        test_model = order_models.OrderModel(**order_create_defaults_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         create_resp, order_ref = self.behaviors.create_order(test_model)
 
         # verify that the order was created successfully
@@ -83,14 +89,14 @@ class OrdersTestCase(base.TestCase):
         self.assertIsNotNone(order_ref)
 
     @testcase.attr('positive')
-    def test_get_order_defaults_metadata(self):
+    def test_order_get_metadata(self):
         """Covers order metadata.
 
         Assumes that the order status will be active or pending.
         """
 
         # first create an order
-        test_model = order_models.OrderModel(**order_create_defaults_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         create_resp, order_ref = self.behaviors.create_order(test_model)
 
         # verify that the order was created successfully
@@ -116,14 +122,14 @@ class OrdersTestCase(base.TestCase):
                          test_model.meta.get('bit_length'))
 
     @testcase.attr('positive')
-    def test_get_order_defaults(self):
+    def test_order_get(self):
         """Covers getting an order.
 
          Assumes that the order status will be active or pending.
         """
 
         # create an order
-        test_model = order_models.OrderModel(**order_create_defaults_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(create_resp.status_code, 202)
         self.assertIsNotNone(order_ref)
@@ -139,11 +145,11 @@ class OrdersTestCase(base.TestCase):
                         order_resp.model.status == "PENDING")
 
     @testcase.attr('positive')
-    def test_delete_order_defaults(self):
+    def test_order_delete(self):
         """Covers simple order deletion."""
 
         # create an order
-        test_model = order_models.OrderModel(**order_create_defaults_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(create_resp.status_code, 202)
         self.assertIsNotNone(order_ref)
@@ -155,11 +161,11 @@ class OrdersTestCase(base.TestCase):
         self.assertEqual(delete_resp.status_code, 204)
 
     @testcase.attr('positive')
-    def test_get_orders_defaults(self):
+    def test_orders_get(self):
         """Covers getting a list of orders."""
 
         # create 11 orders
-        test_model = order_models.OrderModel(**order_create_defaults_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         for i in xrange(0, 11):
             create_resp, order_ref = self.behaviors.create_order(test_model)
             self.assertEqual(create_resp.status_code, 202)

@@ -12,7 +12,6 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import copy
 import json
 import sys
 import time
@@ -31,16 +30,18 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 
-order_create_defaults_data = {
-    'type': 'key',
-    "meta": {
-        "name": "barbican functional test secret name",
-        "algorithm": "aes",
-        "bit_length": 256,
-        "mode": "cbc",
-        "payload_content_type": "application/octet-stream",
-    }
-}
+
+def get_default_order_create_data():
+    return {'type': 'key',
+            "meta": {
+                "name": "barbican functional test secret name",
+                "algorithm": "aes",
+                "bit_length": 256,
+                "mode": "cbc",
+                "payload_content_type": "application/octet-stream",
+            }
+            }
+
 
 # Any field with None will be created in the model with None as the value
 # but will be omitted in the final request (via the requests package)
@@ -48,27 +49,31 @@ order_create_defaults_data = {
 #
 # Given that fact, order_create_nones_data is effectively an empty json request
 # to the server.
-order_create_nones_data = {
-    'type': None,
-    "meta": {
-        "name": None,
-        "algorithm": None,
-        "bit_length": None,
-        "mode": None,
-        "payload_content_type": None,
-    }
-}
 
-order_create_asymmetric_data = {
-    'type': 'asymmetric',
-    "meta": {
-        "name": "barbican functional test asymmetric secret name",
-        "algorithm": "rsa",
-        "bit_length": 1024,
-        "mode": "cbc",
-        "payload_content_type": "application/octet-stream",
+def get_default_order_create_all_none_data():
+    return {
+        'type': None,
+        "meta": {
+            "name": None,
+            "algorithm": None,
+            "bit_length": None,
+            "mode": None,
+            "payload_content_type": None,
+        }
     }
-}
+
+
+def get_default_order_create_asymmetric_data():
+    return {
+        'type': 'asymmetric',
+        "meta": {
+            "name": "barbican functional test asymmetric secret name",
+            "algorithm": "rsa",
+            "bit_length": 1024,
+            "mode": "cbc",
+            "payload_content_type": "application/octet-stream",
+        }
+    }
 
 
 @utils.parameterized_test_case
@@ -80,9 +85,10 @@ class OrdersTestCase(base.TestCase):
         self.container_behaviors = container_behaviors.ContainerBehaviors(
             self.client)
         self.secret_behaviors = secret_behaviors.SecretBehaviors(self.client)
-        self.default_data = copy.deepcopy(order_create_defaults_data)
-        self.nones_data = copy.deepcopy(order_create_nones_data)
-        self.asymmetric_data = copy.deepcopy(order_create_asymmetric_data)
+
+        self.create_default_data = get_default_order_create_data()
+        self.create_all_none_data = get_default_order_create_all_none_data()
+        self.asymmetric_data = get_default_order_create_asymmetric_data()
 
     def tearDown(self):
         self.behaviors.delete_all_created_orders()
@@ -97,10 +103,10 @@ class OrdersTestCase(base.TestCase):
             order_resp = self.behaviors.get_order(order_ref)
 
     @testcase.attr('positive')
-    def test_create_order_defaults_wout_name(self):
+    def test_order_create_w_out_name(self):
         """Create an order without the name attribute."""
 
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.name = None
         create_resp, order_ref = self.behaviors.create_order(test_model)
 
@@ -108,10 +114,10 @@ class OrdersTestCase(base.TestCase):
         self.assertIsNotNone(order_ref)
 
     @testcase.attr('positive')
-    def test_create_order_defaults_w_empty_name(self):
+    def test_order_create_w_empty_name(self):
         """Create an order the name attribute an empty string."""
 
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.name = ""
         create_resp, order_ref = self.behaviors.create_order(test_model)
 
@@ -119,9 +125,9 @@ class OrdersTestCase(base.TestCase):
         self.assertIsNotNone(order_ref)
 
     @testcase.attr('positive')
-    def test_create_order_defaults_payload_content_type_none(self):
+    def test_order_create_payload_content_type_none(self):
         """Covers creating orders with various valid payload content types."""
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         del test_model.meta['payload_content_type']
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -129,14 +135,14 @@ class OrdersTestCase(base.TestCase):
         self.assertIsNotNone(order_ref)
 
     @testcase.attr('positive')
-    def test_create_order_defaults_check_empty_name(self):
+    def test_orders_create_check_empty_name(self):
         """Create order with empty meta name.
 
         The resulting secret name should be a UUID.
         """
 
         # first create an order with defaults
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['name'] = ""
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -172,7 +178,7 @@ class OrdersTestCase(base.TestCase):
         secret metadata from a get on the secret are the same. Assumes
         that the order status will be active and not pending.
         """
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
 
         resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(resp.status_code, 202)
@@ -205,7 +211,7 @@ class OrdersTestCase(base.TestCase):
                          'Modes were not the same')
 
     @testcase.attr('negative')
-    def test_get_order_defaults_that_doesnt_exist(self):
+    def test_order_get_order_that_doesnt_exist(self):
         """Covers case of getting a non-existent order."""
 
         # try to get a non-existent order
@@ -215,10 +221,10 @@ class OrdersTestCase(base.TestCase):
         self.assertEqual(order_resp.status_code, 404)
 
     @testcase.attr('negative')
-    def test_create_order_defaults_w_invalid_content_type(self):
+    def test_order_create_w_invalid_content_type(self):
         """Covers creating order with invalid content-type header."""
 
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         extra_headers = {"Content-Type": "crypto/boom"}
         create_resp, order_ref = self.behaviors.create_order(
             test_model, extra_headers=extra_headers)
@@ -227,20 +233,20 @@ class OrdersTestCase(base.TestCase):
         self.assertIsNone(order_ref)
 
     @testcase.attr('negative')
-    def test_create_order_nones(self):
+    def test_order_create_all_none(self):
         """Covers order creation with empty JSON."""
 
-        test_model = order_models.OrderModel(**self.nones_data)
+        test_model = order_models.OrderModel(**self.create_all_none_data)
         create_resp, order_ref = self.behaviors.create_order(test_model)
 
         self.assertEqual(create_resp.status_code, 400)
         self.assertIsNone(order_ref)
 
     @testcase.attr('negative')
-    def test_create_order_empty_entries(self):
+    def test_order_create_empty_entries(self):
         """Covers order creation with empty JSON."""
 
-        test_model = order_models.OrderModel(**self.nones_data)
+        test_model = order_models.OrderModel(**self.create_all_none_data)
         test_model.meta['name'] = ""
         test_model.meta['algorithm'] = ""
         test_model.meta['mode'] = ""
@@ -253,10 +259,10 @@ class OrdersTestCase(base.TestCase):
         self.assertIsNone(order_ref)
 
     @testcase.attr('negative')
-    def test_create_order_defaults_oversized_strings(self):
+    def test_order_create_oversized_strings(self):
         """Covers order creation with empty JSON."""
 
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['name'] = base.TestCase.oversized_field
         test_model.meta['algorithm'] = base.TestCase.oversized_field
         test_model.meta['mode'] = base.TestCase.oversized_field
@@ -267,9 +273,9 @@ class OrdersTestCase(base.TestCase):
         self.assertIsNone(order_ref)
 
     @testcase.attr('negative')
-    def test_create_order_defaults_error_message_on_invalid_order_create(self):
+    def test_order_create_error_message_on_invalid_order_create(self):
         """Related Launchpad issue: 1269594."""
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['payload_content_encoding'] = "blarg!"
 
         resp, order_ref = self.behaviors.create_order(test_model)
@@ -292,9 +298,9 @@ class OrdersTestCase(base.TestCase):
         '4096': [4096]
     })
     @testcase.attr('positive')
-    def test_create_order_defaults_valid_bit_length(self, bit_length):
+    def test_order_create_valid_bit_length(self, bit_length):
         """Covers creating orders with various valid bit lengths."""
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['bit_length'] = bit_length
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -315,9 +321,9 @@ class OrdersTestCase(base.TestCase):
         'over_signed_small_int': [32768]
     })
     @testcase.attr('negative')
-    def test_create_order_defaults_invalid_bit_length(self, bit_length):
+    def test_order_create_invalid_bit_length(self, bit_length):
         """Covers creating orders with various invalid bit lengths."""
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['bit_length'] = bit_length
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -331,9 +337,9 @@ class OrdersTestCase(base.TestCase):
         'empty': ['']
     })
     @testcase.attr('negative')
-    def test_create_order_defaults_invalid_payload(self, payload):
+    def test_order_create_invalid_payload(self, payload):
         """Covers creating orders with various invalid payloads."""
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['payload'] = payload
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -347,9 +353,9 @@ class OrdersTestCase(base.TestCase):
         'empty': [""]
     })
     @testcase.attr('positive')
-    def test_create_order_defaults_valid_name(self, name):
+    def test_order_create_valid_name(self, name):
         """Covers creating orders with various valid names."""
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['name'] = name
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -360,9 +366,9 @@ class OrdersTestCase(base.TestCase):
         'int': [123]
     })
     @testcase.attr('negative')
-    def test_create_order_defaults_invalid_name(self, name):
+    def test_order_create_invalid_name(self, name):
         """Covers creating orders with various invalid names."""
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['name'] = name
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -372,9 +378,9 @@ class OrdersTestCase(base.TestCase):
         'cbc': ['cbc']
     })
     @testcase.attr('positive')
-    def test_create_order_defaults_valid_mode(self, mode):
+    def test_order_create_valid_mode(self, mode):
         """Covers creating orders with various valid modes."""
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['mode'] = mode
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -385,9 +391,9 @@ class OrdersTestCase(base.TestCase):
         'int': [123]
     })
     @testcase.attr('negative')
-    def test_create_order_defaults_invalid_mode(self, mode):
+    def test_order_create_invalid_mode(self, mode):
         """Covers creating orders with various invalid modes."""
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['mode'] = mode
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -397,9 +403,9 @@ class OrdersTestCase(base.TestCase):
         'aes': ['aes']
     })
     @testcase.attr('positive')
-    def test_create_order_defaults_valid_algorithm(self, algorithm):
+    def test_order_create_valid_algorithm(self, algorithm):
         """Covers creating orders with various valid algorithms."""
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['algorithm'] = algorithm
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -410,9 +416,9 @@ class OrdersTestCase(base.TestCase):
         'int': [123]
     })
     @testcase.attr('negative')
-    def test_create_order_defaults_invalid_algorithm(self, algorithm):
+    def test_order_create_invalid_algorithm(self, algorithm):
         """Covers creating orders with various invalid algorithms."""
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['algorithm'] = algorithm
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -424,9 +430,9 @@ class OrdersTestCase(base.TestCase):
         'text_plain_space_charset_utf8': ['text/plain; charset=utf-8'],
     })
     @testcase.attr('positive')
-    def test_create_order_defaults_valid_payload_content_type(self, pct):
+    def test_order_create_valid_payload_content_type(self, pct):
         """Covers order creation with various valid payload content types."""
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['payload_content_type'] = pct
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -441,9 +447,9 @@ class OrdersTestCase(base.TestCase):
         'text_slash_with_no_subtype': ['text/'],
     })
     @testcase.attr('negative')
-    def test_create_order_defaults_invalid_payload_content_type(self, pct):
+    def test_order_create_invalid_payload_content_type(self, pct):
         """Covers order creation with various invalid payload content types."""
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['payload_content_type'] = pct
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -467,10 +473,10 @@ class OrdersTestCase(base.TestCase):
             'days': 1}
     })
     @testcase.attr('positive')
-    def test_create_order_defaults_valid_expiration(self, **kwargs):
+    def test_order_create_valid_expiration(self, **kwargs):
         """Covers creating orders with various valid expiration data."""
         timestamp = utils.create_timestamp_w_tz_and_offset(**kwargs)
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['expiration'] = timestamp
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -483,10 +489,10 @@ class OrdersTestCase(base.TestCase):
             'days': 5},
     })
     @testcase.attr('negative')
-    def test_create_order_defaults_invalid_expiration(self, **kwargs):
+    def test_order_create_invalid_expiration(self, **kwargs):
         """Covers creating orders with various invalid expiration data."""
         timestamp = utils.create_timestamp_w_tz_and_offset(**kwargs)
-        test_model = order_models.OrderModel(**self.default_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
         test_model.meta['expiration'] = timestamp
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -496,7 +502,7 @@ class OrdersTestCase(base.TestCase):
     def test_order_create_change_host_header(self, **kwargs):
         """Create an order with a (possibly) malicious host name in header."""
 
-        test_model = order_models.OrderModel(**order_create_defaults_data)
+        test_model = order_models.OrderModel(**self.create_default_data)
 
         malicious_hostname = 'some.bad.server.com'
         changed_host_header = {'Host': malicious_hostname}
