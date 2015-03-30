@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2014 Rackspace, Inc.
+# Copyright (c) 2013-2015 Rackspace, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,34 +32,6 @@ from barbican.tasks import certificate_resources as cert
 LOG = utils.getLogger(__name__)
 
 
-RETRY_MSEC = 60 * 1000
-
-
-class FollowOnProcessingStatusDTO(object):
-    """Follow On Processing status data transfer object (DTO).
-
-    An object of this type is optionally returned by the
-    BaseTask.handle_processing() method defined below, and is used to guide
-    follow on processing and to provide status feedback to clients.
-    """
-    def __init__(self, status=u._('Unknown'), status_message=u._('Unknown'),
-                 retry_method=None, retry_msec=RETRY_MSEC):
-        """Creates a new FollowOnProcessingStatusDTO.
-
-        :param status: Status for cert order
-        :param status_message: Message to explain status type.
-        :param retry_method: Method to retry
-        :param retry_msec: Number of milliseconds to wait for retry
-        """
-        self.status = status
-        self.status_message = status_message
-        self.retry_method = retry_method
-        self.retry_msec = int(retry_msec)
-
-    def is_follow_on_needed(self):
-        return self.retry_method
-
-
 @six.add_metaclass(abc.ABCMeta)
 class BaseTask(object):
     """Base asynchronous task."""
@@ -81,9 +53,13 @@ class BaseTask(object):
 
         :param args: List of arguments passed in from the client.
         :param kwargs: Dict of arguments passed in from the client.
-        :return: None
+        :return: Returns :class:`FollowOnProcessingStatusDTO` if follow-on
+                 processing (such as retrying this or another task) is
+                 required, otherwise a None return indicates that no
+                 follow-on processing is required.
         """
         name = self.get_name()
+        result = None
 
         # Retrieve the target entity (such as an models.Order instance).
         try:
@@ -120,6 +96,8 @@ class BaseTask(object):
             LOG.exception(u._LE("Could not process after successfully "
                                 "executing task '%s'."), name)
             raise e
+
+        return result
 
     @abc.abstractmethod
     def retrieve_entity(self, *args, **kwargs):
@@ -216,6 +194,8 @@ class _OrderTaskHelper(object):
 
         if not is_follow_on_needed:
             order.status = models.States.ACTIVE
+        else:
+            order.status = models.States.PENDING
 
         if sub_status:
             order.set_sub_status_safely(sub_status)
