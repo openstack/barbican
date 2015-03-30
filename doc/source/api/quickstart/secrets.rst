@@ -10,8 +10,6 @@ Barbican supports the storage of data for various content-types securely.
 This guide will assume you will be using a local running development environment of Barbican.
 If you need assistance with getting set up, please reference the :doc:`development guide <../setup/dev>`.
 
-TODO(jvrbanac): Add more information about the secrets resource
-
 
 What is a Secret?
 #################
