@@ -21,6 +21,9 @@ from barbican.plugin.interface import certificate_manager as cert
 LOG = utils.getLogger(__name__)
 
 
+MSEC_UNTIL_CHECK_STATUS = 5000
+
+
 class SimpleCertificatePlugin(cert.CertificatePluginBase):
     """Simple/default certificate plugin."""
 
@@ -49,7 +52,9 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
         :rtype: :class:`ResultDTO`
         """
         LOG.info(u._LI('Invoking issue_certificate_request()'))
-        return cert.ResultDTO(cert.CertificateStatus.WAITING_FOR_CA)
+        return cert.ResultDTO(
+            cert.CertificateStatus.WAITING_FOR_CA,
+            retry_msec=MSEC_UNTIL_CHECK_STATUS)
 
     def modify_certificate_request(self, order_id, order_meta, plugin_meta,
                                    barbican_meta_dto):
@@ -103,7 +108,7 @@ class SimpleCertificatePlugin(cert.CertificatePluginBase):
         :rtype: :class:`ResultDTO`
         """
         LOG.info(u._LI('Invoking check_certificate_status()'))
-        return cert.ResultDTO(cert.CertificateStatus.WAITING_FOR_CA)
+        return cert.ResultDTO(cert.CertificateStatus.CERTIFICATE_GENERATED)
 
     def supports(self, certificate_spec):
         """Indicates whether the plugin supports the certificate type.

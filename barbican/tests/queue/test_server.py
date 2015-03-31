@@ -189,9 +189,11 @@ class WhenCallingScheduleOrderRetryTasks(database_utils.RepositoryTestCase):
         self.result = common.FollowOnProcessingStatusDTO()
 
         self.args = ['args-foo', 'args-bar']
-        self.kwargs = {'foo': 1, 'bar': 2}
-        self.date_to_retry_at = datetime.datetime.now() + datetime.timedelta(
-            milliseconds=self.result.retry_msec)
+        self.kwargs = {'order_id': self.order.id, 'foo': 1, 'bar': 2}
+        self.date_to_retry_at = (
+            datetime.datetime.utcnow() + datetime.timedelta(
+                milliseconds=self.result.retry_msec)
+        )
 
     def test_should_not_schedule_task_due_to_no_result(self):
         retry_rpc_method = server.schedule_order_retry_tasks(None, None, None)
@@ -213,7 +215,7 @@ class WhenCallingScheduleOrderRetryTasks(database_utils.RepositoryTestCase):
         retry_rpc_method = server.schedule_order_retry_tasks(
             self.test_should_schedule_invoking_task_for_retry,
             self.result,
-            self.order.id,
+            None,  # Not used.
             *self.args,
             **self.kwargs)
         database_utils.get_session().commit()  # Flush to the database.
@@ -232,7 +234,7 @@ class WhenCallingScheduleOrderRetryTasks(database_utils.RepositoryTestCase):
         retry_rpc_method = server.schedule_order_retry_tasks(
             None,  # Should be ignored for non-self retries.
             self.result,
-            self.order.id,
+            None,  # Not used.
             *self.args,
             **self.kwargs)
         database_utils.get_session().commit()  # Flush to the database.
@@ -262,11 +264,11 @@ class WhenCallingScheduleOrderRetryTasks(database_utils.RepositoryTestCase):
         self.assertEqual(True, delta_seconds <= 2)
 
 
-class WhenUsingBeginTypeOrderTask(utils.BaseTestCase):
-    """Test using the Tasks class for 'type order' task."""
+class WhenCallingTasksMethod(utils.BaseTestCase):
+    """Test calling methods on the Tasks class."""
 
     def setUp(self):
-        super(WhenUsingBeginTypeOrderTask, self).setUp()
+        super(WhenCallingTasksMethod, self).setUp()
 
         # Mock the 'am I a server process?' flag used by the decorator around
         #   all task methods. Since this test class focuses on testing task
@@ -284,7 +286,7 @@ class WhenUsingBeginTypeOrderTask(utils.BaseTestCase):
         self.tasks = server.Tasks()
 
     def tearDown(self):
-        super(WhenUsingBeginTypeOrderTask, self).tearDown()
+        super(WhenCallingTasksMethod, self).tearDown()
         self.is_server_side_patcher.stop()
 
     @mock.patch('barbican.tasks.resources.BeginTypeOrder')
@@ -306,6 +308,16 @@ class WhenUsingBeginTypeOrderTask(utils.BaseTestCase):
             None, self.order_id, self.external_project_id, updated_meta)
         mock_update_order.return_value.process.assert_called_with(
             self.order_id, self.external_project_id, updated_meta
+        )
+
+    @mock.patch('barbican.tasks.resources.CheckCertificateStatusOrder')
+    def test_should_check_certificate_order(self, mock_check_cert_order):
+        mock_check_cert_order.return_value.process.return_value = None
+
+        self.tasks.check_certificate_status(
+            None, self.order_id, self.external_project_id)
+        mock_check_cert_order.return_value.process.assert_called_with(
+            self.order_id, self.external_project_id
         )
 
     @mock.patch('barbican.tasks.resources.BeginTypeOrder')

@@ -25,17 +25,27 @@ class WhenUsingAsyncTaskClient(utils.BaseTestCase):
     def setUp(self):
         super(WhenUsingAsyncTaskClient, self).setUp()
 
+        # Mock out the queue get_client() call:
         self.mock_client = mock.MagicMock()
         self.mock_client.cast.return_value = None
-
-        queue.get_client = mock.MagicMock(return_value=self.mock_client)
+        get_client_config = {
+            'return_value': self.mock_client
+        }
+        self.get_client_patcher = mock.patch(
+            'barbican.queue.get_client',
+            **get_client_config
+        )
+        self.get_client_patcher.start()
 
         self.client = client.TaskClient()
+
+    def tearDown(self):
+        super(WhenUsingAsyncTaskClient, self).tearDown()
+        self.get_client_patcher.stop()
 
     def test_should_process_type_order(self):
         self.client.process_type_order(order_id=self.order_id,
                                        project_id=self.external_project_id)
-        queue.get_client.assert_called_with()
         self.mock_client.cast.assert_called_with(
             {}, 'process_type_order', order_id=self.order_id,
             project_id=self.external_project_id)
@@ -45,10 +55,17 @@ class WhenUsingAsyncTaskClient(utils.BaseTestCase):
         self.client.update_order(order_id=self.order_id,
                                  project_id=self.external_project_id,
                                  updated_meta=updated_meta)
-        queue.get_client.assert_called_with()
         self.mock_client.cast.assert_called_with(
             {}, 'update_order', order_id=self.order_id,
             project_id=self.external_project_id, updated_meta=updated_meta)
+
+    def test_should_check_certificate_order(self):
+        self.client.check_certificate_status(
+            order_id=self.order_id,
+            project_id=self.external_project_id)
+        self.mock_client.cast.assert_called_with(
+            {}, 'check_certificate_status',
+            order_id=self.order_id, project_id=self.external_project_id)
 
 
 class WhenCreatingDirectTaskClient(utils.BaseTestCase):

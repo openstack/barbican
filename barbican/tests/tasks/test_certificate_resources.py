@@ -22,6 +22,7 @@ from barbican.common import hrefs
 from barbican.model import models
 from barbican.plugin.interface import certificate_manager as cert_man
 from barbican.tasks import certificate_resources as cert_res
+from barbican.tasks import common
 from barbican.tests import utils
 
 
@@ -34,6 +35,10 @@ class WhenPerformingPrivateOperations(utils.BaseTestCase,
         self.order_plugin_meta_repo = mock.MagicMock()
         self.setup_order_plugin_meta_repository_mock(
             self.order_plugin_meta_repo)
+
+        self.order_barbican_meta_repo = mock.MagicMock()
+        self.setup_order_barbican_meta_repository_mock(
+            self.order_barbican_meta_repo)
 
     def test_get_plugin_meta(self):
         class Value(object):
@@ -80,6 +85,21 @@ class WhenPerformingPrivateOperations(utils.BaseTestCase,
         self.order_plugin_meta_repo.save.assert_called_once_with(
             {}, test_order_model)
 
+    def test_get_barbican_meta_with_empty_dict(self):
+        result = cert_res._get_barbican_meta(None)
+
+        self._assert_dict_equal({}, result)
+
+    def test_save_barbican_w_null_meta(self):
+        test_order_model = 'My order model'
+
+        # Test None for plugin meta data.
+        cert_res._save_barbican_metadata(
+            test_order_model, None)
+
+        self.order_barbican_meta_repo.save.assert_called_once_with(
+            {}, test_order_model)
+
     def _assert_dict_equal(self, expected, test):
         self.assertIsInstance(expected, dict)
         self.assertIsInstance(test, dict)
@@ -94,12 +114,12 @@ class WhenPerformingPrivateOperations(utils.BaseTestCase,
                           'between the expected and test dicts')
 
 
-class WhenIssuingCertificateRequests(utils.BaseTestCase,
-                                     utils.MockModelRepositoryMixin):
-    """Tests the 'issue_certificate_request()' function."""
+class BaseCertificateRequestsTestCase(utils.BaseTestCase,
+                                      utils.MockModelRepositoryMixin):
+    """Tests the 'xxxx_certificate_request()' functions."""
 
     def setUp(self):
-        super(WhenIssuingCertificateRequests, self).setUp()
+        super(BaseCertificateRequestsTestCase, self).setUp()
         self.project_id = "56789"
         self.order_id = "12345"
         self.barbican_meta_dto = mock.MagicMock()
@@ -109,9 +129,11 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
         self.result = cert_man.ResultDTO(
             cert_man.CertificateStatus.WAITING_FOR_CA
         )
+        self.result_follow_on = common.FollowOnProcessingStatusDTO()
 
         self.cert_plugin = mock.MagicMock()
         self.cert_plugin.issue_certificate_request.return_value = self.result
+        self.cert_plugin.check_certificate_status.return_value = self.result
 
         self.order_model = mock.MagicMock()
         self.order_model.id = self.order_id
@@ -124,6 +146,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
         self._config_cert_event_plugin()
         self._config_save_meta_plugin()
         self._config_get_meta_plugin()
+        self._config_save_barbican_meta_plugin()
+        self._config_get_barbican_meta_plugin()
         self._config_barbican_meta_dto()
 
         self.private_key_secret_id = "private_key_secret_id"
@@ -168,11 +192,161 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
             "https://localhost/containers/" + self.container_id,
             "subject_name": "cn=host.example.com,ou=dev,ou=us,o=example.com"
         }
-        self.order_model.order_barbican_metadata = {}
 
         # Set up mocked repos
         self.container_repo = mock.MagicMock()
         self.secret_repo = mock.MagicMock()
+
+        # Set up mocked repositories
+        self.setup_container_repository_mock(self.container_repo)
+        self.setup_container_secret_repository_mock()
+        self.setup_order_plugin_meta_repository_mock()
+        self.setup_project_secret_repository_mock()
+        self.setup_secret_repository_mock(self.secret_repo)
+
+    def tearDown(self):
+        super(BaseCertificateRequestsTestCase, self).tearDown()
+        self.cert_plugin_patcher.stop()
+        self.save_plugin_meta_patcher.stop()
+        self.get_plugin_meta_patcher.stop()
+        self.cert_event_plugin_patcher.stop()
+        self.barbican_meta_dto_patcher.stop()
+        self.save_barbican_barbican_meta_patcher.stop()
+        self.get_barbican_plugin_meta_patcher.stop()
+
+    def _test_should_return_waiting_for_ca(self, method_to_test):
+        self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
+
+        method_to_test(
+            self.order_model, self.project_model, self.result_follow_on)
+
+        self.assertEqual(
+            common.RetryTasks.INVOKE_CERT_STATUS_CHECK_TASK,
+            self.result_follow_on.retry_task)
+        self.assertEqual(
+            cert_res.ORDER_STATUS_REQUEST_PENDING.id,
+            self.result_follow_on.status)
+        self.assertEqual(
+            cert_res.ORDER_STATUS_REQUEST_PENDING.message,
+            self.result_follow_on.status_message)
+
+    def _test_should_return_certificate_generated(self, method_to_test):
+        self.result.status = cert_man.CertificateStatus.CERTIFICATE_GENERATED
+
+        method_to_test(
+            self.order_model, self.project_model, self.result_follow_on)
+
+        self.assertEqual(
+            common.RetryTasks.NO_ACTION_REQUIRED,
+            self.result_follow_on.retry_task)
+        self.assertEqual(
+            cert_res.ORDER_STATUS_CERT_GENERATED.id,
+            self.result_follow_on.status)
+        self.assertEqual(
+            cert_res.ORDER_STATUS_CERT_GENERATED.message,
+            self.result_follow_on.status_message)
+
+    def _test_should_raise_client_data_issue_seen(self, method_to_test):
+        self.result.status = cert_man.CertificateStatus.CLIENT_DATA_ISSUE_SEEN
+
+        self.assertRaises(
+            cert_man.CertificateStatusClientDataIssue,
+            method_to_test,
+            self.order_model,
+            self.project_model,
+            self.result_follow_on
+        )
+
+    def _test_should_raise_status_not_supported(self, method_to_test):
+        self.result.status = "Legend of Link"
+
+        self.assertRaises(
+            cert_man.CertificateStatusNotSupported,
+            method_to_test,
+            self.order_model,
+            self.project_model,
+            self.result_follow_on
+        )
+
+    def _config_cert_plugin(self):
+        """Mock the certificate plugin manager."""
+        cert_plugin_config = {
+            'return_value.get_plugin.return_value': self.cert_plugin,
+            'return_value.get_plugin_by_name.return_value': self.cert_plugin,
+            'return_value.get_plugin_by_ca_id.return_value': self.cert_plugin
+        }
+        self.cert_plugin_patcher = mock.patch(
+            'barbican.plugin.interface.certificate_manager'
+            '.CertificatePluginManager',
+            **cert_plugin_config
+        )
+        self.cert_plugin_patcher.start()
+
+    def _config_cert_event_plugin(self):
+        """Mock the certificate event plugin manager."""
+        self.cert_event_plugin_patcher = mock.patch(
+            'barbican.plugin.interface.certificate_manager'
+            '.EVENT_PLUGIN_MANAGER'
+        )
+        self.cert_event_plugin_patcher.start()
+
+    def _config_save_meta_plugin(self):
+        """Mock the save plugin meta function."""
+        self.save_plugin_meta_patcher = mock.patch(
+            'barbican.tasks.certificate_resources._save_plugin_metadata'
+        )
+        self.mock_save_plugin = self.save_plugin_meta_patcher.start()
+
+    def _config_get_meta_plugin(self):
+        """Mock the get plugin meta function."""
+        get_plugin_config = {'return_value': self.plugin_meta}
+        self.get_plugin_meta_patcher = mock.patch(
+            'barbican.tasks.certificate_resources._get_plugin_meta',
+            **get_plugin_config
+        )
+        self.get_plugin_meta_patcher.start()
+
+    def _config_save_barbican_meta_plugin(self):
+        """Mock the save barbican plugin meta function."""
+        self.save_barbican_barbican_meta_patcher = mock.patch(
+            'barbican.tasks.certificate_resources._save_barbican_metadata'
+        )
+        self.mock_barbican_save_plugin = (
+            self.save_barbican_barbican_meta_patcher.start()
+        )
+
+    def _config_get_barbican_meta_plugin(self):
+        """Mock the get barbican plugin meta function."""
+        get_barbican_plugin_config = {'return_value': self.barbican_meta}
+        self.get_barbican_plugin_meta_patcher = mock.patch(
+            'barbican.tasks.certificate_resources._get_barbican_meta',
+            **get_barbican_plugin_config
+        )
+        self.get_barbican_plugin_meta_patcher.start()
+
+    def _config_barbican_meta_dto(self):
+        """Mock the BarbicanMetaDTO."""
+        get_plugin_config = {'return_value': self.barbican_meta_dto}
+        self.barbican_meta_dto_patcher = mock.patch(
+            'barbican.plugin.interface.certificate_manager'
+            '.BarbicanMetaDTO',
+            **get_plugin_config
+        )
+        self.barbican_meta_dto_patcher.start()
+
+
+class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
+    """Tests the 'issue_certificate_request()' function."""
+
+    def setUp(self):
+        super(WhenIssuingCertificateRequests, self).setUp()
+
+        self.private_key_secret_id = "private_key_secret_id"
+        self.public_key_secret_id = "public_key_secret_id"
+        self.passphrase_secret_id = "passphrase_secret_id"
+        self.private_key_value = None
+        self.public_key_value = "my public key"
+        self.passphrase_value = "my passphrase"
         self.ca_repo = mock.MagicMock()
         self.preferred_ca_repo = mock.MagicMock()
 
@@ -184,12 +358,6 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
             self.project_id,
             "ca_id")
 
-        # Set up mocked repositories
-        self.setup_container_repository_mock(self.container_repo)
-        self.setup_container_secret_repository_mock()
-        self.setup_order_plugin_meta_repository_mock()
-        self.setup_project_secret_repository_mock()
-        self.setup_secret_repository_mock(self.secret_repo)
         self.setup_ca_repository_mock(self.ca_repo)
         self.setup_preferred_ca_repository_mock(self.preferred_ca_repo)
 
@@ -205,37 +373,33 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
 
     def tearDown(self):
         super(WhenIssuingCertificateRequests, self).tearDown()
-        self.cert_plugin_patcher.stop()
-        self.save_plugin_meta_patcher.stop()
-        self.get_plugin_meta_patcher.stop()
-        self.cert_event_plugin_patcher.stop()
-        self.barbican_meta_dto_patcher.stop()
 
     def test_should_return_waiting_for_ca(self):
-        self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
+        self._test_should_return_waiting_for_ca(
+            cert_res.issue_certificate_request)
 
-        cert_res.issue_certificate_request(self.order_model,
-                                           self.project_model)
+        self._verify_issue_certificate_plugins_called()
+
+    def test_should_return_waiting_for_ca_as_retry(self):
+        # For a retry, the plugin-name to look up would have already been
+        # saved into the barbican metadata for the order, so just make sure
+        # we can retrieve it.
+        self.barbican_meta.update({'plugin_name': 'foo-plugin'})
+
+        self._test_should_return_waiting_for_ca(
+            cert_res.issue_certificate_request)
 
         self._verify_issue_certificate_plugins_called()
 
     def test_should_return_certificate_generated(self):
-        self.result.status = cert_man.CertificateStatus.CERTIFICATE_GENERATED
-
-        cert_res.issue_certificate_request(self.order_model,
-                                           self.project_model)
+        self._test_should_return_certificate_generated(
+            cert_res.issue_certificate_request)
 
         self._verify_issue_certificate_plugins_called()
 
     def test_should_raise_client_data_issue_seen(self):
-        self.result.status = cert_man.CertificateStatus.CLIENT_DATA_ISSUE_SEEN
-
-        self.assertRaises(
-            cert_man.CertificateStatusClientDataIssue,
-            cert_res.issue_certificate_request,
-            self.order_model,
-            self.project_model
-        )
+        self._test_should_raise_client_data_issue_seen(
+            cert_res.issue_certificate_request)
 
     def _do_pyopenssl_stored_key_request(self):
         self.container = models.Container(
@@ -254,13 +418,14 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
 
         cert_res.issue_certificate_request(self.order_model,
-                                           self.project_model)
+                                           self.project_model,
+                                           self.result_follow_on)
 
     def test_should_return_for_pyopenssl_stored_key(self):
         self._do_pyopenssl_stored_key_request()
         self._verify_issue_certificate_plugins_called()
         self.assertIsNotNone(
-            self.order_model.order_barbican_metadata['generated_csr'])
+            self.order_model.order_barbican_metadata.get('generated_csr'))
 
         # TODO(alee-3) Add tests to validate the request based on the validator
         # code that dave-mccowan is adding.
@@ -306,7 +471,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
 
         cert_res.issue_certificate_request(self.order_model,
-                                           self.project_model)
+                                           self.project_model,
+                                           self.result_follow_on)
 
         self._verify_issue_certificate_plugins_called()
         self.assertIsNotNone(
@@ -332,7 +498,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
 
         cert_res.issue_certificate_request(self.order_model,
-                                           self.project_model)
+                                           self.project_model,
+                                           self.result_follow_on)
 
         self._verify_issue_certificate_plugins_called()
         self.assertIsNotNone(
@@ -357,7 +524,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
 
         cert_res.issue_certificate_request(self.order_model,
-                                           self.project_model)
+                                           self.project_model,
+                                           self.result_follow_on)
 
         self._verify_issue_certificate_plugins_called()
         self.assertIsNotNone(
@@ -384,7 +552,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
         self.assertRaises(excep.StoredKeyContainerNotFound,
                           cert_res.issue_certificate_request,
                           self.order_model,
-                          self.project_model)
+                          self.project_model,
+                          self.result_follow_on)
 
     def test_should_raise_for_pycrypto_stored_key_no_private_key(self):
         self.container = models.Container(
@@ -404,7 +573,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
         self.assertRaises(excep.StoredKeyPrivateKeyNotFound,
                           cert_res.issue_certificate_request,
                           self.order_model,
-                          self.project_model)
+                          self.project_model,
+                          self.result_follow_on)
 
     def test_should_return_for_pyopenssl_stored_key_with_extensions(self):
         self.container = models.Container(
@@ -425,7 +595,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
 
         cert_res.issue_certificate_request(self.order_model,
-                                           self.project_model)
+                                           self.project_model,
+                                           self.result_follow_on)
 
         self._verify_issue_certificate_plugins_called()
         self.assertIsNotNone(
@@ -442,7 +613,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
             cert_man.CertificateStatusInvalidOperation,
             cert_res.issue_certificate_request,
             self.order_model,
-            self.project_model
+            self.project_model,
+            self.result_follow_on
         )
 
     def test_should_return_ca_unavailable_for_request(self):
@@ -455,7 +627,8 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
         order_ref = hrefs.convert_order_to_href(self.order_id)
 
         cert_res.issue_certificate_request(self.order_model,
-                                           self.project_model)
+                                           self.project_model,
+                                           self.result_follow_on)
 
         self._verify_issue_certificate_plugins_called()
 
@@ -466,16 +639,19 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
             status_msg,
             retry_msec
         )
+        self.assertEqual(
+            common.RetryTasks.INVOKE_SAME_TASK,
+            self.result_follow_on.retry_task)
+        self.assertEqual(
+            cert_res.ORDER_STATUS_CA_UNAVAIL_FOR_ISSUE.id,
+            self.result_follow_on.status)
+        self.assertEqual(
+            cert_res.ORDER_STATUS_CA_UNAVAIL_FOR_ISSUE.message,
+            self.result_follow_on.status_message)
 
     def test_should_raise_status_not_supported(self):
-        self.result.status = "Legend of Link"
-
-        self.assertRaises(
-            cert_man.CertificateStatusNotSupported,
-            cert_res.issue_certificate_request,
-            self.order_model,
-            self.project_model
-        )
+        self._test_should_raise_status_not_supported(
+            cert_res.issue_certificate_request)
 
     def _verify_issue_certificate_plugins_called(self):
         self.cert_plugin.issue_certificate_request.assert_called_once_with(
@@ -490,49 +666,82 @@ class WhenIssuingCertificateRequests(utils.BaseTestCase,
             self.plugin_meta
         )
 
-    def _config_cert_plugin(self):
-        """Mock the certificate plugin manager."""
-        cert_plugin_config = {
-            'return_value.get_plugin.return_value': self.cert_plugin,
-            'return_value.get_plugin_by_ca_id.return_value': self.cert_plugin
-        }
-        self.cert_plugin_patcher = mock.patch(
-            'barbican.plugin.interface.certificate_manager'
-            '.CertificatePluginManager',
-            **cert_plugin_config
+        self.mock_barbican_save_plugin.assert_called_once_with(
+            self.order_model,
+            self.barbican_meta
         )
-        self.cert_plugin_patcher.start()
 
-    def _config_cert_event_plugin(self):
-        """Mock the certificate event plugin manager."""
-        self.cert_event_plugin_patcher = mock.patch(
-            'barbican.plugin.interface.certificate_manager'
-            '.EVENT_PLUGIN_MANAGER'
-        )
-        self.cert_event_plugin_patcher.start()
 
-    def _config_save_meta_plugin(self):
-        """Mock the save plugin meta function."""
-        self.save_plugin_meta_patcher = mock.patch(
-            'barbican.tasks.certificate_resources._save_plugin_metadata'
-        )
-        self.mock_save_plugin = self.save_plugin_meta_patcher.start()
+class WhenCheckingCertificateRequests(BaseCertificateRequestsTestCase):
+    """Tests the 'check_certificate_request()' function."""
 
-    def _config_get_meta_plugin(self):
-        """Mock the get plugin meta function."""
-        get_plugin_config = {'return_value': self.plugin_meta}
-        self.get_plugin_meta_patcher = mock.patch(
-            'barbican.tasks.certificate_resources._get_plugin_meta',
-            **get_plugin_config
-        )
-        self.get_plugin_meta_patcher.start()
+    def setUp(self):
+        super(WhenCheckingCertificateRequests, self).setUp()
 
-    def _config_barbican_meta_dto(self):
-        """Mock the BarbicanMetaDTO."""
-        get_plugin_config = {'return_value': self.barbican_meta_dto}
-        self.barbican_meta_dto_patcher = mock.patch(
-            'barbican.plugin.interface.certificate_manager'
-            '.BarbicanMetaDTO',
-            **get_plugin_config
+    def tearDown(self):
+        super(WhenCheckingCertificateRequests, self).tearDown()
+
+    def test_should_return_waiting_for_ca(self):
+        self._test_should_return_waiting_for_ca(
+            cert_res.check_certificate_request)
+
+        self._verify_check_certificate_plugins_called()
+
+    def test_should_return_certificate_generated(self):
+        self._test_should_return_certificate_generated(
+            cert_res.check_certificate_request)
+
+        self._verify_check_certificate_plugins_called()
+
+    def test_should_raise_client_data_issue_seen(self):
+        self._test_should_raise_client_data_issue_seen(
+            cert_res.check_certificate_request)
+
+    def test_should_raise_status_not_supported(self):
+        self._test_should_raise_status_not_supported(
+            cert_res.check_certificate_request)
+
+    def test_should_return_ca_unavailable_for_request(self):
+        retry_msec = 123
+        status_msg = 'Test status'
+        self.result.status = (
+            cert_man.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST)
+        self.result.retry_msec = retry_msec
+        self.result.status_message = status_msg
+        order_ref = hrefs.convert_order_to_href(self.order_id)
+
+        cert_res.check_certificate_request(self.order_model,
+                                           self.project_model,
+                                           self.result_follow_on)
+
+        self._verify_check_certificate_plugins_called()
+
+        epm = self.cert_event_plugin_patcher.target.EVENT_PLUGIN_MANAGER
+        epm.notify_ca_is_unavailable.assert_called_once_with(
+            self.project_id,
+            order_ref,
+            status_msg,
+            retry_msec
         )
-        self.barbican_meta_dto_patcher.start()
+        self.assertEqual(
+            common.RetryTasks.INVOKE_SAME_TASK,
+            self.result_follow_on.retry_task)
+        self.assertEqual(
+            cert_res.ORDER_STATUS_CA_UNAVAIL_FOR_CHECK.id,
+            self.result_follow_on.status)
+        self.assertEqual(
+            cert_res.ORDER_STATUS_CA_UNAVAIL_FOR_CHECK.message,
+            self.result_follow_on.status_message)
+
+    def _verify_check_certificate_plugins_called(self):
+        self.cert_plugin.check_certificate_status.assert_called_once_with(
+            self.order_id,
+            self.order_meta,
+            self.plugin_meta,
+            self.barbican_meta_dto
+        )
+
+        self.mock_save_plugin.assert_called_once_with(
+            self.order_model,
+            self.plugin_meta
+        )

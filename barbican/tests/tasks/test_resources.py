@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import mock
+import six
 
 from barbican import i18n as u
 from barbican.model import models
@@ -169,6 +170,7 @@ class WhenBeginningKeyTypeOrder(BaseOrderTestCase):
     @mock.patch('barbican.plugin.resources.generate_secret')
     def test_should_process_key_order(self, mock_generate_secret):
         mock_generate_secret.return_value = self.secret
+
         self.resource.process(self.order.id, self.external_project_id)
 
         self.order_repo.get.assert_called_once_with(
@@ -251,6 +253,57 @@ class WhenBeginningKeyTypeOrder(BaseOrderTestCase):
             self.order.id,
             self.external_project_id,
         )
+
+
+class WhenBeginningCertificateTypeOrder(BaseOrderTestCase):
+
+    def setUp(self):
+        super(WhenBeginningCertificateTypeOrder, self).setUp()
+
+        self.order.type = models.OrderType.CERTIFICATE
+        self.resource = resources.BeginTypeOrder()
+
+    @mock.patch(
+        'barbican.tasks.certificate_resources.issue_certificate_request')
+    def test_should_process_order_no_container(
+            self, mock_issue_cert_request):
+        mock_issue_cert_request.return_value = None
+
+        self.resource.process(self.order.id, self.external_project_id)
+
+        self.order_repo.get.assert_called_once_with(
+            entity_id=self.order.id,
+            external_project_id=self.external_project_id)
+
+        self.assertEqual(self.order.status, models.States.ACTIVE)
+
+        mock_issue_cert_request.assert_called_once_with(
+            self.order,
+            self.project,
+            mock.ANY
+        )
+        self.assertIsNone(self.order.container_id)
+
+    @mock.patch(
+        'barbican.tasks.certificate_resources.issue_certificate_request')
+    def test_should_process_order_with_container(
+            self, mock_issue_cert_request):
+        mock_issue_cert_request.return_value = self.container
+
+        self.resource.process(self.order.id, self.external_project_id)
+
+        self.order_repo.get.assert_called_once_with(
+            entity_id=self.order.id,
+            external_project_id=self.external_project_id)
+
+        self.assertEqual(self.order.status, models.States.ACTIVE)
+
+        mock_issue_cert_request.assert_called_once_with(
+            self.order,
+            self.project,
+            mock.ANY
+        )
+        self.assertEqual(self.container.id, self.order.container_id)
 
 
 class WhenUpdatingOrder(BaseOrderTestCase):
@@ -398,3 +451,73 @@ class WhenBeginningAsymmetricTypeOrder(BaseOrderTestCase):
             self.order.id,
             self.external_project_id,
         )
+
+
+class WhenCheckingCertificateStatus(BaseOrderTestCase):
+
+    def setUp(self):
+        super(WhenCheckingCertificateStatus, self).setUp()
+
+        self.order.type = models.OrderType.CERTIFICATE
+
+        self.resource = resources.CheckCertificateStatusOrder()
+
+    @mock.patch(
+        'barbican.tasks.certificate_resources.check_certificate_request')
+    def test_should_process_order_no_container(
+            self, mock_check_cert_request):
+        mock_check_cert_request.return_value = None
+
+        self.resource.process(self.order.id, self.external_project_id)
+
+        self.order_repo.get.assert_called_once_with(
+            entity_id=self.order.id,
+            external_project_id=self.external_project_id)
+
+        self.assertEqual(self.order.status, models.States.ACTIVE)
+
+        mock_check_cert_request.assert_called_once_with(
+            self.order,
+            self.project,
+            mock.ANY
+        )
+        self.assertIsNone(self.order.container_id)
+
+    @mock.patch(
+        'barbican.tasks.certificate_resources.check_certificate_request')
+    def test_should_process_order_with_container(
+            self, mock_check_cert_request):
+        mock_check_cert_request.return_value = self.container
+
+        self.resource.process(self.order.id, self.external_project_id)
+
+        self.order_repo.get.assert_called_once_with(
+            entity_id=self.order.id,
+            external_project_id=self.external_project_id)
+
+        self.assertEqual(self.order.status, models.States.ACTIVE)
+
+        mock_check_cert_request.assert_called_once_with(
+            self.order,
+            self.project,
+            mock.ANY
+        )
+        self.assertEqual(self.container.id, self.order.container_id)
+
+    def test_should_fail_with_bogus_order_type(self):
+        self.order.type = 'bogus-type'
+
+        self.assertRaises(
+            NotImplementedError,
+            self.resource.process,
+            self.order.id,
+            self.external_project_id,
+        )
+
+        # Order state should be set to ERROR.
+        self.assertEqual(models.States.ERROR, self.order.status)
+        self.assertEqual(
+            six.u('Check Certificate Order Status failure seen - '
+                  'please contact site administrator.'),
+            self.order.error_reason)
+        self.assertEqual(500, self.order.error_status_code)

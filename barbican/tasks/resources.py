@@ -27,6 +27,7 @@ from barbican.model import models
 from barbican.model import repositories as rep
 from barbican.plugin import resources as plugin
 from barbican.tasks import certificate_resources as cert
+from barbican.tasks import common
 
 
 LOG = utils.getLogger(__name__)
@@ -221,7 +222,7 @@ class BeginTypeOrder(BaseTask):
         return self.helper.retrieve_entity(*args, **kwargs)
 
     def handle_processing(self, order, *args, **kwargs):
-        self.handle_order(order)
+        return self.handle_order(order)
 
     def handle_order(self, order):
         """Handle secret creation using meta info.
@@ -234,7 +235,12 @@ class BeginTypeOrder(BaseTask):
         if type is certificate
             TBD
         :param order: Order to process.
+        :return: None if no follow on processing is needed for this task,
+                 otherwise a :class:`FollowOnProcessingStatusDTO` instance
+                 with information on how to process this task into the future.
         """
+        result_follow_on = common.FollowOnProcessingStatusDTO()
+
         order_info = order.to_dict_fields()
         order_type = order_info.get('type')
         meta_info = order_info.get('meta')
@@ -263,7 +269,8 @@ class BeginTypeOrder(BaseTask):
             LOG.debug("...done creating asymmetric order's secret.")
         elif order_type == models.OrderType.CERTIFICATE:
             # Request a certificate
-            new_container = cert.issue_certificate_request(order, project)
+            new_container = cert.issue_certificate_request(
+                order, project, result_follow_on)
             if new_container:
                 order.container_id = new_container.id
             LOG.debug("...done requesting a certificate.")
@@ -271,6 +278,8 @@ class BeginTypeOrder(BaseTask):
             raise NotImplementedError(
                 u._('Order type "{order_type}" not implemented.').format(
                     order_type=order_type))
+
+        return result_follow_on
 
     def handle_error(self, order, status, message, exception,
                      *args, **kwargs):
@@ -317,6 +326,63 @@ class UpdateOrder(BaseTask):
                     order_type=order_type))
 
         LOG.debug("...done updating order.")
+
+    def handle_error(self, order, status, message, exception,
+                     *args, **kwargs):
+        self.helper.handle_error(
+            order, status, message, exception, *args, **kwargs)
+
+    def handle_success(self, order, result, *args, **kwargs):
+        self.helper.handle_success(
+            order, result, *args, **kwargs)
+
+
+class CheckCertificateStatusOrder(BaseTask):
+    """Handles checking the status of a certificate order."""
+
+    def get_name(self):
+        return u._('Check Certificate Order Status')
+
+    def __init__(self):
+        LOG.debug('Creating CheckCertificateStatusOrder task processor')
+        self.project_repo = rep.get_project_repository()
+        self.helper = _OrderTaskHelper()
+
+    def retrieve_entity(self, *args, **kwargs):
+        return self.helper.retrieve_entity(*args, **kwargs)
+
+    def handle_processing(self, order, *args, **kwargs):
+        return self.handle_order(order)
+
+    def handle_order(self, order):
+        """Handle checking the status of a certificate order.
+
+        :param order: Order to process.
+        :return: None if no follow on processing is needed for this task,
+                 otherwise a :class:`FollowOnProcessingStatusDTO` instance
+                 with information on how to process this task into the future.
+        """
+        result_follow_on = common.FollowOnProcessingStatusDTO()
+
+        order_info = order.to_dict_fields()
+        order_type = order_info.get('type')
+
+        # Retrieve the project.
+        project = self.project_repo.get(order.project_id)
+
+        if order_type != models.OrderType.CERTIFICATE:
+            raise NotImplementedError(
+                u._('Order type "{order_type}" not supported.').format(
+                    order_type=order_type))
+
+        # Request a certificate
+        new_container = cert.check_certificate_request(
+            order, project, result_follow_on)
+        if new_container:
+            order.container_id = new_container.id
+        LOG.debug("...done checking status of a certificate order.")
+
+        return result_follow_on
 
     def handle_error(self, order, status, message, exception,
                      *args, **kwargs):

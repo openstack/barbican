@@ -11,13 +11,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import time
 
 import eventlet
 import mock
 import oslotest.base as oslotest
 
+from barbican.model import models
+from barbican.model import repositories
 from barbican.queue import retry_scheduler
+from barbican.tests import database_utils
 
 # Oslo messaging RPC server uses eventlet.
 eventlet.monkey_patch()
@@ -27,7 +31,7 @@ INITIAL_DELAY_SECONDS = 5.0
 NEXT_RETRY_SECONDS = 5.0
 
 
-class WhenRunningPeriodicServerRetryLogic(oslotest.BaseTestCase):
+class WhenRunningPeriodicServerRetryLogic(database_utils.RepositoryTestCase):
     """Tests the retry logic invoked by the periodic task retry server.
 
     These tests are only concerned with the logic of the invoked periodic
@@ -40,27 +44,96 @@ class WhenRunningPeriodicServerRetryLogic(oslotest.BaseTestCase):
         super(WhenRunningPeriodicServerRetryLogic, self).setUp()
 
         retry_scheduler.CONF.set_override(
-            "task_retry_tg_initial_delay",
+            "initial_delay_seconds",
             2 * INITIAL_DELAY_SECONDS,
             group='retry_scheduler')
 
-        self.database_patcher = _DatabasePatcherHelper()
-        self.database_patcher.start()
+        retry_scheduler.CONF.set_override(
+            "periodic_interval_max_seconds",
+            NEXT_RETRY_SECONDS,
+            group='retry_scheduler')
+
+        self.queue_client = mock.MagicMock()
 
         self.periodic_server = retry_scheduler.PeriodicServer(
-            queue_resource=None)
+            queue_resource=self.queue_client)
 
     def tearDown(self):
         super(WhenRunningPeriodicServerRetryLogic, self).tearDown()
         self.periodic_server.stop()
-        self.database_patcher.stop()
 
-    def test_should_perform_retry_processing(self):
-        next_interval = self.periodic_server._check_retry_tasks()
+    def test_should_perform_retry_processing_no_tasks(self):
+        interval = self.periodic_server._check_retry_tasks()
 
-        # TODO(john-wood-w) Will be updated by future CR with actual retry
-        # logic unit tests.
-        self.assertEqual(60, next_interval)
+        self.assertEqual(
+            True,
+            NEXT_RETRY_SECONDS * .8 <= interval < NEXT_RETRY_SECONDS * 1.2)
+
+    def test_should_perform_retry_processing_one_task(self):
+        # Add one retry task.
+        args, kwargs, retry_repo = self._create_retry_task()
+
+        # Retrieve this entity.
+        entities, _, _, total = retry_repo.get_by_create_date()
+        self.assertEqual(1, total)
+
+        time.sleep(1)
+
+        interval = self.periodic_server._check_retry_tasks()
+
+        # Attempt to retrieve this entity, should have been deleted above.
+        entities, _, _, total = retry_repo.get_by_create_date(
+            suppress_exception=True)
+        self.assertEqual(0, total)
+
+        self.assertEqual(
+            True,
+            NEXT_RETRY_SECONDS * .8 <= interval < NEXT_RETRY_SECONDS * 1.2)
+        self.queue_client.test_task.assert_called_once_with(
+            *args, **kwargs
+        )
+
+    @mock.patch('barbican.model.repositories.commit')
+    def test_should_fail_and_force_a_rollback(self, mock_commit):
+        mock_commit.side_effect = Exception()
+
+        # Add one retry task.
+        args, kwargs, retry_repo = self._create_retry_task()
+
+        # Retrieve this entity.
+        entities, _, _, total = retry_repo.get_by_create_date()
+        self.assertEqual(1, total)
+
+        time.sleep(1)
+
+        self.periodic_server._check_retry_tasks()
+
+        # Attempt to retrieve this entity, should not have been deleted above.
+        entities, _, _, total = retry_repo.get_by_create_date(
+            suppress_exception=True)
+        self.assertEqual(1, total)
+
+    def _create_retry_task(self):
+        # Add one retry task:
+        task = 'test_task'
+        args = ('foo', 'bar')
+        kwargs = {'k_foo': 1, 'k_bar': 2}
+
+        order = database_utils.create_order()
+
+        retry = models.OrderRetryTask()
+        retry.order_id = order.id
+        retry.retry_at = datetime.datetime.utcnow()
+        retry.retry_task = task
+        retry.retry_args = args
+        retry.retry_kwargs = kwargs
+
+        retry_repo = repositories.get_order_retry_tasks_repository()
+        retry_repo.create_from(retry)
+
+        database_utils.get_session().commit()
+
+        return args, kwargs, retry_repo
 
 
 class WhenRunningPeriodicServer(oslotest.BaseTestCase):
@@ -76,7 +149,7 @@ class WhenRunningPeriodicServer(oslotest.BaseTestCase):
         super(WhenRunningPeriodicServer, self).setUp()
 
         retry_scheduler.CONF.set_override(
-            "task_retry_tg_initial_delay",
+            "initial_delay_seconds",
             INITIAL_DELAY_SECONDS,
             group='retry_scheduler')
 
