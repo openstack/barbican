@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from six import moves
-import testtools
 
 from barbican.common import hrefs
 from barbican.common import resources as res
@@ -193,7 +192,6 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
             expect_errors=True)
         self.assertEqual(405, resp.status_int)
 
-    @testtools.skip("Still to be fixed")
     def test_should_set_preferred_modify_existing(self):
         self.create_cas()
         self.app.post(
@@ -218,7 +216,6 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
             expect_errors=True)
         self.assertEqual(405, resp.status_int)
 
-    @testtools.skip("Still to be fixed")
     def test_should_set_global_preferred(self):
         self.create_cas()
         self.app.post(

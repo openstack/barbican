@@ -1374,19 +1374,29 @@ class CertificateAuthorityRepo(BaseRepo):
 
         expiration = parsed_ca.pop('expiration', None)
         expiration_iso = timeutils.parse_isotime(expiration.strip())
-        old_ca.expiration = timeutils.normalize_time(expiration_iso)
+        new_expiration = timeutils.normalize_time(expiration_iso)
 
         session = self.get_session(session)
-        for k, v in old_ca.ca_meta.items():
-            v.delete(session)
+        query = session.query(models.CertificateAuthority).filter_by(
+            id=old_ca.id, deleted=False)
+        entity = query.one()
+
+        entity.expiration = new_expiration
+
+        for k, v in entity.ca_meta.items():
+            if k not in parsed_ca.keys():
+                v.delete(session)
 
         for key in parsed_ca:
-            meta = models.CertificateAuthorityMetadatum(key, parsed_ca[key])
-            old_ca.ca_meta[key] = meta
+            if key not in entity.ca_meta.keys():
+                meta = models.CertificateAuthorityMetadatum(
+                    key, parsed_ca[key])
+                entity.ca_meta[key] = meta
+            else:
+                entity.ca_meta[key].value = parsed_ca[key]
 
-        old_ca.save(session)
-
-        return old_ca
+        entity.save()
+        return entity
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
@@ -1580,6 +1590,17 @@ class PreferredCertificateAuthorityRepo(BaseRepo):
         if len(pref_cas) > 0:
             return pref_cas[0]
         return None
+
+    def update_global_preferred_ca(self, new_ca):
+        self.update_preferred_ca(self.PREFERRED_PROJECT_ID, new_ca)
+
+    def update_preferred_ca(self, project_id, new_ca):
+        session = self.get_session()
+        query = session.query(models.PreferredCertificateAuthority).filter_by(
+            project_id=project_id)
+        entity = query.one()
+        entity.ca_id = new_ca.id
+        entity.save()
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
