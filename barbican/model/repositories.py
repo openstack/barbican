@@ -56,6 +56,7 @@ _KEK_DATUM_REPOSITORY = None
 _ORDER_PLUGIN_META_REPOSITORY = None
 _ORDER_BARBICAN_META_REPOSITORY = None
 _ORDER_REPOSITORY = None
+_ORDER_RETRY_TASK_REPOSITORY = None
 _PREFERRED_CA_REPOSITORY = None
 _PROJECT_REPOSITORY = None
 _PROJECT_CA_REPOSITORY = None
@@ -538,6 +539,10 @@ class ProjectRepo(BaseRepo):
         """Sub-class hook: build a retrieve query."""
         return session.query(models.Project).filter_by(id=entity_id)
 
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
     def find_by_external_project_id(self, external_project_id,
                                     suppress_exception=False, session=None):
         session = self.get_session(session)
@@ -1002,6 +1007,71 @@ class OrderBarbicanMetadatumRepo(BaseRepo):
         """Sub-class hook: build a retrieve query."""
         query = session.query(models.OrderBarbicanMetadatum)
         return query.filter_by(id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
+class OrderRetryTaskRepo(BaseRepo):
+    """Repository for the OrderRetryTask entity."""
+
+    def get_by_create_date(
+            self, only_at_or_before_this_date=None,
+            offset_arg=None, limit_arg=None,
+            suppress_exception=False,
+            session=None):
+        """Returns a list of order retry task entities
+
+        The list is ordered by the date they were created at and paged
+        based on the offset and limit fields.
+
+        :param only_at_or_before_this_date: If specified, only entities at or
+            before this date are returned.
+        :param offset_arg: The entity number where the query result should
+            start.
+        :param limit_arg: The maximum amount of entities in the result set.
+        :param suppress_exception: Whether NoResultFound exceptions should be
+            suppressed.
+        :param session: SQLAlchemy session object.
+
+        :returns: Tuple consisting of (list_of_entities, offset, limit, total).
+        """
+
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
+
+        session = self.get_session(session)
+
+        query = session.query(models.OrderRetryTask)
+        query = query.order_by(models.OrderRetryTask.created_at)
+        query = query.filter_by(deleted=False)
+        if only_at_or_before_this_date:
+            query = query.filter(
+                models.OrderRetryTask.retry_at <= only_at_or_before_this_date)
+
+        start = offset
+        end = offset + limit
+        LOG.debug('Retrieving from %s to %s', start, end)
+        total = query.count()
+        entities = query[start:end]
+        LOG.debug('Number entities retrieved: %s out of %s',
+                  len(entities), total
+                  )
+
+        if total <= 0 and not suppress_exception:
+            _raise_no_entities_found(self._do_entity_name())
+
+        return entities, offset, limit, total
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "OrderRetryTask"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+        query = session.query(models.OrderRetryTask)
+        query = query.filter_by(id=entity_id, deleted=False)
+        return query
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
@@ -1589,6 +1659,12 @@ def get_order_repository():
     """Returns a singleton Order repository instance."""
     global _ORDER_REPOSITORY
     return _get_repository(_ORDER_REPOSITORY, OrderRepo)
+
+
+def get_order_retry_tasks_repository():
+    """Returns a singleton OrderRetryTask repository instance."""
+    global _ORDER_RETRY_TASK_REPOSITORY
+    return _get_repository(_ORDER_RETRY_TASK_REPOSITORY, OrderRetryTaskRepo)
 
 
 def get_preferred_ca_repository():

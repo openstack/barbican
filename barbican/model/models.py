@@ -634,7 +634,7 @@ class OrderBarbicanMetadatum(BASE, SoftDeleteMixIn, ModelBase):
                 'value': self.value}
 
 
-class OrderRetryTask(BASE, SoftDeleteMixIn):
+class OrderRetryTask(BASE, SoftDeleteMixIn, ModelBase):
 
     __tablename__ = "order_retry_tasks"
     __table_args__ = {"mysql_engine": "InnoDB"}
@@ -648,12 +648,9 @@ class OrderRetryTask(BASE, SoftDeleteMixIn):
     )
     retry_task = sa.Column(sa.Text, nullable=False)
     retry_at = sa.Column(sa.DateTime, default=None, nullable=False)
-    retry_args = sa.Column(sa.Text, nullable=False)
-    retry_kwargs = sa.Column(sa.Text, nullable=False)
+    retry_args = sa.Column(JsonBlob(), nullable=False)
+    retry_kwargs = sa.Column(JsonBlob(), nullable=False)
     retry_count = sa.Column(sa.Integer, nullable=False, default=0)
-
-    def get_retry_params(self):
-        return json.loads(self.retry_args), json.loads(self.retry_kwargs)
 
 
 class Container(BASE, SoftDeleteMixIn, ModelBase):

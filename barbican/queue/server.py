@@ -16,6 +16,7 @@
 """
 Server-side (i.e. worker side) classes and logic.
 """
+import datetime
 import functools
 
 try:
@@ -29,6 +30,7 @@ from oslo_config import cfg
 
 from barbican.common import utils
 from barbican import i18n as u
+from barbican.model import models
 from barbican.model import repositories
 from barbican.openstack.common import service
 from barbican import queue
@@ -50,13 +52,13 @@ MAP_RETRY_TASKS = {
 }
 
 
-def retryable(fn):
-    """Provides retry/scheduling support to tasks."""
+def retryable_order(fn):
+    """Provides retry/scheduling support to Order-related tasks."""
 
     @functools.wraps(fn)
     def wrapper(method_self, *args, **kwargs):
         result = fn(method_self, *args, **kwargs)
-        retry_rpc_method = schedule_retry_tasks(
+        retry_rpc_method = schedule_order_retry_tasks(
             fn, result, *args, **kwargs)
         if retry_rpc_method:
             LOG.info(
@@ -131,14 +133,16 @@ def monitored(fn):  # pragma: no cover
     return fn
 
 
-def schedule_retry_tasks(invoked_task, retry_result, *args, **kwargs):
-    """Schedules a task for retry.
+def schedule_order_retry_tasks(
+        invoked_task, retry_result, order_id, *args, **kwargs):
+    """Schedules an Order-related task for retry.
 
     :param invoked_task: The RPC method that was just invoked.
     :param retry_result: A :class:`FollowOnProcessingStatusDTO` if follow-on
                          processing (such as retrying this or another task) is
                          required, otherwise None indicates no such follow-on
                          processing is required.
+    :param order_id: ID of the Order entity the task to retry is for.
     :param args: List of arguments passed in to the just-invoked task.
     :param kwargs: Dict of arguments passed in to the just-invoked task.
     :return: Returns the RPC task method scheduled for a retry, None if no RPC
@@ -147,7 +151,7 @@ def schedule_retry_tasks(invoked_task, retry_result, *args, **kwargs):
 
     retry_rpc_method = None
 
-    if not retry_result:
+    if not retry_result or not order_id:
         pass
 
     elif common.RetryTasks.INVOKE_SAME_TASK == retry_result.retry_task:
@@ -159,9 +163,22 @@ def schedule_retry_tasks(invoked_task, retry_result, *args, **kwargs):
         retry_rpc_method = MAP_RETRY_TASKS.get(retry_result.retry_task)
 
     if retry_rpc_method:
-        # TODO(john-wood-w) Add retry task to the retry table here.
         LOG.debug(
             'Scheduling RPC method for retry: {0}'.format(retry_rpc_method))
+
+        date_to_retry_at = datetime.datetime.now() + datetime.timedelta(
+            milliseconds=retry_result.retry_msec)
+
+        retry_model = models.OrderRetryTask()
+        retry_model.order_id = order_id
+        retry_model.retry_task = retry_rpc_method
+        retry_model.retry_at = date_to_retry_at
+        retry_model.retry_args = args
+        retry_model.retry_kwargs = kwargs
+        retry_model.retry_count = 0
+
+        retry_repo = repositories.get_order_retry_tasks_repository()
+        retry_repo.create_from(retry_model)
 
     return retry_rpc_method
 
@@ -183,7 +200,7 @@ class Tasks(object):
 
     @monitored
     @transactional
-    @retryable
+    @retryable_order
     def process_type_order(self, context, order_id, project_id):
         """Process TypeOrder."""
         LOG.info(
@@ -194,7 +211,7 @@ class Tasks(object):
 
     @monitored
     @transactional
-    @retryable
+    @retryable_order
     def update_order(self, context, order_id, project_id, updated_meta):
         """Update Order."""
         LOG.info(
