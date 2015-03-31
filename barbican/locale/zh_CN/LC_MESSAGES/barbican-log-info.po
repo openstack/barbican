@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-26 06:07+0000\n"
-"PO-Revision-Date: 2015-03-25 21:43+0000\n"
+"POT-Creation-Date: 2015-03-31 06:07+0000\n"
+"PO-Revision-Date: 2015-03-30 19:19+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
@@ -128,26 +128,31 @@ msgstr "调用 notify_certificate_is_ready()"
 msgid "Invoking notify_ca_is_unavailable()"
 msgstr "调用 notify_ca_is_unavailable()"
 
-#: barbican/queue/server.py:54 barbican/queue/server.py:60
+#: barbican/queue/server.py:63
+#, python-format
+msgid "Scheduled RPC method for retry: '%s'"
+msgstr ""
+
+#: barbican/queue/server.py:79 barbican/queue/server.py:85
 #, python-format
 msgid "Completed worker task: '%s'"
 msgstr ""
 
-#: barbican/queue/server.py:126
+#: barbican/queue/server.py:190
 #, python-format
 msgid "Processing type order: order ID is '%s'"
 msgstr ""
 
-#: barbican/queue/server.py:136
+#: barbican/queue/server.py:201
 #, python-format
 msgid "Processing update order: order ID is '%s'"
 msgstr ""
 
-#: barbican/queue/server.py:168
+#: barbican/queue/server.py:234
 msgid "Starting the TaskServer"
 msgstr ""
 
-#: barbican/queue/server.py:173
+#: barbican/queue/server.py:239
 msgid "Halting the TaskServer"
 msgstr ""
 

@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2015.1.dev44\n"
+"Project-Id-Version: barbican 2015.1.dev58\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-26 06:07+0000\n"
+"POT-Creation-Date: 2015-03-31 06:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -44,7 +44,7 @@ msgid "System"
 msgstr ""
 
 #: barbican/api/controllers/__init__.py:123
-msgid "Unexpected content type: {type}.  Expected content types are: {expected}"
+msgid "Unexpected content type: {type}. Expected content types are: {expected}"
 msgstr ""
 
 #: barbican/api/controllers/cas.py:32
@@ -1188,7 +1188,9 @@ msgstr ""
 #: barbican/plugin/interface/certificate_manager.py:157
 #: barbican/plugin/interface/certificate_manager.py:171
 #: barbican/plugin/interface/certificate_manager.py:185
-#: barbican/plugin/interface/secret_store.py:125 barbican/tasks/resources.py:45
+#: barbican/plugin/interface/secret_store.py:125 barbican/tasks/common.py:63
+#: barbican/tasks/common.py:64 barbican/tests/tasks/test_common.py:32
+#: barbican/tests/tasks/test_common.py:33
 msgid "Unknown"
 msgstr ""
 
@@ -1466,24 +1468,24 @@ msgstr ""
 msgid "Project cleanup via Keystone notifications"
 msgstr ""
 
-#: barbican/tasks/resources.py:233
+#: barbican/tasks/resources.py:213
 msgid "Process TypeOrder"
 msgstr ""
 
-#: barbican/tasks/resources.py:292 barbican/tasks/resources.py:336
+#: barbican/tasks/resources.py:272 barbican/tasks/resources.py:316
 msgid "Order type \"{order_type}\" not implemented."
 msgstr ""
 
-#: barbican/tasks/resources.py:308
+#: barbican/tasks/resources.py:288
 msgid "Update Order"
 msgstr ""
 
-#: barbican/tests/tasks/test_resources.py:213
-#: barbican/tests/tasks/test_resources.py:360
+#: barbican/tests/tasks/test_resources.py:216
+#: barbican/tests/tasks/test_resources.py:363
 msgid "Process TypeOrder failure seen - please contact site administrator."
 msgstr ""
 
-#: barbican/tests/tasks/test_resources.py:298
+#: barbican/tests/tasks/test_resources.py:301
 msgid "Update Order failure seen - please contact site administrator."
 msgstr ""
 
