@@ -273,8 +273,46 @@ container stored as expected.
 How to Retrieve a Container
 ###########################
 
+To retrieve a container we must have a container reference.
+
+.. code-block:: bash
+
+    curl -X GET -H 'X-Project-Id:12345'  http://localhost:9311/v1/containers/49d3c5e9-80bb-47ec-8787-968bb500d76e
+
+This should provide a response as follows:
+
+.. code-block:: bash
+
+    {
+        "status": "ACTIVE",
+        "updated": "2015-03-31T21:21:34.126042",
+        "name": "container name",
+        "consumers": [],
+        "created": "2015-03-31T21:21:34.126042",
+        "container_ref": "http://localhost:9311/v1/containers/49d3c5e9-80bb-47ec-8787-968bb500d76e",
+        "secret_refs": [
+            {
+                "secret_ref": "http://localhost:9311/v1/secrets/feac9896-49e9-49e0-9484-1a6153c9498b",
+                "name": "a secret"
+            }
+        ],
+        "type": "generic"
+    }
+
+This is the metadata as well as the list of secret references that are stored within the container.
+
 
 .. _delete_container:
 
 How to Delete a Container
 #########################
+
+To delete a container we must have a container reference.
+
+.. code-block:: bash
+
+    curl -X DELETE -H 'X-Project-Id:12345' http://localhost:9311/v1/containers/d1c23e06-476b-4684-be9f-8afbef42768d
+
+No response will be provided. This is expected behavior! If you do receive a
+response, something went wrong and you will have to address that before
+moving forward.
