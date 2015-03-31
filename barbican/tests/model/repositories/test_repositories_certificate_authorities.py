@@ -12,8 +12,6 @@
 
 import datetime
 
-import testtools
-
 from barbican.common import exception
 from barbican.model import models
 from barbican.model import repositories
@@ -412,7 +410,6 @@ class WhenTestingPreferredCARepo(database_utils.RepositoryTestCase):
             session)
         self.assertEqual([ca.id], [s.ca_id for s in pca])
 
-    @testtools.skip("Needs to be fixed")
     def test_should_update(self):
         session = self.ca_repo.get_session()
         ca = self._add_ca(self.parsed_ca, session)
