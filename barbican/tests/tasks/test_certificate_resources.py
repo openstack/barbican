@@ -13,17 +13,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
+
 from Crypto.PublicKey import RSA
 import mock
 from OpenSSL import crypto
 
 from barbican.common import exception as excep
 from barbican.common import hrefs
+from barbican.common import resources as res
 from barbican.model import models
+from barbican.model import repositories
 from barbican.plugin.interface import certificate_manager as cert_man
+from barbican.plugin.interface import secret_store
 from barbican.tasks import certificate_resources as cert_res
 from barbican.tasks import common
+from barbican.tests import database_utils
 from barbican.tests import utils
+
+container_repo = repositories.get_container_repository()
+secret_repo = repositories.get_secret_repository()
+ca_repo = repositories.get_ca_repository()
+preferred_ca_repo = repositories.get_preferred_ca_repository()
+project_repo = repositories.get_project_repository()
+order_repo = repositories.get_order_repository()
+project_secret_repo = repositories.get_project_secret_repository()
 
 
 class WhenPerformingPrivateOperations(utils.BaseTestCase,
@@ -35,7 +49,6 @@ class WhenPerformingPrivateOperations(utils.BaseTestCase,
         self.order_plugin_meta_repo = mock.MagicMock()
         self.setup_order_plugin_meta_repository_mock(
             self.order_plugin_meta_repo)
-
         self.order_barbican_meta_repo = mock.MagicMock()
         self.setup_order_barbican_meta_repository_mock(
             self.order_barbican_meta_repo)
@@ -114,14 +127,18 @@ class WhenPerformingPrivateOperations(utils.BaseTestCase,
                           'between the expected and test dicts')
 
 
-class BaseCertificateRequestsTestCase(utils.BaseTestCase,
-                                      utils.MockModelRepositoryMixin):
-    """Tests the 'xxxx_certificate_request()' functions."""
+class BaseCertificateRequestsTestCase(utils.BaseTestCase):
+    """Base Certificate Case Test function """
 
     def setUp(self):
         super(BaseCertificateRequestsTestCase, self).setUp()
-        self.project_id = "56789"
-        self.order_id = "12345"
+
+        database_utils.setup_in_memory_db()
+
+        self.external_project_id = "56789"
+        self.project = res.get_or_create_project(self.external_project_id)
+        project_repo.save(self.project)
+
         self.barbican_meta_dto = mock.MagicMock()
         self.order_meta = {}
         self.plugin_meta = {}
@@ -135,14 +152,102 @@ class BaseCertificateRequestsTestCase(utils.BaseTestCase,
         self.cert_plugin.issue_certificate_request.return_value = self.result
         self.cert_plugin.check_certificate_status.return_value = self.result
 
-        self.order_model = mock.MagicMock()
-        self.order_model.id = self.order_id
-        self.order_model.meta = self.order_meta
-        self.order_model.project_id = self.project_id
-        self.order_model.order_barbican_meta = self.barbican_meta
-        self.project_model = mock.MagicMock()
+        self.store_plugin = mock.MagicMock()
+
+        # data for preferred CA and global preferred CA tests
+        # add those to the repo in those tests
+        self.pref_ca = models.PreferredCertificateAuthority(
+            self.project.id,
+            "ca_id")
+
+        self.global_pref_ca = models.PreferredCertificateAuthority(
+            1,
+            "ca_id")
+
+        # data for stored key cases
+        self.private_key = models.Secret()
+        self.private_key.secret_type = 'PRIVATE'
+        secret_repo.create_from(self.private_key)
+
+        ps = models.ProjectSecret()
+        ps.project_id = self.project.id
+        ps.secret_id = self.private_key.id
+        project_secret_repo.save(ps)
+
+        self.public_key = models.Secret()
+        self.public_key.secret_type = 'PUBLIC'
+        secret_repo.create_from(self.public_key)
+
+        self.passphrase = models.Secret()
+        self.passphrase.secret_type = 'PASSPHRASE'
+        secret_repo.create_from(self.passphrase)
+
+        self.private_key_value = None
+        self.public_key_value = "public_key"
+        self.passphrase_value = None
+
+        ps = models.ProjectSecret()
+        ps.project_id = self.project.id
+        ps.secret_id = self.passphrase.id
+        project_secret_repo.save(ps)
+
+        self.parsed_container_with_passphrase = {
+            'name': 'container name',
+            'type': 'rsa',
+            'secret_refs': [
+                {'name': 'private_key',
+                 'secret_ref': 'https://localhost/secrets/' +
+                               self.private_key.id},
+                {'name': 'public_key',
+                 'secret_ref': 'https://localhost/secrets/' +
+                               self.public_key.id},
+                {'name': 'private_key_passphrase',
+                 'secret_ref': 'https://localhost/secrets/' +
+                               self.passphrase.id}
+            ]
+        }
+
+        self.parsed_container = {
+            'name': 'container name',
+            'type': 'rsa',
+            'secret_refs': [
+                {'name': 'private_key',
+                 'secret_ref': 'https://localhost/secrets/' +
+                               self.private_key.id},
+                {'name': 'public_key',
+                 'secret_ref': 'https://localhost/secrets/' +
+                               self.public_key.id}
+            ]
+        }
+
+        self.container_with_passphrase = models.Container(
+            self.parsed_container_with_passphrase)
+        self.container_with_passphrase.project_id = self.project.id
+        container_repo.create_from(self.container_with_passphrase)
+
+        self.container = models.Container(self.parsed_container)
+        self.container.project_id = self.project.id
+        container_repo.create_from(self.container)
+
+        repositories.commit()
+
+        self.stored_key_meta = {
+            cert_man.REQUEST_TYPE:
+            cert_man.CertificateRequestType.STORED_KEY_REQUEST,
+            "container_ref":
+            "https://localhost/containers/" + self.container.id,
+            "subject_name": "cn=host.example.com,ou=dev,ou=us,o=example.com"
+        }
+
+        self.order = models.Order()
+        self.order.meta = self.order_meta
+        self.order.project_id = self.project.id
+        self.order.order_barbican_meta = self.barbican_meta
+        self.order.type = 'certificate'
+        order_repo.create_from(self.order)
 
         self._config_cert_plugin()
+        self._config_store_plugin()
         self._config_cert_event_plugin()
         self._config_save_meta_plugin()
         self._config_get_meta_plugin()
@@ -150,62 +255,9 @@ class BaseCertificateRequestsTestCase(utils.BaseTestCase,
         self._config_get_barbican_meta_plugin()
         self._config_barbican_meta_dto()
 
-        self.private_key_secret_id = "private_key_secret_id"
-        self.public_key_secret_id = "public_key_secret_id"
-        self.passphrase_secret_id = "passphrase_secret_id"
-        self.private_key_value = None
-        self.public_key_value = "my public key"
-        self.passphrase_value = "my passphrase"
-
-        self.container_id = "container_id"
-        self.parsed_container_with_passphrase = {
-            'name': 'container name',
-            'type': 'asymmetric',
-            'secret_refs': [
-                {'name': 'private_key',
-                 'secret_ref':
-                 'https://localhost/secrets/' + self.private_key_secret_id},
-                {'name': 'public_key',
-                 'secret_ref':
-                 'https://localhost/secrets/' + self.public_key_secret_id},
-                {'name': 'private_key_passphrase',
-                 'secret_ref':
-                 'https://localhost/secrets/' + self.passphrase_secret_id}
-            ]}
-
-        self.parsed_container_without_passphrase = {
-            'name': 'container name',
-            'type': 'asymmetric',
-            'secret_refs': [
-                {'name': 'private_key',
-                 'secret_ref':
-                 'https://localhost/secrets/' + self.private_key_secret_id},
-                {'name': 'public_key',
-                 'secret_ref':
-                 'https://localhost/secrets/' + self.public_key_secret_id},
-            ]}
-
-        self.stored_key_meta = {
-            cert_man.REQUEST_TYPE:
-            cert_man.CertificateRequestType.STORED_KEY_REQUEST,
-            "container_ref":
-            "https://localhost/containers/" + self.container_id,
-            "subject_name": "cn=host.example.com,ou=dev,ou=us,o=example.com"
-        }
-
-        # Set up mocked repos
-        self.container_repo = mock.MagicMock()
-        self.secret_repo = mock.MagicMock()
-
-        # Set up mocked repositories
-        self.setup_container_repository_mock(self.container_repo)
-        self.setup_container_secret_repository_mock()
-        self.setup_order_plugin_meta_repository_mock()
-        self.setup_project_secret_repository_mock()
-        self.setup_secret_repository_mock(self.secret_repo)
-
     def tearDown(self):
         super(BaseCertificateRequestsTestCase, self).tearDown()
+        database_utils.in_memory_cleanup()
         self.cert_plugin_patcher.stop()
         self.save_plugin_meta_patcher.stop()
         self.get_plugin_meta_patcher.stop()
@@ -213,12 +265,38 @@ class BaseCertificateRequestsTestCase(utils.BaseTestCase,
         self.barbican_meta_dto_patcher.stop()
         self.save_barbican_barbican_meta_patcher.stop()
         self.get_barbican_plugin_meta_patcher.stop()
+        self.store_plugin_patcher.stop()
+
+    def stored_key_side_effect(self, *args, **kwargs):
+        if args[0] == 'PRIVATE':
+            return secret_store.SecretDTO(
+                secret_store.SecretType.PRIVATE,
+                self.private_key_value,
+                None,
+                'application/octet-string',
+                None)
+        elif args[0] == 'PASSPHRASE':
+            return secret_store.SecretDTO(
+                secret_store.SecretType.PASSPHRASE,
+                self.passphrase_value,
+                None,
+                'application/octet-string',
+                None)
+        elif args[0] == 'PUBLIC':
+            return secret_store.SecretDTO(
+                secret_store.SecretType.PUBLIC,
+                self.public_key_value,
+                None,
+                'application/octet-string',
+                None)
+        else:
+            return None
 
     def _test_should_return_waiting_for_ca(self, method_to_test):
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
 
         method_to_test(
-            self.order_model, self.project_model, self.result_follow_on)
+            self.order, self.project, self.result_follow_on)
 
         self.assertEqual(
             common.RetryTasks.INVOKE_CERT_STATUS_CHECK_TASK,
@@ -234,7 +312,7 @@ class BaseCertificateRequestsTestCase(utils.BaseTestCase,
         self.result.status = cert_man.CertificateStatus.CERTIFICATE_GENERATED
 
         method_to_test(
-            self.order_model, self.project_model, self.result_follow_on)
+            self.order, self.project, self.result_follow_on)
 
         self.assertEqual(
             common.RetryTasks.NO_ACTION_REQUIRED,
@@ -252,8 +330,8 @@ class BaseCertificateRequestsTestCase(utils.BaseTestCase,
         self.assertRaises(
             cert_man.CertificateStatusClientDataIssue,
             method_to_test,
-            self.order_model,
-            self.project_model,
+            self.order,
+            self.project,
             self.result_follow_on
         )
 
@@ -263,8 +341,8 @@ class BaseCertificateRequestsTestCase(utils.BaseTestCase,
         self.assertRaises(
             cert_man.CertificateStatusNotSupported,
             method_to_test,
-            self.order_model,
-            self.project_model,
+            self.order,
+            self.project,
             self.result_follow_on
         )
 
@@ -281,6 +359,19 @@ class BaseCertificateRequestsTestCase(utils.BaseTestCase,
             **cert_plugin_config
         )
         self.cert_plugin_patcher.start()
+
+    def _config_store_plugin(self):
+        """Mock the secret store plugin manager."""
+        store_plugin_config = {
+            'return_value.get_plugin_retrieve_delete.return_value':
+            self.store_plugin
+        }
+        self.store_plugin_patcher = mock.patch(
+            'barbican.plugin.interface.secret_store'
+            '.get_manager',
+            **store_plugin_config
+        )
+        self.store_plugin_patcher.start()
 
     def _config_cert_event_plugin(self):
         """Mock the certificate event plugin manager."""
@@ -341,36 +432,6 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
     def setUp(self):
         super(WhenIssuingCertificateRequests, self).setUp()
 
-        self.private_key_secret_id = "private_key_secret_id"
-        self.public_key_secret_id = "public_key_secret_id"
-        self.passphrase_secret_id = "passphrase_secret_id"
-        self.private_key_value = None
-        self.public_key_value = "my public key"
-        self.passphrase_value = "my passphrase"
-        self.ca_repo = mock.MagicMock()
-        self.preferred_ca_repo = mock.MagicMock()
-
-        self.preferred_ca_repo.get_by_create_date.return_value = (
-            None, 0, 10, 0)
-        self.preferred_ca_repo.get_global_preferred_ca.return_value = None
-
-        self.pref_ca = models.PreferredCertificateAuthority(
-            self.project_id,
-            "ca_id")
-
-        self.setup_ca_repository_mock(self.ca_repo)
-        self.setup_preferred_ca_repository_mock(self.preferred_ca_repo)
-
-    def stored_key_side_effect(self, *args, **kwargs):
-        if args[0] == self.private_key_secret_id:
-            return self.private_key_value
-        elif args[0] == self.public_key_secret_id:
-            return self.public_key_value
-        elif args[0] == self.passphrase_secret_id:
-            return self.passphrase_value
-        else:
-            return None
-
     def tearDown(self):
         super(WhenIssuingCertificateRequests, self).tearDown()
 
@@ -385,7 +446,6 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
         # saved into the barbican metadata for the order, so just make sure
         # we can retrieve it.
         self.barbican_meta.update({'plugin_name': 'foo-plugin'})
-
         self._test_should_return_waiting_for_ca(
             cert_res.issue_certificate_request)
 
@@ -402,30 +462,24 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
             cert_res.issue_certificate_request)
 
     def _do_pyopenssl_stored_key_request(self):
-        self.container = models.Container(
-            self.parsed_container_without_passphrase)
-        self.container_repo.get.return_value = self.container
+        self.order_meta.update(self.stored_key_meta)
 
         pkey = crypto.PKey()
         pkey.generate_key(crypto.TYPE_RSA, 2048)
         self.private_key_value = crypto.dump_privatekey(
             crypto.FILETYPE_PEM, pkey)
+        self.public_key_value = "public_key"
+        self.passphrase_value = None
+        self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
 
-        self.secret_repo.get.side_effect = self.stored_key_side_effect
-
-        self.order_meta.update(self.stored_key_meta)
-
-        self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
-
-        cert_res.issue_certificate_request(self.order_model,
-                                           self.project_model,
-                                           self.result_follow_on)
+        self._test_should_return_waiting_for_ca(
+            cert_res.issue_certificate_request)
 
     def test_should_return_for_pyopenssl_stored_key(self):
         self._do_pyopenssl_stored_key_request()
         self._verify_issue_certificate_plugins_called()
         self.assertIsNotNone(
-            self.order_model.order_barbican_metadata.get('generated_csr'))
+            self.order.order_barbican_meta.get('generated_csr'))
 
         # TODO(alee-3) Add tests to validate the request based on the validator
         # code that dave-mccowan is adding.
@@ -435,172 +489,153 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
         self._do_pyopenssl_stored_key_request()
         self._verify_issue_certificate_plugins_called()
         self.assertIsNotNone(
-            self.order_model.order_barbican_metadata['generated_csr'])
+            self.order.order_barbican_meta['generated_csr'])
 
     def test_should_return_for_openssl_stored_key_pref_ca_defined(self):
-        self.preferred_ca_repo.get_by_create_date.return_value = (
-            [self.pref_ca], 0, 10, 1)
+        preferred_ca_repo.create_from(self.pref_ca)
         self._do_pyopenssl_stored_key_request()
         self._verify_issue_certificate_plugins_called()
         self.assertIsNotNone(
-            self.order_model.order_barbican_metadata['generated_csr'])
+            self.order.order_barbican_meta['generated_csr'])
 
     def test_should_return_for_openssl_stored_key_global_ca_defined(self):
-        self.preferred_ca_repo.get_global_preferred_ca.return_value = (
-            self.pref_ca
-        )
+        preferred_ca_repo.create_from(self.global_pref_ca)
         self._do_pyopenssl_stored_key_request()
         self._verify_issue_certificate_plugins_called()
         self.assertIsNotNone(
-            self.order_model.order_barbican_metadata['generated_csr'])
+            self.order.order_barbican_meta['generated_csr'])
 
     def test_should_return_for_pyopenssl_stored_key_with_passphrase(self):
-        self.container = models.Container(
-            self.parsed_container_with_passphrase)
-        self.container_repo.get.return_value = self.container
+        self.order_meta.update(self.stored_key_meta)
+        self.order_meta['container_ref'] = (
+            "https://localhost/containers/" + self.container_with_passphrase.id
+        )
 
+        passphrase = "my secret passphrase"
         pkey = crypto.PKey()
         pkey.generate_key(crypto.TYPE_RSA, 2048)
         self.private_key_value = crypto.dump_privatekey(
-            crypto.FILETYPE_PEM, pkey, passphrase=self.passphrase_value)
-
-        self.secret_repo.get.side_effect = self.stored_key_side_effect
-
-        self.order_meta.update(self.stored_key_meta)
-
-        self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
-
-        cert_res.issue_certificate_request(self.order_model,
-                                           self.project_model,
-                                           self.result_follow_on)
+            crypto.FILETYPE_PEM,
+            pkey,
+            passphrase=passphrase
+        )
+        self.public_key_value = "public_key"
+        self.passphrase_value = base64.b64encode(passphrase)
+        self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
+        self._test_should_return_waiting_for_ca(
+            cert_res.issue_certificate_request)
 
         self._verify_issue_certificate_plugins_called()
         self.assertIsNotNone(
-            self.order_model.order_barbican_metadata['generated_csr'])
+            self.order.order_barbican_meta['generated_csr'])
 
         # TODO(alee-3) Add tests to validate the request based on the validator
         # code that dave-mccowan is adding.
 
     def test_should_return_for_pycrypto_stored_key_with_passphrase(self):
-        self.container = models.Container(
-            self.parsed_container_with_passphrase)
-        self.container_repo.get.return_value = self.container
+        self.order_meta.update(self.stored_key_meta)
+        self.order_meta['container_ref'] = (
+            "https://localhost/containers/" + self.container_with_passphrase.id
+        )
+        passphrase = "my secret passphrase"
 
         private_key = RSA.generate(2048, None, None, 65537)
         public_key = private_key.publickey()
 
-        self.private_key_value = private_key.exportKey(
-            'PEM', self.passphrase_value, 8)
+        self.private_key_value = private_key.exportKey('PEM', passphrase, 8)
         self.public_key_value = public_key.exportKey()
-        self.secret_repo.get.side_effect = self.stored_key_side_effect
+        self.passphrase_value = base64.b64encode(passphrase)
 
-        self.order_meta.update(self.stored_key_meta)
-        self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
-
-        cert_res.issue_certificate_request(self.order_model,
-                                           self.project_model,
-                                           self.result_follow_on)
+        self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
+        self._test_should_return_waiting_for_ca(
+            cert_res.issue_certificate_request)
 
         self._verify_issue_certificate_plugins_called()
         self.assertIsNotNone(
-            self.order_model.order_barbican_metadata['generated_csr'])
+            self.order.order_barbican_meta['generated_csr'])
 
         # TODO(alee-3) Add tests to validate the request based on the validator
         # code that dave-mccowan is adding.
 
     def test_should_return_for_pycrypto_stored_key_without_passphrase(self):
-        self.container = models.Container(
-            self.parsed_container_without_passphrase)
-        self.container_repo.get.return_value = self.container
+        self.order_meta.update(self.stored_key_meta)
 
         private_key = RSA.generate(2048, None, None, 65537)
         public_key = private_key.publickey()
 
         self.private_key_value = private_key.exportKey('PEM', None, 8)
         self.public_key_value = public_key.exportKey()
-        self.secret_repo.get.side_effect = self.stored_key_side_effect
 
-        self.order_meta.update(self.stored_key_meta)
-        self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
-
-        cert_res.issue_certificate_request(self.order_model,
-                                           self.project_model,
-                                           self.result_follow_on)
+        self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
+        self._test_should_return_waiting_for_ca(
+            cert_res.issue_certificate_request)
 
         self._verify_issue_certificate_plugins_called()
         self.assertIsNotNone(
-            self.order_model.order_barbican_metadata['generated_csr'])
+            self.order.order_barbican_meta['generated_csr'])
 
         # TODO(alee-3) Add tests to validate the request based on the validator
         # code that dave-mccowan is adding.
 
     def test_should_raise_for_pycrypto_stored_key_no_container(self):
-        self.container = models.Container(
-            self.parsed_container_without_passphrase)
-        self.container_repo.get.return_value = None
-
+        self.order_meta.update(self.stored_key_meta)
         private_key = RSA.generate(2048, None, None, 65537)
         public_key = private_key.publickey()
 
         self.private_key_value = private_key.exportKey('PEM', None, 8)
         self.public_key_value = public_key.exportKey()
-        self.secret_repo.get.side_effect = self.stored_key_side_effect
 
-        self.order_meta.update(self.stored_key_meta)
+        self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
+        container_repo.delete_project_entities(self.project.id)
 
         self.assertRaises(excep.StoredKeyContainerNotFound,
                           cert_res.issue_certificate_request,
-                          self.order_model,
-                          self.project_model,
+                          self.order,
+                          self.project,
                           self.result_follow_on)
 
     def test_should_raise_for_pycrypto_stored_key_no_private_key(self):
-        self.container = models.Container(
-            self.parsed_container_without_passphrase)
-        self.container_repo.get.return_value = self.container
-
+        self.order_meta.update(self.stored_key_meta)
         private_key = RSA.generate(2048, None, None, 65537)
         public_key = private_key.publickey()
 
-        self.private_key_value = private_key.exportKey('PEM', None, 8)
-        self.public_key_value = public_key.exportKey()
-        self.secret_repo.get.return_value = None
+        self.private_key_value = base64.b64encode(
+            private_key.exportKey('PEM', None, 8))
+        self.public_key_value = base64.b64encode(
+            public_key.exportKey())
 
-        self.order_meta.update(self.stored_key_meta)
+        self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
+
+        secret_repo.delete_entity_by_id(
+            self.private_key.id, self.external_project_id)
 
         self.assertRaises(excep.StoredKeyPrivateKeyNotFound,
                           cert_res.issue_certificate_request,
-                          self.order_model,
-                          self.project_model,
+                          self.order,
+                          self.project,
                           self.result_follow_on)
 
     def test_should_return_for_pyopenssl_stored_key_with_extensions(self):
-        self.container = models.Container(
-            self.parsed_container_without_passphrase)
-        self.container_repo.get.return_value = self.container
-
+        self.order_meta.update(self.stored_key_meta)
         pkey = crypto.PKey()
         pkey.generate_key(crypto.TYPE_RSA, 2048)
         self.private_key_value = crypto.dump_privatekey(
             crypto.FILETYPE_PEM, pkey)
 
-        self.secret_repo.get.side_effect = self.stored_key_side_effect
-
-        self.order_meta.update(self.stored_key_meta)
+        self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
         self.order_meta['extensions'] = 'my ASN.1 extensions structure here'
         # TODO(alee-3) Add real extensions data here
 
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
 
-        cert_res.issue_certificate_request(self.order_model,
-                                           self.project_model,
+        cert_res.issue_certificate_request(self.order,
+                                           self.project,
                                            self.result_follow_on)
 
         self._verify_issue_certificate_plugins_called()
-        self.assertIsNotNone(
-            self.order_model.order_barbican_metadata['generated_csr'])
+        self.assertIsNotNone(self.order.order_barbican_meta['generated_csr'])
 
         # TODO(alee-3) Add tests to validate the request based on the validator
         # code that dave-mccowan is adding.
@@ -612,8 +647,8 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
         self.assertRaises(
             cert_man.CertificateStatusInvalidOperation,
             cert_res.issue_certificate_request,
-            self.order_model,
-            self.project_model,
+            self.order,
+            self.project,
             self.result_follow_on
         )
 
@@ -624,21 +659,22 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
             cert_man.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST)
         self.result.retry_msec = retry_msec
         self.result.status_message = status_msg
-        order_ref = hrefs.convert_order_to_href(self.order_id)
+        order_ref = hrefs.convert_order_to_href(self.order.id)
 
-        cert_res.issue_certificate_request(self.order_model,
-                                           self.project_model,
+        cert_res.issue_certificate_request(self.order,
+                                           self.project,
                                            self.result_follow_on)
 
         self._verify_issue_certificate_plugins_called()
 
         epm = self.cert_event_plugin_patcher.target.EVENT_PLUGIN_MANAGER
         epm.notify_ca_is_unavailable.assert_called_once_with(
-            self.project_id,
+            self.project.id,
             order_ref,
             status_msg,
             retry_msec
         )
+        self._verify_issue_certificate_plugins_called()
         self.assertEqual(
             common.RetryTasks.INVOKE_SAME_TASK,
             self.result_follow_on.retry_task)
@@ -655,19 +691,19 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
 
     def _verify_issue_certificate_plugins_called(self):
         self.cert_plugin.issue_certificate_request.assert_called_once_with(
-            self.order_id,
+            self.order.id,
             self.order_meta,
             self.plugin_meta,
             self.barbican_meta_dto
         )
 
         self.mock_save_plugin.assert_called_once_with(
-            self.order_model,
+            self.order,
             self.plugin_meta
         )
 
         self.mock_barbican_save_plugin.assert_called_once_with(
-            self.order_model,
+            self.order,
             self.barbican_meta
         )
 
@@ -708,17 +744,17 @@ class WhenCheckingCertificateRequests(BaseCertificateRequestsTestCase):
             cert_man.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST)
         self.result.retry_msec = retry_msec
         self.result.status_message = status_msg
-        order_ref = hrefs.convert_order_to_href(self.order_id)
+        order_ref = hrefs.convert_order_to_href(self.order.id)
 
-        cert_res.check_certificate_request(self.order_model,
-                                           self.project_model,
+        cert_res.check_certificate_request(self.order,
+                                           self.project,
                                            self.result_follow_on)
 
         self._verify_check_certificate_plugins_called()
 
         epm = self.cert_event_plugin_patcher.target.EVENT_PLUGIN_MANAGER
         epm.notify_ca_is_unavailable.assert_called_once_with(
-            self.project_id,
+            self.project.id,
             order_ref,
             status_msg,
             retry_msec
@@ -735,13 +771,13 @@ class WhenCheckingCertificateRequests(BaseCertificateRequestsTestCase):
 
     def _verify_check_certificate_plugins_called(self):
         self.cert_plugin.check_certificate_status.assert_called_once_with(
-            self.order_id,
+            self.order.id,
             self.order_meta,
             self.plugin_meta,
             self.barbican_meta_dto
         )
 
         self.mock_save_plugin.assert_called_once_with(
-            self.order_model,
+            self.order,
             self.plugin_meta
         )

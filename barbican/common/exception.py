@@ -132,6 +132,19 @@ class InvalidCertificateRequestType(BarbicanHTTPException):
     status_code = 400
 
 
+class CertificateExtensionsNotSupported(BarbicanHTTPException):
+    message = u._("Extensions are not yet supported.  "
+                  "Specify a valid profile instead.")
+    client_message = message
+    status_code = 400
+
+
+class FullCMCNotSupported(BarbicanHTTPException):
+    message = u._("Full CMC Requests are not yet supported.")
+    client_message = message
+    status_code = 400
+
+
 class BadAuthStrategy(BarbicanException):
     message = u._("Incorrect auth strategy, expected \"%(expected)s\" but "
                   "received \"%(received)s\"")

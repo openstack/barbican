@@ -90,7 +90,8 @@ class StoreCryptoAdapterPlugin(object):
                 secret_type == sstore.SecretType.CERTIFICATE):
             normalized_secret = translations.get_pem_components(
                 normalized_secret)[1]
-        normalized_secret = base64.b64decode(normalized_secret)
+        normalized_secret = base64.decodestring(normalized_secret)
+
         encrypt_dto = crypto.EncryptDTO(normalized_secret)
 
         # Enhance the context with content_type, This is needed to build
@@ -132,7 +133,7 @@ class StoreCryptoAdapterPlugin(object):
         kek_meta_dto = crypto.KEKMetaDTO(datum_model.kek_meta_project)
 
         # Convert from text-based storage format to binary.
-        encrypted = base64.b64decode(datum_model.cypher_text)
+        encrypted = base64.decodestring(datum_model.cypher_text)
         decrypt_dto = crypto.DecryptDTO(encrypted)
 
         # Decrypt the secret.
@@ -140,7 +141,7 @@ class StoreCryptoAdapterPlugin(object):
                                            kek_meta_dto,
                                            datum_model.kek_meta_extended,
                                            context.project_model.external_id)
-        secret = base64.b64encode(secret)
+        secret = base64.encodestring(secret).rstrip('\n')
         if (secret_type == sstore.SecretType.PRIVATE or
                 secret_type == sstore.SecretType.PUBLIC or
                 secret_type == sstore.SecretType.CERTIFICATE):
@@ -324,7 +325,8 @@ def _store_secret_and_datum(
     # setup and store encrypted datum
     datum_model = models.EncryptedDatum(secret_model, kek_datum_model)
     datum_model.content_type = context.content_type
-    datum_model.cypher_text = base64.b64encode(generated_dto.cypher_text)
+    datum_model.cypher_text = (
+        base64.encodestring(generated_dto.cypher_text).rstrip('\n'))
     datum_model.kek_meta_extended = generated_dto.kek_meta_extended
     datum_model.secret_id = secret_model.id
     repositories.get_encrypted_datum_repository().create_from(

@@ -470,10 +470,12 @@ class TypeOrderValidator(ValidatorBase):
         self._validate_pkcs10_data(request_data)
 
     def _validate_full_cmc_request(self, certificate_meta):
-        """Validate full CMC request."""
-        request_data = self._get_required_metadata_value(
-            certificate_meta, "request_data")
-        self._validate_full_cmc_data(request_data)
+        """Validate full CMC request.
+
+        :param certificate_meta: request data from the order
+        :raises: FullCMCNotSupported
+        """
+        raise exception.FullCMCNotSupported()
 
     def _validate_stored_key_request(self, certificate_meta):
         """Validate stored-key cert request."""
@@ -540,14 +542,21 @@ class TypeOrderValidator(ValidatorBase):
             raise exception.InvalidSubjectDN(subject_dn=subject_dn)
 
     def _validate_extensions_data(self, extensions):
-        """Confirm that the extensions data is valid."""
+        """Confirm that the extensions data is valid.
+
+        :param extensions: base 64 encoded ASN.1 string of extension data
+        :raises: CertificateExtensionsNotSupported
+        """
         """
         TODO(alee-3) complete this function
 
         Parse the extensions data into the correct ASN.1 structure.
-        If the parsing fails, throw InvalidExtensionsData
+        If the parsing fails, throw InvalidExtensionsData.
+
+        For now, fail this validation because extensions parsing is not
+        supported.
         """
-        pass
+        raise exception.CertificateExtensionsNotSupported()
 
     def _validate_meta_parameters(self, meta, order_type, schema_name):
         self._assert_validity(meta.get('algorithm'),

@@ -116,7 +116,9 @@ def issue_certificate_request(order_model, project_model, result_follow_on):
     if request_type == cert.CertificateRequestType.STORED_KEY_REQUEST:
         csr = barbican_meta.get('generated_csr')
         if csr is None:
-            csr = _generate_csr(order_model)
+            # TODO(alee) Fix this to be a non-project specific call once
+            # the ACL patches go in.
+            csr = _generate_csr(order_model, project_model)
             barbican_meta['generated_csr'] = csr
         barbican_meta_for_plugins_dto.generated_csr = csr
 
@@ -272,10 +274,11 @@ def _get_barbican_meta(order_model):
         return {}
 
 
-def _generate_csr(order_model):
+def _generate_csr(order_model, project_model):
     """Generate a CSR from the public key.
 
     :param: order_model - order for the request
+    :param: project_model - project for this request
     :return: CSR (certificate signing request) in PEM format
     :raise: :class:`StoredKeyPrivateKeyNotFound` if private key not found
             :class:`StoredKeyContainerNotFound` if container not found
@@ -286,7 +289,9 @@ def _generate_csr(order_model):
     container_id = hrefs.get_container_id_from_ref(container_ref)
 
     container_repo = repos.get_container_repository()
-    container = container_repo.get(container_id)
+    container = container_repo.get(container_id,
+                                   project_model.external_id,
+                                   suppress_exception=True)
     if not container:
         raise excep.StoredKeyContainerNotFound(container_id)
 
@@ -296,9 +301,22 @@ def _generate_csr(order_model):
     for cs in container.container_secrets:
         secret_repo = repos.get_secret_repository()
         if cs.name == 'private_key':
-            private_key = secret_repo.get(cs.secret_id)
+            private_key_model = secret_repo.get(
+                cs.secret_id,
+                project_model.external_id)
+            private_key = plugin.get_secret(
+                'application/pkcs8',
+                private_key_model,
+                project_model,
+                pem_needed=True)
         elif cs.name == 'private_key_passphrase':
-            passphrase = secret_repo.get(cs.secret_id)
+            passphrase_model = secret_repo.get(
+                cs.secret_id,
+                project_model.external_id)
+            passphrase = plugin.get_secret(
+                'text/plain;charset=utf-8',
+                passphrase_model,
+                project_model)
 
     if not private_key:
         raise excep.StoredKeyPrivateKeyNotFound(container_id)
@@ -306,15 +324,19 @@ def _generate_csr(order_model):
     pkey = crypto.load_privatekey(
         crypto.FILETYPE_PEM,
         private_key,
-        passphrase)
+        str(passphrase)
+    )
 
-    subject_name = order_model.meta.get('subject_name')
+    subject_name = order_model.meta.get('subject_dn')
     subject_name_dns = ldap.dn.str2dn(subject_name)
     extensions = order_model.meta.get('extensions', None)
 
     req = crypto.X509Req()
     subj = req.get_subject()
-    for ava in subject_name_dns:
+
+    # Note: must iterate over the DNs in reverse order, or the resulting
+    # subject name will be reversed.
+    for ava in reversed(subject_name_dns):
         for key, val, extra in ava:
             setattr(subj, key.upper(), val)
     req.set_pubkey(pkey)

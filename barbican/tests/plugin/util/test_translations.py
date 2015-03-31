@@ -105,7 +105,7 @@ class WhenNormalizingBeforeEncryption(utils.BaseTestCase):
             'expected': utils.get_private_key()
         },
         'private': {
-            'unencrypted': base64.b64decode(
+            'unencrypted': base64.decodestring(
                 translations.get_pem_components(utils.get_private_key())[1]),
             'secret_type': s.SecretType.PRIVATE,
             'content_type': 'application/pkcs8',
@@ -120,7 +120,7 @@ class WhenNormalizingBeforeEncryption(utils.BaseTestCase):
             'expected': utils.get_public_key()
         },
         'public': {
-            'unencrypted': base64.b64decode(
+            'unencrypted': base64.decodestring(
                 translations.get_pem_components(utils.get_public_key())[1]),
             'secret_type': s.SecretType.PUBLIC,
             'content_type': 'application/octet-stream',
@@ -135,7 +135,7 @@ class WhenNormalizingBeforeEncryption(utils.BaseTestCase):
             'expected': utils.get_certificate()
         },
         'certificate': {
-            'unencrypted': base64.b64decode(
+            'unencrypted': base64.decodestring(
                 translations.get_pem_components(utils.get_certificate())[1]),
             'secret_type': s.SecretType.CERTIFICATE,
             'content_type': 'application/pkix-cert',
@@ -159,7 +159,21 @@ class WhenNormalizingBeforeEncryption(utils.BaseTestCase):
             secret_type=kwargs['secret_type']
         )
 
-        self.assertEqual(kwargs['expected'], unencrypted)
+        if self._testMethodName == 'test_can_normalize_certificate':
+            self.assertTrue(
+                utils.is_cert_valid(kwargs['expected'], unencrypted)
+            )
+        elif self._testMethodName == 'test_can_normalize_private':
+            self.assertTrue(
+                utils.is_private_key_valid(kwargs['expected'], unencrypted)
+            )
+        elif self._testMethodName == 'test_can_normalize_public':
+            self.assertTrue(
+                utils.is_public_key_valid(kwargs['expected'], unencrypted)
+            )
+        else:
+            self.assertEqual(kwargs['expected'], unencrypted)
+
         self.assertEqual(kwargs['content_type'], content_type)
 
     def test_can_normalize_tmp_plain_text(self):
@@ -258,7 +272,10 @@ class WhenNormalizingPemSecrets(utils.BaseTestCase):
     def test_pem_normalized(self, pem):
         pem_components = translations.get_pem_components(pem)
         self.assertEqual(3, len(pem_components))
-        pem_msg = pem_components[0] + pem_components[1] + pem_components[2]
+        pem_msg = (pem_components[0] + '\n' +
+                   pem_components[1] + '\n' +
+                   pem_components[2])
+
         self.assertEqual(pem, pem_msg)
 
     @utils.parameterized_dataset(dataset_for_to_pem)
@@ -266,7 +283,15 @@ class WhenNormalizingPemSecrets(utils.BaseTestCase):
         pem_components = translations.get_pem_components(pem)
         content = base64.b64decode(pem_components[1])
         pem_msg = translations.to_pem(secret_type, content, False)
-        self.assertEqual(pem, pem_msg)
+
+        # because of differences between PEM and base64 line lengths,
+        # pem and pem_msg may not be equal.
+        if self._testMethodName == 'test_to_pem_certificate':
+            self.assertTrue(utils.is_cert_valid(pem, pem_msg))
+        elif self._testMethodName == 'test_to_pem_private_key':
+            self.assertTrue(utils.is_private_key_valid(pem, pem_msg))
+        elif self._testMethodName == 'test_to_pem_public_key':
+            self.assertTrue(utils.is_public_key_valid(pem, pem_msg))
 
     @utils.parameterized_dataset(dataset_for_to_pem)
     def test_to_pem_payload_encoded(self, secret_type, pem):

@@ -512,9 +512,18 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
         self.assertEqual(secret_store.SecretDTO, type(secret_dto))
         self.assertEqual(secret_type, secret_dto.type)
-        self.assertEqual(
-            expected_secret,
-            secret_dto.secret)
+        if self._testMethodName == 'test_get_secret_private_key':
+            self.assertTrue(
+                utils.is_private_key_valid(expected_secret, secret_dto.secret)
+            )
+        elif self._testMethodName == 'test_get_secret_public_key':
+            self.assertTrue(
+                utils.is_public_key_valid(expected_secret, secret_dto.secret)
+            )
+        else:
+            self.assertEqual(
+                expected_secret,
+                secret_dto.secret)
 
     def test_get_secret_symmetric_return_value_invalid_key_material_type(self):
         sample_secret = self.sample_secret

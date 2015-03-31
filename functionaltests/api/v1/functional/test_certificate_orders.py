@@ -16,10 +16,11 @@ import copy
 import json
 import time
 
+from OpenSSL import crypto
 import testtools
 
 from barbican.plugin.interface import secret_store as s
-
+from barbican.tasks import certificate_resources as cert_res
 from barbican.tests import certificate_utils as certutil
 from barbican.tests import utils
 from functionaltests.api import base
@@ -27,10 +28,9 @@ from functionaltests.api.v1.behaviors import ca_behaviors
 from functionaltests.api.v1.behaviors import container_behaviors
 from functionaltests.api.v1.behaviors import order_behaviors
 from functionaltests.api.v1.behaviors import secret_behaviors
+from functionaltests.api.v1.models import container_models
 from functionaltests.api.v1.models import order_models
 from functionaltests.api.v1.models import secret_models
-from functionaltests.api.v1.models import container_models
-
 
 try:
     import pki  # flake8: noqa
@@ -172,19 +172,23 @@ class CertificatesTestCase(base.TestCase):
     def create_asymmetric_key_container(self):
         secret_model = secret_models.SecretModel(**get_private_key_req())
         secret_model.secret_type = s.SecretType.PRIVATE
-        resp, secret_ref_priv = self.secret_behaviors.create_secret(secret_model)
+        resp, secret_ref_priv = self.secret_behaviors.create_secret(
+            secret_model)
         self.assertEqual(201, resp.status_code)
 
         secret_model = secret_models.SecretModel(**get_public_key_req())
         secret_model.secret_type = s.SecretType.PUBLIC
-        resp, secret_ref_pub = self.secret_behaviors.create_secret(secret_model)
+        resp, secret_ref_pub = self.secret_behaviors.create_secret(
+            secret_model)
         self.assertEqual(201, resp.status_code)
 
         pub_key_ref = {'name': 'public_key', 'secret_ref': secret_ref_pub}
         priv_key_ref = {'name': 'private_key', 'secret_ref': secret_ref_priv}
-        test_model = container_models.ContainerModel(**create_container_rsa_data)
+        test_model = container_models.ContainerModel(
+            **create_container_rsa_data)
         test_model.secret_refs = [pub_key_ref, priv_key_ref]
-        resp, container_ref = self.container_behaviors.create_container(test_model)
+        resp, container_ref = self.container_behaviors.create_container(
+            test_model)
         self.assertEqual(resp.status_code, 201)
 
         return container_ref
@@ -232,16 +236,19 @@ class CertificatesTestCase(base.TestCase):
 
         self.assertTrue(contains_cert)
 
+    def verify_pending_waiting_for_ca(self, order_resp):
+        self.assertEqual('PENDING', order_resp.model.status)
+        self.assertEqual(cert_res.ORDER_STATUS_REQUEST_PENDING.id,
+                         order_resp.model.sub_status)
+        self.assertEqual(cert_res.ORDER_STATUS_REQUEST_PENDING.message,
+                         order_resp.model.sub_status_message)
+
     def confirm_error_message(self, resp, message):
         resp_dict = json.loads(resp.content)
         self.assertEqual(message, resp_dict['description'])
 
     @testtools.testcase.attr('positive')
-    @testtools.skip("broken till state machine fixed")
     def test_create_simple_cmc_order(self):
-        # TODO(alee) This currently returns 'ACTIVE' because the underlying
-        # state machine is not correct.  Unskip when all is correct.
-
         test_model = order_models.OrderModel(**self.simple_cmc_data)
         test_model.meta['request_data'] = certutil.create_good_csr()
 
@@ -250,14 +257,10 @@ class CertificatesTestCase(base.TestCase):
         self.assertIsNotNone(order_ref)
 
         order_resp = self.behaviors.get_order(order_ref)
-        self.assertEqual('PENDING', order_resp.model.status)
+        self.verify_pending_waiting_for_ca(order_resp)
 
     @testtools.testcase.attr('positive')
-    @testtools.skip("broken till state machine fixed")
     def test_create_simple_cmc_order_without_requestor_info(self):
-        # TODO(alee) This currently returns 'ACTIVE' because the underlying
-        # state machine is not correct.  Unskip when all is correct.
-
         self.simple_cmc_data.pop("requestor_name", None)
         self.simple_cmc_data.pop("requestor_email", None)
         self.simple_cmc_data.pop("requestor_phone", None)
@@ -270,7 +273,7 @@ class CertificatesTestCase(base.TestCase):
         self.assertIsNotNone(order_ref)
 
         order_resp = self.behaviors.get_order(order_ref)
-        self.assertEqual('PENDING', order_resp.model.status)
+        self.verify_pending_waiting_for_ca(order_resp)
 
     @testtools.testcase.attr('positive')
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
@@ -334,7 +337,11 @@ class CertificatesTestCase(base.TestCase):
 
         order_resp = self.wait_for_order(order_ref)
         self.assertEqual('ERROR', order_resp.model.status)
-        # TODO(alee) confirm error substatus/message
+        self.assertEqual('400', order_resp.model.error_status_code)
+        self.assertIn('Problem with data in certificate request',
+                      order_resp.model.error_reason)
+        # TODO(alee) Dogtag does not currently return a error message
+        # when it does, check for that specific error message
 
     @testtools.testcase.attr('negative')
     def test_create_simple_cmc_order_with_invalid_pkcs10(self):
@@ -388,7 +395,11 @@ class CertificatesTestCase(base.TestCase):
 
         order_resp = self.wait_for_order(order_ref)
         self.assertEqual('ERROR', order_resp.model.status)
-        # confirm order substatus = data issue seen
+        self.assertEqual('400', order_resp.model.error_status_code)
+        self.assertIn('Problem with data in certificate request',
+                      order_resp.model.error_reason)
+        self.assertIn('Profile not found',
+                      order_resp.model.error_reason)
 
     @testtools.testcase.attr('positive')
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
@@ -403,7 +414,7 @@ class CertificatesTestCase(base.TestCase):
         self.assertIsNotNone(order_ref)
 
         order_resp = self.wait_for_order(order_ref)
-        self.assertEqual('PENDING', order_resp.model.status)
+        self.verify_pending_waiting_for_ca(order_resp)
 
     @testtools.testcase.attr('negative')
     def test_create_simple_cmc_order_with_missing_request(self):
@@ -418,16 +429,17 @@ class CertificatesTestCase(base.TestCase):
         )
 
     @testtools.testcase.attr('negative')
-    @testtools.skip("broken till we handle this better")
     def test_create_full_cmc_order(self):
-        # TODO(alee) right now, order is created.  we need to handle this
-        # better and error out early
         test_model = order_models.OrderModel(**self.full_cmc_data)
         test_model.meta['request_data'] = certutil.create_good_csr()
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(400, create_resp.status_code)
-        # confirm error message, should have not implemented
+        self.assertEqual(create_resp.status_code, 400)
+        self.assertIsNone(order_ref)
+        self.confirm_error_message(
+            create_resp,
+            "Full CMC Requests are not yet supported."
+        )
 
     @testtools.testcase.attr('negative')
     def test_create_cert_order_with_invalid_type(self):
@@ -443,9 +455,7 @@ class CertificatesTestCase(base.TestCase):
         )
 
     @testtools.testcase.attr('positive')
-    @testtools.skip("broken till container code written, state machine fixed")
     def test_create_stored_key_order(self):
-        # TODO(alee) Fix the create_container function and status code
         test_model = order_models.OrderModel(**self.stored_key_data)
         test_model.meta['container_ref'] = (
             self.create_asymmetric_key_container())
@@ -455,14 +465,11 @@ class CertificatesTestCase(base.TestCase):
         self.assertIsNotNone(order_ref)
 
         order_resp = self.behaviors.get_order(order_ref)
-        self.assertEqual('PENDING', order_resp.model.status)
-
-        # confirm order_status == PENDING
+        self.verify_pending_waiting_for_ca(order_resp)
 
     @testtools.testcase.attr('positive')
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
     def test_create_stored_key_order_with_dogtag_profile(self):
-        # TODO(alee) Fix the create_container function and status code
         test_model = order_models.OrderModel(**self.stored_key_data)
         test_model.meta['container_ref'] = (
             self.create_asymmetric_key_container())
@@ -566,20 +573,20 @@ class CertificatesTestCase(base.TestCase):
             "Invalid subject DN: invalid_subject_dn"
         )
 
-    @testtools.testcase.attr('positive')
+    @testtools.testcase.attr('negative')
     def test_create_stored_key_order_with_extensions(self):
-        # TODO(alee) - Figure out how we want to handle this.
         test_model = order_models.OrderModel(**self.stored_key_data)
         test_model.meta['container_ref'] = (
             self.create_asymmetric_key_container())
-        test_model.meta['extensions'] = "any-extensions-will-do-right-now"
+        test_model.meta['extensions'] = "any-extensions"
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(202, create_resp.status_code)
-        self.assertIsNotNone(order_ref)
-
-        self.behaviors.get_order(order_ref)
-        # confirm order_status == PENDING ??
+        self.assertEqual(400, create_resp.status_code)
+        self.confirm_error_message(
+            create_resp,
+            "Extensions are not yet supported.  "
+            "Specify a valid profile instead."
+        )
 
     @testtools.testcase.attr('positive')
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
@@ -587,7 +594,7 @@ class CertificatesTestCase(base.TestCase):
         test_model = order_models.OrderModel(**self.stored_key_data)
         test_model.meta['container_ref'] = (
             self.create_asymmetric_key_container())
-        test_model.meta['profile'] = "caSigningCert"
+        test_model.meta['profile'] = "caTPSCert"
         test_model.meta['ca_id'] = self.get_dogtag_ca_id()
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -595,7 +602,7 @@ class CertificatesTestCase(base.TestCase):
         self.assertIsNotNone(order_ref)
 
         order_resp = self.wait_for_order(order_ref)
-        self.assertEqual('PENDING', order_resp.model.status)
+        self.verify_pending_waiting_for_ca(order_resp)
 
     @testtools.testcase.attr('negative')
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
@@ -612,22 +619,39 @@ class CertificatesTestCase(base.TestCase):
 
         order_resp = self.wait_for_order(order_ref)
         self.assertEqual('ERROR', order_resp.model.status)
-        # confirm order substatus = data issue seen
+        self.assertIn('Problem with data in certificate request',
+                      order_resp.model.error_reason)
+        self.assertIn('Profile not found',
+                      order_resp.model.error_reason)
 
     @testtools.testcase.attr('positive')
-    @testtools.skip("broken till state machine fixed")
     def test_create_cert_order_with_missing_request_type(self):
-        # TODO(alee) Need to fix state machine to return PENDING
         # defaults to 'custom' type
         test_model = order_models.OrderModel(**self.dogtag_custom_data)
-        test_model.meta['request_data'] = certutil.create_good_csr()
+        test_model.meta['cert_request'] = certutil.create_good_csr()
+        test_model.meta['profile_id'] = 'caTPSCert'
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
         order_resp = self.behaviors.get_order(order_ref)
-        self.assertEqual('PENDING', order_resp.model.status)
+        self.verify_pending_waiting_for_ca(order_resp)
+
+    @testtools.testcase.attr('positive')
+    @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
+    def test_create_cert_order_with_missing_request_type_auto_enroll(self):
+        # defaults to 'custom' type
+        test_model = order_models.OrderModel(**self.dogtag_custom_data)
+        test_model.meta['cert_request'] = certutil.create_good_csr()
+
+        create_resp, order_ref = self.behaviors.create_order(test_model)
+        self.assertEqual(202, create_resp.status_code)
+        self.assertIsNotNone(order_ref)
+
+        order_resp = self.wait_for_order(order_ref)
+        self.assertEqual('ACTIVE', order_resp.model.status)
+        self.verify_cert_returned(order_resp)
 
     @testtools.testcase.attr('positive')
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
@@ -647,8 +671,10 @@ class CertificatesTestCase(base.TestCase):
     @testtools.testcase.attr('negative')
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
     def test_create_custom_order_with_invalid_dogtag_data(self):
+        # TODO(alee) this test is broken because Dogtag does not return the
+        # correct type of exception,  Fix this when Dogtag is fixed.
         test_model = order_models.OrderModel(**self.dogtag_custom_data)
-        test_model.meta['request_data'] = "invalid_data"
+        test_model.meta['cert_request'] = "invalid_data"
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(202, create_resp.status_code)
@@ -656,12 +682,11 @@ class CertificatesTestCase(base.TestCase):
 
         order_resp = self.wait_for_order(order_ref)
         self.assertEqual('ERROR', order_resp.model.status)
-        # confirm substatus - data error seen
+        # TODO(alee) confirm substatus - data error seen
 
     @testtools.testcase.attr('positive')
-    @testtools.skip("broken till state machine fixed")
+    @testtools.skipIf(dogtag_imports_ok, "Non-Dogtag test only")
     def test_create_custom_order_for_generic_plugin(self):
-        # TODO(alee) - fix state machine
         test_model = order_models.OrderModel(**self.dogtag_custom_data)
         test_model.meta['container_ref'] = (
             self.create_asymmetric_key_container())
