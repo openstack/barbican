@@ -215,11 +215,12 @@ class WhenTestingSecretStorePluginManager(utils.BaseTestCase):
         generate_full_name_for.return_value = "another plugin name"
         plugin_name = 'plugin name searched for'
 
-        self.assertRaises(
+        exception_result = self.assertRaises(
             str.StorePluginNotAvailableOrMisconfigured,
             self.manager.get_plugin_retrieve_delete,
             plugin_name=plugin_name,
         )
+        self.assertIn(plugin_name, exception_result.message)
 
     def test_get_store_plugin_with_tkey_and_supports_storage(self):
         plugin1 = TestSecretStore([str.KeyAlgorithm.AES])
