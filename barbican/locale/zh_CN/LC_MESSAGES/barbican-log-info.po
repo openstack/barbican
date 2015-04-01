@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-31 06:07+0000\n"
-"PO-Revision-Date: 2015-03-30 19:19+0000\n"
+"POT-Creation-Date: 2015-04-01 06:11+0000\n"
+"PO-Revision-Date: 2015-03-31 18:07+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
@@ -20,15 +20,15 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: barbican/model/repositories.py:192
+#: barbican/model/repositories.py:193
 msgid "Not auto-creating barbican registry DB"
 msgstr "没有自动创建 barbican 注册表数据库"
 
-#: barbican/model/repositories.py:226
+#: barbican/model/repositories.py:227
 msgid "Updating schema to latest version"
 msgstr "最新版本更新模式"
 
-#: barbican/model/repositories.py:230
+#: barbican/model/repositories.py:231
 msgid "Auto-creating barbican registry DB"
 msgstr "自动创建 barbican 注册表数据库"
 
@@ -104,55 +104,70 @@ msgstr ""
 msgid "Waiting on %d children to exit"
 msgstr ""
 
-#: barbican/plugin/simple_certificate_manager.py:51
+#: barbican/plugin/simple_certificate_manager.py:54
 msgid "Invoking issue_certificate_request()"
 msgstr "调用 issue_certificate_request()"
 
-#: barbican/plugin/simple_certificate_manager.py:69
+#: barbican/plugin/simple_certificate_manager.py:74
 msgid "Invoking modify_certificate_request()"
 msgstr "调用 modify_certificate_request()"
 
-#: barbican/plugin/simple_certificate_manager.py:87
+#: barbican/plugin/simple_certificate_manager.py:92
 msgid "Invoking cancel_certificate_request()"
 msgstr "调用 cancel_certificate_request()"
 
-#: barbican/plugin/simple_certificate_manager.py:105
+#: barbican/plugin/simple_certificate_manager.py:110
 msgid "Invoking check_certificate_status()"
 msgstr "调用 check_certificate_status()"
 
-#: barbican/plugin/simple_certificate_manager.py:143
+#: barbican/plugin/simple_certificate_manager.py:148
 msgid "Invoking notify_certificate_is_ready()"
 msgstr "调用 notify_certificate_is_ready()"
 
-#: barbican/plugin/simple_certificate_manager.py:156
+#: barbican/plugin/simple_certificate_manager.py:161
 msgid "Invoking notify_ca_is_unavailable()"
 msgstr "调用 notify_ca_is_unavailable()"
 
-#: barbican/queue/server.py:63
+#: barbican/queue/retry_scheduler.py:104
+msgid "Processing scheduled retry tasks:"
+msgstr ""
+
+#: barbican/queue/retry_scheduler.py:119
+#, python-format
+msgid ""
+"Done processing '%(total)s' tasks, will check again in '%(next)s' seconds."
+msgstr ""
+
+#: barbican/queue/server.py:65
 #, python-format
 msgid "Scheduled RPC method for retry: '%s'"
 msgstr ""
 
-#: barbican/queue/server.py:79 barbican/queue/server.py:85
+#: barbican/queue/server.py:81 barbican/queue/server.py:87
 #, python-format
 msgid "Completed worker task: '%s'"
 msgstr ""
 
-#: barbican/queue/server.py:190
+#: barbican/queue/server.py:209
 #, python-format
 msgid "Processing type order: order ID is '%s'"
 msgstr ""
 
-#: barbican/queue/server.py:201
+#: barbican/queue/server.py:220
 #, python-format
 msgid "Processing update order: order ID is '%s'"
 msgstr ""
 
-#: barbican/queue/server.py:234
+#: barbican/queue/server.py:232
+#, python-format
+msgid "Processing check certificate status on order: order ID is '%s'"
+msgstr ""
+
+#: barbican/queue/server.py:266
 msgid "Starting the TaskServer"
 msgstr ""
 
-#: barbican/queue/server.py:239
+#: barbican/queue/server.py:271
 msgid "Halting the TaskServer"
 msgstr ""
 
