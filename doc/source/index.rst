@@ -16,13 +16,14 @@ Getting Started
 .. toctree::
    :maxdepth: 1
 
-   api
+   api/index
    contribute/getting_involved
    contribute/dependencies
    contribute/database_migrations
    setup/index
    testing
    plugin/index
+
 
 
 Indices and tables

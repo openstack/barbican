@@ -8,7 +8,7 @@ to the secret / keying material stored in the system.
 Barbican supports the storage of data for various content-types securely.
 
 This guide will assume you will be using a local running development environment of Barbican.
-If you need assistance with getting set up, please reference the :doc:`development guide <../setup/dev>`.
+If you need assistance with getting set up, please reference the :doc:`development guide </setup/dev>`.
 
 
 What is a Secret?
