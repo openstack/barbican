@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-26 06:07+0000\n"
-"PO-Revision-Date: 2015-03-25 21:44+0000\n"
+"POT-Creation-Date: 2015-04-01 06:11+0000\n"
+"PO-Revision-Date: 2015-03-31 18:07+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
@@ -44,20 +44,20 @@ msgstr "删除容器时出错"
 msgid "Problem deleting transport_key"
 msgstr "删除传输密匙时出错"
 
-#: barbican/model/repositories.py:353
+#: barbican/model/repositories.py:354
 #, python-format
 msgid "Not found for %s"
 msgstr "没有找到%s"
 
-#: barbican/model/repositories.py:388
+#: barbican/model/repositories.py:389
 msgid "Problem saving entity for create"
 msgstr "为创建保存实体时出错"
 
-#: barbican/model/repositories.py:521
+#: barbican/model/repositories.py:522
 msgid "Problem finding project related entity to delete"
 msgstr "寻找项目相关的实体来删除时出错"
 
-#: barbican/model/repositories.py:554
+#: barbican/model/repositories.py:559
 #, python-format
 msgid "Problem getting Project %s"
 msgstr "获取项目%s时出错"
@@ -106,7 +106,14 @@ msgstr "未处理的异常"
 msgid "Error opening or writing to client"
 msgstr "打开或者写入客户端错误"
 
-#: barbican/queue/server.py:69
+#: barbican/queue/retry_scheduler.py:152
+#, python-format
+msgid ""
+"Problem enqueuing method '%(name)s' with args '%(args)s' and kwargs "
+"'%(kwargs)s'."
+msgstr ""
+
+#: barbican/queue/server.py:96
 #, python-format
 msgid "Problem seen processing worker task: '%s'"
 msgstr ""
@@ -121,22 +128,22 @@ msgstr ""
 "处理 Keystone 事件错误，项目id=%(project_id)s，事件资源=%(resource)s，事件操"
 "作=%(operation)s，状态=%(status)s，错误信息=%(message)s"
 
-#: barbican/tasks/resources.py:93
+#: barbican/tasks/resources.py:70
 #, python-format
 msgid "Could not retrieve information needed to process task '%s'."
 msgstr "无法检索到所需的信息来处理任务 '%s'。"
 
-#: barbican/tasks/resources.py:101
+#: barbican/tasks/resources.py:78
 #, python-format
 msgid "Could not perform processing for task '%s'."
 msgstr "无法为任务 '%s' 执行处理。"
 
-#: barbican/tasks/resources.py:111
+#: barbican/tasks/resources.py:88
 #, python-format
 msgid "Problem handling an error for task '%s', raising original exception."
 msgstr "为任务 '%s' 处理错误时出错，原始异常增加。"
 
-#: barbican/tasks/resources.py:120
+#: barbican/tasks/resources.py:97
 #, python-format
 msgid "Could not process after successfully executing task '%s'."
 msgstr "在成功执行任务 '%s' 后无法处理。"

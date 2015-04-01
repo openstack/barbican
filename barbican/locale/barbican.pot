@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2015.1.dev58\n"
+"Project-Id-Version: barbican 2015.1.dev72\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-31 06:07+0000\n"
+"POT-Creation-Date: 2015-04-01 06:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -83,23 +83,23 @@ msgstr ""
 msgid "Set preferred project CA"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:192
+#: barbican/api/controllers/cas.py:191
 msgid "Set global preferred CA"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:207
+#: barbican/api/controllers/cas.py:208
 msgid "Unset global preferred CA"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:255
+#: barbican/api/controllers/cas.py:256
 msgid "Certificate Authorities retrieval"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:298
+#: barbican/api/controllers/cas.py:299
 msgid "Retrieve global preferred CA"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:312
+#: barbican/api/controllers/cas.py:313
 msgid "Retrieve project preferred CA"
 msgstr ""
 
@@ -767,86 +767,86 @@ msgstr ""
 msgid "Must supply non-None {0} argument for OrderBarbicanMetadatum entry."
 msgstr ""
 
-#: barbican/model/models.py:785
+#: barbican/model/models.py:782
 msgid "Must supply non-None {0} argument for TransportKey entry."
 msgstr ""
 
-#: barbican/model/models.py:827
+#: barbican/model/models.py:824
 msgid "Must supply Non-None {0} argument for CertificateAuthority entry."
 msgstr ""
 
-#: barbican/model/models.py:893
+#: barbican/model/models.py:890
 msgid "Must supply non-None {0} argument for CertificateAuthorityMetadatum entry."
 msgstr ""
 
-#: barbican/model/models.py:940
+#: barbican/model/models.py:937
 msgid "Must supply non-None {0} argument for ProjectCertificateAuthority entry."
 msgstr ""
 
-#: barbican/model/models.py:989
+#: barbican/model/models.py:986
 msgid "Must supply non-None {0} argument for PreferredCertificateAuthority entry."
 msgstr ""
 
-#: barbican/model/repositories.py:166
+#: barbican/model/repositories.py:167
 msgid "No SQL connection configured"
 msgstr ""
 
-#: barbican/model/repositories.py:180
+#: barbican/model/repositories.py:181
 msgid ""
 "Error configuring registry database with supplied sql_connection. Got "
 "error: {error}"
 msgstr ""
 
-#: barbican/model/repositories.py:363
+#: barbican/model/repositories.py:364
 msgid "Must supply non-None {entity_name}."
 msgstr ""
 
-#: barbican/model/repositories.py:369
+#: barbican/model/repositories.py:370
 msgid "Must supply {entity_name} with id=None (i.e. new entity)."
 msgstr ""
 
-#: barbican/model/repositories.py:447
+#: barbican/model/repositories.py:448
 msgid "{entity_name} status is required."
 msgstr ""
 
-#: barbican/model/repositories.py:452
+#: barbican/model/repositories.py:453
 msgid "Invalid status '{status}' for {entity_name}."
 msgstr ""
 
-#: barbican/model/repositories.py:472
+#: barbican/model/repositories.py:473
 msgid "{entity_name} is missing query build method for get project entities."
 msgstr ""
 
-#: barbican/model/repositories.py:524
+#: barbican/model/repositories.py:525
 #, python-format
 msgid "Error deleting project entities for project_id=%s"
 msgstr ""
 
-#: barbican/model/repositories.py:556
+#: barbican/model/repositories.py:561
 msgid "No {entity_name} found with keystone-ID {id}"
 msgstr ""
 
-#: barbican/model/repositories.py:753
+#: barbican/model/repositories.py:758
 msgid "Tried to register crypto plugin with null or empty name."
 msgstr ""
 
-#: barbican/model/repositories.py:1144
+#: barbican/model/repositories.py:1214
 msgid "Could not find {entity_name}"
 msgstr ""
 
-#: barbican/model/repositories.py:1645
+#: barbican/model/repositories.py:1742
 msgid "No {entity} found with ID {id}"
 msgstr ""
 
-#: barbican/model/repositories.py:1651
+#: barbican/model/repositories.py:1748
 msgid "Entity ID {entity_id} not found"
 msgstr ""
 
-#: barbican/model/repositories.py:1657
+#: barbican/model/repositories.py:1754
 msgid "No entities of type {entity_name} found"
 msgstr ""
 
-#: barbican/model/repositories.py:1663
+#: barbican/model/repositories.py:1760
 msgid "Entity '{entity_name}' already exists"
 msgstr ""
 
@@ -1456,11 +1456,11 @@ msgid ""
 "processing functionality."
 msgstr ""
 
-#: barbican/queue/retry_scheduler.py:36
+#: barbican/queue/retry_scheduler.py:40
 msgid "Seconds (float) to wait before starting retry scheduler"
 msgstr ""
 
-#: barbican/queue/retry_scheduler.py:39
+#: barbican/queue/retry_scheduler.py:43
 msgid "Seconds (float) to wait between periodic schedule events"
 msgstr ""
 
@@ -1468,24 +1468,32 @@ msgstr ""
 msgid "Project cleanup via Keystone notifications"
 msgstr ""
 
-#: barbican/tasks/resources.py:213
+#: barbican/tasks/resources.py:214
 msgid "Process TypeOrder"
 msgstr ""
 
-#: barbican/tasks/resources.py:272 barbican/tasks/resources.py:316
+#: barbican/tasks/resources.py:279 barbican/tasks/resources.py:325
 msgid "Order type \"{order_type}\" not implemented."
 msgstr ""
 
-#: barbican/tasks/resources.py:288
+#: barbican/tasks/resources.py:297
 msgid "Update Order"
 msgstr ""
 
-#: barbican/tests/tasks/test_resources.py:216
-#: barbican/tests/tasks/test_resources.py:363
+#: barbican/tasks/resources.py:344
+msgid "Check Certificate Order Status"
+msgstr ""
+
+#: barbican/tasks/resources.py:375
+msgid "Order type \"{order_type}\" not supported."
+msgstr ""
+
+#: barbican/tests/tasks/test_resources.py:218
+#: barbican/tests/tasks/test_resources.py:416
 msgid "Process TypeOrder failure seen - please contact site administrator."
 msgstr ""
 
-#: barbican/tests/tasks/test_resources.py:301
+#: barbican/tests/tasks/test_resources.py:354
 msgid "Update Order failure seen - please contact site administrator."
 msgstr ""
 
