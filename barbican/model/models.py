@@ -1267,7 +1267,8 @@ MODELS = [ProjectSecret, Project, Secret, EncryptedDatum, Order, Container,
           SecretStoreMetadatum, OrderPluginMetadatum, OrderBarbicanMetadatum,
           KEKDatum, CertificateAuthority, CertificateAuthorityMetadatum,
           ProjectCertificateAuthority, PreferredCertificateAuthority,
-          SecretACL, ContainerACL, SecretACLUser, ContainerACLUser]
+          SecretACL, ContainerACL, SecretACLUser, ContainerACLUser,
+          OrderRetryTask]
 
 
 def register_models(engine):
