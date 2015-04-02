@@ -52,6 +52,28 @@ def convert_certificate_authority_to_href(ca_id):
     return convert_resource_id_to_href('cas', ca_id)
 
 
+def convert_secret_acl_to_href(secret_id, acl_id):
+    """Convert the secret acl ID to a HATEOS-style href."""
+    secret_href = convert_secret_to_href(secret_id)
+    return secret_href + '/acls/' + acl_id
+
+
+def convert_acl_to_hrefs(fields):
+    acl_id = fields['acl_id']
+    if 'secret_id' in fields:
+        fields['acl_ref'] = convert_secret_acl_to_href(fields['secret_id'],
+                                                       acl_id)
+        del fields['acl_id']
+        fields['secret_ref'] = convert_secret_to_href(fields['secret_id'])
+        del fields['secret_id']
+
+    if 'creator_only' in fields:
+        fields['creator-only'] = fields['creator_only']
+        del fields['creator_only']
+
+    return fields
+
+
 # TODO(hgedikli) handle list of fields in here
 def convert_to_hrefs(fields):
     """Convert id's within a fields dict to HATEOS-style hrefs."""

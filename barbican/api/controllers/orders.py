@@ -203,6 +203,10 @@ class OrdersController(object):
         new_order.type = order_type
         new_order.project_id = project.id
 
+        ctxt = controllers._get_barbican_context(pecan.request)
+        if ctxt:
+            new_order.creator_id = ctxt.user
+
         self.order_repo.create_from(new_order)
 
         # Grab our id before commit due to obj expiration from sqlalchemy
