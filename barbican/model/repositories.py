@@ -27,6 +27,7 @@ import uuid
 from oslo_config import cfg
 from oslo_log import log
 import sqlalchemy
+from sqlalchemy import func as sa_func
 from sqlalchemy import or_
 import sqlalchemy.orm as sa_orm
 
@@ -48,6 +49,7 @@ sa_logger = None
 # Singleton repository references, instantiated via get_xxxx_repository()
 #   functions below.  Please keep this list in alphabetical order.
 _CA_REPOSITORY = None
+_CONTAINER_ACL_REPOSITORY = None
 _CONTAINER_CONSUMER_REPOSITORY = None
 _CONTAINER_REPOSITORY = None
 _CONTAINER_SECRET_REPOSITORY = None
@@ -61,6 +63,7 @@ _PREFERRED_CA_REPOSITORY = None
 _PROJECT_REPOSITORY = None
 _PROJECT_CA_REPOSITORY = None
 _PROJECT_SECRET_REPOSITORY = None
+_SECRET_ACL_REPOSITORY = None
 _SECRET_META_REPOSITORY = None
 _SECRET_REPOSITORY = None
 _TRANSPORT_KEY_REPOSITORY = None
@@ -669,6 +672,32 @@ class SecretRepo(BaseRepo):
         query = query.filter(models.ProjectSecret.project_id == project_id)
         return query
 
+    def get_secret_by_id(self, entity_id, suppress_exception=False,
+                         session=None):
+        """Gets secret by its entity id without project id check."""
+        session = self.get_session(session)
+        try:
+            utcnow = timeutils.utcnow()
+            # Note(john-wood-w): SQLAlchemy requires '== None' below,
+            #   not 'is None'.
+            expiration_filter = or_(models.Secret.expiration == None,
+                                    models.Secret.expiration > utcnow)
+
+            query = session.query(models.Secret)
+            query = query.filter_by(id=entity_id, deleted=False)
+            query = query.filter(expiration_filter)
+            entity = query.one()
+        except sa_orm.exc.NoResultFound:
+            entity = None
+            if not suppress_exception:
+                LOG.exception(u._LE("Problem getting secret %s"),
+                              entity_id)
+                raise exception.NotFound(u._(
+                    "No secret found with secret-ID {id}").format(
+                        entity_name=self._do_entity_name(),
+                        id=entity_id))
+        return entity
+
 
 class EncryptedDatumRepo(BaseRepo):
     """Repository for the EncryptedDatum entity
@@ -1139,6 +1168,25 @@ class ContainerRepo(BaseRepo):
         """
         return session.query(models.Container).filter_by(
             deleted=False).filter_by(project_id=project_id)
+
+    def get_container_by_id(self, entity_id, suppress_exception=False,
+                            session=None):
+        """Gets container by its entity id without project id check."""
+        session = self.get_session(session)
+        try:
+            query = session.query(models.Container)
+            query = query.filter_by(id=entity_id, deleted=False)
+            entity = query.one()
+        except sa_orm.exc.NoResultFound:
+            entity = None
+            if not suppress_exception:
+                LOG.exception(u._LE("Problem getting container %s"),
+                              entity_id)
+                raise exception.NotFound(u._(
+                    "No container found with container-ID {id}").format(
+                        entity_name=self._do_entity_name(),
+                        id=entity_id))
+        return entity
 
 
 class ContainerSecretRepo(BaseRepo):
@@ -1625,10 +1673,204 @@ class PreferredCertificateAuthorityRepo(BaseRepo):
             project_id=project_id).filter_by(deleted=False)
 
 
+class SecretACLRepo(BaseRepo):
+    """Repository for the SecretACL entity.
+
+    There is no need for SecretACLUserRepo as none of logic access
+    SecretACLUser (ACL user data) directly. Its always derived from
+    SecretACL relationship.
+
+    SecretACL and SecretACLUser data is not soft delete. So there is no need
+    to have deleted=False filter in queries.
+    """
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "SecretACL"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+        query = session.query(models.SecretACL)
+        query = query.filter_by(id=entity_id)
+        return query
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+    def get_by_secret_id(self, secret_id, session=None):
+        """Return list of secret ACLs by secret id."""
+
+        session = self.get_session(session)
+
+        query = session.query(models.SecretACL)
+        query = query.filter_by(secret_id=secret_id)
+
+        return query.all()
+
+    def create_or_replace_from(self, secret, secret_acl, user_ids=None,
+                               session=None):
+        session = self.get_session(session)
+        secret.updated_at = timeutils.utcnow()
+        secret.secret_acls.append(secret_acl)
+        secret.save(session=session)
+
+        self._create_or_replace_acl_users(secret_acl, user_ids,
+                                          session=session)
+
+    def _create_or_replace_acl_users(self, secret_acl, user_ids, session=None):
+        """Creates or updates secret acl user based on input user_ids list.
+
+        user_ids is expected to be list of ids (enforced by schema validation).
+        Input user ids should have complete list of acl users. It does not
+        apply partial update of user ids.
+
+        If user_ids is None, no change is made in acl user data.
+        If user_ids list is not None, then following change is made.
+        For existing acl users, just update timestamp if user_id is present in
+        input user ids list. Otherwise, remove existing acl user entries.
+        Then add the remainining input user ids as new acl user db entries.
+        """
+        if user_ids is None:
+            return
+
+        user_ids = set(user_ids)
+
+        now = timeutils.utcnow()
+        session = self.get_session(session)
+        secret_acl.updated_at = now
+
+        for acl_user in secret_acl.acl_users:
+            if acl_user.user_id in user_ids:  # input user_id already exists
+                acl_user.updated_at = now
+                user_ids.remove(acl_user.user_id)
+            else:
+                acl_user.delete(session)
+
+        for user_id in user_ids:
+            acl_user = models.SecretACLUser(secret_acl.id, user_id)
+            secret_acl.acl_users.append(acl_user)
+
+        secret_acl.save(session=session)
+
+    def get_count(self, secret_id, session=None):
+        """Gets count of existing secret ACL(s) for a given secret."""
+        session = self.get_session(session)
+        query = session.query(sa_func.count(models.SecretACL.id))
+        return query.scalar()
+
+    def delete_acls_for_secret(self, secret, session=None):
+        session = self.get_session(session)
+
+        for entity in secret.secret_acls:
+            entity.delete(session=session)
+
+
+class ContainerACLRepo(BaseRepo):
+    """Repository for the ContainerACL entity.
+
+    There is no need for ContainerACLUserRepo as none of logic access
+    ContainerACLUser (ACL user data) directly. Its always derived from
+    ContainerACL relationship.
+
+    ContainerACL and ContainerACLUser data is not soft delete. So there is no
+    need to have deleted=False filter in queries.
+    """
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "ContainerACL"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+
+        query = session.query(models.ContainerACL)
+        query = query.filter_by(id=entity_id)
+
+        return query
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+    def get_by_container_id(self, container_id, session=None):
+        """Return list of container ACLs by container id."""
+
+        session = self.get_session(session)
+        query = session.query(models.ContainerACL)
+        query = query.filter_by(container_id=container_id)
+        return query.all()
+
+    def create_or_replace_from(self, container, container_acl,
+                               user_ids=None, session=None):
+        session = self.get_session(session)
+        container.updated_at = timeutils.utcnow()
+
+        container.container_acls.append(container_acl)
+        container.save(session=session)
+
+        self._create_or_replace_acl_users(container_acl, user_ids, session)
+
+    def _create_or_replace_acl_users(self, container_acl, user_ids,
+                                     session=None):
+        """Creates or updates container acl user based on input user_ids list.
+
+        user_ids is expected to be list of ids (enforced by schema validation).
+        Input user ids should have complete list of acl users. It does not
+        apply partial update of user ids.
+
+        If user_ids is None, no change is made in acl user data.
+        If user_ids list is not None, then following change is made.
+        For existing acl users, just update timestamp if user_id is present in
+        input user ids list. Otherwise, remove existing acl user entries.
+        Then add the remainining input user ids as new acl user db entries.
+        """
+        if user_ids is None:
+            return
+
+        user_ids = set(user_ids)
+
+        now = timeutils.utcnow()
+        session = self.get_session(session)
+        container_acl.updated_at = now
+
+        for acl_user in container_acl.acl_users:
+            if acl_user.user_id in user_ids:  # input user_id already exists
+                acl_user.updated_at = now
+                user_ids.remove(acl_user.user_id)
+            else:
+                acl_user.delete(session)
+
+        for user_id in user_ids:
+            acl_user = models.ContainerACLUser(container_acl.id, user_id)
+            container_acl.acl_users.append(acl_user)
+
+        container_acl.save(session=session)
+
+    def get_count(self, secret_id, session=None):
+        """Gets count of existing container ACL(s) for a given container."""
+        session = self.get_session(session)
+
+        query = session.query(sa_func.count(models.ContainerACL.id))
+        return query.scalar()
+
+    def delete_acls_for_container(self, container, session=None):
+        session = self.get_session(session)
+
+        for entity in container.container_acls:
+            entity.delete(session=session)
+
+
 def get_ca_repository():
     """Returns a singleton Secret repository instance."""
     global _CA_REPOSITORY
     return _get_repository(_CA_REPOSITORY, CertificateAuthorityRepo)
+
+
+def get_container_acl_repository():
+    """Returns a singleton Container ACL repository instance."""
+    global _CONTAINER_ACL_REPOSITORY
+    return _get_repository(_CONTAINER_ACL_REPOSITORY, ContainerACLRepo)
 
 
 def get_container_consumer_repository():
@@ -1712,6 +1954,12 @@ def get_project_secret_repository():
     """Returns a singleton ProjectSecret repository instance."""
     global _PROJECT_SECRET_REPOSITORY
     return _get_repository(_PROJECT_SECRET_REPOSITORY, ProjectSecretRepo)
+
+
+def get_secret_acl_repository():
+    """Returns a singleton Secret ACL repository instance."""
+    global _SECRET_ACL_REPOSITORY
+    return _get_repository(_SECRET_ACL_REPOSITORY, SecretACLRepo)
 
 
 def get_secret_meta_repository():
