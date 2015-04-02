@@ -27,7 +27,7 @@ class ContainerModel(BaseModel):
 
     def __init__(self, name=None, type=None, secret_refs=[],
                  container_ref=None, consumers=None, status=None,
-                 updated=None, created=None):
+                 updated=None, created=None, creator_id=None):
         self.name = name
         self.type = type
         self.secret_refs = secret_refs
@@ -36,6 +36,7 @@ class ContainerModel(BaseModel):
         self.status = status
         self.updated = updated
         self.created = created
+        self.creator_id = creator_id
 
     @classmethod
     def dict_to_obj(cls, input_dict):

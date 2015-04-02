@@ -294,6 +294,7 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
     algorithm = sa.Column(sa.String(255))
     bit_length = sa.Column(sa.Integer)
     mode = sa.Column(sa.String(255))
+    creator_id = sa.Column(sa.String(255))
 
     # TODO(jwood): Performance - Consider avoiding full load of all
     #   datum attributes here. This is only being done to support the
@@ -324,6 +325,7 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
             self.algorithm = parsed_request.get('algorithm')
             self.bit_length = parsed_request.get('bit_length')
             self.mode = parsed_request.get('mode')
+            self.creator_id = parsed_request.get('creator_id')
 
         self.status = States.ACTIVE
 
@@ -337,6 +339,9 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
 
         for secret_ref in self.container_secrets:
             session.delete(secret_ref)
+
+        for secret_acl in self.secret_acls:
+            session.delete(secret_acl)
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -352,7 +357,8 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
             'expiration': expiration,
             'algorithm': self.algorithm,
             'bit_length': self.bit_length,
-            'mode': self.mode
+            'mode': self.mode,
+            'creator_id': self.creator_id
         }
 
 
@@ -497,6 +503,7 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
     sub_status = sa.Column(sa.String(SUB_STATUS_LENGTH), nullable=True)
     sub_status_message = sa.Column(sa.String(SUB_STATUS_MESSAGE_LENGTH),
                                    nullable=True)
+    creator_id = sa.Column(sa.String(255))
 
     order_plugin_metadata = orm.relationship(
         "OrderPluginMetadatum",
@@ -520,6 +527,7 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
                 self.sub_status = parsed_request.get('sub_status')
                 self.sub_status_message = parsed_request.get(
                     'sub_status_message')
+                self.creator_id = parsed_request.get('creator_id')
 
     def set_error_reason_safely(self, error_reason_raw):
         """Ensure error reason does not raise database attribute exceptions."""
@@ -561,6 +569,8 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
             ret['sub_status'] = self.sub_status
         if self.sub_status_message:
             ret['sub_status_message'] = self.sub_status_message
+        if self.creator_id:
+            ret['creator_id'] = self.creator_id
         return ret
 
 
@@ -670,6 +680,7 @@ class Container(BASE, SoftDeleteMixIn, ModelBase):
     project_id = sa.Column(sa.String(36), sa.ForeignKey('projects.id'),
                            index=True, nullable=False)
     consumers = sa.orm.relationship("ContainerConsumerMetadatum")
+    creator_id = sa.Column(sa.String(255))
 
     def __init__(self, parsed_request=None):
         """Creates a Container entity from a dict."""
@@ -679,6 +690,7 @@ class Container(BASE, SoftDeleteMixIn, ModelBase):
             self.name = parsed_request.get('name')
             self.type = parsed_request.get('type')
             self.status = States.ACTIVE
+            self.creator_id = parsed_request.get('creator_id')
 
             secret_refs = parsed_request.get('secret_refs')
             if secret_refs:
@@ -703,11 +715,15 @@ class Container(BASE, SoftDeleteMixIn, ModelBase):
         for container_secret in self.container_secrets:
             session.delete(container_secret)
 
+        for container_acl in self.container_acls:
+            session.delete(container_acl)
+
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
         return {'container_id': self.id,
                 'name': self.name,
                 'type': self.type,
+                'creator_id': self.creator_id,
                 'secret_refs': [
                     {
                         'secret_id': container_secret.secret_id,
@@ -1002,12 +1018,240 @@ class PreferredCertificateAuthority(BASE, SoftDeleteMixIn, ModelBase):
                 'ca_id': self.ca_id}
 
 
+class SecretACL(BASE, ModelBase):
+    """Stores Access Control List (ACL) for a secret.
+
+    Class to define whitelist of user ids who are allowed specific operation
+    on a secret. List of user ids is defined via SecretACLUser via
+    acl_users association.
+    Creator_only flag helps in making a secret private for
+    non-admin project users who may have access otherwise.
+
+    SecretACL deletes are not soft-deletes.
+    """
+
+    __tablename__ = 'secret_acls'
+
+    secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
+                          index=True, nullable=False)
+
+    operation = sa.Column(sa.String(255), nullable=False)
+
+    creator_only = sa.Column(sa.Boolean, nullable=False, default=False)
+
+    secret = orm.relationship(
+        'Secret', backref=orm.backref('secret_acls', lazy=False))
+
+    acl_users = orm.relationship(
+        'SecretACLUser', backref=orm.backref('secret_acl', lazy=False),
+        cascade="all, delete-orphan")
+
+    __table_args__ = (sa.UniqueConstraint(
+        'secret_id', 'operation', name='_secret_acl_operation_uc'),)
+
+    def __init__(self, secret_id, operation, creator_only=None, user_ids=None):
+        """Creates secret ACL entity."""
+        super(SecretACL, self).__init__()
+
+        msg = u._("Must supply non-None {0} argument for SecretACL entry.")
+
+        if secret_id is None:
+            raise exception.MissingArgumentError(msg.format("secret_id"))
+        self.secret_id = secret_id
+
+        if operation is None:
+            raise exception.MissingArgumentError(msg.format("operation"))
+        self.operation = operation
+
+        if creator_only is not None:
+            self.creator_only = creator_only
+        self.status = States.ACTIVE
+        if user_ids is not None and isinstance(user_ids, list):
+            userids = set(user_ids)  # remove duplicate if any
+            for user_id in userids:
+                acl_user = SecretACLUser(self.id, user_id)
+                self.acl_users.append(acl_user)
+
+    def _do_delete_children(self, session):
+        """Sub-class hook: delete children relationships."""
+        for acl_user in self.acl_users:
+            acl_user.delete(session)
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields.
+
+        Adds non-deleted acl related users from relationship if there.
+        """
+        users = [acl_user.user_id for acl_user in self.acl_users
+                 if not acl_user.deleted]
+        fields = {'acl_id': self.id,
+                  'secret_id': self.secret_id,
+                  'operation': self.operation,
+                  'creator_only': self.creator_only}
+        if users:
+            fields['users'] = users
+        return fields
+
+
+class ContainerACL(BASE, ModelBase):
+    """Stores Access Control List (ACL) for a container.
+
+    Class to define whitelist of user ids who are allowed specific operation
+    on a container. List of user ids is defined in ContainerACLUser via
+    acl_users association.
+    Creator_only flag helps in making a container private for
+    non-admin project users who may have access otherwise.
+
+    ContainerACL deletes are not soft-deletes.
+    """
+
+    __tablename__ = 'container_acls'
+
+    container_id = sa.Column(sa.String(36), sa.ForeignKey('containers.id'),
+                             index=True, nullable=False)
+
+    operation = sa.Column(sa.String(255), nullable=False)
+
+    creator_only = sa.Column(sa.Boolean, nullable=False, default=False)
+
+    container = orm.relationship(
+        'Container', backref=orm.backref('container_acls', lazy=False))
+
+    acl_users = orm.relationship(
+        'ContainerACLUser', backref=orm.backref('container_acl', lazy=False),
+        cascade="all, delete-orphan")
+
+    __table_args__ = (sa.UniqueConstraint(
+        'container_id', 'operation', name='_container_acl_operation_uc'),)
+
+    def __init__(self, container_id, operation, creator_only=None,
+                 user_ids=None):
+        """Creates container ACL entity."""
+        super(ContainerACL, self).__init__()
+
+        msg = u._("Must supply non-None {0} argument for ContainerACL entry.")
+
+        if container_id is None:
+            raise exception.MissingArgumentError(msg.format("container_id"))
+        self.container_id = container_id
+
+        if operation is None:
+            raise exception.MissingArgumentError(msg.format("operation"))
+        self.operation = operation
+
+        if creator_only is not None:
+            self.creator_only = creator_only
+        self.status = States.ACTIVE
+
+        if user_ids is not None and isinstance(user_ids, list):
+            userids = set(user_ids)  # remove duplicate if any
+            for user_id in userids:
+                acl_user = ContainerACLUser(self.id, user_id)
+                self.acl_users.append(acl_user)
+
+    def _do_delete_children(self, session):
+        """Sub-class hook: delete children relationships."""
+        for acl_user in self.acl_users:
+            acl_user.delete(session)
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields.
+
+        Adds non-deleted acl related users from relationship if there.
+        """
+        users = [acl_user.user_id for acl_user in self.acl_users
+                 if not acl_user.deleted]
+        fields = {'acl_id': self.id,
+                  'container_id': self.container_id,
+                  'operation': self.operation,
+                  'creator_only': self.creator_only}
+        if users:
+            fields['users'] = users
+        return fields
+
+
+class SecretACLUser(BASE, ModelBase):
+    """Stores user id for a secret ACL.
+
+    This class provides way to store list of users associated with a
+    specific ACL operation.
+
+    SecretACLUser deletes are not soft-deletes.
+    """
+
+    __tablename__ = 'secret_acl_users'
+
+    acl_id = sa.Column(sa.String(36), sa.ForeignKey('secret_acls.id'),
+                       index=True, nullable=False)
+
+    user_id = sa.Column(sa.String(255), nullable=False)
+
+    __table_args__ = (sa.UniqueConstraint(
+        'acl_id', 'user_id', name='_secret_acl_user_uc'),)
+
+    def __init__(self, acl_id, user_id):
+        """Creates secret ACL user entity."""
+        super(SecretACLUser, self).__init__()
+
+        msg = u._("Must supply non-None {0} argument for SecretACLUser entry.")
+
+        self.acl_id = acl_id
+        if user_id is None:
+            raise exception.MissingArgumentError(msg.format("user_id"))
+        self.user_id = user_id
+        self.status = States.ACTIVE
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {'acl_id': self.acl_id,
+                'user_id': self.user_id}
+
+
+class ContainerACLUser(BASE, ModelBase):
+    """Stores user id for a container ACL.
+
+    This class provides way to store list of users associated with a
+    specific ACL operation.
+
+    ContainerACLUser deletes are not soft-deletes.
+    """
+
+    __tablename__ = 'container_acl_users'
+
+    acl_id = sa.Column(sa.String(36), sa.ForeignKey('container_acls.id'),
+                       index=True, nullable=False)
+
+    user_id = sa.Column(sa.String(255), nullable=False)
+
+    __table_args__ = (sa.UniqueConstraint(
+        'acl_id', 'user_id', name='_container_acl_user_uc'),)
+
+    def __init__(self, acl_id, user_id):
+        """Creates container ACL user entity."""
+        super(ContainerACLUser, self).__init__()
+
+        msg = u._("Must supply non-None {0} argument for ContainerACLUser "
+                  "entry.")
+
+        self.acl_id = acl_id
+        if user_id is None:
+            raise exception.MissingArgumentError(msg.format("user_id"))
+        self.user_id = user_id
+        self.status = States.ACTIVE
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {'acl_id': self.acl_id,
+                'user_id': self.user_id}
+
+
 # Keep this tuple synchronized with the models in the file
 MODELS = [ProjectSecret, Project, Secret, EncryptedDatum, Order, Container,
           ContainerConsumerMetadatum, ContainerSecret, TransportKey,
           SecretStoreMetadatum, OrderPluginMetadatum, OrderBarbicanMetadatum,
           KEKDatum, CertificateAuthority, CertificateAuthorityMetadatum,
-          ProjectCertificateAuthority, PreferredCertificateAuthority]
+          ProjectCertificateAuthority, PreferredCertificateAuthority,
+          SecretACL, ContainerACL, SecretACLUser, ContainerACLUser]
 
 
 def register_models(engine):

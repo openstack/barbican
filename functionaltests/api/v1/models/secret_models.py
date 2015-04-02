@@ -23,7 +23,7 @@ class SecretModel(BaseModel):
                  secret_ref=None, bit_length=None, mode=None, secret_type=None,
                  payload_content_type=None, payload=None, content_types=None,
                  payload_content_encoding=None, status=None, updated=None,
-                 created=None):
+                 created=None, creator_id=None):
         super(SecretModel, self).__init__()
 
         self.name = name
@@ -40,3 +40,4 @@ class SecretModel(BaseModel):
         self.status = status
         self.updated = updated
         self.created = created
+        self.creator_id = creator_id

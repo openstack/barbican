@@ -15,6 +15,7 @@
 
 import datetime
 
+from barbican.common import exception
 from barbican.model import models
 from barbican.plugin.interface import secret_store
 from barbican.tests import utils
@@ -28,7 +29,8 @@ class WhenCreatingNewSecret(utils.BaseTestCase):
                               'algorithm': 'algorithm',
                               'bit_length': 512,
                               'mode': 'mode',
-                              'plain_text': 'not-encrypted'}
+                              'plain_text': 'not-encrypted',
+                              'creator_id': 'creator12345'}
 
         self.parsed_order = {'secret': self.parsed_secret}
 
@@ -42,7 +44,15 @@ class WhenCreatingNewSecret(utils.BaseTestCase):
         self.assertEqual(secret.bit_length, self.parsed_secret['bit_length'])
         self.assertEqual(secret.mode, self.parsed_secret['mode'])
         self.assertIsInstance(secret.expiration, datetime.datetime)
+        self.assertEqual(secret.creator_id, self.parsed_secret['creator_id'])
         self.assertEqual(secret.created_at, secret.updated_at)
+
+        fields = secret.to_dict_fields()
+        self.assertEqual(self.parsed_secret['secret_type'],
+                         fields['secret_type'])
+        self.assertEqual(self.parsed_secret['algorithm'], fields['algorithm'])
+        self.assertEqual(self.parsed_secret['creator_id'],
+                         fields['creator_id'])
 
     def test_new_secret_is_created_with_default_secret_type(self):
         secret_spec = dict(self.parsed_secret)
@@ -62,7 +72,8 @@ class WhenCreatingNewOrder(utils.BaseTestCase):
                 'email': 'email@email.com'
             },
             'sub_status': 'Pending',
-            'sub_status_message': 'Waiting for instructions...'
+            'sub_status_message': 'Waiting for instructions...',
+            'creator_id': 'creator12345'
         }
 
     def test_new_order_is_created(self):
@@ -71,10 +82,16 @@ class WhenCreatingNewOrder(utils.BaseTestCase):
         self.assertEqual(order.type, self.parsed_order['type'])
         self.assertEqual(order.meta, self.parsed_order['meta'])
         self.assertEqual(order.sub_status, self.parsed_order['sub_status'])
+        self.assertEqual(order.creator_id, self.parsed_order['creator_id'])
         self.assertEqual(
             order.sub_status_message,
             self.parsed_order['sub_status_message']
         )
+        fields = order.to_dict_fields()
+        self.assertEqual(self.parsed_order['sub_status'], fields['sub_status'])
+        self.assertEqual(self.parsed_order['type'], fields['type'])
+        self.assertEqual(self.parsed_order['creator_id'],
+                         fields['creator_id'])
 
 
 class WhenCreatingNewContainer(utils.BaseTestCase):
@@ -89,12 +106,15 @@ class WhenCreatingNewContainer(utils.BaseTestCase):
                                       'secret_ref': '123'},
                                      {'name': 'test secret 3',
                                       'secret_ref': '123'}
-                                 ]}
+                                 ],
+                                 'creator_id': 'creator123456'}
 
     def test_new_container_is_created_from_dict(self):
         container = models.Container(self.parsed_container)
         self.assertEqual(container.name, self.parsed_container['name'])
         self.assertEqual(container.type, self.parsed_container['type'])
+        self.assertEqual(container.creator_id,
+                         self.parsed_container['creator_id'])
         self.assertEqual(len(container.container_secrets),
                          len(self.parsed_container['secret_refs']))
 
@@ -112,12 +132,19 @@ class WhenCreatingNewContainer(utils.BaseTestCase):
                          self.parsed_container['secret_refs'][2]['name'])
         self.assertEqual(container.container_secrets[2].secret_id,
                          self.parsed_container['secret_refs'][2]['secret_ref'])
+        fields = container.to_dict_fields()
+        self.assertEqual(self.parsed_container['name'], fields['name'])
+        self.assertEqual(self.parsed_container['type'], fields['type'])
+        self.assertEqual(self.parsed_container['creator_id'],
+                         fields['creator_id'])
 
     def test_new_certificate_container_is_created_from_dict(self):
         self.parsed_container['type'] = 'certificate'
         container = models.Container(self.parsed_container)
         self.assertEqual(container.name, self.parsed_container['name'])
         self.assertEqual(container.type, self.parsed_container['type'])
+        self.assertEqual(container.creator_id,
+                         self.parsed_container['creator_id'])
         self.assertEqual(len(container.container_secrets),
                          len(self.parsed_container['secret_refs']))
 
@@ -294,3 +321,188 @@ class WhenCreatingNewPreferredCertificateAuthority(utils.BaseTestCase):
 
         self.assertEqual(ca.id, preferred_ca.ca_id)
         self.assertEqual(project.id, preferred_ca.project_id)
+
+
+class WhenCreatingNewSecretACL(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenCreatingNewSecretACL, self).setUp()
+        self.secret_id = 'secret123456'
+        self.user_ids = ['user12345', 'user67890']
+        self.operation = 'read'
+        self.creator_only = False
+
+    def test_new_secretacl_for_given_all_input(self):
+        acl = models.SecretACL(self.secret_id, self.operation,
+                               self.creator_only, self.user_ids)
+        self.assertEqual(self.secret_id, acl.secret_id)
+        self.assertEqual(self.operation, acl.operation)
+        self.assertEqual(self.creator_only, acl.creator_only)
+        self.assertTrue(all(acl_user.user_id in self.user_ids for acl_user
+                            in acl.acl_users))
+
+    def test_new_secretacl_check_to_dict_fields(self):
+        acl = models.SecretACL(self.secret_id, self.operation,
+                               self.creator_only, self.user_ids)
+        self.assertEqual(self.secret_id, acl.to_dict_fields()['secret_id'])
+        self.assertEqual(self.operation, acl.to_dict_fields()['operation'])
+        self.assertEqual(self.creator_only,
+                         acl.to_dict_fields()['creator_only'])
+        self.assertTrue(all(user_id in self.user_ids for user_id in
+                            acl.to_dict_fields()['users']))
+        self.assertEqual(None, acl.to_dict_fields()['acl_id'])
+
+    def test_new_secretacl_for_bare_minimum_input(self):
+        acl = models.SecretACL(self.secret_id, self.operation,
+                               None, None)
+        self.assertEqual(acl.secret_id, self.secret_id)
+        self.assertEqual(0, len(acl.acl_users))
+        self.assertEqual(self.operation, acl.operation)
+        self.assertEqual(None, acl.creator_only)
+
+    def test_new_secretacl_with_duplicate_userids_input(self):
+        user_ids = list(self.user_ids)
+        user_ids = user_ids * 2  # duplicate ids
+        acl = models.SecretACL(self.secret_id, self.operation,
+                               None, user_ids=user_ids)
+        self.assertEqual(self.secret_id, acl.secret_id)
+        self.assertEqual(self.operation, acl.operation)
+        self.assertEqual(None, acl.creator_only)
+        self.assertEqual(2, len(acl.acl_users))
+
+    def test_should_throw_exception_missing_secret_id(self):
+        self.assertRaises(exception.MissingArgumentError,
+                          models.SecretACL, None, 'read',
+                          ['user246'], None)
+
+    def test_should_throw_exception_missing_operation(self):
+        self.assertRaises(exception.MissingArgumentError,
+                          models.SecretACL, self.secret_id, None,
+                          None, ['user246'])
+
+    def test_new_secretacl_expect_user_ids_as_list(self):
+        acl = models.SecretACL(self.secret_id, self.operation,
+                               None, {'aUser': '12345'})
+        self.assertEqual(0, len(acl.acl_users))
+
+
+class WhenCreatingNewContainerACL(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenCreatingNewContainerACL, self).setUp()
+        self.container_id = 'container123456'
+        self.user_ids = ['user12345', 'user67890']
+        self.operation = 'read'
+        self.creator_only = False
+
+    def test_new_containeracl_for_given_all_input(self):
+        acl = models.ContainerACL(self.container_id, self.operation,
+                                  self.creator_only, self.user_ids)
+        self.assertEqual(acl.container_id, self.container_id)
+        self.assertEqual(acl.operation, self.operation)
+        self.assertEqual(acl.creator_only, self.creator_only)
+        self.assertTrue(all(acl_user.user_id in self.user_ids for acl_user
+                            in acl.acl_users))
+
+    def test_new_containeracl_check_to_dict_fields(self):
+        acl = models.ContainerACL(self.container_id, self.operation,
+                                  self.creator_only, self.user_ids)
+        self.assertEqual(self.container_id,
+                         acl.to_dict_fields()['container_id'])
+        self.assertEqual(self.operation, acl.to_dict_fields()['operation'])
+        self.assertEqual(self.creator_only,
+                         acl.to_dict_fields()['creator_only'])
+        self.assertTrue(all(user_id in self.user_ids for user_id
+                            in acl.to_dict_fields()['users']))
+        self.assertEqual(None, acl.to_dict_fields()['acl_id'])
+
+    def test_new_containeracl_for_bare_minimum_input(self):
+        acl = models.ContainerACL(self.container_id, self.operation,
+                                  None, None)
+        self.assertEqual(self.container_id, acl.container_id)
+        self.assertEqual(0, len(acl.acl_users))
+        self.assertEqual(self.operation, acl.operation)
+        self.assertEqual(None, acl.creator_only)
+
+    def test_new_containeracl_with_duplicate_userids_input(self):
+        user_ids = list(self.user_ids)
+        user_ids = user_ids * 2  # duplicate ids
+        acl = models.ContainerACL(self.container_id, self.operation,
+                                  True, user_ids=user_ids)
+        self.assertEqual(self.container_id, acl.container_id)
+        self.assertEqual(self.operation, acl.operation)
+        self.assertEqual(True, acl.creator_only)
+        self.assertEqual(2, len(acl.acl_users))
+
+    def test_should_throw_exception_missing_container_id(self):
+        self.assertRaises(exception.MissingArgumentError,
+                          models.ContainerACL, None, 'read',
+                          None, ['user246'])
+
+    def test_should_throw_exception_missing_operation(self):
+        self.assertRaises(exception.MissingArgumentError,
+                          models.ContainerACL, self.container_id, None,
+                          None, ['user246'])
+
+    def test_new_containeracl_expect_user_ids_as_list(self):
+        acl = models.ContainerACL(self.container_id, self.operation,
+                                  None, {'aUser': '12345'})
+        self.assertEqual(0, len(acl.acl_users))
+
+
+class WhenCreatingNewSecretACLUser(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenCreatingNewSecretACLUser, self).setUp()
+        self.secret_acl_id = 'secret_acl_123456'
+        self.user_ids = ['user12345', 'user67890']
+
+    def test_new_secretacl_user_for_given_all_input(self):
+        acl_user = models.SecretACLUser(self.secret_acl_id, self.user_ids[0])
+
+        self.assertEqual(self.secret_acl_id, acl_user.acl_id)
+        self.assertEqual(self.user_ids[0], acl_user.user_id)
+        self.assertEqual(models.States.ACTIVE, acl_user.status)
+
+    def test_new_secretacl_user_check_to_dict_fields(self):
+        acl_user = models.SecretACLUser(self.secret_acl_id, self.user_ids[1])
+
+        self.assertEqual(self.secret_acl_id,
+                         acl_user.to_dict_fields()['acl_id'])
+        self.assertEqual(self.user_ids[1],
+                         acl_user.to_dict_fields()['user_id'])
+        self.assertEqual(models.States.ACTIVE,
+                         acl_user.to_dict_fields()['status'])
+
+    def test_should_throw_exception_missing_user_id(self):
+        self.assertRaises(exception.MissingArgumentError,
+                          models.SecretACLUser, self.secret_acl_id,
+                          None)
+
+
+class WhenCreatingNewContainerACLUser(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenCreatingNewContainerACLUser, self).setUp()
+        self.container_acl_id = 'container_acl_123456'
+        self.user_ids = ['user12345', 'user67890']
+
+    def test_new_secretacl_user_for_given_all_input(self):
+        acl_user = models.ContainerACLUser(self.container_acl_id,
+                                           self.user_ids[0])
+
+        self.assertEqual(self.container_acl_id, acl_user.acl_id)
+        self.assertEqual(self.user_ids[0], acl_user.user_id)
+        self.assertEqual(models.States.ACTIVE, acl_user.status)
+
+    def test_new_secretacl_user_check_to_dict_fields(self):
+        acl_user = models.ContainerACLUser(self.container_acl_id,
+                                           self.user_ids[1])
+
+        self.assertEqual(self.container_acl_id,
+                         acl_user.to_dict_fields()['acl_id'])
+        self.assertEqual(self.user_ids[1],
+                         acl_user.to_dict_fields()['user_id'])
+        self.assertEqual(models.States.ACTIVE,
+                         acl_user.to_dict_fields()['status'])
+
+    def test_should_throw_exception_missing_user_id(self):
+        self.assertRaises(exception.MissingArgumentError,
+                          models.ContainerACLUser, self.container_acl_id,
+                          None)

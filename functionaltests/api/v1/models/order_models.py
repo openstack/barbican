@@ -22,7 +22,7 @@ class OrderModel(BaseModel):
                  expiration=None, updated=None, created=None, meta=None,
                  payload_content_type=None, order_ref=None, container_ref=None,
                  error_status_code=None, error_reason=None,
-                 sub_status=None, sub_status_message=None):
+                 sub_status=None, sub_status_message=None, creator_id=None):
         super(OrderModel, self).__init__()
         self.type = type
         self.name = name
@@ -39,3 +39,4 @@ class OrderModel(BaseModel):
         self.container_ref = container_ref
         self.error_status_code = error_status_code
         self.error_reason = error_reason
+        self.creator_id = creator_id
