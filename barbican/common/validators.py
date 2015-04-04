@@ -660,7 +660,7 @@ class ContainerConsumerValidator(ValidatorBase):
             "type": "object",
             "properties": {
                 "URL": {"type": "string"},
-                "name": {"type": "string"}
+                "name": {"type": "string", "maxLength": 255}
             },
             "required": ["name", "URL"]
         }

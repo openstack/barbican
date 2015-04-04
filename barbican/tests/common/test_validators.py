@@ -927,6 +927,18 @@ class WhenTestingConsumerValidator(utils.BaseTestCase):
     def test_should_validate_all_fields(self):
         self.validator.validate(self.consumer_req)
 
+    def test_name_too_long_should_raise_with_invalid_object(self):
+        # Negative test to make sure our maxLength parameter for the
+        # name field raises the proper exception when a value greater
+        # than 255 in this case is passed in.
+        longname = 'a' * 256
+        consumer_req = {'name': longname, 'url': self.URL}
+        self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            consumer_req
+        )
+
 
 class WhenTestingKeyTypeOrderValidator(utils.BaseTestCase):
 
