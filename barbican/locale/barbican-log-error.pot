@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2015.1.dev72\n"
+"Project-Id-Version: barbican 2015.1.dev92\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-04-01 06:11+0000\n"
+"POT-Creation-Date: 2015-04-04 06:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -41,22 +41,32 @@ msgstr ""
 msgid "Problem deleting transport_key"
 msgstr ""
 
-#: barbican/model/repositories.py:354
+#: barbican/model/repositories.py:357
 #, python-format
 msgid "Not found for %s"
 msgstr ""
 
-#: barbican/model/repositories.py:389
+#: barbican/model/repositories.py:392
 msgid "Problem saving entity for create"
 msgstr ""
 
-#: barbican/model/repositories.py:522
+#: barbican/model/repositories.py:525
 msgid "Problem finding project related entity to delete"
 msgstr ""
 
-#: barbican/model/repositories.py:559
+#: barbican/model/repositories.py:562
 #, python-format
 msgid "Problem getting Project %s"
+msgstr ""
+
+#: barbican/model/repositories.py:693
+#, python-format
+msgid "Problem getting secret %s"
+msgstr ""
+
+#: barbican/model/repositories.py:1183
+#, python-format
+msgid "Problem getting container %s"
 msgstr ""
 
 #: barbican/openstack/common/excutils.py:76
