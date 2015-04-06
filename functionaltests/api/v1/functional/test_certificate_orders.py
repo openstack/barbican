@@ -157,14 +157,17 @@ class CertificatesTestCase(base.TestCase):
         self.behaviors.delete_all_created_orders()
         super(CertificatesTestCase, self).tearDown()
 
-    def wait_for_order(self, order_ref):
+    def wait_for_order(
+            self, order_ref, delay_before_check_seconds=1, max_wait_seconds=4):
+        time.sleep(delay_before_check_seconds)
+
         # Make sure we have an order in a terminal state
         time_count = 1
         order_resp = self.behaviors.get_order(order_ref)
 
         while ((order_resp.model.status != "ACTIVE") and
                (order_resp.model.status != "ERROR") and
-               time_count <= 4):
+               time_count <= max_wait_seconds):
             time.sleep(1)
             time_count += 1
             order_resp = self.behaviors.get_order(order_ref)
@@ -271,6 +274,7 @@ class CertificatesTestCase(base.TestCase):
         self.assertEqual(message, resp_dict['description'])
 
     @testtools.testcase.attr('positive')
+    @testtools.skipIf(dogtag_imports_ok, "not applicable with dogtag plugin")
     def test_create_simple_cmc_order(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
         test_model.meta['request_data'] = base64.b64encode(
@@ -282,6 +286,13 @@ class CertificatesTestCase(base.TestCase):
 
         order_resp = self.behaviors.get_order(order_ref)
         self.verify_pending_waiting_for_ca(order_resp)
+
+        # Wait for retry processing to handle checking for status with the
+        # default certificate plugin (which takes about 10 seconds +- 20%).
+        order_resp = self.wait_for_order(
+            order_ref, delay_before_check_seconds=20, max_wait_seconds=25)
+
+        self.assertEqual('ACTIVE', order_resp.model.status)
 
     @testtools.testcase.attr('positive')
     def test_create_simple_cmc_order_without_requestor_info(self):
