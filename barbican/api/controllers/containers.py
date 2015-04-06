@@ -34,7 +34,7 @@ def container_not_found():
                          'another castle.'))
 
 
-class ContainerController(object):
+class ContainerController(controllers.ACLMixin):
     """Handles Container entity retrieval and deletion requests."""
 
     def __init__(self, container_id):
@@ -45,6 +45,17 @@ class ContainerController(object):
         self.consumers = consumers.ContainerConsumersController(container_id)
         self.acls = acls.ContainerACLsController(self.container_id)
         self.container = None
+
+    def get_acl_tuple(self, req, **kwargs):
+        self.container = self.container_repo.get_container_by_id(
+            entity_id=self.container_id, suppress_exception=True)
+        if self.container:
+            d = self.get_acl_dict_for_user(req, self.container.container_acls)
+            d['project_id'] = self.container.project.external_id
+            d['creator_id'] = self.container.creator_id
+            return 'container', d
+        else:
+            return None, None
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
@@ -96,7 +107,7 @@ class ContainerController(object):
                 pass
 
 
-class ContainersController(object):
+class ContainersController(controllers.ACLMixin):
     """Handles Container creation requests."""
 
     def __init__(self):

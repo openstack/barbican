@@ -53,13 +53,19 @@ def _request_has_twsk_but_no_transport_key_id():
                          'transport key id has not been provided.'))
 
 
-class SecretController(object):
+class SecretController(controllers.ACLMixin):
     """Handles Secret retrieval and deletion requests."""
 
     def __init__(self, secret):
         LOG.debug('=== Creating SecretController ===')
         self.secret = secret
         self.transport_key_repo = repo.get_transport_key_repository()
+
+    def get_acl_tuple(self, req, **kwargs):
+        d = self.get_acl_dict_for_user(req, self.secret.secret_acls)
+        d['project_id'] = self.secret.project_assocs[0].projects.external_id
+        d['creator_id'] = self.secret.creator_id
+        return 'secret', d
 
     @pecan.expose()
     def _lookup(self, sub_resource, *remainder):
@@ -108,6 +114,12 @@ class SecretController(object):
 
     def _on_get_secret_payload(self, secret, external_project_id, **kwargs):
         """GET actual payload containing the secret."""
+
+        # With ACL support, the user token project does not have to be same as
+        # project associated with secret. The lookup project_id needs to be
+        # derived from the secret's data considering authorization is already
+        # done.
+        external_project_id = secret.project_assocs[0].projects.external_id
         project = res.get_or_create_project(external_project_id)
 
         pecan.override_template('', pecan.request.accept.header_value)
@@ -190,7 +202,7 @@ class SecretController(object):
         plugin.delete_secret(self.secret, external_project_id)
 
 
-class SecretsController(object):
+class SecretsController(controllers.ACLMixin):
     """Handles Secret creation requests."""
 
     def __init__(self):

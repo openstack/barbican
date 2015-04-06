@@ -51,7 +51,7 @@ def _acl_operation_update_not_allowed():
     pecan.abort(400, u._("Existing ACL's operation cannot be updated."))
 
 
-class SecretACLController(object):
+class SecretACLController(controllers.ACLMixin):
     """Handles a SecretACL entity retrieval and update requests."""
 
     def __init__(self, acl_id, secret_project_id, secret):
@@ -60,6 +60,10 @@ class SecretACLController(object):
         self.secret = secret
         self.acl_repo = repo.get_secret_acl_repository()
         self.validator = validators.ACLValidator()
+
+    def get_acl_tuple(self, req, **kwargs):
+        d = {'project_id': self.secret_project_id}
+        return 'secret', d
 
     @pecan.expose(generic=True)
     def index(self):
@@ -131,7 +135,7 @@ class SecretACLController(object):
                                           external_project_id=None)
 
 
-class SecretACLsController(object):
+class SecretACLsController(controllers.ACLMixin):
     """Handles SecretACL requests by a given secret id."""
 
     def __init__(self, secret):
@@ -140,6 +144,10 @@ class SecretACLsController(object):
                                   projects.external_id)
         self.acl_repo = repo.get_secret_acl_repository()
         self.validator = validators.ACLValidator()
+
+    def get_acl_tuple(self, req, **kwargs):
+        d = {'project_id': self.secret_project_id}
+        return 'secret', d
 
     @pecan.expose()
     def _lookup(self, acl_id, *remainder):
@@ -286,7 +294,7 @@ class SecretACLsController(object):
             return [{'acl_ref': acl['acl_ref']} for acl in acl_recs]
 
 
-class ContainerACLController(object):
+class ContainerACLController(controllers.ACLMixin):
     """Handles a ContainerACL entity retrieval and update requests."""
 
     def __init__(self, acl_id, container_project_id, container):
@@ -295,6 +303,10 @@ class ContainerACLController(object):
         self.container = container
         self.acl_repo = repo.get_container_acl_repository()
         self.validator = validators.ACLValidator()
+
+    def get_acl_tuple(self, req, **kwargs):
+        d = {'project_id': self.container_project_id}
+        return 'container', d
 
     @pecan.expose(generic=True)
     def index(self):
@@ -364,7 +376,7 @@ class ContainerACLController(object):
                                           external_project_id=None)
 
 
-class ContainerACLsController(object):
+class ContainerACLsController(controllers.ACLMixin):
     """Handles ContainerACL requests by a given container id."""
 
     def __init__(self, container_id):

@@ -9,7 +9,7 @@
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #  License for the specific language governing permissions and limitations
 #  under the License.
-
+import collections
 import uuid
 
 import pecan
@@ -41,7 +41,7 @@ def _get_barbican_context(req):
         return None
 
 
-def _do_enforce_rbac(req, action_name, ctx):
+def _do_enforce_rbac(inst, req, action_name, ctx, **kwargs):
     """Enforce RBAC based on 'request' information."""
     if action_name and ctx:
 
@@ -56,10 +56,16 @@ def _do_enforce_rbac(req, action_name, ctx):
         if 'secret:get' == action_name and not is_json_request_accept(req):
             action_name = 'secret:decrypt'  # Override to perform special rules
 
+        target_name, target_data = inst.get_acl_tuple(req, **kwargs)
+        policy_dict = {}
+        if target_name and target_data:
+            policy_dict['target'] = {target_name: target_data}
+
+        policy_dict.update(kwargs)
         # Enforce access controls.
         if ctx.policy_enforcer:
-            ctx.policy_enforcer.enforce(action_name, {}, credentials,
-                                        do_raise=True)
+            ctx.policy_enforcer.enforce(action_name, flatten(policy_dict),
+                                        credentials, do_raise=True)
 
 
 def enforce_rbac(action_name='default'):
@@ -76,7 +82,7 @@ def enforce_rbac(action_name='default'):
             if ctx:
                 external_project_id = ctx.project
 
-            _do_enforce_rbac(pecan.request, action_name, ctx)
+            _do_enforce_rbac(inst, pecan.request, action_name, ctx, **kwargs)
             # insert external_project_id as the first arg to the guarded method
             args = list(args)
             args.insert(0, external_project_id)
@@ -154,3 +160,71 @@ def assert_is_valid_uuid_from_uri(doubtful_uuid):
         uuid.UUID(doubtful_uuid)
     except ValueError:
         raise exception.InvalidUUIDInURI(uuid_string=doubtful_uuid)
+
+
+def flatten(d, parent_key=''):
+    """Flatten a nested dictionary
+
+    Converts a dictionary with nested values to a single level flat
+    dictionary, with dotted notation for each key.
+
+    """
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + '.' + k if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten(v, new_key).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+
+class ACLMixin(object):
+
+    def get_acl_tuple(self, req, **kwargs):
+        return None, None
+
+    def get_acl_dict_for_user(self, req, acl_list):
+        """Get acl operation found for token user in acl list.
+
+        Token user is looked into users list present for each acl operation.
+        If there is a match, it means that ACL data is applicable for policy
+        logic. Policy logic requires data as dictionary so this method capture
+        acl's operation, creator_only data in that format.
+
+        For operation value, matching ACL record's operation is stored in dict
+        as key and value both.
+        creator_only flag is intended to make secret/container private for a
+        given operation. It doesn't require user match. So its captured in dict
+        format where key is prefixed with related operation and flag is used as
+        its value.
+
+        Then for acl related policy logic, this acl dict data is combined with
+        target entity (secret or container) creator_id and project id. The
+        whole dict serves as target in policy enforcement logic i.e. right
+        hand side of policy rule.
+
+        Following is sample outcome where secret or container has ACL defined
+        and token user is among the ACL users defined for 'read' and 'list'
+        operation.
+
+        {'read': 'read', 'list': 'list', 'read_creator_only': False,
+        'list_creator_only': False }
+
+        Its possible that ACLs are defined without any user, they just
+        have creator_only flag set. This means only creator can read or list
+        ACL entities. In that case, dictionary output can be as follows.
+
+        {'read_creator_only': True, 'list_creator_only': True }
+
+        """
+        ctxt = _get_barbican_context(req)
+        if not ctxt:
+            return None
+        acl_dict = {acl.operation: acl.operation for acl in acl_list
+                    if ctxt.user in acl.to_dict_fields().get('users')}
+        co_dict = {'%s_creator_only' % acl.operation: acl.creator_only for acl
+                   in acl_list if acl.creator_only is not None}
+        acl_dict.update(co_dict)
+
+        return acl_dict

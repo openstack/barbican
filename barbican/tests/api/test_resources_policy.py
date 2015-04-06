@@ -12,13 +12,11 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 This test module focuses on RBAC interactions with the API resource classes.
 For typical-flow business logic tests of these classes, see the
 'resources_test.py' module.
 """
-
 import os
 
 import mock
@@ -26,10 +24,12 @@ from oslo_config import cfg
 from webob import exc
 
 from barbican.api.controllers import consumers
+from barbican.api.controllers import containers
 from barbican.api.controllers import orders
 from barbican.api.controllers import secrets
 from barbican.api.controllers import versions
 from barbican import context
+from barbican.model import models
 from barbican.openstack.common import policy
 from barbican.tests import utils
 
@@ -89,6 +89,10 @@ class OrderResource(TestableResource):
     controller_cls = orders.OrderController
 
 
+class ContainerResource(TestableResource):
+    controller_cls = containers.ContainerController
+
+
 class ConsumersResource(TestableResource):
     controller_cls = consumers.ContainerConsumersController
 
@@ -106,14 +110,15 @@ class BaseTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
         self.policy_enforcer.load_rules(True)
         self.resp = mock.MagicMock()
 
-    def _generate_req(self, roles=None, accept=None, content_type=None):
+    def _generate_req(self, roles=None, accept=None, content_type=None,
+                      user_id=None, project_id=None):
         """Generate a fake HTTP request with security context added to it."""
         req = mock.MagicMock()
         req.get_param.return_value = None
 
         kwargs = {
-            'user': None,
-            'project': None,
+            'user': user_id,
+            'project': project_id,
             'roles': roles or [],
             'policy_enforcer': self.policy_enforcer,
         }
@@ -157,7 +162,7 @@ class BaseTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
         return exc.HTTPServerError(message='Read Error')
 
     def _assert_pass_rbac(self, roles, method_under_test, accept=None,
-                          content_type=None):
+                          content_type=None, user_id=None, project_id=None):
         """Assert that RBAC authorization rules passed for the specified roles.
 
         :param roles: List of roles to check, one at a time
@@ -168,7 +173,9 @@ class BaseTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
         for role in roles:
             self.req = self._generate_req(roles=[role] if role else [],
                                           accept=accept,
-                                          content_type=content_type)
+                                          content_type=content_type,
+                                          user_id=user_id,
+                                          project_id=project_id)
 
             # Force an exception early past the RBAC passing.
             self.req.body_file = self._generate_stream_for_exit()
@@ -177,7 +184,7 @@ class BaseTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
             self._assert_post_rbac_exception(exception, role)
 
     def _assert_fail_rbac(self, roles, method_under_test, accept=None,
-                          content_type=None):
+                          content_type=None, user_id=None, project_id=None):
         """Assert that RBAC rules failed for one of the specified roles.
 
         :param roles: List of roles to check, one at a time
@@ -188,7 +195,9 @@ class BaseTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
         for role in roles:
             self.req = self._generate_req(roles=[role] if role else [],
                                           accept=accept,
-                                          content_type=content_type)
+                                          content_type=content_type,
+                                          user_id=user_id,
+                                          project_id=project_id)
 
             exception = self.assertRaises(exc.HTTPForbidden, method_under_test)
             self.assertEqual(403, exception.status_int)
@@ -283,12 +292,15 @@ class WhenTestingSecretsResource(BaseTestCase):
 
 
 class WhenTestingSecretResource(BaseTestCase):
-    """RBAC tests for the barbican.api.resources.SecretResource class."""
+    """RBAC tests for SecretController class."""
+
     def setUp(self):
         super(WhenTestingSecretResource, self).setUp()
 
         self.external_project_id = '12345project'
         self.secret_id = '12345secret'
+        self.user_id = '123456user'
+        self.creator_user_id = '123456CreatorUser'
 
         # Force an error on GET and DELETE calls that pass RBAC,
         #   as we are not testing such flows in this test module.
@@ -305,7 +317,20 @@ class WhenTestingSecretResource(BaseTestCase):
         self.setup_secret_meta_repository_mock()
         self.setup_transport_key_repository_mock()
 
-        self.resource = SecretResource(self.secret_id)
+        acl_read = models.SecretACL(secret_id=self.secret_id, operation='read',
+                                    creator_only=False,
+                                    user_ids=[self.user_id, 'anyRandomId'])
+        self.acl_list = [acl_read]
+        secret = mock.MagicMock()
+        secret.secret_acls.__iter__.return_value = self.acl_list
+        secret.project_assocs[0].projects.external_id = (self.
+                                                         external_project_id)
+        secret.creator_id = self.creator_user_id
+
+        self.resource = SecretResource(secret)
+
+        # self.resource.controller.get_acl_tuple = mock.MagicMock(
+        #    return_value=(None, None))
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
@@ -314,16 +339,236 @@ class WhenTestingSecretResource(BaseTestCase):
         self._assert_pass_rbac(['admin', 'observer', 'creator'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype',
-                               content_type='application/json')
+                               content_type='application/json',
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
 
     def test_should_raise_decrypt_secret(self):
+
         self._assert_fail_rbac([None, 'audit', 'bogus'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype')
 
+    def test_should_pass_decrypt_secret_for_same_project_with_no_acl(self):
+        """Token and secret project needs to be same in no ACL defined case."""
+        self.acl_list.pop()  # remove read acl from default setup
+        self._assert_pass_rbac(['admin', 'observer', 'creator'],
+                               self._invoke_on_get,
+                               accept='notjsonaccepttype',
+                               content_type='application/json',
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_raise_decrypt_secret_for_with_creator_only_enabled(self):
+        """Should raise authz error as secret is marked private.
+
+        As secret is private so project users should not be able to access
+        the secret.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.SecretACL(secret_id=self.secret_id, operation='read',
+                                    creator_only=True,
+                                    user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               accept='notjsonaccepttype',
+                               content_type='application/json',
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_pass_decrypt_secret_private_enabled_with_read_acl(self):
+        """Should pass authz as user has read acl for private secret.
+
+        Even though secret is private, user with read acl should be able to
+        access the secret.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.SecretACL(secret_id=self.secret_id, operation='read',
+                                    creator_only=True,
+                                    user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
+                                'bogusRole'],
+                               self._invoke_on_get,
+                               accept='notjsonaccepttype',
+                               content_type='application/json',
+                               user_id='aclUser1',
+                               project_id=self.external_project_id)
+
+    def test_should_pass_decrypt_secret_different_user_valid_read_acl(self):
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.SecretACL(secret_id=self.secret_id, operation='read',
+                                    creator_only=False,
+                                    user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        # token project_id is different from secret's project id but another
+        # user (from different project) has read acl for secret so should pass
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
+                                'bogusRole'],
+                               self._invoke_on_get,
+                               accept='notjsonaccepttype',
+                               content_type='application/json',
+                               user_id='aclUser1',
+                               project_id='different_project_id')
+
+    def test_should_raise_decrypt_secret_for_different_user_no_read_acl(self):
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.SecretACL(secret_id=self.secret_id,
+                                    operation='write',
+                                    creator_only=False,
+                                    user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        # token project_id is different from secret's project id but another
+        # user (from different project) has read acl for secret so should pass
+        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               accept='notjsonaccepttype',
+                               content_type='application/json',
+                               user_id='aclUser1',
+                               project_id='different_project_id')
+
+    def test_should_pass_decrypt_secret_for_creator_user_with_no_acl(self):
+        """Check for creator user rule for secret decrypt/get call.
+
+        If token's user is same as creator of secret, then they are allowed
+        to read decrypted secret regardless of token's  project or token's
+        role.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        self.resource.controller.secret.creator_id = 'creatorUserX'
+        # token user is creator so allowed get call regardless of role
+        # user (from different project) has read acl for secret so should pass
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
+                                'bogusRole'],
+                               self._invoke_on_get,
+                               accept='notjsonaccepttype',
+                               content_type='application/json',
+                               user_id='creatorUserX',
+                               project_id='different_project_id')
+
     def test_should_pass_get_secret(self):
         self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
-                               self._invoke_on_get)
+                               self._invoke_on_get,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_pass_get_secret_with_no_context(self):
+        """In unauthenticated flow, get secret should work."""
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get_without_context,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_raise_get_secret_for_different_project_no_acl(self):
+        """Should raise error when secret and token's project is different."""
+        self.acl_list.pop()  # remove read acl from default setup
+        # token project_id is different from secret's project id so should fail
+        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               user_id=self.user_id,
+                               project_id='different_id')
+
+    def test_should_pass_get_secret_for_same_project_but_different_user(self):
+        # user id should not matter as long token and secret's project match
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               user_id='different_user_id',
+                               project_id=self.external_project_id)
+
+    def test_should_pass_get_secret_for_same_project_with_no_acl(self):
+        self.acl_list.pop()  # remove read acl from default setup
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_raise_get_secret_for_with_creator_only_enabled(self):
+        """Should raise authz error as secret is marked private.
+
+        As secret is private so project users should not be able to access
+        the secret.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.SecretACL(secret_id=self.secret_id, operation='read',
+                                    creator_only=True,
+                                    user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_pass_get_secret_for_private_enabled_with_read_acl(self):
+        """Should pass authz as user has read acl for private secret.
+
+        Even though secret is private, user with read acl should be able to
+        access the secret.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.SecretACL(secret_id=self.secret_id, operation='read',
+                                    creator_only=True,
+                                    user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
+                                'bogusRole'],
+                               self._invoke_on_get,
+                               user_id='aclUser1',
+                               project_id=self.external_project_id)
+
+    def test_should_pass_get_secret_different_user_with_valid_read_acl(self):
+        """Should allow when read ACL is defined for a user.
+
+        Secret's own project and token's project is different but read is
+        allowed because of valid read ACL.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.SecretACL(secret_id=self.secret_id, operation='read',
+                                    creator_only=False,
+                                    user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        # token project_id is different from secret's project id but another
+        # user (from different project) has read acl for secret so should pass
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
+                                'bogusRole'],
+                               self._invoke_on_get,
+                               user_id='aclUser1',
+                               project_id='different_project_id')
+
+    def test_should_raise_get_secret_for_different_user_with_no_read_acl(self):
+        """Get secret fails when no read acl is defined.
+
+        With different secret and token's project, read is not allowed without
+        a read ACL.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.SecretACL(secret_id=self.secret_id,
+                                    operation='write',
+                                    creator_only=False,
+                                    user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        # token project_id is different from secret's project id but another
+        # user (from different project) has read acl for secret so should pass
+        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               user_id='aclUser1',
+                               project_id='different_project_id')
+
+    def test_should_pass_get_secret_for_creator_user_with_no_acl(self):
+        """Check for creator user rule for secret get call.
+
+        If token's user is same as creator of secret, then he/she is allowed
+        to read secret regardless of token's  project or token's role.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        self.resource.controller.secret.creator_id = 'creatorUserX'
+        # token user is creator so allowed get call regardless of role
+        # user (from different project) has read acl for secret so should pass
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
+                                'bogusRole'],
+                               self._invoke_on_get,
+                               user_id='creatorUserX',
+                               project_id='different_project_id')
 
     def test_should_raise_get_secret(self):
         self._assert_fail_rbac([None, 'bogus'],
@@ -331,7 +576,9 @@ class WhenTestingSecretResource(BaseTestCase):
 
     def test_should_pass_put_secret(self):
         self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_put,
-                               content_type="application/octet-stream")
+                               content_type="application/octet-stream",
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
 
     def test_should_raise_put_secret(self):
         self._assert_fail_rbac([None, 'audit', 'observer', 'bogus'],
@@ -339,13 +586,221 @@ class WhenTestingSecretResource(BaseTestCase):
                                content_type="application/octet-stream")
 
     def test_should_pass_delete_secret(self):
-        self._assert_pass_rbac(['admin'], self._invoke_on_delete)
+        self._assert_pass_rbac(['admin'], self._invoke_on_delete,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
 
     def test_should_raise_delete_secret(self):
         self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
                                self._invoke_on_delete)
 
+    # @mock.patch.object(secrets.SecretController, 'get_acl_tuple',
+    #                   return_value=(None, None))
     def _invoke_on_get(self):
+        self.resource.on_get(self.req, self.resp,
+                             self.external_project_id)
+
+    def _invoke_on_get_without_context(self):
+        # Adding this to get code coverage around context check lines
+        self.req.environ.pop('barbican.context')
+        self.resource.on_get(self.req, self.resp,
+                             self.external_project_id)
+
+    def _invoke_on_put(self):
+        self.resource.on_put(self.req, self.resp,
+                             self.external_project_id)
+
+    def _invoke_on_delete(self):
+        self.resource.on_delete(self.req, self.resp,
+                                self.external_project_id)
+
+
+class WhenTestingContainerResource(BaseTestCase):
+    """RBAC tests for ContainerController class.
+
+    Container controller tests are quite similar to SecretController as
+    policy logic is same. Just adding them here to make sure logic related to
+    acl gathering data works as expected.
+    """
+
+    def setUp(self):
+        super(WhenTestingContainerResource, self).setUp()
+
+        self.external_project_id = '12345project'
+        self.container_id = '12345secret'
+        self.user_id = '123456user'
+        self.creator_user_id = '123456CreatorUser'
+
+        # Force an error on GET and DELETE calls that pass RBAC,
+        #   as we are not testing such flows in this test module.
+        self.container_repo = mock.MagicMock()
+        fail_method = mock.MagicMock(return_value=None,
+                                     side_effect=self._generate_get_error())
+        self.container_repo.get = fail_method
+        self.container_repo.delete_entity_by_id = fail_method
+
+        acl_read = models.ContainerACL(
+            container_id=self.container_id, operation='read',
+            creator_only=False, user_ids=[self.user_id, 'anyRandomId'])
+        self.acl_list = [acl_read]
+        container = mock.MagicMock()
+        container.container_acls.__iter__.return_value = self.acl_list
+        container.project.external_id = self.external_project_id
+        container.creator_id = self.creator_user_id
+
+        self.container_repo.get_container_by_id.return_value = container
+
+        self.setup_container_repository_mock(self.container_repo)
+
+        self.resource = ContainerResource(self.container_id)
+
+    def test_rules_should_be_loaded(self):
+        self.assertIsNotNone(self.policy_enforcer.rules)
+
+    def test_should_pass_get_container(self):
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_pass_get_container_with_no_context(self):
+        """In unauthenticated flow, get container should work."""
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get_without_context,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_raise_get_container_for_different_project_no_acl(self):
+        """Raise error when container and token's project is different."""
+        self.acl_list.pop()  # remove read acl from default setup
+        # token project_id is different from secret's project id so should fail
+        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               user_id=self.user_id,
+                               project_id='different_id')
+
+    def test_should_pass_get_container_for_same_project_but_different_user(
+            self):
+        """Should pass if token and secret's project match.
+
+        User id should not matter as long token and container's project match.
+        """
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               user_id='different_user_id',
+                               project_id=self.external_project_id)
+
+    def test_should_pass_get_container_for_same_project_with_no_acl(self):
+        self.acl_list.pop()  # remove read acl from default setup
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_raise_get_container_for_with_creator_only_enabled(self):
+        """Should raise authz error as container is marked private.
+
+        As container is private so project users should not be able to access
+        the secret.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.ContainerACL(
+            container_id=self.container_id, operation='read',
+            creator_only=True, user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_pass_get_container_for_private_enabled_with_read_acl(self):
+        """Should pass authz as user has read acl for private container.
+
+        Even though container is private, user with read acl should be able to
+        access the container.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.ContainerACL(
+            container_id=self.container_id, operation='read',
+            creator_only=True, user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
+                                'bogusRole'],
+                               self._invoke_on_get,
+                               user_id='aclUser1',
+                               project_id=self.external_project_id)
+
+    def test_should_pass_get_container_different_user_with_valid_read_acl(
+            self):
+        """Should allow when read ACL is defined for a user.
+
+        Container's own project and token's project is different but read is
+        allowed because of valid read ACL. User can read regardless of what is
+        token's project as it has necessary ACL.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.ContainerACL(
+            container_id=self.container_id, operation='read',
+            creator_only=False, user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
+                                'bogusRole'],
+                               self._invoke_on_get,
+                               user_id='aclUser1',
+                               project_id='different_project_id')
+
+    def test_should_raise_get_container_for_different_user_with_no_read_acl(
+            self):
+        """Get secret fails when no read acl is defined.
+
+        With different container and token's project, read is not allowed
+        without a read ACL.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.ContainerACL(
+            container_id=self.container_id, operation='write',
+            creator_only=False, user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        # token project_id is different from secret's project id but another
+        # user (from different project) has read acl for secret so should pass
+        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               user_id='aclUser1',
+                               project_id='different_project_id')
+
+    def test_should_pass_get_container_for_creator_user_with_no_acl(self):
+        """Check for creator user rule for container get call.
+
+        If token's user is same as creator of container, then he/she is allowed
+        to read container regardless of token's  project or token's role.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
+                                'bogusRole'],
+                               self._invoke_on_get,
+                               user_id=self.creator_user_id,
+                               project_id='different_project_id')
+
+    def test_should_raise_get_container(self):
+        self._assert_fail_rbac([None, 'bogus'],
+                               self._invoke_on_get)
+
+    def test_should_pass_delete_container(self):
+        self._assert_pass_rbac(['admin'], self._invoke_on_delete,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_raise_delete_container(self):
+        self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
+                               self._invoke_on_delete)
+
+    def _invoke_on_get(self):
+        self.resource.on_get(self.req, self.resp,
+                             self.external_project_id)
+
+    def _invoke_on_get_without_context(self):
+        # Adding this to get code coverage around context check lines
+        self.req.environ.pop('barbican.context')
         self.resource.on_get(self.req, self.resp,
                              self.external_project_id)
 
