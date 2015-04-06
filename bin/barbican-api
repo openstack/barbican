@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+
+from paste import deploy
+from paste import httpserver
+
+def run():
+    prop_dir = 'etc/barbican'
+
+    application = deploy.loadapp(
+        'config:{prop_dir}/barbican-api-paste.ini'.format(prop_dir=prop_dir),
+            name='main',
+            relative_to='.')
+
+    httpserver.serve(application, host='127.0.0.1', port='9311')
+
+if __name__ == '__main__':
+    run()
