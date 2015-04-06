@@ -254,6 +254,9 @@ class WhenBeginningKeyTypeOrder(BaseOrderTestCase):
             self.external_project_id,
         )
 
+        self.project_repo.get.assert_called_once_with(self.project_id)
+        self.order_repo.save.assert_called_once_with(self.order)
+
 
 class WhenBeginningCertificateTypeOrder(BaseOrderTestCase):
 
@@ -451,6 +454,9 @@ class WhenBeginningAsymmetricTypeOrder(BaseOrderTestCase):
             self.order.id,
             self.external_project_id,
         )
+
+        self.project_repo.get.assert_called_once_with(self.project_id)
+        self.order_repo.save.assert_called_once_with(self.order)
 
 
 class WhenCheckingCertificateStatus(BaseOrderTestCase):

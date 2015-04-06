@@ -326,7 +326,16 @@ class WhenUsingKeystoneEventConsumerProcessMethod(
                           self.task.process, project_id=self.project_id1,
                           resource_type='project', operation_type='deleted')
 
-        mock_handle_error.assert_called()
+        mock_handle_error.assert_called_once_with(
+            self.project1_data,
+            500,
+            mock.ANY,
+            mock.ANY,
+            operation_type='deleted',
+            project_id=mock.ANY,
+            resource_type='project',
+        )
+
         args, kwargs = mock_handle_error.call_args
         self.assertEqual(500, args[1])
         self.assertEqual(self.project_id1, kwargs['project_id'])

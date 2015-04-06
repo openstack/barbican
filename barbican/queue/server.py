@@ -209,7 +209,8 @@ class Tasks(object):
             u._LI("Processing type order: order ID is '%s'"),
             order_id
         )
-        return resources.BeginTypeOrder().process(order_id, project_id)
+        return resources.BeginTypeOrder().process_and_suppress_exceptions(
+            order_id, project_id)
 
     @monitored
     @transactional
@@ -220,7 +221,7 @@ class Tasks(object):
             u._LI("Processing update order: order ID is '%s'"),
             order_id
         )
-        return resources.UpdateOrder().process(
+        return resources.UpdateOrder().process_and_suppress_exceptions(
             order_id, project_id, updated_meta)
 
     @monitored
@@ -233,7 +234,8 @@ class Tasks(object):
                   "'%s'"),
             order_id
         )
-        return resources.CheckCertificateStatusOrder().process(
+        check_cert_order = resources.CheckCertificateStatusOrder()
+        return check_cert_order.process_and_suppress_exceptions(
             order_id, project_id)
 
 
