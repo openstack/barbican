@@ -94,7 +94,7 @@ def validate_datum(test, datum):
     test.assertIsNotNone(datum.kek_meta_project.kek_label)
 
 
-def create_container(id_ref):
+def create_container(id_ref, project_id=None, external_project_id=None):
     """Generate a Container entity instance."""
     container = models.Container()
     container.id = id_ref
@@ -104,6 +104,12 @@ def create_container(id_ref):
     container_secret.container_id = id
     container_secret.secret_id = '123'
     container.container_secrets.append(container_secret)
+
+    if project_id:
+        project = models.Project()
+        project.id = project_id
+        project.external_id = external_project_id
+        container.project = project
     return container
 
 

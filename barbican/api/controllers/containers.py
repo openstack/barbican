@@ -14,6 +14,7 @@ import pecan
 
 from barbican import api
 from barbican.api import controllers
+from barbican.api.controllers import acls
 from barbican.api.controllers import consumers
 from barbican.common import exception
 from barbican.common import hrefs
@@ -42,6 +43,8 @@ class ContainerController(object):
         self.container_repo = repo.get_container_repository()
         self.validator = validators.ContainerValidator()
         self.consumers = consumers.ContainerConsumersController(container_id)
+        self.acls = acls.ContainerACLsController(self.container_id)
+        self.container = None
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
@@ -51,14 +54,14 @@ class ContainerController(object):
     @controllers.handle_exceptions(u._('Container retrieval'))
     @controllers.enforce_rbac('container:get')
     def on_get(self, external_project_id):
-        container = self.container_repo.get(
-            entity_id=self.container_id,
-            external_project_id=external_project_id,
-            suppress_exception=True)
-        if not container:
-            container_not_found()
+        # self.container is not present in case of unauthenticated pipeline
+        if not self.container:
+            self.container = self.container_repo.get_container_by_id(
+                entity_id=self.container_id, suppress_exception=True)
+            if not self.container:
+                container_not_found()
 
-        dict_fields = container.to_dict_fields()
+        dict_fields = self.container.to_dict_fields()
 
         for secret_ref in dict_fields['secret_refs']:
             hrefs.convert_to_hrefs(secret_ref)
