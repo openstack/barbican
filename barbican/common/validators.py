@@ -23,6 +23,7 @@ from oslo_config import cfg
 import six
 
 from barbican.common import exception
+from barbican.common import hrefs
 from barbican.common import utils
 from barbican import i18n as u
 from barbican.model import models
@@ -86,6 +87,33 @@ def validate_ca_id(project_id, order_meta):
     raise exception.CANotDefinedForProject(
         ca_id=ca_id,
         project_id=project_id)
+
+
+def validate_stored_key_rsa_container(project_id, container_ref):
+        try:
+            container_id = hrefs.get_container_id_from_ref(container_ref)
+        except Exception:
+            reason = u._("Bad Container Reference {ref}").format(
+                ref=container_ref
+            )
+            raise exception.InvalidContainer(reason=reason)
+
+        container_repo = repo.get_container_repository()
+        container = container_repo.get(container_id,
+                                       external_project_id=project_id,
+                                       suppress_exception=True)
+        if not container:
+            reason = u._("Container Not Found")
+            raise exception.InvalidContainer(reason=reason)
+
+        if container.type != 'rsa':
+            reason = u._("Container Wrong Type")
+            raise exception.InvalidContainer(reason=reason)
+
+        # TODO(dave) Validation should be done to determine if the
+        # requester of the certificate has permissions to access the
+        # keys in this container.  This can be done after the ACL patch
+        # has landed.
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -449,12 +477,12 @@ class TypeOrderValidator(ValidatorBase):
 
     def _validate_stored_key_request(self, certificate_meta):
         """Validate stored-key cert request."""
-        container_ref = self._get_required_metadata_value(
+        self._get_required_metadata_value(
             certificate_meta, "container_ref")
-        self._validate_certificate_container(container_ref)
         subject_dn = self._get_required_metadata_value(
             certificate_meta, "subject_dn")
         self._validate_subject_dn_data(subject_dn)
+        # container will be validated by validate_stored_key_rsa_container()
 
         extensions = certificate_meta.get("extensions", None)
         if extensions:
@@ -497,21 +525,6 @@ class TypeOrderValidator(ValidatorBase):
 
         Parse data into the ASN.1 structure defined for full CMC.
         If parsing fails, raise InvalidCMCData
-        """
-        pass
-
-    def _validate_certificate_container(self, public_key_ref):
-        """Confirm that the container contains the proper data."""
-        """
-        TODO(alee-3) complete this function
-
-        Check that the container:
-        * exists
-        * is of certificate type
-        * contains a public key which is accessible by the user
-        * contains a private key which is accessible by the user (note, this
-          is like POP-lite.  Someone should not be able to have the server
-          generate a CSR without being able to retrieve the private key.
         """
         pass
 

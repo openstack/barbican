@@ -150,3 +150,26 @@ def add_nav_hrefs(resources_name, offset, limit,
                                        offset,
                                        limit)})
     return data
+
+
+def get_container_id_from_ref(container_ref):
+    """Parse a container reference and return the container ID
+
+    TODO(Dave) Add some extra checking for valid prefix
+
+    The container ID is the right-most element of the URL
+    :param container_ref: HTTP reference of container
+    :return: a string containing the ID of the container
+    """
+    container_id = container_ref.rsplit('/', 1)[1]
+    return container_id
+
+
+def get_secret_id_from_ref(secret_ref):
+    """Parse a secret reference and return the secret ID
+
+    TODO(Dave) Implement this, or make one generic ID from REF function
+
+    :param secret_ref: HTTP reference of secret
+    :return: a string containing the ID of the secret
+    """
