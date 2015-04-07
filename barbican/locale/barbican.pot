@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2015.1.dev92\n"
+"Project-Id-Version: barbican 2015.1.dev101\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-04-04 06:06+0000\n"
+"POT-Creation-Date: 2015-04-07 06:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -39,11 +39,11 @@ msgstr ""
 msgid "{operation} issue seen - {reason}."
 msgstr ""
 
-#: barbican/api/controllers/__init__.py:91
+#: barbican/api/controllers/__init__.py:97
 msgid "System"
 msgstr ""
 
-#: barbican/api/controllers/__init__.py:123
+#: barbican/api/controllers/__init__.py:129
 msgid "Unexpected content type: {type}. Expected content types are: {expected}"
 msgstr ""
 
@@ -63,32 +63,60 @@ msgstr ""
 msgid "Existing ACL's operation cannot be updated."
 msgstr ""
 
-#: barbican/api/controllers/acls.py:69
+#: barbican/api/controllers/acls.py:73
 msgid "SecretACL retrieval"
 msgstr ""
 
-#: barbican/api/controllers/acls.py:84
+#: barbican/api/controllers/acls.py:88
 msgid "A SecretACL Update"
 msgstr ""
 
-#: barbican/api/controllers/acls.py:118
+#: barbican/api/controllers/acls.py:122
 msgid "SecretACL deletion"
 msgstr ""
 
-#: barbican/api/controllers/acls.py:154
+#: barbican/api/controllers/acls.py:162
 msgid "SecretACL(s) retrieval"
 msgstr ""
 
-#: barbican/api/controllers/acls.py:163
+#: barbican/api/controllers/acls.py:171
 msgid "SecretACL(s) creation"
 msgstr ""
 
-#: barbican/api/controllers/acls.py:212
+#: barbican/api/controllers/acls.py:220
 msgid "SecretACL(s) Update"
 msgstr ""
 
-#: barbican/api/controllers/acls.py:269
+#: barbican/api/controllers/acls.py:277
 msgid "SecretACL(s) deletion"
+msgstr ""
+
+#: barbican/api/controllers/acls.py:316
+msgid "ContainerACL retrieval"
+msgstr ""
+
+#: barbican/api/controllers/acls.py:331
+msgid "A ContainerACL Update"
+msgstr ""
+
+#: barbican/api/controllers/acls.py:364
+msgid "ContainerACL deletion"
+msgstr ""
+
+#: barbican/api/controllers/acls.py:406
+msgid "ContainerACL(s) retrieval"
+msgstr ""
+
+#: barbican/api/controllers/acls.py:418
+msgid "ContainerACL(s) creation"
+msgstr ""
+
+#: barbican/api/controllers/acls.py:469
+msgid "ContainerACL(s) Update"
+msgstr ""
+
+#: barbican/api/controllers/acls.py:527
+msgid "ContainerACL(s) deletion"
 msgstr ""
 
 #: barbican/api/controllers/cas.py:32
@@ -167,27 +195,27 @@ msgstr ""
 msgid "ContainerConsumer deletion"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:32
+#: barbican/api/controllers/containers.py:33
 msgid "Not Found. Sorry but your container is in another castle."
 msgstr ""
 
-#: barbican/api/controllers/containers.py:51
+#: barbican/api/controllers/containers.py:65
 msgid "Container retrieval"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:72
+#: barbican/api/controllers/containers.py:86
 msgid "Container deletion"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:114
+#: barbican/api/controllers/containers.py:128
 msgid "Containers(s) retrieval"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:152
+#: barbican/api/controllers/containers.py:166
 msgid "Container creation"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:180
+#: barbican/api/controllers/containers.py:194
 msgid "Secret provided for '{secret_name}' doesn't exist."
 msgstr ""
 
@@ -249,31 +277,31 @@ msgid ""
 "retrieval, but the transport key id has not been provided."
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:77
+#: barbican/api/controllers/secrets.py:83
 msgid "Secret retrieval"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:140
+#: barbican/api/controllers/secrets.py:152
 msgid "Secret payload retrieval"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:151
+#: barbican/api/controllers/secrets.py:163
 msgid "Secret update"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:161
+#: barbican/api/controllers/secrets.py:173
 msgid "Content-Type of '{content_type}' is not supported for PUT."
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:187
+#: barbican/api/controllers/secrets.py:199
 msgid "Secret deletion"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:221
+#: barbican/api/controllers/secrets.py:233
 msgid "Secret(s) retrieval"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:272
+#: barbican/api/controllers/secrets.py:284
 msgid "Secret creation"
 msgstr ""
 
@@ -685,117 +713,129 @@ msgstr ""
 msgid "Cannot generate a fullname for a null instance"
 msgstr ""
 
-#: barbican/common/validators.py:117
+#: barbican/common/validators.py:96
+msgid "Bad Container Reference {ref}"
+msgstr ""
+
+#: barbican/common/validators.py:106
+msgid "Container Not Found"
+msgstr ""
+
+#: barbican/common/validators.py:110
+msgid "Container Wrong Type"
+msgstr ""
+
+#: barbican/common/validators.py:145
 msgid "{schema_name}' within '{parent_schema_name}"
 msgstr ""
 
-#: barbican/common/validators.py:211
+#: barbican/common/validators.py:239
 msgid "If 'payload' specified, must be non empty"
 msgstr ""
 
-#: barbican/common/validators.py:219
+#: barbican/common/validators.py:247
 msgid "payload must be provided when payload_content_type is specified"
 msgstr ""
 
-#: barbican/common/validators.py:227
+#: barbican/common/validators.py:255
 msgid "payload_content_type is not one of {supported}"
 msgstr ""
 
-#: barbican/common/validators.py:253 barbican/common/validators.py:559
+#: barbican/common/validators.py:281 barbican/common/validators.py:572
 msgid "Invalid date for 'expiration'"
 msgstr ""
 
-#: barbican/common/validators.py:267
+#: barbican/common/validators.py:295
 msgid "'expiration' is before current time"
 msgstr ""
 
-#: barbican/common/validators.py:280
+#: barbican/common/validators.py:308
 msgid "If 'payload' is supplied, 'payload_content_type' must also be supplied."
 msgstr ""
 
-#: barbican/common/validators.py:287
+#: barbican/common/validators.py:315
 msgid "payload_content_type {supplied} is not one of {supported}"
 msgstr ""
 
-#: barbican/common/validators.py:297
+#: barbican/common/validators.py:325
 msgid "payload_content_encoding is not one of {supported}"
 msgstr ""
 
-#: barbican/common/validators.py:313
+#: barbican/common/validators.py:341
 msgid "Invalid payload for payload_content_encoding"
 msgstr ""
 
-#: barbican/common/validators.py:386
+#: barbican/common/validators.py:414
 msgid "'payload' not allowed for key type order"
 msgstr ""
 
-#: barbican/common/validators.py:405
+#: barbican/common/validators.py:433
 msgid "Only 'application/octet-stream' supported"
 msgstr ""
 
-#: barbican/common/validators.py:483
+#: barbican/common/validators.py:511
 msgid "Bad format"
 msgstr ""
 
-#: barbican/common/validators.py:490
+#: barbican/common/validators.py:518
 msgid "Signing key incorrect"
 msgstr ""
 
-#: barbican/common/validators.py:542
+#: barbican/common/validators.py:555
 msgid "'algorithm' is required field for {0} type order"
 msgstr ""
 
-#: barbican/common/validators.py:571
+#: barbican/common/validators.py:584
 msgid "Must have non-zero positive bit_length to generate secret"
 msgstr ""
 
-#: barbican/common/validators.py:579
+#: barbican/common/validators.py:592
 msgid "Must be a positive integer that is a multiple of 8"
 msgstr ""
 
-#: barbican/common/validators.py:587
+#: barbican/common/validators.py:600
 msgid "Feature not implemented for '{0}' order type"
 msgstr ""
 
-#: barbican/common/validators.py:698
+#: barbican/common/validators.py:711
 msgid "Duplicate reference names are not allowed"
 msgstr ""
 
-#: barbican/common/validators.py:710
+#: barbican/common/validators.py:723
 msgid "Duplicate secret ids are not allowed"
 msgstr ""
 
-#: barbican/common/validators.py:721
+#: barbican/common/validators.py:734
 msgid "Secret_ref does not match the configured hostname, please try again"
 msgstr ""
 
-#: barbican/common/validators.py:742
+#: barbican/common/validators.py:755
 msgid ""
 "only 'private_key', 'public_key' and 'private_key_passphrase' reference "
 "names are allowed for RSA type"
 msgstr ""
 
-#: barbican/common/validators.py:750
+#: barbican/common/validators.py:763
 msgid ""
 "The minimum required reference names are 'public_key' and'private_key' "
 "for RSA type"
 msgstr ""
 
-#: barbican/common/validators.py:763
+#: barbican/common/validators.py:776
 msgid ""
 "only 'private_key', 'certificate' , 'private_key_passphrase',  or "
 "'intermediates' reference names are allowed for Certificate type"
 msgstr ""
 
-#: barbican/common/validators.py:771
+#: barbican/common/validators.py:784
 msgid "The minimum required reference name is 'certificate' for Certificate type"
 msgstr ""
 
-#: barbican/common/validators.py:817
+#: barbican/common/validators.py:830
 msgid "plugin_name must be provided"
 msgstr ""
 
-#: barbican/common/validators.py:824
+#: barbican/common/validators.py:837
 msgid "transport_key must be provided"
 msgstr ""
 
@@ -1543,32 +1583,32 @@ msgstr ""
 msgid "Project cleanup via Keystone notifications"
 msgstr ""
 
-#: barbican/tasks/resources.py:214
+#: barbican/tasks/resources.py:233
 msgid "Process TypeOrder"
 msgstr ""
 
-#: barbican/tasks/resources.py:281 barbican/tasks/resources.py:327
+#: barbican/tasks/resources.py:301 barbican/tasks/resources.py:348
 msgid "Order type \"{order_type}\" not implemented."
 msgstr ""
 
-#: barbican/tasks/resources.py:299
+#: barbican/tasks/resources.py:319
 msgid "Update Order"
 msgstr ""
 
-#: barbican/tasks/resources.py:346
+#: barbican/tasks/resources.py:367
 msgid "Check Certificate Order Status"
 msgstr ""
 
-#: barbican/tasks/resources.py:377
+#: barbican/tasks/resources.py:398
 msgid "Order type \"{order_type}\" not supported."
 msgstr ""
 
 #: barbican/tests/tasks/test_resources.py:218
-#: barbican/tests/tasks/test_resources.py:416
+#: barbican/tests/tasks/test_resources.py:419
 msgid "Process TypeOrder failure seen - please contact site administrator."
 msgstr ""
 
-#: barbican/tests/tasks/test_resources.py:354
+#: barbican/tests/tasks/test_resources.py:357
 msgid "Update Order failure seen - please contact site administrator."
 msgstr ""
 
