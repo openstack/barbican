@@ -16,7 +16,7 @@
 """
 Common utilities for Barbican.
 """
-
+import collections
 import mimetypes
 import uuid
 
@@ -89,13 +89,15 @@ def get_accepted_encodings_direct(content_encoding_header):
     if content_encoding_header is None:
         return None
 
+    Encoding = collections.namedtuple('Encoding', ['coding', 'quality'])
+
     encodings = list()
     for enc in content_encoding_header.split(','):
         if ';' in enc:
-            encoding, q = enc.split(';')
+            coding, qvalue = enc.split(';')
             try:
-                q = q.split('=')[1]
-                quality = float(q.strip())
+                qvalue = qvalue.split('=')[1]
+                quality = float(qvalue.strip())
             except ValueError:
                 # can't convert quality to float
                 return None
@@ -103,12 +105,14 @@ def get_accepted_encodings_direct(content_encoding_header):
                 # quality is outside valid range
                 return None
             if quality > 0.0:
-                encodings.append((encoding.strip(), quality))
+                encodings.append(Encoding(coding.strip(), quality))
         else:
-            encodings.append((enc.strip(), 1))
+            encodings.append(Encoding(enc.strip(), 1))
 
-    return [enc[0] for enc in sorted(encodings,
-                                     cmp=lambda a, b: cmp(b[1], a[1]))]
+    # Sort the encodings by quality
+    encodings = sorted(encodings, key=lambda e: e.quality, reverse=True)
+
+    return [encoding.coding for encoding in encodings]
 
 
 def generate_fullname_for(instance):
