@@ -84,7 +84,11 @@ class SecretController(controllers.ACLMixin):
     @controllers.enforce_rbac('secret:get')
     def on_get(self, external_project_id, **kwargs):
         if controllers.is_json_request_accept(pecan.request):
-            return self._on_get_secret_metadata(self.secret, **kwargs)
+            resp = self._on_get_secret_metadata(self.secret, **kwargs)
+
+            LOG.info(u._LI('Retrieved secret metadata for project: %s'),
+                     external_project_id)
+            return resp
         else:
             LOG.warning('Decrypted secret %s requested using deprecated '
                         'API call.', self.secret.id)
@@ -154,9 +158,15 @@ class SecretController(controllers.ACLMixin):
     def payload(self, external_project_id, **kwargs):
         if pecan.request.method != 'GET':
             pecan.abort(405)
-        return self._on_get_secret_payload(self.secret,
-                                           external_project_id,
-                                           **kwargs)
+        resp = self._on_get_secret_payload(
+            self.secret,
+            external_project_id,
+            **kwargs
+        )
+
+        LOG.info(u._LI('Retrieved secret payload for project: %s'),
+                 external_project_id)
+        return resp
 
     @index.when(method='PUT')
     @utils.allow_all_content_types
@@ -193,6 +203,7 @@ class SecretController(controllers.ACLMixin):
                             content_encoding, self.secret.to_dict_fields(),
                             self.secret, project_model,
                             transport_key_id=transport_key_id)
+        LOG.info(u._LI('Updated secret for project: %s'), external_project_id)
 
     @index.when(method='DELETE')
     @utils.allow_all_content_types
@@ -200,6 +211,7 @@ class SecretController(controllers.ACLMixin):
     @controllers.enforce_rbac('secret:delete')
     def on_delete(self, external_project_id, **kwargs):
         plugin.delete_secret(self.secret, external_project_id)
+        LOG.info(u._LI('Deleted secret for project: %s'), external_project_id)
 
 
 class SecretsController(controllers.ACLMixin):
@@ -278,6 +290,8 @@ class SecretsController(controllers.ACLMixin):
             )
             secrets_resp_overall.update({'total': total})
 
+        LOG.info(u._LI('Retrieved secret list for project: %s'),
+                 external_project_id)
         return secrets_resp_overall
 
     @index.when(method='POST', template='json')
@@ -311,6 +325,8 @@ class SecretsController(controllers.ACLMixin):
         pecan.response.status = 201
         pecan.response.headers['Location'] = url
 
+        LOG.info(u._LI('Created a secret for project: %s'),
+                 external_project_id)
         if transport_key_model is not None:
             tkey_url = hrefs.convert_transport_key_to_href(
                 transport_key_model.id)
