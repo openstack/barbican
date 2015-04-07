@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-04-04 06:06+0000\n"
-"PO-Revision-Date: 2015-04-02 17:14+0000\n"
+"POT-Creation-Date: 2015-04-07 06:11+0000\n"
+"PO-Revision-Date: 2015-04-06 18:25+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
@@ -28,7 +28,7 @@ msgstr "JSON请求流中读取数据时出错。"
 msgid "Problem loading request JSON."
 msgstr "JSON请求加载时出错"
 
-#: barbican/api/controllers/__init__.py:100
+#: barbican/api/controllers/__init__.py:106
 msgid "Webob error seen"
 msgstr "Webob出错"
 
@@ -36,7 +36,7 @@ msgstr "Webob出错"
 msgid "Problem deleting consumer"
 msgstr "删除用户时出错"
 
-#: barbican/api/controllers/containers.py:85
+#: barbican/api/controllers/containers.py:99
 msgid "Problem deleting container"
 msgstr "删除容器时出错"
 
@@ -138,22 +138,27 @@ msgstr ""
 "处理 Keystone 事件错误，项目id=%(project_id)s，事件资源=%(resource)s，事件操"
 "作=%(operation)s，状态=%(status)s，错误信息=%(message)s"
 
-#: barbican/tasks/resources.py:70
+#: barbican/tasks/resources.py:64
+#, python-format
+msgid "Suppressing exception while trying to process task '%s'."
+msgstr ""
+
+#: barbican/tasks/resources.py:89
 #, python-format
 msgid "Could not retrieve information needed to process task '%s'."
 msgstr "无法检索到所需的信息来处理任务 '%s'。"
 
-#: barbican/tasks/resources.py:78
+#: barbican/tasks/resources.py:97
 #, python-format
 msgid "Could not perform processing for task '%s'."
 msgstr "无法为任务 '%s' 执行处理。"
 
-#: barbican/tasks/resources.py:88
+#: barbican/tasks/resources.py:107
 #, python-format
 msgid "Problem handling an error for task '%s', raising original exception."
 msgstr "为任务 '%s' 处理错误时出错，原始异常增加。"
 
-#: barbican/tasks/resources.py:97
+#: barbican/tasks/resources.py:116
 #, python-format
 msgid "Could not process after successfully executing task '%s'."
 msgstr "在成功执行任务 '%s' 后无法处理。"
