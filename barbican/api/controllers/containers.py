@@ -37,25 +37,21 @@ def container_not_found():
 class ContainerController(controllers.ACLMixin):
     """Handles Container entity retrieval and deletion requests."""
 
-    def __init__(self, container_id):
-        self.container_id = container_id
+    def __init__(self, container):
+        self.container = container
+        self.container_id = container.id
         self.consumer_repo = repo.get_container_consumer_repository()
         self.container_repo = repo.get_container_repository()
         self.validator = validators.ContainerValidator()
-        self.consumers = consumers.ContainerConsumersController(container_id)
+        self.consumers = consumers.ContainerConsumersController(
+            self.container_id)
         self.acls = acls.ContainerACLsController(self.container_id)
-        self.container = None
 
     def get_acl_tuple(self, req, **kwargs):
-        self.container = self.container_repo.get_container_by_id(
-            entity_id=self.container_id, suppress_exception=True)
-        if self.container:
-            d = self.get_acl_dict_for_user(req, self.container.container_acls)
-            d['project_id'] = self.container.project.external_id
-            d['creator_id'] = self.container.creator_id
-            return 'container', d
-        else:
-            return None, None
+        d = self.get_acl_dict_for_user(req, self.container.container_acls)
+        d['project_id'] = self.container.project.external_id
+        d['creator_id'] = self.container.creator_id
+        return 'container', d
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
@@ -65,13 +61,6 @@ class ContainerController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Container retrieval'))
     @controllers.enforce_rbac('container:get')
     def on_get(self, external_project_id):
-        # self.container is not present in case of unauthenticated pipeline
-        if not self.container:
-            self.container = self.container_repo.get_container_by_id(
-                entity_id=self.container_id, suppress_exception=True)
-            if not self.container:
-                container_not_found()
-
         dict_fields = self.container.to_dict_fields()
 
         for secret_ref in dict_fields['secret_refs']:
@@ -118,7 +107,12 @@ class ContainersController(controllers.ACLMixin):
 
     @pecan.expose()
     def _lookup(self, container_id, *remainder):
-        return ContainerController(container_id), remainder
+        container = self.container_repo.get_container_by_id(
+            entity_id=container_id, suppress_exception=True)
+        if not container:
+            container_not_found()
+
+        return ContainerController(container), remainder
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):

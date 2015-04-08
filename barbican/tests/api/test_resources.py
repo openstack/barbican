@@ -784,11 +784,15 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
         self.setup_project_repository_mock(self.project_repo)
 
         # Set up mocked container
-        self.container = create_container(id_ref='id1')
+        self.container = create_container(
+            id_ref='id1',
+            project_id=self.project_internal_id,
+            external_project_id=self.external_project_id)
 
         # Set up mocked container repo
         self.container_repo = mock.MagicMock()
         self.container_repo.get.return_value = self.container
+        self.container_repo.get_container_by_id.return_value = self.container
         self.setup_container_repository_mock(self.container_repo)
 
         # Set up secret repo
@@ -877,7 +881,10 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         self.setup_project_repository_mock(self.project_repo)
 
         # Set up mocked container
-        self.container = create_container(id_ref='id1')
+        self.container = create_container(
+            id_ref='id1',
+            project_id=self.project_internal_id,
+            external_project_id=self.external_project_id)
 
         # Set up mocked consumers
         self.consumer = create_consumer(self.container.id, id_ref='id2')
@@ -891,6 +898,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         # Set up mocked container repo
         self.container_repo = mock.MagicMock()
         self.container_repo.get.return_value = self.container
+        self.container_repo.get_container_by_id.return_value = self.container
         self.setup_container_repository_mock(self.container_repo)
 
         # Set up mocked container consumer repo
@@ -1078,7 +1086,10 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
         self.setup_project_repository_mock(self.project_repo)
 
         # Set up mocked container
-        self.container = create_container(id_ref='id1')
+        self.container = create_container(
+            id_ref='id1',
+            project_id=self.project_internal_id,
+            external_project_id=self.external_project_id)
 
         # Set up mocked container consumers
         self.consumer = create_consumer(self.container.id, id_ref='id2')

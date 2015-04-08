@@ -644,6 +644,7 @@ class WhenTestingContainerResource(BaseTestCase):
             creator_only=False, user_ids=[self.user_id, 'anyRandomId'])
         self.acl_list = [acl_read]
         container = mock.MagicMock()
+        container.id = self.container_id
         container.container_acls.__iter__.return_value = self.acl_list
         container.project.external_id = self.external_project_id
         container.creator_id = self.creator_user_id
@@ -652,7 +653,7 @@ class WhenTestingContainerResource(BaseTestCase):
 
         self.setup_container_repository_mock(self.container_repo)
 
-        self.resource = ContainerResource(self.container_id)
+        self.resource = ContainerResource(container)
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
