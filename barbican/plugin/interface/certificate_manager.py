@@ -32,6 +32,7 @@ import barbican.common.utils as utils
 from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repos
+from barbican.plugin.util import utils as plugin_utils
 
 
 CONF = cfg.CONF
@@ -501,16 +502,18 @@ class BarbicanMetaDTO(object):
 
 
 class CertificatePluginManager(named.NamedExtensionManager):
-    def __init__(self, conf=CONF, invoke_on_load=True,
-                 invoke_args=(), invoke_kwargs={}):
+    def __init__(self, conf=CONF, invoke_args=(), invoke_kwargs={}):
         self.ca_repo = repos.get_ca_repository()
         super(CertificatePluginManager, self).__init__(
             conf.certificate.namespace,
             conf.certificate.enabled_certificate_plugins,
-            invoke_on_load=invoke_on_load,
+            invoke_on_load=False,  # Defer creating plugins to utility below.
             invoke_args=invoke_args,
             invoke_kwds=invoke_kwargs
         )
+
+        plugin_utils.instantiate_plugins(
+            self, invoke_args, invoke_kwargs)
 
     def get_plugin(self, certificate_spec):
         """Gets a supporting certificate plugin.
@@ -523,13 +526,13 @@ class CertificatePluginManager(named.NamedExtensionManager):
             REQUEST_TYPE,
             CertificateRequestType.CUSTOM_REQUEST)
 
-        for ext in self.extensions:
-            supported_request_types = ext.obj.supported_request_types()
+        for plugin in plugin_utils.get_active_plugins(self):
+            supported_request_types = plugin.supported_request_types()
             if request_type not in supported_request_types:
                 continue
 
-            if ext.obj.supports(certificate_spec):
-                return ext.obj
+            if plugin.supports(certificate_spec):
+                return plugin
 
         raise CertificatePluginNotFound()
 
@@ -539,9 +542,9 @@ class CertificatePluginManager(named.NamedExtensionManager):
         :param plugin_name: Name of the plugin to invoke
         :returns: CertificatePluginBase plugin implementation
         """
-        for ext in self.extensions:
-            if utils.generate_fullname_for(ext.obj) == plugin_name:
-                return ext.obj
+        for plugin in plugin_utils.get_active_plugins(self):
+            if utils.generate_fullname_for(plugin) == plugin_name:
+                return plugin
         raise CertificatePluginNotFound(plugin_name)
 
     def get_plugin_by_ca_id(self, ca_id):
@@ -558,8 +561,8 @@ class CertificatePluginManager(named.NamedExtensionManager):
 
     def refresh_ca_table(self):
         """Refreshes the CertificateAuthority table."""
-        for ext in self.extensions:
-            plugin_name = utils.generate_fullname_for(ext.obj)
+        for plugin in plugin_utils.get_active_plugins(self):
+            plugin_name = utils.generate_fullname_for(plugin)
             cas, offset, limit, total = self.ca_repo.get_by_create_date(
                 plugin_name=plugin_name,
                 suppress_exception=True)
@@ -567,7 +570,7 @@ class CertificatePluginManager(named.NamedExtensionManager):
                 # if no entries are found, then the plugin has not yet been
                 # queried or that plugin's entries have expired.
                 # Most of the time, this will be a no-op for plugins.
-                self.update_ca_info(ext.obj)
+                self.update_ca_info(plugin)
 
     def update_ca_info(self, cert_plugin):
         """Update the CA info for a particular plugin."""
@@ -624,24 +627,26 @@ class _CertificateEventPluginManager(named.NamedExtensionManager,
     new instance of this class use the EVENT_PLUGIN_MANAGER at the module
     level.
     """
-    def __init__(self, conf=CONF, invoke_on_load=True,
-                 invoke_args=(), invoke_kwargs={}):
+    def __init__(self, conf=CONF, invoke_args=(), invoke_kwargs={}):
         super(_CertificateEventPluginManager, self).__init__(
             conf.certificate_event.namespace,
             conf.certificate_event.enabled_certificate_event_plugins,
-            invoke_on_load=invoke_on_load,
+            invoke_on_load=False,  # Defer creating plugins to utility below.
             invoke_args=invoke_args,
             invoke_kwds=invoke_kwargs
         )
+
+        plugin_utils.instantiate_plugins(
+            self, invoke_args, invoke_kwargs)
 
     def get_plugin_by_name(self, plugin_name):
         """Gets a supporting certificate event plugin.
 
         :returns: CertificateEventPluginBase plugin implementation
         """
-        for ext in self.extensions:
-            if utils.generate_fullname_for(ext.obj) == plugin_name:
-                return ext.obj
+        for plugin in plugin_utils.get_active_plugins(self):
+            if utils.generate_fullname_for(plugin) == plugin_name:
+                return plugin
         raise CertificateEventPluginNotFound(plugin_name)
 
     def notify_certificate_is_ready(
@@ -658,11 +663,13 @@ class _CertificateEventPluginManager(named.NamedExtensionManager,
 
     def _invoke_certificate_plugins(self, method, *args, **kwargs):
         """Invoke same function on plugins as calling function."""
-        if len(self.extensions) < 1:
+        active_plugins = plugin_utils.get_active_plugins(self)
+
+        if len(active_plugins) < 1:
             raise CertificateEventPluginNotFound()
 
-        for ext in self.extensions:
-            getattr(ext.obj, method)(*args, **kwargs)
+        for plugin in active_plugins:
+            getattr(plugin, method)(*args, **kwargs)
 
 
 EVENT_PLUGIN_MANAGER = _CertificateEventPluginManager()

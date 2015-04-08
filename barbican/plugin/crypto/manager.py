@@ -18,6 +18,8 @@ from barbican.common import utils
 from barbican import i18n as u
 from barbican.plugin.crypto import crypto
 from barbican.plugin.interface import secret_store
+from barbican.plugin.util import utils as plugin_utils
+
 
 _PLUGIN_MANAGER = None
 
@@ -43,8 +45,7 @@ CONF.register_opts(crypto_opts, group=crypto_opt_group)
 
 
 class _CryptoPluginManager(named.NamedExtensionManager):
-    def __init__(self, conf=CONF, invoke_on_load=True,
-                 invoke_args=(), invoke_kwargs={}):
+    def __init__(self, conf=CONF, invoke_args=(), invoke_kwargs={}):
         """Crypto Plugin Manager
 
         Each time this class is initialized it will load a new instance
@@ -55,10 +56,13 @@ class _CryptoPluginManager(named.NamedExtensionManager):
         super(_CryptoPluginManager, self).__init__(
             conf.crypto.namespace,
             conf.crypto.enabled_crypto_plugins,
-            invoke_on_load=invoke_on_load,
+            invoke_on_load=False,  # Defer creating plugins to utility below.
             invoke_args=invoke_args,
             invoke_kwds=invoke_kwargs
         )
+
+        plugin_utils.instantiate_plugins(
+            self, invoke_args, invoke_kwargs)
 
     def get_plugin_store_generate(self, type_needed, algorithm=None,
                                   bit_length=None, mode=None):
@@ -68,18 +72,19 @@ class _CryptoPluginManager(named.NamedExtensionManager):
         type of plugin required
         :returns: CryptoPluginBase plugin implementation
         """
+        active_plugins = plugin_utils.get_active_plugins(self)
 
-        if len(self.extensions) < 1:
+        if len(active_plugins) < 1:
             raise crypto.CryptoPluginNotFound()
 
-        for ext in self.extensions:
-            if ext.obj.supports(type_needed, algorithm, bit_length, mode):
-                plugin = ext.obj
+        for generating_plugin in active_plugins:
+            if generating_plugin.supports(
+                    type_needed, algorithm, bit_length, mode):
                 break
         else:
             raise secret_store.SecretStorePluginNotFound()
 
-        return plugin
+        return generating_plugin
 
     def get_plugin_retrieve(self, plugin_name_for_store):
         """Gets a secret retrieve plugin that supports the provided type.
@@ -88,12 +93,12 @@ class _CryptoPluginManager(named.NamedExtensionManager):
         type of plugin required
         :returns: CryptoPluginBase plugin implementation
         """
+        active_plugins = plugin_utils.get_active_plugins(self)
 
-        if len(self.extensions) < 1:
+        if len(active_plugins) < 1:
             raise crypto.CryptoPluginNotFound()
 
-        for ext in self.extensions:
-            decrypting_plugin = ext.obj
+        for decrypting_plugin in active_plugins:
             plugin_name = utils.generate_fullname_for(decrypting_plugin)
             if plugin_name == plugin_name_for_store:
                 break

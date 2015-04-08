@@ -15,6 +15,7 @@
 
 import mock
 
+from barbican.common import utils as common_utils
 from barbican.plugin.interface import secret_store as str
 from barbican.tests import utils
 
@@ -92,7 +93,7 @@ class WhenTestingSecretStorePluginManager(utils.BaseTestCase):
         super(WhenTestingSecretStorePluginManager, self).setUp()
         self.manager = str.SecretStorePluginManager()
 
-    def test_get_store_supported_plugin(self):
+    def test_get_store_supported_plugin_no_plugin_name(self):
         plugin = TestSecretStore([str.KeyAlgorithm.AES])
         plugin_mock = mock.MagicMock(obj=plugin)
         self.manager.extensions = [plugin_mock]
@@ -100,6 +101,15 @@ class WhenTestingSecretStorePluginManager(utils.BaseTestCase):
 
         self.assertEqual(plugin,
                          self.manager.get_plugin_store(keySpec))
+
+    def test_get_store_supported_plugin_with_plugin_name(self):
+        plugin = TestSecretStore([str.KeyAlgorithm.AES])
+        plugin_mock = mock.MagicMock(obj=plugin)
+        self.manager.extensions = [plugin_mock]
+
+        plugin_found = self.manager.get_plugin_store(
+            None, plugin_name=common_utils.generate_fullname_for(plugin))
+        self.assertEqual(plugin, plugin_found)
 
     def test_get_generate_supported_plugin(self):
         plugin = TestSecretStore([str.KeyAlgorithm.AES])
