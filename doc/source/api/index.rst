@@ -26,6 +26,7 @@ API Reference
     :maxdepth: 1
 
     ./reference/secrets
+    ./reference/secret_types
     ./reference/containers
     ./reference/acls
     ./reference/certificates

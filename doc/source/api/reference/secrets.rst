@@ -8,9 +8,9 @@ Lists a project's secrets.
 
 The list of secrets can be filtered by the parameters passed in via the URL.
 
-
 The actual secret payload data will not be listed here. Clients must instead
-make a separate call to get the secret details to view the secret.
+make a separate call to retrieve the secret payload data for each individual
+secret.
 
 .. _secret_parameters:
 
@@ -38,6 +38,62 @@ Parameters
 |          |         | Project scope is ignored.                                      |
 +----------+---------+----------------------------------------------------------------+
 
+Request:
+********
+
+.. code-block:: javascript
+
+   GET /v1/secrets?offset=1&limit=2
+   Headers:
+       Accept: application/json
+       X-Auth-Token: {keystone_token}
+       (or X-Project-Id: {project id})
+
+Response:
+*********
+
+.. code-block:: javascript
+
+    {
+        "next": "http://{barbican_host}:9311/v1/secrets?limit=2&offset=3",
+        "previous": "http://{barbican_host}:9311/v1/secrets?limit=2&offset=0",
+        "secrets": [
+            {
+                "algorithm": null,
+                "bit_length": null,
+                "content_types": {
+                    "default": "application/octet-stream"
+                },
+                "created": "2015-04-07T03:37:19.805835",
+                "creator_id": "3a7e3d2421384f56a8fb6cf082a8efab",
+                "expiration": null,
+                "mode": null,
+                "name": "opaque octet-stream base64",
+                "secret_ref": "http://{barbican_host}:9311/v1/secrets/{uuid}",
+                "secret_type": "opaque",
+                "status": "ACTIVE",
+                "updated": "2015-04-07T03:37:19.808337"
+            },
+            {
+                "algorithm": null,
+                "bit_length": null,
+                "content_types": {
+                    "default": "application/octet-stream"
+                },
+                "created": "2015-04-07T03:41:02.184159",
+                "creator_id": "3a7e3d2421384f56a8fb6cf082a8efab",
+                "expiration": null,
+                "mode": null,
+                "name": "opaque random octet-stream base64",
+                "secret_ref": "http://{barbican_host}:9311/v1/secrets/{uuid}",
+                "secret_type": "opaque",
+                "status": "ACTIVE",
+                "updated": "2015-04-07T03:41:02.187823"
+            }
+        ],
+        "total": 5
+    }
+
 .. _secret_response_attributes:
 
 Response Attributes
@@ -46,7 +102,8 @@ Response Attributes
 +----------+---------+--------------------------------------------------------------+
 | Name     | Type    | Description                                                  |
 +==========+=========+==============================================================+
-| secrets  | list    | Contains a list of dictionaries filled with secret metadata. |
+| secrets  | list    | Contains a list of secrets.  The attributes in the secret    |
+|          |         | objects are the same as for an individual secret.            |
 +----------+---------+--------------------------------------------------------------+
 | total    | integer | The total number of secrets available to the user.           |
 +----------+---------+--------------------------------------------------------------+
@@ -79,53 +136,52 @@ HTTP Status Codes
 
 POST /v1/secrets
 ################
-Creates a secret
+Creates a Secret entity.  If the ``payload`` attribute is not included in the
+request, then only the metadata for the secret is created, and a
+subsequent PUT request is required.
 
 Attributes
 **********
 
-+----------------------------+---------+----------------------------------------------+------------+
-| Attribute Name             | Type    | Description                                  | Default    |
-+============================+=========+==============================================+============+
-| name                       | string  | (optional) The name of the secret set by the | None       |
-|                            |         | user.                                        |            |
-+----------------------------+---------+----------------------------------------------+------------+
-| expiration                 | string  | (optional) This is a timestamp in ISO 8601   | None       |
-|                            |         | format ``YYYY-MM-DDTHH:MM:SSZ``. Once this   |            |
-|                            |         | time has past, the secret will no longer be  |            |
-|                            |         | available.                                   |            |
-+----------------------------+---------+----------------------------------------------+------------+
-| algorithm                  | string  | (optional) Metadata provided by a user or    | None       |
-|                            |         | system for informational purposes.           |            |
-+----------------------------+---------+----------------------------------------------+------------+
-| bit_length                 | integer | (optional) Metadata provided by a user or    | None       |
-|                            |         | system for informational purposes. Value     |            |
-|                            |         | must be greater than zero.                   |            |
-+----------------------------+---------+----------------------------------------------+------------+
-| mode                       | string  | (optional) Metadata provided by a user or    | None       |
-|                            |         | system for informational purposes.           |            |
-+----------------------------+---------+----------------------------------------------+------------+
-| payload                    | string  | (optional) The secret's data to be stored.   | None       |
-|                            |         | ``payload_content_type`` must also be        |            |
-|                            |         | supplied if payload is provided.             |            |
-+----------------------------+---------+----------------------------------------------+------------+
-| payload_content_type       | string  | (optional) (required if payload is added)    | None       |
-|                            |         | The type and format of the secret data. The  |            |
-|                            |         | two supported types are ``text/plain`` and   |            |
-|                            |         | ``application/octet-stream``.                |            |
-+----------------------------+---------+----------------------------------------------+------------+
-| payload_content_encoding   | string  | (optional) The encoding used to format the   | None       |
-|                            |         | payload provided. Currently only base64 is   |            |
-|                            |         | supported. This is required if content type  |            |
-|                            |         | provided has an encoding available.          |            |
-+----------------------------+---------+----------------------------------------------+------------+
-| secret_type                | string  | (optional) Used to indicate the type of      | ``opaque`` |
-|                            |         | secret being stored. If no value is given,   |            |
-|                            |         | ``opaque`` is used as the default, which is  |            |
-|                            |         | used to signal Barbican to just store the    |            |
-|                            |         | information without worrying about format or |            |
-|                            |         | encoding.                                    |            |
-+----------------------------+---------+----------------------------------------------+------------+
++----------------------------+---------+-----------------------------------------------------+------------+
+| Attribute Name             | Type    | Description                                         | Default    |
++============================+=========+=====================================================+============+
+| name                       | string  | (optional) The name of the secret set by the        | None       |
+|                            |         | user.                                               |            |
++----------------------------+---------+-----------------------------------------------------+------------+
+| expiration                 | string  | (optional) This is a UTC timestamp in ISO           | None       |
+|                            |         | 8601 format ``YYYY-MM-DDTHH:MM:SSZ``.  If           |            |
+|                            |         | set, the secret will not be available after         |            |
+|                            |         | this time.                                          |            |
++----------------------------+---------+-----------------------------------------------------+------------+
+| algorithm                  | string  | (optional) Metadata provided by a user or           | None       |
+|                            |         | system for informational purposes.                  |            |
++----------------------------+---------+-----------------------------------------------------+------------+
+| bit_length                 | integer | (optional) Metadata provided by a user or           | None       |
+|                            |         | system for informational purposes. Value            |            |
+|                            |         | must be greater than zero.                          |            |
++----------------------------+---------+-----------------------------------------------------+------------+
+| mode                       | string  | (optional) Metadata provided by a user or           | None       |
+|                            |         | system for informational purposes.                  |            |
++----------------------------+---------+-----------------------------------------------------+------------+
+| payload                    | string  | (optional) The secret's data to be stored.          | None       |
+|                            |         | ``payload_content_type`` must also be               |            |
+|                            |         | supplied if payload is included.                    |            |
++----------------------------+---------+-----------------------------------------------------+------------+
+| payload_content_type       | string  | (optional) (required if payload is included)        | None       |
+|                            |         | The media type for the content of the               |            |
+|                            |         | payload.  For more information see                  |            |
+|                            |         | :doc:`Secret Types <../reference/secret_types>`     |            |
++----------------------------+---------+-----------------------------------------------------+------------+
+| payload_content_encoding   | string  | (optional) (required if payload is encoded)         | None       |
+|                            |         | The encoding used for the payload to be able        |            |
+|                            |         | to include it in the JSON request.                  |            |
+|                            |         | Currently only ``base64`` is supported.             |            |
++----------------------------+---------+-----------------------------------------------------+------------+
+| secret_type                | string  | (optional) Used to indicate the type of             | ``opaque`` |
+|                            |         | secret being stored.  For more information          |            |
+|                            |         | see :doc:`Secret Types <../reference/secret_types>` |            |
++----------------------------+---------+-----------------------------------------------------+------------+
 
 Request:
 ********
@@ -183,20 +239,9 @@ HTTP Status Codes
 
 GET /v1/secrets/{uuid}
 ######################
-Retrieves a secret's metadata or payload via uuid.
+Retrieves a secret's metadata.
 
-The return type of content, metadata or payload, is controlled by the Accept
-header.
-
-Accept Header Options:
-**********************
-
-* application/json - Returns secret metadata
-* application/octet-stream - Returns secret payload
-* text/plain - Returns secret payload
-
-
-Metadata Request:
+Request:
 *****************
 
 .. code-block:: javascript
@@ -204,10 +249,10 @@ Metadata Request:
     GET /v1/secrets/{uuid}
     Headers:
         Accept: application/json
-        X-Auth-Token: <token>
+        X-Auth-Token: {token}
+        (or X-Project-Id: {project_id})
 
-
-Metadata Response:
+Response:
 ******************
 
 .. code-block:: javascript
@@ -232,6 +277,15 @@ Metadata Response:
 
 Payload Request:
 ****************
+
+.. warning::
+
+   DEPRECATION WARNING: Previous releases of the API allowed the payload to be
+   retrieved from this same endpoint by changing the Accept header to be one
+   of the values listed in the ``content_types`` attribute of the Secret
+   metadata.  This was found to be problematic in some situations, so new
+   applications should make use of the :ref:`/v1/secrets/{uuid}/payload <secret_payload>`
+   endpoint instead.
 
 .. code-block:: javascript
 
@@ -271,25 +325,26 @@ HTTP Status Codes
 PUT /v1/secrets/{uuid}
 ######################
 
-Update a secret's payload by uuid
+Add the payload to an existing metadata-only secret, such as one made by
+sending a POST /v1/secrets request that does not include the ``payload``
+attribute.
 
 .. note::
 
-    This action can only be done for a secret that doesn't have a payload already
-    set.
+    This action can only be done for a secret that doesn't have a payload.
 
-Required Headers
-****************
+Headers
+*******
 
-+------------------+---------------------------------------------------+------------+
-| Name             | Description                                       | Default    |
-+==================+===================================================+============+
-| Content-Type     | Corresponds with the payload_content_type         | text/plain |
-|                  | attribute of a normal secret creation request.    |            |
-+------------------+---------------------------------------------------+------------+
-| Content-Encoding | Corresponds with the payload_content_encoding     | None       |
-|                  | attribute of a normal secret creation request.    |            |
-+------------------+---------------------------------------------------+------------+
++------------------+-----------------------------------------------------------+------------+
+| Name             | Description                                               | Default    |
++==================+===========================================================+============+
+| Content-Type     | Corresponds with the payload_content_type                 | text/plain |
+|                  | attribute of a normal secret creation request.            |            |
++------------------+-----------------------------------------------------------+------------+
+| Content-Encoding | (optional) Corresponds with the payload_content_encoding  | None       |
+|                  | attribute of a normal secret creation request.            |            |
++------------------+-----------------------------------------------------------+------------+
 
 Request:
 ********
@@ -361,6 +416,7 @@ HTTP Status Codes
 | 404  | Not Found                                                                   |
 +------+-----------------------------------------------------------------------------+
 
+.. _secret_payload:
 
 GET /v1/secrets/{uuid}/payload
 ##############################
@@ -369,8 +425,10 @@ Retrieve a secret's payload
 Accept Header Options:
 **********************
 
-* application/octet-stream - Returns secret payload
-* text/plain - Returns secret payload
+When making a request for a secret's payload, you must set the accept header
+to one of the values listed in the ``content_types`` attribute of a secret's
+metadata.
+
 
 Request:
 ********
