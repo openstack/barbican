@@ -88,13 +88,23 @@ def analyze_before_decryption(content_type):
         raise s.SecretAcceptNotSupportedException(content_type)
 
 
-def denormalize_after_decryption(unencrypted, content_type):
+def denormalize_after_decryption(unencrypted, content_type, pem_needed=False,
+                                 secret_type=None):
     """Translate the decrypted data into the desired content type.
 
     This is called when the raw keys are requested by the user. The secret
     returned from the SecretStore is the unencrypted parameter. This
     'denormalizes' the data back to its binary format.
+
+    For the stored key case, we need to return PEM to support passphrases.
+    In this case, pem_needed will be set to True, and a PEM object will be
+    returned
     """
+    if pem_needed:
+        if is_pem_payload(unencrypted):
+            return unencrypted
+        else:
+            return to_pem(secret_type, unencrypted, payload_encoded=True)
     # Process plain-text type.
     if content_type in mime_types.PLAIN_TEXT:
         # normalize text to binary string
@@ -124,10 +134,10 @@ def get_pem_components(pem):
     """
     delim = "-----"
     splits = pem.split(delim)
-    if len(splits) != 5 or splits[0] != "" or splits[4] != "":
+    if len(splits) != 5 or splits[0] != "" or splits[4].strip() != "":
         raise s.SecretPayloadDecodingError()
     header = delim + splits[1] + delim
-    content = splits[2]
+    content = splits[2].strip()
     footer = delim + splits[3] + delim
     return (header, content, footer)
 
@@ -140,7 +150,7 @@ def is_pem_payload(payload):
     """
     delim = "-----"
     splits = payload.split(delim)
-    if len(splits) != 5 or splits[0] != "" or splits[4] != "":
+    if len(splits) != 5 or splits[0] != "" or splits[4].strip() != "":
         return False
     else:
         return True
@@ -157,17 +167,20 @@ def to_pem(secret_type, payload, payload_encoded=False):
     if payload_encoded:
         pem_content = payload
     else:
-        pem_content = base64.b64encode(payload)
+        pem_content = base64.encodestring(payload).rstrip('\n')
 
     if secret_type == s.SecretType.PRIVATE:
         headers = _get_pem_headers("PRIVATE KEY")
-        pem = headers[0] + pem_content + headers[1]
+        pem = headers[0] + '\n' + pem_content + '\n' + headers[1]
     elif secret_type == s.SecretType.PUBLIC:
         headers = _get_pem_headers("PUBLIC KEY")
-        pem = headers[0] + pem_content + headers[1]
+        pem = headers[0] + '\n' + pem_content + '\n' + headers[1]
     elif secret_type == s.SecretType.CERTIFICATE:
         headers = _get_pem_headers("CERTIFICATE")
-        pem = headers[0] + pem_content + headers[1]
+        pem = headers[0] + '\n' + pem_content + '\n' + headers[1]
+    else:
+        # TODO(alee) raise correct exception
+        pass
 
     return pem
 

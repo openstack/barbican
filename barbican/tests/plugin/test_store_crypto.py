@@ -240,8 +240,9 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         # Verify response.
         self.assertIsInstance(secret_dto, secret_store.SecretDTO)
         self.assertEqual(secret_store.SecretType.OPAQUE, secret_dto.type)
-        self.assertEqual(base64.b64encode(self.decrypted_secret),
-                         secret_dto.secret)
+        self.assertEqual(
+            base64.encodestring(self.decrypted_secret).rstrip('\n'),
+            secret_dto.secret)
         self.assertEqual(
             self.encrypted_datum_model.content_type, secret_dto.content_type)
         self.assertIsInstance(secret_dto.key_spec, secret_store.KeySpec)
@@ -287,7 +288,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
 
         decrypt_mock = self.retrieving_plugin.decrypt
         content = translations.get_pem_components(secret)[1]
-        decrypt_mock.return_value = base64.b64decode(content)
+        decrypt_mock.return_value = base64.decodestring(content)
 
         secret_model = self.context.secret_model
         secret_model.algorithm = key_spec.alg
@@ -301,8 +302,23 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
 
         # Verify response.
         self.assertIsInstance(secret_dto, secret_store.SecretDTO)
+
+        # because of differences between PEM and base64 line lengths,
+        # secret and secret_dto may not be equal.
+        if self._testMethodName == 'test_get_secret_encoding_certificate':
+            self.assertTrue(
+                test_utils.is_cert_valid(secret, secret_dto.secret)
+            )
+        elif self._testMethodName == 'test_get_secret_private':
+            self.assertTrue(
+                test_utils.is_private_key_valid(secret, secret_dto.secret)
+            )
+        elif self._testMethodName == 'test_get_secret_public':
+            self.assertTrue(
+                test_utils.is_public_key_valid(secret, secret_dto.secret)
+            )
+
         self.assertEqual(secret_type, secret_dto.type)
-        self.assertEqual(secret, secret_dto.secret)
         self.assertIsInstance(secret_dto.key_spec, secret_store.KeySpec)
         self.assertEqual(
             secret_model.algorithm, secret_dto.key_spec.alg)
@@ -729,7 +745,8 @@ class WhenTestingStoreCryptoStoreSecretAndDatum(TestSecretStoreBase):
         self.assertEqual(
             self.content_type, test_datum_model.content_type)
         self.assertEqual(
-            base64.b64encode(self.cypher_text), test_datum_model.cypher_text)
+            base64.encodestring(self.cypher_text).rstrip('\n'),
+            test_datum_model.cypher_text)
         self.assertEqual(
             self.response_dto.kek_meta_extended,
             test_datum_model.kek_meta_extended)

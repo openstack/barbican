@@ -1142,9 +1142,16 @@ class WhenTestingFullCMCOrderValidator(utils.BaseTestCase):
         self.order_req = {'type': self.type,
                           'meta': self.meta}
 
+    def test_should_raise_not_yet_implemented(self):
+        self.assertRaises(excep.FullCMCNotSupported,
+                          self.validator.validate,
+                          self.order_req)
+
+    @testtools.skip("Feature not yet implemented")
     def test_should_pass_good_data(self):
         self.validator.validate(self.order_req)
 
+    @testtools.skip("Feature not yet implemented")
     def test_should_raise_with_no_request_data(self):
         del self.meta['request_data']
         self._set_order()
@@ -1198,7 +1205,6 @@ class WhenTestingStoredKeyOrderValidator(utils.BaseTestCase):
                      'container_ref':
                          'https://localhost/v1/containers/good_container_ref',
                      'subject_dn': 'cn=barbican-server,o=example.com',
-                     'extensions': VALID_EXTENSIONS,
                      'requestor_name': 'Barbican User',
                      'requestor_email': 'barbican_user@example.com',
                      'requestor_phone': '555-1212'}
@@ -1232,9 +1238,11 @@ class WhenTestingStoredKeyOrderValidator(utils.BaseTestCase):
                           self.validator.validate,
                           self.order_req)
 
-    def test_should_pass_with_no_extensions_data(self):
-        del self.meta['extensions']
-        self.validator.validate(self.order_req)
+    def test_should_raise_with_extensions_data(self):
+        self.meta['extensions'] = VALID_EXTENSIONS
+        self.assertRaises(excep.CertificateExtensionsNotSupported,
+                          self.validator.validate,
+                          self.order_req)
 
     @testtools.skip("Not yet implemented")
     def test_should_raise_with_bad_extensions_data(self):

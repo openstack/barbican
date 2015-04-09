@@ -622,7 +622,7 @@ class OrderBarbicanMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     order_id = sa.Column(sa.String(36), sa.ForeignKey('orders.id'),
                          index=True, nullable=False)
     key = sa.Column(sa.String(255), nullable=False)
-    value = sa.Column(sa.String(255), nullable=False)
+    value = sa.Column(sa.Text, nullable=False)
 
     def __init__(self, key, value):
         super(OrderBarbicanMetadatum, self).__init__()
@@ -892,7 +892,7 @@ class CertificateAuthorityMetadatum(BASE, ModelBase):
     __tablename__ = "certificate_authority_metadata"
 
     key = sa.Column(sa.String(255), index=True, nullable=False)
-    value = sa.Column(sa.String(255), nullable=False)
+    value = sa.Column(sa.Text, nullable=False)
     ca_id = sa.Column(
         sa.String(36), sa.ForeignKey('certificate_authorities.id'),
         index=True, nullable=False)
