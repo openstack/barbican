@@ -19,13 +19,13 @@ API handler for Cloudkeep's Barbican
 import pkgutil
 
 from oslo_config import cfg
+from oslo_policy import policy
 import pecan
 
 from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
 from barbican.openstack.common import jsonutils as json
-from barbican.openstack.common import policy
 
 
 LOG = utils.getLogger(__name__)
