@@ -37,14 +37,21 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
         return resp, secret_ref
 
     def update_secret_payload(self, secret_ref, payload, payload_content_type,
-                              payload_content_encoding):
+                              payload_content_encoding=None):
         """Updates a secret's payload data.
 
-        :param secret_ref: HATEOS ref of the secret to be deleted
-        :return: A request response object
+        :param secret_ref: HATEOS ref of the secret to be updated
+        :param payload: new payload to be sent to server
+        :param payload_content_type: value for the Content-Type header
+        :param payload_content_encoding: value for the Content-Encoding header
+        :return: the response from the PUT update
         """
-        headers = {'Content-Type': payload_content_type,
-                   'Content-Encoding': payload_content_encoding}
+
+        if payload_content_encoding is None:
+            headers = {'Content-Type': payload_content_type}
+        else:
+            headers = {'Content-Type': payload_content_type,
+                       'Content-Encoding': payload_content_encoding}
 
         return self.client.put(secret_ref, data=payload, extra_headers=headers)
 
