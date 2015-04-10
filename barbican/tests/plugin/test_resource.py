@@ -92,12 +92,11 @@ class WhenTestingPluginResource(testtools.TestCase,
         secret = base64.b64encode('ABCDEFABCDEFABCDEFABCDEF')
 
         self.plugin_resource.store_secret(
-            secret,
-            self.content_type,
-            'base64',
-            spec,
-            None,
-            self.project_model)
+            unencrypted_raw=secret,
+            content_type_raw=self.content_type,
+            content_encoding='base64',
+            secret_model=models.Secret(spec),
+            project_model=self.project_model)
 
         dto = self.moc_plugin.store_secret.call_args_list[0][0][0]
         self.assertEqual("symmetric", dto.type)
@@ -155,12 +154,12 @@ class WhenTestingPluginResource(testtools.TestCase,
                 'secret_type': 'symmetric'}
 
         self.plugin_resource.store_secret(
-            base64.b64encode(raw_secret),
-            self.content_type,
-            'base64',
-            spec,
-            None,
-            self.project_model)
+            unencrypted_raw=base64.b64encode(raw_secret),
+            content_type_raw=self.content_type,
+            content_encoding='base64',
+            secret_model=models.Secret(spec),
+            project_model=self.project_model)
+
         secret = self.plugin_resource.get_secret(
             'application/octet-stream',
             models.Secret(spec),

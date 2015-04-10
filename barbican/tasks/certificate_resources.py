@@ -387,8 +387,7 @@ def _save_secrets(result, project_model):
         unencrypted_raw=result.certificate,
         content_type_raw='application/pkix-cert',
         content_encoding='base64',
-        spec={},
-        secret_model=None,
+        secret_model=models.Secret(),
         project_model=project_model)
 
     # save the certificate chain as a secret.
@@ -397,8 +396,7 @@ def _save_secrets(result, project_model):
             unencrypted_raw=result.intermediates,
             content_type_raw='application/pkix-cert',
             content_encoding='base64',
-            spec={},
-            secret_model=None,
+            secret_model=models.Secret(),
             project_model=project_model
         )
     else:
