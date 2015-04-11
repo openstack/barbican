@@ -21,6 +21,7 @@ import os
 
 import mock
 from oslo_config import cfg
+from oslo_policy import policy
 from webob import exc
 
 from barbican.api.controllers import consumers
@@ -30,7 +31,6 @@ from barbican.api.controllers import secrets
 from barbican.api.controllers import versions
 from barbican import context
 from barbican.model import models
-from barbican.openstack.common import policy
 from barbican.tests import utils
 
 
@@ -40,7 +40,7 @@ CONF = cfg.CONF
 TEST_VAR_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                             '../../../etc', 'barbican'))
 
-ENFORCER = policy.Enforcer()
+ENFORCER = policy.Enforcer(CONF)
 
 
 class TestableResource(object):

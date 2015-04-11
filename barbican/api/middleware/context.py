@@ -15,6 +15,7 @@
 import uuid
 
 from oslo_config import cfg
+from oslo_policy import policy
 import webob.exc
 
 from barbican.api import middleware as mw
@@ -22,7 +23,6 @@ from barbican.common import utils
 import barbican.context
 from barbican import i18n as u
 from barbican.openstack.common import jsonutils as json
-from barbican.openstack.common import policy
 
 LOG = utils.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class BaseContextMiddleware(mw.Middleware):
 
 class ContextMiddleware(BaseContextMiddleware):
     def __init__(self, app):
-        self.policy_enforcer = policy.Enforcer()
+        self.policy_enforcer = policy.Enforcer(CONF)
         super(ContextMiddleware, self).__init__(app)
 
     def process_request(self, req):

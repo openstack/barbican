@@ -13,9 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_config import cfg
+from oslo_policy import policy
+
 from barbican.common import utils
 from barbican.openstack.common import local
-from barbican.openstack.common import policy
+
+
+CONF = cfg.CONF
 
 
 class RequestContext(object):
@@ -40,7 +45,7 @@ class RequestContext(object):
         self.owner_is_project = owner_is_project
         self.request_id = utils.generate_uuid()
         self.service_catalog = service_catalog
-        self.policy_enforcer = policy_enforcer or policy.Enforcer()
+        self.policy_enforcer = policy_enforcer or policy.Enforcer(CONF)
         self.is_admin = is_admin
         # TODO(jwood): Is this needed?
         #        if not self.is_admin:
