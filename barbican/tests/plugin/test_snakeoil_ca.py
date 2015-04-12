@@ -23,6 +23,7 @@ from oslo.config import fixture as oslo_fixture
 
 import barbican.plugin.interface.certificate_manager as cm
 from barbican.plugin import snakeoil_ca
+from barbican.tests import certificate_utils
 from barbican.tests import utils
 
 
@@ -95,10 +96,8 @@ class CertManagerTestCase(BaseTestCase):
         crypto.verify(self.ca.cert, sig[1:], der[0], 'sha256')
 
     def test_gen_cert_no_file_storage(self):
-        key = crypto.PKey()
-        key.generate_key(crypto.TYPE_RSA, 512)
-        req = crypto.X509Req()
-        req.set_pubkey(key)
+        req = certificate_utils.get_valid_csr_object()
+
         cm = snakeoil_ca.CertManager(self.ca)
         cert = cm.make_certificate(req)
         first_serial = cert.get_serial_number()
@@ -113,10 +112,8 @@ class CertManagerTestCase(BaseTestCase):
         cert = cm.make_certificate(req)
 
     def test_gen_cert_with_file_storage(self):
-        key = crypto.PKey()
-        key.generate_key(crypto.TYPE_RSA, 512)
-        req = crypto.X509Req()
-        req.set_pubkey(key)
+        req = certificate_utils.get_valid_csr_object()
+
         cm = snakeoil_ca.CertManager(self.ca)
         cert = cm.make_certificate(req)
         cert_enc = crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)
@@ -140,10 +137,8 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         self.order_id = mock.MagicMock()
 
     def test_issue_certificate_request(self):
-        key = crypto.PKey()
-        key.generate_key(crypto.TYPE_RSA, 512)
-        req = crypto.X509Req()
-        req.set_pubkey(key)
+        req = certificate_utils.get_valid_csr_object()
+
         req_enc = crypto.dump_certificate_request(crypto.FILETYPE_PEM, req)
         order_meta = {'request_data': req_enc}
         resp = self.plugin.issue_certificate_request(self.order_id,
@@ -151,10 +146,8 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         crypto.load_certificate(crypto.FILETYPE_PEM, resp.certificate)
 
     def test_issue_certificate_request_set_subject(self):
-        key = crypto.PKey()
-        key.generate_key(crypto.TYPE_RSA, 512)
-        req = crypto.X509Req()
-        req.set_pubkey(key)
+        req = certificate_utils.get_valid_csr_object()
+
         subj = req.get_subject()
         subj.countryName = 'US'
         subj.stateOrProvinceName = 'OR'
@@ -162,6 +155,7 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         subj.organizationName = 'Testers Anon'
         subj.organizationalUnitName = 'Testers OU'
         subj.commonName = 'Testing'
+
         req_enc = crypto.dump_certificate_request(crypto.FILETYPE_PEM, req)
         order_meta = {'request_data': req_enc}
         resp = self.plugin.issue_certificate_request(self.order_id,
