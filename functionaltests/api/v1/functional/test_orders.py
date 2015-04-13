@@ -38,7 +38,6 @@ def get_default_order_create_data():
                 "algorithm": "aes",
                 "bit_length": 256,
                 "mode": "cbc",
-                "payload_content_type": "application/octet-stream",
             }
             }
 
@@ -58,7 +57,6 @@ def get_default_order_create_all_none_data():
             "algorithm": None,
             "bit_length": None,
             "mode": None,
-            "payload_content_type": None,
         }
     }
 
@@ -71,7 +69,6 @@ def get_default_order_create_asymmetric_data():
             "algorithm": "rsa",
             "bit_length": 1024,
             "mode": "cbc",
-            "payload_content_type": "application/octet-stream",
         }
     }
 
@@ -121,16 +118,6 @@ class OrdersTestCase(base.TestCase):
         test_model.name = ""
         create_resp, order_ref = self.behaviors.create_order(test_model)
 
-        self.assertEqual(create_resp.status_code, 202)
-        self.assertIsNotNone(order_ref)
-
-    @testcase.attr('positive')
-    def test_order_create_payload_content_type_none(self):
-        """Covers creating orders with various valid payload content types."""
-        test_model = order_models.OrderModel(**self.create_default_data)
-        del test_model.meta['payload_content_type']
-
-        create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(create_resp.status_code, 202)
         self.assertIsNotNone(order_ref)
 
@@ -276,7 +263,7 @@ class OrdersTestCase(base.TestCase):
     def test_order_create_error_message_on_invalid_order_create(self):
         """Related Launchpad issue: 1269594."""
         test_model = order_models.OrderModel(**self.create_default_data)
-        test_model.meta['payload_content_encoding'] = "blarg!"
+        test_model.meta['payload'] = "blarg!"
 
         resp, order_ref = self.behaviors.create_order(test_model)
 

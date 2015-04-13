@@ -421,13 +421,10 @@ class TypeOrderValidator(ValidatorBase):
         secret_validator = NewSecretValidator()
         secret_validator.validate(asymmetric_meta, parent_schema=self.name)
 
-        if (asymmetric_meta.get('payload_content_type', '').lower() !=
-                'application/octet-stream'):
-            raise exception.UnsupportedField(field='payload_content_type',
-                                             schema=schema_name,
-                                             reason=u._("Only 'application/oc"
-                                                        "tet-stream' "
-                                                        "supported"))
+        self._assert_validity(asymmetric_meta.get('payload') is None,
+                              schema_name,
+                              u._("'payload' not allowed "
+                                  "for asymmetric type order"), "meta")
 
         self._validate_meta_parameters(asymmetric_meta, "asymmetric key",
                                        schema_name)
@@ -440,6 +437,11 @@ class TypeOrderValidator(ValidatorBase):
 
     def _validate_certificate_meta(self, certificate_meta, schema_name):
         """Validation specific to meta for certificate type order."""
+
+        self._assert_validity(certificate_meta.get('payload') is None,
+                              schema_name,
+                              u._("'payload' not allowed "
+                                  "for certificate type order"), "meta")
 
         if 'profile' in certificate_meta:
             if 'ca_id' not in certificate_meta:

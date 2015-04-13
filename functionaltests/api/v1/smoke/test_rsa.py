@@ -86,8 +86,7 @@ def get_order_create_rsa_container():
             "meta": {"name": "ordered rsacontainer",
                      "algorithm": "rsa",
                      "bit_length": 1024,
-                     "mode": "cbc",
-                     "payload_content_type": "application/octet-stream"}}
+                     "mode": "cbc"}}
 
 
 def get_order_create_rsa_container_with_passphrase():
@@ -96,8 +95,7 @@ def get_order_create_rsa_container_with_passphrase():
                      "algorithm": "rsa",
                      "bit_length": 1024,
                      "passphrase": "password",
-                     "mode": "cbc",
-                     "payload_content_type": "application/octet-stream"}}
+                     "mode": "cbc"}}
 
 
 def get_order_create_certificate(container_ref):

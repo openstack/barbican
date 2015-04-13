@@ -29,7 +29,6 @@ def get_default_order_create_data():
                 "algorithm": "aes",
                 "bit_length": 256,
                 "mode": "cbc",
-                "payload_content_type": "application/octet-stream",
             }
             }
 
@@ -49,7 +48,6 @@ def get_default_order_create_all_none_data():
             "algorithm": None,
             "bit_length": None,
             "mode": None,
-            "payload_content_type": None,
         }
     }
 

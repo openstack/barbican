@@ -937,9 +937,7 @@ class WhenTestingKeyTypeOrderValidator(utils.BaseTestCase):
         self.meta = {"name": "secretname",
                      "algorithm": "AES",
                      "bit_length": 256,
-                     "mode": "cbc",
-                     'payload_content_type':
-                     'application/octet-stream'}
+                     "mode": "cbc"}
 
         self.key_order_req = {'type': self.type,
                               'meta': self.meta}
@@ -1018,6 +1016,12 @@ class WhenTestingKeyTypeOrderValidator(utils.BaseTestCase):
         self.assertTrue(result is not None)
         self.assertTrue(result['meta']['algorithm'] == 'hmacsha1')
 
+    def test_should_raise_with_payload_in_order(self):
+        self.key_order_req['meta']['payload'] = 'payload'
+        self.assertRaises(excep.InvalidObject,
+                          self.validator.validate,
+                          self.key_order_req)
+
 
 class WhenTestingAsymmetricTypeOrderValidator(utils.BaseTestCase):
 
@@ -1026,9 +1030,7 @@ class WhenTestingAsymmetricTypeOrderValidator(utils.BaseTestCase):
         self.type = 'asymmetric'
         self.meta = {"name": "secretname",
                      "algorithm": "RSA",
-                     "bit_length": 256,
-                     'payload_content_type':
-                     'application/octet-stream'}
+                     "bit_length": 256}
 
         self.asymmetric_order_req = {'type': self.type,
                                      'meta': self.meta}
@@ -1046,12 +1048,9 @@ class WhenTestingAsymmetricTypeOrderValidator(utils.BaseTestCase):
                           self.validator.validate,
                           self.asymmetric_order_req)
 
-    def test_should_raise_with_wrong_payload_content_type_in_order_refs(self):
-        # NOTE(jaosorior): this is actually a valid content type, but it is not
-        # supported by asymmetric key orders.
-        self.asymmetric_order_req['meta']['payload_content_type'] = (
-            'text/plain')
-        self.assertRaises(excep.UnsupportedField,
+    def test_should_raise_with_payload_in_order(self):
+        self.asymmetric_order_req['meta']['payload'] = 'payload'
+        self.assertRaises(excep.InvalidObject,
                           self.validator.validate,
                           self.asymmetric_order_req)
 
@@ -1131,6 +1130,12 @@ class WhenTestingSimpleCMCOrderValidator(utils.BaseTestCase):
             certs.create_csr_that_has_not_been_signed())
         self._set_order()
         self.assertRaises(excep.InvalidPKCS10Data,
+                          self.validator.validate,
+                          self.order_req)
+
+    def test_should_raise_with_payload_in_order(self):
+        self.meta['payload'] = 'payload'
+        self.assertRaises(excep.InvalidObject,
                           self.validator.validate,
                           self.order_req)
 
@@ -1272,6 +1277,12 @@ class WhenTestingStoredKeyOrderValidator(utils.BaseTestCase):
     def test_should_raise_with_bad_subject_dn(self):
         self.meta['subject_dn'] = "Bad subject DN data"
         self.assertRaises(excep.InvalidSubjectDN,
+                          self.validator.validate,
+                          self.order_req)
+
+    def test_should_raise_with_payload_in_order(self):
+        self.meta['payload'] = 'payload'
+        self.assertRaises(excep.InvalidObject,
                           self.validator.validate,
                           self.order_req)
 
