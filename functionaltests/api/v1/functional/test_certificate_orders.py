@@ -363,10 +363,8 @@ class CertificatesTestCase(base.TestCase):
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(400, create_resp.status_code)
         self.assertIsNone(order_ref)
-        self.confirm_error_message(
-            create_resp,
-            "Invalid PKCS10 Data: Signing key incorrect"
-        )
+        error_description = json.loads(create_resp.content)['description']
+        self.assertIn("Invalid PKCS10 Data", error_description)
 
     @testtools.testcase.attr('negative')
     def test_create_simple_csc_order_with_pkcs10_signed_by_wrong_key(self):
