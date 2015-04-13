@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-04-08 06:21+0000\n"
-"PO-Revision-Date: 2015-04-07 23:34+0000\n"
+"POT-Creation-Date: 2015-04-13 06:11+0000\n"
+"PO-Revision-Date: 2015-04-11 00:22+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
@@ -75,11 +75,6 @@ msgstr ""
 #: barbican/openstack/common/periodic_task.py:125
 #, python-format
 msgid "Skipping periodic task %(task)s because it is disabled"
-msgstr ""
-
-#: barbican/openstack/common/policy.py:275
-#, python-format
-msgid "Can not find policy directory: %s"
 msgstr ""
 
 #: barbican/openstack/common/service.py:173
