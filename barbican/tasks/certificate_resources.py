@@ -317,6 +317,7 @@ def _generate_csr(order_model, project_model):
                 'text/plain;charset=utf-8',
                 passphrase_model,
                 project_model)
+            passphrase = str(passphrase)
 
     if not private_key:
         raise excep.StoredKeyPrivateKeyNotFound(container_id)
@@ -324,7 +325,7 @@ def _generate_csr(order_model, project_model):
     pkey = crypto.load_privatekey(
         crypto.FILETYPE_PEM,
         private_key,
-        str(passphrase)
+        passphrase
     )
 
     subject_name = order_model.meta.get('subject_dn')
