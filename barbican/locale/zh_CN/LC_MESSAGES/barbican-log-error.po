@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-04-13 06:11+0000\n"
-"PO-Revision-Date: 2015-04-11 00:22+0000\n"
-"Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
+"POT-Creation-Date: 2015-04-14 06:07+0000\n"
+"PO-Revision-Date: 2015-04-13 16:16+0000\n"
+"Last-Translator: DuanXin <1145833162@qq.com>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
 "language/zh_CN/)\n"
 "Language: zh_CN\n"
@@ -70,7 +70,7 @@ msgstr ""
 #: barbican/model/repositories.py:1183
 #, python-format
 msgid "Problem getting container %s"
-msgstr ""
+msgstr "问题获得容器 %s"
 
 #: barbican/openstack/common/excutils.py:76
 #, python-format
@@ -93,7 +93,7 @@ msgstr "动态循环调用"
 #: barbican/openstack/common/periodic_task.py:228
 #, python-format
 msgid "Error during %(full_task_name)s: %(e)s"
-msgstr ""
+msgstr "在 %(full_task_name)s: %(e)s 时出现问题"
 
 #: barbican/openstack/common/service.py:268
 msgid "Unhandled exception"
@@ -111,11 +111,12 @@ msgid ""
 "Problem enqueuing method '%(name)s' with args '%(args)s' and kwargs "
 "'%(kwargs)s'."
 msgstr ""
+"队列问题的方法 '%(name)s' 和 args '%(args)s'  和  kwargs '%(kwargs)s'。"
 
 #: barbican/queue/server.py:96
 #, python-format
 msgid "Problem seen processing worker task: '%s'"
-msgstr ""
+msgstr "处理工作任务：'%s' 时出现问题。"
 
 #: barbican/tasks/keystone_consumer.py:75
 #, python-format
@@ -130,7 +131,7 @@ msgstr ""
 #: barbican/tasks/resources.py:64
 #, python-format
 msgid "Suppressing exception while trying to process task '%s'."
-msgstr ""
+msgstr "当尝试去处理任务 '%s' 时清除异常。"
 
 #: barbican/tasks/resources.py:89
 #, python-format
