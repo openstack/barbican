@@ -223,10 +223,15 @@ class ProjectSecret(BASE, SoftDeleteMixIn, ModelBase):
     role = sa.Column(sa.String(255))
     secret = orm.relationship("Secret", backref="project_assocs")
     project_id = sa.Column(
-        sa.String(36), sa.ForeignKey('projects.id'), index=True,
+        sa.String(36),
+        sa.ForeignKey('projects.id', name='project_secret_project_fk'),
+        index=True,
         nullable=False)
     secret_id = sa.Column(
-        sa.String(36), sa.ForeignKey('secrets.id'), index=True, nullable=False)
+        sa.String(36),
+        sa.ForeignKey('secrets.id', name='project_secret_secret_fk'),
+        index=True,
+        nullable=False)
 
     __table_args__ = (sa.UniqueConstraint(
         'project_id', 'secret_id', name='_project_secret_uc'),)
@@ -461,7 +466,9 @@ class KEKDatum(BASE, SoftDeleteMixIn, ModelBase):
     kek_label = sa.Column(sa.String(255))
 
     project_id = sa.Column(
-        sa.String(36), sa.ForeignKey('projects.id'), index=True,
+        sa.String(36),
+        sa.ForeignKey('projects.id', name='kek_data_project_fk'),
+        index=True,
         nullable=False)
 
     active = sa.Column(sa.Boolean, nullable=False, default=True)
@@ -488,8 +495,11 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
     __tablename__ = 'orders'
 
     type = sa.Column(sa.String(255), nullable=False, default='key')
-    project_id = sa.Column(sa.String(36), sa.ForeignKey('projects.id'),
-                           index=True, nullable=False)
+    project_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('projects.id', name='orders_project_fk'),
+        index=True,
+        nullable=False)
 
     error_status_code = sa.Column(sa.String(16))
     error_reason = sa.Column(sa.String(ERROR_REASON_LENGTH))
@@ -677,8 +687,11 @@ class Container(BASE, SoftDeleteMixIn, ModelBase):
     name = sa.Column(sa.String(255))
     type = sa.Column(sa.Enum('generic', 'rsa', 'dsa', 'certificate',
                              name='container_types'))
-    project_id = sa.Column(sa.String(36), sa.ForeignKey('projects.id'),
-                           index=True, nullable=False)
+    project_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('projects.id', name='containers_project_fk'),
+        index=True,
+        nullable=False)
     consumers = sa.orm.relationship("ContainerConsumerMetadatum")
     creator_id = sa.Column(sa.String(255))
 
@@ -985,7 +998,10 @@ class PreferredCertificateAuthority(BASE, SoftDeleteMixIn, ModelBase):
                            nullable=False)
 
     ca_id = sa.Column(sa.String(36),
-                      sa.ForeignKey('certificate_authorities.id'), index=True,
+                      sa.ForeignKey(
+                          'certificate_authorities.id',
+                          name='preferred_certificate_authorities_fk'),
+                      index=True,
                       nullable=False)
 
     project = orm.relationship('Project',

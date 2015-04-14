@@ -15,8 +15,12 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.alter_column('projects', 'keystone_id', new_column_name='external_id')
+    op.alter_column('projects', 'keystone_id',
+                    type_=sa.String(36),
+                    new_column_name='external_id')
 
 
 def downgrade():
-    op.alter_column('projects', 'external_id', new_column_name='keystone_id')
+    op.alter_column('projects', 'external_id',
+                    type_=sa.String(36),
+                    new_column_name='keystone_id')
