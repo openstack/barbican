@@ -539,12 +539,12 @@ class OrdersTestCase(base.TestCase):
             self.assertIsNotNone(secret_resp)
             secret_dict[secret.name] = secret_resp.content
 
-        private_key = serialization.load_der_private_key(
+        private_key = serialization.load_pem_private_key(
             secret_dict['private_key'],
             password=None,
             backend=backends.default_backend()
         )
-        public_key = serialization.load_der_public_key(
+        public_key = serialization.load_pem_public_key(
             secret_dict['public_key'],
             backend=backends.default_backend()
         )

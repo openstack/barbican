@@ -18,6 +18,7 @@ from Crypto.PublicKey import RSA
 from OpenSSL import crypto
 from testtools import testcase
 
+from barbican.tests import keys
 from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import container_behaviors
@@ -26,7 +27,6 @@ from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import container_models
 from functionaltests.api.v1.models import order_models
 from functionaltests.api.v1.models import secret_models
-from functionaltests.common import keys
 
 
 def get_private_key_req(bits, payload):
@@ -175,8 +175,6 @@ class RSATestCase(base.TestCase):
         pem = keys.get_certificate_pem()
         crypto.load_certificate(crypto.FILETYPE_PEM, pem)
 
-    @testcase.skip("Broken pending fix for 1441866")
-    @testcase.skip("POST comes back with Problem decoding payload")
     @testcase.attr('positive')
     def test_rsa_create_and_get_private_key(self):
         """Create a private key secret with one Post, then Get"""
@@ -199,8 +197,6 @@ class RSATestCase(base.TestCase):
         # check that returned key is same as original key
         self.assertEqual(pem, get_resp.content)
 
-    @testcase.skip("Broken pending fix for 1441866")
-    @testcase.skip("POST comes back with Problem decoding payload")
     @testcase.attr('positive')
     def test_rsa_create_and_get_public_key(self):
         """Create a public key secret with one Post, then Get"""
@@ -310,7 +306,6 @@ class RSATestCase(base.TestCase):
         # check that returned phrase is same as original phrase
         self.assertEqual(passphrase, get_resp.content)
 
-    @testcase.skip("POST comes back with Problem decoding payload")
     @testcase.attr('positive')
     def test_rsa_create_and_get_certificate_secret(self):
         """Create a certificate secret with one Post, then Get"""
@@ -365,7 +360,6 @@ class RSATestCase(base.TestCase):
         # check that returned pem is same as original pem
         self.assertEqual(pem, get_resp.content)
 
-    @testcase.skip("Create private secret fails with decoding error")
     @testcase.attr('positive')
     def test_rsa_create_and_get_container(self):
         """Create an rsa container with one Post, then Get"""
@@ -402,10 +396,9 @@ class RSATestCase(base.TestCase):
         secret_dict = self.get_secret_dict(get_resp.model.secret_refs)
 
         # check that returned secrets are same as original secrets
-        self.assertEqual(private_pem, secret_dict['private_key'].content)
-        self.assertEqual(public_pem, secret_dict['public_key'].content)
+        self.assertEqual(private_pem, secret_dict['private_key'])
+        self.assertEqual(public_pem, secret_dict['public_key'])
 
-    @testcase.skip("Create private secret fails with decoding error")
     @testcase.attr('positive')
     def test_rsa_create_and_get_container_with_passphrase(self):
         """Create an rsa container with one Post, then Get"""
@@ -449,12 +442,10 @@ class RSATestCase(base.TestCase):
         secret_dict = self.get_secret_dict(get_resp.model.secret_refs)
 
         # check that returned secrets are same as original secrets
-        self.assertEqual(private_pem, secret_dict['private_key'].content)
-        self.assertEqual(public_pem, secret_dict['public_key'].content)
-        self.assertEqual(passphrase, secret_dict['private_passphrase'].content)
+        self.assertEqual(private_pem, secret_dict['private_key'])
+        self.assertEqual(public_pem, secret_dict['public_key'])
+        self.assertEqual(passphrase, secret_dict['private_key_passphrase'])
 
-    @testcase.skip("Container is created, but when getting secrets")
-    @testcase.skip("the returned format is base64, but not PEM")
     @testcase.attr('positive')
     def test_rsa_order_container(self):
         """Order an rsa container with asymmetric keys."""
@@ -484,8 +475,6 @@ class RSATestCase(base.TestCase):
         crypto.load_privatekey(crypto.FILETYPE_PEM, secret_dict['private_key'])
         RSA.importKey(secret_dict['public_key'])
 
-    @testcase.skip("Container is created, but when getting secrets")
-    @testcase.skip("the returned format is base64, but not PEM")
     @testcase.attr('positive')
     def test_rsa_order_container_with_passphrase(self):
         """Order an rsa container with asymmetric keys and a passphrase."""
@@ -630,7 +619,6 @@ class RSATestCase(base.TestCase):
         self.assertEqual(order_resp.model.status, "PENDING")
         self.assertEqual(order_resp.model.sub_status, "cert_request_pending")
 
-    @testcase.skip("Broken: load_privatekey fails during generate_csr")
     @testcase.attr('positive')
     def test_rsa_order_certificate_from_created_container(self):
         """Order certificate from created rsa container."""
@@ -682,7 +670,6 @@ class RSATestCase(base.TestCase):
         self.assertEqual(order_resp.model.status, "PENDING")
         self.assertEqual(order_resp.model.sub_status, "cert_request_pending")
 
-    @testcase.skip("Broken: load_privatekey fails during generate_csr")
     @testcase.attr('positive')
     def test_rsa_order_certificate_from_created_container_with_pass(self):
         """Order certificate from created rsa container with passphrase."""
@@ -741,7 +728,6 @@ class RSATestCase(base.TestCase):
         self.assertEqual(order_resp.model.status, "PENDING")
         self.assertEqual(order_resp.model.sub_status, "cert_request_pending")
 
-    @testcase.skip("validation code update in other CR")
     @testcase.attr('positive')
     def test_rsa_order_certificate_from_csr(self):
         """Order certificate from csr"""

@@ -40,7 +40,7 @@ def get_private_key_req():
             'algorithm': 'rsa',
             'bit_length': 1024,
             'secret_type': 'private',
-            'payload': utils.get_private_key()}
+            'payload': base64.b64encode(utils.get_private_key())}
 
 
 def get_public_key_req():
@@ -50,7 +50,7 @@ def get_public_key_req():
             'algorithm': 'rsa',
             'bit_length': 1024,
             'secret_type': 'public',
-            'payload': utils.get_public_key()}
+            'payload': base64.b64encode(utils.get_public_key())}
 
 
 def get_certificate_req():
@@ -60,7 +60,7 @@ def get_certificate_req():
             'algorithm': 'rsa',
             'bit_length': 1024,
             'secret_type': 'certificate',
-            'payload': utils.get_certificate()}
+            'payload': base64.b64encode(utils.get_certificate())}
 
 
 def get_passphrase_req():
@@ -902,13 +902,13 @@ class SecretsTestCase(base.TestCase):
                           get_default_payload()),
                       get_default_data()],
         'private': ['private',
-                    get_pem_content(utils.get_private_key()),
+                    utils.get_private_key(),
                     get_private_key_req()],
         'public': ['public',
-                   get_pem_content(utils.get_public_key()),
+                   utils.get_public_key(),
                    get_public_key_req()],
         'certificate': ['certificate',
-                        get_pem_content(utils.get_certificate()),
+                        utils.get_certificate(),
                         get_certificate_req()],
         'passphrase': ['passphrase',
                        'mysecretpassphrase',

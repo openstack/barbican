@@ -24,54 +24,46 @@ def normalize_before_encryption(unencrypted, content_type, content_encoding,
     This normalizes the secrets before they are handed off to the SecretStore
     for storage. This converts all data to Base64 data. If the data is plain
     text then it encoded using utf-8 first and then Base64 encoded. Binary
-    data is simply converted to Base64. In addition if the secret type is
-    one of private, public, or certificate then the PEM headers are added
-    to the Base64 encoding.
+    data is simply converted to Base64.
+
+    :param str unencrypted: Raw payload
+    :param str content_type: The media type for the payload
+    :param str content_encoding: Transfer encoding
+    :param str secret_type: The type of secret
+    :param bool enforce_text_only: Require text content_type or base64
+        content_encoding
+    :returns: Tuple containing the normalized (base64 encoded) payload and
+        the normalized media type.
     """
     if not unencrypted:
         raise s.SecretNoPayloadProvidedException()
 
     # Validate and normalize content-type.
-    normalized_mime = normalize_content_type(content_type)
+    normalized_media_type = normalize_content_type(content_type)
 
     # Process plain-text type.
-    if normalized_mime in mime_types.PLAIN_TEXT:
+    if normalized_media_type in mime_types.PLAIN_TEXT:
         # normalize text to binary and then base64 encode it
-        unencrypted = unencrypted.encode('utf-8')
-        unencrypted = base64.b64encode(unencrypted)
+        unencrypted_bytes = unencrypted.encode('utf-8')
+        b64payload = base64.b64encode(unencrypted_bytes)
 
     # Process binary type.
     else:
-        if content_encoding:
-            content_encoding = content_encoding.lower()
-        if content_encoding == 'base64':
+        if not content_encoding:
+            b64payload = base64.b64encode(unencrypted)
+        elif content_encoding.lower() == 'base64':
             b64payload = unencrypted
-            if is_pem_payload(unencrypted):
-                pem_components = get_pem_components(unencrypted)
-                b64payload = pem_components[1]
-            try:
-                base64.b64decode(b64payload)
-            except TypeError:
-                raise s.SecretPayloadDecodingError()
-        elif mime_types.use_binary_content_as_is(content_type,
-                                                 content_encoding):
-            if (secret_type == s.SecretType.PRIVATE or
-                    secret_type == s.SecretType.PUBLIC or
-                    secret_type == s.SecretType.CERTIFICATE):
-                unencrypted = to_pem(secret_type, unencrypted)
-            else:
-                unencrypted = base64.b64encode(unencrypted)
         elif enforce_text_only:
             # For text-based protocols (such as the one-step secret POST),
             #   only 'base64' encoding is possible/supported.
             raise s.SecretContentEncodingMustBeBase64()
-        elif content_encoding:
+        else:
             # Unsupported content-encoding request.
             raise s.SecretContentEncodingNotSupportedException(
                 content_encoding
             )
 
-    return unencrypted, normalized_mime
+    return b64payload, normalized_media_type
 
 
 def normalize_content_type(content_type):
@@ -88,23 +80,14 @@ def analyze_before_decryption(content_type):
         raise s.SecretAcceptNotSupportedException(content_type)
 
 
-def denormalize_after_decryption(unencrypted, content_type, pem_needed=False,
-                                 secret_type=None):
+def denormalize_after_decryption(unencrypted, content_type):
     """Translate the decrypted data into the desired content type.
 
     This is called when the raw keys are requested by the user. The secret
     returned from the SecretStore is the unencrypted parameter. This
     'denormalizes' the data back to its binary format.
-
-    For the stored key case, we need to return PEM to support passphrases.
-    In this case, pem_needed will be set to True, and a PEM object will be
-    returned
     """
-    if pem_needed:
-        if is_pem_payload(unencrypted):
-            return unencrypted
-        else:
-            return to_pem(secret_type, unencrypted, payload_encoded=True)
+
     # Process plain-text type.
     if content_type in mime_types.PLAIN_TEXT:
         # normalize text to binary string
@@ -116,76 +99,8 @@ def denormalize_after_decryption(unencrypted, content_type, pem_needed=False,
 
     # Process binary type.
     elif content_type in mime_types.BINARY:
-        if is_pem_payload(unencrypted):
-            unencrypted = get_pem_components(unencrypted)[1]
         unencrypted = base64.b64decode(unencrypted)
     else:
         raise s.SecretContentTypeNotSupportedException(content_type)
 
     return unencrypted
-
-
-def get_pem_components(pem):
-    """Returns the PEM content, header, and footer.
-
-    This parses the PEM string and returns the PEM header, content, and footer.
-    The content is the base64 encoded bytes without the header and footer. This
-    is returned as a list. The order of the list is header, content, footer.
-    """
-    delim = "-----"
-    splits = pem.split(delim)
-    if len(splits) != 5 or splits[0] != "" or splits[4].strip() != "":
-        raise s.SecretPayloadDecodingError()
-    header = delim + splits[1] + delim
-    content = splits[2].strip()
-    footer = delim + splits[3] + delim
-    return (header, content, footer)
-
-
-def is_pem_payload(payload):
-    """Tests whether payload is in PEM format.
-
-    This parses the payload for the PEM header and footer strings. If it finds
-    the header and footer strings then it is assumed to be a PEM payload.
-    """
-    delim = "-----"
-    splits = payload.split(delim)
-    if len(splits) != 5 or splits[0] != "" or splits[4].strip() != "":
-        return False
-    else:
-        return True
-
-
-def to_pem(secret_type, payload, payload_encoded=False):
-    """Converts payload to PEM format.
-
-    This converts the payload to Base 64 encoding if payload_encoded is False
-    and then adds PEM headers. This uses the secret_type to determined the PEM
-    header.
-    """
-    pem = payload
-    if payload_encoded:
-        pem_content = payload
-    else:
-        pem_content = base64.encodestring(payload).rstrip('\n')
-
-    if secret_type == s.SecretType.PRIVATE:
-        headers = _get_pem_headers("PRIVATE KEY")
-        pem = headers[0] + '\n' + pem_content + '\n' + headers[1]
-    elif secret_type == s.SecretType.PUBLIC:
-        headers = _get_pem_headers("PUBLIC KEY")
-        pem = headers[0] + '\n' + pem_content + '\n' + headers[1]
-    elif secret_type == s.SecretType.CERTIFICATE:
-        headers = _get_pem_headers("CERTIFICATE")
-        pem = headers[0] + '\n' + pem_content + '\n' + headers[1]
-    else:
-        # TODO(alee) raise correct exception
-        pass
-
-    return pem
-
-
-def _get_pem_headers(pem_name):
-    header = "-----BEGIN {}-----".format(pem_name)
-    footer = "-----END {}-----".format(pem_name)
-    return (header, footer)

@@ -34,7 +34,6 @@ from oslo_log import log
 
 from barbican import i18n as u  # noqa
 from barbican.plugin.interface import secret_store as ss
-from barbican.plugin.util import translations
 
 LOG = log.getLogger(__name__)
 
@@ -314,13 +313,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         template_attribute = kmip_objects.TemplateAttribute(
             attributes=attribute_list)
 
-        normalized_secret = secret_dto.secret
-        if (secret_type == ss.SecretType.PRIVATE or
-                secret_type == ss.SecretType.PUBLIC or
-                secret_type == ss.SecretType.CERTIFICATE):
-            normalized_secret = translations.get_pem_components(
-                normalized_secret)[1]
-        normalized_secret = base64.decodestring(normalized_secret)
+        normalized_secret = base64.b64decode(secret_dto.secret)
 
         secret_features = {
             'key_format_type': key_format_type,
@@ -392,8 +385,8 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 key_value_type = type(secret_block.key_value.key_material)
                 if (key_value_type == kmip_objects.KeyMaterialStruct or
                         key_value_type == kmip_objects.KeyMaterial):
-                    secret_value = base64.encodestring(
-                        secret_block.key_value.key_material.value).rstrip('\n')
+                    secret_value = base64.b64encode(
+                        secret_block.key_value.key_material.value)
                 else:
                     msg = u._(
                         "Unknown key value type received from KMIP "
@@ -406,12 +399,6 @@ class KMIPSecretStore(ss.SecretStoreBase):
                     )
                     LOG.exception(msg)
                     raise ss.SecretGeneralException(msg)
-
-                if(secret_type == ss.SecretType.PRIVATE or
-                        secret_type == ss.SecretType.PUBLIC or
-                        secret_type == ss.SecretType.CERTIFICATE):
-                    secret_value = translations.to_pem(
-                        secret_type, secret_value, True)
 
                 secret_alg = self._map_algorithm_kmip_to_ss(
                     secret_block.cryptographic_algorithm.value)

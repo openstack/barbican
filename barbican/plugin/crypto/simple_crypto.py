@@ -170,7 +170,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
     def _wrap_key(self, public_key, private_key,
                   passphrase):
         pkcs = 8
-        key_wrap_format = 'DER'
+        key_wrap_format = 'PEM'
 
         private_key = private_key.exportKey(key_wrap_format, passphrase, pkcs)
         public_key = public_key.exportKey(key_wrap_format)

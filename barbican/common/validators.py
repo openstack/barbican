@@ -31,7 +31,6 @@ from barbican.model import repositories as repo
 from barbican.openstack.common import timeutils
 from barbican.plugin.interface import secret_store
 from barbican.plugin.util import mime_types
-from barbican.plugin.util import translations
 
 
 LOG = utils.getLogger(__name__)
@@ -330,11 +329,7 @@ class NewSecretValidator(ValidatorBase):
                                               payload, schema_name):
         if payload_content_encoding == 'base64':
             try:
-                secret_payload = payload
-                if translations.is_pem_payload(payload):
-                    pems = translations.get_pem_components(payload)
-                    secret_payload = pems[1]
-                base64.b64decode(secret_payload)
+                base64.b64decode(payload)
             except TypeError:
                 LOG.exception("Problem parsing payload")
                 raise exception.InvalidObject(schema=schema_name,
@@ -501,14 +496,21 @@ class TypeOrderValidator(ValidatorBase):
         pass
 
     def _validate_pkcs10_data(self, request_data):
-        """Confirm that the request_data is valid PKCS#10.
+        """Confirm that the request_data is valid base64 encoded PKCS#10.
 
-        Parse data into the ASN.1 structure defined by PKCS10.
-        If parsing fails, raise InvalidPKCS10Data
+        Base64 decode the request, if it fails raise PayloadDecodingError.
+        Then parse data into the ASN.1 structure defined by PKCS10 and
+        verify the signing information.
+        If parsing of verifying fails, raise InvalidPKCS10Data.
         """
         try:
+            csr_pem = base64.b64decode(request_data)
+        except Exception:
+            raise exception.PayloadDecodingError()
+
+        try:
             csr = crypto.load_certificate_request(crypto.FILETYPE_PEM,
-                                                  request_data)
+                                                  csr_pem)
         except Exception:
             reason = u._("Bad format")
             raise exception.InvalidPKCS10Data(reason=reason)

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
 import datetime
 import unittest
 
@@ -44,7 +45,7 @@ def get_private_key_req():
             'algorithm': 'rsa',
             'bit_length': 1024,
             'secret_type': 'private',
-            'payload': utils.get_private_key()}
+            'payload': base64.b64encode(utils.get_private_key())}
 
 
 def get_public_key_req():
@@ -54,7 +55,7 @@ def get_public_key_req():
             'algorithm': 'rsa',
             'bit_length': 1024,
             'secret_type': 'public',
-            'payload': utils.get_public_key()}
+            'payload': base64.b64encode(utils.get_public_key())}
 
 
 def get_certificate_req():
@@ -64,7 +65,7 @@ def get_certificate_req():
             'algorithm': 'rsa',
             'bit_length': 1024,
             'secret_type': 'certificate',
-            'payload': utils.get_certificate()}
+            'payload': base64.b64encode(utils.get_certificate())}
 
 
 def get_passphrase_req():
@@ -1069,7 +1070,7 @@ class WhenTestingSimpleCMCOrderValidator(utils.BaseTestCase):
         super(WhenTestingSimpleCMCOrderValidator, self).setUp()
         self.type = 'certificate'
         self.meta = {'request_type': 'simple-cmc',
-                     'request_data': certs.create_good_csr(),
+                     'request_data': base64.b64encode(certs.create_good_csr()),
                      'requestor_name': 'Barbican User',
                      'requestor_email': 'barbican_user@example.com',
                      'requestor_phone': '555-1212'}
@@ -1103,22 +1104,31 @@ class WhenTestingSimpleCMCOrderValidator(utils.BaseTestCase):
                           self.validator.validate,
                           self.order_req)
 
-    def test_should_raise_with_bad_pkcs10_data(self):
+    def test_should_raise_with_pkcs10_data_with_bad_base64(self):
         self.meta['request_data'] = certs.create_bad_csr()
+        self._set_order()
+        self.assertRaises(excep.PayloadDecodingError,
+                          self.validator.validate,
+                          self.order_req)
+
+    def test_should_raise_with_bad_pkcs10_data(self):
+        self.meta['request_data'] = base64.b64encode(certs.create_bad_csr())
         self._set_order()
         self.assertRaises(excep.InvalidPKCS10Data,
                           self.validator.validate,
                           self.order_req)
 
     def test_should_raise_with_signed_wrong_key_pkcs10_data(self):
-        self.meta['request_data'] = certs.create_csr_signed_with_wrong_key()
+        self.meta['request_data'] = base64.b64encode(
+            certs.create_csr_signed_with_wrong_key())
         self._set_order()
         self.assertRaises(excep.InvalidPKCS10Data,
                           self.validator.validate,
                           self.order_req)
 
     def test_should_raise_with_unsigned_pkcs10_data(self):
-        self.meta['request_data'] = certs.create_csr_that_has_not_been_signed()
+        self.meta['request_data'] = base64.b64encode(
+            certs.create_csr_that_has_not_been_signed())
         self._set_order()
         self.assertRaises(excep.InvalidPKCS10Data,
                           self.validator.validate,

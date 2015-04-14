@@ -307,8 +307,7 @@ def _generate_csr(order_model, project_model):
             private_key = plugin.get_secret(
                 'application/pkcs8',
                 private_key_model,
-                project_model,
-                pem_needed=True)
+                project_model)
         elif cs.name == 'private_key_passphrase':
             passphrase_model = secret_repo.get(
                 cs.secret_id,

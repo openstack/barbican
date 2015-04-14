@@ -123,7 +123,7 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
 
 
 def get_secret(requesting_content_type, secret_model, project_model,
-               twsk=None, transport_key=None, pem_needed=False):
+               twsk=None, transport_key=None):
     tr.analyze_before_decryption(requesting_content_type)
 
     secret_metadata = _get_secret_meta(secret_model)
@@ -147,9 +147,7 @@ def get_secret(requesting_content_type, secret_model, project_model,
 
     # Denormalize the secret.
     return tr.denormalize_after_decryption(secret_dto.secret,
-                                           requesting_content_type,
-                                           pem_needed,
-                                           secret_model.secret_type)
+                                           requesting_content_type)
 
 
 def get_transport_key_id_for_retrieval(secret_model):

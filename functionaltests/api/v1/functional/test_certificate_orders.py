@@ -12,6 +12,7 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import base64
 import copy
 import json
 import time
@@ -107,7 +108,7 @@ def get_private_key_req():
             'algorithm': 'rsa',
             'bit_length': 1024,
             'secret_type': s.SecretType.PRIVATE,
-            'payload': utils.get_private_key()}
+            'payload': base64.b64encode(utils.get_private_key())}
 
 
 def get_public_key_req():
@@ -117,7 +118,7 @@ def get_public_key_req():
             'algorithm': 'rsa',
             'bit_length': 1024,
             'secret_type': s.SecretType.PUBLIC,
-            'payload': utils.get_public_key()}
+            'payload': base64.b64encode(utils.get_public_key())}
 
 
 create_generic_container_data = {
@@ -250,7 +251,8 @@ class CertificatesTestCase(base.TestCase):
     @testtools.testcase.attr('positive')
     def test_create_simple_cmc_order(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
-        test_model.meta['request_data'] = certutil.create_good_csr()
+        test_model.meta['request_data'] = base64.b64encode(
+            certutil.create_good_csr())
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(202, create_resp.status_code)
@@ -266,7 +268,8 @@ class CertificatesTestCase(base.TestCase):
         self.simple_cmc_data.pop("requestor_phone", None)
 
         test_model = order_models.OrderModel(**self.simple_cmc_data)
-        test_model.meta['request_data'] = certutil.create_good_csr()
+        test_model.meta['request_data'] = base64.b64encode(
+            certutil.create_good_csr())
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(202, create_resp.status_code)
@@ -279,7 +282,8 @@ class CertificatesTestCase(base.TestCase):
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
     def test_create_simple_cmc_order_with_dogtag_profile(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
-        test_model.meta['request_data'] = certutil.create_good_csr()
+        test_model.meta['request_data'] = base64.b64encode(
+            certutil.create_good_csr())
         test_model.meta['profile'] = 'caServerCert'
         test_model.meta['ca_id'] = self.get_dogtag_ca_id()
 
@@ -295,7 +299,8 @@ class CertificatesTestCase(base.TestCase):
     @testtools.testcase.attr('negative')
     def test_create_simple_cmc_with_profile_and_no_ca_id(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
-        test_model.meta['request_data'] = certutil.create_good_csr()
+        test_model.meta['request_data'] = base64.b64encode(
+            certutil.create_good_csr())
         test_model.meta['profile'] = 'caServerCert'
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -309,7 +314,8 @@ class CertificatesTestCase(base.TestCase):
     @testtools.testcase.attr('negative')
     def test_create_simple_cmc_with_profile_and_incorrect_ca_id(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
-        test_model.meta['request_data'] = certutil.create_good_csr()
+        test_model.meta['request_data'] = base64.b64encode(
+            certutil.create_good_csr())
         test_model.meta['profile'] = 'caServerCert'
         test_model.meta['ca_id'] = 'incorrect_ca_id'
 
@@ -326,7 +332,7 @@ class CertificatesTestCase(base.TestCase):
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
     def test_create_simple_cmc_with_dogtag_and_invalid_subject_dn(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
-        test_model.meta['request_data'] = (
+        test_model.meta['request_data'] = base64.b64encode(
             certutil.create_csr_with_bad_subject_dn())
         test_model.meta['profile'] = 'caServerCert'
         test_model.meta['ca_id'] = self.get_dogtag_ca_id()
@@ -344,9 +350,22 @@ class CertificatesTestCase(base.TestCase):
         # when it does, check for that specific error message
 
     @testtools.testcase.attr('negative')
+    def test_create_simple_cmc_order_with_no_base64(self):
+        test_model = order_models.OrderModel(**self.simple_cmc_data)
+        # do not encode with base64 to force the error
+        test_model.meta['request_data'] = certutil.create_bad_csr()
+
+        create_resp, order_ref = self.behaviors.create_order(test_model)
+        self.assertEqual(400, create_resp.status_code)
+        self.assertIsNone(order_ref)
+        self.confirm_error_message(create_resp,
+                                   "Unable to decode request data.")
+
+    @testtools.testcase.attr('negative')
     def test_create_simple_cmc_order_with_invalid_pkcs10(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
-        test_model.meta['request_data'] = certutil.create_bad_csr()
+        test_model.meta['request_data'] = base64.b64encode(
+            certutil.create_bad_csr())
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(400, create_resp.status_code)
@@ -357,7 +376,7 @@ class CertificatesTestCase(base.TestCase):
     @testtools.testcase.attr('negative')
     def test_create_simple_csc_order_with_unsigned_pkcs10(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
-        test_model.meta['request_data'] = (
+        test_model.meta['request_data'] = base64.b64encode(
             certutil.create_csr_that_has_not_been_signed())
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -369,7 +388,7 @@ class CertificatesTestCase(base.TestCase):
     @testtools.testcase.attr('negative')
     def test_create_simple_csc_order_with_pkcs10_signed_by_wrong_key(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
-        test_model.meta['request_data'] = (
+        test_model.meta['request_data'] = base64.b64encode(
             certutil.create_csr_signed_with_wrong_key())
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -383,7 +402,8 @@ class CertificatesTestCase(base.TestCase):
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
     def test_create_simple_cmc_order_with_invalid_dogtag_profile(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
-        test_model.meta['request_data'] = certutil.create_good_csr()
+        test_model.meta['request_data'] = base64.b64encode(
+            certutil.create_good_csr())
         test_model.meta['profile'] = 'invalidProfileID'
         test_model.meta['ca_id'] = self.get_dogtag_ca_id()
 
@@ -403,7 +423,8 @@ class CertificatesTestCase(base.TestCase):
     @testtools.skipIf(not dogtag_imports_ok, "Dogtag imports not available")
     def test_create_simple_cmc_order_with_non_approved_dogtag_profile(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
-        test_model.meta['request_data'] = certutil.create_good_csr()
+        test_model.meta['request_data'] = base64.b64encode(
+            certutil.create_good_csr())
         test_model.meta['profile'] = 'caTPSCert'
         test_model.meta['ca_id'] = self.get_dogtag_ca_id()
 
@@ -429,7 +450,8 @@ class CertificatesTestCase(base.TestCase):
     @testtools.testcase.attr('negative')
     def test_create_full_cmc_order(self):
         test_model = order_models.OrderModel(**self.full_cmc_data)
-        test_model.meta['request_data'] = certutil.create_good_csr()
+        test_model.meta['request_data'] = base64.b64encode(
+            certutil.create_good_csr())
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(create_resp.status_code, 400)
@@ -442,7 +464,8 @@ class CertificatesTestCase(base.TestCase):
     @testtools.testcase.attr('negative')
     def test_create_cert_order_with_invalid_type(self):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
-        test_model.meta['request_data'] = certutil.create_good_csr()
+        test_model.meta['request_data'] = base64.b64encode(
+            certutil.create_good_csr())
         test_model.meta['request_type'] = "invalid_type"
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -626,7 +649,8 @@ class CertificatesTestCase(base.TestCase):
     def test_create_cert_order_with_missing_request_type(self):
         # defaults to 'custom' type
         test_model = order_models.OrderModel(**self.dogtag_custom_data)
-        test_model.meta['cert_request'] = certutil.create_good_csr()
+        test_model.meta['cert_request'] = base64.b64encode(
+            certutil.create_good_csr())
         test_model.meta['profile_id'] = 'caTPSCert'
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
@@ -641,7 +665,8 @@ class CertificatesTestCase(base.TestCase):
     def test_create_cert_order_with_missing_request_type_auto_enroll(self):
         # defaults to 'custom' type
         test_model = order_models.OrderModel(**self.dogtag_custom_data)
-        test_model.meta['cert_request'] = certutil.create_good_csr()
+        test_model.meta['cert_request'] = base64.b64encode(
+            certutil.create_good_csr())
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(202, create_resp.status_code)
@@ -656,7 +681,8 @@ class CertificatesTestCase(base.TestCase):
     def test_create_custom_order_with_valid_dogtag_data(self):
         # defaults to 'custom' type
         test_model = order_models.OrderModel(**self.dogtag_custom_data)
-        test_model.meta['cert_request'] = certutil.create_good_csr()
+        test_model.meta['cert_request'] = base64.b64encode(
+            certutil.create_good_csr())
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(create_resp.status_code, 202)

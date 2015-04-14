@@ -301,10 +301,6 @@ class InvalidContentEncoding(BarbicanException):
     message = u._("Invalid content encoding %(content_encoding)s")
 
 
-class PayloadDecodingError(BarbicanException):
-    message = u._("Error while attempting to decode payload.")
-
-
 class BadRegistryConnectionConfiguration(BarbicanException):
     message = u._("Registry was not configured correctly on API server. "
                   "Reason: %(reason)s")
@@ -371,6 +367,12 @@ class InvalidObject(BarbicanHTTPException):
                                   "{reason}").format(*args, **kwargs)
         self.message = self.message + self.client_message
         super(InvalidObject, self).__init__(*args, **kwargs)
+
+
+class PayloadDecodingError(BarbicanHTTPException):
+    status_code = 400
+    message = u._("Error while attempting to decode payload.")
+    client_message = u._("Unable to decode request data.")
 
 
 class UnsupportedField(BarbicanHTTPException):

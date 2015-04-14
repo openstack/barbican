@@ -21,7 +21,6 @@ from barbican.model import repositories
 from barbican.plugin.crypto import crypto
 from barbican.plugin.crypto import manager
 from barbican.plugin.interface import secret_store as sstore
-from barbican.plugin.util import translations
 
 CONF = cfg.CONF
 
@@ -83,16 +82,9 @@ class StoreCryptoAdapterPlugin(object):
             encrypting_plugin, context.project_model)
 
         # Secrets are base64 encoded before being passed to the secret stores.
-        normalized_secret = secret_dto.secret
-        secret_type = secret_dto.type
-        if (secret_type == sstore.SecretType.PRIVATE or
-                secret_type == sstore.SecretType.PUBLIC or
-                secret_type == sstore.SecretType.CERTIFICATE):
-            normalized_secret = translations.get_pem_components(
-                normalized_secret)[1]
-        normalized_secret = base64.decodestring(normalized_secret)
+        secret_bytes = base64.b64decode(secret_dto.secret)
 
-        encrypt_dto = crypto.EncryptDTO(normalized_secret)
+        encrypt_dto = crypto.EncryptDTO(secret_bytes)
 
         # Enhance the context with content_type, This is needed to build
         # datum_model to store
@@ -133,7 +125,7 @@ class StoreCryptoAdapterPlugin(object):
         kek_meta_dto = crypto.KEKMetaDTO(datum_model.kek_meta_project)
 
         # Convert from text-based storage format to binary.
-        encrypted = base64.decodestring(datum_model.cypher_text)
+        encrypted = base64.b64decode(datum_model.cypher_text)
         decrypt_dto = crypto.DecryptDTO(encrypted)
 
         # Decrypt the secret.
@@ -141,11 +133,7 @@ class StoreCryptoAdapterPlugin(object):
                                            kek_meta_dto,
                                            datum_model.kek_meta_extended,
                                            context.project_model.external_id)
-        secret = base64.encodestring(secret).rstrip('\n')
-        if (secret_type == sstore.SecretType.PRIVATE or
-                secret_type == sstore.SecretType.PUBLIC or
-                secret_type == sstore.SecretType.CERTIFICATE):
-            secret = translations.to_pem(secret_type, secret, True)
+        secret = base64.b64encode(secret)
         key_spec = sstore.KeySpec(alg=context.secret_model.algorithm,
                                   bit_length=context.secret_model.bit_length,
                                   mode=context.secret_model.mode)
@@ -326,7 +314,7 @@ def _store_secret_and_datum(
     datum_model = models.EncryptedDatum(secret_model, kek_datum_model)
     datum_model.content_type = context.content_type
     datum_model.cypher_text = (
-        base64.encodestring(generated_dto.cypher_text).rstrip('\n'))
+        base64.b64encode(generated_dto.cypher_text))
     datum_model.kek_meta_extended = generated_dto.kek_meta_extended
     datum_model.secret_id = secret_model.id
     repositories.get_encrypted_datum_repository().create_from(

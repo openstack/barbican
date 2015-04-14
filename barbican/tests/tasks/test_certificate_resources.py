@@ -466,8 +466,9 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
 
         pkey = crypto.PKey()
         pkey.generate_key(crypto.TYPE_RSA, 2048)
-        self.private_key_value = crypto.dump_privatekey(
+        key_pem = crypto.dump_privatekey(
             crypto.FILETYPE_PEM, pkey)
+        self.private_key_value = base64.b64encode(key_pem)
         self.public_key_value = "public_key"
         self.passphrase_value = None
         self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
@@ -514,11 +515,12 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
         passphrase = "my secret passphrase"
         pkey = crypto.PKey()
         pkey.generate_key(crypto.TYPE_RSA, 2048)
-        self.private_key_value = crypto.dump_privatekey(
+        key_pem = crypto.dump_privatekey(
             crypto.FILETYPE_PEM,
             pkey,
             passphrase=passphrase
         )
+        self.private_key_value = base64.b64encode(key_pem)
         self.public_key_value = "public_key"
         self.passphrase_value = base64.b64encode(passphrase)
         self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
@@ -542,8 +544,10 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
         private_key = RSA.generate(2048, None, None, 65537)
         public_key = private_key.publickey()
 
-        self.private_key_value = private_key.exportKey('PEM', passphrase, 8)
-        self.public_key_value = public_key.exportKey()
+        private_key_pem = private_key.exportKey('PEM', passphrase, 8)
+        self.private_key_value = base64.b64encode(private_key_pem)
+        public_key_pem = public_key.exportKey()
+        self.public_key_value = base64.b64encode(public_key_pem)
         self.passphrase_value = base64.b64encode(passphrase)
 
         self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
@@ -563,8 +567,9 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
         private_key = RSA.generate(2048, None, None, 65537)
         public_key = private_key.publickey()
 
-        self.private_key_value = private_key.exportKey('PEM', None, 8)
-        self.public_key_value = public_key.exportKey()
+        self.private_key_value = base64.b64encode(
+            private_key.exportKey('PEM', None, 8))
+        self.public_key_value = base64.b64encode(public_key.exportKey())
 
         self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
         self._test_should_return_waiting_for_ca(
@@ -621,8 +626,8 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
         self.order_meta.update(self.stored_key_meta)
         pkey = crypto.PKey()
         pkey.generate_key(crypto.TYPE_RSA, 2048)
-        self.private_key_value = crypto.dump_privatekey(
-            crypto.FILETYPE_PEM, pkey)
+        self.private_key_value = base64.b64encode(crypto.dump_privatekey(
+            crypto.FILETYPE_PEM, pkey))
 
         self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
         self.order_meta['extensions'] = 'my ASN.1 extensions structure here'
