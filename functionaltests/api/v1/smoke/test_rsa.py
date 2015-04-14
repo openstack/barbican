@@ -141,6 +141,17 @@ class RSATestCase(base.TestCase):
         self.order_behaviors.delete_all_created_orders()
         super(RSATestCase, self).tearDown()
 
+    def get_secret_dict(self, secret_refs):
+        # get the secrets from the container
+        secret_dict = {}
+        for secret in secret_refs:
+            self.assertIsNotNone(secret.secret_ref)
+            secret_resp = self.secret_behaviors.get_secret(
+                secret.secret_ref, "application/octet-stream")
+            self.assertIsNotNone(secret_resp)
+            secret_dict[secret.name] = secret_resp.content
+        return secret_dict
+
     @testcase.attr('positive')
     def test_rsa_check_input_keys(self):
         """Verify the keys input for test cases"""
@@ -386,25 +397,13 @@ class RSATestCase(base.TestCase):
         # retrieve container with Get to server
         get_resp = self.container_behaviors.get_container(container_ref)
         self.assertEqual(get_resp.status_code, 200)
-        self.assertEqual(get_resp.model.secret_refs[0].name, 'public_key')
-        self.assertEqual(get_resp.model.secret_refs[1].name, 'private_key')
-        self.assertEqual(get_resp.model.secret_refs[2].name,
-                         'private_key_passphrase')
 
-        # retrieve public key secret with Get to server
-        content_type = 'application/octet-stream'
-        public_get_resp = self.secret_behaviors.get_secret(
-            get_resp.model.secret_refs[0].secret_ref, content_type)
-        self.assertEqual(200, public_get_resp.status_code)
-
-        # retrieve private key secret with Get to server
-        private_get_resp = self.secret_behaviors.get_secret(
-            get_resp.model.secret_refs[1].secret_ref, content_type)
-        self.assertEqual(200, private_get_resp.status_code)
+        # get the secrets from the container
+        secret_dict = self.get_secret_dict(get_resp.model.secret_refs)
 
         # check that returned secrets are same as original secrets
-        self.assertEqual(private_pem, private_get_resp.content)
-        self.assertEqual(public_pem, public_get_resp.content)
+        self.assertEqual(private_pem, secret_dict['private_key'].content)
+        self.assertEqual(public_pem, secret_dict['public_key'].content)
 
     @testcase.skip("Create private secret fails with decoding error")
     @testcase.attr('positive')
@@ -445,31 +444,14 @@ class RSATestCase(base.TestCase):
         # retrieve container with Get to server
         get_resp = self.container_behaviors.get_container(container_ref)
         self.assertEqual(get_resp.status_code, 200)
-        self.assertEqual(get_resp.model.secret_refs[0].name, 'public_key')
-        self.assertEqual(get_resp.model.secret_refs[1].name, 'private_key')
-        self.assertEqual(get_resp.model.secret_refs[2].name,
-                         'private_key_passphrase')
 
-        # retrieve public key secret with Get to server
-        content_type = 'application/octet-stream'
-        public_get_resp = self.secret_behaviors.get_secret(
-            get_resp.model.secret_refs[0].secret_ref, content_type)
-        self.assertEqual(200, public_get_resp.status_code)
-
-        # retrieve private key secret with Get to server
-        private_get_resp = self.secret_behaviors.get_secret(
-            get_resp.model.secret_refs[1].secret_ref, content_type)
-        self.assertEqual(200, private_get_resp.status_code)
-
-        # retrieve passphrase with Get to server
-        passphrase_get_resp = self.secret_behaviors.get_secret(
-            get_resp.model.secret_refs[2].secret_ref, content_type)
-        self.assertEqual(200, get_resp.status_code)
+        # get the secrets from the container
+        secret_dict = self.get_secret_dict(get_resp.model.secret_refs)
 
         # check that returned secrets are same as original secrets
-        self.assertEqual(private_pem, private_get_resp.content)
-        self.assertEqual(public_pem, public_get_resp.content)
-        self.assertEqual(passphrase, passphrase_get_resp.content)
+        self.assertEqual(private_pem, secret_dict['private_key'].content)
+        self.assertEqual(public_pem, secret_dict['public_key'].content)
+        self.assertEqual(passphrase, secret_dict['private_passphrase'].content)
 
     @testcase.skip("Container is created, but when getting secrets")
     @testcase.skip("the returned format is base64, but not PEM")
@@ -493,13 +475,7 @@ class RSATestCase(base.TestCase):
         self.assertEqual(container_resp.status_code, 200)
 
         # get the secrets from the container
-        secret_dict = {}
-        for secret in container_resp.model.secret_refs:
-            self.assertIsNotNone(secret.secret_ref)
-            secret_resp = self.secret_behaviors.get_secret(
-                secret.secret_ref, "application/octet-stream")
-            self.assertIsNotNone(secret_resp)
-            secret_dict[secret.name] = secret_resp.content
+        secret_dict = self.get_secret_dict(container_resp.model.secret_refs)
 
         # verify the secrets
         self.assertIsNotNone(secret_dict['private_key'])
@@ -530,13 +506,7 @@ class RSATestCase(base.TestCase):
         self.assertEqual(container_resp.status_code, 200)
 
         # get the secrets from the container
-        secret_dict = {}
-        for secret in container_resp.model.secret_refs:
-            self.assertIsNotNone(secret.secret_ref)
-            secret_resp = self.secret_behaviors.get_secret(
-                secret.secret_ref, "application/octet-stream")
-            self.assertIsNotNone(secret_resp)
-            secret_dict[secret.name] = secret_resp.content
+        secret_dict = self.get_secret_dict(container_resp.model.secret_refs)
 
         # verify the secrets
         self.assertEqual('password', secret_dict['private_key_passphrase'])
@@ -590,13 +560,7 @@ class RSATestCase(base.TestCase):
         self.assertEqual(container_resp.status_code, 200)
 
         # get the secrets from the container
-        secret_dict = {}
-        for secret in container_resp.model.secret_refs:
-            self.assertIsNotNone(secret.secret_ref)
-            secret_resp = self.secret_behaviors.get_secret(
-                secret.secret_ref, "application/octet-stream")
-            self.assertIsNotNone(secret_resp)
-            secret_dict[secret.name] = secret_resp.content
+        secret_dict = self.get_secret_dict(container_resp.model.secret_refs)
 
         # check that returned secrets are same as original secrets
         self.assertEqual(private_pem, secret_dict['private_key'])
@@ -777,6 +741,7 @@ class RSATestCase(base.TestCase):
         self.assertEqual(order_resp.model.status, "PENDING")
         self.assertEqual(order_resp.model.sub_status, "cert_request_pending")
 
+    @testcase.skip("validation code update in other CR")
     @testcase.attr('positive')
     def test_rsa_order_certificate_from_csr(self):
         """Order certificate from csr"""
@@ -784,7 +749,7 @@ class RSATestCase(base.TestCase):
         # order an rsa certificate
         csr = keys.get_csr_pem()
         test_model = order_models.OrderModel(
-            **get_order_create_certificate_simple_cmc(csr))
+            **get_order_create_certificate_simple_cmc(base64.b64encode(csr)))
         create_resp, order_ref = self.order_behaviors.create_order(test_model)
         self.assertEqual(202, create_resp.status_code)
 
