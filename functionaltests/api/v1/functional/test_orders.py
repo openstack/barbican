@@ -570,3 +570,121 @@ class OrdersTestCase(base.TestCase):
             )
         )
         self.assertEqual(message, plaintext)
+
+
+class OrdersUnauthedTestCase(base.TestCase):
+
+    def setUp(self):
+        super(OrdersUnauthedTestCase, self).setUp()
+        self.behaviors = order_behaviors.OrderBehaviors(self.client)
+        self.container_behaviors = container_behaviors.ContainerBehaviors(
+            self.client)
+        self.secret_behaviors = secret_behaviors.SecretBehaviors(self.client)
+
+        self.create_default_data = get_default_order_create_data()
+        self.dummy_order_ref = 'orders/dummy-7b86-4071-935d-ef6b83729200'
+        self.dummy_project_id = 'dummy'
+
+    def tearDown(self):
+        self.behaviors.delete_all_created_orders()
+        super(OrdersUnauthedTestCase, self).tearDown()
+
+    @testcase.attr('negative', 'security')
+    def test_order_create_unauthed_no_proj_id(self):
+        """Attempt to create an order without a token or project id
+
+        Should return 401
+        """
+
+        model = order_models.OrderModel(self.create_default_data)
+        resp, order_ref = self.behaviors.create_order(model, use_auth=False)
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_order_get_unauthed_no_proj_id(self):
+        """Attempt to get an order without a token or project id
+
+        Should return 401
+        """
+
+        resp = self.behaviors.get_order(self.dummy_order_ref, use_auth=False)
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_order_get_order_list_unauthed_no_proj_id(self):
+        """Attempt to get the list of orders without a token or project id
+
+        Should return 401
+        """
+
+        resp, orders, next_ref, prev_ref = self.behaviors.get_orders(
+            use_auth=False
+        )
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_order_delete_unauthed_no_proj_id(self):
+        """Attempt to delete an order without a token or project id
+
+        Should return 401
+        """
+
+        resp = self.behaviors.delete_order(
+            self.dummy_order_ref, expected_fail=True, use_auth=False
+        )
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_order_create_unauthed_with_proj_id(self):
+        """Attempt to create an order with a project id, but no token
+
+        Should return 401
+        """
+
+        model = order_models.OrderModel(self.create_default_data)
+        headers = {'X-Project-Id': self.dummy_project_id}
+        resp, order_ref = self.behaviors.create_order(
+            model, extra_headers=headers, use_auth=False
+        )
+
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_order_get_unauthed_with_proj_id(self):
+        """Attempt to get an order with a project id, but no token
+
+        Should return 401
+        """
+
+        headers = {'X-Project-Id': self.dummy_project_id}
+        resp = self.behaviors.get_order(
+            self.dummy_order_ref, extra_headers=headers, use_auth=False
+        )
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_order_get_order_list_unauthed_with_proj_id(self):
+        """Attempt to get the list of orders with a project id, but no token
+
+        Should return 401
+        """
+
+        headers = {'X-Project-Id': self.dummy_project_id}
+        resp, orders, next_ref, prev_ref = self.behaviors.get_orders(
+            extra_headers=headers, use_auth=False
+        )
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_order_delete_unauthed_with_proj_id(self):
+        """Attempt to delete an order with a project id, but no token
+
+        Should return 401
+        """
+
+        headers = {'X-Project-Id': self.dummy_project_id}
+        resp = self.behaviors.delete_order(
+            self.dummy_order_ref, extra_headers=headers, expected_fail=True,
+            use_auth=False
+        )
+        self.assertEqual(401, resp.status_code)
