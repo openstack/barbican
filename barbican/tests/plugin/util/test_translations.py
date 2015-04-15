@@ -257,3 +257,32 @@ class WhenDenormalizingAfterDecryption(utils.BaseTestCase):
     def test_denormalize_pem(self, encoded_pem, content_type):
         denorm_secret = self.denormalize(encoded_pem, content_type)
         self.assertEqual(base64.b64decode(encoded_pem), denorm_secret)
+
+
+class WhenConvertingKeyFormats(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenConvertingKeyFormats, self).setUp()
+
+    def test_passes_convert_private_pem_to_der(self):
+        pem = keys.get_private_key_pkcs8()
+        expected_der = keys.get_private_key_der()
+        der = translations.convert_private_pem_to_der(pem)
+        self.assertEqual(expected_der, der)
+
+    def test_passes_convert_private_der_to_pem(self):
+        der = keys.get_private_key_der()
+        expected_pem = keys.get_private_key_pkcs8()
+        pem = translations.convert_private_der_to_pkcs8(der)
+        self.assertEqual(expected_pem, pem)
+
+    def test_passes_convert_public_pem_to_der(self):
+        pem = keys.get_public_key_pem()
+        expected_der = keys.get_public_key_der()
+        der = translations.convert_public_pem_to_der(pem)
+        self.assertEqual(expected_der, der)
+
+    def test_passes_convert_public_der_to_pem(self):
+        der = keys.get_public_key_der()
+        expected_pem = keys.get_public_key_pem()
+        pem = translations.convert_public_der_to_pem(der)
+        self.assertEqual(expected_pem, pem)
