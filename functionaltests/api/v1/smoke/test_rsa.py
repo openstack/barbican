@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import base64
-import time
 
 from Crypto.PublicKey import RSA
 from OpenSSL import crypto
@@ -141,14 +140,6 @@ class RSATestCase(base.TestCase):
         self.container_behaviors.delete_all_created_containers()
         self.order_behaviors.delete_all_created_orders()
         super(RSATestCase, self).tearDown()
-
-    def wait_for_order(self, order_resp, order_ref):
-        # Make sure we have an active order
-        time_count = 1
-        while order_resp.model.status != "ACTIVE" and time_count <= 4:
-            time.sleep(1)
-            time_count += 1
-            order_resp = self.order_behaviors.get_order(order_ref)
 
     @testcase.attr('positive')
     def test_rsa_check_input_keys(self):
@@ -611,7 +602,6 @@ class RSATestCase(base.TestCase):
         self.assertEqual(private_pem, secret_dict['private_key'])
         self.assertEqual(public_pem, secret_dict['public_key'])
 
-    @testcase.skip("Broken: order is done, but meta data is not updated")
     @testcase.attr('positive')
     def test_rsa_order_certificate_from_generated_container(self):
         """Order a certificate from generated rsa container."""
@@ -641,19 +631,9 @@ class RSATestCase(base.TestCase):
         # get the certificate order
         order_resp = self.order_behaviors.get_order(order_ref)
         self.assertEqual(order_resp.status_code, 200)
-        self.assertTrue(order_resp.model.status == "ACTIVE" or
-                        order_resp.model.status == "PENDING")
+        self.assertEqual(order_resp.model.status, "PENDING")
+        self.assertEqual(order_resp.model.sub_status, "cert_request_pending")
 
-        # Wait until order is ACTIVE
-        self.wait_for_order(order_resp, order_ref)
-
-        # verify order results
-        # self.assertEqual('ACTIVE', order_resp.model.status)
-        self.assertIsNotNone(order_resp.model.meta['plugin_name'])
-        csr = order_resp.model.meta['generated_csr']
-        crypto.load_certificate_request(crypto.FILETYPE_PEM, csr)
-
-    @testcase.skip("Broken: order is done, but meta data is not updated")
     @testcase.attr('positive')
     def test_rsa_order_certificate_from_generated_container_with_pass(self):
         """Order certificate from generated rsa container with passphrase."""
@@ -683,17 +663,8 @@ class RSATestCase(base.TestCase):
         # get the certificate order
         order_resp = self.order_behaviors.get_order(order_ref)
         self.assertEqual(order_resp.status_code, 200)
-        self.assertTrue(order_resp.model.status == "ACTIVE" or
-                        order_resp.model.status == "PENDING")
-
-        # Wait until order is ACTIVE
-        self.wait_for_order(order_resp, order_ref)
-
-        # verify order results
-        # self.assertEqual('ACTIVE', order_resp.model.status)
-        self.assertIsNotNone(order_resp.model.meta['plugin_name'])
-        csr = order_resp.model.meta['generated_csr']
-        crypto.load_certificate_request(crypto.FILETYPE_PEM, csr)
+        self.assertEqual(order_resp.model.status, "PENDING")
+        self.assertEqual(order_resp.model.sub_status, "cert_request_pending")
 
     @testcase.skip("Broken: load_privatekey fails during generate_csr")
     @testcase.attr('positive')
@@ -744,17 +715,8 @@ class RSATestCase(base.TestCase):
         # get the certificate order
         order_resp = self.order_behaviors.get_order(order_ref)
         self.assertEqual(order_resp.status_code, 200)
-        self.assertTrue(order_resp.model.status == "ACTIVE" or
-                        order_resp.model.status == "PENDING")
-
-        # Wait until order is ACTIVE
-        self.wait_for_order(order_resp, order_ref)
-
-        # verify order results
-        # self.assertEqual('ACTIVE', order_resp.model.status)
-        self.assertIsNotNone(order_resp.model.meta['plugin_name'])
-        csr = order_resp.model.meta['generated_csr']
-        crypto.load_certificate_request(crypto.FILETYPE_PEM, csr)
+        self.assertEqual(order_resp.model.status, "PENDING")
+        self.assertEqual(order_resp.model.sub_status, "cert_request_pending")
 
     @testcase.skip("Broken: load_privatekey fails during generate_csr")
     @testcase.attr('positive')
@@ -812,19 +774,9 @@ class RSATestCase(base.TestCase):
         # get the certificate order
         order_resp = self.order_behaviors.get_order(order_ref)
         self.assertEqual(order_resp.status_code, 200)
-        self.assertTrue(order_resp.model.status == "ACTIVE" or
-                        order_resp.model.status == "PENDING")
+        self.assertEqual(order_resp.model.status, "PENDING")
+        self.assertEqual(order_resp.model.sub_status, "cert_request_pending")
 
-        # Wait until order is ACTIVE
-        self.wait_for_order(order_resp, order_ref)
-
-        # verify order results
-        # self.assertEqual('ACTIVE', order_resp.model.status)
-        self.assertIsNotNone(order_resp.model.meta['plugin_name'])
-        csr = order_resp.model.meta['generated_csr']
-        crypto.load_certificate_request(crypto.FILETYPE_PEM, csr)
-
-    @testcase.skip("Broken: order is done, but meta data is not updated")
     @testcase.attr('positive')
     def test_rsa_order_certificate_from_csr(self):
         """Order certificate from csr"""
@@ -839,6 +791,5 @@ class RSATestCase(base.TestCase):
         # get the certificate order
         order_resp = self.order_behaviors.get_order(order_ref)
         self.assertEqual(order_resp.status_code, 200)
-        self.assertTrue(order_resp.model.status == "ACTIVE" or
-                        order_resp.model.status == "PENDING")
-        self.assertIsNotNone(order_resp.model.meta['plugin_name'])
+        self.assertEqual(order_resp.model.status, "PENDING")
+        self.assertEqual(order_resp.model.sub_status, "cert_request_pending")
