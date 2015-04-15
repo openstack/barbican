@@ -131,3 +131,15 @@ def convert_public_der_to_pem(der):
     pubkey = RSA.importKey(der)
     pem = pubkey.exportKey('PEM')
     return pem
+
+
+def convert_certificate_pem_to_der(pem):
+    cert = crypto.load_certificate(crypto.FILETYPE_PEM, pem)
+    der = crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)
+    return der
+
+
+def convert_certificate_der_to_pem(der):
+    cert = crypto.load_certificate(crypto.FILETYPE_ASN1, der)
+    pem = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
+    return pem

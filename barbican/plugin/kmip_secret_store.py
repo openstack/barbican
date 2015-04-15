@@ -34,6 +34,7 @@ from oslo_log import log
 
 from barbican import i18n as u  # noqa
 from barbican.plugin.interface import secret_store as ss
+from barbican.plugin.util import translations
 
 LOG = log.getLogger(__name__)
 
@@ -313,7 +314,8 @@ class KMIPSecretStore(ss.SecretStoreBase):
         template_attribute = kmip_objects.TemplateAttribute(
             attributes=attribute_list)
 
-        normalized_secret = base64.b64decode(secret_dto.secret)
+        normalized_secret = self._normalize_secret(secret_dto.secret,
+                                                   secret_type)
 
         secret_features = {
             'key_format_type': key_format_type,
@@ -385,8 +387,9 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 key_value_type = type(secret_block.key_value.key_material)
                 if (key_value_type == kmip_objects.KeyMaterialStruct or
                         key_value_type == kmip_objects.KeyMaterial):
-                    secret_value = base64.b64encode(
-                        secret_block.key_value.key_material.value)
+                    secret_value = self._denormalize_secret(
+                        secret_block.key_value.key_material.value,
+                        secret_type)
                 else:
                     msg = u._(
                         "Unknown key value type received from KMIP "
@@ -603,3 +606,25 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 u._('Bad key file permissions found, expected 400 '
                     'for path: {file_path}').format(file_path=path)
             )
+
+    def _normalize_secret(self, secret, secret_type):
+        """Normalizes secret for use by KMIP plugin"""
+        data = base64.b64decode(secret)
+        if secret_type == ss.SecretType.PUBLIC:
+            return translations.convert_public_pem_to_der(data)
+        if secret_type == ss.SecretType.PRIVATE:
+            return translations.convert_private_pem_to_der(data)
+        if secret_type == ss.SecretType.CERTIFICATE:
+            return translations.convert_certificate_pem_to_der(data)
+        return data
+
+    def _denormalize_secret(self, secret, secret_type):
+        """Converts secret back to the format expected by Barbican core"""
+        data = secret
+        if secret_type == ss.SecretType.PUBLIC:
+            data = translations.convert_public_der_to_pem(secret)
+        if secret_type == ss.SecretType.PRIVATE:
+            data = translations.convert_private_der_to_pkcs8(secret)
+        if secret_type == ss.SecretType.CERTIFICATE:
+            data = translations.convert_certificate_der_to_pem(secret)
+        return base64.b64encode(data)

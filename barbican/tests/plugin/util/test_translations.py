@@ -286,3 +286,9 @@ class WhenConvertingKeyFormats(utils.BaseTestCase):
         expected_pem = keys.get_public_key_pem()
         pem = translations.convert_public_der_to_pem(der)
         self.assertEqual(expected_pem, pem)
+
+    def test_certificate_conversion(self):
+        pem = keys.get_certificate_pem()
+        der = translations.convert_certificate_pem_to_der(pem)
+        converted_pem = translations.convert_certificate_der_to_pem(der)
+        self.assertEqual(pem, converted_pem)
