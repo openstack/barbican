@@ -605,6 +605,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
     @mock.patch('barbican.plugin.resources.store_secret')
     def test_should_put_secret_as_plain_with_tkey_id(self, mock_store_secret):
         self.secret.encrypted_data = []
+        self.secret.secret_store_metadata = {}
 
         resp = self.app.put(
             '/secrets/{0}/?transport_key_id={1}'.format(
@@ -627,6 +628,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
     @mock.patch('barbican.plugin.resources.store_secret')
     def test_should_put_secret_as_binary_with_tkey_id(self, mock_store_secret):
         self.secret.encrypted_data = []
+        self.secret.secret_store_metadata = {}
 
         resp = self.app.put(
             '/secrets/{0}/?transport_key_id={1}'.format(

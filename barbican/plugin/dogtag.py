@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
+import copy
 import os
 import uuid
 
@@ -49,9 +51,11 @@ dogtag_plugin_opts = [
                default="8443",
                help=u._('Port for the Dogtag instance')),
     cfg.StrOpt('nss_db_path',
-               help=u._('Path to the NSS certificate database')),
+               help=u._('Path to the NSS certificate database for the KRA')),
+    cfg.StrOpt('nss_db_path_ca',
+               help=u._('Path to the NSS certificate database for the CA')),
     cfg.StrOpt('nss_password',
-               help=u._('Password for NSS certificate database')),
+               help=u._('Password for the NSS certificate databases')),
     cfg.StrOpt('simple_cmc_profile',
                help=u._('Profile for simple CMC requests')),
     cfg.StrOpt('auto_approved_profiles',
@@ -63,10 +67,14 @@ CONF.register_group(dogtag_plugin_group)
 CONF.register_opts(dogtag_plugin_opts, group=dogtag_plugin_group)
 
 
-def setup_nss_db(conf):
+def setup_nss_db(conf, subsystem):
     crypto = None
     create_nss_db = False
-    nss_db_path = conf.dogtag_plugin.nss_db_path
+    if subsystem == 'ca':
+        nss_db_path = conf.dogtag_plugin.nss_db_path_ca
+    else:
+        nss_db_path = conf.dogtag_plugin.nss_db_path
+
     if nss_db_path is not None:
         nss_password = conf.dogtag_plugin.nss_password
         if nss_password is None:
@@ -119,6 +127,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
     # metadata constants
     ALG = "alg"
     BIT_LENGTH = "bit_length"
+    GENERATED = "generated"
     KEY_ID = "key_id"
     SECRET_MODE = "secret_mode"
     PASSPHRASE_KEY_ID = "passphrase_key_id"
@@ -133,7 +142,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
     def __init__(self, conf=CONF):
         """Constructor - create the keyclient."""
         LOG.debug("starting DogtagKRAPlugin init")
-        crypto, create_nss_db = setup_nss_db(conf)
+        crypto, create_nss_db = setup_nss_db(conf, 'kra')
         connection = create_connection(conf, 'kra')
 
         # create kraclient
@@ -243,6 +252,8 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
             passphrase=None
         )
 
+        generated = secret_metadata.get(DogtagKRAPlugin.GENERATED, False)
+
         passphrase = self._get_passphrase_for_a_private_key(
             secret_type, secret_metadata, key_spec)
 
@@ -291,7 +302,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
                 if key_spec.alg.upper() == key.KeyClient.RSA_ALGORITHM:
                     recovered_key = (
                         (RSA.importKey(key_data.data)
-                         .exportKey('PEM', passphrase))
+                         .exportKey('PEM', passphrase, 8))
                         .encode('utf-8')
                     )
                 elif key_spec.alg.upper() == key.KeyClient.DSA_ALGORITHM:
@@ -320,6 +331,10 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
 
         # TODO(alee) remove final field when content_type is removed
         # from secret_dto
+
+        if generated:
+            recovered_key = base64.b64encode(recovered_key)
+
         ret = sstore.SecretDTO(
             type=secret_type,
             secret=recovered_key,
@@ -366,13 +381,26 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
             algorithm,
             key_spec.bit_length,
             usages)
+
+        # Barbican expects stored keys to be base 64 encoded.  We need to
+        # add flag to the keyclient.generate_symmetric_key() call above
+        # to ensure that the key that is stored is base64 encoded.
+        #
+        # As a workaround until that update is available, we will store a
+        # parameter "generated"  to indicate that the response must be base64
+        # encoded on retrieval.  Note that this will not work for transport
+        # key encoded data.
         return {DogtagKRAPlugin.ALG: key_spec.alg,
                 DogtagKRAPlugin.BIT_LENGTH: key_spec.bit_length,
                 DogtagKRAPlugin.SECRET_MODE: key_spec.mode,
-                DogtagKRAPlugin.KEY_ID: response.get_key_id()}
+                DogtagKRAPlugin.KEY_ID: response.get_key_id(),
+                DogtagKRAPlugin.GENERATED: True}
 
     def generate_asymmetric_key(self, key_spec):
-        """Generate an asymmetric key."""
+        """Generate an asymmetric key.
+
+        Note that barbican expects all secrets to be base64 encoded.
+        """
 
         usages = [key.AsymKeyGenerationRequest.DECRYPT_USAGE,
                   key.AsymKeyGenerationRequest.ENCRYPT_USAGE]
@@ -396,12 +424,21 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
             stored_passphrase_info = self.keyclient.archive_key(
                 uuid.uuid4().hex,
                 self.keyclient.PASS_PHRASE_TYPE,
-                passphrase)
+                base64.b64encode(passphrase))
 
             passphrase_key_id = stored_passphrase_info.get_key_id()
             passphrase_metadata = {
                 DogtagKRAPlugin.KEY_ID: passphrase_key_id
             }
+
+        # Barbican expects stored keys to be base 64 encoded.  We need to
+        # add flag to the keyclient.generate_asymmetric_key() call above
+        # to ensure that the key that is stored is base64 encoded.
+        #
+        # As a workaround until that update is available, we will store a
+        # parameter "generated"  to indicate that the response must be base64
+        # encoded on retrieval.  Note that this will not work for transport
+        # key encoded data.
 
         response = self.keyclient.generate_asymmetric_key(
             client_key_id,
@@ -413,14 +450,16 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
             DogtagKRAPlugin.ALG: key_spec.alg,
             DogtagKRAPlugin.BIT_LENGTH: key_spec.bit_length,
             DogtagKRAPlugin.KEY_ID: response.get_key_id(),
-            DogtagKRAPlugin.CONVERT_TO_PEM: "true"
+            DogtagKRAPlugin.CONVERT_TO_PEM: "true",
+            DogtagKRAPlugin.GENERATED: True
         }
 
         private_key_metadata = {
             DogtagKRAPlugin.ALG: key_spec.alg,
             DogtagKRAPlugin.BIT_LENGTH: key_spec.bit_length,
             DogtagKRAPlugin.KEY_ID: response.get_key_id(),
-            DogtagKRAPlugin.CONVERT_TO_PEM: "true"
+            DogtagKRAPlugin.CONVERT_TO_PEM: "true",
+            DogtagKRAPlugin.GENERATED: True
         }
 
         if passphrase_key_id:
@@ -514,6 +553,11 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
                         "passphrase in the database, for being used during "
                         "retrieval.").format(secret_type=secret_type)
                 )
+
+        # note that Barbican expects the passphrase to be base64 encoded when
+        # stored, so we need to decode it.
+        if passphrase:
+            passphrase = base64.b64decode(passphrase)
         return passphrase
 
     @staticmethod
@@ -569,7 +613,7 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
 
     def __init__(self, conf=CONF):
         """Constructor - create the cert clients."""
-        crypto, create_nss_db = setup_nss_db(conf)
+        crypto, create_nss_db = setup_nss_db(conf, 'ca')
         connection = create_connection(conf, 'ca')
         self.certclient = pki.cert.CertClient(connection)
 
@@ -736,7 +780,9 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
         if barbican_meta_dto.generated_csr is not None:
             csr = barbican_meta_dto.generated_csr
         else:
-            csr = order_meta.get('request_data')
+            # we expect the CSR to be base64 encoded PEM
+            # Dogtag CA needs it to be unencoded
+            csr = base64.b64decode(order_meta.get('request_data'))
 
         profile_id = order_meta.get('profile', self.simple_cmc_profile)
         inputs = {
@@ -801,8 +847,15 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
                 cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
                 status_message=u._("No profile_id specified"))
 
+        # we expect the csr to be base64 encoded PEM data.  Dogtag CA expects
+        # PEM data though so we need to decode it.
+        updated_meta = copy.deepcopy(order_meta)
+        if 'cert_request' in updated_meta:
+            updated_meta['cert_request'] = base64.b64decode(
+                updated_meta['cert_request'])
+
         return self._issue_certificate_request(
-            profile_id, order_meta, plugin_meta, barbican_meta_dto)
+            profile_id, updated_meta, plugin_meta, barbican_meta_dto)
 
     def _issue_certificate_request(self, profile_id, inputs, plugin_meta,
                                    barbican_meta_dto):

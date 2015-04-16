@@ -192,7 +192,7 @@ class SecretController(controllers.ACLMixin):
         if validators.secret_too_big(payload):
             raise exception.LimitExceeded()
 
-        if self.secret.encrypted_data:
+        if self.secret.encrypted_data or self.secret.secret_store_metadata:
             _secret_already_has_data()
 
         project_model = res.get_or_create_project(external_project_id)
