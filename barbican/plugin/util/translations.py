@@ -13,6 +13,9 @@
 
 import base64
 
+from Crypto.PublicKey import RSA
+from OpenSSL import crypto
+
 from barbican.plugin.interface import secret_store as s
 from barbican.plugin.util import mime_types
 
@@ -104,3 +107,27 @@ def denormalize_after_decryption(unencrypted, content_type):
         raise s.SecretContentTypeNotSupportedException(content_type)
 
     return unencrypted
+
+
+def convert_private_pem_to_der(pem):
+    pkey = crypto.load_privatekey(crypto.FILETYPE_PEM, pem)
+    pem = crypto.dump_privatekey(crypto.FILETYPE_ASN1, pkey)
+    return pem
+
+
+def convert_private_der_to_pkcs8(der):
+    private_key = RSA.importKey(der)
+    pkcs8 = private_key.exportKey('PEM', pkcs=8)
+    return pkcs8
+
+
+def convert_public_pem_to_der(pem):
+    pubkey = RSA.importKey(pem)
+    der = pubkey.exportKey('DER')
+    return der
+
+
+def convert_public_der_to_pem(der):
+    pubkey = RSA.importKey(der)
+    pem = pubkey.exportKey('PEM')
+    return pem
