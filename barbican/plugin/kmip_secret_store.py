@@ -610,21 +610,17 @@ class KMIPSecretStore(ss.SecretStoreBase):
     def _normalize_secret(self, secret, secret_type):
         """Normalizes secret for use by KMIP plugin"""
         data = base64.b64decode(secret)
-        if secret_type == ss.SecretType.PUBLIC:
-            return translations.convert_public_pem_to_der(data)
-        if secret_type == ss.SecretType.PRIVATE:
-            return translations.convert_private_pem_to_der(data)
-        if secret_type == ss.SecretType.CERTIFICATE:
-            return translations.convert_certificate_pem_to_der(data)
+        if secret_type in [ss.SecretType.PUBLIC,
+                           ss.SecretType.PRIVATE,
+                           ss.SecretType.CERTIFICATE]:
+            data = translations.convert_pem_to_der(data, secret_type)
         return data
 
     def _denormalize_secret(self, secret, secret_type):
         """Converts secret back to the format expected by Barbican core"""
         data = secret
-        if secret_type == ss.SecretType.PUBLIC:
-            data = translations.convert_public_der_to_pem(secret)
-        if secret_type == ss.SecretType.PRIVATE:
-            data = translations.convert_private_der_to_pkcs8(secret)
-        if secret_type == ss.SecretType.CERTIFICATE:
-            data = translations.convert_certificate_der_to_pem(secret)
+        if secret_type in [ss.SecretType.PUBLIC,
+                           ss.SecretType.PRIVATE,
+                           ss.SecretType.CERTIFICATE]:
+            data = translations.convert_der_to_pem(data, secret_type)
         return base64.b64encode(data)

@@ -19,7 +19,6 @@ import stat
 import mock
 
 from barbican.plugin.interface import secret_store
-from barbican.plugin.util import translations
 from barbican.tests import keys
 from barbican.tests import utils
 
@@ -53,9 +52,7 @@ def get_sample_symmetric_key():
 
 
 def get_sample_public_key():
-    key_material = objects.KeyMaterial(
-        translations.convert_public_pem_to_der(keys.get_public_key_pem())
-    )
+    key_material = objects.KeyMaterial(keys.get_public_key_der())
     key_value = objects.KeyValue(key_material)
     key_block = objects.KeyBlock(
         key_format_type=misc.KeyFormatType(enums.KeyFormatType.X_509),
@@ -69,9 +66,7 @@ def get_sample_public_key():
 
 
 def get_sample_private_key():
-    key_material = objects.KeyMaterial(
-        translations.convert_private_pem_to_der(keys.get_private_key_pkcs8())
-    )
+    key_material = objects.KeyMaterial(keys.get_private_key_der())
     key_value = objects.KeyValue(key_material)
     key_block = objects.KeyBlock(
         key_format_type=misc.KeyFormatType(enums.KeyFormatType.PKCS_8),
@@ -383,7 +378,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 2048)
         secret_dto = secret_store.SecretDTO(secret_store.SecretType.PRIVATE,
                                             base64.b64encode(
-                                                keys.get_private_key_pkcs8()),
+                                                keys.get_private_key_pem()),
                                             key_spec,
                                             'content_type')
         self.secret_store.store_secret(secret_dto)
@@ -397,7 +392,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 2048)
         secret_dto = secret_store.SecretDTO(secret_store.SecretType.PRIVATE,
                                             base64.b64encode(
-                                                keys.get_private_key_pkcs8()),
+                                                keys.get_private_key_pem()),
                                             key_spec,
                                             'content_type')
         return_value = self.secret_store.store_secret(secret_dto)
@@ -492,7 +487,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         'private_key': [get_sample_private_key(),
                         secret_store.SecretType.PRIVATE,
                         misc.KeyFormatType(enums.KeyFormatType.PKCS_8),
-                        base64.b64encode(keys.get_private_key_pkcs8())],
+                        base64.b64encode(keys.get_private_key_pem())],
         'opaque': [get_sample_symmetric_key(),
                    secret_store.SecretType.OPAQUE,
                    None,

@@ -16,6 +16,7 @@ import base64
 from Crypto.PublicKey import RSA
 from OpenSSL import crypto
 
+from barbican import i18n as u  # noqa
 from barbican.plugin.interface import secret_store as s
 from barbican.plugin.util import mime_types
 
@@ -109,37 +110,61 @@ def denormalize_after_decryption(unencrypted, content_type):
     return unencrypted
 
 
-def convert_private_pem_to_der(pem):
-    pkey = crypto.load_privatekey(crypto.FILETYPE_PEM, pem)
-    pem = crypto.dump_privatekey(crypto.FILETYPE_ASN1, pkey)
+def convert_pem_to_der(pem, secret_type):
+    if secret_type == s.SecretType.PRIVATE:
+        return _convert_private_pem_to_der(pem)
+    elif secret_type == s.SecretType.PUBLIC:
+        return _convert_public_pem_to_der(pem)
+    elif secret_type == s.SecretType.CERTIFICATE:
+        return _convert_certificate_pem_to_der(pem)
+    else:
+        reason = u._("Secret type can not be converted to DER")
+        raise s.SecretGeneralException(reason=reason)
+
+
+def convert_der_to_pem(der, secret_type):
+    if secret_type == s.SecretType.PRIVATE:
+        return _convert_private_der_to_pem(der)
+    elif secret_type == s.SecretType.PUBLIC:
+        return _convert_public_der_to_pem(der)
+    elif secret_type == s.SecretType.CERTIFICATE:
+        return _convert_certificate_der_to_pem(der)
+    else:
+        reason = u._("Secret type can not be converted to PEM")
+        raise s.SecretGeneralException(reason=reason)
+
+
+def _convert_private_pem_to_der(pem):
+    private_key = RSA.importKey(pem)
+    der = private_key.exportKey('DER', pkcs=8)
+    return der
+
+
+def _convert_private_der_to_pem(der):
+    private_key = RSA.importKey(der)
+    pem = private_key.exportKey('PEM', pkcs=8)
     return pem
 
 
-def convert_private_der_to_pkcs8(der):
-    private_key = RSA.importKey(der)
-    pkcs8 = private_key.exportKey('PEM', pkcs=8)
-    return pkcs8
-
-
-def convert_public_pem_to_der(pem):
+def _convert_public_pem_to_der(pem):
     pubkey = RSA.importKey(pem)
     der = pubkey.exportKey('DER')
     return der
 
 
-def convert_public_der_to_pem(der):
+def _convert_public_der_to_pem(der):
     pubkey = RSA.importKey(der)
     pem = pubkey.exportKey('PEM')
     return pem
 
 
-def convert_certificate_pem_to_der(pem):
+def _convert_certificate_pem_to_der(pem):
     cert = crypto.load_certificate(crypto.FILETYPE_PEM, pem)
     der = crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)
     return der
 
 
-def convert_certificate_der_to_pem(der):
+def _convert_certificate_der_to_pem(der):
     cert = crypto.load_certificate(crypto.FILETYPE_ASN1, der)
     pem = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
     return pem
