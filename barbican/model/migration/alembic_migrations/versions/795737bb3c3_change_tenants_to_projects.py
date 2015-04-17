@@ -11,51 +11,129 @@ revision = '795737bb3c3'
 down_revision = '254495565185'
 
 from alembic import op
+import sqlalchemy as sa
+
+
+def _drop_constraint(ctx, con, table, fk_name_to_try):
+    if ctx.dialect.name == 'mysql':
+        # MySQL creates different default names for foreign key constraints
+        op.drop_constraint(fk_name_to_try,
+                           table,
+                           type_='foreignkey')
+
+
+def _change_fk_to_project(ctx, con, table, fk_old, fk_new):
+    _drop_constraint(ctx, con, table, fk_old)
+    op.alter_column(table, 'tenant_id',
+                    type_=sa.String(36),
+                    new_column_name='project_id')
+    op.create_foreign_key(fk_new, table,
+                          'projects', ['project_id'], ['id'])
+
+
+def _change_fk_to_tenant(ctx, con, table, fk_old):
+    _drop_constraint(ctx, con, table, fk_old)
+    op.alter_column(table, 'project_id',
+                    type_=sa.String(36),
+                    new_column_name='tenant_id')
+    op.create_foreign_key(
+        None,  # None -> auto-generate FK name based on dialect.
+        table, 'tenants', ['tenant_id'], ['id'])
 
 
 def upgrade():
     # project_secret table
-    op.drop_constraint('_tenant_secret_uc', 'tenant_secret')
+    ctx = op.get_context()
+    con = op.get_bind()
+
+    # ---- Update tenant_secret table to project_secret:
+
+    _drop_constraint(ctx, con, 'tenant_secret', 'tenant_secret_ibfk_1')
+    _drop_constraint(ctx, con, 'tenant_secret', 'tenant_secret_ibfk_2')
+
+    op.drop_constraint('_tenant_secret_uc',
+                       'tenant_secret',
+                       type_='unique')
 
     op.rename_table('tenant_secret', 'project_secret')
     op.alter_column('project_secret', 'tenant_id',
+                    type_=sa.String(36),
                     new_column_name='project_id')
 
     op.create_unique_constraint('_project_secret_uc', 'project_secret',
                                 ['project_id', 'secret_id'])
 
-    # projects table
+    # ---- Update tenants table to projects:
+
     op.rename_table('tenants', 'projects')
 
-    # containers table
-    op.alter_column('containers', 'tenant_id', new_column_name='project_id')
+    # re-create the foreign key constraints with explicit names.
+    op.create_foreign_key('project_secret_project_fk', 'project_secret',
+                          'projects', ['project_id'], ['id'])
+    op.create_foreign_key('project_secret_secret_fk', 'project_secret',
+                          'secrets', ['secret_id'], ['id'])
 
-    # kek_data table
-    op.alter_column('kek_data', 'tenant_id', new_column_name='project_id')
+    # ---- Update containers table:
 
-    # orders table
-    op.alter_column('orders', 'tenant_id', new_column_name='project_id')
+    _change_fk_to_project(
+        ctx, con, 'containers', 'containers_ibfk_1', 'containers_project_fk')
+
+    # ---- Update kek_data table:
+
+    _change_fk_to_project(
+        ctx, con, 'kek_data', 'kek_data_ibfk_1', 'kek_data_project_fk')
+
+    # ---- Update orders table:
+
+    _change_fk_to_project(
+        ctx, con, 'orders', 'orders_ibfk_1', 'orders_project_fk')
 
 
 def downgrade():
     # project_secret table
-    op.drop_constraint('_project_secret_uc', 'project_secret')
+    ctx = op.get_context()
+    con = op.get_bind()
+
+    # ---- Update project_secret table to tenant_secret:
+
+    _drop_constraint(ctx, con, 'project_secret', 'project_secret_project_fk')
+    _drop_constraint(ctx, con, 'project_secret', 'project_secret_secret_fk')
+
+    op.drop_constraint('_project_secret_uc',
+                       'project_secret',
+                       type_='unique')
 
     op.rename_table('project_secret', 'tenant_secret')
     op.alter_column('tenant_secret', 'project_id',
+                    type_=sa.String(36),
                     new_column_name='tenant_id')
 
     op.create_unique_constraint('_tenant_secret_uc', 'tenant_secret',
                                 ['tenant_id', 'secret_id'])
 
-    # projects table
+    # ---- Update projects table to tenants:
+
     op.rename_table('projects', 'tenants')
 
-    # containers table
-    op.alter_column('containers', 'project_id', new_column_name='tenant_id')
+    # re-create the foreign key constraints with explicit names.
+    op.create_foreign_key(
+        None,   # None -> auto-generate FK name based on dialect.
+        'tenant_secret', 'tenants', ['tenant_id'], ['id'])
+    op.create_foreign_key(
+        None,   # None -> auto-generate FK name based on dialect.
+        'tenant_secret', 'secrets', ['secret_id'], ['id'])
 
-    # kek_data table
-    op.alter_column('kek_data', 'project_id', new_column_name='tenant_id')
+    # ---- Update containers table:
 
-    # orders table
-    op.alter_column('orders', 'project_id', new_column_name='tenant_id')
+    _change_fk_to_tenant(
+        ctx, con, 'containers', 'containers_project_fk')
+
+    # ---- Update kek_data table:
+
+    _change_fk_to_tenant(
+        ctx, con, 'kek_data', 'kek_data_project_fk')
+
+    # ---- Update orders table:
+
+    _change_fk_to_tenant(
+        ctx, con, 'orders', 'orders_project_fk')
