@@ -23,6 +23,7 @@ from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
 from barbican import i18n as u
+from barbican.model import models
 from barbican.model import repositories as repo
 from barbican.plugin import resources as plugin
 from barbican.plugin import util as putil
@@ -175,7 +176,6 @@ class SecretController(controllers.ACLMixin):
     @controllers.enforce_content_types(['application/octet-stream',
                                        'text/plain'])
     def on_put(self, external_project_id, **kwargs):
-
         if (not pecan.request.content_type or
                 pecan.request.content_type == 'application/json'):
             pecan.abort(
@@ -199,10 +199,13 @@ class SecretController(controllers.ACLMixin):
         content_type = pecan.request.content_type
         content_encoding = pecan.request.headers.get('Content-Encoding')
 
-        plugin.store_secret(payload, content_type,
-                            content_encoding, self.secret.to_dict_fields(),
-                            self.secret, project_model,
-                            transport_key_id=transport_key_id)
+        plugin.store_secret(
+            unencrypted_raw=payload,
+            content_type_raw=content_type,
+            content_encoding=content_encoding,
+            secret_model=self.secret,
+            project_model=project_model,
+            transport_key_id=transport_key_id)
         LOG.info(u._LI('Updated secret for project: %s'), external_project_id)
 
     @index.when(method='DELETE')
@@ -310,12 +313,15 @@ class SecretsController(controllers.ACLMixin):
         if ctxt:  # in authenticated pipleline case, always use auth token user
             data['creator_id'] = ctxt.user
 
+        secret_model = models.Secret(data)
+
         new_secret, transport_key_model = plugin.store_secret(
-            data.get('payload'),
-            data.get('payload_content_type',
-                     'application/octet-stream'),
-            data.get('payload_content_encoding'),
-            data, None, project,
+            unencrypted_raw=data.get('payload'),
+            content_type_raw=data.get('payload_content_type',
+                                      'application/octet-stream'),
+            content_encoding=data.get('payload_content_encoding'),
+            secret_model=secret_model,
+            project_model=project,
             transport_key_needed=transport_key_needed,
             transport_key_id=data.get('transport_key_id'))
 

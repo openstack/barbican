@@ -617,11 +617,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.assertEqual(resp.status_int, 204)
 
         mock_store_secret.assert_called_once_with(
-            'plain text',
-            'text/plain', None,
-            self.secret.to_dict_fields(),
-            self.secret,
-            self.project,
+            unencrypted_raw='plain text',
+            content_type_raw='text/plain',
+            content_encoding=None,
+            secret_model=self.secret,
+            project_model=self.project,
             transport_key_id=self.transport_key_id
         )
 
@@ -643,12 +643,11 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.assertEqual(resp.status_int, 204)
 
         mock_store_secret.assert_called_once_with(
-            'plain text',
-            'application/octet-stream',
-            None,
-            self.secret.to_dict_fields(),
-            self.secret,
-            self.project,
+            unencrypted_raw='plain text',
+            content_type_raw='application/octet-stream',
+            content_encoding=None,
+            secret_model=self.secret,
+            project_model=self.project,
             transport_key_id=self.transport_key_id
         )
 

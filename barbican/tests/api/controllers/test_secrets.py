@@ -148,12 +148,11 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(201, resp.status_int)
         # We're interested in the transport key values
         mocked_store.assert_called_once_with(
-            'not-encrypted',
-            'text/plain',
-            None,
-            mock.ANY,
-            None,
-            mock.ANY,
+            unencrypted_raw='not-encrypted',
+            content_type_raw='text/plain',
+            content_encoding=None,
+            secret_model=mock.ANY,
+            project_model=mock.ANY,
             transport_key_id=transport_key_id,
             transport_key_needed=False
         )
