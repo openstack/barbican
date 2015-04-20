@@ -92,18 +92,18 @@ class WhenNormalizingBeforeEncryption(utils.BaseTestCase):
             'expected': base64.b64encode('stuff')
         },
         'private_base64': {
-            'unencrypted': base64.b64encode(keys.get_private_key_pkcs8()),
+            'unencrypted': base64.b64encode(keys.get_private_key_pem()),
             'secret_type': s.SecretType.PRIVATE,
             'content_type': 'application/octet-stream',
             'content_encoding': 'base64',
-            'expected': base64.b64encode(keys.get_private_key_pkcs8())
+            'expected': base64.b64encode(keys.get_private_key_pem())
         },
         'private': {
-            'unencrypted': keys.get_private_key_pkcs8(),
+            'unencrypted': keys.get_private_key_pem(),
             'secret_type': s.SecretType.PRIVATE,
             'content_type': 'application/octet-stream',
             'content_encoding': None,
-            'expected': base64.b64encode(keys.get_private_key_pkcs8())
+            'expected': base64.b64encode(keys.get_private_key_pem())
         },
         'public_base64': {
             'unencrypted': base64.b64encode(keys.get_public_key_pem()),
@@ -204,7 +204,7 @@ class WhenDenormalizingAfterDecryption(utils.BaseTestCase):
 
     dataset_for_pem_denormalize = {
         'private_key': {
-            'encoded_pem': base64.b64encode(keys.get_private_key_pkcs8()),
+            'encoded_pem': base64.b64encode(keys.get_private_key_pem()),
             'content_type': 'application/octet-stream'
         },
         'public_key': {
@@ -264,31 +264,61 @@ class WhenConvertingKeyFormats(utils.BaseTestCase):
         super(WhenConvertingKeyFormats, self).setUp()
 
     def test_passes_convert_private_pem_to_der(self):
-        pem = keys.get_private_key_pkcs8()
+        pem = keys.get_private_key_pem()
         expected_der = keys.get_private_key_der()
-        der = translations.convert_private_pem_to_der(pem)
+        der = translations.convert_pem_to_der(
+            pem, s.SecretType.PRIVATE)
         self.assertEqual(expected_der, der)
 
     def test_passes_convert_private_der_to_pem(self):
         der = keys.get_private_key_der()
-        expected_pem = keys.get_private_key_pkcs8()
-        pem = translations.convert_private_der_to_pkcs8(der)
+        expected_pem = keys.get_private_key_pem()
+        pem = translations.convert_der_to_pem(
+            der, s.SecretType.PRIVATE)
         self.assertEqual(expected_pem, pem)
 
     def test_passes_convert_public_pem_to_der(self):
         pem = keys.get_public_key_pem()
         expected_der = keys.get_public_key_der()
-        der = translations.convert_public_pem_to_der(pem)
+        der = translations.convert_pem_to_der(
+            pem, s.SecretType.PUBLIC)
         self.assertEqual(expected_der, der)
 
     def test_passes_convert_public_der_to_pem(self):
         der = keys.get_public_key_der()
         expected_pem = keys.get_public_key_pem()
-        pem = translations.convert_public_der_to_pem(der)
+        pem = translations.convert_der_to_pem(
+            der, s.SecretType.PUBLIC)
         self.assertEqual(expected_pem, pem)
 
-    def test_certificate_conversion(self):
+    def test_passes_convert_certificate_pem_to_der(self):
         pem = keys.get_certificate_pem()
-        der = translations.convert_certificate_pem_to_der(pem)
-        converted_pem = translations.convert_certificate_der_to_pem(der)
+        expected_der = keys.get_certificate_der()
+        der = translations.convert_pem_to_der(
+            pem, s.SecretType.CERTIFICATE)
+        self.assertEqual(expected_der, der)
+
+    def test_passes_convert_certificate_der_to_pem(self):
+        der = keys.get_certificate_der()
+        expected_pem = keys.get_certificate_pem()
+        pem = translations.convert_der_to_pem(
+            der, s.SecretType.CERTIFICATE)
+        self.assertEqual(expected_pem, pem)
+
+    def test_passes_certificate_conversion(self):
+        pem = keys.get_certificate_pem()
+        der = translations.convert_pem_to_der(
+            pem, s.SecretType.CERTIFICATE)
+        converted_pem = translations.convert_der_to_pem(
+            der, s.SecretType.CERTIFICATE)
         self.assertEqual(pem, converted_pem)
+
+    def test_should_raise_to_pem_with_bad_secret_type(self):
+        self.assertRaises(s.SecretGeneralException,
+                          translations.convert_der_to_pem,
+                          "der", "bad type")
+
+    def test_should_raise_to_der_with_bad_secret_type(self):
+        self.assertRaises(s.SecretGeneralException,
+                          translations.convert_pem_to_der,
+                          "pem", "bad type")

@@ -155,7 +155,7 @@ class RSATestCase(base.TestCase):
         """Verify the keys input for test cases"""
 
         # prove pyOpenSSL can parse the original private key
-        pem = keys.get_private_key_pkcs8()
+        pem = keys.get_private_key_pem()
         crypto.load_privatekey(crypto.FILETYPE_PEM, pem)
 
         # prove pyCrypto can parse the original public key
@@ -163,7 +163,7 @@ class RSATestCase(base.TestCase):
         RSA.importKey(pem)
 
         # prove pyOpenSSL can parse the original encrypted private key
-        pem = keys.get_encrypted_private_key_pkcs8()
+        pem = keys.get_encrypted_private_key_pem()
         passphrase = keys.get_passphrase_txt()
         crypto.load_privatekey(crypto.FILETYPE_PEM,
                                pem,
@@ -179,7 +179,7 @@ class RSATestCase(base.TestCase):
 
         # make a secret
         bits = 2048
-        pem = keys.get_private_key_pkcs8()
+        pem = keys.get_private_key_pem()
 
         # create with Post to server
         test_model = secret_models.SecretModel(
@@ -256,7 +256,7 @@ class RSATestCase(base.TestCase):
 
         # make a secret
         bits = 2048
-        pem = keys.get_private_key_pkcs8()
+        pem = keys.get_private_key_pem()
 
         # create with Post to server
         create_req = get_private_key_req(bits, base64.b64encode(pem))
@@ -364,7 +364,7 @@ class RSATestCase(base.TestCase):
 
         # make the secrets
         bits = 2048
-        private_pem = keys.get_private_key_pkcs8()
+        private_pem = keys.get_private_key_pem()
         public_pem = keys.get_public_key_pem()
 
         # create private secret with Post to server
@@ -403,7 +403,7 @@ class RSATestCase(base.TestCase):
 
         # make the secrets
         bits = 2048
-        private_pem = keys.get_encrypted_private_key_pkcs8()
+        private_pem = keys.get_encrypted_private_key_pem()
         public_pem = keys.get_public_key_pem()
         passphrase = keys.get_passphrase_txt()
 
@@ -523,7 +523,7 @@ class RSATestCase(base.TestCase):
         self.assertEqual(204, update_resp.status_code)
 
         # store private key
-        private_pem = keys.get_private_key_pkcs8()
+        private_pem = keys.get_private_key_pem()
         create_req = get_private_key_req(bits, base64.b64encode(private_pem))
         del create_req['payload']
         del create_req['payload_content_type']
@@ -637,7 +637,7 @@ class RSATestCase(base.TestCase):
         self.assertEqual(204, update_resp.status_code)
 
         # store private key
-        private_pem = keys.get_private_key_pkcs8()
+        private_pem = keys.get_private_key_pem()
         create_req = get_private_key_req(bits, base64.b64encode(private_pem))
         del create_req['payload']
         del create_req['payload_content_type']
@@ -688,7 +688,7 @@ class RSATestCase(base.TestCase):
         self.assertEqual(204, update_resp.status_code)
 
         # store private key
-        private_pem = keys.get_private_key_pkcs8()
+        private_pem = keys.get_private_key_pem()
         create_req = get_private_key_req(bits, base64.b64encode(private_pem))
         del create_req['payload']
         del create_req['payload_content_type']
