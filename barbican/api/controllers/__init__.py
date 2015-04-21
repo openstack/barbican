@@ -222,7 +222,7 @@ class ACLMixin(object):
         if not ctxt:
             return None
         acl_dict = {acl.operation: acl.operation for acl in acl_list
-                    if ctxt.user in acl.to_dict_fields().get('users')}
+                    if ctxt.user in acl.to_dict_fields().get('users', [])}
         co_dict = {'%s_creator_only' % acl.operation: acl.creator_only for acl
                    in acl_list if acl.creator_only is not None}
         acl_dict.update(co_dict)

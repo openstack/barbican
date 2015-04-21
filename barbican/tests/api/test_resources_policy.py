@@ -377,6 +377,25 @@ class WhenTestingSecretResource(BaseTestCase):
                                user_id=self.user_id,
                                project_id=self.external_project_id)
 
+    def test_should_raise_decrypt_secret_for_with_creator_only_nolist(self):
+        """Should raise authz error as secret is marked private.
+
+        As secret is private so project users should not be able to access
+        the secret.  This test passes user_ids as empty list, which is a
+        valid and common case.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.SecretACL(secret_id=self.secret_id, operation='read',
+                                    creator_only=True,
+                                    user_ids=[])
+        self.acl_list.append(acl_read)
+        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               accept='notjsonaccepttype',
+                               content_type='application/json',
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
     def test_should_pass_decrypt_secret_private_enabled_with_read_acl(self):
         """Should pass authz as user has read acl for private secret.
 
