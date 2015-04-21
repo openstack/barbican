@@ -20,39 +20,47 @@ from functionaltests.api.v1.models import container_models
 
 class ContainerBehaviors(base_behaviors.BaseBehaviors):
 
-    def create_container(self, model, extra_headers=None):
+    def create_container(self, model, extra_headers=None,
+                         user_name=None, admin=None):
         """Create a container from the data in the model.
 
         :param model: The metadata used to create the container
         :param extra_headers: Headers used to create the container
-
+        :param user_name: The user name used to create the container
+        :param admin: The user with permissions to delete the container
         :return: A tuple containing the response from the create
         and the href to the newly created container
         """
 
         resp = self.client.post('containers', request_model=model,
-                                extra_headers=extra_headers)
+                                extra_headers=extra_headers,
+                                user_name=user_name)
 
         returned_data = self.get_json(resp)
         container_ref = returned_data.get('container_ref')
         if container_ref:
-            self.created_entities.append(container_ref)
+            if admin is None:
+                admin = user_name
+            self.created_entities.append((container_ref, admin))
         return resp, container_ref
 
-    def get_container(self, container_ref, extra_headers=None):
+    def get_container(self, container_ref, extra_headers=None, user_name=None):
         """Handles getting a single container
 
         :param container_ref: Reference to the container to be retrieved
         :param extra_headers: Headers used to get the container
+        :param user_name: The user name used to get the container
 
         :return: The response of the GET.
         """
         resp = self.client.get(
-            container_ref, response_model_type=container_models.ContainerModel)
+            container_ref, response_model_type=container_models.ContainerModel,
+            user_name=user_name)
 
         return resp
 
-    def get_containers(self, limit=10, offset=0, extra_headers=None):
+    def get_containers(self, limit=10, offset=0, extra_headers=None,
+                       user_name=None):
         """Handles getting a list of containers.
 
         :param limit: limits number of returned containers
@@ -60,12 +68,14 @@ class ContainerBehaviors(base_behaviors.BaseBehaviors):
             the list
         :param extra_headers: Extra headers used to retrieve a list of
             containers
+        :param user_name: The user name used to get the list
 
         :return: Returns the response, a list of container models, and
             references to the next and previous list of containers.
         """
         params = {'limit': limit, 'offset': offset}
-        resp = self.client.get('containers', params=params)
+        resp = self.client.get('containers', params=params,
+                               user_name=user_name)
 
         container_list = self.get_json(resp)
 
@@ -75,7 +85,7 @@ class ContainerBehaviors(base_behaviors.BaseBehaviors):
         return resp, containers, next_ref, prev_ref
 
     def delete_container(self, container_ref, extra_headers=None,
-                         expected_fail=False):
+                         expected_fail=False, user_name=None):
         """Handles deleting a containers.
 
         :param container_ref: Reference of the container to be deleted
@@ -83,19 +93,21 @@ class ContainerBehaviors(base_behaviors.BaseBehaviors):
         :param expected_fail: If there is a negative test, this should be
             marked true if you are trying to delete a container that does
             not exist.
+        :param user_name: The user name used to delete the container
         :return: Response of the delete.
         """
-        resp = self.client.delete(container_ref, extra_headers)
+        resp = self.client.delete(container_ref, extra_headers,
+                                  user_name=user_name)
 
         if not expected_fail:
-            self.created_entities.remove(container_ref)
+            for item in self.created_entities:
+                if item[0] == container_ref:
+                    self.created_entities.remove(item)
 
         return resp
 
     def delete_all_created_containers(self):
         """Delete all of the containers that we have created."""
-        containers_to_delete = [container for container
-                                in self.created_entities]
-
-        for container_ref in containers_to_delete:
-            self.delete_container(container_ref)
+        entities = list(self.created_entities)
+        for (container_ref, admin) in entities:
+            self.delete_container(container_ref, user_name=admin)
