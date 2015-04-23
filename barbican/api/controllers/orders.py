@@ -206,7 +206,7 @@ class OrdersController(controllers.ACLMixin):
                 container_ref = order_meta.get('container_ref')
                 validators.validate_stored_key_rsa_container(
                     external_project_id,
-                    container_ref)
+                    container_ref, pecan.request)
 
         new_order = models.Order()
         new_order.meta = body.get('meta')
