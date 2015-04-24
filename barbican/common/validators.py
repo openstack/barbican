@@ -636,14 +636,12 @@ class ACLValidator(ValidatorBase):
                         },
                         "creator-only": {"type": "boolean"}
                     },
+                    "additionalProperties": False
                 }
             },
             "type": "object",
             "properties": {
                 "read": {"$ref": "#/definitions/acl_defintion"},
-                "write": {"$ref": "#/definitions/acl_defintion"},
-                "delete": {"$ref": "#/definitions/acl_defintion"},
-                "list": {"$ref": "#/definitions/acl_defintion"}
             },
             "additionalProperties": False
         }
