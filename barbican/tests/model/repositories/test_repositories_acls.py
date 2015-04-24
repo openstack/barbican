@@ -45,19 +45,21 @@ class WhenTestingSecretACLRepository(database_utils.RepositoryTestCase,
         super(WhenTestingSecretACLRepository, self).setUp()
         self.acl_repo = repositories.get_secret_acl_repository()
 
-    def _create_base_secret(self):
+    def _create_base_secret(self, project_id=None):
         # Setup the secret and needed base relationship
         secret_repo = repositories.get_secret_repository()
         session = secret_repo.get_session()
         secret = secret_repo.create_from(models.Secret(), session=session)
 
-        project = models.Project()
-        project.external_id = "keystone_project_id"
-        project.save(session=session)
+        if project_id is None:  # don't re-create project if it created earlier
+            project = models.Project()
+            project.external_id = "keystone_project_id"
+            project.save(session=session)
+            project_id = project.id
 
         project_secret = models.ProjectSecret()
         project_secret.secret_id = secret.id
-        project_secret.project_id = project.id
+        project_secret.project_id = project_id
         project_secret.save(session=session)
 
         session.commit()
@@ -216,6 +218,28 @@ class WhenTestingSecretACLRepository(database_utils.RepositoryTestCase,
         self._assert_acl_users(['u1', 'u2', 'u3', 'u4'], acls, acl2.id)
         self._assert_acl_users(['u1', 'u2', 'u4'], acls, acl3.id)
 
+    def test_get_count(self):
+        session = self.acl_repo.get_session()
+        secret1 = self._create_base_secret()
+        acl1 = self.acl_repo.create_from(models.SecretACL(secret1.id, 'read',
+                                                          None, ['u1', 'u2']),
+                                         session)
+        self.acl_repo.create_or_replace_from(secret1, acl1)
+
+        secret2 = self._create_base_secret(
+            secret1.project_assocs[0].project_id)
+        acl21 = self.acl_repo.create_from(models.SecretACL(secret2.id, 'read',
+                                                           None, ['u3', 'u4']),
+                                          session)
+        self.acl_repo.create_or_replace_from(secret2, acl21)
+        acl22 = self.acl_repo.create_from(models.SecretACL(secret2.id, 'write',
+                                                           None, ['u5', 'u6']),
+                                          session)
+        self.acl_repo.create_or_replace_from(secret2, acl22)
+
+        self.assertEqual(1, self.acl_repo.get_count(secret1.id))
+        self.assertEqual(2, self.acl_repo.get_count(secret2.id))
+
     def test_delete_single_acl_and_count(self):
 
         session = self.acl_repo.get_session()
@@ -273,18 +297,20 @@ class WhenTestingContainerACLRepository(database_utils.RepositoryTestCase,
         super(WhenTestingContainerACLRepository, self).setUp()
         self.acl_repo = repositories.get_container_acl_repository()
 
-    def _create_base_container(self):
+    def _create_base_container(self, project_id=None):
         # Setup the container and needed base relationship
         container_repo = repositories.get_container_repository()
         session = container_repo.get_session()
 
-        project = models.Project()
-        project.external_id = "keystone_project_id"
-        project.save(session=session)
+        if project_id is None:
+            project = models.Project()
+            project.external_id = "keystone_project_id"
+            project.save(session=session)
+            project_id = project.id
 
         container = models.Container()
 
-        container.project_id = project.id
+        container.project_id = project_id
         container.save(session=session)
 
         session.commit()
@@ -443,6 +469,24 @@ class WhenTestingContainerACLRepository(database_utils.RepositoryTestCase,
         self._assert_acl_users(['u5'], acls, acl1.id)
         self._assert_acl_users(['u1', 'u2', 'u3', 'u4'], acls, acl2.id)
         self._assert_acl_users(['u1', 'u2', 'u4'], acls, acl3.id)
+
+    def test_get_count(self):
+        session = self.acl_repo.get_session()
+        container1 = self._create_base_container()
+        acl1 = self.acl_repo.create_from(models.ContainerACL(
+            container1.id, 'read', None, ['u1', 'u2']), session)
+        self.acl_repo.create_or_replace_from(container1, acl1)
+
+        container2 = self._create_base_container(container1.project_id)
+        acl21 = self.acl_repo.create_from(models.ContainerACL(
+            container2.id, 'read', None, ['u3', 'u4']), session)
+        self.acl_repo.create_or_replace_from(container2, acl21)
+        acl22 = self.acl_repo.create_from(models.ContainerACL(
+            container2.id, 'write', None, ['u5', 'u6']), session)
+        self.acl_repo.create_or_replace_from(container2, acl22)
+
+        self.assertEqual(1, self.acl_repo.get_count(container1.id))
+        self.assertEqual(2, self.acl_repo.get_count(container2.id))
 
     def test_delete_single_acl_and_count(self):
 
