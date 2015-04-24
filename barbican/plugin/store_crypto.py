@@ -302,6 +302,7 @@ def _store_secret_and_datum(
 
     # Create Secret entities in data store.
     if not secret_model.id:
+        secret_model.project_id = context.project_model.id
         repositories.get_secret_repository().create_from(secret_model)
         new_assoc = models.ProjectSecret()
         new_assoc.project_id = context.project_model.id
