@@ -321,11 +321,17 @@ def _generate_csr(order_model, project_model):
     if not private_key:
         raise excep.StoredKeyPrivateKeyNotFound(container_id)
 
-    pkey = crypto.load_privatekey(
-        crypto.FILETYPE_PEM,
-        private_key,
-        passphrase
-    )
+    if passphrase is None:
+        pkey = crypto.load_privatekey(
+            crypto.FILETYPE_PEM,
+            private_key
+        )
+    else:
+        pkey = crypto.load_privatekey(
+            crypto.FILETYPE_PEM,
+            private_key,
+            passphrase
+        )
 
     subject_name = order_model.meta.get('subject_dn')
     subject_name_dns = ldap.dn.str2dn(subject_name)
