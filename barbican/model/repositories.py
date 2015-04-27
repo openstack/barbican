@@ -1757,6 +1757,7 @@ class SecretACLRepo(BaseRepo):
         """Gets count of existing secret ACL(s) for a given secret."""
         session = self.get_session(session)
         query = session.query(sa_func.count(models.SecretACL.id))
+        query = query.filter(models.SecretACL.secret_id == secret_id)
         return query.scalar()
 
     def delete_acls_for_secret(self, secret, session=None):
@@ -1847,11 +1848,12 @@ class ContainerACLRepo(BaseRepo):
 
         container_acl.save(session=session)
 
-    def get_count(self, secret_id, session=None):
+    def get_count(self, container_id, session=None):
         """Gets count of existing container ACL(s) for a given container."""
         session = self.get_session(session)
 
         query = session.query(sa_func.count(models.ContainerACL.id))
+        query = query.filter(models.ContainerACL.container_id == container_id)
         return query.scalar()
 
     def delete_acls_for_container(self, container, session=None):
