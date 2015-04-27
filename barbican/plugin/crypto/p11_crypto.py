@@ -1,8 +1,8 @@
-#  Licensed under the Apache License, Version 2.0 (the "License"); you may
-#  not use this file except in compliance with the License. You may obtain
-#  a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#       http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -120,12 +120,99 @@ CKA_REQUIRED_CMS_ATTRIBUTES = 0x501
 CKA_DEFAULT_CMS_ATTRIBUTES = 0x502
 CKA_SUPPORTED_CMS_ATTRIBUTES = 0x503
 
-
 CKM_SHA256_HMAC = 0x251
 CKM_AES_KEY_GEN = 0x1080
 CKM_AES_CBC_PAD = 0x1085
 CKM_AES_KEY_WRAP = 0x1090
 VENDOR_SAFENET_CKM_AES_GCM = 0x8000011c
+
+ERROR_CODES = {
+    1: 'CKR_CANCEL',
+    2: 'CKR_HOST_MEMORY',
+    3: 'CKR_SLOT_ID_INVALID',
+    5: 'CKR_GENERAL_ERROR',
+    6: 'CKR_FUNCTION_FAILED',
+    7: 'CKR_ARGUMENTS_BAD',
+    8: 'CKR_NO_EVENT',
+    9: 'CKR_NEED_TO_CREATE_THREADS',
+    0xa: 'CKR_CANT_LOCK',
+    0x10: 'CKR_ATTRIBUTE_READ_ONLY',
+    0x11: 'CKR_ATTRIBUTE_SENSITIVE',
+    0x12: 'CKR_ATTRIBUTE_TYPE_INVALID',
+    0x13: 'CKR_ATTRIBUTE_VALUE_INVALID',
+    0x20: 'CKR_DATA_INVALID',
+    0x21: 'CKR_DATA_LEN_RANGE',
+    0x30: 'CKR_DEVICE_ERROR',
+    0x31: 'CKR_DEVICE_MEMORY',
+    0x32: 'CKR_DEVICE_REMOVED',
+    0x40: 'CKR_ENCRYPTED_DATA_INVALID',
+    0x41: 'CKR_ENCRYPTED_DATA_LEN_RANGE',
+    0x50: 'CKR_FUNCTION_CANCELED',
+    0x51: 'CKR_FUNCTION_NOT_PARALLEL',
+    0x54: 'CKR_FUNCTION_NOT_SUPPORTED',
+    0x60: 'CKR_KEY_HANDLE_INVALID',
+    0x62: 'CKR_KEY_SIZE_RANGE',
+    0x63: 'CKR_KEY_TYPE_INCONSISTENT',
+    0x64: 'CKR_KEY_NOT_NEEDED',
+    0x65: 'CKR_KEY_CHANGED',
+    0x66: 'CKR_KEY_NEEDED',
+    0x67: 'CKR_KEY_INDIGESTIBLE',
+    0x68: 'CKR_KEY_FUNCTION_NOT_PERMITTED',
+    0x69: 'CKR_KEY_NOT_WRAPPABLE',
+    0x6a: 'CKR_KEY_UNEXTRACTABLE',
+    0x70: 'CKR_MECHANISM_INVALID',
+    0x71: 'CKR_MECHANISM_PARAM_INVALID',
+    0x82: 'CKR_OBJECT_HANDLE_INVALID',
+    0x90: 'CKR_OPERATION_ACTIVE',
+    0x91: 'CKR_OPERATION_NOT_INITIALIZED',
+    0xa0: 'CKR_PIN_INCORRECT',
+    0xa1: 'CKR_PIN_INVALID',
+    0xa2: 'CKR_PIN_LEN_RANGE',
+    0xa3: 'CKR_PIN_EXPIRED',
+    0xa4: 'CKR_PIN_LOCKED',
+    0xb0: 'CKR_SESSION_CLOSED',
+    0xb1: 'CKR_SESSION_COUNT',
+    0xb3: 'CKR_SESSION_HANDLE_INVALID',
+    0xb4: 'CKR_SESSION_PARALLEL_NOT_SUPPORTED',
+    0xb5: 'CKR_SESSION_READ_ONLY',
+    0xb6: 'CKR_SESSION_EXISTS',
+    0xb7: 'CKR_SESSION_READ_ONLY_EXISTS',
+    0xb8: 'CKR_SESSION_READ_WRITE_SO_EXISTS',
+    0xc0: 'CKR_SIGNATURE_INVALID',
+    0xc1: 'CKR_SIGNATURE_LEN_RANGE',
+    0xd0: 'CKR_TEMPLATE_INCOMPLETE',
+    0xd1: 'CKR_TEMPLATE_INCONSISTENT',
+    0xe0: 'CKR_TOKEN_NOT_PRESENT',
+    0xe1: 'CKR_TOKEN_NOT_RECOGNIZED',
+    0xe2: 'CKR_TOKEN_WRITE_PROTECTED',
+    0xf0: 'CKR_UNWRAPPING_KEY_HANDLE_INVALID',
+    0xf1: 'CKR_UNWRAPPING_KEY_SIZE_RANGE',
+    0xf2: 'CKR_UNWRAPPING_KEY_TYPE_INCONSISTENT',
+    0x100: 'CKR_USER_ALREADY_LOGGED_IN',
+    0x101: 'CKR_USER_NOT_LOGGED_IN',
+    0x102: 'CKR_USER_PIN_NOT_INITIALIZED',
+    0x103: 'CKR_USER_TYPE_INVALID',
+    0x104: 'CKR_USER_ANOTHER_ALREADY_LOGGED_IN',
+    0x105: 'CKR_USER_TOO_MANY_TYPES',
+    0x110: 'CKR_WRAPPED_KEY_INVALID',
+    0x112: 'CKR_WRAPPED_KEY_LEN_RANGE',
+    0x113: 'CKR_WRAPPING_KEY_HANDLE_INVALID',
+    0x114: 'CKR_WRAPPING_KEY_SIZE_RANGE',
+    0x115: 'CKR_WRAPPING_KEY_TYPE_INCONSISTENT',
+    0x120: 'CKR_RANDOM_SEED_NOT_SUPPORTED',
+    0x121: 'CKR_RANDOM_NO_RNG',
+    0x130: 'CKR_DOMAIN_PARAMS_INVALID',
+    0x150: 'CKR_BUFFER_TOO_SMALL',
+    0x160: 'CKR_SAVED_STATE_INVALID',
+    0x170: 'CKR_INFORMATION_SENSITIVE',
+    0x180: 'CKR_STATE_UNSAVEABLE',
+    0x190: 'CKR_CRYPTOKI_NOT_INITIALIZED',
+    0x191: 'CKR_CRYPTOKI_ALREADY_INITIALIZED',
+    0x1a0: 'CKR_MUTEX_BAD',
+    0x1a1: 'CKR_MUTEX_NOT_LOCKED',
+    0x200: 'CKR_FUNCTION_REJECTED',
+    1 << 31: 'CKR_VENDOR_DEFINED'
+}
 
 CONF = cfg.CONF
 LOG = utils.getLogger(__name__)
@@ -320,8 +407,11 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
 
     def _check_error(self, value):
         if value != CKR_OK:
-            raise P11CryptoPluginException(
-                "HSM returned response code: {0}".format(value)
+            raise P11CryptoPluginException(u._(
+                "HSM returned response code: {hex_value} {code}").format(
+                    hex_value=hex(value),
+                    code=ERROR_CODES.get(value, 'CKR_????')
+            )
             )
 
     def _build_attributes(self, attrs):
