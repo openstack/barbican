@@ -32,7 +32,9 @@ class VersionController(object):
     @index.when(method='GET', template='json')
     @controllers.handle_exceptions(u._('Version retrieval'))
     def on_get(self):
-        return {
+        body = {
             'v1': 'current',
             'build': version.__version__
         }
+        LOG.info(u._LI('Retrieved version'))
+        return body
