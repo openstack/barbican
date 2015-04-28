@@ -349,8 +349,9 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
     def test_store_symmetric_secret_assert_called(self):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.AES,
                                         128, 'mode')
+        sym_key = utils.get_symmetric_key()
         secret_dto = secret_store.SecretDTO(secret_store.SecretType.SYMMETRIC,
-                                            "AAAA",
+                                            sym_key,
                                             key_spec,
                                             'content_type',
                                             transport_key=None)
@@ -360,12 +361,24 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
             template_attribute=mock.ANY,
             secret=mock.ANY,
             credential=self.credential)
+        _, register_call_kwargs = self.secret_store.client.register.call_args
+        actual_secret = register_call_kwargs.get('secret')
+        self.assertEqual(
+            128,
+            actual_secret.key_block.cryptographic_length.value)
+        self.assertEqual(
+            attr.CryptographicAlgorithm(enums.CryptographicAlgorithm.AES),
+            actual_secret.key_block.cryptographic_algorithm)
+        self.assertEqual(
+            base64.b64decode(sym_key),
+            actual_secret.key_block.key_value.key_material.value)
 
     def test_store_symmetric_secret_return_value(self):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.AES,
                                         128, 'mode')
+        sym_key = utils.get_symmetric_key()
         secret_dto = secret_store.SecretDTO(secret_store.SecretType.SYMMETRIC,
-                                            "AAAA",
+                                            sym_key,
                                             key_spec,
                                             'content_type',
                                             transport_key=None)
@@ -387,6 +400,17 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
             template_attribute=mock.ANY,
             secret=mock.ANY,
             credential=self.credential)
+        _, register_call_kwargs = self.secret_store.client.register.call_args
+        actual_secret = register_call_kwargs.get('secret')
+        self.assertEqual(
+            2048,
+            actual_secret.key_block.cryptographic_length.value)
+        self.assertEqual(
+            attr.CryptographicAlgorithm(enums.CryptographicAlgorithm.RSA),
+            actual_secret.key_block.cryptographic_algorithm)
+        self.assertEqual(
+            keys.get_private_key_der(),
+            actual_secret.key_block.key_value.key_material.value)
 
     def test_store_private_key_secret_return_value(self):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 2048)
