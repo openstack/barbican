@@ -16,7 +16,7 @@
 """
 Server-side (i.e. worker side) Keystone notification related classes and logic.
 """
-from oslo import messaging
+import oslo_messaging
 
 from barbican.common import utils
 from barbican.openstack.common import service
@@ -57,14 +57,16 @@ class NotificationTask(object):
         as acknowledgment.
 
         Messaging server considers message is acknowledged when either return
-        value is `messaging.NotificationResult.HANDLED` or None.
+        value is `oslo_messaging.NotificationResult.HANDLED` or None.
 
         In case of successful processing of notification, the returned value is
-        `messaging.NotificationResult.HANDLED`
+        `oslo_messaging.NotificationResult.HANDLED`
 
-        In case of notification processing error, the value returned is
-        messaging.NotificationResult.REQUEUE when transport supports this
-        feature otherwise `messaging.NotificationResult.HANDLED` is returned.
+        In case of notification processing error, the value returned
+        is oslo_messaging.NotificationResult.REQUEUE when transport
+        supports this feature otherwise
+        `oslo_messaging.NotificationResult.HANDLED` is returned.
+
         """
 
         LOG.debug("Input keystone event publisher_id = %s", publisher_id)
@@ -85,7 +87,7 @@ class NotificationTask(object):
                 task.process(project_id=project_id,
                              resource_type=resource_type,
                              operation_type=operation_type)
-                return messaging.NotificationResult.HANDLED
+                return oslo_messaging.NotificationResult.HANDLED
             except Exception:
                 # No need to log message here as task process method has
                 # already logged it
@@ -94,9 +96,9 @@ class NotificationTask(object):
                 #   for any exception otherwise tasks will be re-queued
                 #   repeatedly. Revisit as part of the retry task work later.
                 if self.conf.keystone_notifications.allow_requeue:
-                    return messaging.NotificationResult.REQUEUE
+                    return oslo_messaging.NotificationResult.REQUEUE
                 else:
-                    return messaging.NotificationResult.HANDLED
+                    return oslo_messaging.NotificationResult.HANDLED
         return None  # in case event is not project delete
 
     def _parse_event_type(self, event_type):

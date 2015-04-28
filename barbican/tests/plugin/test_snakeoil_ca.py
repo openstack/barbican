@@ -19,7 +19,7 @@ from Crypto.Util import asn1
 import fixtures
 import mock
 from OpenSSL import crypto
-from oslo.config import fixture as oslo_fixture
+from oslo_config import fixture as oslo_fixture
 
 import barbican.plugin.interface.certificate_manager as cm
 from barbican.plugin import snakeoil_ca

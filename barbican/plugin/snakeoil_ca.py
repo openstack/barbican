@@ -17,7 +17,7 @@ import os
 import uuid
 
 from OpenSSL import crypto
-from oslo.config import cfg
+from oslo_config import cfg
 
 from barbican.common import utils
 from barbican.openstack.common import gettextutils as u
