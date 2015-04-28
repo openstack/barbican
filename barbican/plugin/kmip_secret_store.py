@@ -319,9 +319,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
 
         secret_features = {
             'key_format_type': key_format_type,
-            'key_value': {
-                'bytes': normalized_secret
-            },
+            'key_value': normalized_secret,
             'cryptographic_algorithm': algorithm_value,
             'cryptographic_length': secret_dto.key_spec.bit_length
         }
