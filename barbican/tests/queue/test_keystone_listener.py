@@ -15,8 +15,8 @@
 import uuid
 
 import mock
-from oslo import messaging
 from oslo_config import cfg
+import oslo_messaging
 import six
 
 from barbican.openstack.common import service
@@ -109,7 +109,7 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
         mock_process.assert_called_once_with(project_id=project_id,
                                              operation_type='deleted',
                                              resource_type='project')
-        self.assertEqual(messaging.NotificationResult.HANDLED, result)
+        self.assertEqual(oslo_messaging.NotificationResult.HANDLED, result)
 
     @mock.patch.object(consumer.KeystoneEventConsumer, 'process',
                        return_value=None)
@@ -124,7 +124,7 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
         mock_process.assert_called_once_with(project_id=project_id,
                                              operation_type='deleted',
                                              resource_type='project')
-        self.assertEqual(messaging.NotificationResult.HANDLED, result)
+        self.assertEqual(oslo_messaging.NotificationResult.HANDLED, result)
 
     @mock.patch.object(consumer.KeystoneEventConsumer, 'process',
                        return_value=None)
@@ -139,7 +139,7 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
         mock_process.assert_called_once_with(project_id=project_id,
                                              operation_type='deleted',
                                              resource_type='project')
-        self.assertEqual(messaging.NotificationResult.HANDLED, result)
+        self.assertEqual(oslo_messaging.NotificationResult.HANDLED, result)
 
     @mock.patch.object(consumer.KeystoneEventConsumer, 'process',
                        return_value=None)
@@ -240,7 +240,7 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
 
         self.assertTrue(mock_process.called, 'Should call event consumer for'
                         ' project delete event')
-        self.assertEqual(messaging.NotificationResult.HANDLED, result)
+        self.assertEqual(oslo_messaging.NotificationResult.HANDLED, result)
 
     @mock.patch.object(consumer.KeystoneEventConsumer, 'process')
     def test_event_notification_with_processing_error_requeue_enabled(
@@ -257,7 +257,7 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
 
         self.assertTrue(mock_process.called, 'Should call event consumer for'
                         ' project delete event')
-        self.assertEqual(messaging.NotificationResult.REQUEUE, result)
+        self.assertEqual(oslo_messaging.NotificationResult.REQUEUE, result)
 
 
 class WhenUsingMessageServer(UtilMixin, utils.BaseTestCase):
