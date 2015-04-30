@@ -54,6 +54,9 @@ class BaseContextMiddleware(mw.Middleware):
             request_id = b'req-{0}'.format(str(uuid.uuid4()))
 
         resp.headers['x-openstack-request-id'] = request_id
+
+        LOG.info('%s | %s: %s - %s %s', request_id, u._LI('Processed request'),
+                 resp.status, resp.request.method, resp.request.url)
         return resp
 
 
