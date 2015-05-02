@@ -17,10 +17,66 @@ import uuid
 
 from barbican.api.controllers import acls
 from barbican.model import repositories
+from barbican.tests.api import test_resources_policy as test_policy
 from barbican.tests import utils
 
 
-class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
+class TestACLsWithContextMixin(test_policy.BaseTestCase):
+    """Mixin for performing common acls operation used with policy logic."""
+
+    def _create_secret_with_creator_user(self, app, creator_user_id):
+
+        # define creator user for new secret entry.
+        app.extra_environ = {
+            'barbican.context': self._build_context(self.project_id,
+                                                    user=creator_user_id)
+        }
+        secret_id, _ = create_secret(app)
+        return secret_id
+
+    def _create_container_with_creator_user(self, app, creator_user_id):
+
+        # define creator user for new container entry.
+        app.extra_environ = {
+            'barbican.context': self._build_context(self.project_id,
+                                                    user=creator_user_id)
+        }
+        container_id, _ = create_container(app)
+        return container_id
+
+    def _set_acls_with_context(self, app, entity_type=None, op_type=None,
+                               entity_id=None, roles=None, user=None,
+                               enforce_policy=True, expect_errors=False):
+        """Perform acl create/update/delete operation with policy logic.
+
+        Before performing acl create/update/delete, provided input is used
+        for setting custom barbican context. Operation is done under policy
+        enforcement logic.
+        """
+        policy_enforcer = self.policy_enforcer if enforce_policy else None
+        app.extra_environ = {
+            'barbican.context': self._build_context(
+                self.project_id, roles=roles, user=user,
+                is_admin=False, policy_enforcer=policy_enforcer)
+        }
+        resp = None
+        if op_type == 'create':
+            resp = create_acls(app, entity_type, entity_id,
+                               read_user_ids=['u1', 'u2'],
+                               expect_errors=expect_errors)
+        elif op_type == 'update':
+            resp = update_acls(app, entity_type, entity_id,
+                               read_user_ids=['u1', 'u2'],
+                               partial_update=True,
+                               expect_errors=expect_errors)
+        elif op_type == 'delete':
+            resp = app.delete('/{0}/{1}/acl'.format(entity_type, entity_id),
+                              expect_errors=expect_errors)
+        return resp
+
+
+class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
+                                    TestACLsWithContextMixin):
 
     def test_can_create_new_secret_acls(self):
         """Create secret acls and compare stored values with request data."""
@@ -36,6 +92,40 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
         acl_map = _get_acl_map(secret_uuid, is_secret=True)
         # Check project_access is True when not provided
         self.assertTrue(acl_map['read']['project_access'])
+
+    def test_who_can_create_new_secret_acls(self):
+        """Test who can create new secret ACLs as per policy rules.
+
+        New secret ACLs can be created by user who created the secret.
+        Other user with 'creator' role in secret project cannot create ACL
+        if user is not creator of the secret.
+        User with 'admin' role in secret project can create ACL for that
+        secret.
+        """
+        creator_user_id = 'creatorUserId'
+        secret_uuid = self._create_secret_with_creator_user(
+            self.app, creator_user_id)
+        secret_uuid2 = self._create_secret_with_creator_user(
+            self.app, creator_user_id)
+
+        resp = self._set_acls_with_context(
+            self.app, entity_type='secrets', op_type='create',
+            entity_id=secret_uuid, roles=['creator'], user='NotSecretCreator',
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 403)
+
+        resp = self._set_acls_with_context(
+            self.app, entity_type='secrets', op_type='create',
+            entity_id=secret_uuid, roles=['creator'],
+            user=creator_user_id, expect_errors=False)
+        self.assertEqual(resp.status_int, 200)
+
+        # test for user with 'admin' role in secret project
+        resp = self._set_acls_with_context(
+            self.app, entity_type='secrets', op_type='create',
+            entity_id=secret_uuid2, roles=['admin'], user='AdminUser',
+            expect_errors=False)
+        self.assertEqual(resp.status_int, 200)
 
     def test_create_new_secret_acls_with_project_access_false(self):
         """Should allow creating acls for a new secret with project-access."""
@@ -269,6 +359,41 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
         acl_map = _get_acl_map(secret_id, is_secret=True)
         self.assertTrue(acl_map['read']['project_access'])
 
+    def test_who_can_update_secret_acls(self):
+        """Test PATCH update existing secret ACLs as per policy rules.
+
+        Existing secret ACLs can be updated by user who created the secret.
+        Other user with 'creator' role in secret project cannot update ACL
+        if user is not creator of the secret.
+        User with 'admin' role in secret project can update ACL for that
+        secret.
+        """
+        creator_user_id = 'creatorUserId'
+        secret_uuid = self._create_secret_with_creator_user(
+            self.app, creator_user_id)
+
+        self._set_acls_with_context(
+            self.app, entity_type='secrets', op_type='create',
+            entity_id=secret_uuid, enforce_policy=False)
+
+        resp = self._set_acls_with_context(
+            self.app, entity_type='secrets', op_type='update',
+            entity_id=secret_uuid, roles=['creator'], user='NotSecretCreator',
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 403)
+
+        resp = self._set_acls_with_context(
+            self.app, entity_type='secrets', op_type='update',
+            entity_id=secret_uuid, roles=['creator'],
+            user=creator_user_id)
+        self.assertEqual(resp.status_int, 200)
+
+        # test for user with 'admin' role in secret project
+        resp = self._set_acls_with_context(
+            self.app, entity_type='secrets', op_type='update',
+            entity_id=secret_uuid, roles=['admin'], user='AdminUser')
+        self.assertEqual(resp.status_int, 200)
+
     def test_partial_update_secret_acls_modify_project_access_values(self):
         """Acls partial update where project-access flag is modified."""
         secret_uuid, _ = create_secret(self.app)
@@ -315,6 +440,48 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
             expect_errors=False)
         self.assertEqual(200, resp.status_int)
 
+    def test_who_can_delete_secret_acls(self):
+        """Test who can delete existing secret ACLs as per policy rules.
+
+        Existing secret ACLs can be deleted by user who created the secret.
+        Other user with 'creator' role in secret project cannot delete ACL
+        if user is not creator of the secret.
+        User with 'admin' role in secret project can delete ACL for that
+        secret.
+        """
+        creator_user_id = 'creatorUserId'
+        secret_uuid = self._create_secret_with_creator_user(
+            self.app, creator_user_id)
+
+        self._set_acls_with_context(
+            self.app, entity_type='secrets', op_type='create',
+            entity_id=secret_uuid, enforce_policy=False)
+
+        resp = self._set_acls_with_context(
+            self.app, entity_type='secrets', op_type='delete',
+            entity_id=secret_uuid, roles=['creator'], user='NotSecretCreator',
+            expect_errors=True)
+
+        self.assertEqual(resp.status_int, 403)
+
+        resp = self._set_acls_with_context(
+            self.app, entity_type='secrets', op_type='delete',
+            entity_id=secret_uuid, roles=['creator'],
+            user=creator_user_id)
+
+        self.assertEqual(resp.status_int, 200)
+
+        # Create new secret ACLs again.
+        self._set_acls_with_context(
+            self.app, entity_type='secrets', op_type='create',
+            entity_id=secret_uuid, enforce_policy=False)
+        # test for user with 'admin' role in secret project
+        resp = self._set_acls_with_context(
+            self.app, entity_type='secrets', op_type='delete',
+            entity_id=secret_uuid, roles=['admin'],
+            user='AdminUser')
+        self.assertEqual(resp.status_int, 200)
+
     def test_invoke_secret_acls_head_should_fail(self):
         """Should fail as put request to secret acls URI is not supported."""
         secret_id, _ = create_secret(self.app)
@@ -324,7 +491,8 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(405, resp.status_int)
 
 
-class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
+class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
+                                       TestACLsWithContextMixin):
 
     def test_can_create_new_container_acls(self):
         """Create container acls and compare db values with request data."""
@@ -343,6 +511,40 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
         self.assertTrue(acl_map['read']['project_access'])
         self.assertEqual(set(['u1', 'u2']),
                          set(acl_map['read'].to_dict_fields()['users']))
+
+    def test_who_can_create_new_container_acls(self):
+        """Test who can create new container ACLs as per policy rules.
+
+        New container ACLs can be created by user who created the container.
+        Other user with 'creator' role in container project cannot create ACL
+        if user is not creator of the container.
+        User with 'admin' role in container project can create ACL for that
+        container.
+        """
+        creator_user_id = 'creatorUserId'
+        container_id = self._create_container_with_creator_user(
+            self.app, creator_user_id)
+        container_id2 = self._create_container_with_creator_user(
+            self.app, creator_user_id)
+
+        resp = self._set_acls_with_context(
+            self.app, entity_type='containers', op_type='create',
+            entity_id=container_id, roles=['creator'],
+            user='NotContainerCreator', expect_errors=True)
+        self.assertEqual(resp.status_int, 403)
+
+        resp = self._set_acls_with_context(
+            self.app, entity_type='containers', op_type='create',
+            entity_id=container_id, roles=['creator'],
+            user=creator_user_id, expect_errors=False)
+        self.assertEqual(resp.status_int, 200)
+
+        # test for user with 'admin' role in container project
+        resp = self._set_acls_with_context(
+            self.app, entity_type='containers', op_type='create',
+            entity_id=container_id2, roles=['admin'], user='AdminUser',
+            expect_errors=False)
+        self.assertEqual(resp.status_int, 200)
 
     def test_create_new_container_acls_with_project_access_true(self):
         """Should allow creating acls for new container with project-access."""
@@ -611,6 +813,42 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(set(['u1', 'u2']),
                          set(acl_map['read'].to_dict_fields()['users']))
 
+    def test_who_can_update_container_acls(self):
+        """Test PATCH update existing container ACLs as per policy rules.
+
+        Existing container ACLs can be updated by user who created the
+        container.
+        Other user with 'creator' role in container project cannot update ACL
+        if user is not creator of the container.
+        User with 'admin' role in container project can update ACL for that
+        container.
+        """
+        creator_user_id = 'creatorUserId'
+        container_id = self._create_container_with_creator_user(
+            self.app, creator_user_id)
+
+        self._set_acls_with_context(
+            self.app, entity_type='containers', op_type='create',
+            entity_id=container_id, enforce_policy=False)
+
+        resp = self._set_acls_with_context(
+            self.app, entity_type='containers', op_type='update',
+            entity_id=container_id, roles=['creator'], user='NotCreator',
+            expect_errors=True)
+        self.assertEqual(resp.status_int, 403)
+
+        resp = self._set_acls_with_context(
+            self.app, entity_type='containers', op_type='update',
+            entity_id=container_id, roles=['creator'],
+            user=creator_user_id)
+        self.assertEqual(resp.status_int, 200)
+
+        # test for user with 'admin' role in container project
+        resp = self._set_acls_with_context(
+            self.app, entity_type='containers', op_type='update',
+            entity_id=container_id, roles=['admin'], user='AdminUser')
+        self.assertEqual(resp.status_int, 200)
+
     def test_delete_container_acls_with_valid_container_id(self):
         """Delete existing acls for a given container."""
         container_id, _ = create_container(self.app)
@@ -634,6 +872,49 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
             '/containers/{0}/acl'.format(container_id),
             expect_errors=False)
         self.assertEqual(200, resp.status_int)
+
+    def test_who_can_delete_container_acls(self):
+        """Test who can delete existing container ACLs as per policy rules.
+
+        Existing container ACLs can be deleted by user who created the
+        container.
+        Other user with 'creator' role in container project cannot delete ACL
+        if user is not creator of the container.
+        User with 'admin' role in container project can delete ACL for that
+        container.
+        """
+        creator_user_id = 'creatorUserId'
+        container_id = self._create_container_with_creator_user(
+            self.app, creator_user_id)
+
+        self._set_acls_with_context(
+            self.app, entity_type='containers', op_type='create',
+            entity_id=container_id, enforce_policy=False)
+
+        resp = self._set_acls_with_context(
+            self.app, entity_type='containers', op_type='delete',
+            entity_id=container_id, roles=['creator'], user='NotCreator',
+            expect_errors=True)
+
+        self.assertEqual(resp.status_int, 403)
+
+        resp = self._set_acls_with_context(
+            self.app, entity_type='containers', op_type='delete',
+            entity_id=container_id, roles=['creator'],
+            user=creator_user_id)
+
+        self.assertEqual(resp.status_int, 200)
+
+        # Create new container ACLs again.
+        self._set_acls_with_context(
+            self.app, entity_type='containers', op_type='create',
+            entity_id=container_id, enforce_policy=False)
+        # test for user with 'admin' role in container project
+        resp = self._set_acls_with_context(
+            self.app, entity_type='containers', op_type='delete',
+            entity_id=container_id, roles=['admin'],
+            user='AdminUser')
+        self.assertEqual(resp.status_int, 200)
 
     def test_invoke_container_acls_head_should_fail(self):
         """PUT request to container acls URI is not supported."""

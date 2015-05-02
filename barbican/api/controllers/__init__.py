@@ -220,7 +220,7 @@ class ACLMixin(object):
         """
         ctxt = _get_barbican_context(req)
         if not ctxt:
-            return None
+            return {}
         acl_dict = {acl.operation: acl.operation for acl in acl_list
                     if ctxt.user in acl.to_dict_fields().get('users', [])}
         co_dict = {'%s_project_access' % acl.operation: acl.project_access for
