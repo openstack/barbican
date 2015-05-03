@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2015.1.dev123\n"
+"Project-Id-Version: barbican 2015.2.0.dev27\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-04-13 06:11+0000\n"
+"POT-Creation-Date: 2015-05-03 06:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,34 +17,86 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
 
-#: barbican/api/controllers/secrets.py:89
+#: barbican/api/app.py:99
+msgid "Barbican app created and initialized"
+msgstr ""
+
+#: barbican/api/controllers/consumers.py:60
+#, python-format
+msgid "Retrieved a consumer for project: %s"
+msgstr ""
+
+#: barbican/api/controllers/consumers.py:122
+#, python-format
+msgid "Retrieved a consumer list for project: %s"
+msgstr ""
+
+#: barbican/api/controllers/consumers.py:150
+#, python-format
+msgid "Created a consumer for project: %s"
+msgstr ""
+
+#: barbican/api/controllers/consumers.py:184
+#, python-format
+msgid "Deleted a consumer for project: %s"
+msgstr ""
+
+#: barbican/api/controllers/containers.py:69
+#, python-format
+msgid "Retrieved container for project: %s"
+msgstr ""
+
+#: barbican/api/controllers/containers.py:93
+#, python-format
+msgid "Deleted container for project: %s"
+msgstr ""
+
+#: barbican/api/controllers/containers.py:162
+#, python-format
+msgid "Retrieved container list for project: %s"
+msgstr ""
+
+#: barbican/api/controllers/containers.py:204
+#, python-format
+msgid "Created a container for project: %s"
+msgstr ""
+
+#: barbican/api/controllers/secrets.py:90
 #, python-format
 msgid "Retrieved secret metadata for project: %s"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:167
+#: barbican/api/controllers/secrets.py:168
 #, python-format
 msgid "Retrieved secret payload for project: %s"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:206
+#: barbican/api/controllers/secrets.py:209
 #, python-format
 msgid "Updated secret for project: %s"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:214
+#: barbican/api/controllers/secrets.py:217
 #, python-format
 msgid "Deleted secret for project: %s"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:293
+#: barbican/api/controllers/secrets.py:296
 #, python-format
 msgid "Retrieved secret list for project: %s"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:328
+#: barbican/api/controllers/secrets.py:334
 #, python-format
 msgid "Created a secret for project: %s"
+msgstr ""
+
+#: barbican/api/controllers/versions.py:39
+msgid "Retrieved version"
+msgstr ""
+
+#: barbican/api/middleware/context.py:58
+msgid "Processed request"
 msgstr ""
 
 #: barbican/model/repositories.py:196

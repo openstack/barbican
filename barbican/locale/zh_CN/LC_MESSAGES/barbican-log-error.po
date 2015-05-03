@@ -20,92 +20,66 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: barbican/api/__init__.py:61
 msgid "Problem reading request JSON stream."
 msgstr "JSON请求流中读取数据时出错。"
 
-#: barbican/api/__init__.py:71
 msgid "Problem loading request JSON."
 msgstr "JSON请求加载时出错"
 
-#: barbican/api/controllers/__init__.py:106
 msgid "Webob error seen"
 msgstr "Webob出错"
 
-#: barbican/api/controllers/consumers.py:169
 msgid "Problem deleting consumer"
 msgstr "删除用户时出错"
 
-#: barbican/api/controllers/containers.py:88
 msgid "Problem deleting container"
 msgstr "删除容器时出错"
 
-#: barbican/api/controllers/transportkeys.py:73
 msgid "Problem deleting transport_key"
 msgstr "删除传输密匙时出错"
 
-#: barbican/model/repositories.py:357
 #, python-format
 msgid "Not found for %s"
 msgstr "没有找到%s"
 
-#: barbican/model/repositories.py:392
 msgid "Problem saving entity for create"
 msgstr "为创建保存实体时出错"
 
-#: barbican/model/repositories.py:525
 msgid "Problem finding project related entity to delete"
 msgstr "寻找项目相关的实体来删除时出错"
 
-#: barbican/model/repositories.py:562
 #, python-format
 msgid "Problem getting Project %s"
 msgstr "获取项目%s时出错"
 
-#: barbican/model/repositories.py:693
-#, python-format
-msgid "Problem getting secret %s"
-msgstr ""
-
-#: barbican/model/repositories.py:1183
 #, python-format
 msgid "Problem getting container %s"
 msgstr "问题获得容器 %s"
 
-#: barbican/openstack/common/excutils.py:76
 #, python-format
 msgid "Original exception being dropped: %s"
 msgstr "原始异常正在减少：%s"
 
-#: barbican/openstack/common/excutils.py:105
 #, python-format
 msgid "Unexpected exception occurred %d time(s)... retrying."
 msgstr "意想不到的异常发生%d time(s)...重试。"
 
-#: barbican/openstack/common/loopingcall.py:95
 msgid "in fixed duration looping call"
 msgstr "在固定的时间循环调用"
 
-#: barbican/openstack/common/loopingcall.py:138
 msgid "in dynamic looping call"
 msgstr "动态循环调用"
 
-#: barbican/openstack/common/periodic_task.py:228
 #, python-format
 msgid "Error during %(full_task_name)s: %(e)s"
 msgstr "在 %(full_task_name)s: %(e)s 时出现问题"
 
-#: barbican/openstack/common/service.py:268
 msgid "Unhandled exception"
 msgstr "未处理的异常"
 
-#: barbican/plugin/kmip_secret_store.py:349
-#: barbican/plugin/kmip_secret_store.py:386
-#: barbican/plugin/kmip_secret_store.py:470
 msgid "Error opening or writing to client"
 msgstr "打开或者写入客户端错误"
 
-#: barbican/queue/retry_scheduler.py:152
 #, python-format
 msgid ""
 "Problem enqueuing method '%(name)s' with args '%(args)s' and kwargs "
@@ -113,12 +87,10 @@ msgid ""
 msgstr ""
 "队列问题的方法 '%(name)s' 和 args '%(args)s'  和  kwargs '%(kwargs)s'。"
 
-#: barbican/queue/server.py:96
 #, python-format
 msgid "Problem seen processing worker task: '%s'"
 msgstr "处理工作任务：'%s' 时出现问题。"
 
-#: barbican/tasks/keystone_consumer.py:75
 #, python-format
 msgid ""
 "Error processing Keystone event, project_id=%(project_id)s, event resource="
@@ -128,27 +100,22 @@ msgstr ""
 "处理 Keystone 事件错误，项目id=%(project_id)s，事件资源=%(resource)s，事件操"
 "作=%(operation)s，状态=%(status)s，错误信息=%(message)s"
 
-#: barbican/tasks/resources.py:64
 #, python-format
 msgid "Suppressing exception while trying to process task '%s'."
 msgstr "当尝试去处理任务 '%s' 时清除异常。"
 
-#: barbican/tasks/resources.py:89
 #, python-format
 msgid "Could not retrieve information needed to process task '%s'."
 msgstr "无法检索到所需的信息来处理任务 '%s'。"
 
-#: barbican/tasks/resources.py:97
 #, python-format
 msgid "Could not perform processing for task '%s'."
 msgstr "无法为任务 '%s' 执行处理。"
 
-#: barbican/tasks/resources.py:107
 #, python-format
 msgid "Problem handling an error for task '%s', raising original exception."
 msgstr "为任务 '%s' 处理错误时出错，原始异常增加。"
 
-#: barbican/tasks/resources.py:116
 #, python-format
 msgid "Could not process after successfully executing task '%s'."
 msgstr "在成功执行任务 '%s' 后无法处理。"
