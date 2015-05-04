@@ -240,7 +240,7 @@ class WhenTestingGetEnginePrivate(utils.BaseTestCase):
             exception_result.message)
 
     @mock.patch('barbican.model.repositories._create_engine')
-    def test_should_complete_with_no_alembic_create(
+    def test_should_complete_with_no_alembic_create_default_configs(
             self, mock_create_engine):
 
         repositories.CONF.set_override("db_auto_create", False)
@@ -251,6 +251,39 @@ class WhenTestingGetEnginePrivate(utils.BaseTestCase):
         repositories._get_engine(None)
 
         engine.connect.assert_called_once_with()
+        mock_create_engine.assert_called_once_with(
+            'connection',
+            pool_recycle=3600,
+            convert_unicode=True,
+            echo=False
+        )
+
+    @mock.patch('barbican.model.repositories._create_engine')
+    def test_should_complete_with_no_alembic_create_pool_configs(
+            self, mock_create_engine):
+
+        repositories.CONF.set_override("db_auto_create", False)
+        repositories.CONF.set_override(
+            "sql_pool_class", "QueuePool")
+        repositories.CONF.set_override("sql_pool_size", 22)
+        repositories.CONF.set_override("sql_pool_max_overflow", 11)
+
+        engine = mock.MagicMock()
+        mock_create_engine.return_value = engine
+
+        # Invoke method under test.
+        repositories._get_engine(None)
+
+        engine.connect.assert_called_once_with()
+        mock_create_engine.assert_called_once_with(
+            'connection',
+            pool_recycle=3600,
+            convert_unicode=True,
+            echo=False,
+            poolclass=sqlalchemy.pool.QueuePool,
+            pool_size=22,
+            max_overflow=11
+        )
 
 
 class WhenTestingAutoGenerateTables(utils.BaseTestCase):

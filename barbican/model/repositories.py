@@ -76,6 +76,10 @@ db_opts = [
     cfg.StrOpt('sql_connection'),
     cfg.IntOpt('max_limit_paging', default=100),
     cfg.IntOpt('default_limit_paging', default=10),
+    cfg.StrOpt('sql_pool_class', default=None),
+    cfg.StrOpt('sql_pool_logging', default=False),
+    cfg.IntOpt('sql_pool_size', default=None),
+    cfg.IntOpt('sql_pool_max_overflow', default=None),
 ]
 
 CONF = cfg.CONF
@@ -102,9 +106,12 @@ def setup_database_engine_and_factory():
 
     LOG.info('Setting up database engine and session factory')
     LOG.debug('Sql connection = %s', CONF.sql_connection)
-    sa_logger = logging.getLogger('sqlalchemy.engine')
     if CONF.debug:
+        sa_logger = logging.getLogger('sqlalchemy.engine')
         sa_logger.setLevel(logging.DEBUG)
+    if CONF.sql_pool_logging:
+        pool_logger = logging.getLogger('sqlalchemy.pool')
+        pool_logger.setLevel(logging.DEBUG)
 
     _ENGINE = _get_engine(_ENGINE)
 
@@ -176,6 +183,13 @@ def _get_engine(engine):
             'pool_recycle': CONF.sql_idle_timeout,
             'echo': False,
             'convert_unicode': True}
+        if CONF.sql_pool_class:
+            engine_args['poolclass'] = utils.get_class_for(
+                'sqlalchemy.pool', CONF.sql_pool_class)
+        if CONF.sql_pool_size:
+            engine_args['pool_size'] = CONF.sql_pool_size
+        if CONF.sql_pool_max_overflow:
+            engine_args['max_overflow'] = CONF.sql_pool_max_overflow
 
         try:
             engine = _create_engine(connection, **engine_args)
