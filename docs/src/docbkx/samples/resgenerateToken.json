@@ -12,7 +12,6 @@
     },
     "serviceCatalog": [{
       "endpoints": [{
-        "adminURL": "http://localhost:9312",
         "region": "RegionOne",
         "internalURL": "http://localhost:9313",
         "publicURL": "http://localhost:9311"

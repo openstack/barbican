@@ -137,7 +137,6 @@ What you might see
     spawned uWSGI master process (pid: 59190)
     spawned uWSGI worker 1 (pid: 59191, cores: 1)
     spawned uWSGI worker 1 (pid: 59192, cores: 1)
-    Loading paste environment: config:/etc/barbican/barbican-admin-paste.ini
     Loading paste environment: config:/etc/barbican/barbican-api-paste.ini
     WSGI app 0 (mountpoint='') ready in 0 seconds on interpreter \
         0x7fd098c08520 pid: 59191 (default app)
@@ -327,7 +326,6 @@ What you might see
 
     *** has_emperor mode detected (fd: 6) ***
     ...
-    [uWSGI] getting INI configuration from barbican-admin.ini
     !!! UNABLE to load uWSGI plugin: dlopen(./python_plugin.so, 10): image not \
     found !!!
     ...
@@ -337,7 +335,6 @@ What you might see
     2015, in load
       entry = __import__(self.module_name, globals(),globals(), ['__name__'])
     ImportError: No module named barbican.api.app
-    [emperor] removed uwsgi instance barbican-admin.ini
     ...
     *** Starting uWSGI 1.9.13 (64bit) on [Fri Jul  5 09:59:29 2013] ***
 

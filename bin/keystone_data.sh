@@ -71,7 +71,6 @@ if [[ "$ENABLED_SERVICES" =~ "barbican" ]]; then
             --region RegionOne \
             --service_id $BARBICAN_SERVICE \
             --publicurl "http://$SERVICE_HOST:9311" \
-            --adminurl "http://$SERVICE_HOST:9312" \
             --internalurl "http://$SERVICE_HOST:9311"
     fi
 fi
