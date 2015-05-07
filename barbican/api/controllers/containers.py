@@ -47,7 +47,7 @@ class ContainerController(controllers.ACLMixin):
         self.validator = validators.ContainerValidator()
         self.consumers = consumers.ContainerConsumersController(
             self.container_id)
-        self.acls = acls.ContainerACLsController(self.container_id)
+        self.acl = acls.ContainerACLsController(self.container)
 
     def get_acl_tuple(self, req, **kwargs):
         d = self.get_acl_dict_for_user(req, self.container.container_acls)

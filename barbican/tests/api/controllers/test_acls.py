@@ -15,12 +15,9 @@
 import os
 import uuid
 
+from barbican.api.controllers import acls
 from barbican.model import repositories
 from barbican.tests import utils
-
-project_repo = repositories.get_project_repository()
-secrets_repo = repositories.get_secret_repository()
-tkey_repo = repositories.get_transport_key_repository()
 
 
 class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
@@ -29,15 +26,13 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
         """Create secret acls and compare stored values with request data."""
         secret_uuid, _ = create_secret(self.app)
 
-        resp, acls = create_acls(
+        resp = create_acls(
             self.app, 'secrets', secret_uuid,
             read_user_ids=['u1', 'u2'])
-        self.assertEqual(resp.status_int, 201)
-        self.assertIsNotNone(acls)
-        self.assertEqual(1, len(acls))
-        for acl_ref in resp.json:
-            self.assertIn('/secrets/{0}/acls'.format(secret_uuid),
-                          acl_ref['acl_ref'])
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/secrets/{0}/acl'.format(secret_uuid),
+                      resp.json['acl_ref'])
         acl_map = _get_acl_map(secret_uuid, is_secret=True)
         # Check creator_only is False when not provided
         self.assertFalse(acl_map['read']['creator_only'])
@@ -46,481 +41,286 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
         """Should allow creating acls for a new secret with creator-only."""
         secret_uuid, _ = create_secret(self.app)
 
-        resp, acls = create_acls(
+        resp = create_acls(
             self.app, 'secrets', secret_uuid,
             read_creator_only=True)
-        self.assertEqual(resp.status_int, 201)
-        self.assertIsNotNone(acls)
-        self.assertEqual(1, len(acls))
-        for acl_ref in resp.json:
-            self.assertIn('/secrets/{0}/acls'.format(secret_uuid),
-                          acl_ref['acl_ref'])
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/secrets/{0}/acl'.format(secret_uuid),
+                      resp.json['acl_ref'])
         acl_map = _get_acl_map(secret_uuid, is_secret=True)
         self.assertTrue(acl_map['read']['creator_only'])
 
-    def test_create_new_secret_acls_with_creator_only_false(self):
-        """Should allow creating acls for a new secret with creator-only."""
-        secret_uuid, _ = create_secret(self.app)
-
-        resp, acls = create_acls(
-            self.app, 'secrets', secret_uuid,
-            read_creator_only=False)
-        self.assertEqual(resp.status_int, 201)
-        self.assertIsNotNone(acls)
-        self.assertEqual(1, len(acls))
-        for acl_ref in resp.json:
-            self.assertIn('/secrets/{0}/acls'.format(secret_uuid),
-                          acl_ref['acl_ref'])
-        acl_map = _get_acl_map(secret_uuid, is_secret=True)
-        self.assertFalse(acl_map['read']['creator_only'])
-
-    def test_new_secret_acls_with_invalid_creator_should_fail(self):
+    def test_new_secret_acls_with_invalid_creator_only_value_should_fail(self):
         """Should fail if creator-only flag is provided as string value."""
         secret_uuid, _ = create_secret(self.app)
 
-        resp, acls = create_acls(
+        resp = create_acls(
             self.app, 'secrets', secret_uuid,
             read_creator_only="False",
             read_user_ids=['u1', 'u3', 'u4'],
             expect_errors=True)
-        self.assertEqual(resp.status_int, 400)
-        self.assertIsNone(acls)
+        self.assertEqual(400, resp.status_int)
 
-        resp, acls = create_acls(
+        resp = create_acls(
             self.app, 'secrets', secret_uuid,
             read_creator_only="None",
             expect_errors=True)
-        self.assertEqual(resp.status_int, 400)
-        self.assertIsNone(acls)
+        self.assertEqual(400, resp.status_int)
 
-    def test_new_secret_acls_with_missing_secret_id_should_fail(self):
-        """Should fail if invalid secret id is provided in create request."""
-        resp, acls = create_acls(
-            self.app, 'secrets', uuid.uuid4().hex,
-            read_creator_only="False",
-            read_user_ids=['u1', 'u3', 'u4'],
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
-        self.assertIsNone(acls)
-
-    def test_existing_acl_post_request_should_fail(self):
-        """Should fail if trying to add acls for secret with existing acls."""
-        secret_uuid, _ = create_secret(self.app)
-        resp, acls = create_acls(
-            self.app, 'secrets', secret_uuid,
-            read_creator_only=False,
-            read_user_ids=['u1', 'u3', 'u4'])
-        self.assertEqual(resp.status_int, 201)
-        self.assertIsNotNone(acls)
-
-        resp, acls = create_acls(
-            self.app, 'secrets', secret_uuid,
-            read_creator_only=False,
-            read_user_ids=['u1', 'u3', 'u4'],
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 400)
-        self.assertIsNone(acls)
-        self.assertIn("Existing ACL cannot be updated",
-                      resp.json['description'])
-
-    def test_get_secret_acls_with_valid_secret_id(self):
-        """Read existing acls for a given valid secret id."""
+    def test_get_secret_acls_with_complete_acl_data(self):
+        """Read existing acls for a with complete acl data."""
         secret_id, _ = create_secret(self.app)
-        _, _ = create_acls(
+        create_acls(
+            self.app, 'secrets', secret_id,
+            read_user_ids=['u1', 'u3'], read_creator_only=True)
+
+        resp = self.app.get(
+            '/secrets/{0}/acl'.format(secret_id),
+            expect_errors=False)
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+
+        self.assertIn('read', resp.json)
+        self.assertTrue(resp.json['read']['creator-only'])
+        self.assertIsNotNone(resp.json['read']['created'])
+        self.assertIsNotNone(resp.json['read']['updated'])
+        self.assertEqual(set(['u1', 'u3']), set(resp.json['read']['users']))
+
+    def test_get_secret_acls_with_creator_only_data(self):
+        """Read existing acls for acl when only creator-only flag is set."""
+        secret_id, _ = create_secret(self.app)
+        create_acls(
             self.app, 'secrets', secret_id,
             read_creator_only=True)
 
         resp = self.app.get(
-            '/secrets/{0}/acls'.format(secret_id),
+            '/secrets/{0}/acl'.format(secret_id),
             expect_errors=False)
-        acls = resp.json
-        self.assertEqual(resp.status_int, 200)
-        self.assertEqual(1, len(acls))
-        for acl_ref in acls:
-            self.assertIn('/secrets/{0}/acls'.format(secret_id),
-                          acl_ref['acl_ref'])
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+
+        self.assertEqual([], resp.json['read']['users'])
+        self.assertTrue(resp.json['read']['creator-only'])
+        self.assertIsNotNone(resp.json['read']['created'])
+        self.assertIsNotNone(resp.json['read']['updated'])
 
     def test_get_secret_acls_invalid_secret_should_fail(self):
-        """Get secret acls should fail for invalid secret id."""
+        """Get secret acls should fail for invalid secret id.
+
+        This test applies to all secret ACLs methods as secret entity is
+        populated in same manner for get, put, patch, delete methods.
+        """
         secret_id, _ = create_secret(self.app)
-        _, _ = create_acls(
+        create_acls(
             self.app, 'secrets', secret_id,
             read_creator_only=False,
             read_user_ids=['u1', 'u3', 'u4'])
 
         resp = self.app.get(
-            '/secrets/{0}/acls'.format(uuid.uuid4().hex),
+            '/secrets/{0}/acl'.format(uuid.uuid4().hex),
             expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
+        self.assertEqual(404, resp.status_int)
 
-    def test_get_secret_acls_no_acls_defined_should_fail(self):
+    def test_get_secret_acls_no_acls_defined_return_default_acl(self):
+        """Get secret acls should pass when no acls defined for a secret."""
+        secret_id, _ = create_secret(self.app)
+
+        resp = self.app.get(
+            '/secrets/{0}/acl'.format(secret_id),
+            expect_errors=True)
+        self.assertEqual(200, resp.status_int)
+        self.assertEqual(acls.DEFAULT_ACL, resp.json)
+
+    def test_get_secret_acls_with_incorrect_uri_should_fail(self):
         """Get secret acls should fail when no acls defined for a secret."""
         secret_id, _ = create_secret(self.app)
 
         resp = self.app.get(
-            '/secrets/{0}/acls'.format(secret_id),
+            '/secrets/{0}/incorrect_acls'.format(secret_id),
             expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
+        self.assertEqual(405, resp.status_int)
 
-    def test_update_secret_acls_modify_all_acls(self):
-        """Acls update where only user ids list is modified."""
+    def test_full_update_secret_acls_modify_creator_only_value(self):
+        """ACLs full update with user ids where creator-only flag modified."""
         secret_uuid, _ = create_secret(self.app)
 
-        _, _ = create_acls(
-            self.app, 'secrets', secret_uuid,
-            read_user_ids=['u1', 'u2'])
-
-        resp, acls = update_acls(
-            self.app, 'secrets', secret_uuid,
-            read_user_ids=['u1', 'u2', 'u5'])
-
-        self.assertEqual(resp.status_int, 200)
-        self.assertIsNotNone(acls)
-        self.assertEqual(1, len(acls))
-        for acl_ref in resp.json:
-            self.assertIn('/secrets/{0}/acls'.format(secret_uuid),
-                          acl_ref['acl_ref'])
-        acl_map = _get_acl_map(secret_uuid, is_secret=True)
-        # Check creator_only is False when not provided
-        self.assertFalse(acl_map['read']['creator_only'])
-        self.assertIn('u5', acl_map['read'].to_dict_fields()['users'])
-
-    def test_update_secret_acls_modify_creator_only_values(self):
-        """Acls update where user ids and creator-only flag is modified."""
-        secret_uuid, _ = create_secret(self.app)
-
-        _, _ = create_acls(
+        create_acls(
             self.app, 'secrets', secret_uuid,
             read_user_ids=['u1', 'u2'],
             read_creator_only=True)
 
-        resp, acls = update_acls(
-            self.app, 'secrets', secret_uuid,
+        # update acls with no user input so  it should delete existing users
+        resp = update_acls(
+            self.app, 'secrets', secret_uuid, partial_update=False,
             read_creator_only=False)
-        self.assertEqual(resp.status_int, 200)
-        self.assertIsNotNone(acls)
-        self.assertEqual(1, len(acls))
-        for acl_ref in resp.json:
-            self.assertIn('/secrets/{0}/acls'.format(secret_uuid),
-                          acl_ref['acl_ref'])
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/secrets/{0}/acl'.format(secret_uuid),
+                      resp.json['acl_ref'])
         acl_map = _get_acl_map(secret_uuid, is_secret=True)
         self.assertFalse(acl_map['read']['creator_only'])
-        self.assertIn('u1', acl_map['read'].to_dict_fields()['users'])
-        self.assertIn('u2', acl_map['read'].to_dict_fields()['users'])
+        self.assertIsNone(acl_map['read'].to_dict_fields().get('users'))
 
-    def test_update_secret_acls_partial_modify_read_users_only(self):
+    def test_full_update_secret_acls_modify_users_only(self):
+        """ACLs full update where specific operation acl is modified."""
+        secret_uuid, _ = create_secret(self.app)
+
+        create_acls(
+            self.app, 'secrets', secret_uuid,
+            read_user_ids=['u1', 'u2'], read_creator_only=True)
+
+        resp = update_acls(
+            self.app, 'secrets', secret_uuid, partial_update=False,
+            read_user_ids=['u1', 'u3', 'u5'])
+
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/secrets/{0}/acl'.format(secret_uuid),
+                      resp.json['acl_ref'])
+        acl_map = _get_acl_map(secret_uuid, is_secret=True)
+        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertNotIn('u2', acl_map['read'].to_dict_fields()['users'])
+        self.assertEqual(set(['u1', 'u3', 'u5']),
+                         set(acl_map['read'].to_dict_fields()['users']))
+
+    def test_full_update_secret_acls_with_read_users_only(self):
+        """Acls full update where specific operation acl is modified."""
+        secret_uuid, _ = create_secret(self.app)
+
+        create_acls(
+            self.app, 'secrets', secret_uuid,
+            read_user_ids=['u1', 'u2'])
+
+        acl_map = _get_acl_map(secret_uuid, is_secret=True)
+        # ACL api does not support 'list' operation so making direct db update
+        # in acl operation data to make sure full update removes this existing
+        # ACL.
+        secret_acl = acl_map['read']
+        secret_acl.operation = 'list'
+        secret_acl.save()
+        acl_map = _get_acl_map(secret_uuid, is_secret=True)
+        # check 'list' operation is there in db
+        self.assertIn('list', acl_map)
+        resp = update_acls(
+            self.app, 'secrets', secret_uuid, partial_update=False,
+            read_user_ids=['u1', 'u3', 'u5'])
+
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/secrets/{0}/acl'.format(secret_uuid),
+                      resp.json['acl_ref'])
+        acl_map = _get_acl_map(secret_uuid, is_secret=True)
+        # make sure 'list' operation is no longer after full update
+        self.assertNotIn('list', acl_map)
+        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertEqual(set(['u1', 'u3', 'u5']),
+                         set(acl_map['read'].to_dict_fields()['users']))
+        self.assertNotIn('u2', acl_map['read'].to_dict_fields()['users'])
+
+    def test_partial_update_secret_acls_with_read_users_only(self):
         """Acls update where specific operation acl is modified."""
         secret_uuid, _ = create_secret(self.app)
 
-        _, _ = create_acls(
+        create_acls(
             self.app, 'secrets', secret_uuid,
             read_user_ids=['u1', 'u2'])
 
-        resp, acls = update_acls(
-            self.app, 'secrets', secret_uuid,
+        acl_map = _get_acl_map(secret_uuid, is_secret=True)
+
+        secret_acl = acl_map['read']
+        secret_acl.operation = 'list'
+        secret_acl.save()
+        acl_map = _get_acl_map(secret_uuid, is_secret=True)
+        # check 'list' operation is there in db
+        self.assertIn('list', acl_map)
+        resp = update_acls(
+            self.app, 'secrets', secret_uuid, partial_update=True,
             read_user_ids=['u1', 'u3', 'u5'])
 
-        self.assertEqual(resp.status_int, 200)
-        self.assertIsNotNone(acls)
-        self.assertEqual(1, len(acls))
-        for acl_ref in resp.json:
-            self.assertIn('/secrets/{0}/acls'.format(secret_uuid),
-                          acl_ref['acl_ref'])
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/secrets/{0}/acl'.format(secret_uuid),
+                      resp.json['acl_ref'])
+        acl_map = _get_acl_map(secret_uuid, is_secret=True)
+        # For partial update, existing other operation ACL is not tocuhed.
+        self.assertIn('list', acl_map)
+        self.assertEqual(set(['u1', 'u2']),
+                         set(acl_map['list'].to_dict_fields()['users']))
+        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertEqual(set(['u1', 'u3', 'u5']),
+                         set(acl_map['read'].to_dict_fields()['users']))
+
+    def test_partial_update_secret_acls_when_no_acls_defined_should_pass(self):
+        """Acls partial update pass when no acls are defined for a secret.
+
+        Partial update (PATCH) is applicable even when no explicit ACL has been
+        set as by default every secret has implicit acl definition. If PUT
+        is used, then new ACL is created instead.
+        """
+        secret_id, _ = create_secret(self.app)
+
+        resp = update_acls(
+            self.app, 'secrets', secret_id, partial_update=True,
+            read_user_ids=['u1', 'u3', 'u5'], expect_errors=False)
+
+        self.assertEqual(200, resp.status_int)
+        acl_map = _get_acl_map(secret_id, is_secret=True)
+        self.assertFalse(acl_map['read']['creator_only'])
+
+    def test_partial_update_secret_acls_modify_creator_only_values(self):
+        """Acls partial update where creator-only flag is modified."""
+        secret_uuid, _ = create_secret(self.app)
+
+        create_acls(
+            self.app, 'secrets', secret_uuid,
+            read_user_ids=['u1', 'u2'],
+            read_creator_only=True)
+
+        resp = update_acls(
+            self.app, 'secrets', secret_uuid, partial_update=True,
+            read_creator_only=False)
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/secrets/{0}/acl'.format(secret_uuid),
+                      resp.json['acl_ref'])
         acl_map = _get_acl_map(secret_uuid, is_secret=True)
         self.assertFalse(acl_map['read']['creator_only'])
-        self.assertIn('u1', acl_map['read'].to_dict_fields()['users'])
-        self.assertIn('u3', acl_map['read'].to_dict_fields()['users'])
-        self.assertIn('u5', acl_map['read'].to_dict_fields()['users'])
-        self.assertNotIn('u2', acl_map['read'].to_dict_fields()['users'])
-
-    def test_update_secret_acls_invalid_secret_should_fail(self):
-        """Acls update should fail when invalid secret is provided."""
-        secret_id, _ = create_secret(self.app)
-        _, _ = create_acls(
-            self.app, 'secrets', secret_id,
-            read_user_ids=['u1', 'u2'])
-
-        resp, acls = update_acls(
-            self.app, 'secrets', uuid.uuid4().hex,
-            read_user_ids=['u1', 'u3', 'u5'], expect_errors=True)
-
-        self.assertEqual(resp.status_int, 404)
-        self.assertIsNone(acls)
-
-    def test_update_secret_acls_when_no_acls_defined_should_fail(self):
-        """Acls update should fail when acls are defined for a secret."""
-        secret_id, _ = create_secret(self.app)
-
-        resp, acls = update_acls(
-            self.app, 'secrets', secret_id,
-            read_user_ids=['u1', 'u3', 'u5'], expect_errors=True)
-
-        self.assertEqual(resp.status_int, 404)
-        self.assertIsNone(acls)
+        self.assertEqual(set(['u1', 'u2']),
+                         set(acl_map['read'].to_dict_fields()['users']))
 
     def test_delete_secret_acls_with_valid_secret_id(self):
         """Delete existing acls for a given secret."""
         secret_id, _ = create_secret(self.app)
-        _, _ = create_acls(
+        create_acls(
             self.app, 'secrets', secret_id,
             read_creator_only=True)
 
         resp = self.app.delete(
-            '/secrets/{0}/acls'.format(secret_id),
+            '/secrets/{0}/acl'.format(secret_id),
             expect_errors=False)
         content = resp.json
         self.assertIsNone(content)  # make sure there is no response
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
         acl_map = _get_acl_map(secret_id, is_secret=True)
         self.assertFalse(acl_map)
 
-    def test_delete_secret_acls_invalid_secret_should_fail(self):
-        """Delete acls should fail when invalid secret id is provided."""
-        secret_id, _ = create_secret(self.app)
-        _, _ = create_acls(
-            self.app, 'secrets', secret_id,
-            read_creator_only=False)
-
-        resp = self.app.delete(
-            '/secrets/{0}/acls'.format(uuid.uuid4().hex),
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
-
-    def test_delete_secret_acls_no_acl_defined_should_fail(self):
-        """Delete acls should fail when no acls are defined for a secret."""
+    def test_delete_secret_acls_no_acl_defined_should_pass(self):
+        """Delete acls should pass when no acls are defined for a secret."""
         secret_id, _ = create_secret(self.app)
 
         resp = self.app.delete(
-            '/secrets/{0}/acls'.format(secret_id),
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
+            '/secrets/{0}/acl'.format(secret_id),
+            expect_errors=False)
+        self.assertEqual(200, resp.status_int)
 
-    def test_invoke_secret_acls_put_should_fail(self):
+    def test_invoke_secret_acls_head_should_fail(self):
         """Should fail as put request to secret acls URI is not supported."""
         secret_id, _ = create_secret(self.app)
-        resp = self.app.put(
-            '/secrets/{0}/acls'.format(secret_id),
+        resp = self.app.head(
+            '/secrets/{0}/acl'.format(secret_id),
             expect_errors=True)
-        self.assertEqual(resp.status_int, 405)
-
-
-class WhenTestingSecretACLResource(utils.BarbicanAPIBaseTestCase):
-
-    def test_get_secret_acl_with_valid_acl_id(self):
-        """Read a specific acl by id and compare with request values."""
-        secret_id, _ = create_secret(self.app)
-        _, _ = create_acls(
-            self.app, 'secrets', secret_id,
-            read_creator_only=False,
-            read_user_ids=['u1', 'u3', 'u4'])
-
-        acl_map = _get_acl_map(secret_id, is_secret=True)
-        resp = self.app.get(
-            '/secrets/{0}/acls/{1}'.format(secret_id,
-                                           acl_map['read']['id']),
-            expect_errors=False)
-        acl = resp.json
-        self.assertEqual(resp.status_int, 200)
-        self.assertEqual('read', acl['operation'])
-        self.assertFalse(acl['creator-only'])
-        self.assertEqual(set(['u1', 'u3', 'u4']), set(acl['users']))
-
-        resp = self.app.get(
-            '/secrets/{0}/acls/{1}'.format(secret_id,
-                                           acl_map['read']['id']),
-            expect_errors=False)
-        acl = resp.json
-        self.assertEqual(resp.status_int, 200)
-        self.assertEqual('read', acl['operation'])
-        self.assertFalse(acl['creator-only'])
-        self.assertEqual(set(['u1', 'u3', 'u4']), set(acl['users']))
-
-    def test_get_secret_acl_invalid_acl_should_fail(self):
-        """Get acl request should fail with invalid acl id."""
-        secret_id, _ = create_secret(self.app)
-        _, _ = create_acls(
-            self.app, 'secrets', secret_id,
-            read_creator_only=False,
-            read_user_ids=['u1', 'u3', 'u4'])
-        resp = self.app.get(
-            '/secrets/{0}/acls/{1}'.format(secret_id,
-                                           uuid.uuid4().hex),
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
-
-    def test_get_secret_acl_no_acl_defined_should_fail(self):
-        """Get acl request should fail with no acls defined for secret."""
-        secret_id, _ = create_secret(self.app)
-        resp = self.app.get(
-            '/secrets/{0}/acls/{1}'.format(secret_id,
-                                           uuid.uuid4().hex),
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
-
-    def test_update_secret_acl_modify_all(self):
-        """Modify existing ACL users by using specific acl id."""
-        secret_id, _ = create_secret(self.app)
-
-        _, _ = create_acls(
-            self.app, 'secrets', secret_id,
-            read_user_ids=['u1', 'u2'])
-
-        acl_map = _get_acl_map(secret_id, is_secret=True)
-        acl_id = acl_map['read']['id']
-
-        resp = update_acl(
-            self.app, 'secrets', secret_id, acl_id,
-            read_user_ids=['u1', 'u2', 'u5'], read_creator_only=True)
-
-        self.assertEqual(resp.status_int, 200)
-        acl_ref = resp.json
-        self.assertIn('/secrets/{0}/acls/{1}'.format(secret_id, acl_id),
-                      acl_ref['acl_ref'])
-
-        resp = self.app.get(
-            '/secrets/{0}/acls/{1}'.format(secret_id, acl_id),
-            expect_errors=False)
-        acl = resp.json
-        self.assertIsNotNone(acl)
-        self.assertIn('/secrets/{0}/acls/{1}'.format(secret_id, acl_id),
-                      acl['acl_ref'])
-        # Check creator_only is False when not provided
-        self.assertTrue(acl['creator-only'])
-        self.assertEqual('read', acl['operation'])
-        self.assertEqual(set(['u1', 'u2', 'u5']), set(acl['users']))
-
-    def test_update_secret_acl_with_duplicate_user_ids(self):
-        """Modify existing ACL users by using specific acl id."""
-        secret_id, _ = create_secret(self.app)
-
-        _, _ = create_acls(
-            self.app, 'secrets', secret_id,
-            read_user_ids=['u1', 'u2'])
-
-        acl_map = _get_acl_map(secret_id, is_secret=True)
-        acl_id = acl_map['read']['id']
-
-        resp = update_acl(
-            self.app, 'secrets', secret_id, acl_id,
-            read_user_ids=['u1', 'u2', 'u1', 'u5'], read_creator_only=True)
-
-        self.assertEqual(resp.status_int, 200)
-
-        resp = self.app.get(
-            '/secrets/{0}/acls/{1}'.format(secret_id, acl_id),
-            expect_errors=False)
-        acl = resp.json
-        self.assertIsNotNone(acl)
-        self.assertIn('/secrets/{0}/acls/{1}'.format(secret_id, acl_id),
-                      acl['acl_ref'])
-        # Check creator_only is False when not provided
-        self.assertTrue(acl['creator-only'])
-        self.assertEqual('read', acl['operation'])
-        self.assertEqual(set(['u1', 'u2', 'u5']), set(acl['users']))
-
-    def test_update_secret_acl_modify_only_users(self):
-        """Modifying existing acl's user list and creator-only flag."""
-        secret_id, _ = create_secret(self.app)
-
-        _, _ = create_acls(
-            self.app, 'secrets', secret_id,
-            read_user_ids=['u1', 'u2'],
-            read_creator_only=True)
-
-        acl_map = _get_acl_map(secret_id, is_secret=True)
-        acl_id = acl_map['read']['id']
-
-        # updating read, list operation and adding write operation acl
-        # Update should be for 'read' operation ACL only. Others are ignored.
-        resp = update_acl(
-            self.app, 'secrets', secret_id, acl_id,
-            read_user_ids=['u1', 'u2', 'u5'])
-
-        self.assertEqual(resp.status_int, 200)
-
-        resp = self.app.get(
-            '/secrets/{0}/acls/{1}'.format(secret_id, acl_id),
-            expect_errors=False)
-        acl = resp.json
-        self.assertIsNotNone(acl)
-        self.assertEqual(set(['u1', 'u2', 'u5']), set(acl['users']))
-        self.assertTrue(acl['creator-only'])
-
-        # Now remove existing all users from ACL list
-        resp = update_acl(
-            self.app, 'secrets', secret_id, acl_id,
-            read_user_ids=[])
-        self.assertEqual(resp.status_int, 200)
-
-        resp = self.app.get(
-            '/secrets/{0}/acls/{1}'.format(secret_id, acl_id),
-            expect_errors=False)
-
-        acl = resp.json
-        self.assertIsNone(acl.get('users'))
-        self.assertTrue(acl['creator-only'])
-
-    def test_update_secret_acl_invalid_acl_should_fail(self):
-        """Update should fail when invalid acl id is provided."""
-        secret_id, _ = create_secret(self.app)
-        _, _ = create_acls(
-            self.app, 'secrets', secret_id,
-            read_creator_only=False)
-
-        resp = update_acl(
-            self.app, 'secrets', secret_id, uuid.uuid4().hex,
-            read_creator_only=False, expect_errors=True)
-
-        self.assertEqual(resp.status_int, 404)
-
-    def test_update_secret_acl_when_no_acls_defined_should_fail(self):
-        """Update should fail when no secret acls are defined."""
-        secret_id, _ = create_secret(self.app)
-        resp = update_acl(
-            self.app, 'secrets', secret_id, uuid.uuid4().hex,
-            read_creator_only=False, expect_errors=True)
-
-        self.assertEqual(resp.status_int, 404)
-
-    def test_delete_secret_acl_with_valid_acl_id(self):
-        """Delete existing acls for a given secret."""
-        secret_id, _ = create_secret(self.app)
-        _, _ = create_acls(
-            self.app, 'secrets', secret_id,
-            read_creator_only=False)
-
-        acl_map = _get_acl_map(secret_id, is_secret=True)
-
-        read_acl_id = acl_map['read'].id
-
-        resp = self.app.delete(
-            '/secrets/{0}/acls/{1}'.format(secret_id, read_acl_id),
-            expect_errors=False)
-        content = resp.json
-        self.assertIsNone(content)  # make sure there is no response
-        self.assertEqual(resp.status_int, 200)
-        acl_map = _get_acl_map(secret_id, is_secret=True)
-        self.assertIsNone(acl_map.get('read'))  # read acl should be deleted
-
-    def test_delete_secret_acls_invalid_secret_should_fail(self):
-        """Delete acls should fail when invalid secret id is provided."""
-        secret_id, _ = create_secret(self.app)
-        _, _ = create_acls(
-            self.app, 'secrets', secret_id,
-            read_creator_only=False)
-
-        resp = self.app.delete(
-            '/secrets/{0}/acls/{1}'.format(secret_id, uuid.uuid4().hex),
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
-
-    def test_invoke_secret_acl_put_should_fail(self):
-        """PUT for specific acl id is not supported."""
-        secret_id, _ = create_secret(self.app)
-        resp = self.app.put(
-            '/secrets/{0}/acls/{1}'.format(secret_id, uuid.uuid4().hex),
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 405)
+        self.assertEqual(405, resp.status_int)
 
 
 class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
@@ -529,33 +329,32 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
         """Create container acls and compare db values with request data."""
         container_id, _ = create_container(self.app)
 
-        resp, acls = create_acls(
+        resp = create_acls(
             self.app, 'containers', container_id,
             read_user_ids=['u1', 'u2'])
-        self.assertEqual(resp.status_int, 201)
-        self.assertIsNotNone(acls)
-        self.assertEqual(1, len(acls))
-        for acl_ref in resp.json:
-            self.assertIn('/containers/{0}/acls'.format(container_id),
-                          acl_ref['acl_ref'])
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/containers/{0}/acl'.format(container_id),
+                      resp.json['acl_ref'])
+
         acl_map = _get_acl_map(container_id, is_secret=False)
         # Check creator_only is False when not provided
         self.assertFalse(acl_map['read']['creator_only'])
+        self.assertEqual(set(['u1', 'u2']),
+                         set(acl_map['read'].to_dict_fields()['users']))
 
     def test_create_new_container_acls_with_creator_only_false(self):
         """Should allow creating acls for a new container with creator-only."""
         container_id, _ = create_container(self.app)
 
-        resp, acls = create_acls(
+        resp = create_acls(
             self.app, 'containers', container_id,
             read_creator_only=False,
             read_user_ids=['u1', 'u3', 'u4'])
-        self.assertEqual(resp.status_int, 201)
-        self.assertIsNotNone(acls)
-        self.assertEqual(1, len(acls))
-        for acl_ref in resp.json:
-            self.assertIn('/containers/{0}/acls'.format(container_id),
-                          acl_ref['acl_ref'])
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/containers/{0}/acl'.format(container_id),
+                      resp.json['acl_ref'])
         acl_map = _get_acl_map(container_id, is_secret=False)
         self.assertFalse(acl_map['read']['creator_only'])
 
@@ -563,453 +362,285 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
         """Should allow creating acls for a new container with creator-only."""
         container_id, _ = create_container(self.app)
 
-        resp, acls = create_acls(
+        resp = create_acls(
             self.app, 'containers', container_id,
             read_creator_only=True,
             read_user_ids=['u1', 'u3', 'u4'])
-        self.assertEqual(resp.status_int, 201)
-        self.assertIsNotNone(acls)
-        self.assertEqual(1, len(acls))
-        for acl_ref in resp.json:
-            self.assertIn('/containers/{0}/acls'.format(container_id),
-                          acl_ref['acl_ref'])
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/containers/{0}/acl'.format(container_id),
+                      resp.json['acl_ref'])
         acl_map = _get_acl_map(container_id, is_secret=False)
         self.assertTrue(acl_map['read']['creator_only'])
 
-    def test_new_container_acls_with_invalid_creator_should_fail(self):
+    def test_container_acls_with_invalid_creator_only_value_should_fail(self):
         """Should fail if creator-only flag is provided as string value."""
         container_id, _ = create_container(self.app)
 
-        resp, acls = create_acls(
+        resp = create_acls(
             self.app, 'containers', container_id,
             read_creator_only="False",
             read_user_ids=['u1', 'u3', 'u4'],
             expect_errors=True)
-        self.assertEqual(resp.status_int, 400)
-        self.assertIsNone(acls)
+        self.assertEqual(400, resp.status_int)
 
-        resp, acls = create_acls(
+        resp = create_acls(
             self.app, 'containers', container_id,
             read_creator_only="None",
             expect_errors=True)
-        self.assertEqual(resp.status_int, 400)
-        self.assertIsNone(acls)
+        self.assertEqual(400, resp.status_int)
 
-    def test_new_container_acls_with_missing_container_id_should_fail(self):
-        """Create acls request should fail for invalid container id."""
-        resp, acls = create_acls(
-            self.app, 'containers', uuid.uuid4().hex,
-            read_creator_only="False",
-            read_user_ids=['u1', 'u3', 'u4'],
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
-        self.assertIsNone(acls)
-
-    def test_existing_acl_post_request_should_fail(self):
-        """Should fail when adding acls for container with existing acls."""
+    def test_get_container_acls_with_complete_acl_data(self):
+        """Read existing acls for a with complete acl data."""
         container_id, _ = create_container(self.app)
-        resp, acls = create_acls(
+        create_acls(
             self.app, 'containers', container_id,
-            read_creator_only=False,
-            read_user_ids=['u1', 'u3', 'u4'])
-        self.assertEqual(resp.status_int, 201)
-        self.assertIsNotNone(acls)
-
-        resp, acls = create_acls(
-            self.app, 'containers', container_id,
-            read_creator_only=False,
-            read_user_ids=['u1', 'u3', 'u4'],
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 400)
-        self.assertIsNone(acls)
-        self.assertIn("Existing ACL cannot be updated",
-                      resp.json['description'])
-
-    def test_get_container_acls_with_valid_container_id(self):
-        """Read existing acls for a given valid container id."""
-        container_id, _ = create_container(self.app)
-        _, _ = create_acls(
-            self.app, 'containers', container_id,
-            read_creator_only=False)
+            read_user_ids=['u1', 'u3'], read_creator_only=True)
 
         resp = self.app.get(
-            '/containers/{0}/acls'.format(container_id),
+            '/containers/{0}/acl'.format(container_id),
             expect_errors=False)
-        acls = resp.json
-        self.assertEqual(resp.status_int, 200)
-        self.assertEqual(1, len(acls))
-        for acl_ref in acls:
-            self.assertIn('/containers/{0}/acls'.format(container_id),
-                          acl_ref['acl_ref'])
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
 
-    def test_get_container_acls_invalid_container_should_fail(self):
-        """Get container acls should fail for invalid secret id."""
+        self.assertIn('read', resp.json)
+        self.assertTrue(resp.json['read']['creator-only'])
+        self.assertIsNotNone(resp.json['read']['created'])
+        self.assertIsNotNone(resp.json['read']['updated'])
+        self.assertEqual(set(['u1', 'u3']), set(resp.json['read']['users']))
+
+    def test_get_container_acls_with_creator_only_data(self):
+        """Read existing acls for acl when only creator-only flag is set."""
         container_id, _ = create_container(self.app)
-        _, _ = create_acls(
+        create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=True)
+
+        resp = self.app.get(
+            '/containers/{0}/acl'.format(container_id),
+            expect_errors=False)
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+
+        self.assertEqual([], resp.json['read']['users'])
+        self.assertTrue(resp.json['read']['creator-only'])
+        self.assertIsNotNone(resp.json['read']['created'])
+        self.assertIsNotNone(resp.json['read']['updated'])
+
+    def test_get_container_acls_invalid_container_id_should_fail(self):
+        """Get container acls should fail for invalid secret id.
+
+        This test applies to all container ACLs methods as secret entity is
+        populated in same manner for get, put, patch, delete methods.
+        """
+        container_id, _ = create_container(self.app)
+        create_acls(
             self.app, 'containers', container_id,
             read_creator_only=False)
 
         resp = self.app.get(
-            '/containers/{0}/acls'.format(uuid.uuid4().hex),
+            '/containers/{0}/acl'.format(uuid.uuid4().hex),
             expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
+        self.assertEqual(404, resp.status_int)
 
-    def test_get_container_acls_no_acls_defined_should_fail(self):
-        """Get container acls should fail when no acls defined for a secret."""
+    def test_get_container_acls_invalid_non_uuid_secret_should_fail(self):
+        """Get container acls should fail for invalid (non-uuid) id."""
+        container_id, _ = create_container(self.app)
+        create_acls(
+            self.app, 'containers', container_id,
+            read_creator_only=False)
+
+        resp = self.app.get(
+            '/containers/{0}/acl'.format('my_container_id'),
+            expect_errors=True)
+        self.assertEqual(404, resp.status_int)
+
+    def test_get_container_acls_no_acls_defined_return_default_acl(self):
+        """Get container acls should pass when no acls defined for a secret."""
         container_id, _ = create_container(self.app)
 
         resp = self.app.get(
-            '/containers/{0}/acls'.format(container_id),
+            '/containers/{0}/acl'.format(container_id),
             expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
+        self.assertEqual(200, resp.status_int)
+        self.assertEqual(acls.DEFAULT_ACL, resp.json)
 
-    def test_update_container_acls_modify_all_acls(self):
+    def test_full_update_container_acls_modify_all_acls(self):
         """Acls update where only user ids list is modified."""
         container_id, _ = create_container(self.app)
 
-        _, _ = create_acls(
-            self.app, 'containers', container_id,
+        create_acls(
+            self.app, 'containers', container_id, read_creator_only=True,
             read_user_ids=['u1', 'u2'])
 
-        resp, acls = update_acls(
-            self.app, 'containers', container_id,
+        resp = update_acls(
+            self.app, 'containers', container_id, partial_update=False,
             read_user_ids=['u1', 'u2', 'u5'])
 
-        self.assertEqual(resp.status_int, 200)
-        self.assertIsNotNone(acls)
-        self.assertEqual(1, len(acls))
-        for acl_ref in resp.json:
-            self.assertIn('/containers/{0}/acls'.format(container_id),
-                          acl_ref['acl_ref'])
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/containers/{0}/acl'.format(container_id),
+                      resp.json['acl_ref'])
         acl_map = _get_acl_map(container_id, is_secret=False)
         # Check creator_only is False when not provided
         self.assertFalse(acl_map['read']['creator_only'])
         self.assertIn('u5', acl_map['read'].to_dict_fields()['users'])
 
-    def test_update_container_acls_modify_creator_only_values(self):
+    def test_full_update_container_acls_modify_creator_only_values(self):
         """Acls update where user ids and creator-only flag is modified."""
         container_id, _ = create_container(self.app)
 
-        _, _ = create_acls(
+        create_acls(
             self.app, 'containers', container_id,
             read_user_ids=['u1', 'u2'])
 
-        resp, acls = update_acls(
-            self.app, 'containers', container_id,
+        resp = update_acls(
+            self.app, 'containers', container_id, partial_update=False,
             read_creator_only=True)
-        self.assertEqual(resp.status_int, 200)
-        self.assertIsNotNone(acls)
-        self.assertEqual(1, len(acls))
-        for acl_ref in resp.json:
-            self.assertIn('/containers/{0}/acls'.format(container_id),
-                          acl_ref['acl_ref'])
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/containers/{0}/acl'.format(container_id),
+                      resp.json['acl_ref'])
         acl_map = _get_acl_map(container_id, is_secret=False)
         self.assertTrue(acl_map['read']['creator_only'])
+        self.assertIsNone(acl_map['read'].to_dict_fields().get('users'))
 
-    def test_update_container_acls_invalid_secret_should_fail(self):
-        """Acls update should fail when invalid container is provided."""
+    def test_full_update_container_acls_with_read_users_only(self):
+        """Acls full update where specific operation acl is modified."""
         container_id, _ = create_container(self.app)
-        _, _ = create_acls(
+
+        create_acls(
             self.app, 'containers', container_id,
             read_user_ids=['u1', 'u2'])
 
-        resp, acls = update_acls(
-            self.app, 'containers', uuid.uuid4().hex,
-            read_user_ids=['u1', 'u3', 'u5'], expect_errors=True)
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        # ACL api does not support 'list' operation so making direct db update
+        # in acl operation data to make sure full update removes this existing
+        # ACL.
+        container_acl = acl_map['read']
+        container_acl.operation = 'list'
+        container_acl.save()
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        # check 'list' operation is there in db
+        self.assertIn('list', acl_map)
+        resp = update_acls(
+            self.app, 'containers', container_id, partial_update=False,
+            read_user_ids=['u1', 'u3', 'u5'])
 
-        self.assertEqual(resp.status_int, 404)
-        self.assertIsNone(acls)
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/containers/{0}/acl'.format(container_id),
+                      resp.json['acl_ref'])
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        # make sure 'list' operation is no longer after full update
+        self.assertNotIn('list', acl_map)
+        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertEqual(set(['u1', 'u3', 'u5']),
+                         set(acl_map['read'].to_dict_fields()['users']))
+        self.assertNotIn('u2', acl_map['read'].to_dict_fields()['users'])
 
-    def test_update_container_acls_when_no_acls_defined_should_fail(self):
-        """Acls update should fail when acls are defined for a container."""
+    def test_partial_update_container_acls_with_read_users_only(self):
+        """Acls update where specific operation acl is modified."""
         container_id, _ = create_container(self.app)
 
-        resp, acls = update_acls(
+        create_acls(
             self.app, 'containers', container_id,
-            read_user_ids=['u1', 'u3', 'u5'], expect_errors=True)
+            read_user_ids=['u1', 'u2'])
 
-        self.assertEqual(resp.status_int, 404)
-        self.assertIsNone(acls)
+        acl_map = _get_acl_map(container_id, is_secret=False)
+
+        secret_acl = acl_map['read']
+        secret_acl.operation = 'list'
+        secret_acl.save()
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        # check 'list' operation is there in db
+        self.assertIn('list', acl_map)
+        resp = update_acls(
+            self.app, 'containers', container_id, partial_update=True,
+            read_user_ids=['u1', 'u3', 'u5'])
+
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/containers/{0}/acl'.format(container_id),
+                      resp.json['acl_ref'])
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        # For partial update, existing other operation ACL is not tocuhed.
+        self.assertIn('list', acl_map)
+        self.assertEqual(set(['u1', 'u2']),
+                         set(acl_map['list'].to_dict_fields()['users']))
+        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertEqual(set(['u1', 'u3', 'u5']),
+                         set(acl_map['read'].to_dict_fields()['users']))
+
+    def test_partial_update_container_acls_when_no_acls_defined(self):
+        """Acls partial update pass when no acls are defined for container.
+
+        Partial update (PATCH) is applicable even when no explicit ACL has been
+        set as by default every container has implicit acl definition. If PUT
+        is used, then new ACL is created instead.
+        """
+        container_id, _ = create_container(self.app)
+
+        resp = update_acls(
+            self.app, 'containers', container_id, partial_update=True,
+            read_user_ids=['u1', 'u3', 'u5'], expect_errors=False)
+
+        self.assertEqual(200, resp.status_int)
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        self.assertFalse(acl_map['read']['creator_only'])
+
+    def test_partial_update_container_acls_modify_creator_only_values(self):
+        """Acls partial update where creator-only flag is modified."""
+        container_id, _ = create_container(self.app)
+
+        create_acls(
+            self.app, 'containers', container_id,
+            read_user_ids=['u1', 'u2'],
+            read_creator_only=True)
+
+        resp = update_acls(
+            self.app, 'containers', container_id, partial_update=True,
+            read_creator_only=False)
+        self.assertEqual(200, resp.status_int)
+        self.assertIsNotNone(resp.json)
+        self.assertIn('/containers/{0}/acl'.format(container_id),
+                      resp.json['acl_ref'])
+        acl_map = _get_acl_map(container_id, is_secret=False)
+        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertEqual(set(['u1', 'u2']),
+                         set(acl_map['read'].to_dict_fields()['users']))
 
     def test_delete_container_acls_with_valid_container_id(self):
         """Delete existing acls for a given container."""
         container_id, _ = create_container(self.app)
-        _, _ = create_acls(
+        create_acls(
             self.app, 'containers', container_id,
             read_creator_only=False)
 
         resp = self.app.delete(
-            '/containers/{0}/acls'.format(container_id),
+            '/containers/{0}/acl'.format(container_id),
             expect_errors=False)
         content = resp.json
         self.assertIsNone(content)  # make sure there is no response
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
         acl_map = _get_acl_map(container_id, is_secret=False)
         self.assertFalse(acl_map)
 
-    def test_delete_container_acls_invalid_container_should_fail(self):
-        """Delete acls should fail when invalid container id is provided."""
-        container_id, _ = create_container(self.app)
-        _, _ = create_acls(
-            self.app, 'containers', container_id,
-            read_creator_only=False)
-
-        resp = self.app.delete(
-            '/containers/{0}/acls'.format(uuid.uuid4().hex),
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
-
-    def test_delete_container_acls_no_acl_defined_should_fail(self):
-        """Delete acls should fail when no acls are defined for a container."""
+    def test_delete_container_acls_no_acl_defined_should_pass(self):
+        """Delete acls should pass when no acls are defined for a container."""
         container_id, _ = create_container(self.app)
         resp = self.app.delete(
-            '/containers/{0}/acls'.format(container_id),
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
+            '/containers/{0}/acl'.format(container_id),
+            expect_errors=False)
+        self.assertEqual(200, resp.status_int)
 
-    def test_invoke_container_acls_put_should_fail(self):
+    def test_invoke_container_acls_head_should_fail(self):
         """PUT request to container acls URI is not supported."""
         container_id, _ = create_container(self.app)
-        resp = self.app.put(
-            '/containers/{0}/acls'.format(container_id),
+        resp = self.app.head(
+            '/containers/{0}/acl/'.format(container_id),
             expect_errors=True)
-        self.assertEqual(resp.status_int, 405)
-
-
-class WhenTestingContainerAclResource(utils.BarbicanAPIBaseTestCase):
-
-    def test_get_container_acl_with_valid_acl_id(self):
-        """Read a specific acl by id and compare with request values."""
-        container_id, _ = create_container(self.app)
-        _, _ = create_acls(
-            self.app, 'containers', container_id,
-            read_creator_only=False)
-
-        acl_map = _get_acl_map(container_id, is_secret=False)
-        resp = self.app.get(
-            '/containers/{0}/acls/{1}'.format(container_id,
-                                              acl_map['read']['id']),
-            expect_errors=False)
-        acl = resp.json
-        self.assertEqual(resp.status_int, 200)
-        self.assertEqual('read', acl['operation'])
-        self.assertFalse(acl['creator-only'])
-        self.assertIsNone(acl.get('users'))
-
-    def test_get_container_acl_invalid_acl_should_fail(self):
-        """Get acl request should fail with invalid acl id."""
-        container_id, _ = create_container(self.app)
-        _, _ = create_acls(
-            self.app, 'containers', container_id,
-            read_creator_only=False)
-        resp = self.app.get(
-            '/containers/{0}/acls/{1}'.format(container_id,
-                                              uuid.uuid4().hex),
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
-
-    def test_get_container_acl_no_acl_defined_should_fail(self):
-        """Get acl request should fail with no acls defined for container."""
-        container_id, _ = create_container(self.app)
-        resp = self.app.get(
-            '/containers/{0}/acls/{1}'.format(container_id,
-                                              uuid.uuid4().hex),
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
-
-    def test_update_container_acl_modify_all(self):
-        """Modify existing ACL users by using specific acl id."""
-        container_id, _ = create_container(self.app)
-
-        _, _ = create_acls(
-            self.app, 'containers', container_id,
-            read_user_ids=['u1', 'u2'])
-
-        acl_map = _get_acl_map(container_id, is_secret=False)
-        acl_id = acl_map['read']['id']
-
-        resp = update_acl(
-            self.app, 'containers', container_id, acl_id,
-            read_user_ids=['u1', 'u2', 'u5'], read_creator_only=True)
-
-        self.assertEqual(resp.status_int, 200)
-
-        resp = self.app.get(
-            '/containers/{0}/acls/{1}'.format(container_id,
-                                              acl_id),
-            expect_errors=False)
-        acl = resp.json
-        self.assertIsNotNone(acl)
-        self.assertIn('/containers/{0}/acls/{1}'.format(container_id, acl_id),
-                      acl['acl_ref'])
-        # Check creator_only is False when not provided
-        self.assertTrue(acl['creator-only'])
-        self.assertEqual('read', acl['operation'])
-        self.assertEqual(set(['u1', 'u2', 'u5']), set(acl['users']))
-
-    def test_update_container_acl_with_duplicate_user_ids(self):
-        """Modify existing ACL users by using specific acl id."""
-        container_id, _ = create_container(self.app)
-
-        _, _ = create_acls(
-            self.app, 'containers', container_id,
-            read_user_ids=['u1', 'u2'])
-
-        acl_map = _get_acl_map(container_id, is_secret=False)
-        acl_id = acl_map['read']['id']
-
-        resp = update_acl(
-            self.app, 'containers', container_id, acl_id,
-            read_user_ids=['u1', 'u2', 'u1', 'u5'], read_creator_only=True)
-
-        self.assertEqual(resp.status_int, 200)
-
-        resp = self.app.get(
-            '/containers/{0}/acls/{1}'.format(container_id,
-                                              acl_id),
-            expect_errors=False)
-        acl = resp.json
-        self.assertIsNotNone(acl)
-        self.assertIn('/containers/{0}/acls/{1}'.format(container_id, acl_id),
-                      acl['acl_ref'])
-        # Check creator_only is False when not provided
-        self.assertTrue(acl['creator-only'])
-        self.assertEqual('read', acl['operation'])
-        self.assertEqual(set(['u1', 'u2', 'u5']), set(acl['users']))
-
-    def test_update_container_acl_modify_only_users(self):
-        """Modifying existing acl's user list and creator-only flag."""
-        container_id, _ = create_container(self.app)
-
-        _, _ = create_acls(
-            self.app, 'containers', container_id,
-            read_user_ids=['u1', 'u2'],
-            read_creator_only=True)
-
-        acl_map = _get_acl_map(container_id, is_secret=False)
-        acl_id = acl_map['read']['id']
-
-        # updating read, list operation and adding write operation acl
-        # Update should be for 'read' operation ACL only. Others are ignored.
-        resp = update_acl(
-            self.app, 'containers', container_id, acl_id,
-            read_user_ids=['u1', 'u2', 'u5'])
-
-        self.assertEqual(resp.status_int, 200)
-
-        resp = self.app.get(
-            '/containers/{0}/acls/{1}'.format(container_id,
-                                              acl_id),
-            expect_errors=False)
-        acl = resp.json
-        self.assertIsNotNone(acl)
-        self.assertEqual(set(['u1', 'u2', 'u5']), set(acl['users']))
-        self.assertTrue(acl['creator-only'])
-
-        # Now remove existing all users from ACL list
-        resp = update_acl(
-            self.app, 'containers', container_id, acl_id,
-            read_user_ids=[])
-        self.assertEqual(resp.status_int, 200)
-
-        resp = self.app.get(
-            '/containers/{0}/acls/{1}'.format(container_id,
-                                              acl_id),
-            expect_errors=False)
-        acl = resp.json
-        self.assertIsNone(acl.get('users'))
-        self.assertTrue(acl['creator-only'])
-
-    def test_update_container_acl_modify_creator_only(self):
-        """Modifying only creator_only flag for existing acl by its id."""
-        container_id, _ = create_container(self.app)
-
-        _, _ = create_acls(
-            self.app, 'containers', container_id,
-            read_user_ids=['u1', 'u2'],
-            read_creator_only=True)
-
-        acl_map = _get_acl_map(container_id, is_secret=False)
-        acl_id = acl_map['read']['id']
-
-        # updating read, list operation and adding write operation acl
-        # Update should be for 'read' operation ACL only. Others are ignored.
-        resp = update_acl(
-            self.app, 'containers', container_id, acl_id,
-            read_creator_only=False)
-
-        self.assertEqual(resp.status_int, 200)
-
-        resp = self.app.get(
-            '/containers/{0}/acls/{1}'.format(container_id,
-                                              acl_id),
-            expect_errors=False)
-        acl = resp.json
-        self.assertIsNotNone(acl)
-        self.assertEqual(set(['u1', 'u2']), set(acl['users']))
-        self.assertFalse(acl['creator-only'])
-
-    def test_update_container_acl_invalid_acl_should_fail(self):
-        """Update should fail when invalid acl id is provided."""
-        container_id, _ = create_container(self.app)
-        _, _ = create_acls(
-            self.app, 'containers', container_id,
-            read_creator_only=False)
-
-        resp = update_acl(
-            self.app, 'containers', container_id, uuid.uuid4().hex,
-            read_creator_only=False, expect_errors=True)
-
-        self.assertEqual(resp.status_int, 404)
-
-    def test_update_container_acl_when_no_acls_defined_should_fail(self):
-        """Update should fail when no container acls are defined."""
-        container_id, _ = create_container(self.app)
-        resp = update_acl(
-            self.app, 'containers', container_id, uuid.uuid4().hex,
-            read_creator_only=False, expect_errors=True)
-
-        self.assertEqual(resp.status_int, 404)
-
-    def test_delete_secret_acl_with_valid_acl_id(self):
-        """Delete existing acls for a given container."""
-        container_id, _ = create_container(self.app)
-        _, _ = create_acls(
-            self.app, 'containers', container_id,
-            read_creator_only=False)
-
-        acl_map = _get_acl_map(container_id, is_secret=False)
-
-        read_acl_id = acl_map['read'].id
-
-        resp = self.app.delete(
-            '/containers/{0}/acls/{1}'.format(container_id, read_acl_id),
-            expect_errors=False)
-        content = resp.json
-        self.assertIsNone(content)  # make sure there is no response
-        self.assertEqual(resp.status_int, 200)
-        acl_map = _get_acl_map(container_id, is_secret=False)
-        self.assertIsNone(acl_map.get('read'))  # read acl should be deleted
-
-    def test_delete_secret_acls_invalid_secret_should_fail(self):
-        """Delete acls should fail when invalid secret id is provided."""
-        container_id, _ = create_container(self.app)
-        _, _ = create_acls(
-            self.app, 'containers', container_id,
-            read_creator_only=False)
-
-        resp = self.app.delete(
-            '/containers/{0}/acls/{1}'.format(container_id, uuid.uuid4().hex),
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
-
-    def test_invoke_container_acl_put_should_fail(self):
-        """PUT for specific acl id is not supported."""
-        container_id, _ = create_container(self.app)
-        resp = self.app.put(
-            '/containers/{0}/acls/{1}'.format(container_id, uuid.uuid4().hex),
-            expect_errors=True)
-        self.assertEqual(resp.status_int, 405)
+        self.assertEqual(405, resp.status_int)
 
 
 # ----------------------- Helper Functions ---------------------------
@@ -1078,23 +709,23 @@ def create_acls(app, entity_type, entity_id, read_user_ids=None,
     return manage_acls(app, entity_type, entity_id,
                        read_user_ids=read_user_ids,
                        read_creator_only=read_creator_only,
-                       is_update=False,
+                       is_update=False, partial_update=False,
                        expect_errors=expect_errors)
 
 
 def update_acls(app, entity_type, entity_id, read_user_ids=None,
-                read_creator_only=None,
+                read_creator_only=None, partial_update=False,
                 expect_errors=False):
     return manage_acls(app, entity_type, entity_id,
                        read_user_ids=read_user_ids,
                        read_creator_only=read_creator_only,
-                       is_update=True,
+                       is_update=True, partial_update=partial_update,
                        expect_errors=expect_errors)
 
 
 def manage_acls(app, entity_type, entity_id, read_user_ids=None,
                 read_creator_only=None, is_update=False,
-                expect_errors=False):
+                partial_update=None, expect_errors=False):
     request = {}
 
     _append_acl_to_request(request, 'read', read_user_ids,
@@ -1103,40 +734,16 @@ def manage_acls(app, entity_type, entity_id, read_user_ids=None,
     cleaned_request = {key: val for key, val in request.items()
                        if val is not None}
 
-    if is_update:
+    if is_update and partial_update:  # patch for partial update
         resp = app.patch_json(
-            '/{0}/{1}/acls'.format(entity_type, entity_id),
+            '/{0}/{1}/acl'.format(entity_type, entity_id),
             cleaned_request,
             expect_errors=expect_errors)
-    else:
-        resp = app.post_json(
-            '/{0}/{1}/acls'.format(entity_type, entity_id),
+    else:  # put (for create or complete update)
+        resp = app.put_json(
+            '/{0}/{1}/acl'.format(entity_type, entity_id),
             cleaned_request,
             expect_errors=expect_errors)
-
-    acl_ids = None
-    if resp.status_int in (201, 200):
-        acl_ids = []
-        for acl in resp.json:
-            acl_ids.append(_get_entity_id(acl))
-
-    return (resp, acl_ids)
-
-
-def update_acl(app, entity_type, entity_id, acl_id, read_user_ids=None,
-               read_creator_only=None, expect_errors=False):
-    request = {}
-
-    _append_acl_to_request(request, 'read', read_user_ids,
-                           read_creator_only)
-
-    cleaned_request = {key: val for key, val in request.items()
-                       if val is not None}
-
-    resp = app.patch_json(
-        '/{0}/{1}/acls/{2}'.format(entity_type, entity_id, acl_id),
-        cleaned_request,
-        expect_errors=expect_errors)
 
     return resp
 
@@ -1149,10 +756,6 @@ def _append_acl_to_request(req, operation, user_ids=None, creator_only=None):
         op_dict['creator-only'] = creator_only
     if op_dict:
         req[operation] = op_dict
-
-
-def _get_entity_id(acl):
-    return os.path.split(acl.get('acl_ref', ''))[-1]
 
 
 def _get_acl_map(entity_id, is_secret=True):

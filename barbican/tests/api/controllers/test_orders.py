@@ -489,7 +489,7 @@ class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase,
         )
 
         if add_acls:
-            _, _ = test_acls.manage_acls(
+            test_acls.manage_acls(
                 self.app, 'containers', container_id,
                 read_user_ids=['u1', 'u3', 'u4'],
                 read_creator_only=read_creator_only,

@@ -1726,6 +1726,7 @@ class SecretACLRepo(BaseRepo):
                                session=None):
         session = self.get_session(session)
         secret.updated_at = timeutils.utcnow()
+        secret_acl.updated_at = timeutils.utcnow()
         secret.secret_acls.append(secret_acl)
         secret.save(session=session)
 
@@ -1820,7 +1821,7 @@ class ContainerACLRepo(BaseRepo):
                                user_ids=None, session=None):
         session = self.get_session(session)
         container.updated_at = timeutils.utcnow()
-
+        container_acl.updated_at = timeutils.utcnow()
         container.container_acls.append(container_acl)
         container.save(session=session)
 
