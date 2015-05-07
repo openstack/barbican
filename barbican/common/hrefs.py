@@ -9,7 +9,6 @@
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #  License for the specific language governing permissions and limitations
 #  under the License.
-
 from barbican.common import utils
 
 
@@ -50,42 +49,6 @@ def convert_consumer_to_href(consumer_id):
 def convert_certificate_authority_to_href(ca_id):
     """Convert the ca ID to a HATEOS-style href."""
     return convert_resource_id_to_href('cas', ca_id)
-
-
-def convert_secret_acl_to_href(secret_id, acl_id):
-    """Convert the secret acl ID to a HATEOS-style href."""
-    secret_href = convert_secret_to_href(secret_id)
-    return secret_href + '/acls/' + acl_id
-
-
-def convert_container_acl_to_href(container_id, acl_id):
-    """Convert the container acl ID to a HATEOS-style href."""
-    container_href = convert_container_to_href(container_id)
-    return container_href + '/acls/' + acl_id
-
-
-def convert_acl_to_hrefs(fields):
-    acl_id = fields['acl_id']
-    if 'secret_id' in fields:
-        fields['acl_ref'] = convert_secret_acl_to_href(fields['secret_id'],
-                                                       acl_id)
-        del fields['acl_id']
-        fields['secret_ref'] = convert_secret_to_href(fields['secret_id'])
-        del fields['secret_id']
-
-    if 'container_id' in fields:
-        fields['acl_ref'] = convert_container_acl_to_href(
-            fields['container_id'], acl_id)
-        del fields['acl_id']
-        fields['container_ref'] = convert_container_to_href(
-            fields['container_id'])
-        del fields['container_id']
-
-    if 'creator_only' in fields:
-        fields['creator-only'] = fields['creator_only']
-        del fields['creator_only']
-
-    return fields
 
 
 # TODO(hgedikli) handle list of fields in here
