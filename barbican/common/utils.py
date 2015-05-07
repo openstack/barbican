@@ -17,6 +17,7 @@
 Common utilities for Barbican.
 """
 import collections
+import importlib
 import mimetypes
 import uuid
 
@@ -132,6 +133,17 @@ def generate_fullname_for(instance):
     if module is None or module == "__builtin__":
         return class_name
     return "{module}.{class_name}".format(module=module, class_name=class_name)
+
+
+def get_class_for(module_name, class_name):
+    """Create a Python class from its text-specified components."""
+    # Load the module via name, raising ImportError if module cannot be
+    # loaded.
+    python_module = importlib.import_module(module_name)
+
+    # Load and return the resolved Python class, raising AttributeError if
+    # class cannot be found.
+    return getattr(python_module, class_name)
 
 
 def generate_uuid():
