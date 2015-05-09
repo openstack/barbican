@@ -22,6 +22,8 @@ from stevedore import named
 from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
+from barbican.plugin.util import utils as plugin_utils
+
 
 _SECRET_STORE = None
 
@@ -480,15 +482,17 @@ def _enforce_extensions_configured(plugin_related_function):
 
 
 class SecretStorePluginManager(named.NamedExtensionManager):
-    def __init__(self, conf=CONF, invoke_on_load=True,
-                 invoke_args=(), invoke_kwargs={}):
+    def __init__(self, conf=CONF, invoke_args=(), invoke_kwargs={}):
         super(SecretStorePluginManager, self).__init__(
             conf.secretstore.namespace,
             conf.secretstore.enabled_secretstore_plugins,
-            invoke_on_load=invoke_on_load,
+            invoke_on_load=False,  # Defer creating plugins to utility below.
             invoke_args=invoke_args,
             invoke_kwds=invoke_kwargs
         )
+
+        plugin_utils.instantiate_plugins(
+            self, invoke_args, invoke_kwargs)
 
     @_enforce_extensions_configured
     def get_plugin_store(self, key_spec, plugin_name=None,
@@ -501,23 +505,24 @@ class SecretStorePluginManager(named.NamedExtensionManager):
         key is required.
         :returns: SecretStoreBase plugin implementation
         """
+        active_plugins = plugin_utils.get_active_plugins(self)
 
         if plugin_name is not None:
-            for ext in self.extensions:
-                if utils.generate_fullname_for(ext.obj) == plugin_name:
-                    return ext.obj
+            for plugin in active_plugins:
+                if utils.generate_fullname_for(plugin) == plugin_name:
+                    return plugin
             raise SecretStorePluginNotFound(plugin_name)
 
         if not transport_key_needed:
-            for ext in self.extensions:
-                if ext.obj.store_secret_supports(key_spec):
-                    return ext.obj
+            for plugin in active_plugins:
+                if plugin.store_secret_supports(key_spec):
+                    return plugin
 
         else:
-            for ext in self.extensions:
-                if (ext.obj.get_transport_key() is not None and
-                        ext.obj.store_secret_supports(key_spec)):
-                    return ext.obj
+            for plugin in active_plugins:
+                if (plugin.get_transport_key() is not None and
+                        plugin.store_secret_supports(key_spec)):
+                    return plugin
 
         raise SecretStoreSupportedPluginNotFound()
 
@@ -537,9 +542,9 @@ class SecretStorePluginManager(named.NamedExtensionManager):
                  configured on the database side.
         """
 
-        for ext in self.extensions:
-            if utils.generate_fullname_for(ext.obj) == plugin_name:
-                return ext.obj
+        for plugin in plugin_utils.get_active_plugins(self):
+            if utils.generate_fullname_for(plugin) == plugin_name:
+                return plugin
         raise StorePluginNotAvailableOrMisconfigured(plugin_name)
 
     @_enforce_extensions_configured
@@ -551,9 +556,9 @@ class SecretStorePluginManager(named.NamedExtensionManager):
         :returns: SecretStoreBase plugin implementation
         """
 
-        for ext in self.extensions:
-            if ext.obj.generate_supports(key_spec):
-                return ext.obj
+        for plugin in plugin_utils.get_active_plugins(self):
+            if plugin.generate_supports(key_spec):
+                return plugin
         raise SecretStoreSupportedPluginNotFound()
 
 
