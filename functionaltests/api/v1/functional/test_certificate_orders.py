@@ -234,8 +234,30 @@ class CertificatesTestCase(base.TestCase):
             if secret.name == 'certificate':
                 contains_cert = True
                 self.assertIsNotNone(secret.secret_ref)
+                self.verify_valid_cert(secret.secret_ref)
+            if secret.name == 'intermediates':
+                self.assertIsNotNone(secret.secret_ref)
+                self.verify_valid_intermediates(secret.secret_ref)
 
         self.assertTrue(contains_cert)
+
+    def verify_valid_cert(self, secret_ref):
+        secret_resp = self.secret_behaviors.get_secret(
+            secret_ref,
+            "application/pkix-cert")
+        self.assertIsNotNone(secret_resp)
+        self.assertIsNotNone(secret_resp.content)
+        cert = secret_resp.content
+        crypto.load_certificate(crypto.FILETYPE_PEM, cert)
+
+    def verify_valid_intermediates(self, secret_ref):
+        secret_resp = self.secret_behaviors.get_secret(
+            secret_ref,
+            "application/pkix-cert")
+        self.assertIsNotNone(secret_resp)
+        self.assertIsNotNone(secret_resp.content)
+        cert_chain = secret_resp.content
+        crypto.load_pkcs7_data(crypto.FILETYPE_PEM, cert_chain)
 
     def verify_pending_waiting_for_ca(self, order_resp):
         self.assertEqual('PENDING', order_resp.model.status)
