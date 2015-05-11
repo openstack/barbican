@@ -66,6 +66,9 @@ dogtag_plugin_opts = [
 CONF.register_group(dogtag_plugin_group)
 CONF.register_opts(dogtag_plugin_opts, group=dogtag_plugin_group)
 
+CERT_HEADER = "-----BEGIN CERTIFICATE-----"
+CERT_FOOTER = "-----END CERTIFICATE-----"
+
 
 def setup_nss_db(conf, subsystem):
     crypto = None
@@ -497,20 +500,23 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
 
         Note that only algorithms supported by Dogtag will be mapped.
         """
-        if algorithm == sstore.KeyAlgorithm.AES:
+        if algorithm is None:
+            return None
+
+        if algorithm.lower() == sstore.KeyAlgorithm.AES.lower():
             return key.KeyClient.AES_ALGORITHM
-        elif algorithm == sstore.KeyAlgorithm.DES:
+        elif algorithm.lower() == sstore.KeyAlgorithm.DES.lower():
             return key.KeyClient.DES_ALGORITHM
-        elif algorithm == sstore.KeyAlgorithm.DESEDE:
+        elif algorithm.lower() == sstore.KeyAlgorithm.DESEDE.lower():
             return key.KeyClient.DES3_ALGORITHM
-        elif algorithm == sstore.KeyAlgorithm.DSA:
+        elif algorithm.lower() == sstore.KeyAlgorithm.DSA.lower():
             return key.KeyClient.DSA_ALGORITHM
-        elif algorithm == sstore.KeyAlgorithm.RSA:
+        elif algorithm.lower() == sstore.KeyAlgorithm.RSA.lower():
             return key.KeyClient.RSA_ALGORITHM
-        elif algorithm == sstore.KeyAlgorithm.DIFFIE_HELLMAN:
+        elif algorithm.lower() == sstore.KeyAlgorithm.DIFFIE_HELLMAN.lower():
             # may be supported, needs to be tested
             return None
-        elif algorithm == sstore.KeyAlgorithm.EC:
+        elif algorithm.lower() == sstore.KeyAlgorithm.EC.lower():
             # asymmetric keys not yet supported
             return None
         else:
@@ -949,9 +955,22 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
         dto = None
         if request_status == pki.cert.CertRequestStatus.COMPLETE:
             if cert is not None:
+                # Barbican is expecting base 64 encoded PEM, so we base64
+                # encode below.
+                #
+                # Currently there is an inconsistency in what Dogtag returns
+                # for certificates and intermediates.  For certs, we return
+                # PEM, whereas for intermediates, we return headerless PEM.
+                # This is being addressed in Dogtag ticket:
+                # https://fedorahosted.org/pki/ticket/1374
+                #
+                # Until this is addressed, simply add the missing headers
+                cert_chain = (CERT_HEADER + "\r\n" + cert.pkcs7_cert_chain +
+                              CERT_FOOTER)
+
                 dto = cm.ResultDTO(cm.CertificateStatus.CERTIFICATE_GENERATED,
-                                   certificate=cert.encoded,
-                                   intermediates=cert.pkcs7_cert_chain)
+                                   certificate=base64.b64encode(cert.encoded),
+                                   intermediates=base64.b64encode(cert_chain))
             else:
                 raise cm.CertificateGeneralException(
                     u._("request_id {req_id} returns COMPLETE but no cert "
