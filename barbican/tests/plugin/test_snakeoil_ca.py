@@ -133,8 +133,9 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         self.ca_key_path = os.path.join(self.tmp_dir, 'ca.pem')
         self.db_dir = self.tmp_dir
         self.plugin = snakeoil_ca.SnakeoilCACertificatePlugin(
-            self.conf.snakeoil_ca_plugin)
+            self.conf)
         self.order_id = mock.MagicMock()
+        self.barbican_meta_dto = cm.BarbicanMetaDTO()
 
     def test_issue_certificate_request(self):
         req = certificate_utils.get_valid_csr_object()
@@ -142,8 +143,10 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         req_enc = crypto.dump_certificate_request(crypto.FILETYPE_PEM, req)
         order_meta = {'request_data': req_enc}
         resp = self.plugin.issue_certificate_request(self.order_id,
-                                                     order_meta, {}, {})
-        crypto.load_certificate(crypto.FILETYPE_PEM, resp.certificate)
+                                                     order_meta, {},
+                                                     self.barbican_meta_dto)
+        crypto.load_certificate(
+            crypto.FILETYPE_PEM, resp.certificate.decode('base64'))
 
     def test_issue_certificate_request_set_subject(self):
         req = certificate_utils.get_valid_csr_object()
@@ -159,8 +162,10 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         req_enc = crypto.dump_certificate_request(crypto.FILETYPE_PEM, req)
         order_meta = {'request_data': req_enc}
         resp = self.plugin.issue_certificate_request(self.order_id,
-                                                     order_meta, {}, {})
-        cert = crypto.load_certificate(crypto.FILETYPE_PEM, resp.certificate)
+                                                     order_meta, {},
+                                                     self.barbican_meta_dto)
+        cert = crypto.load_certificate(
+            crypto.FILETYPE_PEM, resp.certificate.decode('base64'))
         cert_subj = cert.get_subject()
         self.assertEqual(cert_subj.C, 'US')
         self.assertEqual(cert_subj.ST, 'OR')
@@ -169,8 +174,19 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         self.assertEqual(cert_subj.OU, 'Testers OU')
         self.assertEqual(cert_subj.CN, 'Testing')
 
+    def test_issue_certificate_request_stored_key(self):
+        req = certificate_utils.get_valid_csr_object()
+
+        req_enc = crypto.dump_certificate_request(crypto.FILETYPE_PEM, req)
+        self.barbican_meta_dto.generated_csr = req_enc
+        resp = self.plugin.issue_certificate_request(
+            self.order_id, {}, {}, self.barbican_meta_dto)
+        crypto.load_certificate(
+            crypto.FILETYPE_PEM, resp.certificate.decode('base64'))
+
     def test_no_request_data(self):
-        res = self.plugin.issue_certificate_request(self.order_id, {}, {}, {})
+        res = self.plugin.issue_certificate_request(
+            self.order_id, {}, {}, self.barbican_meta_dto)
         self.assertIs(cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
                       res.status)
         self.assertEqual("No request_data specified", res.status_message)
@@ -196,5 +212,20 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         self.assertRaises(NotImplementedError,
                           self.plugin.check_certificate_status,
                           '', {}, {}, {})
-        self.assertRaises(NotImplementedError,
-                          self.plugin.supports, '')
+
+    def test_support_request_types(self):
+        manager = cm.CertificatePluginManager()
+        manager.extensions = [mock.MagicMock(obj=self.plugin)]
+        cert_spec = {
+            cm.REQUEST_TYPE: cm.CertificateRequestType.CUSTOM_REQUEST}
+        self.assertEqual(self.plugin, manager.get_plugin(cert_spec))
+        self.assertTrue(self.plugin.supports(cert_spec))
+        cert_spec = {
+            cm.REQUEST_TYPE: cm.CertificateRequestType.STORED_KEY_REQUEST}
+        self.assertEqual(self.plugin, manager.get_plugin(cert_spec))
+        self.assertTrue(self.plugin.supports(cert_spec))
+        cert_spec = {
+            cm.REQUEST_TYPE: cm.CertificateRequestType.FULL_CMC_REQUEST}
+        self.assertRaises(cm.CertificatePluginNotFound,
+                          manager.get_plugin, cert_spec)
+        self.assertFalse(self.plugin.supports(cert_spec))

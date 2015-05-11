@@ -7,4 +7,5 @@ Setting up Barbican
    dev
    keystone
    devstack
+   certificate
    troubleshooting
