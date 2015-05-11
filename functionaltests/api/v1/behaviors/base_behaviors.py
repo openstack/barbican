@@ -49,3 +49,7 @@ class BaseBehaviors(object):
         if href and len(href) > 0:
             base, item_id = os.path.split(href)
         return item_id
+
+    def get_user_id_from_name(self, user_name):
+        """From a configured user name, get the unique user id from keystone"""
+        return self.client.get_user_id_from_name(user_name)

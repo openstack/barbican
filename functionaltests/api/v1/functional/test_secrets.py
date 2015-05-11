@@ -1028,7 +1028,8 @@ class SecretsUnauthedTestCase(base.TestCase):
             secret_models.SecretModel(**self.default_secret_create_data)
         )
 
-        stored_auth = self.client._auth.stored_auth
+        stored_auth = self.client._auth[
+            self.client._default_user_name].stored_auth
         project_id = stored_auth.values()[0]['project_id']
         self.project_id_header = {
             'X-Project-Id': project_id

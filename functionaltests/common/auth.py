@@ -79,10 +79,15 @@ class FunctionalTestAuth(auth.AuthBase):
             self.stored_auth[self.username] = {
                 'token': token,
                 'project_id': project_id,
-                'service_catalog': self._client.service_catalog
+                'service_catalog': self._client.service_catalog,
+                'user_id': self._client.auth_user_id
             }
 
         return self.stored_auth[self.username]
+
+    def get_user_id(self):
+        """Return the UID used by keystone to uniquely identify the user"""
+        return self.authenticate()['user_id']
 
     def __call__(self, r):
         creds = self.authenticate()
