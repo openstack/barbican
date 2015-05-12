@@ -230,6 +230,9 @@ p11_crypto_plugin_opts = [
                help=u._('Master KEK length in bytes.')),
     cfg.StrOpt('hmac_label',
                help=u._('HMAC label (used in the HSM)')),
+    cfg.IntOpt('slot_id',
+               help=u._('HSM Slot ID'),
+               default=1),
 ]
 CONF.register_group(p11_crypto_plugin_group)
 CONF.register_opts(p11_crypto_plugin_opts, group=p11_crypto_plugin_group)
@@ -401,7 +404,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
 
     def _create_working_session(self):
         """Automatically opens a session and performs a login."""
-        session = self._open_session(1)
+        session = self._open_session(self.conf.p11_crypto_plugin.slot_id)
         self._login(self.conf.p11_crypto_plugin.login, session)
         return session
 

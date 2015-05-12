@@ -51,6 +51,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.cfg_mock.p11_crypto_plugin.mkek_label = "mkek"
         self.cfg_mock.p11_crypto_plugin.hmac_label = "hmac"
         self.cfg_mock.p11_crypto_plugin.mkek_length = 32
+        self.cfg_mock.p11_crypto_plugin.slot_id = 1
         self.plugin = p11_crypto.P11CryptoPlugin(
             ffi=self.ffi, conf=self.cfg_mock
         )
@@ -239,3 +240,24 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.assertFalse(
             self.plugin.supports("SOMETHING_RANDOM")
         )
+
+    def test_default_slot_id(self):
+        with mock.patch.object(self.plugin, '_open_session') as mocked_func:
+            def mocked_open_session(slot):
+                self.assertEqual(1, slot)
+
+            mocked_func.side_effect = mocked_open_session
+            self.plugin._create_working_session()
+
+    def test_configurable_slot_id(self):
+        self.cfg_mock.p11_crypto_plugin.slot_id = 99
+        test_plugin = p11_crypto.P11CryptoPlugin(
+            ffi=self.ffi, conf=self.cfg_mock
+        )
+
+        with mock.patch.object(test_plugin, '_open_session') as mocked_func:
+            def mocked_open_session(slot):
+                self.assertEqual(99, slot)
+
+            mocked_func.side_effect = mocked_open_session
+            test_plugin._create_working_session()
