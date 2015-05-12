@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2015.1.dev123\n"
+"Project-Id-Version: barbican 2015.2.0.dev47\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-04-13 06:11+0000\n"
+"POT-Creation-Date: 2015-05-12 06:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,11 +29,11 @@ msgstr ""
 msgid "Webob error seen"
 msgstr ""
 
-#: barbican/api/controllers/consumers.py:169
+#: barbican/api/controllers/consumers.py:177
 msgid "Problem deleting consumer"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:88
+#: barbican/api/controllers/containers.py:90
 msgid "Problem deleting container"
 msgstr ""
 
@@ -41,30 +41,30 @@ msgstr ""
 msgid "Problem deleting transport_key"
 msgstr ""
 
-#: barbican/model/repositories.py:357
+#: barbican/model/repositories.py:371
 #, python-format
 msgid "Not found for %s"
 msgstr ""
 
-#: barbican/model/repositories.py:392
+#: barbican/model/repositories.py:406
 msgid "Problem saving entity for create"
 msgstr ""
 
-#: barbican/model/repositories.py:525
+#: barbican/model/repositories.py:539
 msgid "Problem finding project related entity to delete"
 msgstr ""
 
-#: barbican/model/repositories.py:562
+#: barbican/model/repositories.py:576
 #, python-format
 msgid "Problem getting Project %s"
 msgstr ""
 
-#: barbican/model/repositories.py:693
+#: barbican/model/repositories.py:707
 #, python-format
 msgid "Problem getting secret %s"
 msgstr ""
 
-#: barbican/model/repositories.py:1183
+#: barbican/model/repositories.py:1197
 #, python-format
 msgid "Problem getting container %s"
 msgstr ""
@@ -96,10 +96,15 @@ msgstr ""
 msgid "Unhandled exception"
 msgstr ""
 
-#: barbican/plugin/kmip_secret_store.py:349
-#: barbican/plugin/kmip_secret_store.py:386
-#: barbican/plugin/kmip_secret_store.py:470
+#: barbican/plugin/kmip_secret_store.py:342
+#: barbican/plugin/kmip_secret_store.py:379
+#: barbican/plugin/kmip_secret_store.py:458
 msgid "Error opening or writing to client"
+msgstr ""
+
+#: barbican/plugin/util/utils.py:46
+#, python-format
+msgid "Problem seen creating plugin: '%s'"
 msgstr ""
 
 #: barbican/queue/retry_scheduler.py:152

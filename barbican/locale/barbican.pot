@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2015.2.0.dev27\n"
+"Project-Id-Version: barbican 2015.2.0.dev47\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-03 06:07+0000\n"
+"POT-Creation-Date: 2015-05-12 06:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -329,28 +329,17 @@ msgstr ""
 msgid "Version retrieval"
 msgstr ""
 
-#: barbican/api/middleware/context.py:32
-msgid ""
-"When true, this option sets the owner of an image to be the project. "
-"Otherwise, the owner of the  image will be the authenticated user issuing"
-" the request."
-msgstr ""
-
-#: barbican/api/middleware/context.py:37
+#: barbican/api/middleware/context.py:30
 msgid "Role used to identify an authenticated user as administrator."
 msgstr ""
 
-#: barbican/api/middleware/context.py:40
+#: barbican/api/middleware/context.py:33
 msgid ""
 "Allow unauthenticated users to access the API with read-only privileges. "
 "This only applies when using ContextMiddleware."
 msgstr ""
 
-#: barbican/api/middleware/context.py:121
-msgid "Problem processing X-Service-Catalog"
-msgstr ""
-
-#: barbican/api/middleware/context.py:146
+#: barbican/api/middleware/context.py:130
 msgid "Missing X-Project-Id"
 msgstr ""
 
@@ -721,7 +710,7 @@ msgstr ""
 msgid "The ca_id provided in the request is not defined for this project"
 msgstr ""
 
-#: barbican/common/utils.py:127
+#: barbican/common/utils.py:128
 msgid "Cannot generate a fullname for a null instance"
 msgstr ""
 
@@ -903,74 +892,74 @@ msgstr ""
 msgid "Must supply non-None {0} argument for ContainerACLUser entry."
 msgstr ""
 
-#: barbican/model/repositories.py:170
+#: barbican/model/repositories.py:177
 msgid "No SQL connection configured"
 msgstr ""
 
-#: barbican/model/repositories.py:184
+#: barbican/model/repositories.py:198
 msgid ""
 "Error configuring registry database with supplied sql_connection. Got "
 "error: {error}"
 msgstr ""
 
-#: barbican/model/repositories.py:367
+#: barbican/model/repositories.py:381
 msgid "Must supply non-None {entity_name}."
 msgstr ""
 
-#: barbican/model/repositories.py:373
+#: barbican/model/repositories.py:387
 msgid "Must supply {entity_name} with id=None (i.e. new entity)."
 msgstr ""
 
-#: barbican/model/repositories.py:451
+#: barbican/model/repositories.py:465
 msgid "{entity_name} status is required."
 msgstr ""
 
-#: barbican/model/repositories.py:456
+#: barbican/model/repositories.py:470
 msgid "Invalid status '{status}' for {entity_name}."
 msgstr ""
 
-#: barbican/model/repositories.py:476
+#: barbican/model/repositories.py:490
 msgid "{entity_name} is missing query build method for get project entities."
 msgstr ""
 
-#: barbican/model/repositories.py:528
+#: barbican/model/repositories.py:542
 #, python-format
 msgid "Error deleting project entities for project_id=%s"
 msgstr ""
 
-#: barbican/model/repositories.py:564
+#: barbican/model/repositories.py:578
 msgid "No {entity_name} found with keystone-ID {id}"
 msgstr ""
 
-#: barbican/model/repositories.py:695
+#: barbican/model/repositories.py:709
 msgid "No secret found with secret-ID {id}"
 msgstr ""
 
-#: barbican/model/repositories.py:787
+#: barbican/model/repositories.py:801
 msgid "Tried to register crypto plugin with null or empty name."
 msgstr ""
 
-#: barbican/model/repositories.py:1185
+#: barbican/model/repositories.py:1199
 msgid "No container found with container-ID {id}"
 msgstr ""
 
-#: barbican/model/repositories.py:1262
+#: barbican/model/repositories.py:1276
 msgid "Could not find {entity_name}"
 msgstr ""
 
-#: barbican/model/repositories.py:1992
+#: barbican/model/repositories.py:2006
 msgid "No {entity} found with ID {id}"
 msgstr ""
 
-#: barbican/model/repositories.py:1998
+#: barbican/model/repositories.py:2012
 msgid "Entity ID {entity_id} not found"
 msgstr ""
 
-#: barbican/model/repositories.py:2004
+#: barbican/model/repositories.py:2018
 msgid "No entities of type {entity_name} found"
 msgstr ""
 
-#: barbican/model/repositories.py:2010
+#: barbican/model/repositories.py:2024
 msgid "Entity '{entity_name}' already exists"
 msgstr ""
 
@@ -1258,11 +1247,11 @@ msgstr ""
 msgid "Bad key file permissions found, expected 400 for path: {file_path}"
 msgstr ""
 
-#: barbican/plugin/snakeoil_ca.py:35
+#: barbican/plugin/snakeoil_ca.py:36
 msgid "Path to CA certicate file"
 msgstr ""
 
-#: barbican/plugin/snakeoil_ca.py:37
+#: barbican/plugin/snakeoil_ca.py:38
 msgid "Path to CA certificate key file"
 msgstr ""
 
@@ -1295,10 +1284,10 @@ msgid "Crypto plugin not found."
 msgstr ""
 
 #: barbican/plugin/crypto/crypto.py:32
-#: barbican/plugin/interface/certificate_manager.py:157
-#: barbican/plugin/interface/certificate_manager.py:171
-#: barbican/plugin/interface/certificate_manager.py:185
-#: barbican/plugin/interface/secret_store.py:125 barbican/tasks/common.py:63
+#: barbican/plugin/interface/certificate_manager.py:158
+#: barbican/plugin/interface/certificate_manager.py:172
+#: barbican/plugin/interface/certificate_manager.py:186
+#: barbican/plugin/interface/secret_store.py:127 barbican/tasks/common.py:63
 #: barbican/tasks/common.py:64 barbican/tests/tasks/test_common.py:32
 #: barbican/tests/tasks/test_common.py:33
 msgid "Unknown"
@@ -1312,13 +1301,13 @@ msgstr ""
 msgid "Could not generate private key"
 msgstr ""
 
-#: barbican/plugin/crypto/manager.py:34
-#: barbican/plugin/interface/certificate_manager.py:48
-#: barbican/plugin/interface/secret_store.py:37
+#: barbican/plugin/crypto/manager.py:36
+#: barbican/plugin/interface/certificate_manager.py:49
+#: barbican/plugin/interface/secret_store.py:39
 msgid "Extension namespace to search for plugins."
 msgstr ""
 
-#: barbican/plugin/crypto/manager.py:38
+#: barbican/plugin/crypto/manager.py:40
 msgid "List of crypto plugins to load."
 msgstr ""
 
@@ -1378,135 +1367,135 @@ msgstr ""
 msgid "Passphrase not supported for DSA key"
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:52
-#: barbican/plugin/interface/certificate_manager.py:72
+#: barbican/plugin/interface/certificate_manager.py:53
+#: barbican/plugin/interface/certificate_manager.py:73
 msgid "List of certificate plugins to load."
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:68
+#: barbican/plugin/interface/certificate_manager.py:69
 msgid "Extension namespace to search for eventing plugins."
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:117
+#: barbican/plugin/interface/certificate_manager.py:118
 msgid "Certificate plugin \"{name}\" not found."
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:121
+#: barbican/plugin/interface/certificate_manager.py:122
 msgid "Certificate plugin not found or configured."
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:128
+#: barbican/plugin/interface/certificate_manager.py:129
 msgid "Certificate plugin not found for \"{ca_id}\"."
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:137
+#: barbican/plugin/interface/certificate_manager.py:138
 msgid "Certificate event plugin \"{name}\" not found."
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:141
+#: barbican/plugin/interface/certificate_manager.py:142
 msgid "Certificate event plugin not found."
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:149
+#: barbican/plugin/interface/certificate_manager.py:150
 msgid "Certificate status of {status} not supported"
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:159
+#: barbican/plugin/interface/certificate_manager.py:160
 msgid "Problem seen during certificate processing - Reason: {reason}"
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:173
+#: barbican/plugin/interface/certificate_manager.py:174
 msgid "Problem with data in certificate request - Reason: {reason}"
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:187
+#: barbican/plugin/interface/certificate_manager.py:188
 msgid "Invalid operation requested - Reason: {reason}"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:41
+#: barbican/plugin/interface/secret_store.py:43
 msgid "List of secret store plugins to load."
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:51
+#: barbican/plugin/interface/secret_store.py:53
 msgid "No plugin was found that could support your request"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:56
+#: barbican/plugin/interface/secret_store.py:58
 msgid "Secret store plugin \"{name}\" not found."
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:59
+#: barbican/plugin/interface/secret_store.py:61
 msgid "Secret store plugin not found."
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:65
+#: barbican/plugin/interface/secret_store.py:67
 msgid "Secret store plugin not found for requested operation."
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:75
+#: barbican/plugin/interface/secret_store.py:77
 msgid "A Content-Type of '{content_type}' for secrets is not supported"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:80
+#: barbican/plugin/interface/secret_store.py:82
 msgid "content-type of '{content_type}' not supported"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:92
+#: barbican/plugin/interface/secret_store.py:94
 msgid "Secret Content-Encoding of '{content_encoding}' not supported"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:97
+#: barbican/plugin/interface/secret_store.py:99
 msgid "content-encoding of '{content_encoding}' not supported"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:106
+#: barbican/plugin/interface/secret_store.py:108
 msgid "No secret information provided to encrypt."
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:113
+#: barbican/plugin/interface/secret_store.py:115
 msgid ""
 "Text-based binary secret payloads must specify a content-encoding of "
 "'base64'"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:119
+#: barbican/plugin/interface/secret_store.py:121
 msgid "Encoding type must be 'base64' for text-based payloads."
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:127
+#: barbican/plugin/interface/secret_store.py:129
 msgid "Problem seen during crypto processing - Reason: {reason}"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:136
-#: barbican/plugin/interface/secret_store.py:141
+#: barbican/plugin/interface/secret_store.py:138
+#: barbican/plugin/interface/secret_store.py:143
 msgid "Problem decoding payload"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:149
+#: barbican/plugin/interface/secret_store.py:151
 msgid "Secret Accept of '{accept}' not supported"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:158
+#: barbican/plugin/interface/secret_store.py:160
 msgid "Not Found. Sorry but your secret is in another castle"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:164
+#: barbican/plugin/interface/secret_store.py:166
 msgid "No secret information found"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:170
+#: barbican/plugin/interface/secret_store.py:172
 msgid "Requested algorithm is not supported"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:175
+#: barbican/plugin/interface/secret_store.py:177
 msgid "Secret algorithm of '{algorithm}' not supported"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:185
+#: barbican/plugin/interface/secret_store.py:187
 msgid "No secret store plugins have been configured"
 msgstr ""
 
-#: barbican/plugin/interface/secret_store.py:193
+#: barbican/plugin/interface/secret_store.py:195
 msgid ""
 "The requested Store Plugin {plugin_name} is not currently available. This"
 " is probably a server misconfiguration."
