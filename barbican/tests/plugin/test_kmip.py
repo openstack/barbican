@@ -50,11 +50,18 @@ def get_sample_symmetric_key():
     return secrets.SymmetricKey(key_block)
 
 
-def get_sample_public_key():
-    key_material = objects.KeyMaterial(keys.get_public_key_der())
+def get_sample_public_key(pkcs1=False):
+    if pkcs1:
+        public_key = kss.get_public_key_der_pkcs1(keys.get_public_key_pem())
+        key_format_type = misc.KeyFormatType(enums.KeyFormatType.PKCS_1)
+    else:
+        public_key = keys.get_public_key_der()
+        key_format_type = misc.KeyFormatType(enums.KeyFormatType.X_509)
+
+    key_material = objects.KeyMaterial(public_key)
     key_value = objects.KeyValue(key_material)
     key_block = objects.KeyBlock(
-        key_format_type=misc.KeyFormatType(enums.KeyFormatType.X_509),
+        key_format_type=key_format_type,
         key_compression_type=None,
         key_value=key_value,
         cryptographic_algorithm=attr.CryptographicAlgorithm(
@@ -64,11 +71,17 @@ def get_sample_public_key():
     return secrets.PublicKey(key_block)
 
 
-def get_sample_private_key():
-    key_material = objects.KeyMaterial(keys.get_private_key_der())
+def get_sample_private_key(pkcs1=False):
+    if pkcs1:
+        private_key = kss.get_private_key_der_pkcs1(keys.get_private_key_pem())
+        key_format_type = misc.KeyFormatType(enums.KeyFormatType.PKCS_1)
+    else:
+        private_key = keys.get_private_key_der()
+        key_format_type = misc.KeyFormatType(enums.KeyFormatType.PKCS_8)
+    key_material = objects.KeyMaterial(private_key)
     key_value = objects.KeyValue(key_material)
     key_block = objects.KeyBlock(
-        key_format_type=misc.KeyFormatType(enums.KeyFormatType.PKCS_8),
+        key_format_type=key_format_type,
         key_compression_type=None,
         key_value=key_value,
         cryptographic_algorithm=attr.CryptographicAlgorithm(
@@ -92,6 +105,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         CONF.kmip_plugin.username = self.expected_username
         CONF.kmip_plugin.password = self.expected_password
         CONF.kmip_plugin.keyfile = None
+        CONF.kmip_plugin.pkcs1_only = False
 
         self.secret_store = kss.KMIPSecretStore(CONF)
         self.credential = self.secret_store.credential
@@ -144,6 +158,14 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
                 secret=self.sample_secret))
 
         self.attribute_factory = attributes.AttributeFactory()
+
+    # --------------- TEST CONFIG OPTIONS ---------------------------------
+
+    def test_enable_pkcs1_only_config_option(self):
+        CONF = kss.CONF
+        CONF.kmip_plugin.pkcs1_only = True
+        secret_store = kss.KMIPSecretStore(CONF)
+        self.assertTrue(secret_store.pkcs1_only)
 
     # --------------- TEST GENERATE_SUPPORTS ---------------------------------
 
@@ -386,16 +408,45 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
         self.assertEqual(0, cmp(expected, return_value))
 
-    def test_store_private_key_secret_assert_called(self):
+    @utils.parameterized_dataset({
+        'private_pkcs8': [secret_store.SecretType.PRIVATE,
+                          keys.get_private_key_pem(),
+                          enums.ObjectType.PRIVATE_KEY,
+                          keys.get_private_key_der(),
+                          False],
+        'private_pkcs1': [secret_store.SecretType.PRIVATE,
+                          keys.get_private_key_pem(),
+                          enums.ObjectType.PRIVATE_KEY,
+                          kss.get_private_key_der_pkcs1(
+                              keys.get_private_key_pem()),
+                          True],
+        'public_pkcs8': [secret_store.SecretType.PUBLIC,
+                         keys.get_public_key_pem(),
+                         enums.ObjectType.PUBLIC_KEY,
+                         keys.get_public_key_der(),
+                         False],
+        'public_pkcs1': [secret_store.SecretType.PUBLIC,
+                         keys.get_public_key_pem(),
+                         enums.ObjectType.PUBLIC_KEY,
+                         kss.get_public_key_der_pkcs1(
+                             keys.get_public_key_pem()),
+                         True],
+    })
+    def test_store_asymmetric_key_secret_assert_called(self,
+                                                       barbican_type,
+                                                       barbican_key,
+                                                       kmip_type,
+                                                       kmip_key,
+                                                       pkcs1_only):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 2048)
-        secret_dto = secret_store.SecretDTO(secret_store.SecretType.PRIVATE,
-                                            base64.b64encode(
-                                                keys.get_private_key_pem()),
+        secret_dto = secret_store.SecretDTO(barbican_type,
+                                            base64.b64encode(barbican_key),
                                             key_spec,
                                             'content_type')
+        self.secret_store.pkcs1_only = pkcs1_only
         self.secret_store.store_secret(secret_dto)
         self.secret_store.client.register.assert_called_once_with(
-            object_type=enums.ObjectType.PRIVATE_KEY,
+            object_type=kmip_type,
             template_attribute=mock.ANY,
             secret=mock.ANY,
             credential=self.credential)
@@ -408,16 +459,33 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
             attr.CryptographicAlgorithm(enums.CryptographicAlgorithm.RSA),
             actual_secret.key_block.cryptographic_algorithm)
         self.assertEqual(
-            keys.get_private_key_der(),
+            kmip_key,
             actual_secret.key_block.key_value.key_material.value)
 
-    def test_store_private_key_secret_return_value(self):
+    @utils.parameterized_dataset({
+        'private_pkcs8': [secret_store.SecretType.PRIVATE,
+                          keys.get_private_key_pem(),
+                          False],
+        'private_pkcs1': [secret_store.SecretType.PRIVATE,
+                          keys.get_private_key_pem(),
+                          True],
+        'public_pkcs8': [secret_store.SecretType.PUBLIC,
+                         keys.get_public_key_pem(),
+                         False],
+        'public_pkcs1': [secret_store.SecretType.PUBLIC,
+                         keys.get_public_key_pem(),
+                         True],
+    })
+    def test_store_asymmetric_key_secret_return_value(self,
+                                                      barbican_type,
+                                                      barbican_key,
+                                                      pkcs1_only):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 2048)
-        secret_dto = secret_store.SecretDTO(secret_store.SecretType.PRIVATE,
-                                            base64.b64encode(
-                                                keys.get_private_key_pem()),
+        secret_dto = secret_store.SecretDTO(barbican_type,
+                                            base64.b64encode(barbican_key),
                                             key_spec,
                                             'content_type')
+        self.secret_store.pkcs1_only = pkcs1_only
         return_value = self.secret_store.store_secret(secret_dto)
         expected = {kss.KMIPSecretStore.KEY_UUID: 'uuid'}
 
@@ -501,29 +569,49 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
     @utils.parameterized_dataset({
         'symmetric': [get_sample_symmetric_key(),
                       secret_store.SecretType.SYMMETRIC,
+                      enums.ObjectType.SYMMETRIC_KEY,
                       misc.KeyFormatType(enums.KeyFormatType.RAW),
-                      utils.get_symmetric_key()],
+                      utils.get_symmetric_key(),
+                      False],
         'public_key': [get_sample_public_key(),
                        secret_store.SecretType.PUBLIC,
+                       enums.ObjectType.PUBLIC_KEY,
                        misc.KeyFormatType(enums.KeyFormatType.X_509),
-                       base64.b64encode(keys.get_public_key_pem())],
+                       base64.b64encode(keys.get_public_key_pem()),
+                       False],
+        'public_key_pkcs1': [get_sample_public_key(pkcs1=True),
+                             secret_store.SecretType.PUBLIC,
+                             enums.ObjectType.PUBLIC_KEY,
+                             misc.KeyFormatType(enums.KeyFormatType.PKCS_1),
+                             base64.b64encode(keys.get_public_key_pem()),
+                             True],
         'private_key': [get_sample_private_key(),
                         secret_store.SecretType.PRIVATE,
+                        enums.ObjectType.PRIVATE_KEY,
                         misc.KeyFormatType(enums.KeyFormatType.PKCS_8),
-                        base64.b64encode(keys.get_private_key_pem())],
+                        base64.b64encode(keys.get_private_key_pem()),
+                        False],
+        'private_key_pkcs1': [get_sample_private_key(pkcs1=True),
+                              secret_store.SecretType.PRIVATE,
+                              enums.ObjectType.PRIVATE_KEY,
+                              misc.KeyFormatType(enums.KeyFormatType.PKCS_1),
+                              base64.b64encode(keys.get_private_key_pem()),
+                              True],
         'opaque': [get_sample_symmetric_key(),
                    secret_store.SecretType.OPAQUE,
                    None,
-                   utils.get_symmetric_key()]
+                   None,
+                   utils.get_symmetric_key(),
+                   False]
     })
-    def test_get_secret(self, returned_secret, secret_type,
-                        key_format_type, expected_secret):
-        object_type, _ = self.secret_store._map_type_ss_to_kmip(secret_type)
+    def test_get_secret(self, kmip_secret, secret_type, kmip_type,
+                        key_format_type, expected_secret, pkcs1_only):
+        self.secret_store.pkcs1_only = pkcs1_only
         self.secret_store.client.get = mock.MagicMock(
             proxy.KMIPProxy.get, return_value=results.GetResult(
                 contents.ResultStatus(enums.ResultStatus.SUCCESS),
-                object_type=attr.ObjectType(object_type),
-                secret=returned_secret))
+                object_type=attr.ObjectType(kmip_type),
+                secret=kmip_secret))
         uuid = utils.generate_test_uuid(0)
         metadata = {kss.KMIPSecretStore.KEY_UUID: uuid}
         secret_dto = self.secret_store.get_secret(secret_type, metadata)
