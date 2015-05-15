@@ -77,7 +77,7 @@ db_opts = [
     cfg.IntOpt('max_limit_paging', default=100),
     cfg.IntOpt('default_limit_paging', default=10),
     cfg.StrOpt('sql_pool_class', default=None),
-    cfg.StrOpt('sql_pool_logging', default=False),
+    cfg.BoolOpt('sql_pool_logging', default=False),
     cfg.IntOpt('sql_pool_size', default=None),
     cfg.IntOpt('sql_pool_max_overflow', default=None),
 ]
