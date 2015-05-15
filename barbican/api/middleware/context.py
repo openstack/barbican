@@ -135,11 +135,19 @@ class UnauthenticatedContextMiddleware(BaseContextMiddleware):
         """Create a context without an authorized user."""
         project_id = self._get_project_id_from_header(req)
 
+        config_admin_role = CONF.admin_role.strip().lower()
+        roles_header = req.headers.get('X-Roles', '')
+        roles = [r.strip().lower() for r in roles_header.split(',') if r]
+
+        # If a role wasn't specified we default to admin
+        if not roles:
+            roles = [config_admin_role]
+
         kwargs = {
             'user': None,
             'project': project_id,
-            'roles': [],
-            'is_admin': True
+            'roles': roles,
+            'is_admin': config_admin_role in roles
         }
 
         context = barbican.context.RequestContext(**kwargs)
