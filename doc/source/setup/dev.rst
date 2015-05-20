@@ -73,16 +73,15 @@ Installing clean versions of Python allows for us to be able to run Barbican
 unit tests through tox without much difficulty. You can see the full list of
 available Python versions you can install by executing: ``pyenv install -l``
 
-For the Barbican development, we'll just be installing Python 2.6.9 and 2.7.8.
+For the Barbican development, we'll just be installing Python 2.7.9.
 
 .. code-block:: bash
 
     # Install our Python Versions
-    pyenv install 2.6.9
-    pyenv install 2.7.8
+    pyenv install 2.7.9
 
     # Set PyEnv to use those versions by default
-    pyenv global 2.7.8 2.6.9
+    pyenv global 2.7.9
 
 
 Setting up a virtual environment
@@ -105,8 +104,8 @@ For more information regarding the usage of virtualenvwrapper, see the
 
     Virtualenvwrapper will attempt to reset the Python version that was active
     when you created the virtualenv. As a result, if you have the version
-    2.7.8 active when you created the virtualenv, then the default Python
-    version will become 2.7.8 when you reactivate the virtualenv.
+    2.7.9 active when you created the virtualenv, then the default Python
+    version will become 2.7.9 when you reactivate the virtualenv.
 
 
 Installing Barbican from source
