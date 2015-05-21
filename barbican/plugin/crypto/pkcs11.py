@@ -305,6 +305,10 @@ class P11CryptoPluginException(exception.BarbicanException):
     message = u._("General exception")
 
 
+class P11CryptoKeyHandleException(exception.BarbicanException):
+    message = u._("No key handle was found")
+
+
 class PKCS11(object):
 
     def __init__(self, library_path, mkek_label, mkek_length, hmac_label,
@@ -332,12 +336,11 @@ class PKCS11(object):
         LOG.debug("Current hmac label: %s", self.current_hmac_label)
 
         # cache current MKEK handle in the dictionary
-        self.get_or_generate_mkek(
+        self.get_mkek(
             self.current_mkek_label,
-            mkek_length,
             session
         )
-        self.get_or_generate_hmac_key(self.current_hmac_label, session)
+        self.get_hmac_key(self.current_hmac_label, session)
 
         # Clean up the active session
         self.close_session(session)
@@ -414,49 +417,64 @@ class PKCS11(object):
 
         return CKAttributes(attributes, val_list)
 
-    def get_or_generate_mkek(self, mkek_label, mkek_length, session):
+    def get_mkek(self, mkek_label, session):
         mkek = self.get_key_handle(mkek_label, session)
         if not mkek:
-            # Generate a key that is persistent and not extractable
-            ck_attributes = self.build_attributes([
-                Attribute(CKA_CLASS, CKO_SECRET_KEY),
-                Attribute(CKA_KEY_TYPE, CKK_AES),
-                Attribute(CKA_VALUE_LEN, mkek_length),
-                Attribute(CKA_LABEL, mkek_label),
-                Attribute(CKA_PRIVATE, True),
-                Attribute(CKA_SENSITIVE, True),
-                Attribute(CKA_ENCRYPT, True),
-                Attribute(CKA_DECRYPT, True),
-                Attribute(CKA_SIGN, True),
-                Attribute(CKA_VERIFY, True),
-                Attribute(CKA_TOKEN, True),
-                Attribute(CKA_WRAP, True),
-                Attribute(CKA_UNWRAP, True),
-                Attribute(CKA_EXTRACTABLE, False)
-            ])
-            mkek = self.generate_kek(ck_attributes.template, session)
+            raise P11CryptoKeyHandleException()
 
         self.key_handles[mkek_label] = mkek
 
         return mkek
 
-    def get_or_generate_hmac_key(self, hmac_label, session):
+    def generate_mkek(self, mkek_label, mkek_length, session):
+
+        # Generate a key that is persistent and not extractable
+        ck_attributes = self.build_attributes([
+            Attribute(CKA_CLASS, CKO_SECRET_KEY),
+            Attribute(CKA_KEY_TYPE, CKK_AES),
+            Attribute(CKA_VALUE_LEN, mkek_length),
+            Attribute(CKA_LABEL, mkek_label),
+            Attribute(CKA_PRIVATE, True),
+            Attribute(CKA_SENSITIVE, True),
+            Attribute(CKA_ENCRYPT, True),
+            Attribute(CKA_DECRYPT, True),
+            Attribute(CKA_SIGN, True),
+            Attribute(CKA_VERIFY, True),
+            Attribute(CKA_TOKEN, True),
+            Attribute(CKA_WRAP, True),
+            Attribute(CKA_UNWRAP, True),
+            Attribute(CKA_EXTRACTABLE, False)
+        ])
+        mkek = self.generate_kek(ck_attributes.template, session)
+
+        self.key_handles[mkek_label] = mkek
+
+        return mkek
+
+    def get_hmac_key(self, hmac_label, session):
         hmac_key = self.get_key_handle(hmac_label, session)
         if not hmac_key:
-            # Generate a key that is persistent and not extractable
-            ck_attributes = self.build_attributes([
-                Attribute(CKA_CLASS, CKO_SECRET_KEY),
-                Attribute(CKA_KEY_TYPE, CKK_AES),
-                Attribute(CKA_VALUE_LEN, 32),
-                Attribute(CKA_LABEL, hmac_label),
-                Attribute(CKA_PRIVATE, True),
-                Attribute(CKA_SENSITIVE, True),
-                Attribute(CKA_SIGN, True),
-                Attribute(CKA_VERIFY, True),
-                Attribute(CKA_TOKEN, True),
-                Attribute(CKA_EXTRACTABLE, False)
-            ])
-            hmac_key = self.generate_kek(ck_attributes.template, session)
+            raise P11CryptoKeyHandleException()
+
+        self.key_handles[hmac_label] = hmac_key
+
+        return hmac_key
+
+    def generate_hmac_key(self, hmac_label, session):
+        # Generate a key that is persistent and not extractable
+        ck_attributes = self.build_attributes([
+            Attribute(CKA_CLASS, CKO_SECRET_KEY),
+            Attribute(CKA_KEY_TYPE, CKK_AES),
+            Attribute(CKA_VALUE_LEN, 32),
+            Attribute(CKA_LABEL, hmac_label),
+            Attribute(CKA_PRIVATE, True),
+            Attribute(CKA_SENSITIVE, True),
+            Attribute(CKA_SIGN, True),
+            Attribute(CKA_VERIFY, True),
+            Attribute(CKA_TOKEN, True),
+            Attribute(CKA_EXTRACTABLE, False)
+        ])
+        hmac_key = self.generate_kek(ck_attributes.template, session)
 
         self.key_handles[hmac_label] = hmac_key
 

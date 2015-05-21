@@ -53,9 +53,11 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.cfg_mock.p11_crypto_plugin.hmac_label = "hmac"
         self.cfg_mock.p11_crypto_plugin.mkek_length = 32
         self.cfg_mock.p11_crypto_plugin.slot_id = 1
-        self.plugin = p11_crypto.P11CryptoPlugin(
-            ffi=self.ffi, conf=self.cfg_mock
-        )
+        with mock.patch.object(pkcs11.PKCS11, 'get_key_handle') as mocked:
+            mocked.return_value = long(1)
+            self.plugin = p11_crypto.P11CryptoPlugin(
+                ffi=self.ffi, conf=self.cfg_mock
+            )
 
         self.test_session = self.plugin.pkcs11.create_working_session()
 
@@ -261,9 +263,11 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
 
     def test_configurable_slot_id(self):
         self.cfg_mock.p11_crypto_plugin.slot_id = 99
-        test_plugin = p11_crypto.P11CryptoPlugin(
-            ffi=self.ffi, conf=self.cfg_mock
-        )
+        with mock.patch.object(pkcs11.PKCS11, 'get_key_handle') as mocked:
+            mocked.return_value = long(1)
+            test_plugin = p11_crypto.P11CryptoPlugin(
+                ffi=self.ffi, conf=self.cfg_mock
+            )
 
         with mock.patch.object(test_plugin.pkcs11, 'open_session') as mocked:
             def mocked_open_session(slot):
@@ -271,3 +275,38 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
 
             mocked.side_effect = mocked_open_session
             test_plugin.pkcs11.create_working_session()
+
+    def test_generate_mkek(self):
+        mkek_label = 'mkek'
+        mkek_length = 32
+        mkek = self.plugin.pkcs11.generate_mkek(
+            mkek_label, mkek_length, self.test_session
+        )
+        self.assertEqual(long(0), mkek)
+
+    def test_generate_hmac_key(self):
+        hmac_label = 'hmac'
+        hmac = self.plugin.pkcs11.generate_hmac_key(
+            hmac_label, self.test_session
+        )
+        self.assertEqual(long(0), hmac)
+
+    def test_get_mkek_with_no_mkek(self):
+        with mock.patch.object(pkcs11.PKCS11, 'get_key_handle') as mocked:
+            mocked.return_value = None
+            self.assertRaises(
+                pkcs11.P11CryptoKeyHandleException,
+                self.plugin.pkcs11.get_mkek,
+                'mkek',
+                self.test_session
+            )
+
+    def test_get_hmac_with_no_hmac(self):
+        with mock.patch.object(pkcs11.PKCS11, 'get_key_handle') as mocked:
+            mocked.return_value = None
+            self.assertRaises(
+                pkcs11.P11CryptoKeyHandleException,
+                self.plugin.pkcs11.get_hmac_key,
+                'hmac',
+                self.test_session
+            )
