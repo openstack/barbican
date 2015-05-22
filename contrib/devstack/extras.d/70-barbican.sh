@@ -9,10 +9,15 @@ if is_service_enabled barbican; then
         echo_summary "Installing Barbican"
         install_barbican
         install_barbicanclient
+        if is_service_enabled barbican-dogtag; then
+            echo_summary "Installing Dogtag"
+            install_dogtag_components
+        fi
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring Barbican"
         configure_barbican
-        if [[ -n $BARBICAN_USE_DOGTAG ]]; then
+        if is_service_enabled barbican-dogtag; then
+            echo_summary "Configuring Dogtag plugin"
             configure_dogtag_plugin
         fi
         configure_barbicanclient
