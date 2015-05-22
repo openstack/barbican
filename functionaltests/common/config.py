@@ -50,8 +50,13 @@ def setup_config(config_file=''):
         cfg.StrOpt('auditor_a_password', default='barbican'),
         cfg.StrOpt('admin_b', default='project_b_admin'),
         cfg.StrOpt('admin_b_password', default='barbican'),
+        cfg.StrOpt('creator_b', default='project_b_creator'),
+        cfg.StrOpt('creator_b_password', default='barbican'),
         cfg.StrOpt('observer_b', default='project_b_observer'),
-        cfg.StrOpt('observer_b_password', default='barbican')]
+        cfg.StrOpt('observer_b_password', default='barbican'),
+        cfg.StrOpt('auditor_b', default='project_b_auditor'),
+        cfg.StrOpt('auditor_b_password', default='barbican'),
+    ]
     TEST_CONF.register_group(rbac_users_group)
     TEST_CONF.register_opts(rbac_users_options, group=rbac_users_group)
 

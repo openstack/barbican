@@ -26,8 +26,11 @@ admin_a = CONF.rbac_users.admin_a
 creator_a = CONF.rbac_users.creator_a
 observer_a = CONF.rbac_users.observer_a
 auditor_a = CONF.rbac_users.auditor_a
+
 admin_b = CONF.rbac_users.admin_b
+creator_b = CONF.rbac_users.creator_b
 observer_b = CONF.rbac_users.observer_b
+auditor_b = CONF.rbac_users.auditor_b
 
 
 test_data_rbac_read_secret = {
@@ -36,7 +39,9 @@ test_data_rbac_read_secret = {
     'with_observer_a': {'user': observer_a, 'expected_return': 200},
     'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
+    'with_creator_b': {'user': creator_b, 'expected_return': 403},
     'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_auditor_b': {'user': auditor_b, 'expected_return': 403},
 }
 
 
@@ -46,7 +51,9 @@ test_data_rbac_read_container = {
     'with_observer_a': {'user': observer_a, 'expected_return': 200},
     'with_auditor_a': {'user': auditor_a, 'expected_return': 200},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
+    'with_creator_b': {'user': creator_b, 'expected_return': 403},
     'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_auditor_b': {'user': auditor_b, 'expected_return': 403},
 }
 
 
