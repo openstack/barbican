@@ -17,8 +17,6 @@
 # install_dogtag.sh
 #     Installs a DogTag CA and KRA inside a devstack vm.
 
-set -e
-
 function install_389_directory_server {
     # Make sure that 127.0.0.1 resolves to localhost.localdomain (fqdn)
     sed -i "s/^127\.0\.0\.1.*/127\.0\.0\.1\tlocalhost.localdomain localhost/" /etc/hosts
@@ -87,6 +85,11 @@ function install_dogtag_kra {
     yum install -y pki-kra
     mkdir -p /etc/dogtag
 
+    # Even though we are using localhost.localdomain, the server certificate by
+    # default will get the real host name for the server. So we need to
+    # properly configure the KRA to try to communicate with the real host name
+    # instead of the localhost.
+    hostname=$(hostname)
     cat > /etc/dogtag/kra.cfg <<EOF
 [KRA]
 pki_admin_cert_file=/root/.dogtag/pki-tomcat/ca_admin.cert
@@ -111,7 +114,7 @@ pki_https_port=8373
 pki_http_port=8370
 pki_ajp_port=8379
 pki_tomcat_server_port=8375
-pki_security_domain_hostname=localhost.localdomain
+pki_security_domain_hostname=$hostname
 pki_security_domain_https_port=8373
 EOF
 
