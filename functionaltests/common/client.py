@@ -76,11 +76,23 @@ class BarbicanClient(object):
             username=CONF.rbac_users.admin_b,
             password=CONF.rbac_users.admin_b_password,
             project_name=CONF.rbac_users.project_b)
+        self._auth[CONF.rbac_users.creator_b] = auth.FunctionalTestAuth(
+            endpoint=CONF.identity.uri,
+            version=CONF.identity.version,
+            username=CONF.rbac_users.creator_b,
+            password=CONF.rbac_users.creator_b_password,
+            project_name=CONF.rbac_users.project_b)
         self._auth[CONF.rbac_users.observer_b] = auth.FunctionalTestAuth(
             endpoint=CONF.identity.uri,
             version=CONF.identity.version,
             username=CONF.rbac_users.observer_b,
             password=CONF.rbac_users.observer_b_password,
+            project_name=CONF.rbac_users.project_b)
+        self._auth[CONF.rbac_users.auditor_b] = auth.FunctionalTestAuth(
+            endpoint=CONF.identity.uri,
+            version=CONF.identity.version,
+            username=CONF.rbac_users.auditor_b,
+            password=CONF.rbac_users.auditor_b_password,
             project_name=CONF.rbac_users.project_b)
 
     def _attempt_to_stringify_content(self, content, content_tag):

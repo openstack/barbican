@@ -135,6 +135,19 @@ if [[ "$ENABLED_SERVICES" =~ "barbican" ]]; then
         --user="$USER_ID" \
         --role="$ROLE_ADMIN_ID" \
         --tenant-id="$PROJECT_B_ID"
+
+    #
+    # Setup RBAC Creator of Project B
+    #
+    USER_ID=$(get_id keystone user-create \
+        --name="project_b_creator" \
+        --pass="$USER_PASSWORD" \
+        --email="creator_b@example.net")
+    keystone user-role-add \
+        --user="$USER_ID" \
+        --role="$ROLE_CREATOR_ID" \
+        --tenant-id="$PROJECT_B_ID"
+
     #
     # Setup RBAC Observer of Project B
     #
@@ -145,6 +158,18 @@ if [[ "$ENABLED_SERVICES" =~ "barbican" ]]; then
     keystone user-role-add \
         --user="$USER_ID" \
         --role="$ROLE_OBSERVER_ID" \
+        --tenant-id="$PROJECT_B_ID"
+
+    #
+    # Setup RBAC Auditor of Project B
+    #
+    USER_ID=$(get_id keystone user-create \
+        --name="project_b_auditor" \
+        --pass="$USER_PASSWORD" \
+        --email="auditor_b@example.net")
+    keystone user-role-add \
+        --user="$USER_ID" \
+        --role="$ROLE_AUDIT_ID" \
         --tenant-id="$PROJECT_B_ID"
     #
     # Setup Admin Endpoint
