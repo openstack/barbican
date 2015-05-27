@@ -1049,7 +1049,7 @@ class SecretsUnauthedTestCase(base.TestCase):
         Should return 401
         """
 
-        model = secret_models.SecretModel(self.default_secret_create_data)
+        model = secret_models.SecretModel(**self.default_secret_create_data)
         resp, secret_ref = self.behaviors.create_secret(model, use_auth=False)
         self.assertEqual(401, resp.status_code)
 
@@ -1060,7 +1060,7 @@ class SecretsUnauthedTestCase(base.TestCase):
         Should return 401
         """
 
-        model = secret_models.SecretModel(self.default_secret_create_data)
+        model = secret_models.SecretModel(**self.default_secret_create_data)
 
         resp, secret_ref = self.behaviors.create_secret(
             model, headers=self.dummy_project_id_header, use_auth=False
@@ -1074,7 +1074,7 @@ class SecretsUnauthedTestCase(base.TestCase):
         Should return 401
         """
 
-        model = secret_models.SecretModel(self.default_secret_create_data)
+        model = secret_models.SecretModel(**self.default_secret_create_data)
 
         resp, secret_ref = self.behaviors.create_secret(
             model, headers=self.project_id_header, use_auth=False
