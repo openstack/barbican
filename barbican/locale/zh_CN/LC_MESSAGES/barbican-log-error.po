@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-12 06:07+0000\n"
+"POT-Creation-Date: 2015-05-28 06:08+0000\n"
 "PO-Revision-Date: 2015-05-09 14:01+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
@@ -20,14 +20,41 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-msgid "Problem reading request JSON stream."
-msgstr "JSON请求流中读取数据时出错。"
+#, python-format
+msgid "Could not perform processing for task '%s'."
+msgstr "无法为任务 '%s' 执行处理。"
 
-msgid "Problem loading request JSON."
-msgstr "JSON请求加载时出错"
+#, python-format
+msgid "Could not process after successfully executing task '%s'."
+msgstr "在成功执行任务 '%s' 后无法处理。"
 
-msgid "Webob error seen"
-msgstr "Webob出错"
+#, python-format
+msgid "Could not retrieve information needed to process task '%s'."
+msgstr "无法检索到所需的信息来处理任务 '%s'。"
+
+#, python-format
+msgid "Error during %(full_task_name)s: %(e)s"
+msgstr "在 %(full_task_name)s: %(e)s 时出现问题"
+
+msgid "Error opening or writing to client"
+msgstr "打开或者写入客户端错误"
+
+#, python-format
+msgid ""
+"Error processing Keystone event, project_id=%(project_id)s, event resource="
+"%(resource)s, event operation=%(operation)s, status=%(status)s, error "
+"message=%(message)s"
+msgstr ""
+"处理 Keystone 事件错误，项目id=%(project_id)s，事件资源=%(resource)s，事件操"
+"作=%(operation)s，状态=%(status)s，错误信息=%(message)s"
+
+#, python-format
+msgid "Not found for %s"
+msgstr "没有找到%s"
+
+#, python-format
+msgid "Original exception being dropped: %s"
+msgstr "原始异常正在减少：%s"
 
 msgid "Problem deleting consumer"
 msgstr "删除用户时出错"
@@ -39,11 +66,11 @@ msgid "Problem deleting transport_key"
 msgstr "删除传输密匙时出错"
 
 #, python-format
-msgid "Not found for %s"
-msgstr "没有找到%s"
-
-msgid "Problem saving entity for create"
-msgstr "为创建保存实体时出错"
+msgid ""
+"Problem enqueuing method '%(name)s' with args '%(args)s' and kwargs "
+"'%(kwargs)s'."
+msgstr ""
+"队列问题的方法 '%(name)s' 和 args '%(args)s'  和  kwargs '%(kwargs)s'。"
 
 msgid "Problem finding project related entity to delete"
 msgstr "寻找项目相关的实体来删除时出错"
@@ -57,65 +84,38 @@ msgid "Problem getting container %s"
 msgstr "问题获得容器 %s"
 
 #, python-format
-msgid "Original exception being dropped: %s"
-msgstr "原始异常正在减少：%s"
+msgid "Problem handling an error for task '%s', raising original exception."
+msgstr "为任务 '%s' 处理错误时出错，原始异常增加。"
 
-#, python-format
-msgid "Unexpected exception occurred %d time(s)... retrying."
-msgstr "意想不到的异常发生%d time(s)...重试。"
+msgid "Problem loading request JSON."
+msgstr "JSON请求加载时出错"
 
-msgid "in fixed duration looping call"
-msgstr "在固定的时间循环调用"
+msgid "Problem reading request JSON stream."
+msgstr "JSON请求流中读取数据时出错。"
 
-msgid "in dynamic looping call"
-msgstr "动态循环调用"
-
-#, python-format
-msgid "Error during %(full_task_name)s: %(e)s"
-msgstr "在 %(full_task_name)s: %(e)s 时出现问题"
-
-msgid "Unhandled exception"
-msgstr "未处理的异常"
-
-msgid "Error opening or writing to client"
-msgstr "打开或者写入客户端错误"
-
-#, python-format
-msgid ""
-"Problem enqueuing method '%(name)s' with args '%(args)s' and kwargs "
-"'%(kwargs)s'."
-msgstr ""
-"队列问题的方法 '%(name)s' 和 args '%(args)s'  和  kwargs '%(kwargs)s'。"
+msgid "Problem saving entity for create"
+msgstr "为创建保存实体时出错"
 
 #, python-format
 msgid "Problem seen processing worker task: '%s'"
 msgstr "处理工作任务：'%s' 时出现问题。"
 
 #, python-format
-msgid ""
-"Error processing Keystone event, project_id=%(project_id)s, event resource="
-"%(resource)s, event operation=%(operation)s, status=%(status)s, error "
-"message=%(message)s"
-msgstr ""
-"处理 Keystone 事件错误，项目id=%(project_id)s，事件资源=%(resource)s，事件操"
-"作=%(operation)s，状态=%(status)s，错误信息=%(message)s"
-
-#, python-format
 msgid "Suppressing exception while trying to process task '%s'."
 msgstr "当尝试去处理任务 '%s' 时清除异常。"
 
 #, python-format
-msgid "Could not retrieve information needed to process task '%s'."
-msgstr "无法检索到所需的信息来处理任务 '%s'。"
+msgid "Unexpected exception occurred %d time(s)... retrying."
+msgstr "意想不到的异常发生%d time(s)...重试。"
 
-#, python-format
-msgid "Could not perform processing for task '%s'."
-msgstr "无法为任务 '%s' 执行处理。"
+msgid "Unhandled exception"
+msgstr "未处理的异常"
 
-#, python-format
-msgid "Problem handling an error for task '%s', raising original exception."
-msgstr "为任务 '%s' 处理错误时出错，原始异常增加。"
+msgid "Webob error seen"
+msgstr "Webob出错"
 
-#, python-format
-msgid "Could not process after successfully executing task '%s'."
-msgstr "在成功执行任务 '%s' 后无法处理。"
+msgid "in dynamic looping call"
+msgstr "动态循环调用"
+
+msgid "in fixed duration looping call"
+msgstr "在固定的时间循环调用"
