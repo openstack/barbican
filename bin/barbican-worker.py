@@ -41,7 +41,6 @@ from barbican.openstack.common import service
 from barbican import queue
 from barbican.queue import server
 
-from oslo_config import cfg
 from oslo_log import log
 
 
@@ -52,8 +51,7 @@ def fail(returncode, e):
 
 if __name__ == '__main__':
     try:
-        config.parse_args()
-        CONF = cfg.CONF
+        CONF = config.CONF
 
         # Import and configure logging.
         log.setup(CONF, 'barbican')

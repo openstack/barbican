@@ -35,15 +35,15 @@ except ImportError:
 
 import eventlet
 from eventlet import event
-from oslo_config import cfg
 
+from barbican.common import config
 from barbican.openstack.common import eventlet_backdoor
 from barbican.openstack.common._i18n import _LE, _LI, _LW
 from barbican.openstack.common import systemd
 from barbican.openstack.common import threadgroup
 
 
-CONF = cfg.CONF
+CONF = config.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -138,7 +138,7 @@ class Launcher(object):
         :returns: None
 
         """
-        cfg.CONF.reload_config_files()
+        config.CONF.reload_config_files()
         self.services.restart()
 
 

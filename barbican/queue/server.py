@@ -26,8 +26,7 @@ try:
 except ImportError:
     newrelic_loaded = False
 
-from oslo_config import cfg
-
+from barbican.common import config
 from barbican.common import utils
 from barbican import i18n as u
 from barbican.model import models
@@ -42,7 +41,7 @@ if newrelic_loaded:
 
 LOG = utils.getLogger(__name__)
 
-CONF = cfg.CONF
+CONF = config.CONF
 
 
 # Maps the common/shared RetryTasks (returned from lower-level business logic

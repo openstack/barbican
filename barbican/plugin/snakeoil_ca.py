@@ -20,11 +20,12 @@ import uuid
 from OpenSSL import crypto
 from oslo_config import cfg
 
+from barbican.common import config
 from barbican.common import utils
 from barbican.openstack.common import gettextutils as u
 import barbican.plugin.interface.certificate_manager as cert_manager
 
-CONF = cfg.CONF
+CONF = config.new_config()
 LOG = utils.getLogger(__name__)
 
 
@@ -40,6 +41,7 @@ snakeoil_ca_plugin_opts = [
 
 CONF.register_group(snakeoil_ca_plugin_group)
 CONF.register_opts(snakeoil_ca_plugin_opts, group=snakeoil_ca_plugin_group)
+config.parse_args(CONF)
 
 
 class SnakeoilCA(object):

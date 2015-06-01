@@ -19,10 +19,10 @@ import base64
 import jsonschema as schema
 import ldap
 from OpenSSL import crypto
-from oslo_config import cfg
 import six
 
 from barbican.api import controllers
+from barbican.common import config
 from barbican.common import exception
 from barbican.common import hrefs
 from barbican.common import utils
@@ -34,15 +34,9 @@ from barbican.plugin.interface import secret_store
 from barbican.plugin.util import mime_types
 
 
+DEFAULT_MAX_SECRET_BYTES = config.DEFAULT_MAX_SECRET_BYTES
 LOG = utils.getLogger(__name__)
-DEFAULT_MAX_SECRET_BYTES = 10000
-common_opts = [
-    cfg.IntOpt('max_allowed_secret_in_bytes',
-               default=DEFAULT_MAX_SECRET_BYTES),
-]
-
-CONF = cfg.CONF
-CONF.register_opts(common_opts)
+CONF = config.CONF
 
 MYSQL_SMALL_INT_MAX = 32767
 

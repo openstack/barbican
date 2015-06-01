@@ -21,10 +21,11 @@ from requests import exceptions as request_exceptions
 from symantecssl.core import Symantec
 from symantecssl import exceptions as symantec_exceptions
 
+from barbican.common import config
 from barbican import i18n as u
 from barbican.plugin.interface import certificate_manager as cert
 
-CONF = cfg.CONF
+CONF = config.new_config()
 
 symantec_plugin_group = cfg.OptGroup(name='symantec_plugin',
                                      title='Symantec Plugin Options')
@@ -40,6 +41,7 @@ symantec_plugin_opts = [
 
 CONF.register_group(symantec_plugin_group)
 CONF.register_opts(symantec_plugin_opts, group=symantec_plugin_group)
+config.parse_args(CONF)
 
 
 class SymantecCertificatePlugin(cert.CertificatePluginBase):

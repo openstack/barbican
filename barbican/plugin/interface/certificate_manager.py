@@ -27,6 +27,7 @@ from oslo_config import cfg
 import six
 from stevedore import named
 
+from barbican.common import config
 from barbican.common import exception
 import barbican.common.utils as utils
 from barbican import i18n as u
@@ -35,7 +36,7 @@ from barbican.model import repositories as repos
 from barbican.plugin.util import utils as plugin_utils
 
 
-CONF = cfg.CONF
+CONF = config.new_config()
 
 # Configuration for certificate processing plugins:
 DEFAULT_PLUGIN_NAMESPACE = 'barbican.certificate.plugin'
@@ -55,6 +56,7 @@ cert_opts = [
 ]
 CONF.register_group(cert_opt_group)
 CONF.register_opts(cert_opts, group=cert_opt_group)
+config.parse_args(CONF)
 
 
 # Configuration for certificate eventing plugins:

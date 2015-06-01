@@ -19,8 +19,7 @@ Retry/scheduler classes and logic.
 import datetime
 import random
 
-from oslo_config import cfg
-
+from barbican.common import config
 from barbican.common import utils
 from barbican import i18n as u
 from barbican.model import models
@@ -31,21 +30,7 @@ from barbican.queue import client as async_client
 
 LOG = utils.getLogger(__name__)
 
-retry_opt_group = cfg.OptGroup(name='retry_scheduler',
-                               title='Retry/Scheduler Options')
-
-retry_opts = [
-    cfg.FloatOpt(
-        'initial_delay_seconds', default=10.0,
-        help=u._('Seconds (float) to wait before starting retry scheduler')),
-    cfg.FloatOpt(
-        'periodic_interval_max_seconds', default=10.0,
-        help=u._('Seconds (float) to wait between periodic schedule events')),
-]
-
-CONF = cfg.CONF
-CONF.register_group(retry_opt_group)
-CONF.register_opts(retry_opts, group=retry_opt_group)
+CONF = config.CONF
 
 
 def _compute_next_periodic_interval():

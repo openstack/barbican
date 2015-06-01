@@ -16,21 +16,13 @@ import logging
 import random
 import time
 
-from oslo_config import cfg
 import six
 
+from barbican.common import config
 from barbican.openstack.common._i18n import _, _LE, _LI
 
 
-periodic_opts = [
-    cfg.BoolOpt('run_external_periodic_tasks',
-                default=True,
-                help='Some periodic tasks can be run in a separate process. '
-                     'Should we run them here?'),
-]
-
-CONF = cfg.CONF
-CONF.register_opts(periodic_opts)
+CONF = config.CONF
 
 LOG = logging.getLogger(__name__)
 

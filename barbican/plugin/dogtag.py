@@ -30,13 +30,14 @@ import pki.kra
 import pki.profile
 from requests import exceptions as request_exceptions
 
+from barbican.common import config
 from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
 import barbican.plugin.interface.certificate_manager as cm
 import barbican.plugin.interface.secret_store as sstore
 
-CONF = cfg.CONF
+CONF = config.new_config()
 LOG = utils.getLogger(__name__)
 
 dogtag_plugin_group = cfg.OptGroup(name='dogtag_plugin',
@@ -65,6 +66,7 @@ dogtag_plugin_opts = [
 
 CONF.register_group(dogtag_plugin_group)
 CONF.register_opts(dogtag_plugin_opts, group=dogtag_plugin_group)
+config.parse_args(CONF)
 
 CERT_HEADER = "-----BEGIN CERTIFICATE-----"
 CERT_FOOTER = "-----END CERTIFICATE-----"

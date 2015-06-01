@@ -19,11 +19,12 @@ from cryptography import fernet
 from oslo_config import cfg
 import six
 
+from barbican.common import config
 from barbican import i18n as u
 from barbican.plugin.crypto import crypto as c
 
 
-CONF = cfg.CONF
+CONF = config.new_config()
 
 simple_crypto_plugin_group = cfg.OptGroup(name='simple_crypto_plugin',
                                           title="Simple Crypto Plugin Options")
@@ -35,6 +36,7 @@ simple_crypto_plugin_opts = [
 ]
 CONF.register_group(simple_crypto_plugin_group)
 CONF.register_opts(simple_crypto_plugin_opts, group=simple_crypto_plugin_group)
+config.parse_args(CONF)
 
 
 class SimpleCryptoPlugin(c.CryptoPluginBase):

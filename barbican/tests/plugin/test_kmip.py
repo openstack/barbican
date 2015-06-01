@@ -31,7 +31,6 @@ from kmip.core import objects
 from kmip.core import secrets
 from kmip.services import kmip_client as proxy
 from kmip.services import results
-from oslo_config import cfg
 
 from barbican.plugin import kmip_secret_store as kss
 
@@ -89,7 +88,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         self.expected_username = "sample_username"
         self.expected_password = "sample_password"
 
-        CONF = cfg.CONF
+        CONF = kss.CONF
         CONF.kmip_plugin.username = self.expected_username
         CONF.kmip_plugin.password = self.expected_password
         CONF.kmip_plugin.keyfile = None
@@ -624,7 +623,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
             actual_credential.credential_value.password.value)
 
     def test_credential_None(self):
-        CONF = cfg.CONF
+        CONF = kss.CONF
         CONF.kmip_plugin.username = None
         CONF.kmip_plugin.password = None
         CONF.kmip_plugin.keyfile = None
@@ -696,7 +695,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
                 "KMIPSecretStore._validate_keyfile_permissions")
 
         with mock.patch(func, **config) as m:
-            CONF = cfg.CONF
+            CONF = kss.CONF
             CONF.kmip_plugin.keyfile = '/some/path'
             kss.KMIPSecretStore(CONF)
             self.assertEqual(len(m.mock_calls), 1)

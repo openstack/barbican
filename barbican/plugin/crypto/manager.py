@@ -14,6 +14,7 @@
 from oslo_config import cfg
 from stevedore import named
 
+from barbican.common import config
 from barbican.common import utils
 from barbican import i18n as u
 from barbican.plugin.crypto import crypto
@@ -23,7 +24,7 @@ from barbican.plugin.util import utils as plugin_utils
 
 _PLUGIN_MANAGER = None
 
-CONF = cfg.CONF
+CONF = config.new_config()
 
 DEFAULT_PLUGIN_NAMESPACE = 'barbican.crypto.plugin'
 DEFAULT_PLUGINS = ['simple_crypto']
@@ -42,6 +43,7 @@ crypto_opts = [
 ]
 CONF.register_group(crypto_opt_group)
 CONF.register_opts(crypto_opts, group=crypto_opt_group)
+config.parse_args(CONF)
 
 
 class _CryptoPluginManager(named.NamedExtensionManager):

@@ -20,7 +20,6 @@ For typical-flow business logic tests of these classes, see the
 import os
 
 import mock
-from oslo_config import cfg
 from oslo_policy import policy
 from webob import exc
 
@@ -29,16 +28,17 @@ from barbican.api.controllers import containers
 from barbican.api.controllers import orders
 from barbican.api.controllers import secrets
 from barbican.api.controllers import versions
+from barbican.common import config
 from barbican import context
 from barbican.model import models
 from barbican.tests import utils
 
 
-CONF = cfg.CONF
-
 # Point to the policy.json file located in source control.
 TEST_VAR_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                             '../../../etc', 'barbican'))
+
+CONF = config.new_config()
 
 ENFORCER = policy.Enforcer(CONF)
 

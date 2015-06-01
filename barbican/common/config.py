@@ -23,24 +23,181 @@ import os
 from oslo_config import cfg
 from oslo_log import log
 
+from barbican import i18n as u
 import barbican.version
 
-CONF = cfg.CONF
-log.register_options(CONF)
+MAX_BYTES_REQUEST_INPUT_ACCEPTED = 15000
+DEFAULT_MAX_SECRET_BYTES = 10000
+KS_NOTIFICATIONS_GRP_NAME = 'keystone_notifications'
 
-LOG = logging.getLogger(__name__)
+help_for_backdoor_port = (
+    "Acceptable values are 0, <port>, and <start>:<end>, where 0 results "
+    "in listening on a random tcp port number; <port> results in listening "
+    "on the specified port number (and not enabling backdoor if that port "
+    "is in use); and <start>:<end> results in listening on the smallest "
+    "unused port number within the specified range of port numbers.  The "
+    "chosen port is displayed in the service's log file.")
 
 
-def parse_args(args=None, usage=None, default_config_files=None):
-    CONF(args=args,
+context_opts = [
+    cfg.StrOpt('admin_role', default='admin',
+               help=u._('Role used to identify an authenticated user as '
+                        'administrator.')),
+    cfg.BoolOpt('allow_anonymous_access', default=False,
+                help=u._('Allow unauthenticated users to access the API with '
+                         'read-only privileges. This only applies when using '
+                         'ContextMiddleware.')),
+]
+
+common_opts = [
+    cfg.IntOpt('max_allowed_request_size_in_bytes',
+               default=MAX_BYTES_REQUEST_INPUT_ACCEPTED),
+    cfg.IntOpt('max_allowed_secret_in_bytes',
+               default=DEFAULT_MAX_SECRET_BYTES),
+]
+
+host_opts = [
+    cfg.StrOpt('host_href', default='http://localhost:9311'),
+]
+
+db_opts = [
+    cfg.StrOpt('sql_connection'),
+    cfg.IntOpt('sql_idle_timeout', default=3600),
+    cfg.IntOpt('sql_max_retries', default=60),
+    cfg.IntOpt('sql_retry_interval', default=1),
+    cfg.BoolOpt('db_auto_create', default=True),
+    cfg.IntOpt('max_limit_paging', default=100),
+    cfg.IntOpt('default_limit_paging', default=10),
+    cfg.StrOpt('sql_pool_class', default=None),
+    cfg.BoolOpt('sql_pool_logging', default=False),
+    cfg.IntOpt('sql_pool_size', default=None),
+    cfg.IntOpt('sql_pool_max_overflow', default=None),
+]
+
+eventlet_backdoor_opts = [
+    cfg.StrOpt('backdoor_port',
+               help="Enable eventlet backdoor.  %s" % help_for_backdoor_port)
+]
+
+periodic_opts = [
+    cfg.BoolOpt('run_external_periodic_tasks',
+                default=True,
+                help='Some periodic tasks can be run in a separate process. '
+                     'Should we run them here?'),
+]
+
+ssl_opts = [
+    cfg.StrOpt('ca_file',
+               default=None,
+               help="CA certificate file to use to verify "
+                    "connecting clients"),
+    cfg.StrOpt('cert_file',
+               default=None,
+               help="Certificate file to use when starting "
+                    "the server securely"),
+    cfg.StrOpt('key_file',
+               default=None,
+               help="Private key file to use when starting "
+                    "the server securely"),
+]
+
+retry_opt_group = cfg.OptGroup(name='retry_scheduler',
+                               title='Retry/Scheduler Options')
+
+retry_opts = [
+    cfg.FloatOpt(
+        'initial_delay_seconds', default=10.0,
+        help=u._('Seconds (float) to wait before starting retry scheduler')),
+    cfg.FloatOpt(
+        'periodic_interval_max_seconds', default=10.0,
+        help=u._('Seconds (float) to wait between periodic schedule events')),
+]
+
+queue_opt_group = cfg.OptGroup(name='queue',
+                               title='Queue Application Options')
+
+queue_opts = [
+    cfg.BoolOpt('enable', default=False,
+                help=u._('True enables queuing, False invokes '
+                         'workers synchronously')),
+    cfg.StrOpt('namespace', default='barbican',
+               help=u._('Queue namespace')),
+    cfg.StrOpt('topic', default='barbican.workers',
+               help=u._('Queue topic name')),
+    cfg.StrOpt('version', default='1.1',
+               help=u._('Version of tasks invoked via queue')),
+    cfg.StrOpt('server_name', default='barbican.queue',
+               help=u._('Server name for RPC task processing server')),
+]
+
+ks_queue_opt_group = cfg.OptGroup(name=KS_NOTIFICATIONS_GRP_NAME,
+                                  title='Keystone Notification Options')
+
+ks_queue_opts = [
+    cfg.BoolOpt('enable', default=False,
+                help=u._('True enables keystone notification listener '
+                         ' functionality.')),
+    cfg.StrOpt('control_exchange', default='openstack',
+               help=u._('The default exchange under which topics are scoped. '
+                        'May be overridden by an exchange name specified in '
+                        'the transport_url option.')),
+    cfg.StrOpt('topic', default='notifications',
+               help=u._("Keystone notification queue topic name. This name "
+                        "needs to match one of values mentioned in Keystone "
+                        "deployment's 'notification_topics' configuration "
+                        "e.g."
+                        "    notification_topics=notifications, "
+                        "    barbican_notifications"
+                        "Multiple servers may listen on a topic and messages "
+                        "will be dispatched to one of the servers in a "
+                        "round-robin fashion. That's why Barbican service "
+                        "should have its own dedicated notification queue so "
+                        "that it receives all of Keystone notifications.")),
+    cfg.BoolOpt('allow_requeue', default=False,
+                help=u._('True enables requeue feature in case of notification'
+                         ' processing error. Enable this only when underlying '
+                         'transport supports this feature.')),
+    cfg.StrOpt('version', default='1.0',
+               help=u._('Version of tasks invoked via notifications')),
+    cfg.IntOpt('thread_pool_size', default=10,
+               help=u._('Define the number of max threads to be used for '
+                        'notification server processing functionality.')),
+]
+
+
+def parse_args(conf, args=None, usage=None, default_config_files=None):
+    conf(args=args if args else [],
          project='barbican',
          prog='barbican-api',
          version=barbican.version.__version__,
          usage=usage,
          default_config_files=default_config_files)
 
-    CONF.pydev_debug_host = os.environ.get('PYDEV_DEBUG_HOST')
-    CONF.pydev_debug_port = os.environ.get('PYDEV_DEBUG_PORT')
+    conf.pydev_debug_host = os.environ.get('PYDEV_DEBUG_HOST')
+    conf.pydev_debug_port = os.environ.get('PYDEV_DEBUG_PORT')
+
+
+def new_config():
+    conf = cfg.ConfigOpts()
+    log.register_options(conf)
+    conf.register_opts(context_opts)
+    conf.register_opts(common_opts)
+    conf.register_opts(host_opts)
+    conf.register_opts(db_opts)
+    conf.register_opts(eventlet_backdoor_opts)
+    conf.register_opts(periodic_opts)
+
+    conf.register_opts(ssl_opts, "ssl")
+
+    conf.register_group(retry_opt_group)
+    conf.register_opts(retry_opts, group=retry_opt_group)
+
+    conf.register_group(queue_opt_group)
+    conf.register_opts(queue_opts, group=queue_opt_group)
+
+    conf.register_group(ks_queue_opt_group)
+    conf.register_opts(ks_queue_opts, group=ks_queue_opt_group)
+    return conf
 
 
 def setup_remote_pydev_debug():
@@ -63,3 +220,7 @@ def setup_remote_pydev_debug():
                           'listening on debug-host \'%s\' debug-port \'%s\'.',
                           CONF.pydev_debug_host, CONF.pydev_debug_port)
             raise
+
+CONF = new_config()
+LOG = logging.getLogger(__name__)
+parse_args(CONF)

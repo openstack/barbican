@@ -18,10 +18,10 @@ API handler for Cloudkeep's Barbican
 """
 import pkgutil
 
-from oslo_config import cfg
 from oslo_policy import policy
 import pecan
 
+from barbican.common import config
 from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
@@ -29,14 +29,7 @@ from barbican.openstack.common import jsonutils as json
 
 
 LOG = utils.getLogger(__name__)
-MAX_BYTES_REQUEST_INPUT_ACCEPTED = 15000
-common_opts = [
-    cfg.IntOpt('max_allowed_request_size_in_bytes',
-               default=MAX_BYTES_REQUEST_INPUT_ACCEPTED),
-]
-
-CONF = cfg.CONF
-CONF.register_opts(common_opts)
+CONF = config.CONF
 
 
 class ApiResource(object):

@@ -24,13 +24,12 @@ import logging
 import time
 import uuid
 
-from oslo_config import cfg
-from oslo_log import log
 import sqlalchemy
 from sqlalchemy import func as sa_func
 from sqlalchemy import or_
 import sqlalchemy.orm as sa_orm
 
+from barbican.common import config
 from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
@@ -68,23 +67,8 @@ _SECRET_META_REPOSITORY = None
 _SECRET_REPOSITORY = None
 _TRANSPORT_KEY_REPOSITORY = None
 
-db_opts = [
-    cfg.IntOpt('sql_idle_timeout', default=3600),
-    cfg.IntOpt('sql_max_retries', default=60),
-    cfg.IntOpt('sql_retry_interval', default=1),
-    cfg.BoolOpt('db_auto_create', default=True),
-    cfg.StrOpt('sql_connection'),
-    cfg.IntOpt('max_limit_paging', default=100),
-    cfg.IntOpt('default_limit_paging', default=10),
-    cfg.StrOpt('sql_pool_class', default=None),
-    cfg.BoolOpt('sql_pool_logging', default=False),
-    cfg.IntOpt('sql_pool_size', default=None),
-    cfg.IntOpt('sql_pool_max_overflow', default=None),
-]
 
-CONF = cfg.CONF
-CONF.register_opts(db_opts)
-log.register_options(CONF)
+CONF = config.CONF
 
 
 def hard_reset():

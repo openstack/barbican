@@ -13,12 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_config import cfg
 import oslo_context
 from oslo_policy import policy
 
+from barbican.common import config
 
-CONF = cfg.CONF
+CONF = config.CONF
 
 
 class RequestContext(oslo_context.context.RequestContext):
