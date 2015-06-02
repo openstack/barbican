@@ -272,7 +272,8 @@ class WhenBeginningCertificateTypeOrder(BaseOrderTestCase):
             self, mock_issue_cert_request):
         mock_issue_cert_request.return_value = None
 
-        self.resource.process(self.order.id, self.external_project_id)
+        result = self.resource.process_and_suppress_exceptions(
+            self.order.id, self.external_project_id)
 
         self.order_repo.get.assert_called_once_with(
             entity_id=self.order.id,
@@ -286,6 +287,7 @@ class WhenBeginningCertificateTypeOrder(BaseOrderTestCase):
             mock.ANY
         )
         self.assertIsNone(self.order.container_id)
+        self.assertIsInstance(result, common.FollowOnProcessingStatusDTO)
 
     @mock.patch(
         'barbican.tasks.certificate_resources.issue_certificate_request')
@@ -293,7 +295,8 @@ class WhenBeginningCertificateTypeOrder(BaseOrderTestCase):
             self, mock_issue_cert_request):
         mock_issue_cert_request.return_value = self.container
 
-        self.resource.process(self.order.id, self.external_project_id)
+        result = self.resource.process(
+            self.order.id, self.external_project_id)
 
         self.order_repo.get.assert_called_once_with(
             entity_id=self.order.id,
@@ -307,6 +310,7 @@ class WhenBeginningCertificateTypeOrder(BaseOrderTestCase):
             mock.ANY
         )
         self.assertEqual(self.container.id, self.order.container_id)
+        self.assertIsInstance(result, common.FollowOnProcessingStatusDTO)
 
 
 class WhenUpdatingOrder(BaseOrderTestCase):
@@ -323,7 +327,7 @@ class WhenUpdatingOrder(BaseOrderTestCase):
     def test_should_update_certificate_order(self, mock_modify_cert_request):
         self.order.type = models.OrderType.CERTIFICATE
 
-        self.resource.process(
+        self.resource.process_and_suppress_exceptions(
             self.order.id, self.external_project_id, self.updated_meta)
 
         self.assertEqual(self.order.status, models.States.ACTIVE)
@@ -474,7 +478,8 @@ class WhenCheckingCertificateStatus(BaseOrderTestCase):
             self, mock_check_cert_request):
         mock_check_cert_request.return_value = None
 
-        self.resource.process(self.order.id, self.external_project_id)
+        result = self.resource.process_and_suppress_exceptions(
+            self.order.id, self.external_project_id)
 
         self.order_repo.get.assert_called_once_with(
             entity_id=self.order.id,
@@ -488,6 +493,7 @@ class WhenCheckingCertificateStatus(BaseOrderTestCase):
             mock.ANY
         )
         self.assertIsNone(self.order.container_id)
+        self.assertIsInstance(result, common.FollowOnProcessingStatusDTO)
 
     @mock.patch(
         'barbican.tasks.certificate_resources.check_certificate_request')
