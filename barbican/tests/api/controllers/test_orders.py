@@ -21,7 +21,10 @@ import testtools
 from barbican.common import resources
 from barbican.model import models
 from barbican.model import repositories
+from barbican.tests.api.controllers import test_acls
+from barbican.tests.api import test_resources_policy as test_policy
 from barbican.tests import utils
+
 
 order_repo = repositories.get_order_repository()
 project_repo = repositories.get_project_repository()
@@ -427,12 +430,14 @@ class WhenCreatingCertificateOrders(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(403, create_resp.status_int)
 
 
-class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase):
+class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase,
+                                  test_policy.BaseTestCase):
     def setUp(self):
         super(WhenCreatingStoredKeyOrders, self).setUp()
 
         # Make sure we have a project
         self.project = resources.get_or_create_project(self.project_id)
+        self.creator_user_id = 'creatorUserId'
 
     def test_can_create_new_stored_key_order(self):
         container_name = 'rsa container name'
@@ -458,6 +463,175 @@ class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase):
 
         order = order_repo.get(order_uuid, self.project_id)
         self.assertIsInstance(order, models.Order)
+
+    def _setup_acl_order_context_and_create_order(
+        self, add_acls=False, read_creator_only=False, order_roles=None,
+            order_user=None, expect_errors=False):
+        """Helper method to setup acls, order context and return created order.
+
+        Create order uses actual oslo policy enforcer instead of being None.
+        Create ACLs for container if 'add_acls' is True.
+        Make container private when 'read_creator_only' is True.
+        """
+
+        container_name = 'rsa container name'
+        container_type = 'rsa'
+        secret_refs = []
+        self.app.extra_environ = {
+            'barbican.context': self._build_context(self.project_id,
+                                                    user=self.creator_user_id)
+        }
+        _, container_id = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type,
+            secret_refs=secret_refs
+        )
+
+        if add_acls:
+            _, _ = test_acls.manage_acls(
+                self.app, 'containers', container_id,
+                read_user_ids=['u1', 'u3', 'u4'],
+                read_creator_only=read_creator_only,
+                is_update=False)
+
+        self.app.extra_environ = {
+            'barbican.context': self._build_context(
+                self.project_id, roles=order_roles, user=order_user,
+                is_admin=False, policy_enforcer=self.policy_enforcer)
+        }
+
+        stored_key_meta = {
+            'request_type': 'stored-key',
+            'subject_dn': 'cn=barbican-server,o=example.com',
+            'container_ref': 'https://localhost/v1/containers/' + container_id
+        }
+        return create_order(
+            self.app,
+            order_type='certificate',
+            meta=stored_key_meta,
+            expect_errors=expect_errors
+        )
+
+    def test_can_create_new_stored_key_order_no_acls_and_policy_check(self):
+        """Create stored key order with actual policy enforcement logic.
+
+        Order can be created as long as order project and user roles are
+        allowed in policy. In the test, user requesting order has container
+        project and has 'creator' role. Order should be created regardless
+        of what user id is.
+        """
+
+        create_resp, order_id = self._setup_acl_order_context_and_create_order(
+            add_acls=False, read_creator_only=False, order_roles=['creator'],
+            order_user='anyUserId', expect_errors=False)
+
+        self.assertEqual(202, create_resp.status_int)
+
+        order = order_repo.get(order_id, self.project_id)
+        self.assertIsInstance(order, models.Order)
+        self.assertEqual('anyUserId', order.creator_id)
+
+    def test_should_fail_for_user_observer_role_no_acls_and_policy_check(self):
+        """Should not allow create order when user doesn't have necessary role.
+
+        Order can be created as long as order project and user roles are
+        allowed in policy. In the test, user requesting order has container
+        project but has 'observer' role. Create order should fail as expected
+        role is 'admin' or 'creator'.
+        """
+
+        create_resp, _ = self._setup_acl_order_context_and_create_order(
+            add_acls=False, read_creator_only=False, order_roles=['observer'],
+            order_user='anyUserId', expect_errors=True)
+        self.assertEqual(403, create_resp.status_int)
+
+    def test_can_create_order_with_private_container_and_creator_user(self):
+        """Create order using private container with creator user.
+
+        Container has been marked private via ACLs. Still creator of container
+        should be able to create stored key order using that container
+        successfully.
+        """
+        create_resp, order_id = self._setup_acl_order_context_and_create_order(
+            add_acls=True, read_creator_only=True, order_roles=['creator'],
+            order_user=self.creator_user_id, expect_errors=False)
+
+        self.assertEqual(202, create_resp.status_int)
+
+        order = order_repo.get(order_id, self.project_id)
+        self.assertIsInstance(order, models.Order)
+        self.assertEqual(self.creator_user_id, order.creator_id)
+
+    def test_can_create_order_with_private_container_and_acl_user(self):
+        """Create order using private container with acl user.
+
+        Container has been marked private via ACLs. So *generally* project user
+        should not be able to create stored key order using that container.
+        But here it can create order as that user is defined in read ACL user
+        list. Here project user means user which has 'creator' role in the
+        container project. Order project is same as container.
+        """
+
+        create_resp, order_id = self._setup_acl_order_context_and_create_order(
+            add_acls=True, read_creator_only=True, order_roles=['creator'],
+            order_user='u3', expect_errors=False)
+        self.assertEqual(202, create_resp.status_int)
+
+        order = order_repo.get(order_id, self.project_id)
+        self.assertIsInstance(order, models.Order)
+        self.assertEqual('u3', order.creator_id)
+
+    def test_should_raise_with_private_container_and_project_user(self):
+        """Create order should fail using private container for project user.
+
+        Container has been marked private via ACLs. So project user should not
+        be able to create stored key order using that container. Here project
+        user means user which has 'creator' role in the container project.
+        Order project is same as container. If container was not marked
+        private, this user would have been able to create order. See next test.
+        """
+
+        create_resp, _ = self._setup_acl_order_context_and_create_order(
+            add_acls=True, read_creator_only=True, order_roles=['creator'],
+            order_user='anyProjectUser', expect_errors=True)
+
+        self.assertEqual(403, create_resp.status_int)
+
+    def test_can_create_order_with_non_private_acls_and_project_user(self):
+        """Create order using non-private container with project user.
+
+        Container has not been marked private via ACLs. So project user should
+        be able to create stored key order using that container successfully.
+        Here project user means user which has 'creator' role in the container
+        project. Order project is same as container.
+        """
+        create_resp, order_id = self._setup_acl_order_context_and_create_order(
+            add_acls=True, read_creator_only=False, order_roles=['creator'],
+            order_user='anyProjectUser', expect_errors=False)
+
+        self.assertEqual(202, create_resp.status_int)
+
+        order = order_repo.get(order_id, self.project_id)
+        self.assertIsInstance(order, models.Order)
+        self.assertEqual('anyProjectUser', order.creator_id)
+
+    def test_can_create_order_with_non_private_acls_and_creator_user(self):
+        """Create order using non-private container with creator user.
+
+        Container has not been marked private via ACLs. So user who created
+        container should be able to create stored key order using that
+        container successfully. Order project is same as container.
+        """
+        create_resp, order_id = self._setup_acl_order_context_and_create_order(
+            add_acls=True, read_creator_only=False, order_roles=['creator'],
+            order_user=self.creator_user_id, expect_errors=False)
+
+        self.assertEqual(202, create_resp.status_int)
+
+        order = order_repo.get(order_id, self.project_id)
+        self.assertIsInstance(order, models.Order)
+        self.assertEqual(self.creator_user_id, order.creator_id)
 
     def test_should_raise_with_bad_container_ref(self):
         stored_key_meta = {
