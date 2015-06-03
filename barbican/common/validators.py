@@ -634,7 +634,7 @@ class ACLValidator(ValidatorBase):
                                 {"type": "string", "maxLength": 255}
                             ]
                         },
-                        "creator-only": {"type": "boolean"}
+                        "project-access": {"type": "boolean"}
                     },
                     "additionalProperties": False
                 }

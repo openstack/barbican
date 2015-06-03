@@ -329,24 +329,24 @@ class WhenCreatingNewSecretACL(utils.BaseTestCase):
         self.secret_id = 'secret123456'
         self.user_ids = ['user12345', 'user67890']
         self.operation = 'read'
-        self.creator_only = False
+        self.project_access = True
 
     def test_new_secretacl_for_given_all_input(self):
         acl = models.SecretACL(self.secret_id, self.operation,
-                               self.creator_only, self.user_ids)
+                               self.project_access, self.user_ids)
         self.assertEqual(self.secret_id, acl.secret_id)
         self.assertEqual(self.operation, acl.operation)
-        self.assertEqual(self.creator_only, acl.creator_only)
+        self.assertEqual(self.project_access, acl.project_access)
         self.assertTrue(all(acl_user.user_id in self.user_ids for acl_user
                             in acl.acl_users))
 
     def test_new_secretacl_check_to_dict_fields(self):
         acl = models.SecretACL(self.secret_id, self.operation,
-                               self.creator_only, self.user_ids)
+                               self.project_access, self.user_ids)
         self.assertEqual(self.secret_id, acl.to_dict_fields()['secret_id'])
         self.assertEqual(self.operation, acl.to_dict_fields()['operation'])
-        self.assertEqual(self.creator_only,
-                         acl.to_dict_fields()['creator_only'])
+        self.assertEqual(self.project_access,
+                         acl.to_dict_fields()['project_access'])
         self.assertTrue(all(user_id in self.user_ids for user_id in
                             acl.to_dict_fields()['users']))
         self.assertEqual(None, acl.to_dict_fields()['acl_id'])
@@ -357,7 +357,7 @@ class WhenCreatingNewSecretACL(utils.BaseTestCase):
         self.assertEqual(acl.secret_id, self.secret_id)
         self.assertEqual(0, len(acl.acl_users))
         self.assertEqual(self.operation, acl.operation)
-        self.assertEqual(None, acl.creator_only)
+        self.assertEqual(None, acl.project_access)
 
     def test_new_secretacl_with_duplicate_userids_input(self):
         user_ids = list(self.user_ids)
@@ -366,7 +366,7 @@ class WhenCreatingNewSecretACL(utils.BaseTestCase):
                                None, user_ids=user_ids)
         self.assertEqual(self.secret_id, acl.secret_id)
         self.assertEqual(self.operation, acl.operation)
-        self.assertEqual(None, acl.creator_only)
+        self.assertEqual(None, acl.project_access)
         self.assertEqual(2, len(acl.acl_users))
 
     def test_should_throw_exception_missing_secret_id(self):
@@ -391,25 +391,25 @@ class WhenCreatingNewContainerACL(utils.BaseTestCase):
         self.container_id = 'container123456'
         self.user_ids = ['user12345', 'user67890']
         self.operation = 'read'
-        self.creator_only = False
+        self.project_access = True
 
     def test_new_containeracl_for_given_all_input(self):
         acl = models.ContainerACL(self.container_id, self.operation,
-                                  self.creator_only, self.user_ids)
+                                  self.project_access, self.user_ids)
         self.assertEqual(acl.container_id, self.container_id)
         self.assertEqual(acl.operation, self.operation)
-        self.assertEqual(acl.creator_only, self.creator_only)
+        self.assertEqual(acl.project_access, self.project_access)
         self.assertTrue(all(acl_user.user_id in self.user_ids for acl_user
                             in acl.acl_users))
 
     def test_new_containeracl_check_to_dict_fields(self):
         acl = models.ContainerACL(self.container_id, self.operation,
-                                  self.creator_only, self.user_ids)
+                                  self.project_access, self.user_ids)
         self.assertEqual(self.container_id,
                          acl.to_dict_fields()['container_id'])
         self.assertEqual(self.operation, acl.to_dict_fields()['operation'])
-        self.assertEqual(self.creator_only,
-                         acl.to_dict_fields()['creator_only'])
+        self.assertEqual(self.project_access,
+                         acl.to_dict_fields()['project_access'])
         self.assertTrue(all(user_id in self.user_ids for user_id
                             in acl.to_dict_fields()['users']))
         self.assertEqual(None, acl.to_dict_fields()['acl_id'])
@@ -420,7 +420,7 @@ class WhenCreatingNewContainerACL(utils.BaseTestCase):
         self.assertEqual(self.container_id, acl.container_id)
         self.assertEqual(0, len(acl.acl_users))
         self.assertEqual(self.operation, acl.operation)
-        self.assertEqual(None, acl.creator_only)
+        self.assertEqual(None, acl.project_access)
 
     def test_new_containeracl_with_duplicate_userids_input(self):
         user_ids = list(self.user_ids)
@@ -429,7 +429,7 @@ class WhenCreatingNewContainerACL(utils.BaseTestCase):
                                   True, user_ids=user_ids)
         self.assertEqual(self.container_id, acl.container_id)
         self.assertEqual(self.operation, acl.operation)
-        self.assertEqual(True, acl.creator_only)
+        self.assertEqual(True, acl.project_access)
         self.assertEqual(2, len(acl.acl_users))
 
     def test_should_throw_exception_missing_container_id(self):
