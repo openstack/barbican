@@ -10,11 +10,11 @@
     "all_users": "role:admin or role:observer or role:creator or role:audit",
     "secret_project_match": "project:%(target.secret.project_id)s",
     "secret_acl_read": "'read':%(target.secret.read)s",
-    "secret_private_read": "'True':%(target.secret.read_creator_only)s",
+    "secret_private_read": "'False':%(target.secret.read_project_access)s",
     "secret_creator_user": "user:%(target.secret.creator_id)s",
     "container_project_match": "project:%(target.container.project_id)s",
     "container_acl_read": "'read':%(target.container.read)s",
-    "container_private_read": "'True':%(target.container.read_creator_only)s",
+    "container_private_read": "'False':%(target.container.read_project_access)s",
     "container_creator_user": "user:%(target.container.creator_id)s",
 
     "secret_non_private_read": "rule:all_users and rule:secret_project_match and not rule:secret_private_read",

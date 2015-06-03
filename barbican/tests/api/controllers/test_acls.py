@@ -34,37 +34,38 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
         self.assertIn('/secrets/{0}/acl'.format(secret_uuid),
                       resp.json['acl_ref'])
         acl_map = _get_acl_map(secret_uuid, is_secret=True)
-        # Check creator_only is False when not provided
-        self.assertFalse(acl_map['read']['creator_only'])
+        # Check project_access is True when not provided
+        self.assertTrue(acl_map['read']['project_access'])
 
-    def test_create_new_secret_acls_with_creator_only_true(self):
-        """Should allow creating acls for a new secret with creator-only."""
+    def test_create_new_secret_acls_with_project_access_false(self):
+        """Should allow creating acls for a new secret with project-access."""
         secret_uuid, _ = create_secret(self.app)
 
         resp = create_acls(
             self.app, 'secrets', secret_uuid,
-            read_creator_only=True)
+            read_project_access=False)
         self.assertEqual(200, resp.status_int)
         self.assertIsNotNone(resp.json)
         self.assertIn('/secrets/{0}/acl'.format(secret_uuid),
                       resp.json['acl_ref'])
         acl_map = _get_acl_map(secret_uuid, is_secret=True)
-        self.assertTrue(acl_map['read']['creator_only'])
+        self.assertFalse(acl_map['read']['project_access'])
 
-    def test_new_secret_acls_with_invalid_creator_only_value_should_fail(self):
-        """Should fail if creator-only flag is provided as string value."""
+    def test_new_secret_acls_with_invalid_project_access_value_should_fail(
+            self):
+        """Should fail if project-access flag is provided as string value."""
         secret_uuid, _ = create_secret(self.app)
 
         resp = create_acls(
             self.app, 'secrets', secret_uuid,
-            read_creator_only="False",
+            read_project_access="False",
             read_user_ids=['u1', 'u3', 'u4'],
             expect_errors=True)
         self.assertEqual(400, resp.status_int)
 
         resp = create_acls(
             self.app, 'secrets', secret_uuid,
-            read_creator_only="None",
+            read_project_access="None",
             expect_errors=True)
         self.assertEqual(400, resp.status_int)
 
@@ -73,7 +74,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
         secret_id, _ = create_secret(self.app)
         create_acls(
             self.app, 'secrets', secret_id,
-            read_user_ids=['u1', 'u3'], read_creator_only=True)
+            read_user_ids=['u1', 'u3'], read_project_access=False)
 
         resp = self.app.get(
             '/secrets/{0}/acl'.format(secret_id),
@@ -82,17 +83,17 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
         self.assertIsNotNone(resp.json)
 
         self.assertIn('read', resp.json)
-        self.assertTrue(resp.json['read']['creator-only'])
+        self.assertFalse(resp.json['read']['project-access'])
         self.assertIsNotNone(resp.json['read']['created'])
         self.assertIsNotNone(resp.json['read']['updated'])
         self.assertEqual(set(['u1', 'u3']), set(resp.json['read']['users']))
 
-    def test_get_secret_acls_with_creator_only_data(self):
-        """Read existing acls for acl when only creator-only flag is set."""
+    def test_get_secret_acls_with_project_access_data(self):
+        """Read existing acls for acl when only project-access flag is set."""
         secret_id, _ = create_secret(self.app)
         create_acls(
             self.app, 'secrets', secret_id,
-            read_creator_only=True)
+            read_project_access=False)
 
         resp = self.app.get(
             '/secrets/{0}/acl'.format(secret_id),
@@ -101,7 +102,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
         self.assertIsNotNone(resp.json)
 
         self.assertEqual([], resp.json['read']['users'])
-        self.assertTrue(resp.json['read']['creator-only'])
+        self.assertFalse(resp.json['read']['project-access'])
         self.assertIsNotNone(resp.json['read']['created'])
         self.assertIsNotNone(resp.json['read']['updated'])
 
@@ -114,7 +115,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
         secret_id, _ = create_secret(self.app)
         create_acls(
             self.app, 'secrets', secret_id,
-            read_creator_only=False,
+            read_project_access=True,
             read_user_ids=['u1', 'u3', 'u4'])
 
         resp = self.app.get(
@@ -141,25 +142,25 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
             expect_errors=True)
         self.assertEqual(405, resp.status_int)
 
-    def test_full_update_secret_acls_modify_creator_only_value(self):
-        """ACLs full update with user ids where creator-only flag modified."""
+    def test_full_update_secret_acls_modify_project_access_value(self):
+        """ACLs full update with userids where project-access flag modified."""
         secret_uuid, _ = create_secret(self.app)
 
         create_acls(
             self.app, 'secrets', secret_uuid,
             read_user_ids=['u1', 'u2'],
-            read_creator_only=True)
+            read_project_access=False)
 
         # update acls with no user input so  it should delete existing users
         resp = update_acls(
             self.app, 'secrets', secret_uuid, partial_update=False,
-            read_creator_only=False)
+            read_project_access=True)
         self.assertEqual(200, resp.status_int)
         self.assertIsNotNone(resp.json)
         self.assertIn('/secrets/{0}/acl'.format(secret_uuid),
                       resp.json['acl_ref'])
         acl_map = _get_acl_map(secret_uuid, is_secret=True)
-        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertTrue(acl_map['read']['project_access'])
         self.assertIsNone(acl_map['read'].to_dict_fields().get('users'))
 
     def test_full_update_secret_acls_modify_users_only(self):
@@ -168,7 +169,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
 
         create_acls(
             self.app, 'secrets', secret_uuid,
-            read_user_ids=['u1', 'u2'], read_creator_only=True)
+            read_user_ids=['u1', 'u2'], read_project_access=False)
 
         resp = update_acls(
             self.app, 'secrets', secret_uuid, partial_update=False,
@@ -179,7 +180,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
         self.assertIn('/secrets/{0}/acl'.format(secret_uuid),
                       resp.json['acl_ref'])
         acl_map = _get_acl_map(secret_uuid, is_secret=True)
-        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertTrue(acl_map['read']['project_access'])
         self.assertNotIn('u2', acl_map['read'].to_dict_fields()['users'])
         self.assertEqual(set(['u1', 'u3', 'u5']),
                          set(acl_map['read'].to_dict_fields()['users']))
@@ -213,7 +214,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
         acl_map = _get_acl_map(secret_uuid, is_secret=True)
         # make sure 'list' operation is no longer after full update
         self.assertNotIn('list', acl_map)
-        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertTrue(acl_map['read']['project_access'])
         self.assertEqual(set(['u1', 'u3', 'u5']),
                          set(acl_map['read'].to_dict_fields()['users']))
         self.assertNotIn('u2', acl_map['read'].to_dict_fields()['users'])
@@ -247,7 +248,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
         self.assertIn('list', acl_map)
         self.assertEqual(set(['u1', 'u2']),
                          set(acl_map['list'].to_dict_fields()['users']))
-        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertTrue(acl_map['read']['project_access'])
         self.assertEqual(set(['u1', 'u3', 'u5']),
                          set(acl_map['read'].to_dict_fields()['users']))
 
@@ -266,26 +267,26 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
 
         self.assertEqual(200, resp.status_int)
         acl_map = _get_acl_map(secret_id, is_secret=True)
-        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertTrue(acl_map['read']['project_access'])
 
-    def test_partial_update_secret_acls_modify_creator_only_values(self):
-        """Acls partial update where creator-only flag is modified."""
+    def test_partial_update_secret_acls_modify_project_access_values(self):
+        """Acls partial update where project-access flag is modified."""
         secret_uuid, _ = create_secret(self.app)
 
         create_acls(
             self.app, 'secrets', secret_uuid,
             read_user_ids=['u1', 'u2'],
-            read_creator_only=True)
+            read_project_access=False)
 
         resp = update_acls(
             self.app, 'secrets', secret_uuid, partial_update=True,
-            read_creator_only=False)
+            read_project_access=True)
         self.assertEqual(200, resp.status_int)
         self.assertIsNotNone(resp.json)
         self.assertIn('/secrets/{0}/acl'.format(secret_uuid),
                       resp.json['acl_ref'])
         acl_map = _get_acl_map(secret_uuid, is_secret=True)
-        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertTrue(acl_map['read']['project_access'])
         self.assertEqual(set(['u1', 'u2']),
                          set(acl_map['read'].to_dict_fields()['users']))
 
@@ -294,7 +295,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase):
         secret_id, _ = create_secret(self.app)
         create_acls(
             self.app, 'secrets', secret_id,
-            read_creator_only=True)
+            read_project_access=True)
 
         resp = self.app.delete(
             '/secrets/{0}/acl'.format(secret_id),
@@ -338,55 +339,55 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
                       resp.json['acl_ref'])
 
         acl_map = _get_acl_map(container_id, is_secret=False)
-        # Check creator_only is False when not provided
-        self.assertFalse(acl_map['read']['creator_only'])
+        # Check project_access is True when not provided
+        self.assertTrue(acl_map['read']['project_access'])
         self.assertEqual(set(['u1', 'u2']),
                          set(acl_map['read'].to_dict_fields()['users']))
 
-    def test_create_new_container_acls_with_creator_only_false(self):
-        """Should allow creating acls for a new container with creator-only."""
+    def test_create_new_container_acls_with_project_access_true(self):
+        """Should allow creating acls for new container with project-access."""
         container_id, _ = create_container(self.app)
 
         resp = create_acls(
             self.app, 'containers', container_id,
-            read_creator_only=False,
+            read_project_access=True,
             read_user_ids=['u1', 'u3', 'u4'])
         self.assertEqual(200, resp.status_int)
         self.assertIsNotNone(resp.json)
         self.assertIn('/containers/{0}/acl'.format(container_id),
                       resp.json['acl_ref'])
         acl_map = _get_acl_map(container_id, is_secret=False)
-        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertTrue(acl_map['read']['project_access'])
 
-    def test_create_new_container_acls_with_creator_only_true(self):
-        """Should allow creating acls for a new container with creator-only."""
+    def test_create_new_container_acls_with_project_access_false(self):
+        """Should allow creating acls for new container with project-access."""
         container_id, _ = create_container(self.app)
 
         resp = create_acls(
             self.app, 'containers', container_id,
-            read_creator_only=True,
+            read_project_access=False,
             read_user_ids=['u1', 'u3', 'u4'])
         self.assertEqual(200, resp.status_int)
         self.assertIsNotNone(resp.json)
         self.assertIn('/containers/{0}/acl'.format(container_id),
                       resp.json['acl_ref'])
         acl_map = _get_acl_map(container_id, is_secret=False)
-        self.assertTrue(acl_map['read']['creator_only'])
+        self.assertFalse(acl_map['read']['project_access'])
 
-    def test_container_acls_with_invalid_creator_only_value_should_fail(self):
-        """Should fail if creator-only flag is provided as string value."""
+    def test_container_acls_with_invalid_project_access_value_fail(self):
+        """Should fail if project-access flag is provided as string value."""
         container_id, _ = create_container(self.app)
 
         resp = create_acls(
             self.app, 'containers', container_id,
-            read_creator_only="False",
+            read_project_access="False",
             read_user_ids=['u1', 'u3', 'u4'],
             expect_errors=True)
         self.assertEqual(400, resp.status_int)
 
         resp = create_acls(
             self.app, 'containers', container_id,
-            read_creator_only="None",
+            read_project_access="None",
             expect_errors=True)
         self.assertEqual(400, resp.status_int)
 
@@ -395,7 +396,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
         container_id, _ = create_container(self.app)
         create_acls(
             self.app, 'containers', container_id,
-            read_user_ids=['u1', 'u3'], read_creator_only=True)
+            read_user_ids=['u1', 'u3'], read_project_access=False)
 
         resp = self.app.get(
             '/containers/{0}/acl'.format(container_id),
@@ -404,17 +405,17 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
         self.assertIsNotNone(resp.json)
 
         self.assertIn('read', resp.json)
-        self.assertTrue(resp.json['read']['creator-only'])
+        self.assertFalse(resp.json['read']['project-access'])
         self.assertIsNotNone(resp.json['read']['created'])
         self.assertIsNotNone(resp.json['read']['updated'])
         self.assertEqual(set(['u1', 'u3']), set(resp.json['read']['users']))
 
-    def test_get_container_acls_with_creator_only_data(self):
-        """Read existing acls for acl when only creator-only flag is set."""
+    def test_get_container_acls_with_project_access_data(self):
+        """Read existing acls for acl when only project-access flag is set."""
         container_id, _ = create_container(self.app)
         create_acls(
             self.app, 'containers', container_id,
-            read_creator_only=True)
+            read_project_access=False)
 
         resp = self.app.get(
             '/containers/{0}/acl'.format(container_id),
@@ -423,7 +424,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
         self.assertIsNotNone(resp.json)
 
         self.assertEqual([], resp.json['read']['users'])
-        self.assertTrue(resp.json['read']['creator-only'])
+        self.assertFalse(resp.json['read']['project-access'])
         self.assertIsNotNone(resp.json['read']['created'])
         self.assertIsNotNone(resp.json['read']['updated'])
 
@@ -436,7 +437,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
         container_id, _ = create_container(self.app)
         create_acls(
             self.app, 'containers', container_id,
-            read_creator_only=False)
+            read_project_access=True)
 
         resp = self.app.get(
             '/containers/{0}/acl'.format(uuid.uuid4().hex),
@@ -448,7 +449,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
         container_id, _ = create_container(self.app)
         create_acls(
             self.app, 'containers', container_id,
-            read_creator_only=False)
+            read_project_access=True)
 
         resp = self.app.get(
             '/containers/{0}/acl'.format('my_container_id'),
@@ -470,7 +471,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
         container_id, _ = create_container(self.app)
 
         create_acls(
-            self.app, 'containers', container_id, read_creator_only=True,
+            self.app, 'containers', container_id, read_project_access=False,
             read_user_ids=['u1', 'u2'])
 
         resp = update_acls(
@@ -482,12 +483,12 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
         self.assertIn('/containers/{0}/acl'.format(container_id),
                       resp.json['acl_ref'])
         acl_map = _get_acl_map(container_id, is_secret=False)
-        # Check creator_only is False when not provided
-        self.assertFalse(acl_map['read']['creator_only'])
+        # Check project_access is True when not provided
+        self.assertTrue(acl_map['read']['project_access'])
         self.assertIn('u5', acl_map['read'].to_dict_fields()['users'])
 
-    def test_full_update_container_acls_modify_creator_only_values(self):
-        """Acls update where user ids and creator-only flag is modified."""
+    def test_full_update_container_acls_modify_project_access_values(self):
+        """Acls update where user ids and project-access flag is modified."""
         container_id, _ = create_container(self.app)
 
         create_acls(
@@ -496,13 +497,13 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
 
         resp = update_acls(
             self.app, 'containers', container_id, partial_update=False,
-            read_creator_only=True)
+            read_project_access=False)
         self.assertEqual(200, resp.status_int)
         self.assertIsNotNone(resp.json)
         self.assertIn('/containers/{0}/acl'.format(container_id),
                       resp.json['acl_ref'])
         acl_map = _get_acl_map(container_id, is_secret=False)
-        self.assertTrue(acl_map['read']['creator_only'])
+        self.assertFalse(acl_map['read']['project_access'])
         self.assertIsNone(acl_map['read'].to_dict_fields().get('users'))
 
     def test_full_update_container_acls_with_read_users_only(self):
@@ -534,7 +535,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
         acl_map = _get_acl_map(container_id, is_secret=False)
         # make sure 'list' operation is no longer after full update
         self.assertNotIn('list', acl_map)
-        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertTrue(acl_map['read']['project_access'])
         self.assertEqual(set(['u1', 'u3', 'u5']),
                          set(acl_map['read'].to_dict_fields()['users']))
         self.assertNotIn('u2', acl_map['read'].to_dict_fields()['users'])
@@ -568,7 +569,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
         self.assertIn('list', acl_map)
         self.assertEqual(set(['u1', 'u2']),
                          set(acl_map['list'].to_dict_fields()['users']))
-        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertTrue(acl_map['read']['project_access'])
         self.assertEqual(set(['u1', 'u3', 'u5']),
                          set(acl_map['read'].to_dict_fields()['users']))
 
@@ -587,26 +588,26 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
 
         self.assertEqual(200, resp.status_int)
         acl_map = _get_acl_map(container_id, is_secret=False)
-        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertTrue(acl_map['read']['project_access'])
 
-    def test_partial_update_container_acls_modify_creator_only_values(self):
-        """Acls partial update where creator-only flag is modified."""
+    def test_partial_update_container_acls_modify_project_access_values(self):
+        """Acls partial update where project-access flag is modified."""
         container_id, _ = create_container(self.app)
 
         create_acls(
             self.app, 'containers', container_id,
             read_user_ids=['u1', 'u2'],
-            read_creator_only=True)
+            read_project_access=False)
 
         resp = update_acls(
             self.app, 'containers', container_id, partial_update=True,
-            read_creator_only=False)
+            read_project_access=True)
         self.assertEqual(200, resp.status_int)
         self.assertIsNotNone(resp.json)
         self.assertIn('/containers/{0}/acl'.format(container_id),
                       resp.json['acl_ref'])
         acl_map = _get_acl_map(container_id, is_secret=False)
-        self.assertFalse(acl_map['read']['creator_only'])
+        self.assertTrue(acl_map['read']['project_access'])
         self.assertEqual(set(['u1', 'u2']),
                          set(acl_map['read'].to_dict_fields()['users']))
 
@@ -615,7 +616,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase):
         container_id, _ = create_container(self.app)
         create_acls(
             self.app, 'containers', container_id,
-            read_creator_only=False)
+            read_project_access=True)
 
         resp = self.app.delete(
             '/containers/{0}/acl'.format(container_id),
@@ -704,32 +705,32 @@ def create_container(app):
 
 
 def create_acls(app, entity_type, entity_id, read_user_ids=None,
-                read_creator_only=None,
+                read_project_access=None,
                 expect_errors=False):
     return manage_acls(app, entity_type, entity_id,
                        read_user_ids=read_user_ids,
-                       read_creator_only=read_creator_only,
+                       read_project_access=read_project_access,
                        is_update=False, partial_update=False,
                        expect_errors=expect_errors)
 
 
 def update_acls(app, entity_type, entity_id, read_user_ids=None,
-                read_creator_only=None, partial_update=False,
+                read_project_access=None, partial_update=False,
                 expect_errors=False):
     return manage_acls(app, entity_type, entity_id,
                        read_user_ids=read_user_ids,
-                       read_creator_only=read_creator_only,
+                       read_project_access=read_project_access,
                        is_update=True, partial_update=partial_update,
                        expect_errors=expect_errors)
 
 
 def manage_acls(app, entity_type, entity_id, read_user_ids=None,
-                read_creator_only=None, is_update=False,
+                read_project_access=None, is_update=False,
                 partial_update=None, expect_errors=False):
     request = {}
 
     _append_acl_to_request(request, 'read', read_user_ids,
-                           read_creator_only)
+                           read_project_access)
 
     cleaned_request = {key: val for key, val in request.items()
                        if val is not None}
@@ -748,12 +749,12 @@ def manage_acls(app, entity_type, entity_id, read_user_ids=None,
     return resp
 
 
-def _append_acl_to_request(req, operation, user_ids=None, creator_only=None):
+def _append_acl_to_request(req, operation, user_ids=None, project_access=None):
     op_dict = {}
     if user_ids is not None:
         op_dict['users'] = user_ids
-    if creator_only is not None:
-        op_dict['creator-only'] = creator_only
+    if project_access is not None:
+        op_dict['project-access'] = project_access
     if op_dict:
         req[operation] = op_dict
 

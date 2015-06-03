@@ -1053,7 +1053,7 @@ class SecretACL(BASE, ModelBase):
 
     operation = sa.Column(sa.String(255), nullable=False)
 
-    creator_only = sa.Column(sa.Boolean, nullable=False, default=False)
+    project_access = sa.Column(sa.Boolean, nullable=False, default=True)
 
     secret = orm.relationship(
         'Secret', backref=orm.backref('secret_acls', lazy=False))
@@ -1065,7 +1065,8 @@ class SecretACL(BASE, ModelBase):
     __table_args__ = (sa.UniqueConstraint(
         'secret_id', 'operation', name='_secret_acl_operation_uc'),)
 
-    def __init__(self, secret_id, operation, creator_only=None, user_ids=None):
+    def __init__(self, secret_id, operation, project_access=None,
+                 user_ids=None):
         """Creates secret ACL entity."""
         super(SecretACL, self).__init__()
 
@@ -1079,8 +1080,8 @@ class SecretACL(BASE, ModelBase):
             raise exception.MissingArgumentError(msg.format("operation"))
         self.operation = operation
 
-        if creator_only is not None:
-            self.creator_only = creator_only
+        if project_access is not None:
+            self.project_access = project_access
         self.status = States.ACTIVE
         if user_ids is not None and isinstance(user_ids, list):
             userids = set(user_ids)  # remove duplicate if any
@@ -1103,7 +1104,7 @@ class SecretACL(BASE, ModelBase):
         fields = {'acl_id': self.id,
                   'secret_id': self.secret_id,
                   'operation': self.operation,
-                  'creator_only': self.creator_only}
+                  'project_access': self.project_access}
         if users:
             fields['users'] = users
         return fields
@@ -1128,7 +1129,7 @@ class ContainerACL(BASE, ModelBase):
 
     operation = sa.Column(sa.String(255), nullable=False)
 
-    creator_only = sa.Column(sa.Boolean, nullable=False, default=False)
+    project_access = sa.Column(sa.Boolean, nullable=False, default=True)
 
     container = orm.relationship(
         'Container', backref=orm.backref('container_acls', lazy=False))
@@ -1140,7 +1141,7 @@ class ContainerACL(BASE, ModelBase):
     __table_args__ = (sa.UniqueConstraint(
         'container_id', 'operation', name='_container_acl_operation_uc'),)
 
-    def __init__(self, container_id, operation, creator_only=None,
+    def __init__(self, container_id, operation, project_access=None,
                  user_ids=None):
         """Creates container ACL entity."""
         super(ContainerACL, self).__init__()
@@ -1155,8 +1156,8 @@ class ContainerACL(BASE, ModelBase):
             raise exception.MissingArgumentError(msg.format("operation"))
         self.operation = operation
 
-        if creator_only is not None:
-            self.creator_only = creator_only
+        if project_access is not None:
+            self.project_access = project_access
         self.status = States.ACTIVE
 
         if user_ids is not None and isinstance(user_ids, list):
@@ -1180,7 +1181,7 @@ class ContainerACL(BASE, ModelBase):
         fields = {'acl_id': self.id,
                   'container_id': self.container_id,
                   'operation': self.operation,
-                  'creator_only': self.creator_only}
+                  'project_access': self.project_access}
         if users:
             fields['users'] = users
         return fields
