@@ -14,30 +14,16 @@
 #    under the License.
 import uuid
 
-from oslo_config import cfg
 import webob.exc
 
 from barbican.api import middleware as mw
+from barbican.common import config
 from barbican.common import utils
 import barbican.context
 from barbican import i18n as u
 
 LOG = utils.getLogger(__name__)
-
-# TODO(jwood) Need to figure out why config is ignored in this module.
-context_opts = [
-    cfg.StrOpt('admin_role', default='admin',
-               help=u._('Role used to identify an authenticated user as '
-                        'administrator.')),
-    cfg.BoolOpt('allow_anonymous_access', default=False,
-                help=u._('Allow unauthenticated users to access the API with '
-                         'read-only privileges. This only applies when using '
-                         'ContextMiddleware.')),
-]
-
-
-CONF = cfg.CONF
-CONF.register_opts(context_opts)
+CONF = config.CONF
 
 
 class BaseContextMiddleware(mw.Middleware):

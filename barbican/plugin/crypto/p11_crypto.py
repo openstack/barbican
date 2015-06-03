@@ -14,13 +14,14 @@ import base64
 
 from oslo_config import cfg
 
+from barbican.common import config
 from barbican.common import utils
 from barbican import i18n as u
 from barbican.openstack.common import jsonutils as json
 from barbican.plugin.crypto import crypto as plugin
 from barbican.plugin.crypto import pkcs11
 
-CONF = cfg.CONF
+CONF = config.new_config()
 LOG = utils.getLogger(__name__)
 
 p11_crypto_plugin_group = cfg.OptGroup(name='p11_crypto_plugin',
@@ -42,6 +43,7 @@ p11_crypto_plugin_opts = [
 ]
 CONF.register_group(p11_crypto_plugin_group)
 CONF.register_opts(p11_crypto_plugin_opts, group=p11_crypto_plugin_group)
+config.parse_args(CONF)
 
 
 class P11CryptoPlugin(plugin.CryptoPluginBase):
@@ -53,7 +55,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
     outside the HSM.
     """
 
-    def __init__(self, conf=cfg.CONF, ffi=None):
+    def __init__(self, conf=CONF, ffi=None):
         self.conf = conf
         if conf.p11_crypto_plugin.library_path is None:
             raise ValueError(u._("library_path is required"))

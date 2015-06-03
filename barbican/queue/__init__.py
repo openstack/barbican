@@ -16,78 +16,21 @@
 """
 Queue objects for Cloudkeep's Barbican
 """
-from oslo_config import cfg
 import oslo_messaging as messaging
 from oslo_messaging.notify import dispatcher as notfiy_dispatcher
 from oslo_messaging import server as msg_server
 
+from barbican.common import config
 from barbican.common import exception
 from barbican.common import utils
-from barbican import i18n as u
 
 
 LOG = utils.getLogger(__name__)
 
-queue_opt_group = cfg.OptGroup(name='queue',
-                               title='Queue Application Options')
+# Constant at one place if this needs to be changed later
+KS_NOTIFICATIONS_GRP_NAME = config.KS_NOTIFICATIONS_GRP_NAME
 
-queue_opts = [
-    cfg.BoolOpt('enable', default=False,
-                help=u._('True enables queuing, False invokes '
-                         'workers synchronously')),
-    cfg.StrOpt('namespace', default='barbican',
-               help=u._('Queue namespace')),
-    cfg.StrOpt('topic', default='barbican.workers',
-               help=u._('Queue topic name')),
-    cfg.StrOpt('version', default='1.1',
-               help=u._('Version of tasks invoked via queue')),
-    cfg.StrOpt('server_name', default='barbican.queue',
-               help=u._('Server name for RPC task processing server')),
-]
-
-# constant at one place if this needs to be changed later
-KS_NOTIFICATIONS_GRP_NAME = 'keystone_notifications'
-
-ks_queue_opt_group = cfg.OptGroup(name=KS_NOTIFICATIONS_GRP_NAME,
-                                  title='Keystone Notification Options')
-
-ks_queue_opts = [
-    cfg.BoolOpt('enable', default=False,
-                help=u._('True enables keystone notification listener '
-                         ' functionality.')),
-    cfg.StrOpt('control_exchange', default='openstack',
-               help=u._('The default exchange under which topics are scoped. '
-                        'May be overridden by an exchange name specified in '
-                        ' the transport_url option.')),
-    cfg.StrOpt('topic', default='notifications',
-               help=u._("Keystone notification queue topic name. This name "
-                        "needs to match one of values mentioned in Keystone "
-                        "deployment\'s 'notification_topics' configuration "
-                        "e.g."
-                        "    notification_topics=notifications, "
-                        "    barbican_notifications"
-                        "Multiple servers may listen on a topic and messages "
-                        " will be dispatched to one of the servers in a "
-                        "round-robin fashion. That's why Barbican service "
-                        " should have its own dedicated notification queue so "
-                        " that it receives all of Keystone notifications.")),
-    cfg.BoolOpt('allow_requeue', default=False,
-                help=u._('True enables requeue feature in case of notification'
-                         ' processing error. Enable this only when underlying '
-                         'transport supports this feature.')),
-    cfg.StrOpt('version', default='1.0',
-               help=u._('Version of tasks invoked via notifications')),
-    cfg.IntOpt('thread_pool_size', default=10,
-               help=u._('Define the number of max threads to be used for '
-                        'notification server processing functionality.')),
-]
-
-CONF = cfg.CONF
-CONF.register_group(queue_opt_group)
-CONF.register_opts(queue_opts, group=queue_opt_group)
-
-CONF.register_group(ks_queue_opt_group)
-CONF.register_opts(ks_queue_opts, group=ks_queue_opt_group)
+CONF = config.CONF
 
 TRANSPORT = None
 IS_SERVER_SIDE = True

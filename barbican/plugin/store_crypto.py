@@ -13,8 +13,7 @@
 
 import base64
 
-from oslo_config import cfg
-
+from barbican.common import config
 from barbican.common import utils
 from barbican.model import models
 from barbican.model import repositories
@@ -22,7 +21,8 @@ from barbican.plugin.crypto import crypto
 from barbican.plugin.crypto import manager
 from barbican.plugin.interface import secret_store as sstore
 
-CONF = cfg.CONF
+CONF = config.new_config()
+config.parse_args(CONF)
 
 
 class StoreCryptoContext(object):

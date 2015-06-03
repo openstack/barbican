@@ -11,9 +11,9 @@
 # limitations under the License.
 
 import mock
-from oslo_config import cfg
 import sqlalchemy
 
+from barbican.common import config
 from barbican.common import exception
 from barbican.model import models
 from barbican.model import repositories
@@ -25,7 +25,7 @@ class WhenCleaningRepositoryPagingParameters(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenCleaningRepositoryPagingParameters, self).setUp()
-        self.CONF = cfg.CONF
+        self.CONF = config.CONF
         self.default_limit = self.CONF.default_limit_paging
 
     def test_parameters_not_assigned(self):
@@ -92,7 +92,7 @@ class WhenInvokingExceptionMethods(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenInvokingExceptionMethods, self).setUp()
-        self.CONF = cfg.CONF
+        self.CONF = config.CONF
 
         self.entity_id = '123456'
         self.entity_name = 'test_entity'

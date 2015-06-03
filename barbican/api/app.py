@@ -24,7 +24,6 @@ try:
 except ImportError:
     newrelic_loaded = False
 
-from oslo_config import cfg
 from oslo_log import log
 
 from barbican.api.controllers import cas
@@ -38,6 +37,8 @@ from barbican.common import config
 from barbican import i18n as u
 from barbican.model import repositories
 from barbican import queue
+
+CONF = config.CONF
 
 if newrelic_loaded:
     newrelic.agent.initialize('/etc/newrelic/newrelic.ini')
@@ -76,11 +77,9 @@ def create_main_app(global_config, **local_conf):
     """uWSGI factory method for the Barbican-API application."""
 
     # Queuing initialization
-    CONF = cfg.CONF
     queue.init(CONF, is_server_side=False)
 
     # Configure oslo logging and configuration services.
-    config.parse_args()
     log.setup(CONF, 'barbican')
     config.setup_remote_pydev_debug()
 
@@ -102,7 +101,6 @@ def create_main_app(global_config, **local_conf):
 
 
 def create_admin_app(global_config, **local_conf):
-    config.parse_args()
     wsgi_app = pecan.make_app(versions.VersionController())
     return wsgi_app
 

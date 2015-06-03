@@ -15,10 +15,10 @@
 import uuid
 
 import mock
-from oslo_config import cfg
 import oslo_messaging
 import six
 
+from barbican.common import config
 from barbican.openstack.common import service
 from barbican import queue
 from barbican.queue import keystone_listener
@@ -30,7 +30,7 @@ class UtilMixin(object):
 
     def __init__(self, *args, **kwargs):
         super(UtilMixin, self).__init__(*args, **kwargs)
-        self.conf = cfg.CONF
+        self.conf = config.CONF
         # dict which has item as {property: (value, group_name)}
         self.overrides = {}
 
