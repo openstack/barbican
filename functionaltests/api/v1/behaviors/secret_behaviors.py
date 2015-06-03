@@ -73,7 +73,7 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
             headers.update(extra_headers)
 
         return self.client.put(secret_ref, data=payload, extra_headers=headers,
-                               use_auth=use_auth)
+                               use_auth=use_auth, user_name=user_name)
 
     def get_secret(self, secret_ref, payload_content_type,
                    payload_content_encoding=None, extra_headers=None,
