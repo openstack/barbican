@@ -55,7 +55,6 @@ def fail(returncode, e):
 
 if __name__ == '__main__':
     try:
-        config.parse_args()
         config.setup_remote_pydev_debug()
         # Import and configure logging.
         log.setup('barbican')
@@ -64,7 +63,7 @@ if __name__ == '__main__':
         LOG.info("Booting up Barbican Keystone listener node...")
 
         # Queuing initialization
-        CONF = cfg.CONF
+        CONF = config.CONF
         queue.init(CONF)
 
         if getattr(getattr(CONF, queue.KS_NOTIFICATIONS_GRP_NAME), 'enable'):

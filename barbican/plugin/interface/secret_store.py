@@ -19,6 +19,7 @@ from oslo_config import cfg
 import six
 from stevedore import named
 
+from barbican.common import config
 from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
@@ -27,7 +28,7 @@ from barbican.plugin.util import utils as plugin_utils
 
 _SECRET_STORE = None
 
-CONF = cfg.CONF
+CONF = config.new_config()
 DEFAULT_PLUGIN_NAMESPACE = 'barbican.secretstore.plugin'
 DEFAULT_PLUGINS = ['store_crypto']
 
@@ -45,6 +46,7 @@ store_opts = [
 ]
 CONF.register_group(store_opt_group)
 CONF.register_opts(store_opts, group=store_opt_group)
+config.parse_args(CONF)
 
 
 class SecretStorePluginNotFound(exception.BarbicanHTTPException):

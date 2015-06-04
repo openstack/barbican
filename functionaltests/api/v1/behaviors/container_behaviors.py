@@ -111,3 +111,18 @@ class ContainerBehaviors(base_behaviors.BaseBehaviors):
         entities = list(self.created_entities)
         for (container_ref, admin) in entities:
             self.delete_container(container_ref, user_name=admin)
+
+    def update_container(self, container_ref, user_name=None):
+        """Attempt to update a container (which is an invalid operation)
+
+        Update (HTTP PUT) is not supported against a container resource, so
+        issuing this call should fail.
+
+        :param container_ref: Reference of the container to be updated
+        :param user_name: The user name used to update the container
+        :return: Response of the update.
+        """
+
+        resp = self.client.put(container_ref, user_name=user_name)
+
+        return resp

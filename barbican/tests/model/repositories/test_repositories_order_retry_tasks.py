@@ -15,8 +15,7 @@
 import datetime
 import time
 
-from oslo_config import cfg
-
+from barbican.common import config
 from barbican.common import exception
 from barbican.model import models
 from barbican.model import repositories
@@ -103,7 +102,7 @@ class WhenTestingOrderRetryTaskRepository(database_utils.RepositoryTestCase):
 
         self.assertEqual([], entities)
         self.assertEqual(0, offset)
-        self.assertEqual(cfg.CONF.default_limit_paging, limit)
+        self.assertEqual(config.CONF.default_limit_paging, limit)
         self.assertEqual(0, total)
 
     def test_should_raise_no_result_found_with_exceptions(self):

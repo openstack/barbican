@@ -25,19 +25,14 @@ import os
 
 from alembic import command as alembic_command
 from alembic import config as alembic_config
-from oslo_config import cfg
 
+from barbican.common import config
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
 
 
-db_opts = [
-    cfg.StrOpt('sql_connection'),
-]
-
-CONF = cfg.CONF
-CONF.register_opts(db_opts)
+CONF = config.CONF
 
 
 def init_config(sql_url=None):

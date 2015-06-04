@@ -21,19 +21,14 @@ import importlib
 import mimetypes
 import uuid
 
-from oslo_config import cfg
 from oslo_log import log
 import pecan
 
+from barbican.common import config
 from barbican import i18n as u
 
 
-host_opts = [
-    cfg.StrOpt('host_href', default='http://localhost:9311'),
-]
-
-CONF = cfg.CONF
-CONF.register_opts(host_opts)
+CONF = config.CONF
 
 
 # Current API version

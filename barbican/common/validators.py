@@ -19,9 +19,10 @@ import base64
 import jsonschema as schema
 import ldap
 from OpenSSL import crypto
-from oslo_config import cfg
 import six
 
+from barbican.api import controllers
+from barbican.common import config
 from barbican.common import exception
 from barbican.common import hrefs
 from barbican.common import utils
@@ -33,15 +34,9 @@ from barbican.plugin.interface import secret_store
 from barbican.plugin.util import mime_types
 
 
+DEFAULT_MAX_SECRET_BYTES = config.DEFAULT_MAX_SECRET_BYTES
 LOG = utils.getLogger(__name__)
-DEFAULT_MAX_SECRET_BYTES = 10000
-common_opts = [
-    cfg.IntOpt('max_allowed_secret_in_bytes',
-               default=DEFAULT_MAX_SECRET_BYTES),
-]
-
-CONF = cfg.CONF
-CONF.register_opts(common_opts)
+CONF = config.CONF
 
 MYSQL_SMALL_INT_MAX = 32767
 
@@ -88,7 +83,7 @@ def validate_ca_id(project_id, order_meta):
         project_id=project_id)
 
 
-def validate_stored_key_rsa_container(project_id, container_ref):
+def validate_stored_key_rsa_container(project_id, container_ref, req):
         try:
             container_id = hrefs.get_container_id_from_ref(container_ref)
         except Exception:
@@ -98,9 +93,9 @@ def validate_stored_key_rsa_container(project_id, container_ref):
             raise exception.InvalidContainer(reason=reason)
 
         container_repo = repo.get_container_repository()
-        container = container_repo.get(container_id,
-                                       external_project_id=project_id,
-                                       suppress_exception=True)
+
+        container = container_repo.get_container_by_id(entity_id=container_id,
+                                                       suppress_exception=True)
         if not container:
             reason = u._("Container Not Found")
             raise exception.InvalidContainer(reason=reason)
@@ -109,10 +104,11 @@ def validate_stored_key_rsa_container(project_id, container_ref):
             reason = u._("Container Wrong Type")
             raise exception.InvalidContainer(reason=reason)
 
-        # TODO(dave) Validation should be done to determine if the
-        # requester of the certificate has permissions to access the
-        # keys in this container.  This can be done after the ACL patch
-        # has landed.
+        ctxt = controllers._get_barbican_context(req)
+        inst = controllers.containers.ContainerController(container)
+        controllers._do_enforce_rbac(inst, req,
+                                     controllers.containers.CONTAINER_GET,
+                                     ctxt)
 
 
 @six.add_metaclass(abc.ABCMeta)

@@ -27,6 +27,8 @@ from barbican.model import repositories as repo
 
 LOG = utils.getLogger(__name__)
 
+CONTAINER_GET = 'container:get'
+
 
 def container_not_found():
     """Throw exception indicating container not found."""
@@ -45,7 +47,7 @@ class ContainerController(controllers.ACLMixin):
         self.validator = validators.ContainerValidator()
         self.consumers = consumers.ContainerConsumersController(
             self.container_id)
-        self.acls = acls.ContainerACLsController(self.container_id)
+        self.acl = acls.ContainerACLsController(self.container)
 
     def get_acl_tuple(self, req, **kwargs):
         d = self.get_acl_dict_for_user(req, self.container.container_acls)
@@ -59,7 +61,7 @@ class ContainerController(controllers.ACLMixin):
 
     @index.when(method='GET', template='json')
     @controllers.handle_exceptions(u._('Container retrieval'))
-    @controllers.enforce_rbac('container:get')
+    @controllers.enforce_rbac(CONTAINER_GET)
     def on_get(self, external_project_id):
         dict_fields = self.container.to_dict_fields()
 

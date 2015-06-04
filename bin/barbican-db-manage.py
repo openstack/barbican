@@ -6,8 +6,8 @@ import argparse
 
 sys.path.insert(0, os.getcwd())
 
+from barbican.common import config
 from barbican.model.migration import commands
-from oslo_config import cfg
 from oslo_log import log
 
 
@@ -124,8 +124,7 @@ def _exception_is_successfull_exit(thrown_exception):
 
 def main():
     # Import and configure logging.
-    CONF = cfg.CONF
-    log.register_options(CONF)
+    CONF = config.CONF
     log.setup(CONF, 'barbican-db-manage')
     LOG = log.getLogger(__name__)
     LOG.debug("Performing database schema migration...")

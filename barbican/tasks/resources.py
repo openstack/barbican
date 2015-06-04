@@ -58,7 +58,7 @@ class BaseTask(object):
         https://gist.github.com/jfwood/a8130265b0db3c793ec8
         """
         try:
-            self.process(*args, **kwargs)
+            return self.process(*args, **kwargs)
         except Exception:
             LOG.exception(
                 u._LE(

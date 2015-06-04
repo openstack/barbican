@@ -10,6 +10,7 @@ Quick Start
 
    ./quickstart/secrets
    ./quickstart/containers
+   ./quickstart/acls
 
 
 API Reference
@@ -20,3 +21,4 @@ API Reference
 
     ./reference/secrets
     ./reference/containers
+    ./reference/acls

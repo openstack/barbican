@@ -18,13 +18,12 @@ A filter middleware that just outputs to logs, for instructive/sample
 purposes only.
 """
 
-from oslo_config import cfg
-
 from barbican.api import middleware
+from barbican.common import config
 from barbican.common import utils
 
 LOG = utils.getLogger(__name__)
-CONF = cfg.CONF
+CONF = config.CONF
 
 
 class SimpleFilter(middleware.Middleware):

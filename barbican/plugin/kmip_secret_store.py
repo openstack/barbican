@@ -32,13 +32,14 @@ from kmip.core import objects as kmip_objects
 from oslo_config import cfg
 from oslo_log import log
 
+from barbican.common import config
 from barbican import i18n as u  # noqa
 from barbican.plugin.interface import secret_store as ss
 from barbican.plugin.util import translations
 
 LOG = log.getLogger(__name__)
 
-CONF = cfg.CONF
+CONF = config.new_config()
 
 kmip_opt_group = cfg.OptGroup(name='kmip_plugin', title='KMIP Plugin')
 kmip_opts = [
@@ -78,6 +79,7 @@ kmip_opts = [
 ]
 CONF.register_group(kmip_opt_group)
 CONF.register_opts(kmip_opts, group=kmip_opt_group)
+config.parse_args(CONF)
 
 attribute_debug_msg = "Created attribute type %s with value %s"
 
