@@ -846,3 +846,36 @@ class NewTransportKeyValidator(ValidatorBase):
         json_data['transport_key'] = transport_key
 
         return json_data
+
+
+class ProjectQuotaValidator(ValidatorBase):
+    """Validate a new project quota."""
+
+    def __init__(self):
+        self.name = 'Project Quota'
+
+        self.schema = {
+            'type': 'object',
+            'properties': {
+                'project_quotas': {
+                    'type': 'object',
+                    'properties': {
+                        'secrets': {'type': 'integer'},
+                        'orders': {'type': 'integer'},
+                        'containers': {'type': 'integer'},
+                        'transport_keys': {'type': 'integer'},
+                        'consumers': {'type': 'integer'}
+                    },
+                    'additionalProperties': False,
+                }
+            },
+            'required': ['project_quotas'],
+            'additionalProperties': False
+        }
+
+    def validate(self, json_data, parent_schema=None):
+        schema_name = self._full_name(parent_schema)
+
+        self._assert_schema_is_valid(json_data, schema_name)
+
+        return json_data

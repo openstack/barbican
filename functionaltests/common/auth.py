@@ -89,6 +89,10 @@ class FunctionalTestAuth(auth.AuthBase):
         """Return the UID used by keystone to uniquely identify the user"""
         return self.authenticate()['user_id']
 
+    def get_project_id(self):
+        """Return the UID used by keystone to identify the user's project"""
+        return self.authenticate()['project_id']
+
     def __call__(self, r):
         creds = self.authenticate()
 

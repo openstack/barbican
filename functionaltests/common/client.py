@@ -221,7 +221,8 @@ class BarbicanClient(object):
                 next_ref = item_list.get('next')
             elif 'previous' == item:
                 prev_ref = item_list.get('previous')
-            elif item in ('secrets', 'orders', 'containers', 'consumers'):
+            elif item in ('secrets', 'orders', 'containers',
+                          'consumers', 'project_quotas'):
                 for entity in item_list.get(item):
                     models.append(model_type(**entity))
 
@@ -285,5 +286,11 @@ class BarbicanClient(object):
     def get_user_id_from_name(self, user_name):
         if user_name and self._auth[user_name]:
             return self._auth[user_name].get_user_id()
+        else:
+            return None
+
+    def get_project_id_from_name(self, user_name):
+        if user_name and self._auth[user_name]:
+            return self._auth[user_name].get_project_id()
         else:
             return None

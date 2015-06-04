@@ -53,3 +53,7 @@ class BaseBehaviors(object):
     def get_user_id_from_name(self, user_name):
         """From a configured user name, get the unique user id from keystone"""
         return self.client.get_user_id_from_name(user_name)
+
+    def get_project_id_from_name(self, user_name):
+        """From a configured user name, get the project id from keystone"""
+        return self.client.get_project_id_from_name(user_name)

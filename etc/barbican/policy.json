@@ -66,5 +66,9 @@
     "secret_acls:get": "rule:all_but_audit and rule:secret_project_match",
     "container_acls:put_patch": "rule:container_project_admin or rule:container_project_creator",
     "container_acls:delete": "rule:container_project_admin or rule:container_project_creator",
-    "container_acls:get": "rule:all_but_audit and rule:container_project_match"
+    "container_acls:get": "rule:all_but_audit and rule:container_project_match",
+    "quotas:get": "rule:all_users",
+    "project_quotas:get": "rule:admin",
+    "project_quotas:post": "rule:admin",
+    "project_quotas:delete": "rule:admin"
 }
