@@ -311,8 +311,7 @@ class P11CryptoKeyHandleException(exception.BarbicanException):
 
 class PKCS11(object):
 
-    def __init__(self, library_path, mkek_label, mkek_length, hmac_label,
-                 login_passphrase, slot_id, ffi=None):
+    def __init__(self, library_path, login_passphrase, slot_id, ffi=None):
         self.ffi = build_ffi() if not ffi else ffi
         self.lib = self.ffi.dlopen(library_path)
 
@@ -330,19 +329,19 @@ class PKCS11(object):
         session = self.create_working_session()
         self.perform_rng_self_test(session)
 
+        # Clean up the active session
+        self.close_session(session)
+
+    def cache_mkek_and_hmac(self, mkek_label, hmac_label):
+        session = self.create_working_session()
         self.current_mkek_label = mkek_label
         self.current_hmac_label = hmac_label
         LOG.debug("Current mkek label: %s", self.current_mkek_label)
         LOG.debug("Current hmac label: %s", self.current_hmac_label)
 
         # cache current MKEK handle in the dictionary
-        self.get_mkek(
-            self.current_mkek_label,
-            session
-        )
+        self.get_mkek(self.current_mkek_label, session)
         self.get_hmac_key(self.current_hmac_label, session)
-
-        # Clean up the active session
         self.close_session(session)
 
     def perform_rng_self_test(self, session):

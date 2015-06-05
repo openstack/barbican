@@ -61,13 +61,12 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             raise ValueError(u._("library_path is required"))
         self.pkcs11 = pkcs11.PKCS11(
             library_path=conf.p11_crypto_plugin.library_path,
-            mkek_label=conf.p11_crypto_plugin.mkek_label,
-            mkek_length=conf.p11_crypto_plugin.mkek_length,
-            hmac_label=conf.p11_crypto_plugin.hmac_label,
             login_passphrase=conf.p11_crypto_plugin.login,
             slot_id=conf.p11_crypto_plugin.slot_id,
             ffi=ffi
         )
+        self.pkcs11.cache_mkek_and_hmac(conf.p11_crypto_plugin.mkek_label,
+                                        conf.p11_crypto_plugin.hmac_label)
 
     def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
         session = self.pkcs11.create_working_session()
