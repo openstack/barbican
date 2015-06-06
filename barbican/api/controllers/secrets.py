@@ -127,7 +127,10 @@ class SecretController(controllers.ACLMixin):
         external_project_id = secret.project_assocs[0].projects.external_id
         project = res.get_or_create_project(external_project_id)
 
-        pecan.override_template('', pecan.request.accept.header_value)
+        # default to application/octet-stream if there is no Accept header
+        accept_header = getattr(pecan.request.accept, 'header_value',
+                                'application/octet-stream')
+        pecan.override_template('', accept_header)
 
         twsk = kwargs.get('trans_wrapped_session_key', None)
         transport_key = None
@@ -136,7 +139,7 @@ class SecretController(controllers.ACLMixin):
             transport_key = self._get_transport_key(
                 kwargs.get('transport_key_id', None))
 
-        return plugin.get_secret(pecan.request.accept.header_value,
+        return plugin.get_secret(accept_header,
                                  secret,
                                  project,
                                  twsk,
