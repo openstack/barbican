@@ -16,13 +16,21 @@ import logging
 import random
 import time
 
+from oslo_config import cfg
 import six
 
-from barbican.common import config
 from barbican.openstack.common._i18n import _, _LE, _LI
 
 
-CONF = config.CONF
+periodic_opts = [
+    cfg.BoolOpt('run_external_periodic_tasks',
+                default=True,
+                help='Some periodic tasks can be run in a separate process. '
+                     'Should we run them here?'),
+]
+
+CONF = cfg.CONF
+CONF.register_opts(periodic_opts)
 
 LOG = logging.getLogger(__name__)
 
@@ -214,11 +222,11 @@ class PeriodicTasks(object):
 
             try:
                 task(self, context)
-            except Exception as e:
+            except Exception:
                 if raise_on_error:
                     raise
-                LOG.exception(_LE("Error during %(full_task_name)s: %(e)s"),
-                              {"full_task_name": full_task_name, "e": e})
+                LOG.exception(_LE("Error during %(full_task_name)s"),
+                              {"full_task_name": full_task_name})
             time.sleep(0)
 
         return idle_for

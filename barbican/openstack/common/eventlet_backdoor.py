@@ -28,8 +28,8 @@ import traceback
 
 import eventlet.backdoor
 import greenlet
+from oslo_config import cfg
 
-from barbican.common import config
 from barbican.openstack.common._i18n import _LI
 
 help_for_backdoor_port = (
@@ -39,15 +39,20 @@ help_for_backdoor_port = (
     "is in use); and <start>:<end> results in listening on the smallest "
     "unused port number within the specified range of port numbers.  The "
     "chosen port is displayed in the service's log file.")
+eventlet_backdoor_opts = [
+    cfg.StrOpt('backdoor_port',
+               help="Enable eventlet backdoor.  %s" % help_for_backdoor_port)
+]
 
-CONF = config.CONF
+CONF = cfg.CONF
+CONF.register_opts(eventlet_backdoor_opts)
 LOG = logging.getLogger(__name__)
 
 
 def list_opts():
-    """Entry point for oslo.config-generator.
+    """Entry point for oslo-config-generator.
     """
-    return [(None, copy.deepcopy(config.eventlet_backdoor_opts))]
+    return [(None, copy.deepcopy(eventlet_backdoor_opts))]
 
 
 class EventletBackdoorConfigValueError(Exception):
@@ -138,7 +143,7 @@ def initialize_if_enabled():
     # listen().  In any case, pull the port number out here.
     port = sock.getsockname()[1]
     LOG.info(
-        _LI('Eventlet backdoor listening on %(port)s for process %(pid)d') %
+        _LI('Eventlet backdoor listening on %(port)s for process %(pid)d'),
         {'port': port, 'pid': os.getpid()}
     )
     eventlet.spawn_n(eventlet.backdoor.backdoor_server, sock,
