@@ -14,7 +14,7 @@ VENV_HOME=${VENV_HOME:-$PWD}
 VENV_PYTHON=$VENV_HOME/$VENV/lib/python2.7/site-packages
 
 PKG_DIR=/etc/$PKG
-CONF_FILE=$PKG_DIR/barbican-api.conf
+CONF_FILE=$PKG_DIR/barbican.conf
 POLICY_FILE=$PKG_DIR/policy.json
 SIGNING_DIR=$PKG_DIR/cache/
 OPTS='--daemonize /var/log/barbican/uwsgi.log'
@@ -25,15 +25,15 @@ then
   echo 'Running locally...'
 
   PKG_DIR=$PWD/etc/$PKG
-  CONF_FILE=./etc/$PKG/barbican-api.conf
+  CONF_FILE=./etc/$PKG/barbican.conf
   PYTHONPATH=$VENV_PYTHON:$PYTHONPATH
   OPTS='-H '$VENV_HOME/$VENV' --stats :9314'
 
   # Copy conf file to home directory so oslo.config can find it
-  LOCAL_CONF_FILE=~/barbican-api.conf
+  LOCAL_CONF_FILE=~/barbican.conf
   if [ ! -f $LOCAL_CONF_FILE ];
   then
-    cp ./etc/$PKG/barbican-api.conf ~
+    cp ./etc/$PKG/barbican.conf ~
   fi
 fi
 

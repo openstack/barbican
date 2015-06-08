@@ -178,7 +178,7 @@ application per the 'Via Application' section.
 Thereafter, it is suggested that only the ``barbican-db-manage.py`` script
 above be used to update the database schema per the 'Manually' section. Also,
 automatic database updates from the Barbican application should be disabled by
-adding/updating ``db_auto_create = False`` in the ``barbican-api.conf``
+adding/updating ``db_auto_create = False`` in the ``barbican.conf``
 configuration file.
 
 Via Application
@@ -196,7 +196,7 @@ version, or else it can update an existing database table space to the latest
 schema revision (called ``head`` in the docs).
 
 *To bypass this automatic behavior, add* ``db_auto_create = False`` *to the*
-``barbican-api.conf`` *file*.
+``barbican.conf`` *file*.
 
 Manually
 '''''''''

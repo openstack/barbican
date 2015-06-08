@@ -32,7 +32,7 @@ set +o xtrace
 BARBICAN_DIR=$DEST/barbican
 BARBICANCLIENT_DIR=$DEST/python-barbicanclient
 BARBICAN_CONF_DIR=${BARBICAN_CONF_DIR:-/etc/barbican}
-BARBICAN_CONF=$BARBICAN_CONF_DIR/barbican-api.conf
+BARBICAN_CONF=$BARBICAN_CONF_DIR/barbican.conf
 BARBICAN_PASTE_CONF=$BARBICAN_CONF_DIR/barbican-api-paste.ini
 BARBICAN_API_LOG_DIR=$DEST/logs
 BARBICAN_AUTH_CACHE_DIR=${BARBICAN_AUTH_CACHE_DIR:-/var/cache/barbican}
@@ -89,7 +89,7 @@ function configure_barbican {
     sudo chown $USER $BARBICAN_CONF_DIR
 
     # Copy the barbican config files to the config dir
-    cp $BARBICAN_DIR/etc/barbican/barbican-api.conf $BARBICAN_CONF_DIR
+    cp $BARBICAN_DIR/etc/barbican/barbican.conf $BARBICAN_CONF_DIR
     cp $BARBICAN_DIR/etc/barbican/barbican-api-paste.ini $BARBICAN_CONF_DIR
     cp -R $BARBICAN_DIR/etc/barbican/vassals $BARBICAN_CONF_DIR
 
