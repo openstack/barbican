@@ -19,18 +19,22 @@ from functionaltests.api.v1.models import order_models
 
 class OrderBehaviors(base_behaviors.BaseBehaviors):
 
-    def create_order(self, model, extra_headers=None, use_auth=True):
+    def create_order(self, model, extra_headers=None, use_auth=True,
+                     user_name=None, admin=None):
         """Create an order from the data in the model.
 
         :param model: The data used to create the order
         :param extra_headers: Optional HTTP headers to add to the request
         :param use_auth: Boolean to determine whether auth headers are sent
+        :param user_name: the user used to do the create
+        :param admin: the admin of the group to which user_name belongs
         :return: The create response and href for the order
         """
 
         # create the order
         resp = self.client.post('orders', request_model=model,
-                                extra_headers=extra_headers, use_auth=use_auth)
+                                extra_headers=extra_headers,
+                                user_name=user_name, use_auth=use_auth)
 
         # handle expected JSON parsing errors for unauthenticated requests
         if resp.status_code == 401 and not use_auth:
@@ -39,26 +43,29 @@ class OrderBehaviors(base_behaviors.BaseBehaviors):
         returned_data = self.get_json(resp)
         order_ref = returned_data.get('order_ref')
 
-        # remember this order for our housekeeping cleanup
+        # remember this order and its admin for our housekeeping cleanup
         if order_ref:
-            self.created_entities.append(order_ref)
+            self.created_entities.append((order_ref, admin))
 
         return resp, order_ref
 
-    def get_order(self, order_ref, extra_headers=None, use_auth=True):
+    def get_order(self, order_ref, extra_headers=None, user_name=None,
+                  use_auth=True):
         """Get an order from an href.
 
         :param order_ref: The href for an order
         :param extra_headers: Optional HTTP headers to add to the request
+        :param user_name: the user used to do the get
         :param use_auth: Boolean to determine whether auth headers are sent
         :return: The response from the get
         """
         return self.client.get(order_ref,
                                response_model_type=order_models.OrderModel,
-                               extra_headers=extra_headers, use_auth=use_auth)
+                               extra_headers=extra_headers,
+                               user_name=user_name, use_auth=use_auth)
 
     def get_orders(self, limit=10, offset=0, name_filter=None,
-                   extra_headers=None, use_auth=True):
+                   extra_headers=None, user_name=None, use_auth=True):
         """Get a list of orders.
 
         :param limit: limits number of returned orders (default 10)
@@ -67,6 +74,7 @@ class OrderBehaviors(base_behaviors.BaseBehaviors):
         :param name_filter: optional filter to limit the returned secrets to
                         those whose name matches the filter.
         :param extra_headers: Optional HTTP headers to add to the request
+        :param user_name: the user used to do the get
         :param use_auth: Boolean to determine whether auth headers are sent
         :return the response, a list of orders and the next/pref hrefs
         """
@@ -75,7 +83,8 @@ class OrderBehaviors(base_behaviors.BaseBehaviors):
             params['name'] = name_filter
 
         resp = self.client.get('orders', params=params,
-                               extra_headers=extra_headers, use_auth=use_auth)
+                               extra_headers=extra_headers,
+                               user_name=user_name, use_auth=use_auth)
 
         # handle expected JSON parsing errors for unauthenticated requests
         if resp.status_code == 401 and not use_auth:
@@ -89,7 +98,7 @@ class OrderBehaviors(base_behaviors.BaseBehaviors):
         return resp, orders, next_ref, prev_ref
 
     def delete_order(self, order_ref, extra_headers=None, expected_fail=False,
-                     use_auth=True):
+                     user_name=None, use_auth=True):
         """Delete an order.
 
         :param order_ref: HATEOS ref of the order to be deleted
@@ -100,17 +109,22 @@ class OrderBehaviors(base_behaviors.BaseBehaviors):
                               determine whether or not this delete should
                               also remove an entity from our internal
                               list for housekeeping.
+        :param user_name: the user used to do the delete
         :param use_auth: Boolean to determine whether auth headers are sent
         :return A request response object
         """
         resp = self.client.delete(order_ref, extra_headers=extra_headers,
-                                  use_auth=use_auth)
+                                  user_name=user_name, use_auth=use_auth)
+
         if not expected_fail:
-            self.created_entities.remove(order_ref)
+            for item in self.created_entities:
+                if item[0] == order_ref:
+                    self.created_entities.remove(item)
+
         return resp
 
     def delete_all_created_orders(self):
         """Delete all of the orders that we have created."""
         orders_to_delete = [order for order in self.created_entities]
-        for order_ref in orders_to_delete:
-            self.delete_order(order_ref)
+        for (order_ref, admin) in orders_to_delete:
+            self.delete_order(order_ref, user_name=admin)
