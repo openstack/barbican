@@ -465,13 +465,13 @@ class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase,
         self.assertIsInstance(order, models.Order)
 
     def _setup_acl_order_context_and_create_order(
-        self, add_acls=False, read_creator_only=False, order_roles=None,
+        self, add_acls=False, read_project_access=True, order_roles=None,
             order_user=None, expect_errors=False):
         """Helper method to setup acls, order context and return created order.
 
         Create order uses actual oslo policy enforcer instead of being None.
         Create ACLs for container if 'add_acls' is True.
-        Make container private when 'read_creator_only' is True.
+        Make container private when 'read_project_access' is False.
         """
 
         container_name = 'rsa container name'
@@ -492,7 +492,7 @@ class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase,
             test_acls.manage_acls(
                 self.app, 'containers', container_id,
                 read_user_ids=['u1', 'u3', 'u4'],
-                read_creator_only=read_creator_only,
+                read_project_access=read_project_access,
                 is_update=False)
 
         self.app.extra_environ = {
@@ -523,7 +523,7 @@ class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase,
         """
 
         create_resp, order_id = self._setup_acl_order_context_and_create_order(
-            add_acls=False, read_creator_only=False, order_roles=['creator'],
+            add_acls=False, read_project_access=True, order_roles=['creator'],
             order_user='anyUserId', expect_errors=False)
 
         self.assertEqual(202, create_resp.status_int)
@@ -542,7 +542,7 @@ class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase,
         """
 
         create_resp, _ = self._setup_acl_order_context_and_create_order(
-            add_acls=False, read_creator_only=False, order_roles=['observer'],
+            add_acls=False, read_project_access=True, order_roles=['observer'],
             order_user='anyUserId', expect_errors=True)
         self.assertEqual(403, create_resp.status_int)
 
@@ -554,7 +554,7 @@ class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase,
         successfully.
         """
         create_resp, order_id = self._setup_acl_order_context_and_create_order(
-            add_acls=True, read_creator_only=True, order_roles=['creator'],
+            add_acls=True, read_project_access=False, order_roles=['creator'],
             order_user=self.creator_user_id, expect_errors=False)
 
         self.assertEqual(202, create_resp.status_int)
@@ -574,7 +574,7 @@ class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase,
         """
 
         create_resp, order_id = self._setup_acl_order_context_and_create_order(
-            add_acls=True, read_creator_only=True, order_roles=['creator'],
+            add_acls=True, read_project_access=False, order_roles=['creator'],
             order_user='u3', expect_errors=False)
         self.assertEqual(202, create_resp.status_int)
 
@@ -593,7 +593,7 @@ class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase,
         """
 
         create_resp, _ = self._setup_acl_order_context_and_create_order(
-            add_acls=True, read_creator_only=True, order_roles=['creator'],
+            add_acls=True, read_project_access=False, order_roles=['creator'],
             order_user='anyProjectUser', expect_errors=True)
 
         self.assertEqual(403, create_resp.status_int)
@@ -607,7 +607,7 @@ class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase,
         project. Order project is same as container.
         """
         create_resp, order_id = self._setup_acl_order_context_and_create_order(
-            add_acls=True, read_creator_only=False, order_roles=['creator'],
+            add_acls=True, read_project_access=True, order_roles=['creator'],
             order_user='anyProjectUser', expect_errors=False)
 
         self.assertEqual(202, create_resp.status_int)
@@ -624,7 +624,7 @@ class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase,
         container successfully. Order project is same as container.
         """
         create_resp, order_id = self._setup_acl_order_context_and_create_order(
-            add_acls=True, read_creator_only=False, order_roles=['creator'],
+            add_acls=True, read_project_access=True, order_roles=['creator'],
             order_user=self.creator_user_id, expect_errors=False)
 
         self.assertEqual(202, create_resp.status_int)

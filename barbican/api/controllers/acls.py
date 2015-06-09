@@ -33,7 +33,7 @@ def _convert_acl_to_response_format(acl, acls_dict):
 
     acl_data = {}  # dict for each acl operation data
 
-    acl_data['creator-only'] = fields['creator_only']
+    acl_data['project-access'] = fields['project_access']
     acl_data['users'] = fields.get('users', [])
     acl_data['created'] = fields['created']
     acl_data['updated'] = fields['updated']
@@ -41,7 +41,7 @@ def _convert_acl_to_response_format(acl, acls_dict):
     acls_dict[operation] = acl_data
 
 
-DEFAULT_ACL = {'read': {'creator-only': False}}
+DEFAULT_ACL = {'read': {'project-access': True}}
 
 
 class SecretACLsController(controllers.ACLMixin):
@@ -96,7 +96,7 @@ class SecretACLsController(controllers.ACLMixin):
             "users":[
               "5ecb18f341894e94baca9e8c7b6a824a"
             ],
-            "creator-only":true
+            "project-access":true
           }
         }
         """
@@ -107,16 +107,16 @@ class SecretACLsController(controllers.ACLMixin):
                              self.secret.secret_acls}
         for operation in itertools.ifilter(lambda x: data.get(x),
                                            validators.ACL_OPERATIONS):
-            creator_only = data[operation].get('creator-only')
+            project_access = data[operation].get('project-access')
             user_ids = data[operation].get('users')
             s_acl = None
             if operation in existing_acls_map:  # update if matching acl exists
                 s_acl = existing_acls_map[operation]
-                if creator_only is not None:
-                    s_acl.creator_only = creator_only
+                if project_access is not None:
+                    s_acl.project_access = project_access
             else:
                 s_acl = models.SecretACL(self.secret.id, operation=operation,
-                                         creator_only=creator_only)
+                                         project_access=project_access)
             self.acl_repo.create_or_replace_from(self.secret, secret_acl=s_acl,
                                                  user_ids=user_ids)
 
@@ -133,7 +133,7 @@ class SecretACLsController(controllers.ACLMixin):
 
         Replaces existing secret ACL(s) with input ACL(s) data. Existing
         ACL operation not specified in input are removed as part of update.
-        For missing creator-only in ACL, false is used as default.
+        For missing project-access in ACL, true is used as default.
         In update, multiple operation ACL payload can be specified as
         mentioned in sample below. A specific ACL can be updated by its
         own id via SecretACLController patch request.
@@ -150,7 +150,7 @@ class SecretACLsController(controllers.ACLMixin):
             "users":[
               "5ecb18f341894e94baca9e8c7b6a824a"
             ],
-            "creator-only":true
+            "project-access":false
           }
         }
 
@@ -168,15 +168,15 @@ class SecretACLsController(controllers.ACLMixin):
                              self.secret.secret_acls}
         for operation in itertools.ifilter(lambda x: data.get(x),
                                            validators.ACL_OPERATIONS):
-            creator_only = data[operation].get('creator-only', False)
+            project_access = data[operation].get('project-access', True)
             user_ids = data[operation].get('users', [])
             s_acl = None
             if operation in existing_acls_map:  # update if matching acl exists
                 s_acl = existing_acls_map.pop(operation)
-                s_acl.creator_only = creator_only
+                s_acl.project_access = project_access
             else:
                 s_acl = models.SecretACL(self.secret.id, operation=operation,
-                                         creator_only=creator_only)
+                                         project_access=project_access)
             self.acl_repo.create_or_replace_from(self.secret, secret_acl=s_acl,
                                                  user_ids=user_ids)
         # delete remaining existing acls as they are not present in input.
@@ -261,7 +261,7 @@ class ContainerACLsController(controllers.ACLMixin):
             "users":[
               "5ecb18f341894e94baca9e8c7b6a824a"
             ],
-            "creator-only":true
+            "project-access":false
           }
         }
         """
@@ -272,16 +272,16 @@ class ContainerACLsController(controllers.ACLMixin):
                              self.container.container_acls}
         for operation in itertools.ifilter(lambda x: data.get(x),
                                            validators.ACL_OPERATIONS):
-            creator_only = data[operation].get('creator-only')
+            project_access = data[operation].get('project-access')
             user_ids = data[operation].get('users')
             if operation in existing_acls_map:  # update if matching acl exists
                 c_acl = existing_acls_map[operation]
-                if creator_only is not None:
-                    c_acl.creator_only = creator_only
+                if project_access is not None:
+                    c_acl.project_access = project_access
             else:
                 c_acl = models.ContainerACL(self.container.id,
                                             operation=operation,
-                                            creator_only=creator_only)
+                                            project_access=project_access)
             self.acl_repo.create_or_replace_from(self.container,
                                                  container_acl=c_acl,
                                                  user_ids=user_ids)
@@ -299,7 +299,7 @@ class ContainerACLsController(controllers.ACLMixin):
 
         Replaces existing container ACL(s) with input ACL(s) data. Existing
         ACL operation not specified in input are removed as part of update.
-        For missing creator-only in ACL, false is used as default.
+        For missing project-access in ACL, true is used as default.
         In update, multiple operation ACL payload can be specified as
         mentioned in sample below. A specific ACL can be updated by its
         own id via ContainerACLController patch request.
@@ -316,7 +316,7 @@ class ContainerACLsController(controllers.ACLMixin):
             "users":[
               "5ecb18f341894e94baca9e8c7b6a824a"
             ],
-            "creator-only":true
+            "project-access":false
           }
         }
 
@@ -336,15 +336,15 @@ class ContainerACLsController(controllers.ACLMixin):
                              self.container.container_acls}
         for operation in itertools.ifilter(lambda x: data.get(x),
                                            validators.ACL_OPERATIONS):
-            creator_only = data[operation].get('creator-only', False)
+            project_access = data[operation].get('project-access', True)
             user_ids = data[operation].get('users', [])
             if operation in existing_acls_map:  # update if matching acl exists
                 c_acl = existing_acls_map.pop(operation)
-                c_acl.creator_only = creator_only
+                c_acl.project_access = project_access
             else:
                 c_acl = models.ContainerACL(self.container.id,
                                             operation=operation,
-                                            creator_only=creator_only)
+                                            project_access=project_access)
             self.acl_repo.create_or_replace_from(self.container,
                                                  container_acl=c_acl,
                                                  user_ids=user_ids)
