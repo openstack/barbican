@@ -102,7 +102,7 @@ instructions).
    user/pw> revision -m '<your-summary-of-changes>' --autogenerate``
 
    a. For example: ``bin/barbican-db-manage.py -d
-      mysql://root:password@127.0.0.1/barbican?charset=utf8
+      mysql+pymysql://root:password@127.0.0.1/barbican?charset=utf8
       revision -m 'Make unneeded verification columns nullable' --autogenerate``
 
 3. Examine the generated version file, found in

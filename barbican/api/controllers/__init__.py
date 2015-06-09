@@ -102,9 +102,9 @@ def handle_exceptions(operation_name=u._('System')):
         def handler(inst, *args, **kwargs):
             try:
                 return fn(inst, *args, **kwargs)
-            except exc.HTTPError as f:
+            except exc.HTTPError:
                 LOG.exception(u._LE('Webob error seen'))
-                raise f  # Already converted to Webob exception, just reraise
+                raise  # Already converted to Webob exception, just reraise
             except Exception as e:
                 # In case intervening modules have disabled logging.
                 LOG.logger.disabled = False
@@ -190,11 +190,11 @@ class ACLMixin(object):
         Token user is looked into users list present for each acl operation.
         If there is a match, it means that ACL data is applicable for policy
         logic. Policy logic requires data as dictionary so this method capture
-        acl's operation, creator_only data in that format.
+        acl's operation, project_access data in that format.
 
         For operation value, matching ACL record's operation is stored in dict
         as key and value both.
-        creator_only flag is intended to make secret/container private for a
+        project_access flag is intended to make secret/container private for a
         given operation. It doesn't require user match. So its captured in dict
         format where key is prefixed with related operation and flag is used as
         its value.
@@ -208,14 +208,14 @@ class ACLMixin(object):
         and token user is among the ACL users defined for 'read' and 'list'
         operation.
 
-        {'read': 'read', 'list': 'list', 'read_creator_only': False,
-        'list_creator_only': False }
+        {'read': 'read', 'list': 'list', 'read_project_access': True,
+        'list_project_access': True }
 
         Its possible that ACLs are defined without any user, they just
-        have creator_only flag set. This means only creator can read or list
+        have project_access flag set. This means only creator can read or list
         ACL entities. In that case, dictionary output can be as follows.
 
-        {'read_creator_only': True, 'list_creator_only': True }
+        {'read_project_access': False, 'list_project_access': False }
 
         """
         ctxt = _get_barbican_context(req)
@@ -223,8 +223,8 @@ class ACLMixin(object):
             return None
         acl_dict = {acl.operation: acl.operation for acl in acl_list
                     if ctxt.user in acl.to_dict_fields().get('users', [])}
-        co_dict = {'%s_creator_only' % acl.operation: acl.creator_only for acl
-                   in acl_list if acl.creator_only is not None}
+        co_dict = {'%s_project_access' % acl.operation: acl.project_access for
+                   acl in acl_list if acl.project_access is not None}
         acl_dict.update(co_dict)
 
         return acl_dict

@@ -23,6 +23,9 @@ import base64
 import os
 import stat
 
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+
 from kmip.core import enums
 from kmip.core.factories import attributes
 from kmip.core.factories import credentials
@@ -75,13 +78,54 @@ kmip_opts = [
     cfg.StrOpt('keyfile',
                default=None,
                help=u._('File path to local client certificate keyfile'),
-               )
+               ),
+    cfg.BoolOpt('pkcs1_only',
+                default=False,
+                help=u._('Only support PKCS#1 encoding of asymmetric keys'),
+                )
 ]
 CONF.register_group(kmip_opt_group)
 CONF.register_opts(kmip_opts, group=kmip_opt_group)
 config.parse_args(CONF)
 
 attribute_debug_msg = "Created attribute type %s with value %s"
+
+
+def convert_pem_to_der(pem_pkcs1):
+    # cryptography adds an extra '\n' to end of PEM file
+    # added if statement so if future version removes extra \n tests will not
+    # break
+    if pem_pkcs1.endswith('\n'):
+        pem_pkcs1 = pem_pkcs1[:-1]
+    # neither PyCrypto or cryptography support export in DER format with PKCS1
+    # encoding so doing by hand
+    der_pkcs1_b64 = ''.join(pem_pkcs1.split('\n')[1:-1])
+    der_pkcs1 = base64.b64decode(der_pkcs1_b64)
+    return der_pkcs1
+
+
+def get_public_key_der_pkcs1(pem):
+    """Converts PEM public key to DER PKCS1"""
+    rsa_public = serialization.load_pem_public_key(
+        pem,
+        backend=default_backend())
+    pem_pkcs1 = rsa_public.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.PKCS1)
+    return convert_pem_to_der(pem_pkcs1)
+
+
+def get_private_key_der_pkcs1(pem):
+    """Converts PEM private key to DER PKCS1"""
+    rsa_private = serialization.load_pem_private_key(
+        pem,
+        None,
+        backend=default_backend())
+    pem_pkcs1 = rsa_private.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=serialization.NoEncryption())
+    return convert_pem_to_der(pem_pkcs1)
 
 
 class KMIPSecretStoreError(Exception):
@@ -128,6 +172,10 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 KMIPSecretStore.KMIP_ALGORITHM_ENUM:
                 enums.CryptographicAlgorithm.RSA},
         }
+        self.pkcs1_only = conf.kmip_plugin.pkcs1_only
+        if self.pkcs1_only:
+            LOG.debug("KMIP secret store only supports PKCS#1")
+            del self.valid_alg_dict[ss.KeyAlgorithm.DSA]
 
         if conf.kmip_plugin.keyfile is not None:
             self._validate_keyfile_permissions(conf.kmip_plugin.keyfile)
@@ -545,9 +593,15 @@ class KMIPSecretStore(ss.SecretStoreBase):
         if object_type == ss.SecretType.SYMMETRIC:
             return enums.ObjectType.SYMMETRIC_KEY, enums.KeyFormatType.RAW
         elif object_type == ss.SecretType.PRIVATE:
-            return enums.ObjectType.PRIVATE_KEY, enums.KeyFormatType.PKCS_8
+            if self.pkcs1_only:
+                return enums.ObjectType.PRIVATE_KEY, enums.KeyFormatType.PKCS_1
+            else:
+                return enums.ObjectType.PRIVATE_KEY, enums.KeyFormatType.PKCS_8
         elif object_type == ss.SecretType.PUBLIC:
-            return enums.ObjectType.PUBLIC_KEY, enums.KeyFormatType.X_509
+            if self.pkcs1_only:
+                return enums.ObjectType.PUBLIC_KEY, enums.KeyFormatType.PKCS_1
+            else:
+                return enums.ObjectType.PUBLIC_KEY, enums.KeyFormatType.X_509
         else:
             return None, None
 
@@ -610,9 +664,14 @@ class KMIPSecretStore(ss.SecretStoreBase):
     def _normalize_secret(self, secret, secret_type):
         """Normalizes secret for use by KMIP plugin"""
         data = base64.b64decode(secret)
-        if secret_type in [ss.SecretType.PUBLIC,
-                           ss.SecretType.PRIVATE,
-                           ss.SecretType.CERTIFICATE]:
+        if self.pkcs1_only:
+            if secret_type == ss.SecretType.PUBLIC:
+                data = get_public_key_der_pkcs1(data)
+            elif secret_type == ss.SecretType.PRIVATE:
+                data = get_private_key_der_pkcs1(data)
+        elif secret_type in [ss.SecretType.PUBLIC,
+                             ss.SecretType.PRIVATE,
+                             ss.SecretType.CERTIFICATE]:
             data = translations.convert_pem_to_der(data, secret_type)
         return data
 

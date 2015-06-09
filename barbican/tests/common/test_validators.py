@@ -1306,11 +1306,12 @@ class WhenTestingAclValidator(utils.BaseTestCase):
         self.validator = validators.ACLValidator()
 
     @utils.parameterized_dataset({
-        'one_reader': [{'read': {'users': ['reader'], 'creator-only': False}}],
+        'one_reader': [{'read': {'users': ['reader'],
+                                 'project-access': True}}],
         'two_reader': [{'read': {'users': ['r1', 'r2'],
-                                 'creator-only': False}}],
-        'private': [{'read': {'users': [], 'creator-only': True}}],
-        'default_users': [{'read': {'creator-only': True}}],
+                                 'project-access': True}}],
+        'private': [{'read': {'users': [], 'project-access': False}}],
+        'default_users': [{'read': {'project-access': False}}],
         'default_creator': [{'read': {'users': ['reader']}}],
         'almost_empty': [{'read': {}}],
         'empty': [{}],
@@ -1320,11 +1321,11 @@ class WhenTestingAclValidator(utils.BaseTestCase):
 
     @utils.parameterized_dataset({
         'foo': ['foo'],
-        'bad_op': [{'bad_op': {'users': ['reader'], 'creator-only': False}}],
+        'bad_op': [{'bad_op': {'users': ['reader'], 'project-access': True}}],
         'bad_field': [{'read': {'bad_field': ['reader'],
-                                'creator-only': False}}],
-        'bad_user': [{'read': {'users': [27], 'creator-only': False}}],
-        'missing_op': [{'creator-only': True}],
+                                'project-access': True}}],
+        'bad_user': [{'read': {'users': [27], 'project-access': True}}],
+        'missing_op': [{'project-access': False}],
     })
     def test_should_raise(self, acl_req):
         self.assertRaises(excep.InvalidObject,
@@ -1332,9 +1333,9 @@ class WhenTestingAclValidator(utils.BaseTestCase):
                           acl_req)
 
     @utils.parameterized_dataset({
-        'write': [{'write': {'users': ['writer'], 'creator-only': False}}],
-        'list': [{'list': {'users': ['lister'], 'creator-only': False}}],
-        'delete': [{'delete': {'users': ['deleter'], 'creator-only': False}}],
+        'write': [{'write': {'users': ['writer'], 'project-access': True}}],
+        'list': [{'list': {'users': ['lister'], 'project-access': True}}],
+        'delete': [{'delete': {'users': ['deleter'], 'project-access': True}}],
     })
     def test_should_raise_future(self, acl_req):
         self.assertRaises(excep.InvalidObject,

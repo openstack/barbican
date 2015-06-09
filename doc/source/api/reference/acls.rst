@@ -51,7 +51,7 @@ Request/Response (With ACL defined):
           {user_id2},
           .....
         ],
-        "creator-only":{creator-only-flag}
+        "project-access":{project-access-flag}
       }
     }
 
@@ -72,7 +72,7 @@ Request/Response (With no ACL defined):
     HTTP/1.1 200 OK
     {
       "read":{
-        "creator-only": false
+        "project-access": true
       }
     }
 
@@ -88,7 +88,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Secret not found for the given UUID.                                        |
 +------+-----------------------------------------------------------------------------+
@@ -122,16 +122,16 @@ This access is configured via operations on those secrets. Currently only the 'r
 | users                      | [string] | (optional) List of user ids. This needs to be | []       |
 |                            |          | a user id as returned by Keystone.            |          |
 +----------------------------+----------+-----------------------------------------------+----------+
-| creator-only               | boolean  | (optional) Flag to mark a secret private so   | `false`  |
+| project-access             | boolean  | (optional) Flag to mark a secret private so   | `true`   |
 |                            |          | that the user who created the secret and      |          |
 |                            |          | ``users`` specified in above list can only    |          |
-|                            |          | access the secret. Pass `true` to mark the    |          |
+|                            |          | access the secret. Pass `false` to mark the   |          |
 |                            |          | secret private.                               |          |
 +----------------------------+----------+-----------------------------------------------+----------+
 
 
-Request/Response (Set ACL):
-***************************
+Request/Response (Set or Replace ACL):
+**************************************
 
 .. code-block:: none
 
@@ -150,7 +150,7 @@ Request/Response (Set ACL):
           {user_id2},
           .....
         ],
-        "creator-only":{creator-only-flag}
+        "project-access":{project-access-flag}
       }
     }
 
@@ -158,33 +158,6 @@ Request/Response (Set ACL):
 
     HTTP/1.1 200 OK
     {"acl_ref": "https://{barbican_host}/v1/secrets/{uuid}/acl"}
-
-Request/Response (Replace ACL):
-******************************
-
-.. code-block:: none
-
-    PUT /v1/secrets/{uuid}/acl
-    Headers:
-        Content-Type: application/json
-        X-Auth-Token: {token_id}
-
-    Body:
-    {
-      "read":{
-        "users":[
-          {user_id1},
-          {user_id2},
-          .....
-        ],
-        "creator-only":{creator-only-flag}
-      }
-    }
-
-    Response:
-    HTTP/1.1 200 OK
-    {"acl_ref": "https://{barbican_host}/v1/secrets/{uuid}/acl"}
-
 
 
 HTTP Status Codes
@@ -199,7 +172,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Secret not found for the given UUID.                                        |
 +------+-----------------------------------------------------------------------------+
@@ -213,7 +186,7 @@ PATCH /v1/secrets/{uuid}/acl
 ############################
 
 Updates existing ACL for a given secret. This method can be used to apply partial changes on
-existing ACL settings. Client can update the `users` list and enable or disable `creator-only`
+existing ACL settings. Client can update the `users` list and enable or disable `project-access`
 flag for existing ACL. List of provided users replaces existing users if any. For an existing
 list of provided users from an ACL definition, pass empty list [] for `users`.
 
@@ -235,15 +208,15 @@ Attributes
 | users                      | [string] | (optional) List of user ids. This needs to be | None     |
 |                            |          | a user id as returned by Keystone.            |          |
 +----------------------------+----------+-----------------------------------------------+----------+
-| creator-only               | boolean  | (optional) Flag to mark a secret private so   | None     |
+| project-access             | boolean  | (optional) Flag to mark a secret private so   | None     |
 |                            |          | that the user who created the secret and      |          |
 |                            |          | ``users`` specified in above list can only    |          |
-|                            |          | access the secret. Pass `true` to mark the    |          |
+|                            |          | access the secret. Pass `false` to mark the   |          |
 |                            |          | secret private.                               |          |
 +----------------------------+----------+-----------------------------------------------+----------+
 
-Request/Response (Updating creator-only flag):
-**********************************************
+Request/Response (Updating project-access flag):
+************************************************
 
 .. code-block:: none
 
@@ -256,7 +229,7 @@ Request/Response (Updating creator-only flag):
     {
       "read":
         {
-          "creator-only":true
+          "project-access":false
         }
     }
 
@@ -300,7 +273,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Secret not found for the given UUID.                                        |
 +------+-----------------------------------------------------------------------------+
@@ -338,7 +311,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Secret not found for the given UUID.                                        |
 +------+-----------------------------------------------------------------------------+
@@ -377,7 +350,7 @@ Request/Response (With ACL defined):
           {user_id2},
           .....
         ],
-        "creator-only":{creator-only-flag}
+        "project-access":{project-access-flag}
       }
     }
 
@@ -398,7 +371,7 @@ Request/Response (With no ACL defined):
     HTTP/1.1 200 OK
     {
       "read":{
-        "creator-only": false
+        "project-access": true
       }
     }
 
@@ -414,7 +387,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Container not found for the given UUID.                                     |
 +------+-----------------------------------------------------------------------------+
@@ -448,45 +421,15 @@ This access is configured via operations on those containers. Currently only the
 | users                      | [string] | (optional) List of user ids. This needs to be | []       |
 |                            |          | a user id as returned by Keystone.            |          |
 +----------------------------+----------+-----------------------------------------------+----------+
-| creator-only               | boolean  | (optional) Flag to mark a container private   | `false`  |
+| project-access             | boolean  | (optional) Flag to mark a container private   | `true`   |
 |                            |          | so that the user who created the container and|          |
 |                            |          | ``users`` specified in above list can only    |          |
-|                            |          | access the container. Pass `true` to mark the |          |
+|                            |          | access the container. Pass `false` to mark the|          |
 |                            |          | container private.                            |          |
 +----------------------------+----------+-----------------------------------------------+----------+
 
-
-Request/Response (Set ACL):
-***************************
-
-.. code-block:: none
-
-    Request:
-
-    PUT /v1/containers/{uuid}/acl
-    Headers:
-        Content-Type: application/json
-        X-Auth-Token: {token_id}
-
-    Body:
-    {
-      "read":{
-        "users":[
-          {user_id1},
-          {user_id2},
-          .....
-        ],
-        "creator-only":{creator-only-flag}
-      }
-    }
-
-    Response:
-
-    HTTP/1.1 201 Created
-    {"acl_ref": "https://{barbican_host}/v1/containers/{uuid}/acl"}
-
-Request/Response (Replace ACL):
-******************************
+Request/Response (Set or Replace ACL):
+**************************************
 
 .. code-block:: none
 
@@ -503,7 +446,7 @@ Request/Response (Replace ACL):
           {user_id2},
           .....
         ],
-        "creator-only":{creator-only-flag}
+        "project-access":{project-access-flag}
       }
     }
 
@@ -525,7 +468,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Container not found for the given UUID.                                     |
 +------+-----------------------------------------------------------------------------+
@@ -539,7 +482,7 @@ PATCH /v1/containers/{uuid}/acl
 ###############################
 
 Update existing ACL for a given container. This method can be used to apply partial changes
-on existing ACL settings. Client can update `users` list and enable or disable `creator-only`
+on existing ACL settings. Client can update `users` list and enable or disable `project-access`
 flag for existing ACL. List of provided users replaces existing users if any. For an existing
 list of provided users from an ACL definition, pass empty list [] for `users`.
 
@@ -561,15 +504,15 @@ Attributes
 | users                      | [string] | (optional) List of user ids. This needs to be | None     |
 |                            |          | a user id as returned by Keystone.            |          |
 +----------------------------+----------+-----------------------------------------------+----------+
-| creator-only               | boolean  | (optional) Flag to mark a container private   | None     |
+| project-access             | boolean  | (optional) Flag to mark a container private   | None     |
 |                            |          | so that the user who created the container and|          |
 |                            |          | ``users`` specified in above list can only    |          |
-|                            |          | access the container. Pass `true` to mark the |          |
+|                            |          | access the container. Pass `false` to mark the|          |
 |                            |          | container private.                            |          |
 +----------------------------+----------+-----------------------------------------------+----------+
 
-Request/Response (Updating creator-only flag):
-**********************************************
+Request/Response (Updating project-access flag):
+************************************************
 
 .. code-block:: none
 
@@ -582,7 +525,7 @@ Request/Response (Updating creator-only flag):
     {
       "read":
         {
-          "creator-only":true
+          "project-access":false
         }
     }
 
@@ -626,7 +569,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Container not found for the given UUID.                                     |
 +------+-----------------------------------------------------------------------------+
@@ -664,7 +607,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Container not found for the given UUID.                                     |
 +------+-----------------------------------------------------------------------------+

@@ -11,6 +11,7 @@ Quick Start
    ./quickstart/secrets
    ./quickstart/containers
    ./quickstart/acls
+   ./quickstart/pkcs11keygeneration
 
 
 API Reference

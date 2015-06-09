@@ -37,7 +37,7 @@ need to be added in related ACL users list.
 An operation specific ACL definition has following attribute:
   * `users`: Whitelist of users who are allowed access to target resource. In this case a user means
     a Keystone user id.
-  * `creator-only`: Flag to mark a secret or a container private for an operation. Pass `true` to
+  * `project-access`: Flag to mark a secret or a container private for an operation. Pass `false` to
     mark private.
 
 To acommplish above mentioned behavior for a secret/container resource, having ACL data populated
@@ -65,14 +65,14 @@ Default ACL
 
 By default when no ACL is explicitly set on a secret or a container, then clients with necessary
 roles on secret's project or container's project can access it. This default access pattern translates
-to `creator-only` as False and no `users` in ACL settings. That's why every secret and container by
+to `project-access` as true and no `users` in ACL settings. That's why every secret and container by
 default has following implicit ACL.
 
 .. code-block:: json
     
     {
       "read":{
-        "creator-only": false
+        "project-access": true
       }
     }
 
@@ -106,7 +106,7 @@ To set/replace an ACL for a secret:
           "721e27b8505b499e8ab3b38154705b9e",
           "c1d20e4b7e7d4917aee6f0832152269b"
         ],
-        "creator-only":true
+        "project-access":false
       }
     }' \
     http://localhost:9311/v1/secrets/15621a1b-efdf-41d8-92dc-356cec8e9da9/acl
@@ -133,7 +133,7 @@ To set/replace an ACL for a container:
           "721e27b8505b499e8ab3b38154705b9e",
           "c1d20e4b7e7d4917aee6f0832152269b"
         ],
-        "creator-only":true
+        "project-access":false
       }
     }' \
     http://localhost:9311/v1/containers/8c077991-d524-4e15-8eaf-bc0c3bb225f2/acl
@@ -171,7 +171,7 @@ To replace an existing ACL for a container:
           "2d0ee7c681cc4549b6d76769c320d91f",
           "721e27b8505b499e8ab3b38154705b9e"
         ],
-        "creator-only":false
+        "project-access":true
       }
     }' \
      http://localhost:9311/v1/containers/8c077991-d524-4e15-8eaf-bc0c3bb225f2/acl
@@ -194,7 +194,7 @@ To remove all users from an existing ACL for a container (pass empty list in `us
     {
       "read":{
         "users":[],
-        "creator-only":false
+        "project-access":true
       }
     }' \
      http://localhost:9311/v1/containers/8c077991-d524-4e15-8eaf-bc0c3bb225f2/acl
@@ -205,7 +205,7 @@ To remove all users from an existing ACL for a container (pass empty list in `us
     {"acl_ref": "http://localhost:9311/v1/containers/8c077991-d524-4e15-8eaf-bc0c3bb225f2/acl"}
 
 
-To update only the creator-only flag for container ACL (use PATCH):
+To update only the `project-access` flag for container ACL (use PATCH):
 
 .. code-block:: bash
 
@@ -216,7 +216,7 @@ To update only the creator-only flag for container ACL (use PATCH):
     -d '
     {
       "read":{
-        "creator-only":true
+        "project-access":false
       }
     }' \
      http://localhost:9311/v1/containers/8c077991-d524-4e15-8eaf-bc0c3bb225f2/acl
@@ -289,7 +289,7 @@ To get secret ACL data:
           "c1d20e4b7e7d4917aee6f0832152269b",
           "2d0ee7c681cc4549b6d76769c320d91f"
         ],
-        "creator-only":true
+        "project-access":false
       }
     }
 
@@ -315,7 +315,7 @@ To get container ACL data:
           "c1d20e4b7e7d4917aee6f0832152269b",
           "2d0ee7c681cc4549b6d76769c320d91f"
         ],
-        "creator-only":true
+        "project-access":false
       }
     }
 
