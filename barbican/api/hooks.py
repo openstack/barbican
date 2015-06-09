@@ -15,6 +15,12 @@
 import pecan
 import webob
 
+try:
+    import newrelic.agent
+    newrelic_loaded = True
+except ImportError:
+    newrelic_loaded = False
+
 from barbican.model import repositories
 from barbican.openstack.common import jsonutils
 
@@ -41,3 +47,9 @@ class BarbicanTransactionHook(pecan.hooks.TransactionHook):
             rollback=repositories.rollback,
             clear=repositories.clear
         )
+
+
+class NewRelicHook(pecan.hooks.PecanHook):
+    def on_error(self, state, exc):
+        if newrelic_loaded:
+            newrelic.agent.record_exception()
