@@ -88,7 +88,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Secret not found for the given UUID.                                        |
 +------+-----------------------------------------------------------------------------+
@@ -172,7 +172,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Secret not found for the given UUID.                                        |
 +------+-----------------------------------------------------------------------------+
@@ -273,7 +273,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Secret not found for the given UUID.                                        |
 +------+-----------------------------------------------------------------------------+
@@ -311,7 +311,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Secret not found for the given UUID.                                        |
 +------+-----------------------------------------------------------------------------+
@@ -387,7 +387,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Container not found for the given UUID.                                     |
 +------+-----------------------------------------------------------------------------+
@@ -468,7 +468,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Container not found for the given UUID.                                     |
 +------+-----------------------------------------------------------------------------+
@@ -569,7 +569,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Container not found for the given UUID.                                     |
 +------+-----------------------------------------------------------------------------+
@@ -607,7 +607,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Missing or Invalid X-Auth-Token. Authentication required.                   |
 +------+-----------------------------------------------------------------------------+
-| 403  | User does not have have permission to access this resource.                 |
+| 403  | User does not have permission to access this resource.                      |
 +------+-----------------------------------------------------------------------------+
 | 404  | Container not found for the given UUID.                                     |
 +------+-----------------------------------------------------------------------------+
