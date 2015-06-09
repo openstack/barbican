@@ -104,17 +104,20 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
         return self.client.get(secret_ref, extra_headers=headers,
                                user_name=user_name)
 
-    def get_secret_metadata(self, secret_ref, use_auth=True, user_name=None):
+    def get_secret_metadata(self, secret_ref, use_auth=True, user_name=None,
+                            extra_headers=None):
         """Retrieves a secret's metadata.
 
         :param secret_ref: HATEOS ref of the secret to be retrieved
         :param use_auth: Boolean for whether to send authentication headers
         :param user_name: The user name used to get the metadata
+        :param extra_headers: Optional HTTP headers to add to the request
         :return: A request response object
         """
         return self.client.get(
             secret_ref, response_model_type=secret_models.SecretModel,
-            use_auth=use_auth, user_name=user_name)
+            use_auth=use_auth, user_name=user_name,
+            extra_headers=extra_headers)
 
     def get_secrets(self, limit=10, offset=0, name_filter=None,
                     extra_headers=None, use_auth=True, user_name=None):
