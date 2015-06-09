@@ -63,6 +63,8 @@ def build_wsgi_app(controller=None, transactional=False):
     request_hooks = [hooks.JSONErrorHook()]
     if transactional:
         request_hooks.append(hooks.BarbicanTransactionHook())
+    if newrelic_loaded:
+        request_hooks.insert(0, hooks.NewRelicHook())
 
     # Create WSGI app
     wsgi_app = pecan.Pecan(

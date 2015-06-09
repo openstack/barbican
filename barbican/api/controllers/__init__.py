@@ -102,9 +102,9 @@ def handle_exceptions(operation_name=u._('System')):
         def handler(inst, *args, **kwargs):
             try:
                 return fn(inst, *args, **kwargs)
-            except exc.HTTPError as f:
+            except exc.HTTPError:
                 LOG.exception(u._LE('Webob error seen'))
-                raise f  # Already converted to Webob exception, just reraise
+                raise  # Already converted to Webob exception, just reraise
             except Exception as e:
                 # In case intervening modules have disabled logging.
                 LOG.logger.disabled = False
