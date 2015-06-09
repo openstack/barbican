@@ -1521,6 +1521,7 @@ class SecretsFuzzTestCase(base.TestCase):
         )
         self.assertNotIn(resp.status_code, range(500, 600))
 
+    """ NOT IMPLEMENTED IN BEHAVIORS """
     # @utils.parameterized_dataset(fuzzer.get_dataset('bad_numbers'))
     # @testcase.attr('negative', 'security')
     # def test_secret_get_secret_list_junk_bit_length(self, payload):
@@ -1531,6 +1532,7 @@ class SecretsFuzzTestCase(base.TestCase):
     #    )
     #    self.assertNotIn(resp.status_code, range(500, 600))
 
+    """ NOT IMPLEMENTED IN BEHAVIORS"""
     # @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
     # @testcase.attr('negative', 'security')
     # def test_secret_get_secret_list_junk_algorithm(self, payload):
@@ -1541,6 +1543,7 @@ class SecretsFuzzTestCase(base.TestCase):
     #    )
     #    self.assertNotIn(resp.status_code, range(500, 600))
 
+    """ NOT IMPLEMENTED IN BEHAVIORS"""
     # @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
     # @testcase.attr('negative', 'security')
     # def test_secret_get_secret_list_junk_mode(self, payload):
@@ -1553,22 +1556,26 @@ class SecretsFuzzTestCase(base.TestCase):
 
     # SECRET CREATION #
 
-#    ALL FAILING - RETURNING 201 FOR ALL
-#    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
-#    @testcase.attr('negative', 'security')
-#    def test_secret_create_junk_name(self, payload):
-#        """Sends junk name for secret creation
-#
-#        Should return 400"""
-#        model = secret_models.SecretModel(
-#            **self.default_secret_create_data
-#        )
-#        overrides = {
-#            'name': payload
-#        }
-#        model.override_values(**overrides)
-#        resp, secret = self.behaviors.create_secret(model)
-#        self.assertEqual(400, resp.status_code)
+    """
+    ERROR (json encoder): higher_ascii
+    FAIL (201): higher_unicode, nullbyte, unicode_double_quote,
+        unicode_single_quote
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    @testcase.attr('negative', 'security')
+    def test_secret_create_junk_name(self, payload):
+        """Sends junk name for secret creation
+
+        Should return 400"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_data
+        )
+        overrides = {
+            'name': payload
+        }
+        model.override_values(**overrides)
+        resp, secret = self.behaviors.create_secret(model)
+        self.assertEqual(400, resp.status_code)
 
     """ ALL PASSING ? """
     @utils.parameterized_dataset(fuzzer.get_dataset('date'))
@@ -1587,22 +1594,26 @@ class SecretsFuzzTestCase(base.TestCase):
         resp, secret = self.behaviors.create_secret(model)
         self.assertEqual(400, resp.status_code)
 
-#    ALL FAILING - RETURNING 201 FOR ALL
-#    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
-#    @testcase.attr('negative', 'security')
-#    def test_secret_create_junk_algorithm(self, payload):
-#        """Sends junk algorithm for secret creation
-#
-#        Should return 400"""
-#        model = secret_models.SecretModel(
-#            **self.default_secret_create_data
-#        )
-#        overrides = {
-#            'algorithm': payload
-#        }
-#        model.override_values(**overrides)
-#        resp, secret = self.behaviors.create_secret(model)
-#        self.assertEqual(400, resp.status_code)
+    """
+    ERROR (json encoder): higher_ascii
+    FAIL (201): higher_unicode, nullbyte, unicode_double_quote,
+        unicode_single_quote
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    @testcase.attr('negative', 'security')
+    def test_secret_create_junk_algorithm(self, payload):
+        """Sends junk algorithm for secret creation
+
+        Should return 400"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_data
+        )
+        overrides = {
+            'algorithm': payload
+        }
+        model.override_values(**overrides)
+        resp, secret = self.behaviors.create_secret(model)
+        self.assertEqual(400, resp.status_code)
 
     """ ALL PASSING? """
     @utils.parameterized_dataset(fuzzer.get_dataset('bad_numbers'))
@@ -1738,22 +1749,28 @@ class SecretsFuzzTestCase(base.TestCase):
         )
         self.assertEqual(400, resp.status_code)
 
-#    FAILING - ALLOWS ALMOST ANYTHING
-#    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
-#    @testcase.attr('negative', 'security')
-#    def test_secret_update_payload_junk_payload(self, payload):
-#        """Attempt to update a secret payload with a junk payload
-#
-#        Should return 400"""
-#        model = secret_models.SecretModel(
-#            **self.default_secret_create_two_phase_data
-#        )
-#        resp, secret_ref = self.behaviors.create_secret(model)
-#        resp = self.behaviors.update_secret_payload(
-#            secret_ref, payload=payload,
-#            payload_content_type='text/plain'
-#        )
-#        self.assertEqual(400, resp.status_code)
+    """
+    FAIL (500): higher_ascii
+    FAIL (413): huge
+        -> this should be a pass
+    FAIL (204): nullbyte
+    ERROR (httplib): higher_unicode, unicode_double_quote, unicode_single_quote
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    @testcase.attr('negative', 'security')
+    def test_secret_update_payload_junk_payload(self, payload):
+        """Attempt to update a secret payload with a junk payload
+
+        Should return 400"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_two_phase_data
+        )
+        resp, secret_ref = self.behaviors.create_secret(model)
+        resp = self.behaviors.update_secret_payload(
+            secret_ref, payload=payload,
+            payload_content_type='text/plain'
+        )
+        self.assertEqual(400, resp.status_code)
 
     # DELETE SECRET #
     """
