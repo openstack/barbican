@@ -906,8 +906,8 @@ class OrderRepo(BaseRepo):
     """Repository for the Order entity."""
 
     def get_by_create_date(self, external_project_id, offset_arg=None,
-                           limit_arg=None, suppress_exception=False,
-                           session=None):
+                           limit_arg=None, meta_arg=None,
+                           suppress_exception=False, session=None):
         """Returns a list of orders
 
         The list is ordered by the date they were created at and paged
@@ -917,6 +917,7 @@ class OrderRepo(BaseRepo):
         :param offset_arg: The entity number where the query result should
                            start.
         :param limit_arg: The maximum amount of entities in the result set.
+        :param meta_arg: Optional meta field used to filter results.
         :param suppress_exception: Whether NoResultFound exceptions should be
                                    suppressed.
         :param session: SQLAlchemy session object.
@@ -931,6 +932,10 @@ class OrderRepo(BaseRepo):
         query = session.query(models.Order)
         query = query.order_by(models.Order.created_at)
         query = query.filter_by(deleted=False)
+
+        if meta_arg:
+            query = query.filter(models.Order.meta.contains(meta_arg))
+
         query = query.join(models.Project, models.Order.project)
         query = query.filter(models.Project.external_id == external_project_id)
 
@@ -938,7 +943,7 @@ class OrderRepo(BaseRepo):
         end = offset + limit
         LOG.debug('Retrieving from %s to %s', start, end)
         total = query.count()
-        entities = query[start:end]
+        entities = query.offset(start).limit(limit).all()
         LOG.debug('Number entities retrieved: %s out of %s',
                   len(entities), total
                   )
@@ -1120,7 +1125,7 @@ class OrderRetryTaskRepo(BaseRepo):
         end = offset + limit
         LOG.debug('Retrieving from %s to %s', start, end)
         total = query.count()
-        entities = query[start:end]
+        entities = query.offset(start).limit(limit).all()
         LOG.debug('Number entities retrieved: %s out of %s',
                   len(entities), total
                   )
@@ -1149,8 +1154,8 @@ class ContainerRepo(BaseRepo):
     """Repository for the Container entity."""
 
     def get_by_create_date(self, external_project_id, offset_arg=None,
-                           limit_arg=None, suppress_exception=False,
-                           session=None):
+                           limit_arg=None, name_arg=None,
+                           suppress_exception=False, session=None):
         """Returns a list of containers
 
         The list is ordered by the date they were created at and paged
@@ -1165,6 +1170,10 @@ class ContainerRepo(BaseRepo):
         query = session.query(models.Container)
         query = query.order_by(models.Container.created_at)
         query = query.filter_by(deleted=False)
+
+        if name_arg:
+            query = query.filter(models.Container.name.like(name_arg))
+
         query = query.join(models.Project, models.Container.project)
         query = query.filter(models.Project.external_id == external_project_id)
 
@@ -1172,7 +1181,7 @@ class ContainerRepo(BaseRepo):
         end = offset + limit
         LOG.debug('Retrieving from %s to %s', start, end)
         total = query.count()
-        entities = query[start:end]
+        entities = query.offset(start).limit(limit).all()
         LOG.debug('Number entities retrieved: %s out of %s',
                   len(entities), total
                   )
@@ -1270,7 +1279,7 @@ class ContainerConsumerRepo(BaseRepo):
         end = offset + limit
         LOG.debug('Retrieving from %s to %s', start, end)
         total = query.count()
-        entities = query[start:end]
+        entities = query.offset(start).limit(limit).all()
         LOG.debug('Number entities retrieved: %s out of %s',
                   len(entities), total
                   )
@@ -1374,7 +1383,7 @@ class TransportKeyRepo(BaseRepo):
         end = offset + limit
         LOG.debug('Retrieving from %s to %s', start, end)
         total = query.count()
-        entities = query[start:end]
+        entities = query.offset(start).limit(limit).all()
         LOG.debug('Number of entities retrieved: %s out of %s',
                   len(entities), total)
 
@@ -1440,7 +1449,7 @@ class CertificateAuthorityRepo(BaseRepo):
         end = offset + limit
         LOG.debug('Retrieving from %s to %s', start, end)
         total = query.count()
-        entities = query[start:end]
+        entities = query.offset(start).limit(limit).all()
         LOG.debug('Number entities retrieved: %s out of %s',
                   len(entities), total
                   )
@@ -1594,7 +1603,7 @@ class ProjectCertificateAuthorityRepo(BaseRepo):
         end = offset + limit
         LOG.debug('Retrieving from %s to %s', start, end)
         total = query.count()
-        entities = query[start:end]
+        entities = query.offset(start).limit(limit).all()
         LOG.debug('Number entities retrieved: %s out of %s',
                   len(entities), total
                   )
@@ -1661,7 +1670,7 @@ class PreferredCertificateAuthorityRepo(BaseRepo):
         end = offset + limit
         LOG.debug('Retrieving from %s to %s', start, end)
         total = query.count()
-        entities = query[start:end]
+        entities = query.offset(start).limit(limit).all()
         LOG.debug('Number entities retrieved: %s out of %s',
                   len(entities), total
                   )

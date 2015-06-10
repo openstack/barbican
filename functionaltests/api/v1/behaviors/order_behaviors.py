@@ -64,23 +64,24 @@ class OrderBehaviors(base_behaviors.BaseBehaviors):
                                extra_headers=extra_headers,
                                user_name=user_name, use_auth=use_auth)
 
-    def get_orders(self, limit=10, offset=0, name_filter=None,
+    def get_orders(self, limit=10, offset=0, filter=None,
                    extra_headers=None, user_name=None, use_auth=True):
         """Get a list of orders.
 
         :param limit: limits number of returned orders (default 10)
         :param offset: represents how many records to skip before retrieving
                        the list (default 0)
-        :param name_filter: optional filter to limit the returned secrets to
-                        those whose name matches the filter.
+        :param filter: optional filter to limit the returned orders to
+                        those whose metadata contains the filter.
         :param extra_headers: Optional HTTP headers to add to the request
         :param user_name: the user used to do the get
         :param use_auth: Boolean to determine whether auth headers are sent
         :return the response, a list of orders and the next/pref hrefs
         """
         params = {'limit': limit, 'offset': offset}
-        if name_filter:
-            params['name'] = name_filter
+
+        if filter:
+            params['meta'] = filter
 
         resp = self.client.get('orders', params=params,
                                extra_headers=extra_headers,

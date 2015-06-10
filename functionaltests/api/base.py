@@ -71,6 +71,11 @@ class PagingTestCase(TestCase):
     def tearDown(self):
         super(PagingTestCase, self).tearDown()
 
+    def _set_filter_field(self, model):
+        filter = str(uuid.uuid4())
+        self.set_filter_field(filter, model)
+        return filter
+
     def _validate_resource_group(self, resources=[], next_ref=None,
                                  prev_ref=None,
                                  expected_size=0,
@@ -121,7 +126,11 @@ class PagingTestCase(TestCase):
         pass
 
     @abc.abstractmethod
-    def get_resources(self, limit=10, offset=0, name_filter=""):
+    def get_resources(self, limit=10, offset=0, filter=""):
+        pass
+
+    @abc.abstractmethod
+    def set_filter_field(self, filter, model):
         pass
 
     @testcase.attr('positive')
@@ -132,9 +141,9 @@ class PagingTestCase(TestCase):
         number_of_resource_groups = 5
         resources_per_group = 10
 
+        filter = self._set_filter_field(test_model)
+
         # create a number of resources
-        resource_name = str(uuid.uuid4())
-        test_model.name = resource_name
         self.create_resources(
             count=number_of_resource_groups * resources_per_group,
             model=test_model)
@@ -144,7 +153,7 @@ class PagingTestCase(TestCase):
             resp, resources, next_ref, prev_ref = self.get_resources(
                 limit=resources_per_group,
                 offset=(i - 1) * resources_per_group,
-                name_filter=resource_name)
+                filter=filter)
 
             self.assertEqual(200, resp.status_code)
 
@@ -167,8 +176,7 @@ class PagingTestCase(TestCase):
         res_count = 25
 
         test_model = self.create_model()
-        resource_name = str(uuid.uuid4())
-        test_model.name = resource_name
+        filter = self._set_filter_field(test_model)
         self.create_resources(count=res_count, model=test_model)
 
         minimum_limit = 1
@@ -177,7 +185,7 @@ class PagingTestCase(TestCase):
 
         for limit in range(minimum_limit, maximum_limit):
             resp, resources, next_ref, prev_ref = self.get_resources(
-                limit=limit, offset=offset, name_filter=resource_name)
+                limit=limit, offset=offset, filter=filter)
 
             self.assertEqual(200, resp.status_code)
 
@@ -202,12 +210,11 @@ class PagingTestCase(TestCase):
         number_of_resources = max_allowable_limit + 10
 
         test_model = self.create_model()
-        resource_name = str(uuid.uuid4())
-        test_model.name = resource_name
+        filter = self._set_filter_field(test_model)
         self.create_resources(count=number_of_resources, model=test_model)
 
         resp, resources, next_ref, prev_ref = self.get_resources(
-            limit=number_of_resources, offset=0, name_filter=resource_name)
+            limit=number_of_resources, offset=0, filter=filter)
         self.assertEqual(200, resp.status_code)
 
         self._validate_resource_group(resources=resources, next_ref=next_ref,
@@ -223,7 +230,7 @@ class PagingTestCase(TestCase):
 
         # now get the rest
         resp, resources, next_ref, prev_ref = self.get_resources(
-            limit=limit, offset=offset, name_filter=resource_name)
+            limit=limit, offset=offset, filter=filter)
         self.assertEqual(200, resp.status_code)
 
         expected_size = number_of_resources - max_allowable_limit
@@ -240,8 +247,7 @@ class PagingTestCase(TestCase):
         number_of_resources = 150
 
         test_model = self.create_model()
-        resource_name = str(uuid.uuid4())
-        test_model.name = resource_name
+        filter = self._set_filter_field(test_model)
         self.create_resources(count=number_of_resources, model=test_model)
 
         # First set of resources
@@ -249,7 +255,7 @@ class PagingTestCase(TestCase):
         offset = number_of_resources // 2
 
         resp, resources, next_ref, prev_ref = self.get_resources(
-            limit=limit, offset=offset, name_filter=resource_name)
+            limit=limit, offset=offset, filter=filter)
         self.assertEqual(200, resp.status_code)
 
         self._validate_resource_group(resources=resources, next_ref=next_ref,
@@ -262,7 +268,7 @@ class PagingTestCase(TestCase):
 
         # Next set of resources
         resp, resources, next_ref, prev_ref = self.get_resources(
-            limit=limit, offset=offset, name_filter=resource_name)
+            limit=limit, offset=offset, filter=filter)
 
         self._validate_resource_group(resources=resources, next_ref=next_ref,
                                       prev_ref=prev_ref,
@@ -281,8 +287,7 @@ class PagingTestCase(TestCase):
         number_of_resources = 15
 
         test_model = self.create_model()
-        resource_name = str(uuid.uuid4())
-        test_model.name = resource_name
+        filter = self._set_filter_field(test_model)
         self.create_resources(count=number_of_resources, model=test_model)
 
         minimum_offset = 0
@@ -291,7 +296,7 @@ class PagingTestCase(TestCase):
 
         for offset in range(minimum_offset, maximum_offset):
             resp, resources, next_ref, prev_ref = self.get_resources(
-                limit=limit, offset=offset, name_filter=resource_name)
+                limit=limit, offset=offset, filter=filter)
             self.assertEqual(200, resp.status_code)
 
             check_next = offset + limit >= number_of_resources
@@ -312,15 +317,14 @@ class PagingTestCase(TestCase):
         number_of_resources = 150
 
         test_model = self.create_model()
-        resource_name = str(uuid.uuid4())
-        test_model.name = resource_name
+        filter = self._set_filter_field(test_model)
         self.create_resources(count=number_of_resources, model=test_model)
 
         # First set of resources
         limit = number_of_resources // 10
         offset = number_of_resources // 2
         resp, resources, next_ref, prev_ref = self.get_resources(
-            limit=limit, offset=offset, name_filter=resource_name)
+            limit=limit, offset=offset, filter=filter)
         self.assertEqual(200, resp.status_code)
 
         self._validate_resource_group(resources=resources, next_ref=next_ref,
@@ -333,7 +337,7 @@ class PagingTestCase(TestCase):
 
         # Previous set of resources
         resp, resources, next_ref, prev_ref = self.get_resources(
-            limit=limit, offset=offset, name_filter=resource_name)
+            limit=limit, offset=offset, filter=filter)
 
         self._validate_resource_group(resources=resources, next_ref=next_ref,
                                       prev_ref=prev_ref,
@@ -349,14 +353,13 @@ class PagingTestCase(TestCase):
         number_of_resources = 25
 
         # create a number of resources
-        resource_name = str(uuid.uuid4())
-        test_model.name = resource_name
+        filter = self._set_filter_field(test_model)
         self.create_resources(count=number_of_resources, model=test_model)
 
         # pass in non-integer values for limit and offset
         resp, resources, next_ref, prev_ref = self.get_resources(
             limit='not-an-int-limit',
-            offset='not-an-int-offset', name_filter=resource_name)
+            offset='not-an-int-offset', filter=filter)
 
         self.assertEqual(200, resp.status_code)
         self._validate_resource_group(resources=resources, next_ref=next_ref,

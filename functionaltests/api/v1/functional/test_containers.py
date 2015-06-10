@@ -23,6 +23,19 @@ from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import container_models
 from functionaltests.api.v1.models import secret_models
 
+
+def get_default_container_create_data(secret):
+    return {
+        "type": "generic",
+        "name": "generic name",
+        "secret_refs": [
+            {
+                "name": "a secret",
+                "secret_ref": secret
+            }
+        ]
+    }
+
 create_container_data = {
     "name": "containername",
     "type": "generic",
@@ -304,6 +317,57 @@ class RSAContainersTestCase(BaseContainerTestCase):
         # malicious one.
         regex = '.*{0}.*'.format(malicious_hostname)
         self.assertNotRegexpMatches(resp.headers['location'], regex)
+
+
+class ContainersPagingTestCase(base.PagingTestCase):
+
+    def setUp(self):
+        super(ContainersPagingTestCase, self).setUp()
+        self.secret_behaviors = secret_behaviors.SecretBehaviors(self.client)
+        self.behaviors = container_behaviors.ContainerBehaviors(self.client)
+
+        # make a local mutable copy of the default data to prevent
+        # possible data contamination
+        secret = self._create_a_secret()
+        self.create_default_data = get_default_container_create_data(secret)
+
+    def _create_a_secret(self):
+        secret_defaults_data = {
+            "name": "AES key",
+            "expiration": "2018-02-28T19:14:44.180394",
+            "algorithm": "aes",
+            "bit_length": 256,
+            "mode": "cbc",
+            "payload": "gF6+lLoF3ohA9aPRpt+6bQ==",
+            "payload_content_type": "application/octet-stream",
+            "payload_content_encoding": "base64",
+        }
+
+        secret_model = secret_models.SecretModel(**secret_defaults_data)
+        resp, secret_ref = self.secret_behaviors.create_secret(secret_model)
+        self.assertEqual(resp.status_code, 201)
+        self.assertIsNotNone(secret_ref)
+
+        return secret_ref
+
+    def tearDown(self):
+        self.behaviors.delete_all_created_containers()
+        super(ContainersPagingTestCase, self).tearDown()
+
+    def create_model(self):
+        return container_models.ContainerModel(**self.create_default_data)
+
+    def create_resources(self, count=0, model=None):
+        for x in range(0, count):
+            self.behaviors.create_container(model)
+
+    def get_resources(self, limit=10, offset=0, filter=filter):
+        return self.behaviors.get_containers(limit=limit, offset=offset,
+                                             filter=filter)
+
+    def set_filter_field(self, unique_str, model):
+        '''Set the name field which we use in the get_resources '''
+        model.name = unique_str
 
 
 class ContainersUnauthedTestCase(BaseContainerTestCase):
