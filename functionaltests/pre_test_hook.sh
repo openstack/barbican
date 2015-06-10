@@ -20,6 +20,3 @@ DEVSTACK_BASE=/opt/stack/new/devstack
 
 cp $BARBICAN_BASE/lib/* $DEVSTACK_BASE/lib
 cp $BARBICAN_BASE/extras.d/* $DEVSTACK_BASE/extras.d
-if [[ -n $BARBICAN_USE_DOGTAG ]]; then
-    sudo /opt/stack/new/barbican/contrib/dogtag/install_dogtag.sh
-fi
