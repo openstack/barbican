@@ -36,7 +36,8 @@ class TestUnauthenticatedContextMiddleware(oslotest.BaseTestCase):
                 project='trace',
                 is_admin=True,
                 user=None,
-                roles=['admin']
+                roles=['admin'],
+                request_id=request.request_id
             )
 
     def test_role_used_from_header(self):
@@ -50,5 +51,6 @@ class TestUnauthenticatedContextMiddleware(oslotest.BaseTestCase):
                 project='trace',
                 is_admin=False,
                 user=None,
-                roles=['something']
+                roles=['something'],
+                request_id=request.request_id
             )

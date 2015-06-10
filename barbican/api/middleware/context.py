@@ -27,14 +27,17 @@ CONF = config.CONF
 
 
 class BaseContextMiddleware(mw.Middleware):
-    def process_response(self, resp):
-        request_id = resp.request.headers.get('x-openstack-request-id')
+    def process_request(self, req):
+        request_id = req.headers.get('x-openstack-request-id')
         if not request_id:
             request_id = b'req-{0}'.format(str(uuid.uuid4()))
+        setattr(req, 'request_id', request_id)
 
-        resp.headers['x-openstack-request-id'] = request_id
+    def process_response(self, resp):
 
-        LOG.info('%s | %s: %s - %s %s', request_id, u._LI('Processed request'),
+        resp.headers['x-openstack-request-id'] = resp.request.request_id
+
+        LOG.info('%s: %s - %s %s', u._LI('Processed request'),
                  resp.status, resp.request.method, resp.request.url)
         return resp
 
@@ -55,6 +58,8 @@ class ContextMiddleware(BaseContextMiddleware):
                                             header is not 'Confirmed' and
                                             anonymous access is disallowed
         """
+        super(ContextMiddleware, self).process_request(req)
+
         if req.headers.get('X-Identity-Status') == 'Confirmed':
             req.context = self._get_authenticated_context(req)
             LOG.debug("==== Inserted barbican auth "
@@ -94,6 +99,7 @@ class ContextMiddleware(BaseContextMiddleware):
             'project': req.headers.get('X-Project-Id'),
             'roles': roles,
             'is_admin': CONF.admin_role.strip().lower() in roles,
+            'request_id': req.request_id
         }
 
         if req.headers.get('X-Domain-Id'):
@@ -119,6 +125,8 @@ class UnauthenticatedContextMiddleware(BaseContextMiddleware):
 
     def process_request(self, req):
         """Create a context without an authorized user."""
+        super(UnauthenticatedContextMiddleware, self).process_request(req)
+
         project_id = self._get_project_id_from_header(req)
 
         config_admin_role = CONF.admin_role.strip().lower()
@@ -133,7 +141,8 @@ class UnauthenticatedContextMiddleware(BaseContextMiddleware):
             'user': None,
             'project': project_id,
             'roles': roles,
-            'is_admin': config_admin_role in roles
+            'is_admin': config_admin_role in roles,
+            'request_id': req.request_id
         }
 
         context = barbican.context.RequestContext(**kwargs)
