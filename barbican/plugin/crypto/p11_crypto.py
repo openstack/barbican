@@ -13,11 +13,11 @@
 import base64
 
 from oslo_config import cfg
+from oslo_serialization import jsonutils as json
 
 from barbican.common import config
 from barbican.common import utils
 from barbican import i18n as u
-from barbican.openstack.common import jsonutils as json
 from barbican.plugin.crypto import crypto as plugin
 from barbican.plugin.crypto import pkcs11
 

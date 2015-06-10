@@ -16,9 +16,10 @@ This test module tests the barbican.api.__init__.py module functionality.
 """
 import mock
 
+from oslo_serialization import jsonutils as json
+
 from barbican import api
 from barbican.common import exception
-from barbican.openstack.common import jsonutils as json
 from barbican.plugin.interface import secret_store
 from barbican.tests import utils
 

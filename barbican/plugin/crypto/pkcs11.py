@@ -16,11 +16,11 @@ import textwrap
 
 import cffi
 from cryptography.hazmat.primitives import padding
+from oslo_serialization import jsonutils as json
 
 from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
-from barbican.openstack.common import jsonutils as json
 
 LOG = utils.getLogger(__name__)
 
