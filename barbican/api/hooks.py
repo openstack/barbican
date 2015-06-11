@@ -15,6 +15,8 @@
 import pecan
 import webob
 
+from oslo_serialization import jsonutils
+
 try:
     import newrelic.agent
     newrelic_loaded = True
@@ -22,7 +24,6 @@ except ImportError:
     newrelic_loaded = False
 
 from barbican.model import repositories
-from barbican.openstack.common import jsonutils
 
 
 class JSONErrorHook(pecan.hooks.PecanHook):

@@ -18,6 +18,7 @@ Defines database models for Barbican
 """
 import hashlib
 
+from oslo_serialization import jsonutils as json
 import six
 import sqlalchemy as sa
 from sqlalchemy.ext import compiler
@@ -29,7 +30,6 @@ from sqlalchemy import types as sql_types
 from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
-from barbican.openstack.common import jsonutils as json
 from barbican.openstack.common import timeutils
 from barbican.plugin.interface import secret_store
 
