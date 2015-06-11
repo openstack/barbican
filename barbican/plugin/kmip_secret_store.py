@@ -39,6 +39,7 @@ from kmip.core.objects import TemplateAttribute
 from kmip.core.secrets import Certificate
 from kmip.core.secrets import PrivateKey
 from kmip.core.secrets import PublicKey
+from kmip.core.secrets import SecretData
 from kmip.core.secrets import SymmetricKey
 from kmip.services import kmip_client
 
@@ -516,16 +517,21 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 certificate_type=enums.CertificateTypeEnum.X_509,
                 certificate_value=normalized_secret)
         elif (object_type == enums.ObjectType.SYMMETRIC_KEY or
+              object_type == enums.ObjectType.SECRET_DATA or
               object_type == enums.ObjectType.PRIVATE_KEY or
               object_type == enums.ObjectType.PUBLIC_KEY):
             key_material = KeyMaterial(normalized_secret)
             key_value = KeyValue(key_material)
 
             key_spec = secret_dto.key_spec
-            algorithm_name = self._map_algorithm_ss_to_kmip(
-                key_spec.alg.lower())
-            algorithm = CryptographicAlgorithm(algorithm_name)
-            bit_length = CryptographicLength(key_spec.bit_length)
+            algorithm = None
+            if key_spec.alg is not None:
+                algorithm_name = self._map_algorithm_ss_to_kmip(
+                    key_spec.alg.lower())
+                algorithm = CryptographicAlgorithm(algorithm_name)
+            bit_length = None
+            if key_spec.bit_length is not None:
+                bit_length = CryptographicLength(key_spec.bit_length)
 
             key_block = KeyBlock(
                 key_format_type=misc.KeyFormatType(key_format_type),
@@ -541,6 +547,11 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 kmip_object = PrivateKey(key_block)
             elif object_type == enums.ObjectType.PUBLIC_KEY:
                 kmip_object = PublicKey(key_block)
+            elif object_type == enums.ObjectType.SECRET_DATA:
+                kind = SecretData.SecretDataType(enums.SecretDataType.PASSWORD)
+                return SecretData(secret_data_type=kind,
+                                  key_block=key_block)
+
         return kmip_object
 
     def _get_barbican_secret(self, result, secret_type):
@@ -551,7 +562,8 @@ class KMIPSecretStore(ss.SecretStoreBase):
             key_spec = ss.KeySpec()
         elif (object_type == enums.ObjectType.SYMMETRIC_KEY.value or
               object_type == enums.ObjectType.PRIVATE_KEY.value or
-              object_type == enums.ObjectType.PUBLIC_KEY.value):
+              object_type == enums.ObjectType.PUBLIC_KEY.value or
+              object_type == enums.ObjectType.SECRET_DATA.value):
 
             secret_block = result.secret.key_block
             key_value_type = type(secret_block.key_value.key_material)
@@ -571,9 +583,15 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 LOG.exception(msg)
                 raise ss.SecretGeneralException(msg)
 
-            secret_alg = self._map_algorithm_kmip_to_ss(
-                secret_block.cryptographic_algorithm.value)
-            secret_bit_length = secret_block.cryptographic_length.value
+            if secret_block.cryptographic_algorithm:
+                secret_alg = self._map_algorithm_kmip_to_ss(
+                    secret_block.cryptographic_algorithm.value)
+            else:
+                secret_alg = None
+            if secret_block.cryptographic_length:
+                secret_bit_length = secret_block.cryptographic_length.value
+            else:
+                secret_bit_length = None
             key_spec = ss.KeySpec(secret_alg, secret_bit_length),
 
         secret_value = self._denormalize_secret(secret_value, secret_type)
@@ -669,6 +687,8 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 return enums.ObjectType.PUBLIC_KEY, enums.KeyFormatType.X_509
         elif object_type == ss.SecretType.CERTIFICATE:
             return enums.ObjectType.CERTIFICATE, enums.KeyFormatType.X_509
+        elif object_type == ss.SecretType.PASSPHRASE:
+            return enums.ObjectType.SECRET_DATA, enums.KeyFormatType.RAW
         else:
             return None, None
 

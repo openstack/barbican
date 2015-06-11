@@ -414,6 +414,45 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
         self.assertEqual(expected, return_value)
 
+    def test_store_passphrase_secret_assert_called(self):
+        key_spec = secret_store.KeySpec(None, None, None)
+        passphrase = "supersecretpassphrase"
+        secret_dto = secret_store.SecretDTO(secret_store.SecretType.PASSPHRASE,
+                                            base64.b64encode(passphrase),
+                                            key_spec,
+                                            'content_type',
+                                            transport_key=None)
+        self.secret_store.store_secret(secret_dto)
+        self.secret_store.client.register.assert_called_once_with(
+            object_type=enums.ObjectType.SECRET_DATA,
+            template_attribute=mock.ANY,
+            secret=mock.ANY,
+            credential=self.credential)
+        _, register_call_kwargs = self.secret_store.client.register.call_args
+        actual_secret = register_call_kwargs.get('secret')
+        self.assertEqual(
+            None,
+            actual_secret.key_block.cryptographic_length)
+        self.assertEqual(
+            None,
+            actual_secret.key_block.cryptographic_algorithm)
+        self.assertEqual(
+            passphrase,
+            actual_secret.key_block.key_value.key_material.value)
+
+    def test_store_passphrase_secret_return_value(self):
+        key_spec = secret_store.KeySpec(None, None, None)
+        passphrase = "supersecretpassphrase"
+        secret_dto = secret_store.SecretDTO(secret_store.SecretType.PASSPHRASE,
+                                            base64.b64encode(passphrase),
+                                            key_spec,
+                                            'content_type',
+                                            transport_key=None)
+        return_value = self.secret_store.store_secret(secret_dto)
+        expected = {kss.KMIPSecretStore.KEY_UUID: 'uuid'}
+
+        self.assertEqual(0, cmp(expected, return_value))
+
     @utils.parameterized_dataset({
         'private_pkcs8': [secret_store.SecretType.PRIVATE,
                           keys.get_private_key_pem(),
