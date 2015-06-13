@@ -29,10 +29,18 @@ from kmip.core.messages import contents
 from kmip.core import misc
 from kmip.core import objects
 from kmip.core import secrets
+from kmip.core.secrets import OpaqueObject as Opaque
 from kmip.services import kmip_client as proxy
 from kmip.services import results
 
 from barbican.plugin import kmip_secret_store as kss
+
+
+def get_sample_opaque_secret():
+    opaque_type = Opaque.OpaqueDataType(enums.OpaqueDataType.NONE)
+    opaque_value = Opaque.OpaqueDataValue(base64.b64decode(
+        utils.get_symmetric_key()))
+    return Opaque(opaque_type, opaque_value)
 
 
 def get_sample_symmetric_key():
@@ -454,6 +462,42 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
         self.assertEqual(0, cmp(expected, return_value))
 
+    def test_store_opaque_secret_assert_called(self):
+        key_spec = secret_store.KeySpec(None, None, None)
+        opaque = ('\x00\x01\x02\x03\x04\x05\x06\x07')
+        secret_dto = secret_store.SecretDTO(secret_store.SecretType.OPAQUE,
+                                            base64.b64encode(opaque),
+                                            key_spec,
+                                            'content_type',
+                                            transport_key=None)
+        self.secret_store.store_secret(secret_dto)
+        self.secret_store.client.register.assert_called_once_with(
+            object_type=enums.ObjectType.OPAQUE_DATA,
+            template_attribute=mock.ANY,
+            secret=mock.ANY,
+            credential=self.credential)
+        _, register_call_kwargs = self.secret_store.client.register.call_args
+        actual_secret = register_call_kwargs.get('secret')
+        self.assertEqual(
+            Opaque.OpaqueDataType(enums.OpaqueDataType.NONE),
+            actual_secret.opaque_data_type)
+        self.assertEqual(
+            Opaque.OpaqueDataValue(opaque),
+            actual_secret.opaque_data_value)
+
+    def test_store_opaque_secret_return_value(self):
+        key_spec = secret_store.KeySpec(None, None, None)
+        opaque = ('\x00\x01\x02\x03\x04\x05\x06\x07')
+        secret_dto = secret_store.SecretDTO(secret_store.SecretType.OPAQUE,
+                                            base64.b64encode(opaque),
+                                            key_spec,
+                                            'content_type',
+                                            transport_key=None)
+        return_value = self.secret_store.store_secret(secret_dto)
+        expected = {kss.KMIPSecretStore.KEY_UUID: 'uuid'}
+
+        self.assertEqual(0, cmp(expected, return_value))
+
     @utils.parameterized_dataset({
         'private_pkcs8': [secret_store.SecretType.PRIVATE,
                           keys.get_private_key_pem(),
@@ -607,19 +651,6 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
             self.secret_store.store_secret,
             secret_dto)
 
-    def test_store_secret_invalid_object_type(self):
-        key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.AES,
-                                        128, 'mode')
-        secret_dto = secret_store.SecretDTO(secret_store.SecretType.OPAQUE,
-                                            "AAAA",
-                                            key_spec,
-                                            'content_type',
-                                            transport_key=None)
-        self.assertRaises(
-            kss.KMIPSecretStoreError,
-            self.secret_store.store_secret,
-            secret_dto)
-
     def test_store_secret_valid_algorithm_invalid_bit_length(self):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.AES,
                                         56, 'mode')
@@ -658,6 +689,12 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
                       misc.KeyFormatType(enums.KeyFormatType.RAW),
                       utils.get_symmetric_key(),
                       False],
+        'opaque': [get_sample_opaque_secret(),
+                   secret_store.SecretType.OPAQUE,
+                   enums.ObjectType.OPAQUE_DATA,
+                   misc.KeyFormatType(enums.KeyFormatType.RAW),
+                   utils.get_symmetric_key(),
+                   False],
         'public_key': [get_sample_public_key(),
                        secret_store.SecretType.PUBLIC,
                        enums.ObjectType.PUBLIC_KEY,
