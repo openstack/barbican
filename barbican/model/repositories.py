@@ -24,6 +24,7 @@ import logging
 import time
 import uuid
 
+from oslo_utils import timeutils
 import sqlalchemy
 from sqlalchemy import func as sa_func
 from sqlalchemy import or_
@@ -35,7 +36,6 @@ from barbican.common import utils
 from barbican import i18n as u
 from barbican.model.migration import commands
 from barbican.model import models
-from barbican.openstack.common import timeutils
 
 LOG = utils.getLogger(__name__)
 

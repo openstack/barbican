@@ -19,6 +19,7 @@ import base64
 import jsonschema as schema
 import ldap
 from OpenSSL import crypto
+from oslo_utils import timeutils
 import six
 
 from barbican.api import controllers
@@ -29,7 +30,6 @@ from barbican.common import utils
 from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repo
-from barbican.openstack.common import timeutils
 from barbican.plugin.interface import secret_store
 from barbican.plugin.util import mime_types
 

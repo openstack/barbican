@@ -16,11 +16,11 @@ import base64
 import os
 
 import mock
+from oslo_utils import timeutils
 
 from barbican.common import validators
 from barbican.model import models
 from barbican.model import repositories
-from barbican.openstack.common import timeutils
 from barbican.tests import utils
 
 project_repo = repositories.get_project_repository()

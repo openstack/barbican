@@ -14,11 +14,11 @@
 # limitations under the License.
 
 import mock
+from oslo_utils import timeutils
 import six
 
 from barbican import i18n as u
 from barbican.model import models
-from barbican.openstack.common import timeutils
 from barbican.tasks import common
 from barbican.tasks import resources
 from barbican.tests import utils
