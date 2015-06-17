@@ -16,10 +16,10 @@ import uuid
 
 import mock
 import oslo_messaging
+from oslo_service import service
 import six
 
 from barbican.common import config
-from barbican.openstack.common import service
 from barbican import queue
 from barbican.queue import keystone_listener
 from barbican.tasks import keystone_consumer as consumer

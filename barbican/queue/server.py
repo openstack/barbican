@@ -26,12 +26,13 @@ try:
 except ImportError:
     newrelic_loaded = False
 
+from oslo_service import service
+
 from barbican.common import config
 from barbican.common import utils
 from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories
-from barbican.openstack.common import service
 from barbican import queue
 from barbican.tasks import common
 from barbican.tasks import resources

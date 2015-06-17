@@ -37,11 +37,11 @@ if os.path.exists(os.path.join(possible_topdir, 'barbican', '__init__.py')):
 
 
 from barbican.common import config
-from barbican.openstack.common import service
 from barbican import queue
 from barbican.queue import server
 
 from oslo_log import log
+from oslo_service import service
 
 
 def fail(returncode, e):
@@ -62,6 +62,7 @@ if __name__ == '__main__':
         queue.init(CONF)
 
         service.launch(
+            CONF,
             server.TaskServer()
         ).wait()
     except RuntimeError as e:

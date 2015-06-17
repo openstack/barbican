@@ -17,9 +17,9 @@
 Server-side (i.e. worker side) Keystone notification related classes and logic.
 """
 import oslo_messaging
+from oslo_service import service
 
 from barbican.common import utils
-from barbican.openstack.common import service
 from barbican import queue
 from barbican.tasks import keystone_consumer
 

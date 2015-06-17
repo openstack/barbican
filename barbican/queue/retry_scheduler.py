@@ -19,13 +19,14 @@ Retry/scheduler classes and logic.
 import datetime
 import random
 
+from oslo_service import periodic_task
+from oslo_service import service
+
 from barbican.common import config
 from barbican.common import utils
 from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories
-from barbican.openstack.common import periodic_task
-from barbican.openstack.common import service
 from barbican.queue import client as async_client
 
 LOG = utils.getLogger(__name__)
