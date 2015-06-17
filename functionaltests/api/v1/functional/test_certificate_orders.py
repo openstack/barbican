@@ -23,7 +23,7 @@ import testtools
 from barbican.plugin.interface import secret_store as s
 from barbican.tasks import certificate_resources as cert_res
 from barbican.tests import certificate_utils as certutil
-from barbican.tests import utils
+from barbican.tests import keys
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import ca_behaviors
 from functionaltests.api.v1.behaviors import container_behaviors
@@ -106,9 +106,9 @@ def get_private_key_req():
             'payload_content_type': 'application/octet-stream',
             'payload_content_encoding': 'base64',
             'algorithm': 'rsa',
-            'bit_length': 1024,
+            'bit_length': 2048,
             'secret_type': s.SecretType.PRIVATE,
-            'payload': base64.b64encode(utils.get_private_key())}
+            'payload': base64.b64encode(keys.get_private_key_pem())}
 
 
 def get_public_key_req():
@@ -116,9 +116,9 @@ def get_public_key_req():
             'payload_content_type': 'application/octet-stream',
             'payload_content_encoding': 'base64',
             'algorithm': 'rsa',
-            'bit_length': 1024,
+            'bit_length': 2048,
             'secret_type': s.SecretType.PUBLIC,
-            'payload': base64.b64encode(utils.get_public_key())}
+            'payload': base64.b64encode(keys.get_public_key_pem())}
 
 
 create_generic_container_data = {

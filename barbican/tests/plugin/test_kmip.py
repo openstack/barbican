@@ -193,14 +193,14 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
     def test_generate_supports_rsa(self):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA,
                                         None, 'mode')
-        for x in [1024, 2048, 3072, 4096]:
+        for x in [2048, 3072, 4096]:
             key_spec.bit_length = x
             self.assertTrue(self.secret_store.generate_supports(key_spec))
 
     def test_generate_supports_dsa(self):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.DSA,
                                         None, 'mode')
-        for x in [1024, 2048, 3072]:
+        for x in [2048, 3072]:
             key_spec.bit_length = x
             self.assertTrue(self.secret_store.generate_supports(key_spec))
 

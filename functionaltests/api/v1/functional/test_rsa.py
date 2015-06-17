@@ -80,7 +80,7 @@ def get_order_rsa_container():
     return {'type': 'asymmetric',
             "meta": {"name": "ordered rsacontainer",
                      "algorithm": "rsa",
-                     "bit_length": 1024,
+                     "bit_length": 2048,
                      "mode": "cbc"}}
 
 
@@ -88,7 +88,7 @@ def get_order_rsa_container_with_passphrase():
     return {'type': 'asymmetric',
             "meta": {"name": "ordered rsacontainer",
                      "algorithm": "rsa",
-                     "bit_length": 1024,
+                     "bit_length": 2048,
                      "passphrase": "password",
                      "mode": "cbc"}}
 
