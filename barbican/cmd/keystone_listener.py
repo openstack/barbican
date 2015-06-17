@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # Copyright 2014 Hewlett-Packard Development Company, L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -75,4 +74,3 @@ if __name__ == '__main__':
             LOG.info("Exiting as Barbican Keystone listener is not enabled...")
     except RuntimeError as e:
         fail(1, e)
-

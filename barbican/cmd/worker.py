@@ -49,7 +49,7 @@ def fail(returncode, e):
     sys.exit(returncode)
 
 
-if __name__ == '__main__':
+def main():
     try:
         CONF = config.CONF
 
@@ -68,3 +68,6 @@ if __name__ == '__main__':
     except RuntimeError as e:
         fail(1, e)
 
+
+if __name__ == '__main__':
+    main()
