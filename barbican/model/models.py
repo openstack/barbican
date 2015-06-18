@@ -1260,26 +1260,3 @@ class ContainerACLUser(BASE, ModelBase):
         """Sub-class hook method: return dict of fields."""
         return {'acl_id': self.acl_id,
                 'user_id': self.user_id}
-
-
-# Keep this tuple synchronized with the models in the file
-MODELS = [ProjectSecret, Project, Secret, EncryptedDatum, Order, Container,
-          ContainerConsumerMetadatum, ContainerSecret, TransportKey,
-          SecretStoreMetadatum, OrderPluginMetadatum, OrderBarbicanMetadatum,
-          KEKDatum, CertificateAuthority, CertificateAuthorityMetadatum,
-          ProjectCertificateAuthority, PreferredCertificateAuthority,
-          SecretACL, ContainerACL, SecretACLUser, ContainerACLUser,
-          OrderRetryTask]
-
-
-def register_models(engine):
-    """Creates database tables for all models with the given engine."""
-    LOG.debug("Models: %s", repr(MODELS))
-    for model in MODELS:
-        model.metadata.create_all(engine)
-
-
-def unregister_models(engine):
-    """Drops database tables for all models with the given engine."""
-    for model in MODELS:
-        model.metadata.drop_all(engine)

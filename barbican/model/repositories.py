@@ -230,7 +230,7 @@ def _auto_generate_tables(engine, tables):
     else:
         # Create database tables from our models.
         LOG.info(u._LI('Auto-creating barbican registry DB'))
-        models.register_models(engine)
+        models.BASE.metadata.create_all(engine)
 
         # Sync the alembic version 'head' with current models.
         commands.stamp()
