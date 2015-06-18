@@ -70,7 +70,7 @@ class SecretController(controllers.ACLMixin):
 
     @pecan.expose()
     def _lookup(self, sub_resource, *remainder):
-        if sub_resource == 'acls':
+        if sub_resource == 'acl':
             return acls.SecretACLsController(self.secret), remainder
         else:
             pecan.abort(405)  # only 'acl' as sub-resource is supported
