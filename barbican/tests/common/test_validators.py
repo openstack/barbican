@@ -1299,5 +1299,48 @@ class WhenTestingStoredKeyOrderValidator(utils.BaseTestCase):
                           self.order_req)
 
 
+@utils.parameterized_test_case
+class WhenTestingAclValidator(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenTestingAclValidator, self).setUp()
+        self.validator = validators.ACLValidator()
+
+    @utils.parameterized_dataset({
+        'one_reader': [{'read': {'users': ['reader'], 'creator-only': False}}],
+        'two_reader': [{'read': {'users': ['r1', 'r2'],
+                                 'creator-only': False}}],
+        'private': [{'read': {'users': [], 'creator-only': True}}],
+        'default_users': [{'read': {'creator-only': True}}],
+        'default_creator': [{'read': {'users': ['reader']}}],
+        'almost_empty': [{'read': {}}],
+        'empty': [{}],
+    })
+    def test_should_validate(self, acl_req):
+        self.validator.validate(acl_req)
+
+    @utils.parameterized_dataset({
+        'foo': ['foo'],
+        'bad_op': [{'bad_op': {'users': ['reader'], 'creator-only': False}}],
+        'bad_field': [{'read': {'bad_field': ['reader'],
+                                'creator-only': False}}],
+        'bad_user': [{'read': {'users': [27], 'creator-only': False}}],
+        'missing_op': [{'creator-only': True}],
+    })
+    def test_should_raise(self, acl_req):
+        self.assertRaises(excep.InvalidObject,
+                          self.validator.validate,
+                          acl_req)
+
+    @utils.parameterized_dataset({
+        'write': [{'write': {'users': ['writer'], 'creator-only': False}}],
+        'list': [{'list': {'users': ['lister'], 'creator-only': False}}],
+        'delete': [{'delete': {'users': ['deleter'], 'creator-only': False}}],
+    })
+    def test_should_raise_future(self, acl_req):
+        self.assertRaises(excep.InvalidObject,
+                          self.validator.validate,
+                          acl_req)
+
+
 if __name__ == '__main__':
     unittest.main()
