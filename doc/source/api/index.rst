@@ -12,7 +12,8 @@ Quick Start
    ./quickstart/containers
    ./quickstart/acls
    ./quickstart/pkcs11keygeneration
-
+   ./quickstart/certificates
+   ./quickstart/dogtag_setup
 
 API Reference
 #############
@@ -23,3 +24,4 @@ API Reference
     ./reference/secrets
     ./reference/containers
     ./reference/acls
+    ./reference/certificates

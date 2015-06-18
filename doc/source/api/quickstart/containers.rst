@@ -99,6 +99,12 @@ certificates:
         "updated": "2015-03-30T21:10:45.417835"
     }
 
+The payload for the secret referenced as the "certificate" is expected to be a
+PEM formatted x509 certificate.
+
+The payload for the secret referenced as the "intermediates" is expected to be a
+PEM formatted PKCS7 certificate chain.
+
 For more information on creating a certificate container, reference the
 :ref:`Creating a Certificate Container <create_certificate_container>` section.
 
