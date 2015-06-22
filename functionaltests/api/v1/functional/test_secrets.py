@@ -1576,7 +1576,7 @@ class SecretsFuzzTestCase(base.TestCase):
         }
         model.override_values(**overrides)
         resp, secret = self.behaviors.create_secret(model)
-        self.assertEqual(400, resp.status_code)
+        self.assertNotIn(resp.status_code, range(500, 600))
 
     """ ALL PASSING ? """
     @utils.parameterized_dataset(fuzzer.get_dataset('date'))
