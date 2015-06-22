@@ -271,7 +271,8 @@ class Project(BASE, SoftDeleteMixIn, ModelBase):
     external_id = sa.Column(sa.String(255), unique=True)
 
     orders = orm.relationship("Order", backref="project")
-    secrets = orm.relationship("ProjectSecret", backref="projects")
+    secrets = orm.relationship("Secret", backref="project")
+    old_secrets = orm.relationship("ProjectSecret", backref="projects")
     keks = orm.relationship("KEKDatum", backref="project")
     containers = orm.relationship("Container", backref="project")
     cas = orm.relationship("ProjectCertificateAuthority", backref="project")
@@ -300,6 +301,11 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
     bit_length = sa.Column(sa.Integer)
     mode = sa.Column(sa.String(255))
     creator_id = sa.Column(sa.String(255))
+    project_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('projects.id', name='secrets_project_fk'),
+        index=True,
+        nullable=True)
 
     # TODO(jwood): Performance - Consider avoiding full load of all
     #   datum attributes here. This is only being done to support the
