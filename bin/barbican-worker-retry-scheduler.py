@@ -37,12 +37,12 @@ if os.path.exists(os.path.join(possible_topdir, 'barbican', '__init__.py')):
 
 
 from barbican.common import config
-from barbican.openstack.common import service
 from barbican import queue
 from barbican.queue import retry_scheduler
 
 from oslo_config import cfg
 from oslo_log import log
+from oslo_service import service
 
 
 def fail(returncode, e):
@@ -63,6 +63,7 @@ if __name__ == '__main__':
         queue.init(CONF, is_server_side=False)
 
         service.launch(
+            CONF,
             retry_scheduler.PeriodicServer()
         ).wait()
     except RuntimeError as e:

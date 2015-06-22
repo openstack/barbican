@@ -22,6 +22,7 @@ import os
 
 from oslo_config import cfg
 from oslo_log import log
+from oslo_service import _options
 
 from barbican import i18n as u
 import barbican.version
@@ -29,15 +30,6 @@ import barbican.version
 MAX_BYTES_REQUEST_INPUT_ACCEPTED = 15000
 DEFAULT_MAX_SECRET_BYTES = 10000
 KS_NOTIFICATIONS_GRP_NAME = 'keystone_notifications'
-
-help_for_backdoor_port = (
-    "Acceptable values are 0, <port>, and <start>:<end>, where 0 results "
-    "in listening on a random tcp port number; <port> results in listening "
-    "on the specified port number (and not enabling backdoor if that port "
-    "is in use); and <start>:<end> results in listening on the smallest "
-    "unused port number within the specified range of port numbers.  The "
-    "chosen port is displayed in the service's log file.")
-
 
 context_opts = [
     cfg.StrOpt('admin_role', default='admin',
@@ -72,33 +64,6 @@ db_opts = [
     cfg.BoolOpt('sql_pool_logging', default=False),
     cfg.IntOpt('sql_pool_size', default=None),
     cfg.IntOpt('sql_pool_max_overflow', default=None),
-]
-
-eventlet_backdoor_opts = [
-    cfg.StrOpt('backdoor_port',
-               help="Enable eventlet backdoor.  %s" % help_for_backdoor_port)
-]
-
-periodic_opts = [
-    cfg.BoolOpt('run_external_periodic_tasks',
-                default=True,
-                help='Some periodic tasks can be run in a separate process. '
-                     'Should we run them here?'),
-]
-
-ssl_opts = [
-    cfg.StrOpt('ca_file',
-               default=None,
-               help="CA certificate file to use to verify "
-                    "connecting clients"),
-    cfg.StrOpt('cert_file',
-               default=None,
-               help="Certificate file to use when starting "
-                    "the server securely"),
-    cfg.StrOpt('key_file',
-               default=None,
-               help="Private key file to use when starting "
-                    "the server securely"),
 ]
 
 retry_opt_group = cfg.OptGroup(name='retry_scheduler',
@@ -184,10 +149,10 @@ def new_config():
     conf.register_opts(common_opts)
     conf.register_opts(host_opts)
     conf.register_opts(db_opts)
-    conf.register_opts(eventlet_backdoor_opts)
-    conf.register_opts(periodic_opts)
+    conf.register_opts(_options.eventlet_backdoor_opts)
+    conf.register_opts(_options.periodic_opts)
 
-    conf.register_opts(ssl_opts, "ssl")
+    conf.register_opts(_options.ssl_opts, "ssl")
 
     conf.register_group(retry_opt_group)
     conf.register_opts(retry_opts, group=retry_opt_group)
