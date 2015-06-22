@@ -22,32 +22,33 @@ from barbican.model import models
 from barbican.plugin.crypto import crypto
 from barbican.plugin.interface import secret_store
 from barbican.plugin import store_crypto
+from barbican.tests import keys
 from barbican.tests import utils as test_utils
 
 
 def get_private_dto():
-    spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 1024)
+    spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 2048)
     return secret_store.SecretDTO(secret_store.SecretType.PRIVATE,
                                   base64.b64encode(
-                                      test_utils.get_private_key()),
+                                      keys.get_private_key_pem()),
                                   spec,
                                   'application/pkcs8')
 
 
 def get_public_dto():
-    spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 1024)
+    spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 2048)
     return secret_store.SecretDTO(secret_store.SecretType.PUBLIC,
                                   base64.b64encode(
-                                      test_utils.get_public_key()),
+                                      keys.get_public_key_pem()),
                                   spec,
                                   'application/octet-stream')
 
 
 def get_certificate_dto():
-    spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 1024)
+    spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 2048)
     return secret_store.SecretDTO(secret_store.SecretType.CERTIFICATE,
                                   base64.b64encode(
-                                      test_utils.get_certificate()),
+                                      keys.get_certificate_pem()),
                                   spec,
                                   'application/pkix-cert')
 

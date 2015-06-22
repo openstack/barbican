@@ -91,6 +91,12 @@ def get_sample_private_key(pkcs1=False):
     return secrets.PrivateKey(key_block)
 
 
+def get_sample_certificate():
+    return secrets.Certificate(
+        certificate_type=enums.CertificateTypeEnum.X_509,
+        certificate_value=keys.get_certificate_der())
+
+
 @utils.parameterized_test_case
 class WhenTestingKMIPSecretStore(utils.BaseTestCase):
     """Test using the KMIP server backend for SecretStore."""
@@ -193,14 +199,14 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
     def test_generate_supports_rsa(self):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA,
                                         None, 'mode')
-        for x in [1024, 2048, 3072, 4096]:
+        for x in [2048, 3072, 4096]:
             key_spec.bit_length = x
             self.assertTrue(self.secret_store.generate_supports(key_spec))
 
     def test_generate_supports_dsa(self):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.DSA,
                                         None, 'mode')
-        for x in [1024, 2048, 3072]:
+        for x in [2048, 3072]:
             key_spec.bit_length = x
             self.assertTrue(self.secret_store.generate_supports(key_spec))
 
@@ -406,6 +412,45 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         return_value = self.secret_store.store_secret(secret_dto)
         expected = {kss.KMIPSecretStore.KEY_UUID: 'uuid'}
 
+        self.assertEqual(expected, return_value)
+
+    def test_store_passphrase_secret_assert_called(self):
+        key_spec = secret_store.KeySpec(None, None, None)
+        passphrase = "supersecretpassphrase"
+        secret_dto = secret_store.SecretDTO(secret_store.SecretType.PASSPHRASE,
+                                            base64.b64encode(passphrase),
+                                            key_spec,
+                                            'content_type',
+                                            transport_key=None)
+        self.secret_store.store_secret(secret_dto)
+        self.secret_store.client.register.assert_called_once_with(
+            object_type=enums.ObjectType.SECRET_DATA,
+            template_attribute=mock.ANY,
+            secret=mock.ANY,
+            credential=self.credential)
+        _, register_call_kwargs = self.secret_store.client.register.call_args
+        actual_secret = register_call_kwargs.get('secret')
+        self.assertEqual(
+            None,
+            actual_secret.key_block.cryptographic_length)
+        self.assertEqual(
+            None,
+            actual_secret.key_block.cryptographic_algorithm)
+        self.assertEqual(
+            passphrase,
+            actual_secret.key_block.key_value.key_material.value)
+
+    def test_store_passphrase_secret_return_value(self):
+        key_spec = secret_store.KeySpec(None, None, None)
+        passphrase = "supersecretpassphrase"
+        secret_dto = secret_store.SecretDTO(secret_store.SecretType.PASSPHRASE,
+                                            base64.b64encode(passphrase),
+                                            key_spec,
+                                            'content_type',
+                                            transport_key=None)
+        return_value = self.secret_store.store_secret(secret_dto)
+        expected = {kss.KMIPSecretStore.KEY_UUID: 'uuid'}
+
         self.assertEqual(0, cmp(expected, return_value))
 
     @utils.parameterized_dataset({
@@ -489,7 +534,46 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         return_value = self.secret_store.store_secret(secret_dto)
         expected = {kss.KMIPSecretStore.KEY_UUID: 'uuid'}
 
-        self.assertEqual(0, cmp(expected, return_value))
+        self.assertEqual(expected, return_value)
+
+    @utils.parameterized_dataset({
+        'rsa': [secret_store.KeyAlgorithm.RSA, 2048],
+        'no_key_spec': [None, None]
+    })
+    def test_store_certificate_secret_assert_called(
+            self, algorithm, bit_length):
+        key_spec = secret_store.KeySpec(algorithm, bit_length)
+        secret_dto = secret_store.SecretDTO(
+            secret_store.SecretType.CERTIFICATE,
+            base64.b64encode(keys.get_certificate_pem()),
+            key_spec,
+            'content_type')
+        self.secret_store.store_secret(secret_dto)
+        self.secret_store.client.register.assert_called_once_with(
+            object_type=enums.ObjectType.CERTIFICATE,
+            template_attribute=mock.ANY,
+            secret=mock.ANY,
+            credential=self.credential)
+        _, register_call_kwargs = self.secret_store.client.register.call_args
+        actual_secret = register_call_kwargs.get('secret')
+        self.assertEqual(
+            enums.CertificateTypeEnum.X_509.value,
+            actual_secret.certificate_type.value)
+        self.assertEqual(
+            keys.get_certificate_der(),
+            actual_secret.certificate_value.value)
+
+    def test_store_certificate_secret_return_value(self):
+        key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA, 2048)
+        secret_dto = secret_store.SecretDTO(
+            secret_store.SecretType.CERTIFICATE,
+            base64.b64encode(keys.get_certificate_pem()),
+            key_spec,
+            'content_type')
+        return_value = self.secret_store.store_secret(secret_dto)
+        expected = {kss.KMIPSecretStore.KEY_UUID: 'uuid'}
+
+        self.assertEqual(expected, return_value)
 
     def test_store_secret_server_error_occurs(self):
         self.secret_store.client.register = mock.MagicMock(
@@ -597,12 +681,12 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
                               misc.KeyFormatType(enums.KeyFormatType.PKCS_1),
                               base64.b64encode(keys.get_private_key_pem()),
                               True],
-        'opaque': [get_sample_symmetric_key(),
-                   secret_store.SecretType.OPAQUE,
-                   None,
-                   None,
-                   utils.get_symmetric_key(),
-                   False]
+        'certificate': [get_sample_certificate(),
+                        secret_store.SecretType.CERTIFICATE,
+                        enums.ObjectType.CERTIFICATE,
+                        None,
+                        base64.b64encode(keys.get_certificate_pem()),
+                        False]
     })
     def test_get_secret(self, kmip_secret, secret_type, kmip_type,
                         key_format_type, expected_secret, pkcs1_only):

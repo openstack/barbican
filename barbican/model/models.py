@@ -19,6 +19,7 @@ Defines database models for Barbican
 import hashlib
 
 from oslo_serialization import jsonutils as json
+from oslo_utils import timeutils
 import six
 import sqlalchemy as sa
 from sqlalchemy.ext import compiler
@@ -30,7 +31,6 @@ from sqlalchemy import types as sql_types
 from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
-from barbican.openstack.common import timeutils
 from barbican.plugin.interface import secret_store
 
 LOG = utils.getLogger(__name__)
@@ -271,7 +271,8 @@ class Project(BASE, SoftDeleteMixIn, ModelBase):
     external_id = sa.Column(sa.String(255), unique=True)
 
     orders = orm.relationship("Order", backref="project")
-    secrets = orm.relationship("ProjectSecret", backref="projects")
+    secrets = orm.relationship("Secret", backref="project")
+    old_secrets = orm.relationship("ProjectSecret", backref="projects")
     keks = orm.relationship("KEKDatum", backref="project")
     containers = orm.relationship("Container", backref="project")
     cas = orm.relationship("ProjectCertificateAuthority", backref="project")
@@ -300,6 +301,11 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
     bit_length = sa.Column(sa.Integer)
     mode = sa.Column(sa.String(255))
     creator_id = sa.Column(sa.String(255))
+    project_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('projects.id', name='secrets_project_fk'),
+        index=True,
+        nullable=True)
 
     # TODO(jwood): Performance - Consider avoiding full load of all
     #   datum attributes here. This is only being done to support the
@@ -1260,26 +1266,3 @@ class ContainerACLUser(BASE, ModelBase):
         """Sub-class hook method: return dict of fields."""
         return {'acl_id': self.acl_id,
                 'user_id': self.user_id}
-
-
-# Keep this tuple synchronized with the models in the file
-MODELS = [ProjectSecret, Project, Secret, EncryptedDatum, Order, Container,
-          ContainerConsumerMetadatum, ContainerSecret, TransportKey,
-          SecretStoreMetadatum, OrderPluginMetadatum, OrderBarbicanMetadatum,
-          KEKDatum, CertificateAuthority, CertificateAuthorityMetadatum,
-          ProjectCertificateAuthority, PreferredCertificateAuthority,
-          SecretACL, ContainerACL, SecretACLUser, ContainerACLUser,
-          OrderRetryTask]
-
-
-def register_models(engine):
-    """Creates database tables for all models with the given engine."""
-    LOG.debug("Models: %s", repr(MODELS))
-    for model in MODELS:
-        model.metadata.create_all(engine)
-
-
-def unregister_models(engine):
-    """Drops database tables for all models with the given engine."""
-    for model in MODELS:
-        model.metadata.drop_all(engine)

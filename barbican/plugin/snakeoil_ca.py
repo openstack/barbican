@@ -22,7 +22,7 @@ from oslo_config import cfg
 
 from barbican.common import config
 from barbican.common import utils
-from barbican.openstack.common import gettextutils as u
+from barbican import i18n as u
 import barbican.plugin.interface.certificate_manager as cert_manager
 
 CONF = config.new_config()

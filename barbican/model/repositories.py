@@ -24,6 +24,7 @@ import logging
 import time
 import uuid
 
+from oslo_utils import timeutils
 import sqlalchemy
 from sqlalchemy import func as sa_func
 from sqlalchemy import or_
@@ -35,7 +36,6 @@ from barbican.common import utils
 from barbican import i18n as u
 from barbican.model.migration import commands
 from barbican.model import models
-from barbican.openstack.common import timeutils
 
 LOG = utils.getLogger(__name__)
 
@@ -230,7 +230,7 @@ def _auto_generate_tables(engine, tables):
     else:
         # Create database tables from our models.
         LOG.info(u._LI('Auto-creating barbican registry DB'))
-        models.register_models(engine)
+        models.BASE.metadata.create_all(engine)
 
         # Sync the alembic version 'head' with current models.
         commands.stamp()
@@ -592,7 +592,6 @@ class SecretRepo(BaseRepo):
         utcnow = timeutils.utcnow()
 
         query = session.query(models.Secret)
-        query = query.order_by(models.Secret.created_at)
         query = query.filter_by(deleted=False)
 
         # Note(john-wood-w): SQLAlchemy requires '== None' below,
@@ -611,24 +610,58 @@ class SecretRepo(BaseRepo):
         if secret_type:
             query = query.filter(models.Secret.secret_type == secret_type)
 
-        query = query.join(models.ProjectSecret,
-                           models.Secret.project_assocs)
-        query = query.join(models.Project, models.ProjectSecret.projects)
-        query = query.filter(models.Project.external_id == external_project_id)
+        query_projects, query_old_project_assoc = (
+            self._build_filter_secrets_by_project_queries(
+                query, external_project_id))
 
-        start = offset
-        end = offset + limit
-        LOG.debug('Retrieving from %s to %s', start, end)
-        total = query.count()
-        entities = query[start:end]
-        LOG.debug('Number entities retrieved: %s out of %s',
-                  len(entities), total
-                  )
+        total, entities = self._page_old_and_new_secret_project_assocs(
+            query_projects, query_old_project_assoc, offset, limit)
 
         if total <= 0 and not suppress_exception:
             _raise_no_entities_found(self._do_entity_name())
 
         return entities, offset, limit, total
+
+    def _build_filter_secrets_by_project_queries(self, query, project_id):
+        query_projects = query.filter(models.Secret.project_id == project_id)
+
+        query_old_project_assoc = query.join(models.ProjectSecret,
+                                             models.Secret.project_assocs)
+        query_old_project_assoc = query_old_project_assoc.join(
+            models.Project, models.ProjectSecret.projects)
+        query_old_project_assoc = query_old_project_assoc.filter(
+            models.Project.external_id == project_id)
+
+        return query_projects, query_old_project_assoc
+
+    def _page_old_and_new_secret_project_assocs(
+            self, query_projects, query_old_project_assoc, offset, limit):
+        project_count = query_projects.count()
+        old_project_count = query_old_project_assoc.count()
+
+        total = project_count + old_project_count
+        end_offset = offset + limit
+        LOG.debug('Retrieving from %s to %s', offset, end_offset)
+        # Page over new-association secrets first, then old-association secrets
+        if end_offset < project_count:
+            query_project = query_projects.limit(limit).offset(offset)
+            entities = query_project.all()
+        elif offset >= project_count:
+            query_old_project_assoc = (
+                query_old_project_assoc.limit(limit).offset(
+                    offset - project_count))
+            entities = query_old_project_assoc.all()
+        else:
+            query_project = query_projects.limit(limit).offset(offset)
+            entities = query_project.all()
+            query_old_project_assoc = query_old_project_assoc.limit(
+                end_offset - project_count + 1).offset(0)
+            entities.extend(query_old_project_assoc.all())
+
+        LOG.debug('Number entities retrieved: %s out of %s',
+                  len(entities), total)
+
+        return total, entities
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
@@ -640,18 +673,20 @@ class SecretRepo(BaseRepo):
 
         # Note(john-wood-w): SQLAlchemy requires '== None' below,
         #   not 'is None'.
-        # TODO(jfwood): Performance? Is the many-to-many join needed?
         expiration_filter = or_(models.Secret.expiration == None,
                                 models.Secret.expiration > utcnow)
 
         query = session.query(models.Secret)
         query = query.filter_by(id=entity_id, deleted=False)
         query = query.filter(expiration_filter)
-        query = query.join(models.ProjectSecret, models.Secret.project_assocs)
-        query = query.join(models.Project, models.ProjectSecret.projects)
-        query = query.filter(models.Project.external_id == external_project_id)
+        query_projects, query_old_project_assoc = (
+            self._build_filter_secrets_by_project_queries(
+                query, external_project_id))
 
-        return query
+        if query_projects.count() > 0:
+            return query_projects
+        else:
+            return query_old_project_assoc
 
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
@@ -666,8 +701,13 @@ class SecretRepo(BaseRepo):
         :param session: existing db session reference.
         """
         query = session.query(models.Secret).filter_by(deleted=False)
-        query = query.join(models.ProjectSecret, models.Secret.project_assocs)
-        query = query.filter(models.ProjectSecret.project_id == project_id)
+
+        query_projects, query_old_project_assoc = (
+            self._build_filter_secrets_by_project_queries(
+                query, project_id))
+
+        query = query_projects.union(query_old_project_assoc)
+
         return query
 
     def get_secret_by_id(self, entity_id, suppress_exception=False,

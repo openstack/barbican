@@ -343,6 +343,7 @@ def _save_secret_in_repo(secret_model, project_model):
     secret_repo = repos.get_secret_repository()
     # Create Secret entities in data store.
     if not secret_model.id:
+        secret_model.project_id = project_model.id
         secret_repo.create_from(secret_model)
         new_assoc = models.ProjectSecret()
         new_assoc.project_id = project_model.id

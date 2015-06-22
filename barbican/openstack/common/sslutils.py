@@ -18,7 +18,7 @@ import os
 import ssl
 
 from barbican.common import config
-from barbican.openstack.common.gettextutils import _  # noqa
+from barbican.i18n import _  # noqa
 
 
 CONF = config.CONF
