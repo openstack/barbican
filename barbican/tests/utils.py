@@ -213,19 +213,6 @@ class MockModelRepositoryMixin(object):
                                     mock_repo_obj=mock_project_repo,
                                     patcher_obj=self.mock_project_repo_patcher)
 
-    def setup_project_secret_repository_mock(
-            self, mock_project_secret_repo=mock.MagicMock()):
-        """Mocks the project-secret repository factory function
-
-        :param mock_project_secret_repo: The pre-configured mock project-secret
-                                         repo to be returned.
-        """
-        self.mock_project_secret_repo_patcher = None
-        self._setup_repository_mock(
-            repo_factory='get_project_secret_repository',
-            mock_repo_obj=mock_project_secret_repo,
-            patcher_obj=self.mock_project_secret_repo_patcher)
-
     def setup_secret_meta_repository_mock(
             self, mock_secret_meta_repo=mock.MagicMock()):
         """Mocks the secret-meta repository factory function

@@ -72,7 +72,6 @@ class WhenUsingKeystoneEventConsumer(
         super(WhenUsingKeystoneEventConsumer, self).setUp()
         self.kek_repo = rep.get_kek_datum_repository()
         self.project_repo = rep.get_project_repository()
-        self.project_secret_repo = rep.get_project_secret_repository()
         self.secret_meta_repo = rep.get_secret_meta_repository()
         self.secret_repo = rep.get_secret_repository()
         self.transport_key_repo = rep.get_transport_key_repository()
@@ -88,10 +87,6 @@ class WhenUsingKeystoneEventConsumer(
 
         self.assertEqual(1, len(db_secrets))
         self.assertEqual(secret.id, db_secrets[0].id)
-
-        db_project_secret = (
-            self.project_secret_repo.get_project_entities(project2_id))
-        self.assertEqual(1, len(db_project_secret))
 
         db_kek = self.kek_repo.get_project_entities(project2_id)
         self.assertEqual(1, len(db_kek))
@@ -245,11 +240,6 @@ class WhenUsingKeystoneEventConsumerProcessMethod(
             entity_id=secret_metadata_id)
         self.assertIsNotNone(db_secret_store_meta)
 
-        project_secret_repo = rep.get_project_secret_repository()
-        db_project_secret = project_secret_repo.get_project_entities(
-            project1_id)
-        self.assertEqual(1, len(db_project_secret))
-
         kek_repo = rep.get_kek_datum_repository()
         db_kek = kek_repo.get_project_entities(project1_id)
         self.assertEqual(1, len(db_kek))
@@ -271,11 +261,6 @@ class WhenUsingKeystoneEventConsumerProcessMethod(
                                entity_id=secret_id,
                                external_project_id=self.project_id1)
         self.assertIn(secret_id, str(ex))
-
-        # After project entities delete, make sure project_secret is not found
-        entities = project_secret_repo.get_project_entities(
-            project1_id)
-        self.assertEqual(0, len(entities))
 
         # After project entities delete, make sure kek data is not found
         entities = kek_repo.get_project_entities(project1_id)
@@ -307,11 +292,6 @@ class WhenUsingKeystoneEventConsumerProcessMethod(
         db_secrets = secret_repo.get_project_entities(project1_id)
         self.assertEqual(1, len(db_secrets))
         self.assertEqual(secret.id, db_secrets[0].id)
-
-        project_secret_repo = rep.get_project_secret_repository()
-        db_project_secret = project_secret_repo.get_project_entities(
-            project1_id)
-        self.assertEqual(1, len(db_project_secret))
 
         kek_repo = rep.get_kek_datum_repository()
         db_kek = kek_repo.get_project_entities(project1_id)
@@ -345,10 +325,6 @@ class WhenUsingKeystoneEventConsumerProcessMethod(
         db_secrets = secret_repo.get_project_entities(project1_id)
         self.assertEqual(1, len(db_secrets))
         self.assertEqual(secret_id, db_secrets[0].id)
-
-        db_project_secret = project_secret_repo.get_project_entities(
-            project1_id)
-        self.assertEqual(1, len(db_project_secret))
 
         db_kek = kek_repo.get_project_entities(project1_id)
         self.assertEqual(1, len(db_kek))

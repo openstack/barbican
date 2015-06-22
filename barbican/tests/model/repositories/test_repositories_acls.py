@@ -49,7 +49,6 @@ class WhenTestingSecretACLRepository(database_utils.RepositoryTestCase,
         # Setup the secret and needed base relationship
         secret_repo = repositories.get_secret_repository()
         session = secret_repo.get_session()
-        secret = secret_repo.create_from(models.Secret(), session=session)
 
         if project_id is None:  # don't re-create project if it created earlier
             project = models.Project()
@@ -57,10 +56,11 @@ class WhenTestingSecretACLRepository(database_utils.RepositoryTestCase,
             project.save(session=session)
             project_id = project.id
 
-        project_secret = models.ProjectSecret()
-        project_secret.secret_id = secret.id
-        project_secret.project_id = project_id
-        project_secret.save(session=session)
+        secret_model = models.Secret()
+        secret_model.project_id = project_id
+        secret = secret_repo.create_from(secret_model, session=session)
+
+        secret.save(session=session)
 
         session.commit()
         return secret
@@ -226,8 +226,7 @@ class WhenTestingSecretACLRepository(database_utils.RepositoryTestCase,
                                          session)
         self.acl_repo.create_or_replace_from(secret1, acl1)
 
-        secret2 = self._create_base_secret(
-            secret1.project_assocs[0].project_id)
+        secret2 = self._create_base_secret(secret1.project.id)
         acl21 = self.acl_repo.create_from(models.SecretACL(secret2.id, 'read',
                                                            None, ['u3', 'u4']),
                                           session)

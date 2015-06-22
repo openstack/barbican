@@ -64,7 +64,7 @@ class SecretController(controllers.ACLMixin):
 
     def get_acl_tuple(self, req, **kwargs):
         d = self.get_acl_dict_for_user(req, self.secret.secret_acls)
-        d['project_id'] = self.secret.project_assocs[0].projects.external_id
+        d['project_id'] = self.secret.project.external_id
         d['creator_id'] = self.secret.creator_id
         return 'secret', d
 
@@ -124,7 +124,7 @@ class SecretController(controllers.ACLMixin):
         # project associated with secret. The lookup project_id needs to be
         # derived from the secret's data considering authorization is already
         # done.
-        external_project_id = secret.project_assocs[0].projects.external_id
+        external_project_id = secret.project.external_id
         project = res.get_or_create_project(external_project_id)
 
         # default to application/octet-stream if there is no Accept header

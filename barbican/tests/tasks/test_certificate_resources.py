@@ -37,7 +37,6 @@ ca_repo = repositories.get_ca_repository()
 preferred_ca_repo = repositories.get_preferred_ca_repository()
 project_repo = repositories.get_project_repository()
 order_repo = repositories.get_order_repository()
-project_secret_repo = repositories.get_project_secret_repository()
 
 
 class WhenPerformingPrivateOperations(utils.BaseTestCase,
@@ -167,29 +166,22 @@ class BaseCertificateRequestsTestCase(utils.BaseTestCase):
         # data for stored key cases
         self.private_key = models.Secret()
         self.private_key.secret_type = 'PRIVATE'
+        self.private_key.project_id = self.project.id
         secret_repo.create_from(self.private_key)
-
-        ps = models.ProjectSecret()
-        ps.project_id = self.project.id
-        ps.secret_id = self.private_key.id
-        project_secret_repo.save(ps)
 
         self.public_key = models.Secret()
         self.public_key.secret_type = 'PUBLIC'
+        self.public_key.project_id = self.project.id
         secret_repo.create_from(self.public_key)
 
         self.passphrase = models.Secret()
         self.passphrase.secret_type = 'PASSPHRASE'
+        self.passphrase.project_id = self.project.id
         secret_repo.create_from(self.passphrase)
 
         self.private_key_value = None
         self.public_key_value = "public_key"
         self.passphrase_value = None
-
-        ps = models.ProjectSecret()
-        ps.project_id = self.project.id
-        ps.secret_id = self.passphrase.id
-        project_secret_repo.save(ps)
 
         self.parsed_container_with_passphrase = {
             'name': 'container name',

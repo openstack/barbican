@@ -236,11 +236,6 @@ class BaseSecretsResource(FunctionalTest):
         self.secret_repo.create_from.return_value = self.secret
         self.setup_secret_repository_mock(self.secret_repo)
 
-        # Set up mocked project-secret repo
-        self.project_secret_repo = mock.MagicMock()
-        self.project_secret_repo.create_from.return_value = None
-        self.setup_project_secret_repository_mock(self.project_secret_repo)
-
         # Set up mocked encrypted datum repo
         self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
@@ -327,9 +322,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
                                     content_type=self.datum.content_type)
 
         self.secret.secret_acls = []
-        self.secret.project_assocs = [mock.MagicMock()]
-        secret_project = self.secret.project_assocs[0].projects
-        secret_project.external_id = self.external_project_id
+        self.secret.project = mock.MagicMock()
+        self.secret.project.external_id = self.external_project_id
 
         # Set up mocked project
         self.project = models.Project()
@@ -349,9 +343,6 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret_repo.get_secret_by_id = mock.Mock(return_value=self.secret)
         self.secret_repo.delete_entity_by_id = mock.Mock(return_value=None)
         self.setup_secret_repository_mock(self.secret_repo)
-
-        # Set up mocked project-secret repo
-        self.setup_project_secret_repository_mock()
 
         # Set up mocked encrypted datum repo
         self.datum_repo = mock.MagicMock()

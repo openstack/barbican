@@ -256,7 +256,6 @@ class WhenTestingSecretsResource(BaseTestCase):
         self.setup_encrypted_datum_repository_mock()
         self.setup_kek_datum_repository_mock()
         self.setup_project_repository_mock()
-        self.setup_project_secret_repository_mock()
         self.setup_secret_meta_repository_mock()
         self.setup_transport_key_repository_mock()
 
@@ -323,8 +322,7 @@ class WhenTestingSecretResource(BaseTestCase):
         self.acl_list = [acl_read]
         secret = mock.MagicMock()
         secret.secret_acls.__iter__.return_value = self.acl_list
-        secret.project_assocs[0].projects.external_id = (self.
-                                                         external_project_id)
+        secret.project.external_id = self.external_project_id
         secret.creator_id = self.creator_user_id
 
         self.resource = SecretResource(secret)

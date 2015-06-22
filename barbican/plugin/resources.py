@@ -345,14 +345,6 @@ def _save_secret_in_repo(secret_model, project_model):
     if not secret_model.id:
         secret_model.project_id = project_model.id
         secret_repo.create_from(secret_model)
-        new_assoc = models.ProjectSecret()
-        new_assoc.project_id = project_model.id
-        new_assoc.secret_id = secret_model.id
-        new_assoc.role = "admin"
-        new_assoc.status = models.States.ACTIVE
-
-        project_secret_repo = repos.get_project_secret_repository()
-        project_secret_repo.create_from(new_assoc)
     else:
         secret_repo.save(secret_model)
 
