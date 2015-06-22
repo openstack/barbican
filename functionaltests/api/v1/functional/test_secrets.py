@@ -22,6 +22,7 @@ import time
 from testtools import testcase
 
 from barbican.plugin.util import translations
+from barbican.tests import keys
 from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import secret_behaviors
@@ -38,9 +39,9 @@ def get_private_key_req():
             'payload_content_type': 'application/octet-stream',
             'payload_content_encoding': 'base64',
             'algorithm': 'rsa',
-            'bit_length': 1024,
+            'bit_length': 2048,
             'secret_type': 'private',
-            'payload': base64.b64encode(utils.get_private_key())}
+            'payload': base64.b64encode(keys.get_private_key_pem())}
 
 
 def get_public_key_req():
@@ -48,9 +49,9 @@ def get_public_key_req():
             'payload_content_type': 'application/octet-stream',
             'payload_content_encoding': 'base64',
             'algorithm': 'rsa',
-            'bit_length': 1024,
+            'bit_length': 2048,
             'secret_type': 'public',
-            'payload': base64.b64encode(utils.get_public_key())}
+            'payload': base64.b64encode(keys.get_public_key_pem())}
 
 
 def get_certificate_req():
@@ -58,9 +59,9 @@ def get_certificate_req():
             'payload_content_type': 'application/octet-stream',
             'payload_content_encoding': 'base64',
             'algorithm': 'rsa',
-            'bit_length': 1024,
+            'bit_length': 2048,
             'secret_type': 'certificate',
-            'payload': base64.b64encode(utils.get_certificate())}
+            'payload': base64.b64encode(keys.get_certificate_pem())}
 
 
 def get_passphrase_req():
@@ -921,13 +922,13 @@ class SecretsTestCase(base.TestCase):
                           get_default_payload()),
                       get_default_data()],
         'private': ['private',
-                    utils.get_private_key(),
+                    keys.get_private_key_pem(),
                     get_private_key_req()],
         'public': ['public',
-                   utils.get_public_key(),
+                   keys.get_public_key_pem(),
                    get_public_key_req()],
         'certificate': ['certificate',
-                        utils.get_certificate(),
+                        keys.get_certificate_pem(),
                         get_certificate_req()],
         'passphrase': ['passphrase',
                        'mysecretpassphrase',

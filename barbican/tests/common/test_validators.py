@@ -22,6 +22,7 @@ import testtools
 from barbican.common import exception as excep
 from barbican.common import validators
 from barbican.tests import certificate_utils as certs
+from barbican.tests import keys
 from barbican.tests import utils
 
 VALID_EXTENSIONS = "valid extensions"
@@ -43,9 +44,9 @@ def get_private_key_req():
             'payload_content_type': 'application/pkcs8',
             'payload_content_encoding': 'base64',
             'algorithm': 'rsa',
-            'bit_length': 1024,
+            'bit_length': 2048,
             'secret_type': 'private',
-            'payload': base64.b64encode(utils.get_private_key())}
+            'payload': base64.b64encode(keys.get_private_key_pem())}
 
 
 def get_public_key_req():
@@ -53,9 +54,9 @@ def get_public_key_req():
             'payload_content_type': 'application/octet-stream',
             'payload_content_encoding': 'base64',
             'algorithm': 'rsa',
-            'bit_length': 1024,
+            'bit_length': 2048,
             'secret_type': 'public',
-            'payload': base64.b64encode(utils.get_public_key())}
+            'payload': base64.b64encode(keys.get_public_key_pem())}
 
 
 def get_certificate_req():
@@ -63,9 +64,9 @@ def get_certificate_req():
             'payload_content_type': 'application/pkix-cert',
             'payload_content_encoding': 'base64',
             'algorithm': 'rsa',
-            'bit_length': 1024,
+            'bit_length': 2048,
             'secret_type': 'certificate',
-            'payload': base64.b64encode(utils.get_certificate())}
+            'payload': base64.b64encode(keys.get_certificate_pem())}
 
 
 def get_passphrase_req():

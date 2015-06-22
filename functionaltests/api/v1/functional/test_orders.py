@@ -67,7 +67,7 @@ def get_default_order_create_asymmetric_data():
         "meta": {
             "name": "barbican functional test asymmetric secret name",
             "algorithm": "rsa",
-            "bit_length": 1024,
+            "bit_length": 2048,
             "mode": "cbc",
         }
     }
