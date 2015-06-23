@@ -18,6 +18,7 @@ import binascii
 import json
 import sys
 import time
+import urllib
 
 from testtools import testcase
 
@@ -1401,7 +1402,6 @@ class SecretsFuzzTestCase(base.TestCase):
     # CONTENT TYPES IN HEADERS #
     """
     FAILING (NO RESPONSE): multipart_form
-    ERROR IN HTTPLIB: anything w/ unichr(0xff)
     """
     @utils.parameterized_dataset(fuzzer.get_dataset('content_types'))
     @testcase.attr('negative', 'security')
@@ -1419,7 +1419,6 @@ class SecretsFuzzTestCase(base.TestCase):
     """
     FAILING (500): app_ecma, app_js, app_pkcs12, app_rdf_xml, app_rss_xml,
     app_xml, atom_xml
-    ERROR IN HTTPLIB: anything w/ unichr(0xff)
     """
     @utils.parameterized_dataset(fuzzer.get_dataset('content_types'))
     @testcase.attr('negative', 'security')
@@ -1443,7 +1442,6 @@ class SecretsFuzzTestCase(base.TestCase):
     """
     FAILING (500): app_ecma, app_js, app_pkcs12, app_rdf_xml, app_rss_xml,
     app_xml, atom_xml
-    ERROR IN HTTPLIB: anything w/ unichr(0xff)
     """
     @utils.parameterized_dataset(fuzzer.get_dataset('content_types'))
     @testcase.attr('negative', 'security')
@@ -1462,7 +1460,6 @@ class SecretsFuzzTestCase(base.TestCase):
 
     """
     FAILING (NO RESPONSE): multipart_form
-    ERROR IN HTTPLIB: anything w/ unichr(0xff)
     """
     @utils.parameterized_dataset(fuzzer.get_dataset('content_types'))
     @testcase.attr('negative', 'security')
@@ -1722,7 +1719,7 @@ class SecretsFuzzTestCase(base.TestCase):
     # GET SECRET METADATA #
 
     """
-    BROKEN
+    ALL GOOD
     """
     @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
     @testcase.attr('negative', 'security')
@@ -1730,7 +1727,9 @@ class SecretsFuzzTestCase(base.TestCase):
         """Attempts to get a secret's metadata with a junk secret reference
 
         Should return 404"""
-        resp = self.behaviors.get_secret_metadata(payload)
+        resp = self.behaviors.get_secret_metadata(
+            urllib.quote_plus(payload.encode('utf-8'))
+        )
         self.assertEqual(404, resp.status_code)
 
     # UPDATE SECRET #
@@ -1745,15 +1744,16 @@ class SecretsFuzzTestCase(base.TestCase):
 
         Should return 400"""
         model = secret_models.SecretModel(
-            **self.default_secret_create_two_phase_data
+            **get_private_key_req()
         )
         resp, secret_ref = self.behaviors.create_secret(model)
         resp = self.behaviors.update_secret_payload(
             secret_ref,
-            payload=base64.b64encode(utils.get_private_key()),
-            payload_content_type='text/plain',
+            payload=base64.b64encode(b'\xb0'),
+            payload_content_type='application/octet-stream',
             payload_content_encoding=payload
         )
+
         self.assertEqual(400, resp.status_code)
 
     """
