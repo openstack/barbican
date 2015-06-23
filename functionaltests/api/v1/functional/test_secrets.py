@@ -1593,29 +1593,28 @@ class SecretsFuzzTestCase(base.TestCase):
         self.assertEqual(400, resp.status_code)
 
     """
-    ALL GOOD ( FAILS ON SECRET PAYLOAD RETRIEVAL )
+    ALL GOOD
     """
     @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
     @testcase.attr('negative', 'security')
     def test_secret_create_junk_algorithm(self, payload):
-        """Sends junk algorithm for secret creation
+        """Sends junk algorithm for secret creation, and attempt to retrieve
+        secret payload if successful
 
         Should return 400"""
         model = secret_models.SecretModel(
             **self.default_secret_create_data
         )
         overrides = {
-            'algorithm': payload
+            'algorithm': payload.encode('utf-8')
         }
         model.override_values(**overrides)
-        resp, secret = self.behaviors.create_secret(model)
+        resp, secret_ref = self.behaviors.create_secret(model)
         self.assertNotIn(resp.status_code, range(500, 600))
-
-    """
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!  NEED TEST THAT WILL CREATE WITH ABOVE, ATTEMPT TO GET PAYLOAD   !!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    """
+        resp = self.behaviors.get_secret(
+            secret_ref, payload_content_type='text/plain'
+        )
+        self.assertNotIn(resp.status_code, range(500, 600))
 
     """ ALL PASSING? """
     @utils.parameterized_dataset(fuzzer.get_dataset('bad_numbers'))
@@ -1631,33 +1630,33 @@ class SecretsFuzzTestCase(base.TestCase):
             'bit_length': payload
         }
         model.override_values(**overrides)
-        resp, secret = self.behaviors.create_secret(model)
+        resp, secret_ref = self.behaviors.create_secret(model)
         self.assertEqual(400, resp.status_code)
 
     """
-    ALL GOOD
+    FAIL (500): higher_ascii, higher_unicode, unicode_double_quote,
+        unicode_single_quote
     """
-    @utils.parameterized_dataset(fuzzer.get_dataset('bad_numbers'))
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
     @testcase.attr('negative', 'security')
     def test_secret_create_junk_payload(self, payload):
-        """Sends junk payload for secret creation
+        """Sends junk payload for secret creation, and attempts to retrieve
+        payload if successful
 
         Should return 400"""
         model = secret_models.SecretModel(
             **self.default_secret_create_data
         )
         overrides = {
-            'payload': payload
+            'payload': payload.encode('utf-8')
         }
         model.override_values(**overrides)
-        resp, secret = self.behaviors.create_secret(model)
+        resp, secret_ref = self.behaviors.create_secret(model)
         self.assertNotIn(resp.status_code, range(500, 600))
-
-    """
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!  NEED TEST THAT WILL CREATE WITH ABOVE, ATTEMPT TO GET PAYLOAD   !!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    """
+        resp = self.behaviors.get_secret(
+            secret_ref, payload_content_type='text/plain'
+        )
+        self.assertNotIn(resp.status_code, range(500, 600))
 
     """
     ALL GOOD
@@ -1753,7 +1752,6 @@ class SecretsFuzzTestCase(base.TestCase):
             payload_content_type='application/octet-stream',
             payload_content_encoding=payload.encode('utf-8')
         )
-
         self.assertEqual(400, resp.status_code)
 
     """
@@ -1764,7 +1762,8 @@ class SecretsFuzzTestCase(base.TestCase):
     @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
     @testcase.attr('negative', 'security')
     def test_secret_update_payload_junk_payload(self, payload):
-        """Attempt to update a secret payload with a junk payload
+        """Attempt to update a secret payload with a junk payload, and retrieve
+        payload if successful
 
         Should return 400"""
         model = secret_models.SecretModel(
@@ -1775,7 +1774,11 @@ class SecretsFuzzTestCase(base.TestCase):
             secret_ref, payload=payload.encode('utf-8'),
             payload_content_type='text/plain'
         )
-        self.assertEqual(400, resp.status_code)
+        self.assertNotIn(resp.status_code, range(500, 600))
+        resp = self.behaviors.get_secret(
+            secret_ref, payload_content_type='text/plain'
+        )
+        self.assertNotIn(resp.status_code, range(500, 600))
 
     # DELETE SECRET #
     """
