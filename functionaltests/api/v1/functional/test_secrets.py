@@ -18,6 +18,7 @@ import binascii
 import json
 import sys
 import time
+import urllib
 
 from testtools import testcase
 
@@ -27,6 +28,7 @@ from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import secret_models
+from functionaltests.api.v1.functional import security_utils
 
 
 def get_pem_content(pem):
@@ -86,6 +88,8 @@ def get_default_data():
 
 def get_default_payload():
     return "gF6+lLoF3ohA9aPRpt+6bQ=="
+
+fuzzer = security_utils.Fuzzer()
 
 
 @utils.parameterized_test_case
@@ -1069,7 +1073,7 @@ class SecretsUnauthedTestCase(base.TestCase):
         Should return 401
         """
 
-        model = secret_models.SecretModel(self.default_secret_create_data)
+        model = secret_models.SecretModel(**self.default_secret_create_data)
         resp, secret_ref = self.behaviors.create_secret(model, use_auth=False)
         self.assertEqual(401, resp.status_code)
 
@@ -1080,7 +1084,7 @@ class SecretsUnauthedTestCase(base.TestCase):
         Should return 401
         """
 
-        model = secret_models.SecretModel(self.default_secret_create_data)
+        model = secret_models.SecretModel(**self.default_secret_create_data)
 
         resp, secret_ref = self.behaviors.create_secret(
             model, headers=self.dummy_project_id_header, use_auth=False
@@ -1094,7 +1098,7 @@ class SecretsUnauthedTestCase(base.TestCase):
         Should return 401
         """
 
-        model = secret_models.SecretModel(self.default_secret_create_data)
+        model = secret_models.SecretModel(**self.default_secret_create_data)
 
         resp, secret_ref = self.behaviors.create_secret(
             model, headers=self.project_id_header, use_auth=False
@@ -1364,3 +1368,446 @@ class SecretsUnauthedTestCase(base.TestCase):
             use_auth=False
         )
         self.assertEqual(401, resp.status_code)
+
+
+@utils.parameterized_test_case
+class SecretsFuzzTestCase(base.TestCase):
+
+    def setUp(self):
+        super(SecretsFuzzTestCase, self).setUp()
+        self.behaviors = secret_behaviors.SecretBehaviors(self.client)
+        self.default_secret_create_data = get_default_data()
+        self.default_secret_create_emptystrings_data = {
+            "name": '',
+            "expiration": '',
+            "algorithm": '',
+            "bit_length": '',
+            "mode": '',
+            "payload": '',
+            "payload_content_type": '',
+            "payload_content_encoding": '',
+        }
+        self.default_secret_create_two_phase_data = {
+            "name": "AES key",
+            "expiration": "2018-02-28T19:14:44.180394",
+            "algorithm": "aes",
+            "bit_length": 256,
+            "mode": "cbc",
+        }
+
+    def tearDown(self):
+        self.behaviors.delete_all_created_secrets()
+        super(SecretsFuzzTestCase, self).tearDown()
+
+    # CONTENT TYPES IN HEADERS #
+    """
+    FAILING (NO RESPONSE): multipart_form
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('content_types'))
+    @testcase.attr('negative', 'security')
+    def test_secret_create_junk_content_type_header(self, payload):
+        """Attempt to create a secret with junk Content-Type headers
+
+        Should return 415"""
+        model = secret_models.SecretModel(**self.default_secret_create_data)
+        headers = {
+            'Content-Type': payload
+        }
+        resp, secret_ref = self.behaviors.create_secret(model, headers=headers)
+        self.assertEqual(415, resp.status_code)
+
+    """
+    FAILING (500): app_ecma, app_js, app_pkcs12, app_rdf_xml, app_rss_xml,
+    app_xml, atom_xml
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('content_types'))
+    @testcase.attr('negative', 'security')
+    def test_secret_get_secret_metadata_junk_accept_header(self, payload):
+        """Attempt to get a secret's metadata with junk Accept headers
+
+        Should return 406"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_data
+        )
+        resp, secret_ref = self.behaviors.create_secret(model)
+
+        headers = {
+            'Accept': payload
+        }
+        resp = self.behaviors.get_secret_metadata(
+            secret_ref, extra_headers=headers
+        )
+        self.assertEqual(406, resp.status_code)
+
+    """
+    FAILING (500): app_ecma, app_js, app_pkcs12, app_rdf_xml, app_rss_xml,
+    app_xml, atom_xml
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('content_types'))
+    @testcase.attr('negative', 'security')
+    def test_secret_get_secret_payload_junk_accept_header(self, payload):
+        """Attempt to get a secret's payload with junk Accept headers
+
+        Should return 406"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_data
+        )
+        resp, secret_ref = self.behaviors.create_secret(model)
+        resp = self.behaviors.get_secret(
+            secret_ref, payload_content_type=payload
+        )
+        self.assertEqual(406, resp.status_code)
+
+    """
+    FAILING (NO RESPONSE): multipart_form
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('content_types'))
+    @testcase.attr('negative', 'security')
+    def test_secret_update_payload_junk_content_type_header(self, payload):
+        """Attempt to update a secret payload with junk Content-Type headers
+
+        Should return 415"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_two_phase_data
+        )
+        resp, secret_ref = self.behaviors.create_secret(model)
+
+        resp = self.behaviors.update_secret_payload(
+            secret_ref, payload=None,
+            payload_content_type=payload,
+            payload_content_encoding='base64'
+        )
+        self.assertEqual(415, resp.status_code)
+
+    # SECRET LISTING #
+
+    """
+    FAILING (500): extreme_overflow
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('bad_numbers'))
+    @testcase.attr('negative', 'security')
+    def test_secret_get_secret_list_junk_offset(self, payload):
+        """Attempts to get a list of secrets using junk 'offset' parameter
+
+        Should return non-500 status code"""
+        resp, secrets, next_ref, prev_ref = self.behaviors.get_secrets(
+            offset=payload
+        )
+        self.assertNotIn(resp.status_code, range(500, 600))
+
+    """ ALL PASSING? """
+    @utils.parameterized_dataset(fuzzer.get_dataset('bad_numbers'))
+    @testcase.attr('negative', 'security')
+    def test_secret_get_secret_list_junk_limit(self, payload):
+        """Attempts to get a list of secrets using junk 'limit' parameter
+
+        Should return non-500 status code"""
+        resp, secrets, next_ref, prev_ref = self.behaviors.get_secrets(
+            limit=payload
+        )
+        self.assertNotIn(resp.status_code, range(500, 600))
+
+    """ ALL PASSING? """
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    @testcase.attr('negative', 'security')
+    def test_secret_get_secret_list_junk_name_filter(self, payload):
+        """Attempts to get a list of secrets using junk name filter
+
+        Should return non-500 status code"""
+        resp, secrets, next_ref, prev_ref = self.behaviors.get_secrets(
+            name_filter=payload
+        )
+        self.assertNotIn(resp.status_code, range(500, 600))
+
+    """ NOT IMPLEMENTED IN BEHAVIORS """
+    # @utils.parameterized_dataset(fuzzer.get_dataset('bad_numbers'))
+    # @testcase.attr('negative', 'security')
+    # def test_secret_get_secret_list_junk_bit_length(self, payload):
+    #    """Attempts to get a list of secrets using junk 'bit_length' parameter
+    #    Should return non-500 status code"""
+    #    resp, secrets, next_ref, prev_ref = self.behaviors.get_secrets(
+    #        bits=payload
+    #    )
+    #    self.assertNotIn(resp.status_code, range(500, 600))
+
+    """ NOT IMPLEMENTED IN BEHAVIORS"""
+    # @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    # @testcase.attr('negative', 'security')
+    # def test_secret_get_secret_list_junk_algorithm(self, payload):
+    #    """Attempts to get a list of secrets using junk 'algorithm' parameter
+    #    Should return non-500 status code"""
+    #    resp, secrets, next_ref, prev_ref = self.behaviors.get_secrets(
+    #        alg=payload
+    #    )
+    #    self.assertNotIn(resp.status_code, range(500, 600))
+
+    """ NOT IMPLEMENTED IN BEHAVIORS"""
+    # @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    # @testcase.attr('negative', 'security')
+    # def test_secret_get_secret_list_junk_mode(self, payload):
+    #    """Attempts to get a list of secrets using junk 'mode' parameter
+    #    Should return non-500 status code"""
+    #    resp, secrets, next_ref, prev_ref = self.behaviors.get_secrets(
+    #        mode=payload
+    #    )
+    #    self.assertNotIn(resp.status_code, range(500, 600))
+
+    # SECRET CREATION #
+
+    """
+    ALL GOOD
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    @testcase.attr('negative', 'security')
+    def test_secret_create_junk_name(self, payload):
+        """Sends junk name for secret creation
+
+        Should return 400"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_data
+        )
+        overrides = {
+            'name': payload
+        }
+        model.override_values(**overrides)
+        resp, secret = self.behaviors.create_secret(model)
+        self.assertNotIn(resp.status_code, range(500, 600))
+
+    """
+    ALL GOOD
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('date'))
+    @testcase.attr('negative', 'security')
+    def test_secret_create_junk_expiration(self, payload):
+        """Sends junk expiration date for secret creation
+
+        Should return 400"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_data
+        )
+        overrides = {
+            'expiration': payload
+        }
+        model.override_values(**overrides)
+        resp, secret = self.behaviors.create_secret(model)
+        self.assertEqual(400, resp.status_code)
+
+    """
+    ALL GOOD
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    @testcase.attr('negative', 'security')
+    def test_secret_create_junk_algorithm(self, payload):
+        """Sends junk algorithm for secret creation, and attempt to retrieve
+        secret payload if successful
+
+        Should return 400"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_data
+        )
+        overrides = {
+            'algorithm': payload.encode('utf-8')
+        }
+        model.override_values(**overrides)
+        resp, secret_ref = self.behaviors.create_secret(model)
+        self.assertNotIn(resp.status_code, range(500, 600))
+        resp = self.behaviors.get_secret(
+            secret_ref, payload_content_type='text/plain'
+        )
+        self.assertNotIn(resp.status_code, range(500, 600))
+
+    """ ALL PASSING? """
+    @utils.parameterized_dataset(fuzzer.get_dataset('bad_numbers'))
+    @testcase.attr('negative', 'security')
+    def test_secret_create_junk_bit_length(self, payload):
+        """Sends junk bit length for secret creation
+
+        Should return 400"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_data
+        )
+        overrides = {
+            'bit_length': payload
+        }
+        model.override_values(**overrides)
+        resp, secret_ref = self.behaviors.create_secret(model)
+        self.assertEqual(400, resp.status_code)
+
+    """
+    FAIL (500): higher_ascii, higher_unicode, unicode_double_quote,
+        unicode_single_quote
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    @testcase.attr('negative', 'security')
+    def test_secret_create_junk_payload(self, payload):
+        """Sends junk payload for secret creation, and attempts to retrieve
+        payload if successful
+
+        Should return 400"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_data
+        )
+        overrides = {
+            'payload': payload.encode('utf-8')
+        }
+        model.override_values(**overrides)
+        resp, secret_ref = self.behaviors.create_secret(model)
+        self.assertNotIn(resp.status_code, range(500, 600))
+        resp = self.behaviors.get_secret(
+            secret_ref, payload_content_type='text/plain'
+        )
+        self.assertNotIn(resp.status_code, range(500, 600))
+
+    """
+    ALL GOOD
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('content_types'))
+    @testcase.attr('negative', 'security')
+    def test_secret_create_junk_payload_content_type(self, payload):
+        """Sends junk payload content type for secret creation
+
+        Should return 400"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_data
+        )
+        overrides = {
+            'payload_content_type': payload
+        }
+        model.override_values(**overrides)
+        resp, secret = self.behaviors.create_secret(model)
+        self.assertEqual(400, resp.status_code)
+
+    """
+    ALL GOOD
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    @testcase.attr('negative', 'security')
+    def test_secret_create_junk_payload_content_encoding(self, payload):
+        """Sends junk payload content encoding for secret creation
+
+        Should return 400"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_data
+        )
+        overrides = {
+            'payload_content_type': payload
+        }
+        model.override_values(**overrides)
+        resp, secret = self.behaviors.create_secret(model)
+        self.assertEqual(400, resp.status_code)
+
+    """
+    ALL GOOD
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    @testcase.attr('negative', 'security')
+    def test_secret_create_junk_secret_type(self, payload):
+        """Sends junk secret type for secret creation
+
+        Should return 400"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_data
+        )
+        overrides = {
+            'secret_type': payload
+        }
+        model.override_values(**overrides)
+        resp, secret = self.behaviors.create_secret(model)
+        self.assertEqual(400, resp.status_code)
+
+    # GET SECRET METADATA #
+
+    """
+    ALL GOOD
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    @testcase.attr('negative', 'security')
+    def test_secret_get_secret_junk_ref(self, payload):
+        """Attempts to get a secret's metadata with a junk secret reference
+
+        Should return 404"""
+        resp = self.behaviors.get_secret_metadata(
+            urllib.quote_plus(payload.encode('utf-8'))
+        )
+        self.assertEqual(404, resp.status_code)
+
+    # UPDATE SECRET #
+
+    """
+    ALL GOOD
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    @testcase.attr('negative', 'security')
+    def test_secret_update_payload_junk_content_encoding(self, payload):
+        """Attempt to update a secret payload with a junk content encoding
+
+        Should return 400"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_two_phase_data
+        )
+        resp, secret_ref = self.behaviors.create_secret(model)
+        resp = self.behaviors.update_secret_payload(
+            secret_ref,
+            payload=base64.b64encode(b'\xb0'),
+            payload_content_type='application/octet-stream',
+            payload_content_encoding=payload.encode('utf-8')
+        )
+        self.assertEqual(400, resp.status_code)
+
+    """
+    FAIL (500): higher_ascii, higher_unicode, unicode_double_quote,
+        unicode_single_quote
+    FAIL (204): nullbyte
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    @testcase.attr('negative', 'security')
+    def test_secret_update_payload_junk_payload(self, payload):
+        """Attempt to update a secret payload with a junk payload, and retrieve
+        payload if successful
+
+        Should return 400"""
+        model = secret_models.SecretModel(
+            **self.default_secret_create_two_phase_data
+        )
+        resp, secret_ref = self.behaviors.create_secret(model)
+        resp = self.behaviors.update_secret_payload(
+            secret_ref, payload=payload.encode('utf-8'),
+            payload_content_type='text/plain'
+        )
+        self.assertNotIn(resp.status_code, range(500, 600))
+        resp = self.behaviors.get_secret(
+            secret_ref, payload_content_type='text/plain'
+        )
+        self.assertNotIn(resp.status_code, range(500, 600))
+
+    # DELETE SECRET #
+    """
+    ALL GOOD
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    @testcase.attr('negative', 'security')
+    def test_secret_delete_junk_secret_reference(self, payload):
+        """Attempt to delete a secret with a junk secret reference
+
+        Should return 404"""
+        resp = self.behaviors.delete_secret(
+            urllib.quote_plus(payload.encode('utf-8')), expected_fail=True
+        )
+        self.assertEqual(404, resp.status_code)
+
+    # GET SECRET PAYLOAD #
+
+    """
+    ALL GOOD
+    """
+    @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
+    @testcase.attr('negative', 'security')
+    def test_secret_get_payload_junk_secret_reference(self, payload):
+        """Attempt to get a secret payload with a junk secret reference
+
+        Should return 404"""
+        resp = self.behaviors.get_secret(
+            urllib.quote_plus(payload.encode('utf-8')),
+            payload_content_type='applicaton/octet-stream'
+        )
+        self.assertEqual(404, resp.status_code)
