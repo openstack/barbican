@@ -1735,7 +1735,7 @@ class SecretsFuzzTestCase(base.TestCase):
     # UPDATE SECRET #
 
     """
-    BROKEN
+    ALL GOOD
     """
     @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
     @testcase.attr('negative', 'security')
@@ -1744,20 +1744,22 @@ class SecretsFuzzTestCase(base.TestCase):
 
         Should return 400"""
         model = secret_models.SecretModel(
-            **get_private_key_req()
+            **self.default_secret_create_two_phase_data
         )
         resp, secret_ref = self.behaviors.create_secret(model)
         resp = self.behaviors.update_secret_payload(
             secret_ref,
             payload=base64.b64encode(b'\xb0'),
             payload_content_type='application/octet-stream',
-            payload_content_encoding=payload
+            payload_content_encoding=payload.encode('utf-8')
         )
 
         self.assertEqual(400, resp.status_code)
 
     """
-    BROKEN
+    FAIL (500): higher_ascii, higher_unicode, unicode_double_quote,
+        unicode_single_quote
+    FAIL (204): nullbyte
     """
     @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
     @testcase.attr('negative', 'security')
@@ -1770,14 +1772,14 @@ class SecretsFuzzTestCase(base.TestCase):
         )
         resp, secret_ref = self.behaviors.create_secret(model)
         resp = self.behaviors.update_secret_payload(
-            secret_ref, payload=payload,
+            secret_ref, payload=payload.encode('utf-8'),
             payload_content_type='text/plain'
         )
         self.assertEqual(400, resp.status_code)
 
     # DELETE SECRET #
     """
-    BROKEN
+    ALL GOOD
     """
     @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
     @testcase.attr('negative', 'security')
@@ -1785,13 +1787,15 @@ class SecretsFuzzTestCase(base.TestCase):
         """Attempt to delete a secret with a junk secret reference
 
         Should return 404"""
-        resp = self.behaviors.delete_secret(payload, expected_fail=True)
+        resp = self.behaviors.delete_secret(
+            urllib.quote_plus(payload.encode('utf-8')), expected_fail=True
+        )
         self.assertEqual(404, resp.status_code)
 
     # GET SECRET PAYLOAD #
 
     """
-    BROKEN
+    ALL GOOD
     """
     @utils.parameterized_dataset(fuzzer.get_dataset('junk'))
     @testcase.attr('negative', 'security')
@@ -1800,6 +1804,7 @@ class SecretsFuzzTestCase(base.TestCase):
 
         Should return 404"""
         resp = self.behaviors.get_secret(
-            payload, payload_content_type='applicaton/octet-stream'
+            urllib.quote_plus(payload.encode('utf-8')),
+            payload_content_type='applicaton/octet-stream'
         )
         self.assertEqual(404, resp.status_code)
