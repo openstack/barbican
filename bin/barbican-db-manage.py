@@ -17,7 +17,8 @@ class DatabaseManager:
     using Alembic commands.
     """
 
-    def __init__(self):
+    def __init__(self, conf):
+        self.conf = conf
         self.parser = self.get_main_parser()
         self.subparsers = self.parser.add_subparsers(
             title='subcommands',
@@ -31,7 +32,7 @@ class DatabaseManager:
     def get_main_parser(self):
         """Create top-level parser and arguments."""
         parser = argparse.ArgumentParser(description='Barbican DB manager.')
-        parser.add_argument('--dburl', '-d', default=None,
+        parser.add_argument('--dburl', '-d', default=self.conf.sql_connection,
                             help='URL to the database.')
 
         return parser
@@ -125,12 +126,12 @@ def _exception_is_successfull_exit(thrown_exception):
 def main():
     # Import and configure logging.
     CONF = config.CONF
-    log.setup(CONF, 'barbican-db-manage')
+    log.setup(CONF, 'barbican')
     LOG = log.getLogger(__name__)
     LOG.debug("Performing database schema migration...")
 
     try:
-        dm = DatabaseManager()
+        dm = DatabaseManager(CONF)
         dm.execute()
     except Exception as ex:
         if _exception_is_successfull_exit(ex):
