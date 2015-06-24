@@ -215,28 +215,6 @@ class SoftDeleteMixIn(object):
         self._do_delete_children(session)
 
 
-class ProjectSecret(BASE, SoftDeleteMixIn, ModelBase):
-    """Represents an association between a Project and a Secret."""
-
-    __tablename__ = 'project_secret'
-
-    role = sa.Column(sa.String(255))
-    secret = orm.relationship("Secret", backref="project_assocs")
-    project_id = sa.Column(
-        sa.String(36),
-        sa.ForeignKey('projects.id', name='project_secret_project_fk'),
-        index=True,
-        nullable=False)
-    secret_id = sa.Column(
-        sa.String(36),
-        sa.ForeignKey('secrets.id', name='project_secret_secret_fk'),
-        index=True,
-        nullable=False)
-
-    __table_args__ = (sa.UniqueConstraint(
-        'project_id', 'secret_id', name='_project_secret_uc'),)
-
-
 class ContainerSecret(BASE, SoftDeleteMixIn, ModelBase):
     """Represents an association between a Container and a Secret."""
 
@@ -272,7 +250,6 @@ class Project(BASE, SoftDeleteMixIn, ModelBase):
 
     orders = orm.relationship("Order", backref="project")
     secrets = orm.relationship("Secret", backref="project")
-    old_secrets = orm.relationship("ProjectSecret", backref="projects")
     keks = orm.relationship("KEKDatum", backref="project")
     containers = orm.relationship("Container", backref="project")
     cas = orm.relationship("ProjectCertificateAuthority", backref="project")
@@ -305,7 +282,7 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
         sa.String(36),
         sa.ForeignKey('projects.id', name='secrets_project_fk'),
         index=True,
-        nullable=True)
+        nullable=False)
 
     # TODO(jwood): Performance - Consider avoiding full load of all
     #   datum attributes here. This is only being done to support the
@@ -337,6 +314,7 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
             self.bit_length = parsed_request.get('bit_length')
             self.mode = parsed_request.get('mode')
             self.creator_id = parsed_request.get('creator_id')
+            self.project_id = parsed_request.get('project_id')
 
         self.status = States.ACTIVE
 

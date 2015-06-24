@@ -49,8 +49,7 @@ class SecretACLsController(controllers.ACLMixin):
 
     def __init__(self, secret):
         self.secret = secret
-        self.secret_project_id = (self.secret.project_assocs[0].
-                                  projects.external_id)
+        self.secret_project_id = self.secret.project.external_id
         self.acl_repo = repo.get_secret_acl_repository()
         self.validator = validators.ACLValidator()
 

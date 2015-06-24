@@ -67,10 +67,6 @@ class BaseOrderTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
         self.secret_repo.create_from.return_value = None
         self.setup_secret_repository_mock(self.secret_repo)
 
-        self.project_secret_repo = mock.MagicMock()
-        self.project_secret_repo.create_from.return_value = None
-        self.setup_project_secret_repository_mock(self.project_secret_repo)
-
         self.datum_repo = mock.MagicMock()
         self.datum_repo.create_from.return_value = None
         self.setup_encrypted_datum_repository_mock(self.datum_repo)

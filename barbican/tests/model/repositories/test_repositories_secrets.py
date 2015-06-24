@@ -56,15 +56,13 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
     def test_get_by_create_date(self):
         session = self.repo.get_session()
 
-        secret = self.repo.create_from(models.Secret(), session=session)
         project = models.Project()
         project.external_id = "my keystone id"
         project.save(session=session)
 
-        project_secret = models.ProjectSecret()
-        project_secret.secret_id = secret.id
-        project_secret.project_id = project.id
-        project_secret.save(session=session)
+        secret_model = models.Secret()
+        secret_model.project_id = project.id
+        secret = self.repo.create_from(secret_model, session=session)
 
         session.commit()
 
@@ -81,15 +79,14 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
     def test_get_secret_by_id(self):
         session = self.repo.get_session()
 
-        secret = self.repo.create_from(models.Secret(), session=session)
         project = models.Project()
         project.external_id = "my keystone id"
         project.save(session=session)
 
-        project_secret = models.ProjectSecret()
-        project_secret.secret_id = secret.id
-        project_secret.project_id = project.id
-        project_secret.save(session=session)
+        secret_model = models.Secret()
+        secret_model.project_id = project.id
+        secret = self.repo.create_from(secret_model, session=session)
+
         session.commit()
 
         db_secret = self.repo.get_secret_by_id(secret.id)
@@ -104,31 +101,24 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
                                                      suppress_exception=True))
 
     @utils.parameterized_dataset(dataset_for_filter_tests)
-    def test_get_by_create_date_with_filter(
-            self, secret_1_dict, secret_2_dict, query_dict):
+    def test_get_by_create_date_with_filter(self, secret_1_dict, secret_2_dict,
+                                            query_dict):
         session = self.repo.get_session()
 
-        secret1 = self.repo.create_from(
-            models.Secret(secret_1_dict),
-            session=session,
-        )
-        secret2 = self.repo.create_from(
-            models.Secret(secret_2_dict),
-            session=session,
-        )
         project = models.Project()
         project.external_id = "my keystone id"
         project.save(session=session)
 
-        project_secret1 = models.ProjectSecret()
-        project_secret1.secret_id = secret1.id
-        project_secret1.project_id = project.id
-        project_secret1.save(session=session)
-
-        project_secret2 = models.ProjectSecret()
-        project_secret2.secret_id = secret2.id
-        project_secret2.project_id = project.id
-        project_secret2.save(session=session)
+        secret_1_dict['project_id'] = project.id
+        secret1 = self.repo.create_from(
+            models.Secret(secret_1_dict),
+            session=session,
+        )
+        secret_2_dict['project_id'] = project.id
+        secret2 = self.repo.create_from(
+            models.Secret(secret_2_dict),
+            session=session,
+        )
 
         session.commit()
 
@@ -137,8 +127,9 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
             session=session,
             **query_dict
         )
-
-        self.assertEqual([s.id for s in secrets], [secret1.id])
+        resulting_secret_ids = [s.id for s in secrets]
+        self.assertIn(secret1.id, resulting_secret_ids)
+        self.assertNotIn(secret2.id, resulting_secret_ids)
         self.assertEqual(offset, 0)
         self.assertEqual(limit, 10)
         self.assertEqual(total, 1)

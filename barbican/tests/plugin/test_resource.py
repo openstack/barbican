@@ -75,10 +75,6 @@ class WhenTestingPluginResource(testtools.TestCase,
         self.setup_container_secret_repository_mock(
             self.container_secret_repo)
 
-        self.project_secret_repo = mock.MagicMock()
-        self.project_secret_repo.create_from.return_value = None
-        self.setup_project_secret_repository_mock(self.project_secret_repo)
-
         self.secret_meta_repo = mock.MagicMock()
         self.secret_meta_repo.create_from.return_value = None
         self.setup_secret_meta_repository_mock(self.secret_meta_repo)
