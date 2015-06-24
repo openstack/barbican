@@ -9,7 +9,7 @@ certificate plugin. This is not suitable for production environment, but it can
 be useful as a development tool.
 
 To do so, you simply need to set ``enabled_certificate_plugins`` in
-``barbican-api.conf``.
+``barbican.conf``.
 
 .. code-block:: text
 

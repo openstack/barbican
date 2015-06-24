@@ -79,7 +79,7 @@ endpoint's host name (typically the load balancer's DNS name and port).
 How to avoid
 ^^^^^^^^^^^^^
 
-Change your ``barbican-api.conf`` file's ``host_href`` setting from
+Change your ``barbican.conf`` file's ``host_href`` setting from
 ``localhost:9311`` to the correct host name (myhostname.com in the example
 above).
 
@@ -159,7 +159,7 @@ The vassal (worker) processes are not able to access the datastore.
 How to avoid
 ^^^^^^^^^^^^
 
-Check the ``sql_connection`` in your ``barbican-api.conf`` file, to make sure
+Check the ``sql_connection`` in your ``barbican.conf`` file, to make sure
 that it references a valid reachable database.
 
 

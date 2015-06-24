@@ -41,7 +41,7 @@ mkdir -p $RPM_BUILD_ROOT/etc/init
 mkdir -p $RPM_BUILD_ROOT/etc/barbican/vassals
 mkdir -p $RPM_BUILD_ROOT/var/l{ib,og}/barbican
 install -m 644 etc/barbican/policy.json $RPM_BUILD_ROOT/etc/barbican
-install -m 644 etc/init/barbican-api.conf $RPM_BUILD_ROOT/etc/init
+install -m 644 etc/init/barbican.conf $RPM_BUILD_ROOT/etc/init
 install -m 644 etc/init/barbican-worker.conf $RPM_BUILD_ROOT/etc/init
 install -m 644 etc/init/barbican-keystone-listener.conf $RPM_BUILD_ROOT/etc/init
 install bin/barbican-worker.py $RPM_BUILD_ROOT/usr/bin
@@ -88,7 +88,7 @@ Barbican Key Manager API daemon
 /etc/logrotate.d/barbican-api
 %attr(0755,root,root) /usr/bin/barbican.sh
 %attr(0755,root,root) /usr/bin/barbican-db-manage.py
-%config(noreplace) /etc/init/barbican-api.conf
+%config(noreplace) /etc/init/barbican.conf
 %config(noreplace) /etc/barbican/*
 
 %preun -n barbican-api
