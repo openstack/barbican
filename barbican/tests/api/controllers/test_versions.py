@@ -16,15 +16,32 @@ from barbican.api import controllers
 from barbican.tests import utils
 
 
-class WhenTestingVersionResource(utils.BarbicanAPIBaseTestCase):
-    root_controller = controllers.versions.VersionController()
+class WhenTestingVersionsResource(utils.BarbicanAPIBaseTestCase):
+    root_controller = controllers.versions.VersionsController()
 
-    def test_should_return_200_on_get(self):
+    def test_should_return_multiple_choices_on_get(self):
         resp = self.app.get('/')
-        self.assertEqual(200, resp.status_int)
+        self.assertEqual(300, resp.status_int)
+
+    def test_should_return_multiple_choices_on_get_if_json_accept_header(self):
+        headers = {'Accept': 'application/json'}
+        resp = self.app.get('/', headers=headers)
+        self.assertEqual(300, resp.status_int)
+
+    def test_should_redirect_if_json_home_accept_header_present(self):
+        headers = {'Accept': 'application/json-home'}
+        resp = self.app.get('/', headers=headers)
+        self.assertEqual(302, resp.status_int)
 
     def test_should_return_version_json(self):
         resp = self.app.get('/')
 
-        self.assertTrue('v1' in resp.json)
-        self.assertEqual(resp.json.get('v1'), 'current')
+        versions_response = resp.json['versions']['values']
+        v1_info = versions_response[0]
+
+        # NOTE(jaosorior): I used assertIn instead of assertEqual because we
+        # might start using decimal numbers in the future. So when that happens
+        # this test will still be valid.
+        self.assertIn('v1', v1_info['id'])
+        self.assertEqual(len(v1_info['media-types']), 1)
+        self.assertEqual(v1_info['media-types'][0]['base'], 'application/json')

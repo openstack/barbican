@@ -69,8 +69,8 @@ class TestableResource(object):
                 return self.controller.on_delete(*args, **kwargs)
 
 
-class VersionResource(TestableResource):
-    controller_cls = versions.VersionController
+class VersionsResource(TestableResource):
+    controller_cls = versions.VersionsController
 
 
 class SecretsResource(TestableResource):
@@ -203,32 +203,32 @@ class BaseTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
             self.assertEqual(403, exception.status_int)
 
 
-class WhenTestingVersionResource(BaseTestCase):
-    """RBAC tests for the barbican.api.resources.VersionResource class."""
+class WhenTestingVersionsResource(BaseTestCase):
+    """RBAC tests for the barbican.api.resources.VersionsResource class."""
     def setUp(self):
-        super(WhenTestingVersionResource, self).setUp()
+        super(WhenTestingVersionsResource, self).setUp()
 
-        self.resource = VersionResource()
+        self.resource = VersionsResource()
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
 
-    def test_should_pass_get_version(self):
+    def test_should_pass_get_versions(self):
         # Can't use base method that short circuits post-RBAC processing here,
         # as version GET is trivial
         for role in ['admin', 'observer', 'creator', 'audit']:
             self.req = self._generate_req(roles=[role] if role else [])
             self._invoke_on_get()
 
-    def test_should_pass_get_version_with_bad_roles(self):
+    def test_should_pass_get_versions_with_bad_roles(self):
         self.req = self._generate_req(roles=[None, 'bunkrolehere'])
         self._invoke_on_get()
 
-    def test_should_pass_get_version_with_no_roles(self):
+    def test_should_pass_get_versions_with_no_roles(self):
         self.req = self._generate_req()
         self._invoke_on_get()
 
-    def test_should_pass_get_version_multiple_roles(self):
+    def test_should_pass_get_versions_multiple_roles(self):
         self.req = self._generate_req(roles=['admin', 'observer', 'creator',
                                              'audit'])
         self._invoke_on_get()
