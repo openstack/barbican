@@ -92,9 +92,6 @@ def create_main_app_v1(global_config, **local_conf):
     return build_wsgi_app(versions.V1Controller(), transactional=True)
 
 
-def create_admin_app(global_config, **local_conf):
+def create_version_app(global_config, **local_conf):
     wsgi_app = pecan.make_app(versions.VersionsController())
     return wsgi_app
-
-
-create_version_app = create_admin_app
