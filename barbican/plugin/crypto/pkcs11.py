@@ -16,7 +16,6 @@ import textwrap
 
 import cffi
 from cryptography.hazmat.primitives import padding
-from oslo_serialization import jsonutils as json
 
 from barbican.common import exception
 from barbican.common import utils
@@ -612,21 +611,27 @@ class PKCS11(object):
         )
         self.check_error(rv)
 
-    def unwrap_key(self, plugin_meta, session):
+    def unwrap_key(self, iv, hmac, wrapped_key, mkek_label, hmac_label,
+                   session):
         """Unwraps byte string to key handle in HSM.
 
-        :param plugin_meta: kek_meta_dto plugin meta (json string)
+        :param iv: the initialization vector used for wrapped key
+        :param hmac: the hmac for used for wrapped key
+        :param wrapped_key: the key to be unwrapped
+        :param mkek_label: label of mkek for used for wrapped key
+        :param hmac_label: label of hmac for used for wrapped key
+        :param session: active HSM session
+
         :returns: Key handle from HSM. No unencrypted bytes.
         """
-        meta = json.loads(plugin_meta)
-        iv = base64.b64decode(meta['iv'])
-        hmac = base64.b64decode(meta['hmac'])
-        wrapped_key = base64.b64decode(meta['wrapped_key'])
-        mkek = self.get_key_handle(meta['mkek_label'], session)
-        hmac_key = self.get_key_handle(meta['hmac_label'], session)
-        LOG.debug("Unwrapping key with %s mkek label", meta['mkek_label'])
+        iv = base64.b64decode(iv)
+        hmac = base64.b64decode(hmac)
+        wrapped_key = base64.b64decode(wrapped_key)
+        mkek = self.get_key_handle(mkek_label, session)
+        hmac_key = self.get_key_handle(hmac_label, session)
+        LOG.debug("Unwrapping key with %s mkek label", mkek_label)
 
-        LOG.debug("Verifying key with %s hmac label", meta['hmac_label'])
+        LOG.debug("Verifying key with %s hmac label", hmac_label)
         self.verify_hmac(hmac_key, hmac, wrapped_key, session)
 
         unwrapped = self.ffi.new("CK_OBJECT_HANDLE *")
