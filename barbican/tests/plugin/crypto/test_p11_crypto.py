@@ -232,6 +232,34 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.assertEqual(self.lib.C_UnwrapKey.call_count, 1)
         self.assertEqual(self.lib.C_Verify.call_count, 1)
 
+    def test_rewrap_kek(self):
+        plugin_meta = {
+            'iv': base64.b64encode(b"\x00" * 16),
+            'hmac': base64.b64encode(b"\x00" * 32),
+            'wrapped_key': base64.b64encode(b"\x00" * 48),
+            'mkek_label': 'mkek',
+            'hmac_label': 'hmac',
+        }
+        self.lib.C_WrapKey.return_value = pkcs11.CKR_OK
+        self.lib.C_UnwrapKey.return_value = pkcs11.CKR_OK
+        self.lib.C_VerifyInit.return_value = pkcs11.CKR_OK
+        self.lib.C_Verify.return_value = pkcs11.CKR_OK
+        self.lib.C_SignInit.return_value = pkcs11.CKR_OK
+        self.lib.C_Sign.return_value = pkcs11.CKR_OK
+
+        self.plugin.pkcs11.rewrap_kek(
+            plugin_meta['iv'],
+            plugin_meta['wrapped_key'],
+            plugin_meta['hmac'],
+            plugin_meta['mkek_label'],
+            plugin_meta['hmac'],
+            32,
+            self.test_session
+        )
+        self.assertEqual(self.lib.C_UnwrapKey.call_count, 1)
+        self.assertEqual(self.lib.C_WrapKey.call_count, 1)
+        self.assertEqual(self.lib.C_Verify.call_count, 1)
+
     def test_generate_asymmetric_raises_error(self):
         self.assertRaises(NotImplementedError,
                           self.plugin.generate_asymmetric,
