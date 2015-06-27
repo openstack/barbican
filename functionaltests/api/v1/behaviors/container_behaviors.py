@@ -59,13 +59,14 @@ class ContainerBehaviors(base_behaviors.BaseBehaviors):
 
         return resp
 
-    def get_containers(self, limit=10, offset=0, extra_headers=None,
-                       user_name=None):
+    def get_containers(self, limit=10, offset=0, filter=None,
+                       extra_headers=None, user_name=None):
         """Handles getting a list of containers.
 
         :param limit: limits number of returned containers
         :param offset: represents how many records to skip before retrieving
             the list
+        :param name_filter: allows you to filter results based on name
         :param extra_headers: Extra headers used to retrieve a list of
             containers
         :param user_name: The user name used to get the list
@@ -74,7 +75,12 @@ class ContainerBehaviors(base_behaviors.BaseBehaviors):
             references to the next and previous list of containers.
         """
         params = {'limit': limit, 'offset': offset}
+
+        if filter:
+            params['name'] = filter
+
         resp = self.client.get('containers', params=params,
+                               extra_headers=extra_headers,
                                user_name=user_name)
 
         container_list = self.get_json(resp)

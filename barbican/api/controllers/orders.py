@@ -158,7 +158,8 @@ class OrdersController(controllers.ACLMixin):
 
         result = self.order_repo.get_by_create_date(
             external_project_id, offset_arg=kw.get('offset', 0),
-            limit_arg=kw.get('limit', None), suppress_exception=True)
+            limit_arg=kw.get('limit', None), meta_arg=kw.get('meta', None),
+            suppress_exception=True)
         orders, offset, limit, total = result
 
         if not orders:

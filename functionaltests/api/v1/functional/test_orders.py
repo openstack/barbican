@@ -559,6 +559,36 @@ class OrdersTestCase(base.TestCase):
         self.assertEqual(message, plaintext)
 
 
+class OrdersPagingTestCase(base.PagingTestCase):
+
+    def setUp(self):
+        super(OrdersPagingTestCase, self).setUp()
+        self.behaviors = order_behaviors.OrderBehaviors(self.client)
+
+        # make a local mutable copy of the default data to prevent
+        # possible data contamination
+        self.create_default_data = get_default_order_create_data()
+
+    def tearDown(self):
+        self.behaviors.delete_all_created_orders()
+        super(OrdersPagingTestCase, self).tearDown()
+
+    def create_model(self):
+        return order_models.OrderModel(**self.create_default_data)
+
+    def create_resources(self, count=0, model=None):
+        for x in range(0, count):
+            self.behaviors.create_order(model)
+
+    def get_resources(self, limit=10, offset=0, filter=None):
+        return self.behaviors.get_orders(limit=limit, offset=offset,
+                                         filter=filter)
+
+    def set_filter_field(self, unique_str, model):
+        '''Set the meta field which we use in the get_resources '''
+        model.meta['name'] = unique_str
+
+
 class OrdersUnauthedTestCase(base.TestCase):
 
     def setUp(self):

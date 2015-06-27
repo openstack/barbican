@@ -116,22 +116,22 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
             secret_ref, response_model_type=secret_models.SecretModel,
             use_auth=use_auth, user_name=user_name)
 
-    def get_secrets(self, limit=10, offset=0, name_filter=None,
+    def get_secrets(self, limit=10, offset=0, filter=None,
                     extra_headers=None, use_auth=True, user_name=None):
         """Handles getting a list of secrets.
 
         :param limit: limits number of returned secrets
         :param offset: represents how many records to skip before retrieving
                        the list
-        :param name_filter: optional filter to limit the returned secrets to
+        :param filter: optional filter to limit the returned secrets to
                         those whose name matches the filter.
         :param extra_headers: Optional HTTP headers to add to the request
         :param use_auth: Boolean for whether to send authentication headers
         :param user_name: The user name used to list the secrets
         """
         params = {'limit': limit, 'offset': offset}
-        if name_filter:
-            params['name'] = name_filter
+        if filter:
+            params['name'] = filter
         resp = self.client.get('secrets', params=params,
                                extra_headers=extra_headers,
                                use_auth=use_auth, user_name=user_name)

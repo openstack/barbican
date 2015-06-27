@@ -1030,9 +1030,13 @@ class SecretsPagingTestCase(base.PagingTestCase):
         for x in range(0, count):
             self.behaviors.create_secret(model)
 
-    def get_resources(self, limit=10, offset=0, name_filter=""):
+    def get_resources(self, limit=10, offset=0, filter=None):
         return self.behaviors.get_secrets(limit=limit, offset=offset,
-                                          name_filter=name_filter)
+                                          filter=filter)
+
+    def set_filter_field(self, unique_str, model):
+        '''Set the name field which we use in the get_resources '''
+        model.name = unique_str
 
 
 class SecretsUnauthedTestCase(base.TestCase):
