@@ -125,6 +125,22 @@ asked if you want to install the command line tools. Now
 tests should run.
 
 
+Barbican's tox tests fail with "ImportError: No module named _bsddb"
+-------------------------------------------------
+
+What you might see
+^^^^^^^^^^^^^^^^^^
+
+.. code-block:: text
+
+    ImportError: No module named _bsddb
+
+How to avoid
+^^^^^^^^^^^^
+
+Running tests via tox (which uses testr) will create a .testrepository directory containing, among other things, data files.  Those datafiles may be created with bsddb, if it is available in the environment. This can cause problems if you run in an environment that does not have bsddb.  To resolve this, delete your .testrepository directory and run tox again.
+
+
 uWSGI logs 'OOPS ! failed loading app'
 --------------------------------------
 
