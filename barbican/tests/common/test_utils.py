@@ -103,18 +103,13 @@ class WhenTestingAcceptEncodingGetter(test_utils.BaseTestCase):
         ae = utils.get_accepted_encodings(self.req)
         self.assertEqual(ae, ['compress', 'base64'])
 
-    def test_get_correct_fullname_for_class(self):
-        test_class = self.req
-        fullname = utils.generate_fullname_for(test_class)
-        self.assertEqual("mock.Mock", fullname)
-
 
 class WhenTestingGenerateFullClassnameForInstance(test_utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingGenerateFullClassnameForInstance, self).setUp()
 
-        self.instance = mock.Mock()
+        self.instance = test_utils.DummyClassForTesting()
 
     def test_get_fullname_for_null_instance_raises_exception(self):
         self.assertRaises(ValueError, utils.generate_fullname_for, None)
@@ -128,8 +123,9 @@ class WhenTestingGenerateFullClassnameForInstance(test_utils.BaseTestCase):
     def test_returns_class_name_on_null_module(self):
         self.instance.__class__.__module__ = None
         name = utils.generate_fullname_for(self.instance)
-        self.assertEqual('Mock', name)
+        self.assertEqual('DummyClassForTesting', name)
 
     def test_returns_qualified_name(self):
+        self.instance.__class__.__module__ = 'dummy'
         name = utils.generate_fullname_for(self.instance)
-        self.assertEqual('mock.Mock', name)
+        self.assertEqual('dummy.DummyClassForTesting', name)

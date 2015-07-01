@@ -532,3 +532,7 @@ def is_private_key_valid(expected, observed):
 def is_public_key_valid(expected, observed):
     # TODO(alee) fill in the relevant test here
     return True
+
+
+class DummyClassForTesting(object):
+    pass
