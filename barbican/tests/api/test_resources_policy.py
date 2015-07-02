@@ -361,6 +361,24 @@ class WhenTestingSecretResource(BaseTestCase):
         """Should raise authz error as secret is marked private.
 
         As secret is private so project users should not be able to access
+        the secret. Admin project user can still access it.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.SecretACL(secret_id=self.secret_id, operation='read',
+                                    project_access=False,
+                                    user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        self._assert_fail_rbac(['observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               accept='notjsonaccepttype',
+                               content_type='application/json',
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_pass_decrypt_secret_for_admin_user_project_access_disabled(self):
+        """Should pass authz for admin role user as secret is marked private.
+
+        Even when secret is private, admin user should still have access to
         the secret.
         """
         self.acl_list.pop()  # remove read acl from default setup
@@ -368,7 +386,7 @@ class WhenTestingSecretResource(BaseTestCase):
                                     project_access=False,
                                     user_ids=['anyRandomUserX', 'aclUser1'])
         self.acl_list.append(acl_read)
-        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['admin'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype',
                                content_type='application/json',
@@ -380,14 +398,14 @@ class WhenTestingSecretResource(BaseTestCase):
 
         As secret is private so project users should not be able to access
         the secret.  This test passes user_ids as empty list, which is a
-        valid and common case.
+        valid and common case. Admin project user can still access it.
         """
         self.acl_list.pop()  # remove read acl from default setup
         acl_read = models.SecretACL(secret_id=self.secret_id, operation='read',
                                     project_access=False,
                                     user_ids=[])
         self.acl_list.append(acl_read)
-        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_fail_rbac(['observer', 'creator', 'audit'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype',
                                content_type='application/json',
@@ -445,18 +463,23 @@ class WhenTestingSecretResource(BaseTestCase):
                                user_id='aclUser1',
                                project_id='different_project_id')
 
-    def test_should_pass_decrypt_secret_for_creator_user_with_no_acl(self):
+    def test_fail_decrypt_secret_for_creator_user_with_different_project(self):
         """Check for creator user rule for secret decrypt/get call.
 
-        If token's user is same as creator of secret, then they are allowed
-        to read decrypted secret regardless of token's  project or token's
-        role.
+        If token's user is creator of secret but its scoped to different
+        project, then he/she is not allowed access to secret when project
+        is marked private.
         """
         self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.SecretACL(secret_id=self.secret_id,
+                                    operation='write',
+                                    project_access=True,
+                                    user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
         self.resource.controller.secret.creator_id = 'creatorUserX'
-        # token user is creator so allowed get call regardless of role
-        # user (from different project) has read acl for secret so should pass
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
+        # token user is creator but scoped to project different from secret
+        # project so don't allow decrypt secret call to creator of that secret
+        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit',
                                 'bogusRole'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype',
@@ -511,7 +534,23 @@ class WhenTestingSecretResource(BaseTestCase):
                                     project_access=False,
                                     user_ids=['anyRandomUserX', 'aclUser1'])
         self.acl_list.append(acl_read)
-        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_fail_rbac(['observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_pass_get_secret_for_admin_user_with_project_access_disabled(self):
+        """Should pass authz for admin user as secret is marked private.
+
+        Even when secret is private, admin user should have access
+        the secret.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.SecretACL(secret_id=self.secret_id, operation='read',
+                                    project_access=False,
+                                    user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        self._assert_pass_rbac(['admin'],
                                self._invoke_on_get,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
@@ -571,17 +610,17 @@ class WhenTestingSecretResource(BaseTestCase):
                                user_id='aclUser1',
                                project_id='different_project_id')
 
-    def test_should_pass_get_secret_for_creator_user_with_no_acl(self):
+    def test_fail_get_secret_for_creator_user_with_different_project(self):
         """Check for creator user rule for secret get call.
 
-        If token's user is same as creator of secret, then he/she is allowed
-        to read secret regardless of token's  project or token's role.
+        If token's user is creator of secret but its scoped to different
+        project, then he/she is not allowed access to secret when project
+        is marked private.
         """
         self.acl_list.pop()  # remove read acl from default setup
         self.resource.controller.secret.creator_id = 'creatorUserX'
-        # token user is creator so allowed get call regardless of role
-        # user (from different project) has read acl for secret so should pass
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
+
+        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit',
                                 'bogusRole'],
                                self._invoke_on_get,
                                user_id='creatorUserX',
@@ -719,6 +758,22 @@ class WhenTestingContainerResource(BaseTestCase):
         """Should raise authz error as container is marked private.
 
         As container is private so project users should not be able to access
+        the secret (other than admin user).
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.ContainerACL(
+            container_id=self.container_id, operation='read',
+            project_access=False, user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        self._assert_fail_rbac(['observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_pass_get_container_for_admin_user_project_access_disabled(self):
+        """Should pass authz for admin user when container is marked private.
+
+        For private container, admin user should still be able to access
         the secret.
         """
         self.acl_list.pop()  # remove read acl from default setup
@@ -726,7 +781,7 @@ class WhenTestingContainerResource(BaseTestCase):
             container_id=self.container_id, operation='read',
             project_access=False, user_ids=['anyRandomUserX', 'aclUser1'])
         self.acl_list.append(acl_read)
-        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['admin'],
                                self._invoke_on_get,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
@@ -786,18 +841,38 @@ class WhenTestingContainerResource(BaseTestCase):
                                user_id='aclUser1',
                                project_id='different_project_id')
 
-    def test_should_pass_get_container_for_creator_user_with_no_acl(self):
+    def test_fail_get_container_for_creator_user_different_project(self):
         """Check for creator user rule for container get call.
 
-        If token's user is same as creator of container, then he/she is allowed
-        to read container regardless of token's  project or token's role.
+        If token's user is creator of container but its scoped to different
+        project, then he/she is not allowed access to container when project
+        is marked private.
         """
         self.acl_list.pop()  # remove read acl from default setup
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
-                                'bogusRole'],
+        acl_read = models.ContainerACL(
+            container_id=self.container_id, operation='read',
+            project_access=False, user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        self._assert_fail_rbac(['creator'],
                                self._invoke_on_get,
                                user_id=self.creator_user_id,
-                               project_id='different_project_id')
+                               project_id='differet_project_id')
+
+    def test_pass_get_container_for_creator_user_project_access_disabled(self):
+        """Should pass authz for creator user when container is marked private.
+
+        As container is private so user who created the container can still
+        access it as long as user has 'creator' role in container project.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.ContainerACL(
+            container_id=self.container_id, operation='read',
+            project_access=False, user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        self._assert_pass_rbac(['creator'],
+                               self._invoke_on_get,
+                               user_id=self.creator_user_id,
+                               project_id=self.external_project_id)
 
     def test_should_raise_get_container(self):
         self._assert_fail_rbac([None, 'bogus'],
