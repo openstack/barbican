@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import base64
-import json
 
 import mock
 
@@ -133,10 +132,16 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.lib.C_EncryptInit.return_value = pkcs11.CKR_OK
         self.lib.C_Encrypt.return_value = pkcs11.CKR_OK
         encrypt_dto = plugin_import.EncryptDTO(payload)
+        kek_meta = mock.MagicMock()
+        kek_meta.plugin_meta = ('{"iv":123,'
+                                '"hmac": "hmac",'
+                                '"wrapped_key": "wrapped_key",'
+                                '"mkek_label": "mkek_label",'
+                                '"hmac_label": "hmac_label"}')
         with mock.patch.object(self.plugin.pkcs11, 'unwrap_key') as key_mock:
             key_mock.return_value = 'unwrapped_key'
             response_dto = self.plugin.encrypt(encrypt_dto,
-                                               mock.MagicMock(),
+                                               kek_meta,
                                                mock.MagicMock())
 
             self.assertEqual(self.lib.C_Encrypt.call_count, 1)
@@ -153,10 +158,16 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         kek_meta_extended = '{"iv": "AQIDBAUGBwgJCgsMDQ4PEA=="}'
         decrypt_dto = plugin_import.DecryptDTO(ct)
 
+        kek_meta = mock.MagicMock()
+        kek_meta.plugin_meta = ('{"iv":123,'
+                                '"hmac": "hmac",'
+                                '"wrapped_key": "wrapped_key",'
+                                '"mkek_label": "mkek_label",'
+                                '"hmac_label": "hmac_label"}')
         with mock.patch.object(self.plugin.pkcs11, 'unwrap_key') as key_mock:
             key_mock.return_value = 'unwrapped_key'
             self.plugin.decrypt(decrypt_dto,
-                                mock.MagicMock(),
+                                kek_meta,
                                 kek_meta_extended,
                                 mock.MagicMock())
             self.assertEqual(self.lib.C_Decrypt.call_count, 1)
@@ -213,9 +224,10 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.lib.C_UnwrapKey.return_value = pkcs11.CKR_OK
         self.lib.C_VerifyInit.return_value = pkcs11.CKR_OK
         self.lib.C_Verify.return_value = pkcs11.CKR_OK
+
         self.plugin.pkcs11.unwrap_key(
-            json.dumps(plugin_meta),
-            self.test_session
+            plugin_meta['iv'], plugin_meta['hmac'], plugin_meta['wrapped_key'],
+            plugin_meta['mkek_label'], plugin_meta['hmac'], self.test_session
         )
         self.assertEqual(self.lib.C_UnwrapKey.call_count, 1)
         self.assertEqual(self.lib.C_Verify.call_count, 1)

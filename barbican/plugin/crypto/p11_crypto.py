@@ -71,7 +71,11 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
     def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
         session = self.pkcs11.create_working_session()
 
-        key = self.pkcs11.unwrap_key(kek_meta_dto.plugin_meta, session)
+        meta = json.loads(kek_meta_dto.plugin_meta)
+        key = self.pkcs11.unwrap_key(
+            meta['iv'], meta['hmac'], meta['wrapped_key'],
+            meta['mkek_label'], meta['hmac_label'], session
+        )
         iv = self.pkcs11.generate_random(16, session)
         ck_mechanism = self.pkcs11.build_gcm_mech(iv)
 
@@ -102,7 +106,11 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
                 project_id):
         session = self.pkcs11.create_working_session()
 
-        key = self.pkcs11.unwrap_key(kek_meta_dto.plugin_meta, session)
+        meta = json.loads(kek_meta_dto.plugin_meta)
+        key = self.pkcs11.unwrap_key(
+            meta['iv'], meta['hmac'], meta['wrapped_key'],
+            meta['mkek_label'], meta['hmac_label'], session
+        )
         meta_extended = json.loads(kek_meta_extended)
         iv = base64.b64decode(meta_extended['iv'])
         iv = self.pkcs11.ffi.new("CK_BYTE[]", iv)
