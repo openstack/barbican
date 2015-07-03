@@ -165,7 +165,7 @@ created with trusted agent credentials.
         -out $BARBICAN_CONF_DIR/kra_admin_cert.pem -nodes
     chown $USER $BARBICAN_CONF_DIR/kra_admin_cert.pem
 
-The Barbican config file (/etc/barbican/barbican-api.conf) needs to be modified.
+The Barbican config file (/etc/barbican/barbican.conf) needs to be modified.
 The modifications below set the Dogtag plugins as the only enabled secret store and
 certificate plugins.  Be sure to restart Barbican once these changes are made.
 

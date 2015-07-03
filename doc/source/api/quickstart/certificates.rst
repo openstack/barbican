@@ -118,7 +118,7 @@ What CAs are Available?
 
 Barbican communicates with public and private CAs through CA plugins that are
 configured to communicate with one or more CAs.  CA plugins are configured and
-enabled in **barbican-api.conf**.
+enabled in **barbican.conf**.
 
 To see the list of CA's that are currently configured, you can query the cas
 resource:
