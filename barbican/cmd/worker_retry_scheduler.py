@@ -40,7 +40,6 @@ from barbican.common import config
 from barbican import queue
 from barbican.queue import retry_scheduler
 
-from oslo_config import cfg
 from oslo_log import log
 from oslo_service import service
 
@@ -50,7 +49,7 @@ def fail(returncode, e):
     sys.exit(returncode)
 
 
-if __name__ == '__main__':
+def main():
     try:
         CONF = config.CONF
 
@@ -68,3 +67,7 @@ if __name__ == '__main__':
         ).wait()
     except RuntimeError as e:
         fail(1, e)
+
+
+if __name__ == '__main__':
+    main()
