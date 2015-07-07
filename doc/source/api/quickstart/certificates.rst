@@ -290,7 +290,7 @@ Now that we have a reference to the container, we can create a stored-key reques
     curl -X POST -H 'content-type:application/json' -H 'X-Project-Id: 12345' -d '{
         "type": "certificate",
         "meta": {
-            "source_container_ref": "http://localhost:9311/v1/containers/1e71dc2b-cf63-4aa4-91f7-41ea1a9e5493",
+            "container_ref": "http://localhost:9311/v1/containers/1e71dc2b-cf63-4aa4-91f7-41ea1a9e5493",
             "subject_dn": "cn=server1, o=example.com",
             "request_type": "stored-key",
             "ca_id": "422e6ad3-24ae-45e3-b165-4e9487cd0ded",
