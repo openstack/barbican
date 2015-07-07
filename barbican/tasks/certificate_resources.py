@@ -80,8 +80,6 @@ def issue_certificate_request(order_model, project_model, result_follow_on):
     :returns: container_model - container with the relevant cert if
         the request has been completed.  None otherwise
     """
-    container_model = None
-
     plugin_meta = _get_plugin_meta(order_model)
     barbican_meta = _get_barbican_meta(order_model)
 
@@ -95,20 +93,9 @@ def issue_certificate_request(order_model, project_model, result_follow_on):
     # for a plugin are expired.
     cert.CertificatePluginManager().refresh_ca_table()
 
-    # Locate the required certificate plugin.
-    cert_plugin_name = barbican_meta.get('plugin_name')
-    if cert_plugin_name:
-        cert_plugin = cert.CertificatePluginManager().get_plugin_by_name(
-            cert_plugin_name)
-    else:
-        ca_id = _get_ca_id(order_model.meta, project_model.id)
-        if ca_id:
-            barbican_meta_for_plugins_dto.plugin_ca_id = ca_id
-            cert_plugin = cert.CertificatePluginManager().get_plugin_by_ca_id(
-                ca_id)
-        else:
-            cert_plugin = cert.CertificatePluginManager().get_plugin(
-                order_model.meta)
+    cert_plugin = _get_cert_plugin(barbican_meta,
+                                   barbican_meta_for_plugins_dto,
+                                   order_model, project_model)
     barbican_meta['plugin_name'] = utils.generate_fullname_for(cert_plugin)
 
     # Generate CSR if needed.
@@ -118,7 +105,7 @@ def issue_certificate_request(order_model, project_model, result_follow_on):
         if csr is None:
             # TODO(alee) Fix this to be a non-project specific call once
             # the ACL patches go in.
-            csr = _generate_csr(order_model, project_model)
+            csr = _generate_csr_from_private_key(order_model, project_model)
             barbican_meta['generated_csr'] = csr
         barbican_meta_for_plugins_dto.generated_csr = csr
 
@@ -131,32 +118,23 @@ def issue_certificate_request(order_model, project_model, result_follow_on):
     _save_barbican_metadata(order_model, barbican_meta)
 
     # Handle result
-    if cert.CertificateStatus.WAITING_FOR_CA == result.status:
-        _update_result_follow_on(
-            result_follow_on,
-            order_status=ORDER_STATUS_REQUEST_PENDING,
-            retry_task=common.RetryTasks.INVOKE_CERT_STATUS_CHECK_TASK,
-            retry_msec=result.retry_msec)
-    elif cert.CertificateStatus.CERTIFICATE_GENERATED == result.status:
-        _update_result_follow_on(
-            result_follow_on,
-            order_status=ORDER_STATUS_CERT_GENERATED)
-        container_model = _save_secrets(result, project_model)
-    elif cert.CertificateStatus.CLIENT_DATA_ISSUE_SEEN == result.status:
-        raise cert.CertificateStatusClientDataIssue(result.status_message)
-    elif cert.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST == result.status:
-        _update_result_follow_on(
-            result_follow_on,
-            order_status=ORDER_STATUS_CA_UNAVAIL_FOR_ISSUE,
-            retry_task=common.RetryTasks.INVOKE_SAME_TASK,
-            retry_msec=cert.ERROR_RETRY_MSEC)
-        _notify_ca_unavailable(order_model, result)
-    elif cert.CertificateStatus.INVALID_OPERATION == result.status:
-        raise cert.CertificateStatusInvalidOperation(result.status_message)
-    else:
-        raise cert.CertificateStatusNotSupported(result.status)
+    return _handle_task_result(
+        result, result_follow_on, order_model, project_model, request_type,
+        unavailable_status=ORDER_STATUS_CA_UNAVAIL_FOR_ISSUE)
 
-    return container_model
+
+def _get_cert_plugin(barbican_meta, barbican_meta_for_plugins_dto,
+                     order_model, project_model):
+    cert_plugin_name = barbican_meta.get('plugin_name')
+    if cert_plugin_name:
+        return cert.CertificatePluginManager().get_plugin_by_name(
+            cert_plugin_name)
+    ca_id = _get_ca_id(order_model.meta, project_model.id)
+    if ca_id:
+        barbican_meta_for_plugins_dto.plugin_ca_id = ca_id
+        return cert.CertificatePluginManager().get_plugin_by_ca_id(ca_id)
+    else:
+        return cert.CertificatePluginManager().get_plugin(order_model.meta)
 
 
 def check_certificate_request(order_model, project_model, result_follow_on):
@@ -174,7 +152,6 @@ def check_certificate_request(order_model, project_model, result_follow_on):
     :returns: container_model - container with the relevant cert if the
         request has been completed.  None otherwise.
     """
-    container_model = None
     plugin_meta = _get_plugin_meta(order_model)
     barbican_meta = _get_barbican_meta(order_model)
 
@@ -191,7 +168,14 @@ def check_certificate_request(order_model, project_model, result_follow_on):
     # Save plugin order plugin state
     _save_plugin_metadata(order_model, plugin_meta)
 
-    # Handle result
+    request_type = order_model.meta.get(cert.REQUEST_TYPE)
+    return _handle_task_result(
+        result, result_follow_on, order_model, project_model, request_type,
+        unavailable_status=ORDER_STATUS_CA_UNAVAIL_FOR_CHECK)
+
+
+def _handle_task_result(result, result_follow_on, order_model,
+                        project_model, request_type, unavailable_status):
     if cert.CertificateStatus.WAITING_FOR_CA == result.status:
         _update_result_follow_on(
             result_follow_on,
@@ -202,13 +186,15 @@ def check_certificate_request(order_model, project_model, result_follow_on):
         _update_result_follow_on(
             result_follow_on,
             order_status=ORDER_STATUS_CERT_GENERATED)
-        container_model = _save_secrets(result, project_model)
+        container_model = _save_secrets(result, project_model, request_type,
+                                        order_model)
+        return container_model
     elif cert.CertificateStatus.CLIENT_DATA_ISSUE_SEEN == result.status:
         raise cert.CertificateStatusClientDataIssue(result.status_message)
     elif cert.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST == result.status:
         _update_result_follow_on(
             result_follow_on,
-            order_status=ORDER_STATUS_CA_UNAVAIL_FOR_CHECK,
+            order_status=unavailable_status,
             retry_task=common.RetryTasks.INVOKE_SAME_TASK,
             retry_msec=cert.ERROR_RETRY_MSEC)
         _notify_ca_unavailable(order_model, result)
@@ -217,7 +203,25 @@ def check_certificate_request(order_model, project_model, result_follow_on):
     else:
         raise cert.CertificateStatusNotSupported(result.status)
 
-    return container_model
+    return None
+
+
+def _add_private_key_to_generated_cert_container(container_id, order_model,
+                                                 project_model):
+    keypair_container_id, keypair_container = _get_container_from_order_meta(
+        order_model, project_model)
+    private_key_id = None
+
+    for cs in keypair_container.container_secrets:
+        if cs.name == 'private_key':
+            private_key_id = cs.secret_id
+
+    new_consec_assoc = models.ContainerSecret()
+    new_consec_assoc.name = 'private_key'
+    new_consec_assoc.container_id = container_id
+    new_consec_assoc.secret_id = private_key_id
+    container_secret_repo = repos.get_container_secret_repository()
+    container_secret_repo.create_from(new_consec_assoc)
 
 
 def modify_certificate_request(order_model, updated_meta):
@@ -274,8 +278,8 @@ def _get_barbican_meta(order_model):
         return {}
 
 
-def _generate_csr(order_model, project_model):
-    """Generate a CSR from the public key.
+def _generate_csr_from_private_key(order_model, project_model):
+    """Generate a CSR from the private key.
 
     :param: order_model - order for the request
     :param: project_model - project for this request
@@ -283,15 +287,9 @@ def _generate_csr(order_model, project_model):
     :raise: :class:`StoredKeyPrivateKeyNotFound` if private key not found
             :class:`StoredKeyContainerNotFound` if container not found
     """
-    container_ref = order_model.meta.get('container_ref')
+    container_id, container = _get_container_from_order_meta(order_model,
+                                                             project_model)
 
-    # extract container_id as the last part of the URL
-    container_id = hrefs.get_container_id_from_ref(container_ref)
-
-    container_repo = repos.get_container_repository()
-    container = container_repo.get(container_id,
-                                   project_model.external_id,
-                                   suppress_exception=True)
     if not container:
         raise excep.StoredKeyContainerNotFound(container_id)
 
@@ -319,7 +317,7 @@ def _generate_csr(order_model, project_model):
             passphrase = str(passphrase)
 
     if not private_key:
-        raise excep.StoredKeyPrivateKeyNotFound(container_id)
+        raise excep.StoredKeyPrivateKeyNotFound(container.id)
 
     if passphrase is None:
         pkey = crypto.load_privatekey(
@@ -359,6 +357,19 @@ def _generate_csr(order_model, project_model):
     return csr
 
 
+def _get_container_from_order_meta(order_model, project_model):
+    container_ref = order_model.meta.get('container_ref')
+
+    # extract container_id as the last part of the URL
+    container_id = hrefs.get_container_id_from_ref(container_ref)
+
+    container_repo = repos.get_container_repository()
+    container = container_repo.get(container_id,
+                                   project_model.external_id,
+                                   suppress_exception=True)
+    return container_id, container
+
+
 def _notify_ca_unavailable(order_model, result):
     """Notify observer(s) that the CA was unavailable at this time."""
     cert.EVENT_PLUGIN_MANAGER.notify_ca_is_unavailable(
@@ -388,7 +399,7 @@ def _save_barbican_metadata(order_model, barbican_meta):
     order_barbican_meta_repo.save(barbican_meta, order_model)
 
 
-def _save_secrets(result, project_model):
+def _save_secrets(result, project_model, request_type, order_model):
     cert_secret_model, transport_key_model = plugin.store_secret(
         unencrypted_raw=result.certificate,
         content_type_raw='application/pkix-cert',
@@ -430,5 +441,10 @@ def _save_secrets(result, project_model):
         new_consec_assoc.container_id = container_model.id
         new_consec_assoc.secret_id = intermediates_secret_model.id
         container_secret_repo.create_from(new_consec_assoc)
+
+    if request_type == cert.CertificateRequestType.STORED_KEY_REQUEST:
+        _add_private_key_to_generated_cert_container(container_model.id,
+                                                     order_model,
+                                                     project_model)
 
     return container_model
