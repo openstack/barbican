@@ -16,7 +16,6 @@ import os
 import uuid
 
 import mock
-import testtools
 
 from barbican.common import resources
 from barbican.model import models
@@ -684,7 +683,6 @@ class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase,
         )
         self.assertEqual(400, create_resp.status_int)
 
-    @testtools.skip("TODO(dave) Not yet implemented")
     def test_should_raise_with_container_no_access(self):
         stored_key_meta = {
             'request_type': 'stored-key',

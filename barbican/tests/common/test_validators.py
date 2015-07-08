@@ -1020,7 +1020,6 @@ class WhenTestingKeyTypeOrderValidator(utils.BaseTestCase):
                                       self.key_order_req)
         self.assertEqual('expiration', exception.invalid_property)
 
-    @testtools.skip("due to bug#1365131")
     def test_should_not_raise_correct_hmac_order_refs(self):
         self.key_order_req['meta']['algorithm'] = 'hmacsha1'
         del self.key_order_req['meta']['mode']
