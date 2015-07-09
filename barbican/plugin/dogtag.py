@@ -780,8 +780,8 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
         }
 
         if request_type not in jump_table:
-            raise DogtagPluginNotSupportedException(
-                "Dogtag plugin does not support %s request type".format(
+            raise DogtagPluginNotSupportedException(u._(
+                "Dogtag plugin does not support %s request type").format(
                     request_type))
 
         return jump_table[request_type](order_id, order_meta, plugin_meta,
@@ -825,8 +825,8 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
         :param barbican_meta_dto:
         :return: cm.ResultDTO
         """
-        raise DogtagPluginNotSupportedException(
-            "Dogtag plugin does not support %s request type".format(
+        raise DogtagPluginNotSupportedException(u._(
+            "Dogtag plugin does not support %s request type").format(
                 cm.CertificateRequestType.FULL_CMC_REQUEST))
 
     @_catch_enrollment_exceptions

@@ -207,7 +207,7 @@ class SnakeoilCACertificatePlugin(cert_manager.CertificatePluginBase):
             except KeyError:
                 return cert_manager.ResultDTO(
                     cert_manager.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
-                    status_message="No request_data specified")
+                    status_message=u._("No request_data specified"))
         csr = crypto.load_certificate_request(crypto.FILETYPE_PEM, encoded_csr)
         cert = self.cert_manager.make_certificate(csr)
         cert_enc = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)

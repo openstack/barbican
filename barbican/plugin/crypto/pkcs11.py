@@ -346,7 +346,8 @@ class PKCS11(object):
     def perform_rng_self_test(self, session):
         test_random = self.generate_random(100, session)
         if self.ffi.buffer(test_random, 100)[:] == b"\x00" * 100:
-            raise P11CryptoPluginException("Apparent RNG self-test failure.")
+            raise P11CryptoPluginException(u._(
+                "Apparent RNG self-test failure."))
 
     def open_session(self, slot):
         session_ptr = self.ffi.new("CK_SESSION_HANDLE *")
@@ -409,7 +410,7 @@ class PKCS11(object):
                 val_list.append(self.ffi.new("char []", attr.value))
                 attributes[index].value_len = len(attr.value)
             else:
-                raise TypeError("Unknown attribute type provided.")
+                raise TypeError(u._("Unknown attribute type provided."))
 
             attributes[index].value = val_list[-1]
 

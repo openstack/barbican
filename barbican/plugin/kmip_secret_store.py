@@ -256,7 +256,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                                         template_attribute=template_attribute,
                                         credential=self.credential)
         except Exception as e:
-            LOG.exception("Error opening or writing to client")
+            LOG.exception(u._LE("Error opening or writing to client"))
             raise ss.SecretGeneralException(str(e))
         else:
             if result.result_status.enum == enums.ResultStatus.SUCCESS:
@@ -315,7 +315,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 common_template_attribute=common,
                 credential=self.credential)
         except Exception as e:
-            LOG.exception("Error opening or writing to client")
+            LOG.exception(u._LE("Error opening or writing to client"))
             raise ss.SecretGeneralException(str(e))
         else:
             if result.result_status.enum == enums.ResultStatus.SUCCESS:
@@ -728,7 +728,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
             reason=result.result_reason,
             message=result.result_message
         )
-        LOG.debug("ERROR from KMIP server: %s", msg)
+        LOG.error(u._LE("ERROR from KMIP server: %s"), msg)
         raise ss.SecretGeneralException(msg)
 
     def _validate_keyfile_permissions(self, path):
