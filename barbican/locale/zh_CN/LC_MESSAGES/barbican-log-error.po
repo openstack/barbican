@@ -8,11 +8,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Barbican\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-28 06:08+0000\n"
-"PO-Revision-Date: 2015-05-09 14:01+0000\n"
+"POT-Creation-Date: 2015-07-09 06:18+0000\n"
+"PO-Revision-Date: 2015-06-22 23:08+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
-"Language-Team: Chinese (China) (http://www.transifex.com/projects/p/barbican/"
-"language/zh_CN/)\n"
+"Language-Team: Chinese (China) (http://www.transifex.com/p/barbican/language/"
+"zh_CN/)\n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -32,10 +32,6 @@ msgstr "在成功执行任务 '%s' 后无法处理。"
 msgid "Could not retrieve information needed to process task '%s'."
 msgstr "无法检索到所需的信息来处理任务 '%s'。"
 
-#, python-format
-msgid "Error during %(full_task_name)s: %(e)s"
-msgstr "在 %(full_task_name)s: %(e)s 时出现问题"
-
 msgid "Error opening or writing to client"
 msgstr "打开或者写入客户端错误"
 
@@ -51,10 +47,6 @@ msgstr ""
 #, python-format
 msgid "Not found for %s"
 msgstr "没有找到%s"
-
-#, python-format
-msgid "Original exception being dropped: %s"
-msgstr "原始异常正在减少：%s"
 
 msgid "Problem deleting consumer"
 msgstr "删除用户时出错"
@@ -104,18 +96,5 @@ msgstr "处理工作任务：'%s' 时出现问题。"
 msgid "Suppressing exception while trying to process task '%s'."
 msgstr "当尝试去处理任务 '%s' 时清除异常。"
 
-#, python-format
-msgid "Unexpected exception occurred %d time(s)... retrying."
-msgstr "意想不到的异常发生%d time(s)...重试。"
-
-msgid "Unhandled exception"
-msgstr "未处理的异常"
-
 msgid "Webob error seen"
 msgstr "Webob出错"
-
-msgid "in dynamic looping call"
-msgstr "动态循环调用"
-
-msgid "in fixed duration looping call"
-msgstr "在固定的时间循环调用"
