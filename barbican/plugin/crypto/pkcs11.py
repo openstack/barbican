@@ -485,7 +485,7 @@ class PKCS11(object):
         ck_attributes = self.build_attributes([
             Attribute(CKA_CLASS, CKO_SECRET_KEY),
             Attribute(CKA_KEY_TYPE, CKK_AES),
-            Attribute(CKA_LABEL, mkek_label)
+            Attribute(CKA_LABEL, str(mkek_label))
         ])
         rv = self.lib.C_FindObjectsInit(
             session, ck_attributes.template, len(ck_attributes.template)
@@ -541,6 +541,44 @@ class PKCS11(object):
 
         self.check_error(rv)
         return object_handle_ptr[0]
+
+    def rewrap_kek(self, iv, wrapped_key, hmac, mkek_label, hmac_label,
+                   key_length, session):
+        unwrapped_kek = self.unwrap_key(iv, hmac, wrapped_key, mkek_label,
+                                        hmac_label, session)
+        mkek = self.key_handles[self.current_mkek_label]
+
+        iv = self.generate_random(16, session)
+        mech = self.ffi.new("CK_MECHANISM *")
+        mech.mechanism = CKM_AES_CBC_PAD
+        mech.parameter = iv
+        mech.parameter_len = 16
+
+        padded_length = key_length + self.block_size
+
+        buf = self.ffi.new("CK_BYTE[{0}]".format(padded_length))
+        buf_len = self.ffi.new("CK_ULONG *", padded_length)
+
+        rv = self.lib.C_WrapKey(
+            session,
+            mech,
+            mkek,
+            unwrapped_kek,
+            buf,
+            buf_len
+        )
+        self.check_error(rv)
+
+        wrapped_kek = self.ffi.buffer(buf, buf_len[0])[:]
+        hmac = self.compute_hmac(wrapped_kek, session)
+
+        return {
+            'iv': base64.b64encode(self.ffi.buffer(iv)[:]),
+            'wrapped_key': base64.b64encode(wrapped_kek),
+            'hmac': base64.b64encode(hmac),
+            'mkek_label': self.current_mkek_label,
+            'hmac_label': self.current_hmac_label
+        }
 
     def generate_wrapped_kek(self, kek_label, key_length, session):
         # generate a non-persistent key that is extractable
