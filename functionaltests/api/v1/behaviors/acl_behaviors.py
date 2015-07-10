@@ -49,8 +49,27 @@ class AclBehaviors(base_behaviors.BaseBehaviors):
         :return: The response of the GET.
         """
         resp = self.client.get(
-            acl_ref, response_model_type=acl_models.aclModel,
+            acl_ref, response_model_type=acl_models.AclModel,
             user_name=user_name)
+
+        return resp
+
+    def update_acl(self, acl_ref, model, extra_headers=None,
+                   use_auth=True, user_name=None):
+        """Update an acl from the data in the model.
+
+        :param acl_ref: Reference of the acl to be updated
+        :param model: The metadata used to update the acl
+        :param extra_headers: Headers used to update the acl
+        :param use_auth: Boolean for whether to send authentication headers
+        :param user_name: The user name used to update the acl
+
+        :return: the response from the PATCH request
+        """
+        resp = self.client.patch(
+            acl_ref, request_model=model, extra_headers=extra_headers,
+            response_model_type=acl_models.AclModel,
+            use_auth=use_auth, user_name=user_name)
 
         return resp
 

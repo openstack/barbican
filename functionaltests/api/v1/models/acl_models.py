@@ -18,7 +18,7 @@ from functionaltests.api.v1.models.base_models import BaseModel
 
 class AclModel(BaseModel):
 
-    def __init__(self, entity_ref=None, read=None):
+    def __init__(self, acl_ref=None, read=None):
         super(AclModel, self).__init__()
-        self.entity_ref = entity_ref
+        self.acl_ref = acl_ref
         self.read = read
