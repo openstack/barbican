@@ -16,6 +16,7 @@ import datetime
 import mock
 import testtools
 
+from barbican.common import utils as common_utils
 from barbican.model import models
 from barbican.plugin.interface import certificate_manager as cm
 from barbican.tests import utils
@@ -33,7 +34,8 @@ class WhenTestingCertificateEventPluginManager(testtools.TestCase):
         self.retry_in_msec = 5432
 
         self.plugin_returned = mock.MagicMock()
-        self.plugin_name = 'mock.MagicMock'
+        self.plugin_name = common_utils.generate_fullname_for(
+            self.plugin_returned)
         self.plugin_loaded = mock.MagicMock(obj=self.plugin_returned)
         self.manager = cm.EVENT_PLUGIN_MANAGER
         self.manager.extensions = [self.plugin_loaded]
@@ -111,7 +113,8 @@ class WhenTestingCertificatePluginManager(utils.BaseTestCase,
         self.cert_spec = {}
 
         self.plugin_returned = mock.MagicMock()
-        self.plugin_name = 'mock.MagicMock'
+        self.plugin_name = common_utils.generate_fullname_for(
+            self.plugin_returned)
         types_list = [cm.CertificateRequestType.SIMPLE_CMC_REQUEST,
                       cm.CertificateRequestType.CUSTOM_REQUEST]
         self.plugin_returned.supported_request_types.return_value = types_list
@@ -275,7 +278,7 @@ class WhenTestingCertificatePluginManager(utils.BaseTestCase,
         self.ca_repo.get_by_create_date.side_effect = side_effect
 
         self.manager.refresh_ca_table()
-        self.plugin_returned.get_ca_info.assert_called_once()
+        self.plugin_returned.get_ca_info.assert_called_once_with()
         self.ca_repo.update_entity.assert_called_once_with(
             ca1,
             ca1_modified_info)
@@ -283,4 +286,4 @@ class WhenTestingCertificatePluginManager(utils.BaseTestCase,
         self.ca_repo.delete_entity_by_id.assert_called_once_with(
             ca2.id,
             None)
-        self.ca_repo.create_from.assert_called_once()
+        self.ca_repo.create_from.assert_has_calls([])

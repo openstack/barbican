@@ -132,33 +132,34 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
         self.sample_secret = get_sample_symmetric_key()
 
-        self.secret_store.client.open = mock.MagicMock(proxy.KMIPProxy.open)
-        self.secret_store.client.close = mock.MagicMock(proxy.KMIPProxy.close)
+        self.secret_store.client.open = mock.MagicMock(proxy.KMIPProxy().open)
+        self.secret_store.client.close = mock.MagicMock(
+            proxy.KMIPProxy().close)
 
         self.secret_store.client.create = mock.MagicMock(
-            proxy.KMIPProxy.create, return_value=results.CreateResult(
+            proxy.KMIPProxy().create, return_value=results.CreateResult(
                 contents.ResultStatus(enums.ResultStatus.SUCCESS),
                 uuid=attr.UniqueIdentifier(
                     self.symmetric_key_uuid)))
 
         self.secret_store.client.create_key_pair = mock.MagicMock(
-            proxy.KMIPProxy.create_key_pair,
+            proxy.KMIPProxy().create_key_pair,
             return_value=results.CreateKeyPairResult(
                 contents.ResultStatus(enums.ResultStatus.SUCCESS),
                 private_key_uuid=attr.UniqueIdentifier(self.private_key_uuid),
                 public_key_uuid=attr.UniqueIdentifier(self.public_key_uuid)))
 
         self.secret_store.client.register = mock.MagicMock(
-            proxy.KMIPProxy.register, return_value=results.RegisterResult(
+            proxy.KMIPProxy().register, return_value=results.RegisterResult(
                 contents.ResultStatus(enums.ResultStatus.SUCCESS),
                 uuid=attr.UniqueIdentifier('uuid')))
 
         self.secret_store.client.destroy = mock.MagicMock(
-            proxy.KMIPProxy.destroy, return_value=results.DestroyResult(
+            proxy.KMIPProxy().destroy, return_value=results.DestroyResult(
                 contents.ResultStatus(enums.ResultStatus.SUCCESS)))
 
         self.secret_store.client.get = mock.MagicMock(
-            proxy.KMIPProxy.get, return_value=results.GetResult(
+            proxy.KMIPProxy().get, return_value=results.GetResult(
                 contents.ResultStatus(enums.ResultStatus.SUCCESS),
                 object_type=attr.ObjectType(enums.ObjectType.SYMMETRIC_KEY),
                 secret=self.sample_secret))
@@ -243,7 +244,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
     def test_generate_symmetric_key_server_error_occurs(self):
         self.secret_store.client.create = mock.MagicMock(
-            proxy.KMIPProxy.create, return_value=results.CreateResult(
+            proxy.KMIPProxy().create, return_value=results.CreateResult(
                 contents.ResultStatus(enums.ResultStatus.OPERATION_FAILED)))
 
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.AES,
@@ -319,7 +320,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
     def test_generate_asymmetric_key_server_error_occurs(self):
         self.secret_store.client.create_key_pair = mock.MagicMock(
-            proxy.KMIPProxy.create_key_pair,
+            proxy.KMIPProxy().create_key_pair,
             return_value=results.CreateKeyPairResult(
                 contents.ResultStatus(enums.ResultStatus.OPERATION_FAILED)))
 
@@ -577,7 +578,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
     def test_store_secret_server_error_occurs(self):
         self.secret_store.client.register = mock.MagicMock(
-            proxy.KMIPProxy.register, return_value=results.RegisterResult(
+            proxy.KMIPProxy().register, return_value=results.RegisterResult(
                 contents.ResultStatus(enums.ResultStatus.OPERATION_FAILED)))
 
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.AES,
@@ -692,7 +693,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
                         key_format_type, expected_secret, pkcs1_only):
         self.secret_store.pkcs1_only = pkcs1_only
         self.secret_store.client.get = mock.MagicMock(
-            proxy.KMIPProxy.get, return_value=results.GetResult(
+            proxy.KMIPProxy().get, return_value=results.GetResult(
                 contents.ResultStatus(enums.ResultStatus.SUCCESS),
                 object_type=attr.ObjectType(kmip_type),
                 secret=kmip_secret))
@@ -713,7 +714,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         sample_secret = self.sample_secret
         sample_secret.key_block.key_value.key_material = 'invalid_type'
         self.secret_store.client.get = mock.MagicMock(
-            proxy.KMIPProxy.get, return_value=results.GetResult(
+            proxy.KMIPProxy().get, return_value=results.GetResult(
                 contents.ResultStatus(enums.ResultStatus.SUCCESS),
                 object_type=attr.ObjectType(enums.ObjectType.SYMMETRIC_KEY),
                 secret=sample_secret))
@@ -726,7 +727,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
     def test_get_secret_symmetric_server_error_occurs(self):
         self.secret_store.client.get = mock.MagicMock(
-            proxy.KMIPProxy.get, return_value=results.GetResult(
+            proxy.KMIPProxy().get, return_value=results.GetResult(
                 contents.ResultStatus(enums.ResultStatus.OPERATION_FAILED)))
         metadata = {kss.KMIPSecretStore.KEY_UUID: self.symmetric_key_uuid}
         self.assertRaises(
@@ -763,7 +764,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
     def test_delete_secret_server_error_occurs(self):
         self.secret_store.client.destroy = mock.MagicMock(
-            proxy.KMIPProxy.destroy, return_value=results.DestroyResult(
+            proxy.KMIPProxy().destroy, return_value=results.DestroyResult(
                 contents.ResultStatus(enums.ResultStatus.OPERATION_FAILED)))
         metadata = {kss.KMIPSecretStore.KEY_UUID: self.symmetric_key_uuid}
         self.assertRaises(
