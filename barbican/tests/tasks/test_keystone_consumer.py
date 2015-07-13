@@ -250,7 +250,7 @@ class WhenUsingKeystoneEventConsumerProcessMethod(
                                    operation_type='deleted')
         self.assertIsNone(result, 'No return is expected as result')
 
-        mock_handle_success.assert_called()
+        mock_handle_success.assert_has_calls([])
         _, kwargs = mock_handle_success.call_args
         self.assertEqual(self.project_id1, kwargs['project_id'])
         self.assertEqual('project', kwargs['resource_type'])
