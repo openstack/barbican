@@ -224,7 +224,7 @@ function create_barbican_accounts {
 
 function install_389_directory_server {
     # Make sure that 127.0.0.1 resolves to localhost.localdomain (fqdn)
-    sudo sed -i "s/^127\.0\.0\.1.*/127\.0\.0\.1\tlocalhost.localdomain localhost/" /etc/hosts
+    sudo sed -i 's/127.0.0.1[ \t]*localhost localhost.localdomain/127.0.0.1\tlocalhost.localdomain localhost/' /etc/hosts
 
     install_package 389-ds-base
     sudo mkdir -p /etc/389-ds
@@ -271,6 +271,7 @@ pki_clone_pkcs12_password=PASSWORD
 pki_ds_base_dn=dc=ca,dc=example,dc=com
 pki_ds_database=ca
 pki_ds_password=PASSWORD
+pki_hostname=localhost
 pki_security_domain_name=EXAMPLE
 pki_token_password=PASSWORD
 pki_https_port=8373
@@ -305,7 +306,6 @@ function install_dogtag_kra {
     # default will get the real host name for the server. So we need to
     # properly configure the KRA to try to communicate with the real host name
     # instead of the localhost.
-    hostname=$(hostname)
     cat > .tmp.kra.cfg <<EOF
 [KRA]
 pki_admin_cert_file=/root/.dogtag/pki-tomcat/ca_admin.cert
@@ -322,6 +322,7 @@ pki_clone_pkcs12_password=PASSWORD
 pki_ds_base_dn=dc=kra,dc=example,dc=com
 pki_ds_database=kra
 pki_ds_password=PASSWORD
+pki_hostname=localhost
 pki_security_domain_name=EXAMPLE
 pki_security_domain_user=caadmin
 pki_security_domain_password=PASSWORD
@@ -330,7 +331,7 @@ pki_https_port=8373
 pki_http_port=8370
 pki_ajp_port=8379
 pki_tomcat_server_port=8375
-pki_security_domain_hostname=$hostname
+pki_security_domain_hostname=localhost
 pki_security_domain_https_port=8373
 EOF
 
