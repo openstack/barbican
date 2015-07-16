@@ -37,6 +37,7 @@ from kmip.core.objects import KeyMaterialStruct
 from kmip.core.objects import KeyValue
 from kmip.core.objects import TemplateAttribute
 from kmip.core.secrets import Certificate
+from kmip.core.secrets import OpaqueObject as Opaque
 from kmip.core.secrets import PrivateKey
 from kmip.core.secrets import PublicKey
 from kmip.core.secrets import SecretData
@@ -516,6 +517,10 @@ class KMIPSecretStore(ss.SecretStoreBase):
             kmip_object = Certificate(
                 certificate_type=enums.CertificateTypeEnum.X_509,
                 certificate_value=normalized_secret)
+        elif object_type == enums.ObjectType.OPAQUE_DATA:
+            opaque_type = Opaque.OpaqueDataType(enums.OpaqueDataType.NONE)
+            opaque_value = Opaque.OpaqueDataValue(normalized_secret)
+            kmip_object = Opaque(opaque_type, opaque_value)
         elif (object_type == enums.ObjectType.SYMMETRIC_KEY or
               object_type == enums.ObjectType.SECRET_DATA or
               object_type == enums.ObjectType.PRIVATE_KEY or
@@ -559,6 +564,10 @@ class KMIPSecretStore(ss.SecretStoreBase):
         if object_type == enums.ObjectType.CERTIFICATE.value:
             certificate = result.secret
             secret_value = certificate.certificate_value.value
+            key_spec = ss.KeySpec()
+        elif object_type == enums.ObjectType.OPAQUE_DATA.value:
+            opaque_secret = result.secret
+            secret_value = opaque_secret.opaque_data_value.value
             key_spec = ss.KeySpec()
         elif (object_type == enums.ObjectType.SYMMETRIC_KEY.value or
               object_type == enums.ObjectType.PRIVATE_KEY.value or
@@ -628,7 +637,8 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :returns: A KMIP Usage Mask attribute specific to the object type
         """
         if (kmip_type == enums.ObjectType.SYMMETRIC_KEY or
-                kmip_type == enums.ObjectType.SECRET_DATA):
+                kmip_type == enums.ObjectType.SECRET_DATA or
+                kmip_type == enums.ObjectType.OPAQUE_DATA):
             flags = [enums.CryptographicUsageMask.ENCRYPT,
                      enums.CryptographicUsageMask.DECRYPT]
         elif (kmip_type == enums.ObjectType.PUBLIC_KEY or
@@ -689,6 +699,8 @@ class KMIPSecretStore(ss.SecretStoreBase):
             return enums.ObjectType.CERTIFICATE, enums.KeyFormatType.X_509
         elif object_type == ss.SecretType.PASSPHRASE:
             return enums.ObjectType.SECRET_DATA, enums.KeyFormatType.RAW
+        elif object_type == ss.SecretType.OPAQUE:
+            return enums.ObjectType.OPAQUE_DATA, enums.KeyFormatType.RAW
         else:
             return None, None
 
