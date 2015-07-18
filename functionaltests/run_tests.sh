@@ -35,8 +35,9 @@ retval=$?
 testr slowest
 
 # run the tests in parallel
+SKIP=^\(\?\!\.\*ProjectQuotasPagingTestCase\)
 testr init
-testr run --parallel --subunit | subunit-trace --no-failure-debug -f
+testr run $SKIP --parallel --subunit | subunit-trace --no-failure-debug -f
 retval=$?
 testr slowest
 

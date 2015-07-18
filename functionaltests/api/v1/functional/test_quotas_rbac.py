@@ -56,7 +56,7 @@ test_data_rbac_get_project_quotas = {
 
 test_data_rbac_set_project_quotas = {
     'with_service_admin': {'user': service_admin, 'admin': service_admin,
-                           'expected_return': 200},
+                           'expected_return': 204},
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 403},
     'with_creator_a': {'user': creator_a, 'admin': admin_a,
@@ -125,7 +125,7 @@ class RBACQuotasTestCase(base.TestCase):
         :param admin: the admin of the group owning quotas
         :param expected_return: the expected http return code
         """
-        resp, _ = self.behaviors.get_project_quotas_list(user_name=user)
+        resp, _, _, _ = self.behaviors.get_project_quotas_list(user_name=user)
         self.assertEqual(expected_return, resp.status_code)
 
     @utils.parameterized_dataset(test_data_rbac_set_project_quotas)

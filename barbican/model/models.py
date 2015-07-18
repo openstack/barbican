@@ -1242,3 +1242,76 @@ class ContainerACLUser(BASE, ModelBase):
         """Sub-class hook method: return dict of fields."""
         return {'acl_id': self.acl_id,
                 'user_id': self.user_id}
+
+
+class ProjectQuotas(BASE, ModelBase):
+    """Stores Project Quotas.
+
+    Class to define project specific resource quotas.
+
+    Project quota deletes are not soft-deletes.
+    """
+
+    __tablename__ = 'project_quotas'
+
+    project_id = sa.Column(
+        sa.String(36),
+        # TODO(dave): enforce project exists
+        # sa.ForeignKey('projects.id', name='project_quotas_fk'),
+        index=True,
+        nullable=False)
+    secrets = sa.Column(sa.Integer, nullable=True)
+    orders = sa.Column(sa.Integer, nullable=True)
+    containers = sa.Column(sa.Integer, nullable=True)
+    transport_keys = sa.Column(sa.Integer, nullable=True)
+    consumers = sa.Column(sa.Integer, nullable=True)
+
+    __table_args__ = (sa.UniqueConstraint('project_id',
+                                          name='project_quotas_uc'),)
+
+    def __init__(self, project_id=None, parsed_project_quotas=None):
+        """Creates Project Quotas entity from a project and a dict.
+
+        :param project_id: the id of the project whose quotas are to be stored
+        :param parsed_project_quotas: a dict with the keys matching the
+        resources for which quotas are to be set, and the values containing
+        the quota value to be set for this project and that resource.
+        :return: None
+        """
+        super(ProjectQuotas, self).__init__()
+
+        msg = u._("Must supply non-None {0} argument for ProjectQuotas entry.")
+
+        if project_id is None:
+            raise exception.MissingArgumentError(msg.format("project_id"))
+        self.project_id = project_id
+
+        if parsed_project_quotas is None:
+            self.secrets = None
+            self.orders = None
+            self.containers = None
+            self.transport_keys = None
+            self.consumers = None
+        else:
+            self.secrets = parsed_project_quotas.get('secrets')
+            self.orders = parsed_project_quotas.get('orders')
+            self.containers = parsed_project_quotas.get('containers')
+            self.transport_keys = parsed_project_quotas.get('transport_keys')
+            self.consumers = parsed_project_quotas.get('consumers')
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        ret = {
+            'project_id': self.project_id,
+        }
+        if self.secrets:
+            ret['secrets'] = self.secrets
+        if self.orders:
+            ret['orders'] = self.orders
+        if self.containers:
+            ret['containers'] = self.containers
+        if self.transport_keys:
+            ret['transport_keys'] = self.transport_keys
+        if self.consumers:
+            ret['consumers'] = self.consumers
+        return ret
