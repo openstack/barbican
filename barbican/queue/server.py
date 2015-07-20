@@ -52,6 +52,11 @@ MAP_RETRY_TASKS = {
 }
 
 
+def find_function_name(func, if_no_name=None):
+    """Returns pretty-formatted function name."""
+    return getattr(func, '__name__', if_no_name)
+
+
 def retryable_order(fn):
     """Provides retry/scheduling support to Order-related tasks."""
 
@@ -64,6 +69,10 @@ def retryable_order(fn):
             LOG.info(
                 u._LI("Scheduled RPC method for retry: '%s'"),
                 retry_rpc_method)
+        else:
+            LOG.info(
+                u._LI("Task '%s' did not have to be retried"),
+                find_function_name(fn, if_no_name='???'))
 
     return wrapper
 
@@ -73,7 +82,7 @@ def transactional(fn):
 
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
-        fn_name = getattr(fn, '__name__', '????')
+        fn_name = find_function_name(fn, if_no_name='???')
 
         if not queue.is_server_side():
             # Non-server mode directly invokes tasks.
@@ -84,7 +93,9 @@ def transactional(fn):
             try:
                 fn(*args, **kwargs)
                 repositories.commit()
-                LOG.info(u._LI("Completed worker task: '%s'"), fn_name)
+                LOG.info(
+                    u._LI("Completed worker task (post-commit): '%s'"),
+                    fn_name)
             except Exception:
                 """NOTE: Wrapped functions must process with care!
 
@@ -158,8 +169,7 @@ def schedule_order_retry_tasks(
 
     elif common.RetryTasks.INVOKE_SAME_TASK == retry_result.retry_task:
         if invoked_task:
-            retry_rpc_method = getattr(
-                invoked_task, '__name__', None)
+            retry_rpc_method = find_function_name(invoked_task)
 
     else:
         retry_rpc_method = MAP_RETRY_TASKS.get(retry_result.retry_task)

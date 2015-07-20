@@ -27,8 +27,9 @@ from oslo_log import log
 
 
 class DatabaseManager(object):
-    """Builds and executes a CLI parser to manage the Barbican
+    """Database Manager class.
 
+    Builds and executes a CLI parser to manage the Barbican database
     This extends the Alembic commands.
     """
 

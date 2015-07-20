@@ -2,7 +2,7 @@
 # Install and start **Barbican** service
 
 # To enable a minimal set of Barbican features, add the following to localrc:
-#   enable_service barbican
+#   enable_service barbican-svc barbican-retry
 #
 # Dependencies:
 # - functions
@@ -54,6 +54,31 @@ TEMPEST_SERVICES+=,barbican
 
 # Functions
 # ---------
+
+# TODO(john-wood-w) These 'magic' functions are called by devstack to enable
+# a given service (so the name between 'is_' and '_enabled'). Currently the
+# Zuul infra gate configuration (at https://github.com/openstack-infra/project-config/blob/master/jenkins/jobs/barbican.yaml)
+# only enables the 'barbican' service. So the two functions below, for the two
+# services we wish to run, have to key off of that lone 'barbican' selection.
+# Once the Zuul config is updated to add these two services properly, then
+# these functions should be replaced by the single method below.
+# !!!! Special thanks to rm_work for figuring this out !!!!
+function is_barbican-retry_enabled {
+    [[ ,${ENABLED_SERVICES} =~ ,"barbican" ]] && return 0
+}
+
+function is_barbican-svc_enabled {
+    [[ ,${ENABLED_SERVICES} =~ ,"barbican" ]] && return 0
+}
+
+# TODO(john-wood-w) Replace the above two functions with the one below once
+# Zuul is update per above.
+## Test if any Barbican services are enabled
+## is_barbican_enabled
+#function is_barbican_enabled {
+#    [[ ,${ENABLED_SERVICES} =~ ,"barbican-" ]] && return 0
+#    return 1
+#}
 
 # cleanup_barbican - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
@@ -175,7 +200,16 @@ function install_barbicanclient {
 
 # start_barbican - Start running processes, including screen
 function start_barbican {
-    screen_it barbican "uwsgi --master --emperor $BARBICAN_CONF_DIR/vassals"
+    # Start the Barbican service up.
+    run_process barbican-svc "uwsgi --master --emperor $BARBICAN_CONF_DIR/vassals"
+
+    # Pause while the barbican-svc populates the database, otherwise the retry
+    # service below might try to do this at the same time, leading to race
+    # conditions.
+    sleep 10
+
+    # Start the retry scheduler server up.
+    run_process barbican-retry "$BARBICAN_BIN_DIR/barbican-retry --config-file=$BARBICAN_CONF_DIR/barbican-api.conf"
 }
 
 # stop_barbican - Stop running processes
@@ -187,7 +221,9 @@ function stop_barbican {
 
     # This cleans up the PID file, but uses pkill so Barbican
     # uWSGI emperor process doesn't actually stop
-    screen_stop barbican
+    stop_process barbican-svc
+
+    stop_process barbican-retry
 }
 
 function get_id {

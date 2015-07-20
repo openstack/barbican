@@ -56,6 +56,13 @@ class BaseTask(object):
         For Liberty, we might want to consider a workflow manager instead of
         these process_xxxx() method as shown here:
         https://gist.github.com/jfwood/a8130265b0db3c793ec8
+
+        :param args: List of arguments passed in from the client.
+        :param kwargs: Dict of arguments passed in from the client.
+        :return: Returns :class:`FollowOnProcessingStatusDTO` if follow-on
+                 processing (such as retrying this or another task) is
+                 required, otherwise a None return indicates that no
+                 follow-on processing is required.
         """
         try:
             return self.process(*args, **kwargs)

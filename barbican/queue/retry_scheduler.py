@@ -87,17 +87,13 @@ class PeriodicServer(service.Service):
         :return: Return the number of seconds to wait before invoking this
             method again.
         """
-        LOG.info(u._LI("Processing scheduled retry tasks:"))
-
-        # Retrieve tasks to retry.
-        entities, _, _, total = self.order_retry_repo.get_by_create_date(
-            only_at_or_before_this_date=datetime.datetime.utcnow(),
-            suppress_exception=True)
-
-        # Create RPC tasks for each retry task found.
-        if total > 0:
-            for task in entities:
-                self._enqueue_task(task)
+        total_tasks_processed = 0
+        try:
+            total_tasks_processed = self._process_retry_tasks()
+        except Exception:
+            LOG.exception(
+                u._LE("Problem seen processing scheduled retry tasks")
+            )
 
         # Return the next delay before this method is invoked again.
         check_again_in_seconds = _compute_next_periodic_interval()
@@ -105,16 +101,45 @@ class PeriodicServer(service.Service):
             u._LI("Done processing '%(total)s' tasks, will check again in "
                   "'%(next)s' seconds."),
             {
-                'total': total,
+                'total': total_tasks_processed,
                 'next': check_again_in_seconds
             }
         )
         return check_again_in_seconds
 
+    def _process_retry_tasks(self):
+        """Scan for and then re-queue tasks that are ready to retry."""
+        LOG.info(u._LI("Processing scheduled retry tasks:"))
+
+        # Retrieve tasks to retry.
+        entities, total = self._retrieve_tasks()
+
+        # Create RPC tasks for each retry task found.
+        for task in entities:
+            self._enqueue_task(task)
+
+        return total
+
+    def _retrieve_tasks(self):
+        """Retrieve a list of tasks to retry."""
+        repositories.start()
+        try:
+            entities, _, _, total = self.order_retry_repo.get_by_create_date(
+                only_at_or_before_this_date=datetime.datetime.utcnow(),
+                suppress_exception=True)
+        finally:
+            repositories.clear()
+
+        return entities, total
+
     def _enqueue_task(self, task):
+        """Re-enqueue the specified task."""
         retry_task_name = 'N/A'
         retry_args = 'N/A'
         retry_kwargs = 'N/A'
+
+        # Start a new isolated database transaction just for this task.
+        repositories.start()
         try:
             # Invoke queue client to place retried RPC task on queue.
             retry_task_name = task.retry_task

@@ -31,6 +31,10 @@ INITIAL_DELAY_SECONDS = 5.0
 NEXT_RETRY_SECONDS = 5.0
 
 
+def is_interval_in_expected_range(interval):
+    return NEXT_RETRY_SECONDS * .8 <= interval < NEXT_RETRY_SECONDS * 1.2
+
+
 class WhenRunningPeriodicServerRetryLogic(database_utils.RepositoryTestCase):
     """Tests the retry logic invoked by the periodic task retry server.
 
@@ -65,9 +69,7 @@ class WhenRunningPeriodicServerRetryLogic(database_utils.RepositoryTestCase):
     def test_should_perform_retry_processing_no_tasks(self):
         interval = self.periodic_server._check_retry_tasks()
 
-        self.assertEqual(
-            True,
-            NEXT_RETRY_SECONDS * .8 <= interval < NEXT_RETRY_SECONDS * 1.2)
+        self.assertTrue(is_interval_in_expected_range(interval))
 
     def test_should_perform_retry_processing_one_task(self):
         # Add one retry task.
@@ -86,9 +88,7 @@ class WhenRunningPeriodicServerRetryLogic(database_utils.RepositoryTestCase):
             suppress_exception=True)
         self.assertEqual(0, total)
 
-        self.assertEqual(
-            True,
-            NEXT_RETRY_SECONDS * .8 <= interval < NEXT_RETRY_SECONDS * 1.2)
+        self.assertTrue(is_interval_in_expected_range(interval))
         self.queue_client.test_task.assert_called_once_with(
             *args, **kwargs
         )
@@ -112,6 +112,18 @@ class WhenRunningPeriodicServerRetryLogic(database_utils.RepositoryTestCase):
         entities, _, _, total = retry_repo.get_by_create_date(
             suppress_exception=True)
         self.assertEqual(1, total)
+
+    @mock.patch('barbican.model.repositories.get_order_retry_tasks_repository')
+    def test_should_fail_process_retry(self, mock_get_repo):
+        mock_get_repo.return_value.get_by_create_date.side_effect = \
+            Exception()
+
+        periodic_server_with_mock_repo = retry_scheduler.PeriodicServer(
+            queue_resource=self.queue_client)
+
+        interval = periodic_server_with_mock_repo._check_retry_tasks()
+
+        self.assertTrue(is_interval_in_expected_range(interval))
 
     def _create_retry_task(self):
         # Add one retry task:
