@@ -282,6 +282,10 @@ class BarbicanClient(object):
         """Proxies the request method specifically for http DELETE methods."""
         return self.request('DELETE', *args, **kwargs)
 
+    def patch(self, *args, **kwargs):
+        """Proxies the request method specifically for http PATCH methods."""
+        return self.request('PATCH', *args, **kwargs)
+
     def get_user_id_from_name(self, user_name):
         if user_name and self._auth[user_name]:
             return self._auth[user_name].get_user_id()
