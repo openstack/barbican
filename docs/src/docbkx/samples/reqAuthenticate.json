@@ -1,8 +1,0 @@
-curl -i  'http://endpointURL/v2.0/tokens' -X 'POST' \
-     -d '{"auth":{"tenantName": "admin",
-                  "passwordCredentials:
-                            {"username":"admin",
-                             "password":"devstack"}}}' \ 
-     -H "Accept: application/json"
-     -H "Content-Type:
-        application/json" | python -m json.tool 
