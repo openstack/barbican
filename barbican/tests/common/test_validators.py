@@ -1343,5 +1343,32 @@ class WhenTestingAclValidator(utils.BaseTestCase):
                           acl_req)
 
 
+class WhenTestingProjectQuotasValidator(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenTestingProjectQuotasValidator, self).setUp()
+        self.good_project_quotas = {"project_quotas":
+                                    {"secrets": 50,
+                                     "orders": 10,
+                                     "containers": 20}}
+        self.bad_project_quotas = {"bad key": "bad value"}
+        self.validator = validators.ProjectQuotaValidator()
+
+    def test_should_pass_good_data(self):
+        self.validator.validate(self.good_project_quotas)
+
+    def test_should_pass_empty_properties(self):
+        self.validator.validate({"project_quotas": {}})
+
+    def test_should_raise_bad_data(self):
+        self.assertRaises(excep.InvalidObject,
+                          self.validator.validate,
+                          self.bad_project_quotas)
+
+    def test_should_raise_empty_dict(self):
+        self.assertRaises(excep.InvalidObject,
+                          self.validator.validate,
+                          {})
+
+
 if __name__ == '__main__':
     unittest.main()
