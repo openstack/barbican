@@ -228,6 +228,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('bit_length', exception.invalid_property)
+        self.assertIn('bit_length', exception.message)
 
     def test_should_raise_non_integer_bit_length(self):
         self.secret_req['bit_length'] = "23"
@@ -238,6 +239,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('bit_length', exception.invalid_property)
+        self.assertIn('bit_length', exception.message)
 
     def test_validation_should_raise_with_empty_payload(self):
         self.secret_req['payload'] = '   '
@@ -248,6 +250,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('payload', exception.invalid_property)
+        self.assertIn('payload', exception.message)
 
     def test_should_raise_already_expired(self):
         self.secret_req['expiration'] = '2004-02-28T19:14:44.180394'
@@ -258,6 +261,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('expiration', exception.invalid_property)
+        self.assertIn('expiration', exception.message)
 
     def test_should_raise_expiration_nonsense(self):
         self.secret_req['expiration'] = 'nonsense'
@@ -268,6 +272,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('expiration', exception.invalid_property)
+        self.assertIn('expiration', exception.message)
 
     def test_should_raise_all_nulls(self):
         self.secret_req = {'name': None,
