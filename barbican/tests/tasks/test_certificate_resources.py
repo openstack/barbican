@@ -766,6 +766,30 @@ class WhenCheckingCertificateRequests(BaseCertificateRequestsTestCase):
             cert_res.ORDER_STATUS_CA_UNAVAIL_FOR_CHECK.message,
             self.result_follow_on.status_message)
 
+    def _do_pyopenssl_stored_key_request(self):
+        self.order_meta.update(self.stored_key_meta)
+
+        pkey = crypto.PKey()
+        pkey.generate_key(crypto.TYPE_RSA, 2048)
+        key_pem = crypto.dump_privatekey(
+            crypto.FILETYPE_PEM, pkey)
+        self.private_key_value = base64.b64encode(key_pem)
+        self.public_key_value = "public_key"
+        self.passphrase_value = None
+        self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
+
+        self._test_should_return_waiting_for_ca(
+            cert_res.issue_certificate_request)
+
+        self._test_should_return_certificate_generated(
+            cert_res.check_certificate_request)
+
+    def test_should_return_for_pyopenssl_stored_key(self):
+        self._do_pyopenssl_stored_key_request()
+        self._verify_check_certificate_plugins_called()
+        self.assertIsNotNone(
+            self.order.order_barbican_meta.get('generated_csr'))
+
     def _verify_check_certificate_plugins_called(self):
         self.cert_plugin.check_certificate_status.assert_called_once_with(
             self.order.id,
@@ -774,7 +798,7 @@ class WhenCheckingCertificateRequests(BaseCertificateRequestsTestCase):
             self.barbican_meta_dto
         )
 
-        self.mock_save_plugin.assert_called_once_with(
+        self.mock_save_plugin.assert_called_with(
             self.order,
             self.plugin_meta
         )

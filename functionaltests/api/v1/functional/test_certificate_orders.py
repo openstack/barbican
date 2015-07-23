@@ -221,7 +221,7 @@ class CertificatesTestCase(base.TestCase):
                 return ca.model.ca_id
         return None
 
-    def verify_cert_returned(self, order_resp):
+    def verify_cert_returned(self, order_resp, is_stored_key_type=False):
         container_ref = order_resp.model.container_ref
         self.assertIsNotNone(container_ref, "no cert container returned")
 
@@ -233,6 +233,8 @@ class CertificatesTestCase(base.TestCase):
         self.assertIsNotNone(secret_refs, "container has no secret refs")
 
         contains_cert = False
+        contains_private_key_ref = False
+
         for secret in secret_refs:
             if secret.name == 'certificate':
                 contains_cert = True
@@ -241,8 +243,14 @@ class CertificatesTestCase(base.TestCase):
             if secret.name == 'intermediates':
                 self.assertIsNotNone(secret.secret_ref)
                 self.verify_valid_intermediates(secret.secret_ref)
+            if is_stored_key_type:
+                if secret.name == 'private_key':
+                    contains_private_key_ref = True
+                    self.assertIsNotNone(secret.secret_ref)
 
         self.assertTrue(contains_cert)
+        if is_stored_key_type:
+            self.assertTrue(contains_private_key_ref)
 
     def verify_valid_cert(self, secret_ref):
         secret_resp = self.secret_behaviors.get_secret(
@@ -536,7 +544,7 @@ class CertificatesTestCase(base.TestCase):
 
         order_resp = self.wait_for_order(order_ref)
         self.assertEqual('ACTIVE', order_resp.model.status)
-        self.verify_cert_returned(order_resp)
+        self.verify_cert_returned(order_resp, is_stored_key_type=True)
 
     @testtools.testcase.attr('negative')
     def test_create_stored_key_order_with_invalid_container_ref(self):
