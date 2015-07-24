@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 1.0.0.0b2.dev23\n"
+"Project-Id-Version: barbican 1.0.0.0b2.dev48\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-07-09 06:18+0000\n"
+"POT-Creation-Date: 2015-07-24 06:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -59,6 +59,14 @@ msgstr ""
 #: barbican/api/controllers/containers.py:207
 #, python-format
 msgid "Created a container for project: %s"
+msgstr ""
+
+#: barbican/api/controllers/quotas.py:87
+msgid "Post Project Quotas"
+msgstr ""
+
+#: barbican/api/controllers/quotas.py:97
+msgid "Delete Project Quotas"
 msgstr ""
 
 #: barbican/api/controllers/secrets.py:90
@@ -137,45 +145,55 @@ msgstr ""
 msgid "Invoking notify_ca_is_unavailable()"
 msgstr ""
 
-#: barbican/queue/retry_scheduler.py:90
-msgid "Processing scheduled retry tasks:"
-msgstr ""
-
-#: barbican/queue/retry_scheduler.py:105
+#: barbican/queue/retry_scheduler.py:101
 #, python-format
 msgid "Done processing '%(total)s' tasks, will check again in '%(next)s' seconds."
 msgstr ""
 
-#: barbican/queue/server.py:65
+#: barbican/queue/retry_scheduler.py:112
+msgid "Processing scheduled retry tasks:"
+msgstr ""
+
+#: barbican/queue/server.py:70
 #, python-format
 msgid "Scheduled RPC method for retry: '%s'"
 msgstr ""
 
-#: barbican/queue/server.py:81 barbican/queue/server.py:87
+#: barbican/queue/server.py:74
+#, python-format
+msgid "Task '%s' did not have to be retried"
+msgstr ""
+
+#: barbican/queue/server.py:90
 #, python-format
 msgid "Completed worker task: '%s'"
 msgstr ""
 
-#: barbican/queue/server.py:209
+#: barbican/queue/server.py:97
+#, python-format
+msgid "Completed worker task (post-commit): '%s'"
+msgstr ""
+
+#: barbican/queue/server.py:219
 #, python-format
 msgid "Processing type order: order ID is '%s'"
 msgstr ""
 
-#: barbican/queue/server.py:221
+#: barbican/queue/server.py:231
 #, python-format
 msgid "Processing update order: order ID is '%s'"
 msgstr ""
 
-#: barbican/queue/server.py:233
+#: barbican/queue/server.py:243
 #, python-format
 msgid "Processing check certificate status on order: order ID is '%s'"
 msgstr ""
 
-#: barbican/queue/server.py:268
+#: barbican/queue/server.py:278
 msgid "Starting the TaskServer"
 msgstr ""
 
-#: barbican/queue/server.py:273
+#: barbican/queue/server.py:283
 msgid "Halting the TaskServer"
 msgstr ""
 
