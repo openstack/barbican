@@ -132,7 +132,7 @@ function configure_barbican {
 
     # Format logging
     if [ "$LOG_COLOR" == "True" ] && [ "$SYSLOG" == "False" ]; then
-        setup_colorized_logging $BARBICAN_CONF DEFAULT "project_id" "user_id"
+        setup_colorized_logging $BARBICAN_CONF DEFAULT project user
     fi
 
     # Install the policy file for the API server
