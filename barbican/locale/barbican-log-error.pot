@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 1.0.0.0b2.dev23\n"
+"Project-Id-Version: barbican 1.0.0.0b2.dev48\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-07-09 06:18+0000\n"
+"POT-Creation-Date: 2015-07-24 06:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -69,10 +69,17 @@ msgstr ""
 msgid "Problem getting container %s"
 msgstr ""
 
-#: barbican/plugin/kmip_secret_store.py:380
-#: barbican/plugin/kmip_secret_store.py:418
-#: barbican/plugin/kmip_secret_store.py:468
+#: barbican/plugin/kmip_secret_store.py:260
+#: barbican/plugin/kmip_secret_store.py:319
+#: barbican/plugin/kmip_secret_store.py:381
+#: barbican/plugin/kmip_secret_store.py:419
+#: barbican/plugin/kmip_secret_store.py:469
 msgid "Error opening or writing to client"
+msgstr ""
+
+#: barbican/plugin/kmip_secret_store.py:743
+#, python-format
+msgid "ERROR from KMIP server: %s"
 msgstr ""
 
 #: barbican/plugin/util/utils.py:46
@@ -80,14 +87,18 @@ msgstr ""
 msgid "Problem seen creating plugin: '%s'"
 msgstr ""
 
-#: barbican/queue/retry_scheduler.py:138
+#: barbican/queue/retry_scheduler.py:95
+msgid "Problem seen processing scheduled retry tasks"
+msgstr ""
+
+#: barbican/queue/retry_scheduler.py:163
 #, python-format
 msgid ""
 "Problem enqueuing method '%(name)s' with args '%(args)s' and kwargs "
 "'%(kwargs)s'."
 msgstr ""
 
-#: barbican/queue/server.py:96
+#: barbican/queue/server.py:107
 #, python-format
 msgid "Problem seen processing worker task: '%s'"
 msgstr ""
@@ -100,27 +111,27 @@ msgid ""
 "error message=%(message)s"
 msgstr ""
 
-#: barbican/tasks/resources.py:64
+#: barbican/tasks/resources.py:71
 #, python-format
 msgid "Suppressing exception while trying to process task '%s'."
 msgstr ""
 
-#: barbican/tasks/resources.py:89
+#: barbican/tasks/resources.py:96
 #, python-format
 msgid "Could not retrieve information needed to process task '%s'."
 msgstr ""
 
-#: barbican/tasks/resources.py:97
+#: barbican/tasks/resources.py:104
 #, python-format
 msgid "Could not perform processing for task '%s'."
 msgstr ""
 
-#: barbican/tasks/resources.py:107
+#: barbican/tasks/resources.py:114
 #, python-format
 msgid "Problem handling an error for task '%s', raising original exception."
 msgstr ""
 
-#: barbican/tasks/resources.py:116
+#: barbican/tasks/resources.py:123
 #, python-format
 msgid "Could not process after successfully executing task '%s'."
 msgstr ""
