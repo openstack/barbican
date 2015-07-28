@@ -178,6 +178,7 @@ class BaseTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
                                           project_id=project_id)
 
             # Force an exception early past the RBAC passing.
+            type(self.req).body = mock.PropertyMock(side_effect=IOError)
             self.req.body_file = self._generate_stream_for_exit()
             exception = self.assertRaises(exc.HTTPServerError,
                                           method_under_test)
@@ -284,10 +285,10 @@ class WhenTestingSecretsResource(BaseTestCase):
                                content_type='application/json')
 
     def _invoke_on_post(self):
-        self.resource.on_post(self.req, self.resp, self.external_project_id)
+        self.resource.on_post(self.req, self.resp)
 
     def _invoke_on_get(self):
-        self.resource.on_get(self.req, self.resp, self.external_project_id)
+        self.resource.on_get(self.req, self.resp)
 
 
 class WhenTestingSecretResource(BaseTestCase):
@@ -653,8 +654,7 @@ class WhenTestingSecretResource(BaseTestCase):
     # @mock.patch.object(secrets.SecretController, 'get_acl_tuple',
     #                   return_value=(None, None))
     def _invoke_on_get(self):
-        self.resource.on_get(self.req, self.resp,
-                             self.external_project_id)
+        self.resource.on_get(self.req, self.resp)
 
     def _invoke_on_get_without_context(self):
         # Adding this to get code coverage around context check lines
@@ -663,12 +663,10 @@ class WhenTestingSecretResource(BaseTestCase):
                              self.external_project_id)
 
     def _invoke_on_put(self):
-        self.resource.on_put(self.req, self.resp,
-                             self.external_project_id)
+        self.resource.on_put(self.req, self.resp)
 
     def _invoke_on_delete(self):
-        self.resource.on_delete(self.req, self.resp,
-                                self.external_project_id)
+        self.resource.on_delete(self.req, self.resp)
 
 
 class WhenTestingContainerResource(BaseTestCase):
@@ -700,6 +698,7 @@ class WhenTestingContainerResource(BaseTestCase):
             project_access=True, user_ids=[self.user_id, 'anyRandomId'])
         self.acl_list = [acl_read]
         container = mock.MagicMock()
+        container.to_dict_fields = mock.MagicMock(side_effect=IOError)
         container.id = self.container_id
         container.container_acls.__iter__.return_value = self.acl_list
         container.project.external_id = self.external_project_id
@@ -888,22 +887,18 @@ class WhenTestingContainerResource(BaseTestCase):
                                self._invoke_on_delete)
 
     def _invoke_on_get(self):
-        self.resource.on_get(self.req, self.resp,
-                             self.external_project_id)
+        self.resource.on_get(self.req, self.resp)
 
     def _invoke_on_get_without_context(self):
         # Adding this to get code coverage around context check lines
         self.req.environ.pop('barbican.context')
-        self.resource.on_get(self.req, self.resp,
-                             self.external_project_id)
+        self.resource.on_get(self.req, self.resp)
 
     def _invoke_on_put(self):
-        self.resource.on_put(self.req, self.resp,
-                             self.external_project_id)
+        self.resource.on_put(self.req, self.resp)
 
     def _invoke_on_delete(self):
-        self.resource.on_delete(self.req, self.resp,
-                                self.external_project_id)
+        self.resource.on_delete(self.req, self.resp)
 
 
 class WhenTestingOrdersResource(BaseTestCase):
@@ -946,10 +941,10 @@ class WhenTestingOrdersResource(BaseTestCase):
                                self._invoke_on_get)
 
     def _invoke_on_post(self):
-        self.resource.on_post(self.req, self.resp, self.external_project_id)
+        self.resource.on_post(self.req, self.resp)
 
     def _invoke_on_get(self):
-        self.resource.on_get(self.req, self.resp, self.external_project_id)
+        self.resource.on_get(self.req, self.resp)
 
 
 class WhenTestingOrderResource(BaseTestCase):
@@ -991,10 +986,10 @@ class WhenTestingOrderResource(BaseTestCase):
                                self._invoke_on_delete)
 
     def _invoke_on_get(self):
-        self.resource.on_get(self.req, self.resp, self.external_project_id)
+        self.resource.on_get(self.req, self.resp)
 
     def _invoke_on_delete(self):
-        self.resource.on_delete(self.req, self.resp, self.external_project_id)
+        self.resource.on_delete(self.req, self.resp)
 
 
 class WhenTestingConsumersResource(BaseTestCase):
@@ -1050,13 +1045,13 @@ class WhenTestingConsumersResource(BaseTestCase):
                                content_type='application/json')
 
     def _invoke_on_post(self):
-        self.resource.on_post(self.req, self.resp, self.external_project_id)
+        self.resource.on_post(self.req, self.resp)
 
     def _invoke_on_delete(self):
-        self.resource.on_delete(self.req, self.resp, self.external_project_id)
+        self.resource.on_delete(self.req, self.resp)
 
     def _invoke_on_get(self):
-        self.resource.on_get(self.req, self.resp, self.external_project_id)
+        self.resource.on_get(self.req, self.resp)
 
 
 class WhenTestingConsumerResource(BaseTestCase):
@@ -1090,4 +1085,4 @@ class WhenTestingConsumerResource(BaseTestCase):
                                self._invoke_on_get)
 
     def _invoke_on_get(self):
-        self.resource.on_get(self.req, self.resp, self.external_project_id)
+        self.resource.on_get(self.req, self.resp)
