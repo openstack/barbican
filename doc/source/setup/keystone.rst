@@ -32,7 +32,7 @@ the get version call.
     .. code-block:: ini
 
         [pipeline:barbican_api]
-        pipeline = keystone_authtoken context apiapp_v1
+        pipeline = keystone_authtoken context apiapp
 
    2. Replace ``keystone_authtoken`` filter values to match your Keystone
       setup

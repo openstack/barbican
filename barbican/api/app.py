@@ -86,7 +86,7 @@ def main_app(func):
 
 
 @main_app
-def create_main_app_v1(global_config, **local_conf):
+def create_main_app(global_config, **local_conf):
     """uWSGI factory method for the Barbican-API application."""
     # Setup app with transactional hook enabled
     return build_wsgi_app(versions.V1Controller(), transactional=True)
