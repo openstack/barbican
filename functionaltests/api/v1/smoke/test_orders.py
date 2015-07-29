@@ -164,7 +164,7 @@ class OrdersTestCase(base.TestCase):
 
         # create 11 orders
         test_model = order_models.OrderModel(**self.create_default_data)
-        for i in xrange(0, 11):
+        for i in range(0, 11):
             create_resp, order_ref = self.behaviors.create_order(test_model)
             self.assertEqual(create_resp.status_code, 202)
             self.assertIsNotNone(order_ref)
