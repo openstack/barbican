@@ -10,7 +10,7 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
-import httplib
+from six.moves import http_client
 
 
 host = "localhost"
@@ -47,7 +47,7 @@ def get_demo_token(password):
 
 def ping_barbican(token_id):
     headers = {'X_AUTH_TOKEN': token_id, 'X_IDENTITY_STATUS': 'Confirmed'}
-    connection = httplib.HTTPConnection(host, port, timeout=timeout)
+    connection = http_client.HTTPConnection(host, port, timeout=timeout)
     connection.request(method, path, None, headers)
     response = connection.getresponse().read()
     connection.close()

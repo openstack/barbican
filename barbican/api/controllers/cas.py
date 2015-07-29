@@ -12,9 +12,8 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
-import urllib
-
 import pecan
+from six.moves.urllib import parse
 
 from barbican.api import controllers
 from barbican.common import hrefs
@@ -260,11 +259,11 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
 
         plugin_name = kw.get('plugin_name')
         if plugin_name is not None:
-            plugin_name = urllib.unquote_plus(plugin_name)
+            plugin_name = parse.unquote_plus(plugin_name)
 
         plugin_ca_id = kw.get('plugin_ca_id', None)
         if plugin_ca_id is not None:
-            plugin_ca_id = urllib.unquote_plus(plugin_ca_id)
+            plugin_ca_id = parse.unquote_plus(plugin_ca_id)
 
         result = self.ca_repo.get_by_create_date(
             offset_arg=kw.get('offset', 0),

@@ -260,7 +260,7 @@ def wrap_db_error(f):
                     raise
         except sqlalchemy.exc.DBAPIError:
             raise
-    _wrap.func_name = f.func_name
+    _wrap.__name__ = f.__name__
     return _wrap
 
 
