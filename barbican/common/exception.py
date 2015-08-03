@@ -364,7 +364,8 @@ class InvalidObject(BarbicanHTTPException):
         self.message = u._("Failed to validate JSON information: ")
         self.client_message = u._("Provided object does not match "
                                   "schema '{schema}': "
-                                  "{reason}").format(*args, **kwargs)
+                                  "{reason}. Invalid property: "
+                                  "'{property}'").format(*args, **kwargs)
         self.message = self.message + self.client_message
         super(InvalidObject, self).__init__(*args, **kwargs)
 
