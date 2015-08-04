@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import mock
+import six
 
 from barbican.common import utils
 from barbican.tests import utils as test_utils
@@ -118,7 +119,7 @@ class WhenTestingGenerateFullClassnameForInstance(test_utils.BaseTestCase):
         test_string = "foo"
         fullname = utils.generate_fullname_for(test_string)
         self.assertEqual(0, fullname.count("."))
-        self.assertNotIn("__builtin__", fullname)
+        self.assertNotIn(six.moves.builtins.__name__, fullname)
 
     def test_returns_class_name_on_null_module(self):
         self.instance.__class__.__module__ = None

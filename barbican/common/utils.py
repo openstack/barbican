@@ -23,6 +23,7 @@ import uuid
 
 from oslo_log import log
 import pecan
+import six
 
 from barbican.common import config
 from barbican import i18n as u
@@ -135,7 +136,7 @@ def generate_fullname_for(instance):
     module = type(instance).__module__
     class_name = type(instance).__name__
 
-    if module is None or module == "__builtin__":
+    if module is None or module == six.moves.builtins.__name__:
         return class_name
     return "{module}.{class_name}".format(module=module, class_name=class_name)
 
