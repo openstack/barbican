@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 1.0.0.0b3.dev5\n"
+"Project-Id-Version: barbican 1.0.0.0b3.dev8\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-08-03 06:15+0000\n"
+"POT-Creation-Date: 2015-08-04 06:29+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -655,88 +655,90 @@ msgid "Failed to validate JSON information: "
 msgstr ""
 
 #: barbican/common/exception.py:365
-msgid "Provided object does not match schema '{schema}': {reason}"
-msgstr ""
-
-#: barbican/common/exception.py:374
-msgid "Error while attempting to decode payload."
+msgid ""
+"Provided object does not match schema '{schema}': {reason}. Invalid "
+"property: '{property}'"
 msgstr ""
 
 #: barbican/common/exception.py:375
+msgid "Error while attempting to decode payload."
+msgstr ""
+
+#: barbican/common/exception.py:376
 msgid "Unable to decode request data."
 msgstr ""
 
-#: barbican/common/exception.py:379
+#: barbican/common/exception.py:380
 #, python-format
 msgid ""
 "No support for value set on field '%(field)s' on schema '%(schema)s': "
 "%(reason)s"
 msgstr ""
 
-#: barbican/common/exception.py:381
+#: barbican/common/exception.py:382
 msgid "Provided field value is not supported"
 msgstr ""
 
-#: barbican/common/exception.py:390
+#: barbican/common/exception.py:391
 #, python-format
 msgid ""
 "Feature not implemented for value set on field '%(field)s' on schema "
 "'%(schema)s': %(reason)s"
 msgstr ""
 
-#: barbican/common/exception.py:399
+#: barbican/common/exception.py:400
 #, python-format
 msgid "Provided header feature is unsupported: %(feature)s"
 msgstr ""
 
-#: barbican/common/exception.py:403
+#: barbican/common/exception.py:404
 msgid ""
 "The image cannot be deleted because it is in use through the backend "
 "store outside of Barbican."
 msgstr ""
 
-#: barbican/common/exception.py:408
+#: barbican/common/exception.py:409
 msgid "The provided image is too large."
 msgstr ""
 
-#: barbican/common/exception.py:412
+#: barbican/common/exception.py:413
 #, python-format
 msgid ""
 "Container %(container_id)s does not exist for stored key certificate "
 "generation."
 msgstr ""
 
-#: barbican/common/exception.py:417
+#: barbican/common/exception.py:418
 #, python-format
 msgid ""
 "Container %(container_id)s does not reference a private key needed for "
 "stored key certificate generation."
 msgstr ""
 
-#: barbican/common/exception.py:422
+#: barbican/common/exception.py:423
 #, python-format
 msgid "The provided UUID in the URI (%(uuid_string)s) is malformed."
 msgstr ""
 
-#: barbican/common/exception.py:424
+#: barbican/common/exception.py:425
 msgid "The provided UUID in the URI is malformed."
 msgstr ""
 
-#: barbican/common/exception.py:429
+#: barbican/common/exception.py:430
 #, python-format
 msgid "Invalid CA_ID: %(ca_id)s"
 msgstr ""
 
-#: barbican/common/exception.py:430
+#: barbican/common/exception.py:431
 msgid "The ca_id provided in the request is invalid"
 msgstr ""
 
-#: barbican/common/exception.py:435
+#: barbican/common/exception.py:436
 #, python-format
 msgid "CA specified by ca_id %(ca_id)s not defined for project: %(project_id)s"
 msgstr ""
 
-#: barbican/common/exception.py:437
+#: barbican/common/exception.py:438
 msgid "The ca_id provided in the request is not defined for this project"
 msgstr ""
 
