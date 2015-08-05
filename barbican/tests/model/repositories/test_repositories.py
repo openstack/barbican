@@ -13,12 +13,17 @@
 import mock
 import sqlalchemy
 
+from alembic import script as alembic_script
+
 from barbican.common import config
 from barbican.common import exception
+from barbican.model.migration import commands as migration
 from barbican.model import models
 from barbican.model import repositories
 from barbican.tests import database_utils
 from barbican.tests import utils
+
+from oslo_config import cfg
 
 
 class WhenCleaningRepositoryPagingParameters(utils.BaseTestCase):
@@ -321,3 +326,24 @@ class WhenTestingIsDbConnectionError(utils.BaseTestCase):
         result = repositories.is_db_connection_error(args)
 
         self.assertTrue(result)
+
+
+class WhenTestingMigrations(utils.BaseTestCase):
+
+    def setUp(self):
+        super(WhenTestingMigrations, self).setUp()
+        self.alembic_config = migration.init_config()
+        self.alembic_config.barbican_config = cfg.CONF
+
+    def test_no_downgrade(self):
+        script_dir = alembic_script.ScriptDirectory.from_config(
+            self.alembic_config)
+        versions = [v for v in script_dir.walk_revisions(base='base',
+                                                         head='heads')]
+        failed_revisions = []
+        for version in versions:
+            if hasattr(version.module, 'downgrade'):
+                failed_revisions.append(version.revision)
+
+        if failed_revisions:
+            self.fail('Migrations %s have downgrade' % failed_revisions)

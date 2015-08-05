@@ -28,7 +28,3 @@ def upgrade():
         sa.PrimaryKeyConstraint("id"),
         mysql_engine="InnoDB"
     )
-
-
-def downgrade():
-    op.drop_table("order_retry_tasks")

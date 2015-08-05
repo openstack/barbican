@@ -103,21 +103,3 @@ def upgrade():
                                        nullable=True))
     op.add_column(u'secrets', sa.Column('creator_id', sa.String(length=255),
                                         nullable=True))
-
-
-def downgrade():
-    op.drop_column(u'secrets', 'creator_id')
-    op.drop_column(u'orders', 'creator_id')
-    op.drop_column(u'containers', 'creator_id')
-    op.drop_index(op.f('ix_container_acl_users_acl_id'),
-                  table_name='container_acl_users')
-    op.drop_table('container_acl_users')
-    op.drop_index(op.f('ix_secret_acl_users_acl_id'),
-                  table_name='secret_acl_users')
-    op.drop_table('secret_acl_users')
-    op.drop_index(op.f('ix_container_acls_container_id'),
-                  table_name='container_acls')
-    op.drop_table('container_acls')
-    op.drop_index(op.f('ix_secret_acls_secret_id'),
-                  table_name='secret_acls')
-    op.drop_table('secret_acls')

@@ -126,9 +126,6 @@ instructions).
          barbican.model.models.py module, and also in the Alembic version
          modules when creating/dropping constraints, otherwise MySQL migrations
          might crash.
-      3. If only columns were added with no uniqueness constraints, you should
-         consider reordering the ``downgrade()`` lines to place them in the
-         same order as the ``upgrade()`` lines.
 
    d. **If you added new tables, follow this guidance**:
 
@@ -162,8 +159,7 @@ Manually
    Note that only the first 20 characters of the description are used.
 3. You can then edit this file per tutorial and the `Alembic Operation
    Reference`_ page for available operations you may make from the version
-   files. **You must properly fill in both the** ``upgrade()`` **and**
-   ``downgrade()`` **methods.**
+   files. **You must properly fill in the** ``upgrade()`` **methods.**
 
 Applying Changes
 -----------------
@@ -180,6 +176,11 @@ above be used to update the database schema per the 'Manually' section. Also,
 automatic database updates from the Barbican application should be disabled by
 adding/updating ``db_auto_create = False`` in the ``barbican.conf``
 configuration file.
+
+**Note** : Before attempting any upgrade, you should make a full database
+backup of your production data. As of Kilo, database downgrades are not
+supported in OpenStack, and the only method available to get back to a
+prior database version will be to restore from backup.
 
 Via Application
 ''''''''''''''''
@@ -211,9 +212,37 @@ To upgrade to a specific version, run this command:
 upgrade -v <Alembic-ID-of-version>``. The ``Alembic-ID-of-version`` is a
 unique ID assigned to the change such ``as1a0c2cdafb38``.
 
-To downgrade to a specific version, run this command:
-``bin/barbican-db-manage.py -d <Full URL to database, including user/pw>
-downgrade -v <Alembic-ID-of-version>``.
+Downgrade
+'''''''''
+
+Upgrades involve complex operations and can fail. Before attempting any upgrade,
+you should make a full database backup of your production data. As of Kilo,
+database downgrades are not supported, and the only method available to get back
+to a prior database version will be to restore from backup.
+
+You must complete these steps to successfully roll back your environment:
+
+1. Roll back configuration files.
+2. Restore databases from backup.
+3. Roll back packages.
+
+Rolling back upgrades is a tricky process because distributions tend to put
+much more effort into testing upgrades than downgrades. Broken downgrades
+often take significantly more effort to troubleshoot and resolve than broken
+upgrades. Only you can weigh the risks of trying to push a failed upgrade
+forward versus rolling it back. Generally, consider rolling back as the
+very last option.
+
+The backup instructions provided in `Backup tutorial`_ ensure that you have
+proper backups of your databases and configuration files. Read through this
+section carefully and verify that you have the requisite backups to restore.
+
+**Note** : The backup tutorial reference file only updated to Juno, DB backup
+operation will be similar for Kilo. The link will be updated when the reference
+has updated.
+
+For more information and examples about downgrade operation please
+see `Downgrade tutorial`_ as reference.
 
 TODO Items
 -----------
@@ -250,3 +279,5 @@ TODO Items
 .. _OpenStack and SQLAlchemy: https://wiki.openstack.org/wiki/OpenStack_and_SQLAlchemy#Migrations
 .. _What does Autogenerate Detect: http://alembic.readthedocs.org/en/latest/autogenerate.html#what-does-autogenerate-detect-and-what-does-it-not-detect
 .. _SQLAlchemy's server_default: http://docs.sqlalchemy.org/en/latest/core/metadata.html?highlight=column#sqlalchemy.schema.Column.params.server_default
+.. _Backup tutorial: http://docs.openstack.org/openstack-ops/content/upgrade-icehouse-juno.html#upgrade-icehouse-juno-backup
+.. _Downgrade tutorial: http://docs.openstack.org/openstack-ops/content/ops_upgrades-roll-back.html

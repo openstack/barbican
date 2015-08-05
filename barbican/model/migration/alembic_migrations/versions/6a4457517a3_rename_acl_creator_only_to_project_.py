@@ -33,22 +33,3 @@ def upgrade():
     # reverse existing flag value as project_access is negation of creator_only
     op.execute('UPDATE container_acls SET project_access = NOT project_access',
                execution_options={'autocommit': True})
-
-
-def downgrade():
-
-    ctx = op.get_context()
-    con = op.get_bind()
-
-    op.alter_column('secret_acls', 'project_access',
-                    existing_type=sa.BOOLEAN(), new_column_name='creator_only')
-
-    op.execute('UPDATE secret_acls SET creator_only = NOT creator_only',
-               execution_options={'autocommit': True})
-
-    op.alter_column('container_acls', 'project_access',
-                    existing_type=sa.BOOLEAN(),
-                    new_column_name='creator_only')
-
-    op.execute('UPDATE container_acls SET creator_only = NOT creator_only',
-               execution_options={'autocommit': True})

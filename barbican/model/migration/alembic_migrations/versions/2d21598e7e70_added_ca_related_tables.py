@@ -98,10 +98,3 @@ def upgrade():
             sa.PrimaryKeyConstraint('id', 'project_id'),
             sa.UniqueConstraint('project_id')
         )
-
-
-def downgrade():
-    op.drop_table('preferred_certificate_authorities')
-    op.drop_table('certificate_authority_metadata')
-    op.drop_table('project_certificate_authorities')
-    op.drop_table('certificate_authorities')

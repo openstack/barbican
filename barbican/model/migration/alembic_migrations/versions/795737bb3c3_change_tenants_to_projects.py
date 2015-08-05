@@ -30,17 +30,6 @@ def _change_fk_to_project(ctx, con, table, fk_old, fk_new):
     op.create_foreign_key(fk_new, table,
                           'projects', ['project_id'], ['id'])
 
-
-def _change_fk_to_tenant(ctx, con, table, fk_old):
-    _drop_constraint(ctx, con, table, fk_old)
-    op.alter_column(table, 'project_id',
-                    type_=sa.String(36),
-                    new_column_name='tenant_id')
-    op.create_foreign_key(
-        None,  # None -> auto-generate FK name based on dialect.
-        table, 'tenants', ['tenant_id'], ['id'])
-
-
 def upgrade():
     # project_secret table
     ctx = op.get_context()
@@ -87,53 +76,3 @@ def upgrade():
 
     _change_fk_to_project(
         ctx, con, 'orders', 'orders_ibfk_1', 'orders_project_fk')
-
-
-def downgrade():
-    # project_secret table
-    ctx = op.get_context()
-    con = op.get_bind()
-
-    # ---- Update project_secret table to tenant_secret:
-
-    _drop_constraint(ctx, con, 'project_secret', 'project_secret_project_fk')
-    _drop_constraint(ctx, con, 'project_secret', 'project_secret_secret_fk')
-
-    op.drop_constraint('_project_secret_uc',
-                       'project_secret',
-                       type_='unique')
-
-    op.rename_table('project_secret', 'tenant_secret')
-    op.alter_column('tenant_secret', 'project_id',
-                    type_=sa.String(36),
-                    new_column_name='tenant_id')
-
-    op.create_unique_constraint('_tenant_secret_uc', 'tenant_secret',
-                                ['tenant_id', 'secret_id'])
-
-    # ---- Update projects table to tenants:
-
-    op.rename_table('projects', 'tenants')
-
-    # re-create the foreign key constraints with explicit names.
-    op.create_foreign_key(
-        None,   # None -> auto-generate FK name based on dialect.
-        'tenant_secret', 'tenants', ['tenant_id'], ['id'])
-    op.create_foreign_key(
-        None,   # None -> auto-generate FK name based on dialect.
-        'tenant_secret', 'secrets', ['secret_id'], ['id'])
-
-    # ---- Update containers table:
-
-    _change_fk_to_tenant(
-        ctx, con, 'containers', 'containers_project_fk')
-
-    # ---- Update kek_data table:
-
-    _change_fk_to_tenant(
-        ctx, con, 'kek_data', 'kek_data_project_fk')
-
-    # ---- Update orders table:
-
-    _change_fk_to_tenant(
-        ctx, con, 'orders', 'orders_project_fk')

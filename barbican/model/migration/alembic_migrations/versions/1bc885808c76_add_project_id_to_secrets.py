@@ -21,9 +21,3 @@ def upgrade():
                     unique=False)
     op.create_foreign_key('secrets_project_fk', 'secrets', 'projects',
                           ['project_id'], ['id'])
-
-
-def downgrade():
-    op.drop_constraint('secrets_project_fk', 'secrets', type_='foreignkey')
-    op.drop_index(op.f('ix_secrets_project_id'), table_name='secrets')
-    op.drop_column('secrets', 'project_id')

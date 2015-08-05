@@ -16,7 +16,3 @@ import sqlalchemy as sa
 
 def upgrade():
     op.alter_column('kek_data', 'plugin_name', nullable=False)
-
-
-def downgrade():
-    op.alter_column('kek_data', 'plugin_name', nullable=True)

@@ -21,22 +21,3 @@ def upgrade():
     op.drop_column('orders', 'secret_expiration')
     op.drop_column('orders', 'secret_payload_content_type')
     op.drop_column('orders', 'secret_name')
-
-
-def downgrade():
-    op.add_column('orders', sa.Column('secret_name', sa.String(length=255),
-                                      nullable=True))
-    op.add_column('orders', sa.Column('secret_payload_content_type',
-                                      sa.String(length=255),
-                                      nullable=True))
-    op.add_column('orders', sa.Column('secret_expiration',
-                                      sa.DateTime(), nullable=True))
-    op.add_column('orders', sa.Column('secret_bit_length',
-                                      sa.Integer(),
-                                      autoincrement=False,
-                                      nullable=True))
-    op.add_column('orders', sa.Column('secret_algorithm',
-                                      sa.String(length=255),
-                                      nullable=True))
-    op.add_column('orders', sa.Column('secret_mode', sa.String(length=255),
-                                      nullable=True))
