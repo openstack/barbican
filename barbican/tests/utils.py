@@ -449,6 +449,11 @@ def get_symmetric_key():
     return s
 
 
+def get_triple_des_key():
+    s = "AQIDBAUGBwgBAgMEBQYHCAECAwQFBgcI"
+    return s
+
+
 def is_cert_valid(expected, observed):
     c1 = crypto.load_certificate(crypto.FILETYPE_PEM, expected)
     c2 = crypto.load_certificate(crypto.FILETYPE_PEM, observed)

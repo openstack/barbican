@@ -244,8 +244,8 @@ class KeyAlgorithm(object):
     HMACSHA1 = "hmacsha1"
     """Constant for the HMACSHA256 algorithm."""
     HMACSHA256 = "hmacsha256"
-    """Constant for the HMACSHA348 algorithm."""
-    HMACSHA348 = "hmacsha348"
+    """Constant for the HMACSHA384 algorithm."""
+    HMACSHA384 = "hmacsha384"
     """Constant for the HMACSHA512 algorithm."""
     HMACSHA512 = "hmacsha512"
     """List of asymmetric algorithms"""
@@ -258,7 +258,7 @@ class KeyAlgorithm(object):
     DESEDE = "desede"
     """List of symmetric algorithms"""
     SYMMETRIC_ALGORITHMS = [AES, DES, DESEDE, HMACSHA1,
-                            HMACSHA256, HMACSHA348, HMACSHA512]
+                            HMACSHA256, HMACSHA384, HMACSHA512]
 
 
 class KeySpec(object):
