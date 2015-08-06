@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-API application handler for Cloudkeep's Barbican
+API application handler for Barbican
 """
 import pecan
 

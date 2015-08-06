@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-Queue objects for Cloudkeep's Barbican
+Queue objects for Barbican
 """
 import oslo_messaging as messaging
 from oslo_messaging.notify import dispatcher as notfiy_dispatcher

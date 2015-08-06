@@ -240,8 +240,7 @@ class ContainerSecret(BASE, SoftDeleteMixIn, ModelBase):
 class Project(BASE, SoftDeleteMixIn, ModelBase):
     """Represents a Project in the datastore.
 
-    Projects are users that wish to store secret information within
-    Cloudkeep's Barbican.
+    Projects are users that wish to store secret information within Barbican.
     """
 
     __tablename__ = 'projects'
@@ -263,9 +262,8 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
     """Represents a Secret in the datastore.
 
     Secrets are any information Projects wish to store within
-    Cloudkeep's Barbican, though the actual encrypted data
-    is stored in one or more EncryptedData entities on behalf
-    of a Secret.
+    Barbican, though the actual encrypted data is stored in one
+    or more EncryptedData entities on behalf of a Secret.
     """
 
     __tablename__ = 'secrets'

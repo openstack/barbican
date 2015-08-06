@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-API handler for Cloudkeep's Barbican
+API handler for Barbican
 """
 import pkgutil
 

@@ -4,7 +4,7 @@
 # WARNING: This script is deprecated now. Please use the barbican.sh script instead.
 #####
 
-# barbican-api - Script run Cloudkeep's Barbican API app.
+# barbican-api - Script run Barbican API app.
 
 PKG=barbican
 

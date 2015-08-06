@@ -14,5 +14,5 @@
 # limitations under the License.
 
 """
-Task processing objects for Cloudkeep's Barbican
+Task processing objects for Barbican
 """

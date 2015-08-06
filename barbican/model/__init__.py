@@ -14,5 +14,5 @@
 # limitations under the License.
 
 """
-Model objects for Cloudkeep's Barbican
+Model objects for Barbican
 """
