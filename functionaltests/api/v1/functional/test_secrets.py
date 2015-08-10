@@ -833,7 +833,8 @@ class SecretsTestCase(base.TestCase):
         'array': [['boom']],
         'int': [123],
         'none': [None],
-        'bad_character': ['\u0080']
+        'bad_character': [unichr(0x0080)],
+        'bad_characters': [unichr(0x1111) + unichr(0xffff)]
     })
     @testcase.attr('negative')
     def test_secret_create_defaults_invalid_payload(self, payload):

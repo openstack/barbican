@@ -326,14 +326,12 @@ class NewSecretValidator(ValidatorBase):
         if payload_content_encoding == 'base64':
             try:
                 base64.b64decode(payload)
-            except TypeError:
+            except Exception:
                 LOG.exception("Problem parsing payload")
-                raise exception.InvalidObject(schema=schema_name,
-                                              reason=u._("Invalid payload "
-                                                         "for "
-                                                         "payload_content"
-                                                         "_encoding"),
-                                              property="payload")
+                raise exception.InvalidObject(
+                    schema=schema_name,
+                    reason=u._("Invalid payload for payload_content_encoding"),
+                    property="payload")
 
     def _extract_payload(self, json_data):
         """Extracts and returns the payload from the JSON data.
