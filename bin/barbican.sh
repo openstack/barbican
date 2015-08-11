@@ -93,12 +93,6 @@ install_barbican()
     # Install source code into the Python path as if packaged.
     pip install -e .
 
-    # If using pyenv, rehash now.
-    hash pyenv &> /dev/null
-    if [ $? -eq 0 ]; then
-       pyenv rehash
-    fi
-
     # Run unit tests
     python setup.py testr
 
