@@ -381,7 +381,19 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
     def test_validation_should_raise_with_bad_base64_payload(self):
         self.secret_req['payload_content_type'] = 'application/octet-stream'
         self.secret_req['payload_content_encoding'] = 'base64'
-        self.secret_req['payload'] = '\u0080'
+        self.secret_req['payload'] = 'bad base 64'
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.secret_req,
+        )
+        self.assertEqual('payload', exception.invalid_property)
+
+    def test_validation_should_raise_with_unicode_payload(self):
+        self.secret_req['payload_content_type'] = 'application/octet-stream'
+        self.secret_req['payload_content_encoding'] = 'base64'
+        self.secret_req['payload'] = unichr(0x0080)
 
         exception = self.assertRaises(
             excep.InvalidObject,
