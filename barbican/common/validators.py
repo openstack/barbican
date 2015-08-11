@@ -17,7 +17,7 @@ import abc
 import base64
 
 import jsonschema as schema
-import ldap
+from ldap3.utils.dn import parse_dn
 from OpenSSL import crypto
 from oslo_utils import timeutils
 import six
@@ -537,7 +537,7 @@ class TypeOrderValidator(ValidatorBase):
         If not, raise InvalidSubjectDN
         """
         try:
-            ldap.dn.str2dn(subject_dn)
+            parse_dn(subject_dn)
         except Exception:
             raise exception.InvalidSubjectDN(subject_dn=subject_dn)
 

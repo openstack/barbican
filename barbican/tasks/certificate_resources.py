@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ldap
+from ldap3.utils.dn import parse_dn
 from OpenSSL import crypto
 
 from barbican.common import exception as excep
@@ -332,7 +332,7 @@ def _generate_csr_from_private_key(order_model, project_model):
         )
 
     subject_name = order_model.meta.get('subject_dn')
-    subject_name_dns = ldap.dn.str2dn(subject_name)
+    subject_name_dns = parse_dn(subject_name)
     extensions = order_model.meta.get('extensions', None)
 
     req = crypto.X509Req()
@@ -341,8 +341,8 @@ def _generate_csr_from_private_key(order_model, project_model):
     # Note: must iterate over the DNs in reverse order, or the resulting
     # subject name will be reversed.
     for ava in reversed(subject_name_dns):
-        for key, val, extra in ava:
-            setattr(subj, key.upper(), val)
+        key, val, extra = ava
+        setattr(subj, key.upper(), val)
     req.set_pubkey(pkey)
     if extensions:
         # TODO(alee-3) We need code here to parse the encoded extensions and
