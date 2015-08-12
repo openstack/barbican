@@ -1,7 +1,7 @@
 Welcome to Barbican's developer documentation!
 ==============================================
 
-Barbican is an incubated OpenStack service that provides secure storage,
+Barbican is an OpenStack service that provides secure storage,
 provisioning and management of secret data.  This includes keying material such
 as Symmetric Keys, Asymmetric Keys, Certificates and raw binary data.
 
