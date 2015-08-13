@@ -769,7 +769,8 @@ class ContainerConsumerMetadatum(BASE, SoftDeleteMixIn, ModelBase):
             self.name = parsed_request.get('name')
             self.URL = parsed_request.get('URL')
             hash_text = ''.join((self.container_id, self.name, self.URL))
-            self.data_hash = hashlib.sha256(hash_text).hexdigest()
+            self.data_hash = hashlib.sha256(hash_text.
+                                            encode('utf-8')).hexdigest()
             self.status = States.ACTIVE
 
     def _do_extra_dict_fields(self):
