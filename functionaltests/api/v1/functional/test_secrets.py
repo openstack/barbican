@@ -85,7 +85,7 @@ def get_default_data():
 
 
 def get_default_payload():
-    return "gF6+lLoF3ohA9aPRpt+6bQ=="
+    return "AQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIAQIDBAUGBwg="
 
 
 @utils.parameterized_test_case
