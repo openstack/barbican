@@ -17,6 +17,8 @@
 Barbican defined mime-types
 """
 
+import six
+
 from barbican.common import utils
 
 
@@ -68,7 +70,7 @@ CTYPES_TO_ENCODINGS = {'text/plain': None,
 
 def normalize_content_type(mime_type):
     """Normalize the supplied content-type to an internal form."""
-    stripped = map(lambda x: x.strip(), mime_type.split(';'))
+    stripped = list(six.moves.map(lambda x: x.strip(), mime_type.split(';')))
     mime = stripped[0].lower()
     if len(stripped) > 1:
         # mime type includes charset
@@ -77,7 +79,8 @@ def normalize_content_type(mime_type):
             # charset is malformed
             return mime_type
         else:
-            charset = map(lambda x: x.strip(), charset_type.split('='))[1]
+            charset = list(six.moves.map(lambda x: x.strip(),
+                           charset_type.split('=')))[1]
             if charset not in PLAIN_TEXT_CHARSETS:
                 # unsupported charset
                 return mime_type

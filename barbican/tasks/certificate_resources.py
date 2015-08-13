@@ -328,7 +328,7 @@ def _generate_csr_from_private_key(order_model, project_model):
         pkey = crypto.load_privatekey(
             crypto.FILETYPE_PEM,
             private_key,
-            passphrase
+            passphrase.encode('utf-8')
         )
 
     subject_name = order_model.meta.get('subject_dn')

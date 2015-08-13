@@ -59,7 +59,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
     def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
         kek = self._get_kek(kek_meta_dto)
         unencrypted = encrypt_dto.unencrypted
-        if not isinstance(unencrypted, str):
+        if not isinstance(unencrypted, six.binary_type):
             raise ValueError(
                 u._(
                     'Unencrypted data must be a byte type, but was '
@@ -91,7 +91,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         return kek_meta_dto
 
     def generate_symmetric(self, generate_dto, kek_meta_dto, project_id):
-        byte_length = int(generate_dto.bit_length) / 8
+        byte_length = int(generate_dto.bit_length) // 8
         unencrypted = os.urandom(byte_length)
 
         return self.encrypt(c.EncryptDTO(unencrypted),

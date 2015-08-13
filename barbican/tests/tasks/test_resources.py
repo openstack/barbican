@@ -348,7 +348,7 @@ class WhenUpdatingOrder(BaseOrderTestCase):
             self.meta
         )
 
-        self.assertEqual('Abort!', exception.message)
+        self.assertEqual('Abort!', six.text_type(exception))
 
         mock_mod_cert.assert_called_once_with(self.order, self.meta)
 
