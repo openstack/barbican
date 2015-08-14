@@ -494,6 +494,24 @@ class BaseRepo(object):
         else:
             return []
 
+    def get_count(self, project_id, session=None):
+        """Gets count of entities associated with a given project
+
+        :param project_id: id of barbican project entity
+        :param session: existing db session reference. If None, gets session.
+        :return: an number 0 or greater
+
+        Sub-class should implement `_build_get_project_entities_query` function
+        to delete related entities otherwise it would raise NotImplementedError
+        on its usage.
+        """
+        session = self.get_session(session)
+        query = self._build_get_project_entities_query(project_id, session)
+        if query:
+            return query.count()
+        else:
+            return 0
+
     def delete_project_entities(self, project_id,
                                 suppress_exception=False,
                                 session=None):
@@ -1271,6 +1289,19 @@ class ContainerConsumerRepo(BaseRepo):
     def _do_validate(self, values):
         """Sub-class hook: validate values."""
         pass
+
+    def _build_get_project_entities_query(self, project_id, session):
+        """Builds query for retrieving consumers associated with given project
+
+        :param project_id: id of barbican project entity
+        :param session: existing db session reference.
+        """
+        query = session.query(
+            models.ContainerConsumerMetadatum).filter_by(deleted=False)
+        query = query.filter(
+            models.ContainerConsumerMetadatum.project_id == project_id)
+
+        return query
 
 
 class TransportKeyRepo(BaseRepo):

@@ -181,10 +181,12 @@ class WhenCreatingNewConsumer(utils.BaseTestCase):
         super(WhenCreatingNewConsumer, self).setUp()
         self.parsed_consumer = {'name': 'name',
                                 'URL': 'URL'}
+        self.project_id = '12345project'
         self.container_id = '12345container'
 
     def test_new_consumer_is_created_from_dict(self):
         consumer = models.ContainerConsumerMetadatum(self.container_id,
+                                                     self.project_id,
                                                      self.parsed_consumer)
         self.assertEqual(consumer.name, self.parsed_consumer['name'])
         self.assertEqual(consumer.URL, self.parsed_consumer['URL'])
@@ -192,12 +194,14 @@ class WhenCreatingNewConsumer(utils.BaseTestCase):
 
     def test_new_consumer_has_correct_hash(self):
         consumer_one = models.ContainerConsumerMetadatum(self.container_id,
+                                                         self.project_id,
                                                          self.parsed_consumer)
         consumer_two = models.ContainerConsumerMetadatum(self.container_id,
+                                                         self.project_id,
                                                          self.parsed_consumer)
         different_container = '67890container'
         consumer_three = models.ContainerConsumerMetadatum(
-            different_container, self.parsed_consumer)
+            different_container, self.project_id, self.parsed_consumer)
         self.assertEqual(consumer_one.data_hash, consumer_two.data_hash)
         self.assertNotEqual(consumer_one.data_hash, consumer_three.data_hash)
 

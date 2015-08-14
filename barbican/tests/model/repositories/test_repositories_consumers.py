@@ -36,7 +36,7 @@ class WhenTestingContainerConsumerRepository(utils.RepositoryTestCase):
 
         # Create a consumer.
         consumer = models.ContainerConsumerMetadatum(
-            container.id, {'name': 'name', 'URL': 'www.foo.com'})
+            container.id, project.id, {'name': 'name', 'URL': 'www.foo.com'})
         consumer.save(session=session)
 
         # Commit things so far, because the 'create_or_update_from' call below
@@ -48,7 +48,7 @@ class WhenTestingContainerConsumerRepository(utils.RepositoryTestCase):
         # Try to create a consumer on the container...should re-use the
         # one added above.
         consumer2 = models.ContainerConsumerMetadatum(
-            container.id, {'name': 'name', 'URL': 'www.foo.com'})
+            container.id, project.id, {'name': 'name', 'URL': 'www.foo.com'})
         self.repo.create_or_update_from(consumer2, container, session=session)
 
         container2 = self.repo_container.get(
@@ -68,7 +68,7 @@ class WhenTestingContainerConsumerRepository(utils.RepositoryTestCase):
 
         # Create a consumer.
         consumer = models.ContainerConsumerMetadatum(
-            container.id, {'name': 'name', 'URL': 'www.foo.com'})
+            container.id, project.id, {'name': 'name', 'URL': 'www.foo.com'})
         consumer.save(session=session)
 
         # Commit things so far, because the 'create_from' call below will
@@ -79,7 +79,7 @@ class WhenTestingContainerConsumerRepository(utils.RepositoryTestCase):
 
         # Create a new entity with the same composite key as the first one.
         consumer2 = models.ContainerConsumerMetadatum(
-            container.id, {'name': 'name', 'URL': 'www.foo.com'})
+            container.id, project.id, {'name': 'name', 'URL': 'www.foo.com'})
 
         exception_result = self.assertRaises(
             exception.Duplicate,
@@ -125,3 +125,64 @@ class WhenTestingContainerConsumerRepository(utils.RepositoryTestCase):
             session=session,
             suppress_exception=False,
             show_deleted=True)
+
+    def test_should_get_count_zero(self):
+        session = self.repo.get_session()
+
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        session.commit()
+        count = self.repo.get_count(project.id, session=session)
+
+        self.assertEqual(count, 0)
+
+    def test_should_get_count_one(self):
+        session = self.repo.get_session()
+
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        container = models.Container()
+        container.project_id = project.id
+        container.save(session=session)
+
+        consumer = models.ContainerConsumerMetadatum(
+            container.id, project.id, {'name': 'name', 'URL': 'www.foo.com'})
+        consumer.save(session=session)
+        session.commit()
+
+        count = self.repo.get_count(project.id, session=session)
+        self.assertEqual(count, 1)
+
+    def test_should_get_count_one_after_delete(self):
+        session = self.repo.get_session()
+
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        container = models.Container()
+        container.project_id = project.id
+        container.save(session=session)
+
+        consumer = models.ContainerConsumerMetadatum(
+            container.id, project.id, {'name': 'name1', 'URL': 'www.foo.com'})
+        consumer.save(session=session)
+
+        consumer = models.ContainerConsumerMetadatum(
+            container.id, project.id, {'name': 'name2', 'URL': 'www.foo.com'})
+        consumer.save(session=session)
+        session.commit()
+
+        count = self.repo.get_count(project.id, session=session)
+        self.assertEqual(count, 2)
+
+        self.repo.delete_entity_by_id(consumer.id, "my keystone id",
+                                      session=session)
+        session.commit()
+
+        count = self.repo.get_count(project.id, session=session)
+        self.assertEqual(count, 1)

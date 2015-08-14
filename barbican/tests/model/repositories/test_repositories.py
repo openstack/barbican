@@ -347,3 +347,34 @@ class WhenTestingMigrations(utils.BaseTestCase):
 
         if failed_revisions:
             self.fail('Migrations %s have downgrade' % failed_revisions)
+
+
+class DummyRepo(repositories.BaseRepo):
+    """Repository for the increasing code coverage of unit tests."""
+    def get_session(self, session=None):
+        return None
+
+    def _do_entity_name(self):
+        return "Dummy"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        return None
+
+    def _do_validate(self, values):
+        pass
+
+    def _build_get_project_entities_query(self, project_id, session):
+        return None
+
+
+class WhenIncreasingRepositoryTestCoverage(utils.BaseTestCase):
+
+    def test_get_count_should_return_zero(self):
+        dummy_repo = DummyRepo()
+        count = dummy_repo.get_count('dummy_project_id')
+        self.assertEqual(0, count)
+
+    def test_get_project_entities_should_return_empty(self):
+        dummy_repo = DummyRepo()
+        count = dummy_repo.get_project_entities('dummy_project_id')
+        self.assertEqual([], count)
