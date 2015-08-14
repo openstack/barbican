@@ -15,6 +15,7 @@ import pecan
 from barbican import api
 from barbican.api import controllers
 from barbican.common import hrefs
+from barbican.common import quota
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
@@ -127,6 +128,7 @@ class OrdersController(controllers.ACLMixin):
         self.order_repo = repo.get_order_repository()
         self.queue = queue_resource or async_client.TaskClient()
         self.type_order_validator = validators.TypeOrderValidator()
+        self.quota_enforcer = quota.QuotaEnforcer('orders')
 
     @pecan.expose()
     def _lookup(self, order_id, *remainder):
@@ -208,6 +210,8 @@ class OrdersController(controllers.ACLMixin):
                 validators.validate_stored_key_rsa_container(
                     external_project_id,
                     container_ref, pecan.request)
+
+        self.quota_enforcer.enforce(project)
 
         new_order = models.Order()
         new_order.meta = body.get('meta')

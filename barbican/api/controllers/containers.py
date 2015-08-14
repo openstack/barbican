@@ -18,6 +18,7 @@ from barbican.api.controllers import acls
 from barbican.api.controllers import consumers
 from barbican.common import exception
 from barbican.common import hrefs
+from barbican.common import quota
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
@@ -111,6 +112,7 @@ class ContainersController(controllers.ACLMixin):
         self.container_repo = repo.get_container_repository()
         self.secret_repo = repo.get_secret_repository()
         self.validator = validators.ContainerValidator()
+        self.quota_enforcer = quota.QuotaEnforcer('containers')
 
     @pecan.expose()
     def _lookup(self, container_id, *remainder):
@@ -177,6 +179,8 @@ class ContainersController(controllers.ACLMixin):
         ctxt = controllers._get_barbican_context(pecan.request)
         if ctxt:  # in authenticated pipleline case, always use auth token user
             data['creator_id'] = ctxt.user
+
+        self.quota_enforcer.enforce(project)
 
         LOG.debug('Start on_post...%s', data)
 
