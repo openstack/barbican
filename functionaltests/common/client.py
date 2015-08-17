@@ -46,6 +46,12 @@ class BarbicanClient(object):
             username=CONF.identity.username,
             password=CONF.identity.password,
             project_name=CONF.identity.project_name)
+        self._auth[CONF.identity.service_admin] = auth.FunctionalTestAuth(
+            endpoint=CONF.identity.uri,
+            version=CONF.identity.version,
+            username=CONF.identity.service_admin,
+            password=CONF.identity.service_admin_password,
+            project_name=CONF.identity.service_admin_project)
         self._auth[CONF.rbac_users.admin_a] = auth.FunctionalTestAuth(
             endpoint=CONF.identity.uri,
             version=CONF.identity.version,

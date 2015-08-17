@@ -66,6 +66,19 @@ if [[ "$ENABLED_SERVICES" =~ "barbican" ]]; then
         --user_id="$BARBICAN_USER" \
         --role_id="$ADMIN_ROLE"
     #
+    # Setup Default service-admin User
+    #
+    SERVICE_ADMIN=$(get_id keystone user-create \
+        --name="service-admin" \
+        --pass="$SERVICE_PASSWORD" \
+        --email="service_admin@example.com")
+    SERVICE_ADMIN_ROLE=$(get_id keystone role-create \
+        --name="key-manager:service-admin")
+    keystone user-role-add \
+        --tenant_id="$SERVICE_TENANT" \
+        --user_id="$SERVICE_ADMIN" \
+        --role_id="$SERVICE_ADMIN_ROLE"
+    #
     # Setup RBAC User Projects and Roles
     #
     USER_PASSWORD="barbican"
