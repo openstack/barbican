@@ -25,7 +25,7 @@ pbr<2.0,>=1.4
 pecan>=0.8.0
 pycrypto>=2.6
 pyOpenSSL>=0.14
-python-ldap>=2.4;python_version=='2.7'
+ldap3>=0.9.8.2 # LGPLv3
 keystonemiddleware>=2.0.0
 six>=1.9.0
 SQLAlchemy<1.1.0,>=0.9.7

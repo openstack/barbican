@@ -1295,13 +1295,19 @@ class WhenTestingStoredKeyOrderValidator(utils.BaseTestCase):
                           self.validator.validate,
                           self.order_req)
 
-    def test_should_pass_with_two_cn_in_dn(self):
-        self.meta['subject_dn'] = "CN=example1 CN=example2"
+    def test_should_pass_with_one_cn_in_dn(self):
+        self.meta['subject_dn'] = "CN=example1"
         self.validator.validate(self.order_req)
 
-    def test_should_pass_with_blank_dn(self):
-        self.meta['subject_dn'] = ""
+    def test_should_pass_with_two_cn_in_dn(self):
+        self.meta['subject_dn'] = "CN=example1,CN=example2"
         self.validator.validate(self.order_req)
+
+    def test_should_raise_with_blank_dn(self):
+        self.meta['subject_dn'] = ""
+        self.assertRaises(excep.InvalidSubjectDN,
+                          self.validator.validate,
+                          self.order_req)
 
     def test_should_raise_with_bad_subject_dn(self):
         self.meta['subject_dn'] = "Bad subject DN data"

@@ -228,7 +228,7 @@ class BaseCertificateRequestsTestCase(utils.BaseTestCase):
             cert_man.CertificateRequestType.STORED_KEY_REQUEST,
             "container_ref":
             "https://localhost/containers/" + self.container.id,
-            "subject_name": "cn=host.example.com,ou=dev,ou=us,o=example.com"
+            "subject_dn": "cn=host.example.com,ou=dev,ou=us,o=example.com"
         }
 
         self.order = models.Order()
