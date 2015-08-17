@@ -55,7 +55,7 @@ class ContainerController(controllers.ACLMixin):
         d['creator_id'] = self.container.creator_id
         return 'container', d
 
-    @pecan.expose(generic=True)
+    @pecan.expose(generic=True, template='json')
     def index(self, **kwargs):
         pecan.abort(405)  # HTTP 405 Method Not Allowed as default
 
@@ -121,7 +121,7 @@ class ContainersController(controllers.ACLMixin):
 
         return ContainerController(container), remainder
 
-    @pecan.expose(generic=True)
+    @pecan.expose(generic=True, template='json')
     def index(self, **kwargs):
         pecan.abort(405)  # HTTP 405 Method Not Allowed as default
 

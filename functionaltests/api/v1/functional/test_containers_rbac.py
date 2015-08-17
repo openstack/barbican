@@ -42,13 +42,13 @@ test_data_rbac_store_container = {
 
 test_data_rbac_update_container = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
-                     'expected_return': 406},
+                     'expected_return': 405},
     'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 406},
+                       'expected_return': 405},
     'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 406},
+                        'expected_return': 405},
     'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 406},
+                       'expected_return': 405},
 }
 
 
