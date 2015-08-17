@@ -29,7 +29,7 @@ LOG = utils.getLogger(__name__)
 
 MIME_TYPE_JSON = 'application/json'
 MIME_TYPE_JSON_HOME = 'application/json-home'
-MEDIA_TYPE_JSON = 'application/vnd.openstack.keymanagement-%s+json'
+MEDIA_TYPE_JSON = 'application/vnd.openstack.key-manager-%s+json'
 
 
 def _version_not_found():
