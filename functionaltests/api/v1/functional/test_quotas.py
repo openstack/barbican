@@ -35,7 +35,8 @@ class QuotasTestCase(base.TestCase):
     def setUp(self):
         super(QuotasTestCase, self).setUp()
         self.behaviors = quota_behaviors.QuotaBehaviors(self.client)
-        self.project_id = self.behaviors.get_project_id_from_name('admin')
+        self.project_id = self.behaviors.get_project_id_from_name(
+            CONF.identity.username)
 
     def tearDown(self):
         super(QuotasTestCase, self).tearDown()
