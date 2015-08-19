@@ -49,15 +49,3 @@ def upgrade():
             sa.DateTime(),
             nullable=False,
             server_default=str(timeutils.utcnow())))
-
-
-def downgrade():
-    op.drop_column('order_retry_tasks', 'created_at')
-    op.drop_column('order_retry_tasks', 'deleted')
-    op.drop_column('order_retry_tasks', 'deleted_at')
-    op.drop_column('order_retry_tasks', 'status')
-    op.drop_column('order_retry_tasks', 'updated_at')
-
-
-
-

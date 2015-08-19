@@ -48,7 +48,3 @@ def upgrade():
             sa.ForeignKeyConstraint(['secret_id'], ['secrets.id'],),
             sa.PrimaryKeyConstraint('id'),
         )
-
-
-def downgrade():
-    op.drop_table('secret_store_metadata')

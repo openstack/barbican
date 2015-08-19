@@ -33,7 +33,3 @@ def upgrade():
             sa.ForeignKeyConstraint(['order_id'], ['orders.id'], ),
             sa.PrimaryKeyConstraint('id')
         )
-
-
-def downgrade():
-    op.drop_table('order_barbican_metadata')

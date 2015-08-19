@@ -17,7 +17,3 @@ import sqlalchemy as sa
 def upgrade():
     op.add_column('secrets', sa.Column('secret_type', sa.String(length=255),
                   nullable=False, server_default="opaque"))
-
-
-def downgrade():
-    op.drop_column('secrets', 'secret_type')

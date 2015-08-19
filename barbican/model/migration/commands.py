@@ -62,12 +62,6 @@ def upgrade(to_version='head', sql_url=None):
     alembic_command.upgrade(alembic_cfg, to_version)
 
 
-def downgrade(to_version, sql_url=None):
-    """Downgrade to the specified version."""
-    alembic_cfg = init_config(sql_url)
-    alembic_command.downgrade(alembic_cfg, to_version)
-
-
 def history(verbose, sql_url=None):
     alembic_cfg = init_config(sql_url)
     alembic_command.history(alembic_cfg, verbose=verbose)

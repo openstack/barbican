@@ -40,7 +40,6 @@ class DatabaseManager(object):
             title='subcommands',
             description='Action to perform')
         self.add_revision_args()
-        self.add_downgrade_args()
         self.add_upgrade_args()
         self.add_history_args()
         self.add_current_args()
@@ -75,16 +74,6 @@ class DatabaseManager(object):
                                         'the latest/head if not specified.')
         create_parser.set_defaults(func=self.upgrade)
 
-    def add_downgrade_args(self):
-        """Create 'downgrade' command parser and arguments."""
-        create_parser = self.subparsers.add_parser('downgrade',
-                                                   help='Downgrade to a '
-                                                   'previous DB '
-                                                   'version file.')
-        create_parser.add_argument('--version', '-v', default='need version',
-                                   help='the version to downgrade back to.')
-        create_parser.set_defaults(func=self.downgrade)
-
     def add_history_args(self):
         """Create 'history' command parser and arguments."""
         create_parser = self.subparsers.add_parser(
@@ -114,10 +103,6 @@ class DatabaseManager(object):
     def upgrade(self, args):
         """Process the 'upgrade' Alembic command."""
         commands.upgrade(to_version=args.version, sql_url=args.dburl)
-
-    def downgrade(self, args):
-        """Process the 'downgrade' Alembic command."""
-        commands.downgrade(to_version=args.version, sql_url=args.dburl)
 
     def history(self, args):
         commands.history(args.verbose, sql_url=args.dburl)

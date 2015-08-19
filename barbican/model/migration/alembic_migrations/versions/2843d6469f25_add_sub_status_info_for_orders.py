@@ -17,9 +17,3 @@ import sqlalchemy as sa
 def upgrade():
     op.add_column('orders', sa.Column('sub_status', sa.String(length=36), nullable=True))
     op.add_column('orders', sa.Column('sub_status_message', sa.String(length=255), nullable=True))
-
-
-
-def downgrade():
-    op.drop_column('orders', 'sub_status')
-    op.drop_column('orders', 'sub_status_message')

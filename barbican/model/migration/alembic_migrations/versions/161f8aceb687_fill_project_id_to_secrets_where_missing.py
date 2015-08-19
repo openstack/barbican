@@ -37,11 +37,3 @@ def upgrade():
 
     # make project_id no longer nullable
     op.alter_column('secrets', 'project_id', nullable=False)
-
-
-def downgrade():
-    metadata = _get_database_metadata()
-    secrets = metadata.tables['secrets']
-    op.alter_column('secrets', 'project_id', nullable=True)
-    op.execute(secrets.update().
-               values({'project_id': None}))

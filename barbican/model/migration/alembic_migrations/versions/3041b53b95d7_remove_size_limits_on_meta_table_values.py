@@ -26,17 +26,3 @@ def upgrade():
         'value',
         type_=sa.Text()
     )
-
-
-def downgrade():
-    op.alter_column(
-        'order_barbican_metadata',
-        'value',
-        type_=sa.String(255)
-    )
-
-    op.alter_column(
-        'certificate_authority_metadata',
-        'value',
-        type_=sa.String(255)
-    )
