@@ -237,6 +237,10 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource |
 +------+-----------------------------------------------------------------------------+
+| 403  | Forbidden.  The user has been authenticated, but is not authorized to       |
+|      | create a container.  This can be based on the the user's role or the        |
+|      | project's quota.                                                            |
++------+-----------------------------------------------------------------------------+
 
 
 DELETE /v1/containers/{uuid}

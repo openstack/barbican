@@ -25,3 +25,4 @@ API Reference
     ./reference/containers
     ./reference/acls
     ./reference/certificates
+    ./reference/quotas
