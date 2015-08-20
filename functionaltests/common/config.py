@@ -32,7 +32,10 @@ def setup_config(config_file=''):
         cfg.StrOpt('password', default='secretadmin'),
         cfg.StrOpt('project_name', default='admin'),
         cfg.StrOpt('domain_name', default='Default'),
-        cfg.StrOpt('region', default='RegionOne')]
+        cfg.StrOpt('region', default='RegionOne'),
+        cfg.StrOpt('service_admin', default='service-admin'),
+        cfg.StrOpt('service_admin_project', default='service'),
+        cfg.StrOpt('service_admin_password', default='secretservice')]
     TEST_CONF.register_group(identity_group)
     TEST_CONF.register_opts(identity_options, group=identity_group)
 

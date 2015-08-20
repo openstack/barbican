@@ -3,11 +3,12 @@
     "observer": "role:observer",
     "creator_role": "role:creator",
     "audit": "role:audit",
+    "service_admin": "role:key-manager:service-admin",
     "admin_or_user_does_not_work": "project_id:%(project_id)s",
     "admin_or_user": "role:admin or project_id:%(project_id)s",
     "admin_or_creator_role": "role:admin or role:creator",
     "all_but_audit": "role:admin or role:observer or role:creator",
-    "all_users": "role:admin or role:observer or role:creator or role:audit",
+    "all_users": "role:admin or role:observer or role:creator or role:audit or rule:service_admin",
     "secret_project_match": "project:%(target.secret.project_id)s",
     "secret_acl_read": "'read':%(target.secret.read)s",
     "secret_private_read": "'False':%(target.secret.read_project_access)s",
@@ -68,7 +69,7 @@
     "container_acls:delete": "rule:container_project_admin or rule:container_project_creator",
     "container_acls:get": "rule:all_but_audit and rule:container_project_match",
     "quotas:get": "rule:all_users",
-    "project_quotas:get": "rule:admin",
-    "project_quotas:post": "rule:admin",
-    "project_quotas:delete": "rule:admin"
+    "project_quotas:get": "rule:service_admin",
+    "project_quotas:post": "rule:service_admin",
+    "project_quotas:delete": "rule:service_admin"
 }
