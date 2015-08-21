@@ -12,6 +12,8 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from testtools import testcase
+
 from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import acl_behaviors
@@ -210,6 +212,74 @@ class AclTestCase(base.TestCase):
         status = self.get_container(container_ref, user_name=user)
         self.assertEqual(expected_return, status)
 
+# ----------------------- Secret ACL Tests ---------------------------
+
+    @testcase.attr('negative', 'security')
+    def test_secret_read_acl_no_token(self):
+        secret_ref = self.store_secret()
+        acl_ref = '{0}/acl'.format(secret_ref)
+        resp = self.acl_behaviors.get_acl(acl_ref, use_auth=False)
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_secret_set_acl_no_token(self):
+        secret_ref = self.store_secret()
+        resp = self.set_secret_acl(secret_ref, get_rbac_only(), use_auth=False)
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_secret_delete_acl_no_token(self):
+        secret_ref = self.store_secret()
+        acl_ref = '{0}/acl'.format(secret_ref)
+        resp = self.acl_behaviors.delete_acl(
+            acl_ref, expected_fail=True, use_auth=False
+        )
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_secret_update_acl_no_token(self):
+        secret_ref = self.store_secret()
+        acl_ref = '{0}/acl'.format(secret_ref)
+        resp = self.set_secret_acl(secret_ref, get_rbac_only())
+        self.assertEqual(200, resp.status_code)
+        resp = self.acl_behaviors.update_acl(acl_ref, {}, use_auth=False)
+        self.assertEqual(401, resp.status_code)
+
+# ----------------------- Container ACL Tests ---------------------------
+
+    @testcase.attr('negative', 'security')
+    def test_container_read_acl_no_token(self):
+        container_ref = self.store_container()
+        acl_ref = '{0}/acl'.format(container_ref)
+        resp = self.acl_behaviors.get_acl(acl_ref, use_auth=False)
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_container_set_acl_no_token(self):
+        container_ref = self.store_container()
+        resp = self.set_container_acl(
+            container_ref, get_rbac_only(), use_auth=False
+        )
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_container_delete_acl_no_token(self):
+        container_ref = self.store_container()
+        acl_ref = '{0}/acl'.format(container_ref)
+        resp = self.acl_behaviors.delete_acl(
+            acl_ref, expected_fail=True, use_auth=False
+        )
+        self.assertEqual(401, resp.status_code)
+
+    @testcase.attr('negative', 'security')
+    def test_container_update_acl_no_token(self):
+        container_ref = self.store_container()
+        acl_ref = '{0}/acl'.format(container_ref)
+        resp = self.set_container_acl(container_ref, get_rbac_only())
+        self.assertEqual(200, resp.status_code)
+        resp = self.acl_behaviors.update_acl(acl_ref, {}, use_auth=False)
+        self.assertEqual(401, resp.status_code)
+
 # ----------------------- Helper Functions ---------------------------
 
     def store_secret(self, user_name=creator_a, admin=admin_a):
@@ -226,11 +296,14 @@ class AclTestCase(base.TestCase):
             user_name=user_name)
         return resp.status_code
 
-    def set_secret_acl(self, secret_ref, acl, user_name=creator_a):
+    def set_secret_acl(self, secret_ref, acl, use_auth=True,
+                       user_name=creator_a):
         test_model = acl_models.AclModel(**acl)
         resp = self.acl_behaviors.create_acl(
-            secret_ref, test_model, user_name=user_name)
-        self.assertEqual(200, resp.status_code)
+            secret_ref, test_model, use_auth=use_auth, user_name=user_name)
+        if use_auth:
+            self.assertEqual(200, resp.status_code)
+        return resp
 
     def store_container(self, user_name=creator_a, admin=admin_a):
         secret_ref = self.store_secret(user_name=user_name, admin=admin)
@@ -247,11 +320,14 @@ class AclTestCase(base.TestCase):
             container_ref, user_name=user_name)
         return resp.status_code
 
-    def set_container_acl(self, container_ref, acl, user_name=creator_a):
+    def set_container_acl(self, container_ref, acl, use_auth=True,
+                          user_name=creator_a):
         test_model = acl_models.AclModel(**acl)
         resp = self.acl_behaviors.create_acl(
-            container_ref, test_model, user_name=user_name)
-        self.assertEqual(200, resp.status_code)
+            container_ref, test_model, use_auth=use_auth, user_name=user_name)
+        if use_auth:
+            self.assertEqual(200, resp.status_code)
+        return resp
 
 # ----------------------- Support Functions ---------------------------
 
