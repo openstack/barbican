@@ -45,14 +45,15 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
 
         url_nav_next = self._create_url(self.project_id,
                                         self.offset + self.limit, self.limit)
-        self.assertEqual(resp.body.count(url_nav_next), 1)
+        self.assertEqual(resp.body.decode('utf-8').count(url_nav_next), 1)
 
         url_nav_prev = self._create_url(self.project_id,
                                         0, self.limit)
-        self.assertEqual(resp.body.count(url_nav_prev), 1)
+        self.assertEqual(resp.body.decode('utf-8').count(url_nav_prev), 1)
 
         url_hrefs = self._create_url(self.project_id)
-        self.assertEqual(resp.body.count(url_hrefs), (self.limit + 2))
+        self.assertEqual(resp.body.decode('utf-8').count(url_hrefs),
+                         (self.limit + 2))
 
     def test_response_should_include_total(self):
         self.create_cas()
@@ -122,7 +123,7 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
     def test_should_get_signing_certificate(self):
         self.create_cas()
         resp = self.app.get('/cas/{0}/cacert'.format(self.selected_ca_id))
-        self.assertEqual(self.selected_signing_cert, resp.body)
+        self.assertEqual(self.selected_signing_cert, resp.body.decode('utf-8'))
 
     def test_should_raise_for_get_signing_certificate_ca_not_found(self):
         resp = self.app.get('/cas/bogus_ca/cacert', expect_errors=True)
@@ -133,7 +134,8 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
         resp = self.app.get('/cas/{0}/intermediates'.format(
             self.selected_ca_id))
 
-        self.assertEqual(self.selected_intermediates, resp.body)
+        self.assertEqual(self.selected_intermediates,
+                         resp.body.decode('utf-8'))
 
     def test_should_raise_for_get_cert_chain_ca_not_found(self):
         resp = self.app.get('/cas/bogus_ca/intermediates', expect_errors=True)

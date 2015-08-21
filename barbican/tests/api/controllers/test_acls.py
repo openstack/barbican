@@ -927,7 +927,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
 
 # ----------------------- Helper Functions ---------------------------
 def create_secret(app, name=None, algorithm=None, bit_length=None, mode=None,
-                  expiration=None, payload=b'not-encrypted',
+                  expiration=None, payload='not-encrypted',
                   content_type='text/plain',
                   content_encoding=None, transport_key_id=None,
                   transport_key_needed=None, expect_errors=False):
