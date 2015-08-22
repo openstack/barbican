@@ -21,6 +21,7 @@ import pkgutil
 from oslo_policy import policy
 from oslo_serialization import jsonutils as json
 import pecan
+import six
 
 from barbican.common import config
 from barbican.common import exception
@@ -129,7 +130,7 @@ def get_items(obj):
 
 @get_items.register(dict)
 def _json_object(obj):
-    return obj.iteritems()
+    return six.iteritems(obj)
 
 
 @get_items.register(list)

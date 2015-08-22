@@ -46,6 +46,7 @@ from kmip.services import kmip_client
 
 from oslo_config import cfg
 from oslo_log import log
+import six
 
 from barbican.common import config
 from barbican import i18n as u  # noqa
@@ -726,7 +727,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :returns: SecretStore algorithm enum value if supported, None if not
         supported
         """
-        for ss_alg, ss_dict in self.valid_alg_dict.iteritems():
+        for ss_alg, ss_dict in six.iteritems(self.valid_alg_dict):
             if ss_dict.get(KMIPSecretStore.KMIP_ALGORITHM_ENUM) == algorithm:
                 return ss_alg
         return None

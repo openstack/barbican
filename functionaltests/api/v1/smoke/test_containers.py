@@ -223,7 +223,7 @@ class ContainersTestCase(base.TestCase):
         offset = 0
         test_model = container_models.ContainerModel(
             **create_container_defaults_data)
-        for i in xrange(11):
+        for i in range(11):
             resp, container_ref = self.behaviors.create_container(test_model)
             self.assertEqual(resp.status_code, 201)
             self.assertGreater(len(container_ref), 0)

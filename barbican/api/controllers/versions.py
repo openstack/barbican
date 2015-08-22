@@ -11,6 +11,7 @@
 #  under the License.
 
 import pecan
+import six
 from six.moves.urllib import parse
 
 from barbican.api import controllers
@@ -131,8 +132,8 @@ class VersionsController(object):
         if 'build' in kwargs:
             return {'build': version.__version__}
 
-        versions_info = [version_class.get_version_info(pecan.request)
-                         for version_class in AVAILABLE_VERSIONS.itervalues()]
+        versions_info = [version_class.get_version_info(pecan.request) for
+                         version_class in six.itervalues(AVAILABLE_VERSIONS)]
 
         version_output = {
             'versions': {
