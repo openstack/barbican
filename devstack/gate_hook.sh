@@ -12,11 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# This script is executed inside pre_test_hook function in devstack gate.
+set -ex
 
 # Install barbican devstack integration
-BARBICAN_BASE=/opt/stack/new/barbican/contrib/devstack
-DEVSTACK_BASE=/opt/stack/new/devstack
+export DEVSTACK_LOCAL_CONFIG="enable_plugin barbican https://review.openstack.org/openstack/barbican refs/changes/85/167885/25"
 
-cp $BARBICAN_BASE/lib/* $DEVSTACK_BASE/lib
-cp $BARBICAN_BASE/extras.d/* $DEVSTACK_BASE/extras.d
+$BASE/new/devstack-gate/devstack-vm-gate.sh
