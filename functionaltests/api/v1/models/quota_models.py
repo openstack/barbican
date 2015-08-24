@@ -17,19 +17,28 @@ limitations under the License.
 from functionaltests.api.v1.models.base_models import BaseModel
 
 
-class QuotaModel(BaseModel):
+class QuotasModel(BaseModel):
+
+    def __init__(self, secrets=None, orders=None, containers=None,
+                 transport_keys=None, consumers=None):
+        super(QuotasModel, self).__init__()
+        self.secrets = secrets
+        self.orders = orders
+        self.containers = containers
+        self.transport_keys = transport_keys
+        self.consumers = consumers
+
+
+class QuotasResponseModel(BaseModel):
 
     def __init__(self, quotas=None):
-        super(QuotaModel, self).__init__()
+        super(QuotasResponseModel, self).__init__()
         self.quotas = quotas
 
-
-class ProjectQuotaModel(BaseModel):
-
-    def __init__(self, project_quotas=None, project_id=None):
-        super(ProjectQuotaModel, self).__init__()
-        self.project_quotas = project_quotas
-        self.project_id = project_id
+    @classmethod
+    def dict_to_obj(cls, input_dict):
+        quotas = QuotasModel(**input_dict.get('quotas'))
+        return cls(quotas=quotas)
 
 
 class ProjectQuotaRequestModel(BaseModel):
@@ -37,3 +46,37 @@ class ProjectQuotaRequestModel(BaseModel):
     def __init__(self, project_quotas=None):
         super(ProjectQuotaRequestModel, self).__init__()
         self.project_quotas = project_quotas
+
+    @classmethod
+    def dict_to_obj(cls, input_dict):
+        project_quotas = QuotasModel(**input_dict.get('project_quotas'))
+        return cls(project_quotas=project_quotas)
+
+
+class ProjectQuotaOneModel(BaseModel):
+
+    def __init__(self, project_quotas=None):
+        super(ProjectQuotaOneModel, self).__init__()
+        self.project_quotas = QuotasModel(**project_quotas)
+
+
+class ProjectQuotaListItemModel(BaseModel):
+
+    def __init__(self, project_id=None, project_quotas=None):
+        super(ProjectQuotaListItemModel, self).__init__()
+        self.project_id = project_id
+        self.project_quotas = QuotasModel(**project_quotas)
+
+
+class ProjectQuotaListModel(BaseModel):
+
+    def __init__(self, project_quotas=None):
+        super(ProjectQuotaListModel, self).__init__()
+        self.project_quotas = project_quotas
+
+    @classmethod
+    def dict_to_obj(cls, input_dict):
+        project_quotas = [ProjectQuotaListItemModel(**project_quotas_item)
+                          for project_quotas_item in
+                          input_dict.get('project_quotas', [])]
+        return cls(project_quotas=project_quotas)

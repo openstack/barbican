@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import datetime
+import unittest
 
 from barbican.common import exception
 from barbican.model import models
@@ -506,3 +507,86 @@ class WhenCreatingNewContainerACLUser(utils.BaseTestCase):
         self.assertRaises(exception.MissingArgumentError,
                           models.ContainerACLUser, self.container_acl_id,
                           None)
+
+
+class WhenCreatingNewProjectQuotas(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenCreatingNewProjectQuotas, self).setUp()
+
+    def test_create_new_project_quotas(self):
+        project_id = '12345'
+        parsed_project_quotas = {
+            'secrets': 101,
+            'orders': 102,
+            'containers': 103,
+            'transport_keys': 104,
+            'consumers': 105}
+        project_quotas = models.ProjectQuotas(project_id,
+                                              parsed_project_quotas)
+
+        self.assertEqual('12345', project_quotas.project_id)
+        self.assertEqual(101, project_quotas.secrets)
+        self.assertEqual(102, project_quotas.orders)
+        self.assertEqual(103, project_quotas.containers)
+        self.assertEqual(104, project_quotas.transport_keys)
+        self.assertEqual(105, project_quotas.consumers)
+
+    def test_create_new_project_quotas_with_all_default_quotas(self):
+        project_id = '12345'
+        project_quotas = models.ProjectQuotas(project_id,
+                                              None)
+
+        self.assertEqual('12345', project_quotas.project_id)
+        self.assertEqual(None, project_quotas.secrets)
+        self.assertEqual(None, project_quotas.orders)
+        self.assertEqual(None, project_quotas.containers)
+        self.assertEqual(None, project_quotas.transport_keys)
+        self.assertEqual(None, project_quotas.consumers)
+
+    def test_create_new_project_quotas_with_some_default_quotas(self):
+        project_id = '12345'
+        parsed_project_quotas = {
+            'secrets': 101,
+            'containers': 103,
+            'consumers': 105}
+        project_quotas = models.ProjectQuotas(project_id,
+                                              parsed_project_quotas)
+
+        self.assertEqual('12345', project_quotas.project_id)
+        self.assertEqual(101, project_quotas.secrets)
+        self.assertEqual(None, project_quotas.orders)
+        self.assertEqual(103, project_quotas.containers)
+        self.assertEqual(None, project_quotas.transport_keys)
+        self.assertEqual(105, project_quotas.consumers)
+
+    def test_should_throw_exception_missing_project_id(self):
+        self.assertRaises(exception.MissingArgumentError,
+                          models.ProjectQuotas, None,
+                          None)
+
+    def test_project_quotas_check_to_dict_fields(self):
+        project_id = '12345'
+        parsed_project_quotas = {
+            'secrets': 101,
+            'orders': 102,
+            'containers': 103,
+            'transport_keys': 104,
+            'consumers': 105}
+        project_quotas = models.ProjectQuotas(project_id,
+                                              parsed_project_quotas)
+        self.assertEqual(project_id,
+                         project_quotas.to_dict_fields()['project_id'])
+        self.assertEqual(101,
+                         project_quotas.to_dict_fields()['secrets'])
+        self.assertEqual(102,
+                         project_quotas.to_dict_fields()['orders'])
+        self.assertEqual(103,
+                         project_quotas.to_dict_fields()['containers'])
+        self.assertEqual(104,
+                         project_quotas.to_dict_fields()['transport_keys'])
+        self.assertEqual(105,
+                         project_quotas.to_dict_fields()['consumers'])
+
+
+if __name__ == '__main__':
+    unittest.main()

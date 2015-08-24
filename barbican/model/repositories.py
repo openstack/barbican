@@ -61,6 +61,7 @@ _ORDER_RETRY_TASK_REPOSITORY = None
 _PREFERRED_CA_REPOSITORY = None
 _PROJECT_REPOSITORY = None
 _PROJECT_CA_REPOSITORY = None
+_PROJECT_QUOTAS_REPOSITORY = None
 _SECRET_ACL_REPOSITORY = None
 _SECRET_META_REPOSITORY = None
 _SECRET_REPOSITORY = None
@@ -1836,6 +1837,126 @@ class ContainerACLRepo(BaseRepo):
             entity.delete(session=session)
 
 
+class ProjectQuotasRepo(BaseRepo):
+    """Repository for the ProjectQuotas entity."""
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "ProjectQuotas"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.ProjectQuotas).filter_by(id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+    def get_by_create_date(self, offset_arg=None, limit_arg=None,
+                           suppress_exception=False, session=None):
+        """Returns a list of ProjectQuotas
+
+        The list is ordered by the date they were created at and paged
+        based on the offset and limit fields.
+
+        :param offset_arg: The entity number where the query result should
+                           start.
+        :param limit_arg: The maximum amount of entities in the result set.
+        :param suppress_exception: Whether NoResultFound exceptions should be
+                                   suppressed.
+        :param session: SQLAlchemy session object.
+        :raises NotFound: if no quota config is found for the project
+        :returns: Tuple consisting of (list_of_entities, offset, limit, total).
+        """
+
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
+
+        session = self.get_session(session)
+
+        query = session.query(models.ProjectQuotas)
+        query = query.order_by(models.ProjectQuotas.created_at)
+        query = query.filter_by(deleted=False)
+
+        start = offset
+        end = offset + limit
+        LOG.debug('Retrieving from %s to %s', start, end)
+        total = query.count()
+        entities = query.offset(start).limit(limit).all()
+        LOG.debug('Number entities retrieved: %s out of %s',
+                  len(entities), total)
+
+        if total <= 0 and not suppress_exception:
+            _raise_no_entities_found(self._do_entity_name())
+
+        return entities, offset, limit, total
+
+    def create_or_update_by_project_id(self, project_id, parsed_project_quotas,
+                                       session=None):
+        """Create or update Project Quotas config for a project by project_id.
+
+        :param project_id: ID of project whose quota config will be saved
+        :param parsed_project_quotas: Python dict with quota definition
+        :param session: SQLAlchemy session object.
+        :return: None
+        """
+        session = self.get_session(session)
+        query = session.query(models.ProjectQuotas)
+        query = query.filter_by(project_id=project_id)
+        try:
+            entity = query.one()
+        except sa_orm.exc.NoResultFound:
+            self.create_from(
+                models.ProjectQuotas(project_id, parsed_project_quotas),
+                session=session)
+        else:
+            self._update_values(entity, parsed_project_quotas)
+
+    def get_by_project_id(self, project_id,
+                          suppress_exception=False, session=None):
+        """Return configured Project Quotas for a project by project_id.
+
+        :param project_id: ID of project whose quota config will be deleted
+        :param suppress_exception: when True, NotFound is not raised
+        :param session: SQLAlchemy session object.
+        :raises NotFound: if no quota config is found for the project
+        :return: None or Python dict of project quotas for project
+        """
+
+        session = self.get_session(session)
+        query = session.query(models.ProjectQuotas)
+        query = query.filter_by(project_id=project_id)
+        try:
+            entity = query.one()
+        except sa_orm.exc.NoResultFound:
+            if suppress_exception:
+                return None
+            else:
+                _raise_no_entities_found(self._do_entity_name())
+        return entity
+
+    def delete_by_project_id(self, project_id,
+                             suppress_exception=False, session=None):
+        """Remove configured Project Quotas for a project by project_id.
+
+        :param project_id: ID of project whose quota config will be deleted
+        :param suppress_exception: when True, NotFound is not raised
+        :param session: SQLAlchemy session object.
+        :raises NotFound: if no quota config is found for the project
+        :return: None
+        """
+
+        session = self.get_session(session)
+        query = session.query(models.ProjectQuotas)
+        query = query.filter_by(project_id=project_id)
+        try:
+            entity = query.one()
+        except sa_orm.exc.NoResultFound:
+            if suppress_exception:
+                return
+            else:
+                _raise_no_entities_found(self._do_entity_name())
+        entity.delete(session=session)
+
+
 def get_ca_repository():
     """Returns a singleton Secret repository instance."""
     global _CA_REPOSITORY
@@ -1923,6 +2044,13 @@ def get_project_ca_repository():
     global _PROJECT_CA_REPOSITORY
     return _get_repository(_PROJECT_CA_REPOSITORY,
                            ProjectCertificateAuthorityRepo)
+
+
+def get_project_quotas_repository():
+    """Returns a singleton Project Quotas repository instance."""
+    global _PROJECT_QUOTAS_REPOSITORY
+    return _get_repository(_PROJECT_QUOTAS_REPOSITORY,
+                           ProjectQuotasRepo)
 
 
 def get_secret_acl_repository():

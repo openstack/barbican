@@ -70,6 +70,6 @@
     "container_acls:get": "rule:all_but_audit and rule:container_project_match",
     "quotas:get": "rule:all_users",
     "project_quotas:get": "rule:service_admin",
-    "project_quotas:post": "rule:service_admin",
+    "project_quotas:put": "rule:service_admin",
     "project_quotas:delete": "rule:service_admin"
 }

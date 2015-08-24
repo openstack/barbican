@@ -16,20 +16,28 @@ import pecan
 
 from barbican import api
 from barbican.api import controllers
+from barbican.common import exception
 from barbican.common import quota
+from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
 from barbican import i18n as u
 
+
 LOG = utils.getLogger(__name__)
+
+
+def _project_quotas_not_found():
+    """Throw exception indicating project quotas not found."""
+    pecan.abort(404, u._('Not Found. Sorry but your project quotas are in '
+                         'another castle.'))
 
 
 class QuotasController(controllers.ACLMixin):
     """Handles quota retrieval requests."""
 
-    def __init__(self, quota_repo=None):
+    def __init__(self):
         LOG.debug('=== Creating QuotasController ===')
-        self.repo = quota_repo
         self.quota_driver = quota.QuotaDriver()
 
     @pecan.expose(generic=True)
@@ -40,18 +48,18 @@ class QuotasController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Quotas'))
     @controllers.enforce_rbac('quotas:get')
     def on_get(self, external_project_id, **kwargs):
-        # TODO(dave) implement
-        resp = {'quotas': self.quota_driver.get_defaults()}
+        LOG.debug('=== QuotasController GET ===')
+        project = res.get_or_create_project(external_project_id)
+        resp = self.quota_driver.get_quotas(project.id)
         return resp
 
 
 class ProjectQuotasController(controllers.ACLMixin):
     """Handles project quota requests."""
 
-    def __init__(self, project_id, project_quota_repo=None):
+    def __init__(self, project_id):
         LOG.debug('=== Creating ProjectQuotasController ===')
         self.passed_project_id = project_id
-        self.repo = project_quota_repo
         self.validator = validators.ProjectQuotaValidator()
         self.quota_driver = quota.QuotaDriver()
 
@@ -63,29 +71,26 @@ class ProjectQuotasController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Project Quotas'))
     @controllers.enforce_rbac('project_quotas:get')
     def on_get(self, external_project_id, **kwargs):
-        # TODO(dave) implement
         LOG.debug('=== ProjectQuotasController GET ===')
-        resp = {'project_quotas': self.quota_driver.get_defaults()}
+        resp = self.quota_driver.get_project_quotas(self.passed_project_id)
+        if resp:
+            return resp
+        else:
+            _project_quotas_not_found()
 
-        return resp
-
-    @index.when(method='POST', template='json')
+    @index.when(method='PUT', template='json')
     @controllers.handle_exceptions(u._('Project Quotas'))
-    @controllers.enforce_rbac('project_quotas:post')
-    def on_post(self, external_project_id, **kwargs):
-        LOG.debug('=== ProjectQuotasController POST ===')
+    @controllers.enforce_rbac('project_quotas:put')
+    def on_put(self, external_project_id, **kwargs):
+        LOG.debug('=== ProjectQuotasController PUT ===')
+        if not pecan.request.body:
+            raise exception.NoDataToProcess()
         api.load_body(pecan.request,
                       validator=self.validator)
-        # TODO(dave) implement
-        resp = {'project_quotas': {
-            'secrets': 10,
-            'orders': 20,
-            'containers': 10,
-            'transport_keys': 10,
-            'consumers': -1}
-        }
-        LOG.info(u._LI('Post Project Quotas'))
-        return resp
+        self.quota_driver.set_project_quotas(self.passed_project_id,
+                                             kwargs['project_quotas'])
+        LOG.info(u._LI('Put Project Quotas'))
+        pecan.response.status = 204
 
     @index.when(method='DELETE', template='json')
     @utils.allow_all_content_types
@@ -93,23 +98,26 @@ class ProjectQuotasController(controllers.ACLMixin):
     @controllers.enforce_rbac('project_quotas:delete')
     def on_delete(self, external_project_id, **kwargs):
         LOG.debug('=== ProjectQuotasController DELETE ===')
-        # TODO(dave) implement
-        LOG.info(u._LI('Delete Project Quotas'))
-        pecan.response.status = 204
+        try:
+            self.quota_driver.delete_project_quotas(self.passed_project_id)
+        except exception.NotFound:
+            LOG.info(u._LI('Delete Project Quotas - Project not found'))
+            _project_quotas_not_found()
+        else:
+            LOG.info(u._LI('Delete Project Quotas'))
+            pecan.response.status = 204
 
 
 class ProjectsQuotasController(controllers.ACLMixin):
     """Handles projects quota retrieval requests."""
 
-    def __init__(self, project_quota_repo=None):
+    def __init__(self):
         LOG.debug('=== Creating ProjectsQuotaController ===')
-        self.repo = project_quota_repo
         self.quota_driver = quota.QuotaDriver()
 
     @pecan.expose()
     def _lookup(self, project_id, *remainder):
-        return ProjectQuotasController(project_id,
-                                       project_quota_repo=self.repo), remainder
+        return ProjectQuotasController(project_id), remainder
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
@@ -119,13 +127,8 @@ class ProjectsQuotasController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Project Quotas'))
     @controllers.enforce_rbac('project_quotas:get')
     def on_get(self, external_project_id, **kwargs):
-
-        # TODO(dave) implement
-        project1 = {'project_id': "1234",
-                    'project_quotas': self.quota_driver.get_defaults()}
-        project2 = {'project_id': "5678",
-                    'project_quotas': self.quota_driver.get_defaults()}
-        project_quotas = {"project_quotas": [project1, project2]}
-        resp = project_quotas
-
+        resp = self.quota_driver.get_project_quotas_list(
+            offset_arg=kwargs.get('offset', 0),
+            limit_arg=kwargs.get('limit', None)
+        )
         return resp
