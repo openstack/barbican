@@ -18,6 +18,7 @@ from oslo_log import log as logging
 
 from barbican.common import exception
 from barbican.common import hrefs
+from barbican.common import resources as res
 from barbican.model import repositories as repo
 
 
@@ -102,28 +103,26 @@ class QuotaDriver(object):
         """A helper method to check for unlimited value."""
         return v is not None and v <= UNLIMITED_VALUE
 
-    def set_project_quotas(self, project_id, parsed_project_quotas):
+    def set_project_quotas(self, external_project_id, parsed_project_quotas):
         """Create a new database entry, or update existing one
 
-        :param project_id: ID of project whose quotas are to be set
+        :param external_project_id: ID of project whose quotas are to be set
         :param parsed_project_quotas: quota values to save in database
         :return: None
         """
-        session = self.repo.get_session()
-        self.repo.create_or_update_by_project_id(
-            project_id, parsed_project_quotas, session=session)
-        session.commit()
+        project = res.get_or_create_project(external_project_id)
+        self.repo.create_or_update_by_project_id(project.id,
+                                                 parsed_project_quotas)
 
-    def get_project_quotas(self, project_id):
+    def get_project_quotas(self, external_project_id):
         """Retrieve configured quota information from database
 
-        :param project_id: ID of project for whose value are wanted
+        :param external_project_id: ID of project for whose values are wanted
         :return: the values
         """
-        session = self.repo.get_session()
         try:
-            retrieved_project_quotas =\
-                self.repo.get_by_project_id(project_id, session=session)
+            retrieved_project_quotas = self.repo.get_by_external_project_id(
+                external_project_id)
         except exception.NotFound:
             return None
         resp_quotas = self._extract_project_quotas(retrieved_project_quotas)
@@ -135,15 +134,13 @@ class QuotaDriver(object):
 
         :return: a dict and list of a page of quota config info
         """
-        session = self.repo.get_session()
         retrieved_project_quotas, offset, limit, total =\
-            self.repo.get_by_create_date(session=session,
-                                         offset_arg=offset_arg,
+            self.repo.get_by_create_date(offset_arg=offset_arg,
                                          limit_arg=limit_arg,
                                          suppress_exception=True)
         resp_quotas = []
         for quotas in retrieved_project_quotas:
-            list_item = {'project_id': quotas.project_id,
+            list_item = {'project_id': quotas.project.external_id,
                          'project_quotas':
                              self._extract_project_quotas(quotas)}
             resp_quotas.append(list_item)
@@ -153,29 +150,25 @@ class QuotaDriver(object):
         resp_overall.update({'total': total})
         return resp_overall
 
-    def delete_project_quotas(self, project_id):
+    def delete_project_quotas(self, external_project_id):
         """Remove configured quota information from database
 
-        :param project_id: ID of project whose quota config will be deleted
+        :param external_project_id: ID of project whose quotas will be deleted
         :raises NotFound: if project has no configured values
         :return: None
         """
-        session = self.repo.get_session()
-        self.repo.delete_by_project_id(project_id,
-                                       session=session)
+        self.repo.delete_by_external_project_id(external_project_id)
 
-    def get_quotas(self, project_id):
+    def get_quotas(self, external_project_id):
         """Get the effective quotas for a project
 
         Effective quotas are based on both configured and default values
-        :param project_id: ID of project for which to get effective quotas
+        :param external_project_id: ID of project for which to get quotas
         :return: dict of effective quota values
         """
-        session = self.repo.get_session()
         try:
-            retrieved_project_quotas =\
-                self.repo.get_by_project_id(project_id,
-                                            session=session)
+            retrieved_project_quotas = self.repo.get_by_external_project_id(
+                external_project_id)
         except exception.NotFound:
             resp_quotas = self._get_defaults()
         else:

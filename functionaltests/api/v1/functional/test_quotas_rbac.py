@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import uuid
+
 from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import quota_behaviors
@@ -95,7 +97,6 @@ class RBACQuotasTestCase(base.TestCase):
     def setUp(self):
         super(RBACQuotasTestCase, self).setUp()
         self.behaviors = quota_behaviors.QuotaBehaviors(self.client)
-        self.project_id = self.behaviors.get_project_id_from_name('admin')
 
     def tearDown(self):
         self.behaviors.delete_all_created_quotas()
@@ -142,7 +143,8 @@ class RBACQuotasTestCase(base.TestCase):
         """
         request_model = quota_models.ProjectQuotaRequestModel(
             **get_set_project_quotas_request())
-        resp = self.behaviors.set_project_quotas(self.project_id,
+        project_id = str(uuid.uuid4())
+        resp = self.behaviors.set_project_quotas(project_id,
                                                  request_model,
                                                  user_name=user)
         self.assertEqual(expected_return, resp.status_code)
@@ -160,9 +162,10 @@ class RBACQuotasTestCase(base.TestCase):
         """
         request_model = quota_models.ProjectQuotaRequestModel(
             **get_set_project_quotas_request())
-        resp = self.behaviors.set_project_quotas(
-            self.project_id, request_model,
-            user_name=CONF.identity.service_admin)
-        resp = self.behaviors.delete_project_quotas(self.project_id,
+        project_id = str(uuid.uuid4())
+        resp = self.behaviors.set_project_quotas(project_id,
+                                                 request_model,
+                                                 user_name=service_admin)
+        resp = self.behaviors.delete_project_quotas(project_id,
                                                     user_name=user)
         self.assertEqual(expected_return, resp.status_code)

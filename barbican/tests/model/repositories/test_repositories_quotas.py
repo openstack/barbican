@@ -26,9 +26,21 @@ class WhenTestingProjectQuotasRepo(database_utils.RepositoryTestCase):
         super(WhenTestingProjectQuotasRepo, self).setUp()
         self.project_quotas_repo = repositories.ProjectQuotasRepo()
 
-        self.project_id_1 = '11111'
-        self.project_id_2 = '22222'
-        self.project_id_3 = '33333'
+        self.session = self.project_quotas_repo.get_session()
+
+        self.project_1 = models.Project()
+        self.project_1.id = '11111'
+        self.project_1.external_id = '44444'
+        self.project_1.save(session=self.session)
+        self.project_2 = models.Project()
+        self.project_2.id = '22222'
+        self.project_2.external_id = '55555'
+        self.project_2.save(session=self.session)
+        self.project_3 = models.Project()
+        self.project_3.id = '33333'
+        self.project_3.external_id = '66666'
+        self.project_3.save(session=self.session)
+
         self.parsed_project_quotas_1 = {
             'secrets': 101,
             'orders': 102,
@@ -47,19 +59,21 @@ class WhenTestingProjectQuotasRepo(database_utils.RepositoryTestCase):
             'consumers': 305}
 
     def test_get_list_of_one_project_quotas(self):
-        session = self.project_quotas_repo.get_session()
         self.project_quotas_repo.create_or_update_by_project_id(
-            self.project_id_1,
+            self.project_1.id,
             self.parsed_project_quotas_1,
-            session)
-        session.commit()
+            session=self.session)
+        self.session.commit()
         retrieved_project_quotas, offset, limit, total =\
-            self.project_quotas_repo.get_by_create_date(session=session)
+            self.project_quotas_repo.get_by_create_date(session=self.session)
         self.assertEqual(0, offset)
         self.assertEqual(10, limit)
         self.assertEqual(1, total)
-        self.assertEqual([self.project_id_1],
+        self.assertEqual([self.project_1.id],
                          [s.project_id for s in retrieved_project_quotas])
+        self.assertEqual([self.project_1.external_id],
+                         [s.project.external_id for s
+                          in retrieved_project_quotas])
         self.assertEqual([101],
                          [s.secrets for s in retrieved_project_quotas])
         self.assertEqual([102],
@@ -72,23 +86,26 @@ class WhenTestingProjectQuotasRepo(database_utils.RepositoryTestCase):
                          [s.consumers for s in retrieved_project_quotas])
 
     def test_get_list_of_two_project_quotas(self):
-        session = self.project_quotas_repo.get_session()
         self.project_quotas_repo.create_or_update_by_project_id(
-            self.project_id_1,
+            self.project_1.id,
             self.parsed_project_quotas_1,
-            session)
+            session=self.session)
         self.project_quotas_repo.create_or_update_by_project_id(
-            self.project_id_2,
+            self.project_2.id,
             self.parsed_project_quotas_2,
-            session)
-        session.commit()
+            session=self.session)
+        self.session.commit()
         retrieved_project_quotas, offset, limit, total =\
-            self.project_quotas_repo.get_by_create_date(session=session)
+            self.project_quotas_repo.get_by_create_date(session=self.session)
         self.assertEqual(0, offset)
         self.assertEqual(10, limit)
         self.assertEqual(2, total)
-        self.assertItemsEqual([self.project_id_1, self.project_id_2],
+        self.assertItemsEqual([self.project_1.id, self.project_2.id],
                               [s.project_id for s in retrieved_project_quotas])
+        self.assertItemsEqual([self.project_1.external_id,
+                               self.project_2.external_id],
+                              [s.project.external_id for s
+                               in retrieved_project_quotas])
         self.assertItemsEqual([101, 201],
                               [s.secrets for s in retrieved_project_quotas])
         self.assertItemsEqual([102, 202],
@@ -102,32 +119,33 @@ class WhenTestingProjectQuotasRepo(database_utils.RepositoryTestCase):
                               [s.consumers for s in retrieved_project_quotas])
 
     def test_should_raise_get_list_of_zero_project_quotas(self):
-        session = self.project_quotas_repo.get_session()
         self.assertRaises(
             exception.NotFound,
             self.project_quotas_repo.get_by_create_date,
-            session=session,
+            session=self.session,
             suppress_exception=False)
 
     def test_should_suppress_get_list_of_zero_project_quotas(self):
-        session = self.project_quotas_repo.get_session()
         retrieved_project_quotas, offset, limit, total =\
             self.project_quotas_repo.get_by_create_date(
-                session=session, suppress_exception=True)
+                session=self.session, suppress_exception=True)
         self.assertEqual(0, offset)
         self.assertEqual(10, limit)
         self.assertEqual(0, total)
 
     def test_get_specific_project_quotas(self):
-        session = self.project_quotas_repo.get_session()
         self.project_quotas_repo.create_or_update_by_project_id(
-            self.project_id_1, self.parsed_project_quotas_1, session)
-        session.commit()
+            self.project_1.id,
+            self.parsed_project_quotas_1,
+            session=self.session)
+        self.session.commit()
         retrieved_project_quotas =\
-            self.project_quotas_repo.get_by_project_id(self.project_id_1,
-                                                       session=session)
-        self.assertEqual(self.project_id_1,
+            self.project_quotas_repo.get_by_external_project_id(
+                self.project_1.external_id, session=self.session)
+        self.assertEqual(self.project_1.id,
                          retrieved_project_quotas.project_id)
+        self.assertEqual(self.project_1.external_id,
+                         retrieved_project_quotas.project.external_id)
         self.assertEqual(101, retrieved_project_quotas.secrets)
         self.assertEqual(102, retrieved_project_quotas.orders)
         self.assertEqual(103, retrieved_project_quotas.containers)
@@ -135,15 +153,18 @@ class WhenTestingProjectQuotasRepo(database_utils.RepositoryTestCase):
         self.assertEqual(105, retrieved_project_quotas.consumers)
 
     def test_project_quotas_with_some_defaults(self):
-        session = self.project_quotas_repo.get_session()
         self.project_quotas_repo.create_or_update_by_project_id(
-            self.project_id_3, self.parsed_project_quotas_3, session)
-        session.commit()
+            self.project_3.id,
+            self.parsed_project_quotas_3,
+            session=self.session)
+        self.session.commit()
         retrieved_project_quotas =\
-            self.project_quotas_repo.get_by_project_id(self.project_id_3,
-                                                       session=session)
-        self.assertEqual(self.project_id_3,
+            self.project_quotas_repo.get_by_external_project_id(
+                self.project_3.external_id, session=self.session)
+        self.assertEqual(self.project_3.id,
                          retrieved_project_quotas.project_id)
+        self.assertEqual(self.project_3.external_id,
+                         retrieved_project_quotas.project.external_id)
         self.assertEqual(301, retrieved_project_quotas.secrets)
         self.assertIsNone(retrieved_project_quotas.orders)
         self.assertEqual(303, retrieved_project_quotas.containers)
@@ -151,19 +172,23 @@ class WhenTestingProjectQuotasRepo(database_utils.RepositoryTestCase):
         self.assertEqual(305, retrieved_project_quotas.consumers)
 
     def test_update_specific_project_quotas(self):
-        session = self.project_quotas_repo.get_session()
-
         self.project_quotas_repo.create_or_update_by_project_id(
-            self.project_id_1, self.parsed_project_quotas_1, session)
-        session.commit()
+            self.project_1.id,
+            self.parsed_project_quotas_1,
+            session=self.session)
+        self.session.commit()
         self.project_quotas_repo.create_or_update_by_project_id(
-            self.project_id_1, self.parsed_project_quotas_2, session)
-        session.commit()
+            self.project_1.id,
+            self.parsed_project_quotas_2,
+            session=self.session)
+        self.session.commit()
         retrieved_project_quotas =\
-            self.project_quotas_repo.get_by_project_id(self.project_id_1,
-                                                       session=session)
-        self.assertEqual(self.project_id_1,
+            self.project_quotas_repo.get_by_external_project_id(
+                self.project_1.external_id, session=self.session)
+        self.assertEqual(self.project_1.id,
                          retrieved_project_quotas.project_id)
+        self.assertEqual(self.project_1.external_id,
+                         retrieved_project_quotas.project.external_id)
         self.assertEqual(201, retrieved_project_quotas.secrets)
         self.assertEqual(202, retrieved_project_quotas.orders)
         self.assertEqual(203, retrieved_project_quotas.containers)
@@ -171,78 +196,58 @@ class WhenTestingProjectQuotasRepo(database_utils.RepositoryTestCase):
         self.assertEqual(205, retrieved_project_quotas.consumers)
 
     def test_should_raise_get_missing_specific_project_quotas(self):
-        session = self.project_quotas_repo.get_session()
         self.assertRaises(
             exception.NotFound,
-            self.project_quotas_repo.get_by_project_id,
-            "dummy",
+            self.project_quotas_repo.get_by_external_project_id,
+            'dummy',
             suppress_exception=False,
-            session=session)
+            session=self.session)
 
     def test_should_suppress_get_missing_specific_project_quotas(self):
-        session = self.project_quotas_repo.get_session()
         retrieved_project_quotas =\
-            self.project_quotas_repo.get_by_project_id(self.project_id_1,
-                                                       suppress_exception=True,
-                                                       session=session)
+            self.project_quotas_repo.get_by_external_project_id(
+                'dummy', suppress_exception=True, session=self.session)
         self.assertIsNone(retrieved_project_quotas)
 
     def test_get_by_create_date_nothing(self):
-        session = self.project_quotas_repo.get_session()
         retrieved_project_quotas, offset, limit, total =\
             self.project_quotas_repo.get_by_create_date(
-                session=session, suppress_exception=True)
+                session=self.session, suppress_exception=True)
         self.assertEqual([], retrieved_project_quotas)
         self.assertEqual(0, offset)
         self.assertEqual(10, limit)
         self.assertEqual(0, total)
 
-    def test_should_raise_add_duplicate_project_id(self):
-        session = self.project_quotas_repo.get_session()
-        self.project_quotas_repo.create_or_update_by_project_id(
-            self.project_id_1, self.parsed_project_quotas_1, session)
-        session.commit()
-        project_quotas = models.ProjectQuotas(
-            self.project_id_1, self.parsed_project_quotas_2)
-        self.assertRaises(
-            exception.Duplicate,
-            self.project_quotas_repo.create_from,
-            project_quotas,
-            session)
-
     def test_should_delete(self):
-        session = self.project_quotas_repo.get_session()
         self.project_quotas_repo.create_or_update_by_project_id(
-            self.project_id_1, self.parsed_project_quotas_1, session)
-        session.commit()
-        self.project_quotas_repo.delete_by_project_id(self.project_id_1,
-                                                      session=session)
+            self.project_1.id,
+            self.parsed_project_quotas_1,
+            session=self.session)
+        self.session.commit()
+        self.project_quotas_repo.delete_by_external_project_id(
+            self.project_1.external_id, session=self.session)
 
     def test_should_raise_delete_not_found(self):
-        session = self.project_quotas_repo.get_session()
         self.assertRaises(
             exception.NotFound,
-            self.project_quotas_repo.delete_by_project_id,
-            "dummy",
-            session=session)
+            self.project_quotas_repo.delete_by_external_project_id,
+            'dummy',
+            session=self.session)
 
     def test_should_suppress_delete_not_found(self):
-        session = self.project_quotas_repo.get_session()
-        self.project_quotas_repo.delete_by_project_id('dummy',
-                                                      suppress_exception=True,
-                                                      session=session)
+        self.project_quotas_repo.delete_by_external_project_id(
+            'dummy', suppress_exception=True, session=self.session)
 
     def test_do_entity_name(self):
         self.assertEqual("ProjectQuotas",
                          self.project_quotas_repo._do_entity_name())
 
     def test_should_raise_not_found_get_by_entity_id(self):
-        session = self.project_quotas_repo.get_session()
         self.assertRaises(
             exception.NotFound,
             self.project_quotas_repo.get,
-            "dummy",
-            session=session)
+            'dummy',
+            session=self.session)
 
 
 if __name__ == '__main__':

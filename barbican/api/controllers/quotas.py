@@ -49,8 +49,9 @@ class QuotasController(controllers.ACLMixin):
     @controllers.enforce_rbac('quotas:get')
     def on_get(self, external_project_id, **kwargs):
         LOG.debug('=== QuotasController GET ===')
-        project = res.get_or_create_project(external_project_id)
-        resp = self.quota_driver.get_quotas(project.id)
+        # make sure project exists
+        res.get_or_create_project(external_project_id)
+        resp = self.quota_driver.get_quotas(external_project_id)
         return resp
 
 

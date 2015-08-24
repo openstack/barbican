@@ -252,6 +252,7 @@ class Project(BASE, SoftDeleteMixIn, ModelBase):
     keks = orm.relationship("KEKDatum", backref="project")
     containers = orm.relationship("Container", backref="project")
     cas = orm.relationship("ProjectCertificateAuthority", backref="project")
+    project_quotas = orm.relationship("ProjectQuotas", backref="project")
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -1256,8 +1257,7 @@ class ProjectQuotas(BASE, ModelBase):
 
     project_id = sa.Column(
         sa.String(36),
-        # TODO(dave): enforce project exists
-        # sa.ForeignKey('projects.id', name='project_quotas_fk'),
+        sa.ForeignKey('projects.id', name='project_quotas_fk'),
         index=True,
         nullable=False)
     secrets = sa.Column(sa.Integer, nullable=True)
@@ -1266,13 +1266,10 @@ class ProjectQuotas(BASE, ModelBase):
     transport_keys = sa.Column(sa.Integer, nullable=True)
     consumers = sa.Column(sa.Integer, nullable=True)
 
-    __table_args__ = (sa.UniqueConstraint('project_id',
-                                          name='project_quotas_uc'),)
-
     def __init__(self, project_id=None, parsed_project_quotas=None):
         """Creates Project Quotas entity from a project and a dict.
 
-        :param project_id: the id of the project whose quotas are to be stored
+        :param project_id: the internal id of the project with quotas
         :param parsed_project_quotas: a dict with the keys matching the
         resources for which quotas are to be set, and the values containing
         the quota value to be set for this project and that resource.
