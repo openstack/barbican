@@ -16,6 +16,7 @@ from barbican import api
 from barbican.api import controllers
 from barbican.common import exception
 from barbican.common import hrefs
+from barbican.common import quota
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
@@ -73,6 +74,7 @@ class ContainerConsumersController(controllers.ACLMixin):
         self.consumer_repo = repo.get_container_consumer_repository()
         self.container_repo = repo.get_container_repository()
         self.validator = validators.ContainerConsumerValidator()
+        self.quota_enforcer = quota.QuotaEnforcer('consumers')
 
     @pecan.expose()
     def _lookup(self, consumer_id, *remainder):
@@ -138,6 +140,8 @@ class ContainerConsumersController(controllers.ACLMixin):
                                                 external_project_id)
         except exception.NotFound:
             controllers.containers.container_not_found()
+
+        self.quota_enforcer.enforce(project)
 
         new_consumer = models.ContainerConsumerMetadatum(self.container_id,
                                                          data)

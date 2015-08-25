@@ -438,3 +438,17 @@ class CANotDefinedForProject(BarbicanHTTPException):
     client_message = u._("The ca_id provided in the request is not defined "
                          "for this project")
     status_code = 403
+
+
+class QuotaReached(BarbicanHTTPException):
+    message = u._("Quota reached for project %(project_id)s. Only "
+                  "%(count)s %(resource_type)s are allowed.")
+    client_message = u._("Creation not allowed because a quota has "
+                         "been reached")
+    status_code = 403
+
+    def __init__(self, *args, **kwargs):
+        super(QuotaReached, self).__init__(*args, **kwargs)
+        self.project_id = kwargs.get('project_id')
+        self.count = kwargs.get('count')
+        self.resource_type = kwargs.get('resource_type')

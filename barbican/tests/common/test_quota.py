@@ -15,9 +15,11 @@
 
 import unittest
 
-from barbican.common import exception
+from barbican.common import exception as excep
 from barbican.common import quota
+from barbican.model import models
 from barbican.tests import database_utils
+from barbican.tests import utils
 
 
 class WhenTestingQuotaDriverFunctions(database_utils.RepositoryTestCase):
@@ -98,7 +100,7 @@ class WhenTestingQuotaDriverFunctions(database_utils.RepositoryTestCase):
 
     def test_should_raise_not_found_delete_project_quotas(self):
         self.assertRaises(
-            exception.NotFound,
+            excep.NotFound,
             self.quota_driver.delete_project_quotas,
             'dummy')
 
@@ -191,6 +193,35 @@ class WhenTestingQuotaDriverFunctions(database_utils.RepositoryTestCase):
     def create_project_quotas(self):
         for index in [1, 2, 3]:
             self.create_a_test_project_quotas(index)
+
+
+class WhenTestingQuotaEnforcingFunctions(utils.BaseTestCase):
+
+    def setUp(self):
+        super(WhenTestingQuotaEnforcingFunctions, self).setUp()
+        self.project = models.Project()
+        self.project.id = 'my_internal_id'
+        self.project.external_id = 'my_keystone_id'
+
+    def test_should_pass(self):
+        quota_enforcer = quota.QuotaEnforcer('my_resource')
+        quota_enforcer.enforce(self.project)
+
+    def test_should_raise(self):
+        """This is a dummy implementation for developing the API"""
+        # TODO(dave) implement
+        quota_enforcer = quota.QuotaEnforcer('my_resource')
+        self.project.id = None
+        exception = self.assertRaises(
+            excep.QuotaReached,
+            quota_enforcer.enforce,
+            self.project
+        )
+        self.assertIn('Quota reached for project', exception.message)
+        self.assertIn('my_keystone_id', exception.message)
+        self.assertIn('my_resource', exception.message)
+        self.assertIn(str(0), exception.message)
+
 
 if __name__ == '__main__':
     unittest.main()

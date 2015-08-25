@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from oslo_config import cfg
 from oslo_log import log as logging
 
@@ -184,3 +183,17 @@ class QuotaDriver(object):
                 self._extract_project_quotas(retrieved_project_quotas))
         resp = {'quotas': resp_quotas}
         return resp
+
+
+class QuotaEnforcer(object):
+    """Checks quotas limits and current resource usage levels"""
+    def __init__(self, resource_type):
+        self.resource_type = resource_type
+
+    def enforce(self, project):
+        """This is a dummy implementation for developing the API"""
+        # TODO(dave) implement
+        if project.id is None:  # dummy logic, dummy code
+            raise exception.QuotaReached(project_id=project.external_id,
+                                         resource_type=self.resource_type,
+                                         count=0)
