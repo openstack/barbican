@@ -98,6 +98,7 @@ class RBACQuotasTestCase(base.TestCase):
         self.project_id = self.behaviors.get_project_id_from_name('admin')
 
     def tearDown(self):
+        self.behaviors.delete_all_created_quotas()
         super(RBACQuotasTestCase, self).tearDown()
 
     @utils.parameterized_dataset(test_data_rbac_get_quotas)
@@ -157,6 +158,11 @@ class RBACQuotasTestCase(base.TestCase):
         :param admin: the admin of the group owning quotas
         :param expected_return: the expected http return code
         """
+        request_model = quota_models.ProjectQuotaRequestModel(
+            **get_set_project_quotas_request())
+        resp = self.behaviors.set_project_quotas(
+            self.project_id, request_model,
+            user_name=CONF.identity.service_admin)
         resp = self.behaviors.delete_project_quotas(self.project_id,
                                                     user_name=user)
         self.assertEqual(expected_return, resp.status_code)

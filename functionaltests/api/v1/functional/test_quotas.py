@@ -39,8 +39,8 @@ class QuotasTestCase(base.TestCase):
             CONF.identity.username)
 
     def tearDown(self):
-        super(QuotasTestCase, self).tearDown()
         self.behaviors.delete_all_created_quotas()
+        super(QuotasTestCase, self).tearDown()
 
     def test_get_quotas_with_defaults(self):
         """Get effective quota information for own project"""

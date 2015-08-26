@@ -101,7 +101,8 @@ class QuotaBehaviors(base_behaviors.BaseBehaviors):
             extra_headers=extra_headers,
             use_auth=use_auth, user_name=user_name)
 
-        self.created_entities.append((project_id, user_name))
+        if resp.status_code == 204:
+            self.created_entities.append((project_id, user_name))
 
         return resp
 
@@ -120,7 +121,7 @@ class QuotaBehaviors(base_behaviors.BaseBehaviors):
                                   extra_headers=extra_headers,
                                   use_auth=use_auth, user_name=user_name)
 
-        if not expected_fail:
+        if resp.status_code == 204:
             for item in self.created_entities:
                 if item[0] == project_id:
                     self.created_entities.remove(item)
