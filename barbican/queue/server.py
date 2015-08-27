@@ -213,37 +213,42 @@ class Tasks(object):
     @monitored
     @transactional
     @retryable_order
-    def process_type_order(self, context, order_id, project_id):
+    def process_type_order(self, context, order_id, project_id, request_id):
         """Process TypeOrder."""
-        LOG.info(
-            u._LI("Processing type order: order ID is '%s'"),
-            order_id
+        message = u._LI(
+            "Processing type order:  "
+            "order ID is '%(order)s' and request ID is '%(request)s'"
         )
+        LOG.info(message, {'order': order_id, 'request': request_id})
         return resources.BeginTypeOrder().process_and_suppress_exceptions(
             order_id, project_id)
 
     @monitored
     @transactional
     @retryable_order
-    def update_order(self, context, order_id, project_id, updated_meta):
+    def update_order(self, context, order_id, project_id,
+                     updated_meta, request_id):
         """Update Order."""
-        LOG.info(
-            u._LI("Processing update order: order ID is '%s'"),
-            order_id
+        message = u._LI(
+            "Processing update order: "
+            "order ID is '%(order)s' and request ID is '%(request)s'"
         )
+        LOG.info(message, {'order': order_id, 'request': request_id})
         return resources.UpdateOrder().process_and_suppress_exceptions(
             order_id, project_id, updated_meta)
 
     @monitored
     @transactional
     @retryable_order
-    def check_certificate_status(self, context, order_id, project_id):
+    def check_certificate_status(self, context, order_id,
+                                 project_id, request_id):
         """Check the status of a certificate order."""
-        LOG.info(
-            u._LI("Processing check certificate status on order: order ID is "
-                  "'%s'"),
-            order_id
+        message = u._LI(
+            "Processing check certificate status on order: "
+            "order ID is '%(order)s' and request ID is '%(request)s'"
         )
+
+        LOG.info(message, {'order': order_id, 'request': request_id})
         check_cert_order = resources.CheckCertificateStatusOrder()
         return check_cert_order.process_and_suppress_exceptions(
             order_id, project_id)

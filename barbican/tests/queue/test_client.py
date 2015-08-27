@@ -45,27 +45,35 @@ class WhenUsingAsyncTaskClient(utils.BaseTestCase):
 
     def test_should_process_type_order(self):
         self.client.process_type_order(order_id=self.order_id,
-                                       project_id=self.external_project_id)
+                                       project_id=self.external_project_id,
+                                       request_id=self.request_id)
         self.mock_client.cast.assert_called_with(
             {}, 'process_type_order', order_id=self.order_id,
-            project_id=self.external_project_id)
+            project_id=self.external_project_id,
+            request_id=self.request_id)
 
     def test_should_update_order(self):
         updated_meta = {}
         self.client.update_order(order_id=self.order_id,
                                  project_id=self.external_project_id,
-                                 updated_meta=updated_meta)
+                                 updated_meta=updated_meta,
+                                 request_id=self.request_id)
         self.mock_client.cast.assert_called_with(
             {}, 'update_order', order_id=self.order_id,
-            project_id=self.external_project_id, updated_meta=updated_meta)
+            project_id=self.external_project_id,
+            updated_meta=updated_meta,
+            request_id=self.request_id)
 
     def test_should_check_certificate_order(self):
         self.client.check_certificate_status(
             order_id=self.order_id,
-            project_id=self.external_project_id)
+            project_id=self.external_project_id,
+            request_id=self.request_id)
         self.mock_client.cast.assert_called_with(
             {}, 'check_certificate_status',
-            order_id=self.order_id, project_id=self.external_project_id)
+            order_id=self.order_id,
+            project_id=self.external_project_id,
+            request_id=self.request_id)
 
 
 class WhenCreatingDirectTaskClient(utils.BaseTestCase):
