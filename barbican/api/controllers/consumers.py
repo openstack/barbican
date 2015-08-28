@@ -74,7 +74,8 @@ class ContainerConsumersController(controllers.ACLMixin):
         self.consumer_repo = repo.get_container_consumer_repository()
         self.container_repo = repo.get_container_repository()
         self.validator = validators.ContainerConsumerValidator()
-        self.quota_enforcer = quota.QuotaEnforcer('consumers')
+        self.quota_enforcer = quota.QuotaEnforcer('consumers',
+                                                  self.consumer_repo)
 
     @pecan.expose()
     def _lookup(self, consumer_id, *remainder):
@@ -141,7 +142,7 @@ class ContainerConsumersController(controllers.ACLMixin):
         except exception.NotFound:
             controllers.containers.container_not_found()
 
-        self.quota_enforcer.enforce(project)
+        self.quota_enforcer.enforce(external_project_id)
 
         new_consumer = models.ContainerConsumerMetadatum(self.container_id,
                                                          project.id,
