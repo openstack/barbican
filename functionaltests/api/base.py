@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import abc
+import fixtures
 import logging
+import os
 import uuid
 
 import oslotest.base as oslotest
@@ -37,6 +39,9 @@ class TestCase(oslotest.BaseTestCase):
     max_sized_field = 'a' * max_field_size
     oversized_field = 'a' * (max_field_size + 1)
 
+    log_format = ('%(asctime)s %(process)d %(levelname)-8s '
+                  '[%(name)s] %(message)s')
+
     @classmethod
     def setUpClass(cls):
         cls.LOG = logging.getLogger(cls._get_full_case_name())
@@ -47,6 +52,20 @@ class TestCase(oslotest.BaseTestCase):
         super(TestCase, self).setUp()
 
         self.client = client.BarbicanClient()
+
+        if (os.environ.get('OS_STDOUT_CAPTURE').lower() == 'true' or
+                os.environ.get('OS_STDOUT_CAPTURE') == '1'):
+            stdout = self.useFixture(fixtures.StringStream('stdout')).stream
+            self.useFixture(fixtures.MonkeyPatch('sys.stdout', stdout))
+        if (os.environ.get('OS_STDERR_CAPTURE').lower() == 'true' or
+                os.environ.get('OS_STDERR_CAPTURE') == '1'):
+            stderr = self.useFixture(fixtures.StringStream('stderr')).stream
+            self.useFixture(fixtures.MonkeyPatch('sys.stderr', stderr))
+        if (os.environ.get('OS_LOG_CAPTURE').lower() == 'true' or
+                os.environ.get('OS_LOG_CAPTURE') == '1'):
+            self.useFixture(fixtures.LoggerFixture(nuke_handlers=False,
+                                                   format=self.log_format,
+                                                   level=logging.DEBUG))
 
     def tearDown(self):
         super(TestCase, self).tearDown()
