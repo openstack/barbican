@@ -311,6 +311,10 @@ def construct_new_test_function(original_func, name, build_params):
         argdefs=six.get_function_defaults(original_func)
     )
 
+    for key, val in six.iteritems(original_func.__dict__):
+        if key != 'build_data':
+            new_func.__dict__[key] = val
+
     # Support either an arg list or kwarg dict for our data
     build_args = build_params if isinstance(build_params, list) else []
     build_kwargs = build_params if isinstance(build_params, dict) else {}
