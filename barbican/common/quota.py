@@ -200,14 +200,14 @@ class QuotaEnforcer(object):
         self.resource_type = resource_type
         self.resource_repo = resource_repo
 
-    def enforce(self, external_project_id):
+    def enforce(self, project):
         """Enforce the quota limit for the resource
 
-        :param external_project_id: ID of project requesting to create
+        :param project: the project object corresponding to the sender
         :raises QuotaReached: exception raised if quota forbids request
         :return: None
         """
-        quotas = self.quota_driver.get_effective_quotas(external_project_id)
+        quotas = self.quota_driver.get_effective_quotas(project.external_id)
         quota = quotas[self.resource_type]
 
         reached = False
@@ -217,12 +217,12 @@ class QuotaEnforcer(object):
         elif self.quota_driver.is_disabled_value(quota):
             reached = True
         else:
-            count = self.resource_repo.get_count(external_project_id)
+            count = self.resource_repo.get_count(project.id)
             if count >= quota:
                 reached = True
 
         if reached:
             raise exception.QuotaReached(
-                external_project_id=external_project_id,
+                external_project_id=project.external_id,
                 resource_type=self.resource_type,
                 quota=quota)

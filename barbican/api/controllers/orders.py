@@ -211,7 +211,7 @@ class OrdersController(controllers.ACLMixin):
                     external_project_id,
                     container_ref, pecan.request)
 
-        self.quota_enforcer.enforce(external_project_id)
+        self.quota_enforcer.enforce(project)
 
         new_order = models.Order()
         new_order.meta = body.get('meta')

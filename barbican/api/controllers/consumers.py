@@ -142,7 +142,7 @@ class ContainerConsumersController(controllers.ACLMixin):
         except exception.NotFound:
             controllers.containers.container_not_found()
 
-        self.quota_enforcer.enforce(external_project_id)
+        self.quota_enforcer.enforce(project)
 
         new_consumer = models.ContainerConsumerMetadatum(self.container_id,
                                                          project.id,
