@@ -17,12 +17,12 @@ import functools
 from os import path
 import time
 import types
-import urlparse
 import uuid
 
 import mock
 import oslotest.base as oslotest
 import six
+from six.moves.urllib import parse
 import webtest
 
 from OpenSSL import crypto
@@ -408,7 +408,7 @@ def create_timestamp_w_tz_and_offset(timezone=None, days=0, hours=0, minutes=0,
 
 
 def get_limit_and_offset_from_ref(ref):
-    matches = dict(urlparse.parse_qsl(urlparse.urlparse(ref).query))
+    matches = dict(parse.parse_qsl(parse.urlparse(ref).query))
     ref_limit = matches['limit']
     ref_offset = matches['offset']
 

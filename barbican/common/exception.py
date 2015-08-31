@@ -17,16 +17,9 @@
 Barbican exception subclasses
 """
 
-import urlparse
-
 from barbican import i18n as u
 
 _FATAL_EXCEPTION_FORMAT_ERRORS = False
-
-
-class RedirectException(Exception):
-    def __init__(self, url):
-        self.url = urlparse.urlparse(url)
 
 
 class BarbicanException(Exception):
