@@ -12,6 +12,7 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 import argparse
+import base64
 import json
 import traceback
 
@@ -43,6 +44,11 @@ class KekRewrap(object):
         self.crypto_plugin = p11_crypto.P11CryptoPlugin(CONF)
         self.pkcs11 = self.crypto_plugin.pkcs11
         self.plugin_name = utils.generate_fullname_for(self.crypto_plugin)
+        self.hsm_session = self.pkcs11.get_session()
+        self.new_mkek_label = self.plugin_crypto.mkek_label
+        self.new_hmac_label = self.plugin_crypto.hmac_label
+        self.new_mkek = self.crypto_plugin.get_master_key(self.new_mkek_label)
+        self.new_mkhk = self.crypto_plugin.get_master_key(self.new_hmac_label)
 
     def rewrap_kek(self, project, kek):
         with self.db_session.begin():
@@ -53,29 +59,53 @@ class KekRewrap(object):
                 print(msg.format(meta_dict['mkek_label'], self.new_label))
                 print('Would have updated KEKDatum in db {}'.format(kek.id))
 
-            else:
-                hsm_session = self.pkcs11.create_working_session()
-
                 print('Rewrapping KEK {}'.format(kek.id))
                 print('Pre-change IV: {}, Wrapped Key: {}'.format(
                     meta_dict['iv'], meta_dict['wrapped_key']))
+                return
 
-                updated_meta = self.pkcs11.rewrap_kek(
-                    iv=meta_dict['iv'],
-                    wrapped_key=meta_dict['wrapped_key'],
-                    hmac=meta_dict['hmac'],
-                    mkek_label=meta_dict['mkek_label'],
-                    hmac_label=meta_dict['hmac_label'],
-                    key_length=32,
-                    session=hsm_session
-                )
+            session = self.hsm_session
 
-                self.pkcs11.close_session(hsm_session)
-                print('Post-change IV: {}, Wrapped Key: {}'.format(
-                    updated_meta['iv'], updated_meta['wrapped_key']))
+            # Get KEK's master keys
+            kek_mkek = self.pkcs11._get_key_handle(
+                meta_dict['mkek_label'], session
+            )
+            kek_mkhk = self.pkcs11._get_key_handle(
+                meta_dict['hmac_label'], session
+            )
+            # Decode data
+            iv = base64.b64decode(meta_dict['iv'])
+            wrapped_key = base64.b64decode(meta_dict['wrapped_key'])
+            hmac = base64.b64decode(meta_dict['hmac'])
+            # Verify HMAC
+            kek_data = iv + wrapped_key
+            self.pkcs11.verify_hmac(kek_mkhk, hmac, kek_data, session)
+            # Unwrap KEK
+            kek = self.pkcs11.unwrap_key(kek_mkek, iv, wrapped_key, session)
 
-                # Update KEK metadata in DB
-                kek.plugin_meta = json.dumps(updated_meta)
+            # Wrap KEK with new master keys
+            new_kek = self.pkcs11.wrap_key(self.new_mkek, kek, session)
+            # Compute HMAC for rewrapped KEK
+            new_kek_data = new_kek['iv'] + new_kek['wrapped_key']
+            new_hmac = self.pkcs11.compute_hmac(self.new_mkhk, new_kek_data,
+                                                session)
+            # Destroy unwrapped KEK
+            self.pkcs11.destroy_object(kek, session)
+
+            # Build updated meta dict
+            updated_meta = meta_dict.copy()
+            updated_meta['mkek_label'] = self.new_mkek_label
+            updated_meta['hmac_label'] = self.new_hmac_label
+            updated_meta['iv'] = base64.b64encode(new_kek['iv'])
+            updated_meta['wrapped_key'] = base64.b64encode(
+                new_kek['wrapped_key'])
+            updated_meta['hmac'] = base64.b64encode(new_hmac)
+
+            print('Post-change IV: {}, Wrapped Key: {}'.format(
+                updated_meta['iv'], updated_meta['wrapped_key']))
+
+            # Update KEK metadata in DB
+            kek.plugin_meta = p11_crypto.json_dumps_compact(updated_meta)
 
     def get_keks_for_project(self, project):
         keks = []

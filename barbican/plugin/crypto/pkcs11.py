@@ -1,21 +1,20 @@
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#    http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#  License for the specific language governing permissions and limitations
-#  under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-import base64
 import collections
 import textwrap
 
 import cffi
-from cryptography.hazmat.primitives import padding
 
 from barbican.common import exception
 from barbican.common import utils
@@ -32,6 +31,11 @@ CKF_RW_SESSION = (1 << 1)
 CKF_SERIAL_SESSION = (1 << 2)
 CKU_SO = 0
 CKU_USER = 1
+
+CKS_RO_PUBLIC_SESSION = 0
+CKS_RO_USER_FUNCTIONS = 1
+CKS_RW_PUBLIC_SESSION = 2
+CKS_RW_USER_FUNCTIONS = 3
 
 CKO_SECRET_KEY = 4
 CKK_AES = 0x1f
@@ -120,9 +124,16 @@ CKA_SUPPORTED_CMS_ATTRIBUTES = 0x503
 
 CKM_SHA256_HMAC = 0x251
 CKM_AES_KEY_GEN = 0x1080
+CKM_AES_CBC = 0x1082
 CKM_AES_CBC_PAD = 0x1085
+CKM_AES_GCM = 0x1087
 CKM_AES_KEY_WRAP = 0x1090
 VENDOR_SAFENET_CKM_AES_GCM = 0x8000011c
+
+CKM_NAMES = {
+    'CKM_AES_GCM': CKM_AES_GCM,
+    'VENDOR_SAFENET_CKM_AES_GCM': VENDOR_SAFENET_CKM_AES_GCM
+}
 
 ERROR_CODES = {
     1: 'CKR_CANCEL',
@@ -223,6 +234,7 @@ def build_ffi():
     typedef unsigned long CK_OBJECT_HANDLE;
     typedef unsigned long CK_SLOT_ID;
     typedef unsigned long CK_FLAGS;
+    typedef unsigned long CK_STATE;
     typedef unsigned long CK_USER_TYPE;
     typedef unsigned char * CK_UTF8CHAR_PTR;
     typedef ... *CK_NOTIFY;
@@ -247,6 +259,14 @@ def build_ffi():
     typedef CK_BYTE *CK_BYTE_PTR;
     typedef CK_ULONG *CK_ULONG_PTR;
 
+    typedef struct ck_session_info {
+        CK_SLOT_ID slot_id;
+        CK_STATE state;
+        CK_FLAGS flags;
+        unsigned long device_error;
+    } CK_SESSION_INFO;
+    typedef CK_SESSION_INFO *CK_SESSION_INFO_PTR;
+
     typedef struct CK_AES_GCM_PARAMS {
         char * pIv;
         unsigned long ulIvLen;
@@ -262,8 +282,12 @@ def build_ffi():
     CK_RV C_OpenSession(CK_SLOT_ID, CK_FLAGS, void *, CK_NOTIFY,
                         CK_SESSION_HANDLE *);
     CK_RV C_CloseSession(CK_SESSION_HANDLE);
+    CK_RV C_GetSessionInfo(CK_SESSION_HANDLE, CK_SESSION_INFO_PTR);
     CK_RV C_Login(CK_SESSION_HANDLE, CK_USER_TYPE, CK_UTF8CHAR_PTR,
                   CK_ULONG);
+    CK_RV C_SetAttributeValue(CK_SESSION_HANDLE, CK_OBJECT_HANDLE,
+                              CK_ATTRIBUTE *, CK_ULONG);
+    CK_RV C_DestroyObject(CK_SESSION_HANDLE, CK_OBJECT_HANDLE);
     CK_RV C_FindObjectsInit(CK_SESSION_HANDLE, CK_ATTRIBUTE *, CK_ULONG);
     CK_RV C_FindObjects(CK_SESSION_HANDLE, CK_OBJECT_HANDLE *, CK_ULONG,
                         CK_ULONG *);
@@ -309,104 +333,256 @@ class P11CryptoKeyHandleException(exception.BarbicanException):
 
 
 class PKCS11(object):
-
-    def __init__(self, library_path, login_passphrase, slot_id, ffi=None):
-        self.ffi = build_ffi() if not ffi else ffi
+    def __init__(self, library_path, login_passphrase, rw_session, slot_id,
+                 ffi=None, algorithm='CKM_AES_GCM'):
+        self.ffi = ffi or build_ffi()
         self.lib = self.ffi.dlopen(library_path)
+        rv = self.lib.C_Initialize(self.ffi.NULL)
+        self._check_error(rv)
 
-        # TODO(reaperhulk): abstract this so alternate algorithms/vendors
-        # are possible.
-        self.algorithm = VENDOR_SAFENET_CKM_AES_GCM
-        self.block_size = 16  # in bytes
-        self.key_handles = {}
+        # Session options
         self.login_passphrase = login_passphrase
+        self.rw_session = rw_session
         self.slot_id = slot_id
 
-        self.check_error(self.lib.C_Initialize(self.ffi.NULL))
+        # Algorithm options
+        self.algorithm = CKM_NAMES[algorithm]
+        self.blocksize = 16
+        self.noncesize = 12
+        self.gcmtagsize = 16
 
-        # Open session to perform self-test and get/generate mkek and hmac
-        session = self.create_working_session()
-        self.perform_rng_self_test(session)
+        # Validate configuration and RNG
+        session = self.get_session()
+        self._rng_self_test(session)
+        self.return_session(session)
 
-        # Clean up the active session
-        self.close_session(session)
-
-    def cache_mkek_and_hmac(self, mkek_label, hmac_label):
-        session = self.create_working_session()
-        self.current_mkek_label = mkek_label
-        self.current_hmac_label = hmac_label
-        LOG.debug("Current mkek label: %s", self.current_mkek_label)
-        LOG.debug("Current hmac label: %s", self.current_hmac_label)
-
-        # cache current MKEK handle in the dictionary
-        self.get_mkek(self.current_mkek_label, session)
-        self.get_hmac_key(self.current_hmac_label, session)
-        self.close_session(session)
-
-    def perform_rng_self_test(self, session):
-        test_random = self.generate_random(100, session)
-        if self.ffi.buffer(test_random, 100)[:] == b"\x00" * 100:
-            raise P11CryptoPluginException(u._(
-                "Apparent RNG self-test failure."))
-
-    def open_session(self, slot):
-        session_ptr = self.ffi.new("CK_SESSION_HANDLE *")
-        rv = self.lib.C_OpenSession(
-            slot,
-            CKF_RW_SESSION | CKF_SERIAL_SESSION,
-            self.ffi.NULL,
-            self.ffi.NULL,
-            session_ptr
-        )
-        self.check_error(rv)
-        session = session_ptr[0]
+    def get_session(self):
+        session = self._open_session(self.slot_id)
+        # Get session info to check user state
+        session_info = self._get_session_info(session)
+        if session_info.state in (CKS_RO_PUBLIC_SESSION,
+                                  CKS_RW_PUBLIC_SESSION):
+            # Login public sessions
+            self._login(self.login_passphrase, session)
         return session
 
-    def close_session(self, session):
-        rv = self.lib.C_CloseSession(session)
-        self.check_error(rv)
+    def return_session(self, session):
+        self._close_session(session)
 
-    def login(self, password, session):
-        rv = self.lib.C_Login(
-            session,
-            CKU_USER,
-            password,
-            len(password)
+    def generate_random(self, length, session):
+        buf = self._generate_random(length, session)
+        return self.ffi.buffer(buf)[:]
+
+    def get_key_handle(self, label, session):
+        attributes = self._build_attributes([
+            Attribute(CKA_CLASS, CKO_SECRET_KEY),
+            Attribute(CKA_KEY_TYPE, CKK_AES),
+            Attribute(CKA_LABEL, str(label))
+        ])
+        rv = self.lib.C_FindObjectsInit(
+            session, attributes.template, len(attributes.template)
         )
-        self.check_error(rv)
+        self._check_error(rv)
 
-    def create_working_session(self):
-        """Automatically opens a session and performs a login."""
-        session = self.open_session(self.slot_id)
-        self.login(self.login_passphrase, session)
-        return session
+        count = self.ffi.new("CK_ULONG *")
+        obj_handle_ptr = self.ffi.new("CK_OBJECT_HANDLE[2]")
+        rv = self.lib.C_FindObjects(session, obj_handle_ptr, 2, count)
+        self._check_error(rv)
+        key = None
+        if count[0] == 1:
+            key = obj_handle_ptr[0]
+        rv = self.lib.C_FindObjectsFinal(session)
+        self._check_error(rv)
+        if count[0] > 1:
+            raise P11CryptoPluginKeyException()
+        return key
 
-    def check_error(self, value):
+    def encrypt(self, key, pt_data, session):
+        iv = self._generate_random(self.noncesize, session)
+        ck_mechanism = self._build_gcm_mechanism(iv)
+        rv = self.lib.C_EncryptInit(session, ck_mechanism.mech, key)
+        self._check_error(rv)
+
+        pt_len = len(pt_data)
+        ct_len = self.ffi.new("CK_ULONG *", pt_len + self.gcmtagsize)
+        ct = self.ffi.new("CK_BYTE[{0}]".format(ct_len[0]))
+        rv = self.lib.C_Encrypt(session, pt_data, pt_len, ct, ct_len)
+        self._check_error(rv)
+
+        return {
+            "iv": self.ffi.buffer(iv)[:],
+            "ct": self.ffi.buffer(ct, ct_len[0])[:]
+        }
+
+    def decrypt(self, key, iv, ct_data, session):
+        iv = self.ffi.new("CK_BYTE[{0}]".format(len(iv)), iv)
+        ck_mechanism = self._build_gcm_mechanism(iv)
+        rv = self.lib.C_DecryptInit(session, ck_mechanism.mech, key)
+        self._check_error(rv)
+
+        ct_len = len(ct_data)
+        pt_len = self.ffi.new("CK_ULONG *", ct_len - self.gcmtagsize)
+        pt = self.ffi.new("CK_BYTE[{0}]".format(pt_len[0]))
+        rv = self.lib.C_Decrypt(session, ct_data, ct_len, pt, pt_len)
+        self._check_error(rv)
+
+        return self.ffi.buffer(pt, pt_len[0])[:]
+
+    def generate_key(self, key_length, session, key_label=None,
+                     encrypt=False, sign=False, wrap=False, master_key=False):
+        if not encrypt and not sign and not wrap:
+            raise P11CryptoPluginException()
+        if master_key and not key_label:
+            raise ValueError(u._("key_label must be set for master_keys"))
+
+        token = True if master_key else False
+        extractable = False if master_key else True
+
+        ck_attributes = [
+            Attribute(CKA_CLASS, CKO_SECRET_KEY),
+            Attribute(CKA_KEY_TYPE, CKK_AES),
+            Attribute(CKA_VALUE_LEN, key_length),
+            Attribute(CKA_TOKEN, token),
+            Attribute(CKA_PRIVATE, True),
+            Attribute(CKA_SENSITIVE, True),
+            Attribute(CKA_ENCRYPT, encrypt),
+            Attribute(CKA_DECRYPT, encrypt),
+            Attribute(CKA_SIGN, sign),
+            Attribute(CKA_VERIFY, sign),
+            Attribute(CKA_WRAP, wrap),
+            Attribute(CKA_UNWRAP, wrap),
+            Attribute(CKA_EXTRACTABLE, extractable)
+        ]
+        if master_key:
+            ck_attributes.append(Attribute(CKA_LABEL, key_label))
+        ck_attributes = self._build_attributes(ck_attributes)
+        mech = self.ffi.new("CK_MECHANISM *")
+        mech.mechanism = CKM_AES_KEY_GEN
+        obj_handle_ptr = self.ffi.new("CK_OBJECT_HANDLE *")
+        rv = self.lib.C_GenerateKey(
+            session, mech, ck_attributes.template, len(ck_attributes.template),
+            obj_handle_ptr
+        )
+        self._check_error(rv)
+
+        return obj_handle_ptr[0]
+
+    def wrap_key(self, wrapping_key, key_to_wrap, session):
+        mech = self.ffi.new("CK_MECHANISM *")
+        mech.mechanism = CKM_AES_CBC_PAD
+        iv = self._generate_random(16, session)
+        mech.parameter = iv
+        mech.parameter_len = 16
+
+        # Ask for length of the wrapped key
+        wrapped_key_len = self.ffi.new("CK_ULONG *")
+        rv = self.lib.C_WrapKey(
+            session, mech, wrapping_key, key_to_wrap,
+            self.ffi.NULL, wrapped_key_len
+        )
+        self._check_error(rv)
+
+        # Wrap key
+        wrapped_key = self.ffi.new("CK_BYTE[{0}]".format(wrapped_key_len[0]))
+        rv = self.lib.C_WrapKey(
+            session, mech, wrapping_key, key_to_wrap,
+            wrapped_key, wrapped_key_len
+        )
+        self._check_error(rv)
+
+        return {
+            'iv': self.ffi.buffer(iv)[:],
+            'wrapped_key': self.ffi.buffer(wrapped_key, wrapped_key_len[0])[:]
+        }
+
+    def unwrap_key(self, wrapping_key, iv, wrapped_key, session):
+        ck_iv = self.ffi.new("CK_BYTE[]", iv)
+        ck_wrapped_key = self.ffi.new("CK_BYTE[]", wrapped_key)
+        unwrapped_key = self.ffi.new("CK_OBJECT_HANDLE *")
+        mech = self.ffi.new("CK_MECHANISM *")
+        mech.mechanism = CKM_AES_CBC_PAD
+        mech.parameter = ck_iv
+        mech.parameter_len = len(iv)
+
+        ck_attributes = self._build_attributes([
+            Attribute(CKA_CLASS, CKO_SECRET_KEY),
+            Attribute(CKA_KEY_TYPE, CKK_AES),
+            Attribute(CKA_TOKEN, False),
+            Attribute(CKA_PRIVATE, True),
+            Attribute(CKA_SENSITIVE, True),
+            Attribute(CKA_ENCRYPT, True),
+            Attribute(CKA_DECRYPT, True),
+            Attribute(CKA_EXTRACTABLE, True)
+        ])
+        rv = self.lib.C_UnwrapKey(
+            session, mech, wrapping_key, ck_wrapped_key, len(wrapped_key),
+            ck_attributes.template, len(ck_attributes.template), unwrapped_key
+        )
+        self._check_error(rv)
+
+        return unwrapped_key[0]
+
+    def compute_hmac(self, hmac_key, data, session):
+        mech = self.ffi.new("CK_MECHANISM *")
+        mech.mechanism = CKM_SHA256_HMAC
+        rv = self.lib.C_SignInit(session, mech, hmac_key)
+        self._check_error(rv)
+
+        ck_data = self.ffi.new("CK_BYTE[]", data)
+        buf = self.ffi.new("CK_BYTE[32]")
+        buf_len = self.ffi.new("CK_ULONG *", 32)
+        rv = self.lib.C_Sign(session, ck_data, len(data), buf, buf_len)
+        self._check_error(rv)
+        return self.ffi.buffer(buf, buf_len[0])[:]
+
+    def verify_hmac(self, hmac_key, sig, data, session):
+        mech = self.ffi.new("CK_MECHANISM *")
+        mech.mechanism = CKM_SHA256_HMAC
+
+        rv = self.lib.C_VerifyInit(session, mech, hmac_key)
+        self._check_error(rv)
+        ck_data = self.ffi.new("CK_BYTE[]", data)
+        ck_sig = self.ffi.new("CK_BYTE[]", sig)
+        rv = self.lib.C_Verify(session, ck_data, len(data), ck_sig, len(sig))
+        self._check_error(rv)
+
+    def destroy_object(self, obj_handle, session):
+        rv = self.lib.C_DestroyObject(session, obj_handle)
+        self._check_error(rv)
+
+    def _check_error(self, value):
         if value != CKR_OK:
+            # TODO(jkf) Expand error handling to raise different exceptions
+            # for notable errors we want to handle programmatically
             raise P11CryptoPluginException(u._(
                 "HSM returned response code: {hex_value} {code}").format(
                     hex_value=hex(value),
-                    code=ERROR_CODES.get(value, 'CKR_????')
-            )
-            )
+                    code=ERROR_CODES.get(value, 'CKR_????')))
 
-    def build_attributes(self, attrs):
+    def _generate_random(self, length, session):
+        buf = self.ffi.new("CK_BYTE[{0}]".format(length))
+        rv = self.lib.C_GenerateRandom(session, buf, length)
+        self._check_error(rv)
+        return buf
+
+    def _build_attributes(self, attrs):
         attributes = self.ffi.new("CK_ATTRIBUTE[{0}]".format(len(attrs)))
         val_list = []
         for index, attr in enumerate(attrs):
             attributes[index].type = attr.type
             if isinstance(attr.value, bool):
-                if attr.value:
-                    val_list.append(self.ffi.new("unsigned char *", 1))
-                else:
-                    val_list.append(self.ffi.new("unsigned char *", 0))
-
+                val_list.append(self.ffi.new("unsigned char *",
+                                int(attr.value)))
                 attributes[index].value_len = 1  # sizeof(char) is 1
             elif isinstance(attr.value, int):
                 # second because bools are also considered ints
                 val_list.append(self.ffi.new("CK_ULONG *", attr.value))
                 attributes[index].value_len = 8
             elif isinstance(attr.value, str):
+                buf = attr.value.encode('utf-8')
+                val_list.append(self.ffi.new("char []", buf))
+                attributes[index].value_len = len(buf)
+            elif isinstance(attr.value, bytes):
                 val_list.append(self.ffi.new("char []", attr.value))
                 attributes[index].value_len = len(attr.value)
             else:
@@ -416,293 +592,45 @@ class PKCS11(object):
 
         return CKAttributes(attributes, val_list)
 
-    def get_mkek(self, mkek_label, session):
-        mkek = self.get_key_handle(mkek_label, session)
-        if not mkek:
-            raise P11CryptoKeyHandleException()
+    def _open_session(self, slot):
+        session_ptr = self.ffi.new("CK_SESSION_HANDLE *")
+        flags = CKF_SERIAL_SESSION
+        if self.rw_session:
+            flags |= CKF_RW_SESSION
+        rv = self.lib.C_OpenSession(slot, flags, self.ffi.NULL,
+                                    self.ffi.NULL, session_ptr)
+        self._check_error(rv)
+        return session_ptr[0]
 
-        self.key_handles[mkek_label] = mkek
+    def _close_session(self, session):
+        rv = self.lib.C_CloseSession(session)
+        self._check_error(rv)
 
-        return mkek
+    def _get_session_info(self, session):
+        session_info_ptr = self.ffi.new("CK_SESSION_INFO *")
+        rv = self.lib.C_GetSessionInfo(session, session_info_ptr)
+        self._check_error(rv)
+        return session_info_ptr[0]
 
-    def generate_mkek(self, mkek_label, mkek_length, session):
+    def _login(self, password, session):
+        rv = self.lib.C_Login(session, CKU_USER, password, len(password))
+        self._check_error(rv)
 
-        # Generate a key that is persistent and not extractable
-        ck_attributes = self.build_attributes([
-            Attribute(CKA_CLASS, CKO_SECRET_KEY),
-            Attribute(CKA_KEY_TYPE, CKK_AES),
-            Attribute(CKA_VALUE_LEN, mkek_length),
-            Attribute(CKA_LABEL, mkek_label),
-            Attribute(CKA_PRIVATE, True),
-            Attribute(CKA_SENSITIVE, True),
-            Attribute(CKA_ENCRYPT, True),
-            Attribute(CKA_DECRYPT, True),
-            Attribute(CKA_SIGN, True),
-            Attribute(CKA_VERIFY, True),
-            Attribute(CKA_TOKEN, True),
-            Attribute(CKA_WRAP, True),
-            Attribute(CKA_UNWRAP, True),
-            Attribute(CKA_EXTRACTABLE, False)
-        ])
-        mkek = self.generate_kek(ck_attributes.template, session)
+    def _rng_self_test(self, session):
+        test_random = self.generate_random(100, session)
+        if test_random == b'\x00' * 100:
+            raise P11CryptoPluginException(
+                u._("Apparent RNG self-test failure."))
 
-        self.key_handles[mkek_label] = mkek
-
-        return mkek
-
-    def get_hmac_key(self, hmac_label, session):
-        hmac_key = self.get_key_handle(hmac_label, session)
-        if not hmac_key:
-            raise P11CryptoKeyHandleException()
-
-        self.key_handles[hmac_label] = hmac_key
-
-        return hmac_key
-
-    def generate_hmac_key(self, hmac_label, session):
-        # Generate a key that is persistent and not extractable
-        ck_attributes = self.build_attributes([
-            Attribute(CKA_CLASS, CKO_SECRET_KEY),
-            Attribute(CKA_KEY_TYPE, CKK_AES),
-            Attribute(CKA_VALUE_LEN, 32),
-            Attribute(CKA_LABEL, hmac_label),
-            Attribute(CKA_PRIVATE, True),
-            Attribute(CKA_SENSITIVE, True),
-            Attribute(CKA_SIGN, True),
-            Attribute(CKA_VERIFY, True),
-            Attribute(CKA_TOKEN, True),
-            Attribute(CKA_EXTRACTABLE, False)
-        ])
-        hmac_key = self.generate_kek(ck_attributes.template, session)
-
-        self.key_handles[hmac_label] = hmac_key
-
-        return hmac_key
-
-    def get_key_handle(self, mkek_label, session):
-        if mkek_label in self.key_handles:
-            return self.key_handles[mkek_label]
-
-        ck_attributes = self.build_attributes([
-            Attribute(CKA_CLASS, CKO_SECRET_KEY),
-            Attribute(CKA_KEY_TYPE, CKK_AES),
-            Attribute(CKA_LABEL, str(mkek_label))
-        ])
-        rv = self.lib.C_FindObjectsInit(
-            session, ck_attributes.template, len(ck_attributes.template)
-        )
-        self.check_error(rv)
-
-        returned_count = self.ffi.new("CK_ULONG *")
-        object_handle_ptr = self.ffi.new("CK_OBJECT_HANDLE *")
-        rv = self.lib.C_FindObjects(
-            session, object_handle_ptr, 2, returned_count
-        )
-        self.check_error(rv)
-        if returned_count[0] == 1:
-            key = object_handle_ptr[0]
-        rv = self.lib.C_FindObjectsFinal(session)
-        self.check_error(rv)
-        if returned_count[0] == 1:
-            return key
-        elif returned_count[0] == 0:
-            return None
-        else:
-            raise P11CryptoPluginKeyException()
-
-    def generate_random(self, length, session):
-        buf = self.ffi.new("CK_BYTE[{0}]".format(length))
-        rv = self.lib.C_GenerateRandom(session, buf, length)
-        self.check_error(rv)
-        return buf
-
-    def build_gcm_mech(self, iv):
+    def _build_gcm_mechanism(self, iv):
+        iv_len = len(iv)
         mech = self.ffi.new("CK_MECHANISM *")
         mech.mechanism = self.algorithm
         gcm = self.ffi.new("CK_AES_GCM_PARAMS *")
         gcm.pIv = iv
-        gcm.ulIvLen = 16
-        gcm.ulIvBits = 128
-        gcm.ulTagBits = 128
+        gcm.ulIvLen = iv_len
+        gcm.ulIvBits = iv_len * 8
+        gcm.ulTagBits = self.gcmtagsize * 8
         mech.parameter = gcm
-        mech.parameter_len = 48  # sizeof(CK_AES_GCM_PARAMS)
+        mech.parameter_len = 48
         return CKMechanism(mech, gcm)
-
-    def generate_kek(self, template, session):
-        """Generates both master and project KEKs
-
-        :param template: A tuple of tuples in (CKA_TYPE, VALUE) form
-        """
-        mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = CKM_AES_KEY_GEN
-        object_handle_ptr = self.ffi.new("CK_OBJECT_HANDLE *")
-        rv = self.lib.C_GenerateKey(
-            session, mech, template, len(template), object_handle_ptr
-        )
-
-        self.check_error(rv)
-        return object_handle_ptr[0]
-
-    def rewrap_kek(self, iv, wrapped_key, hmac, mkek_label, hmac_label,
-                   key_length, session):
-        unwrapped_kek = self.unwrap_key(iv, hmac, wrapped_key, mkek_label,
-                                        hmac_label, session)
-        mkek = self.key_handles[self.current_mkek_label]
-
-        iv = self.generate_random(16, session)
-        mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = CKM_AES_CBC_PAD
-        mech.parameter = iv
-        mech.parameter_len = 16
-
-        padded_length = key_length + self.block_size
-
-        buf = self.ffi.new("CK_BYTE[{0}]".format(padded_length))
-        buf_len = self.ffi.new("CK_ULONG *", padded_length)
-
-        rv = self.lib.C_WrapKey(
-            session,
-            mech,
-            mkek,
-            unwrapped_kek,
-            buf,
-            buf_len
-        )
-        self.check_error(rv)
-
-        wrapped_kek = self.ffi.buffer(buf, buf_len[0])[:]
-        hmac = self.compute_hmac(wrapped_kek, session)
-
-        return {
-            'iv': base64.b64encode(self.ffi.buffer(iv)[:]),
-            'wrapped_key': base64.b64encode(wrapped_kek),
-            'hmac': base64.b64encode(hmac),
-            'mkek_label': self.current_mkek_label,
-            'hmac_label': self.current_hmac_label
-        }
-
-    def generate_wrapped_kek(self, kek_label, key_length, session):
-        # generate a non-persistent key that is extractable
-        ck_attributes = self.build_attributes([
-            Attribute(CKA_CLASS, CKO_SECRET_KEY),
-            Attribute(CKA_KEY_TYPE, CKK_AES),
-            Attribute(CKA_VALUE_LEN, key_length),
-            Attribute(CKA_LABEL, kek_label),
-            Attribute(CKA_PRIVATE, True),
-            Attribute(CKA_SENSITIVE, True),
-            Attribute(CKA_ENCRYPT, True),
-            Attribute(CKA_DECRYPT, True),
-            Attribute(CKA_TOKEN, False),  # not persistent
-            Attribute(CKA_WRAP, True),
-            Attribute(CKA_UNWRAP, True),
-            Attribute(CKA_EXTRACTABLE, True)
-        ])
-        kek = self.generate_kek(ck_attributes.template, session)
-        mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = CKM_AES_CBC_PAD
-        iv = self.generate_random(16, session)
-        mech.parameter = iv
-        mech.parameter_len = 16
-        mkek = self.key_handles[self.current_mkek_label]
-        # Since we're using CKM_AES_CBC_PAD the maximum length of the
-        # padded key will be the key length + one block. We allocate the
-        # worst case scenario as a CK_BYTE array.
-        padded_length = key_length + self.block_size
-
-        buf = self.ffi.new("CK_BYTE[{0}]".format(padded_length))
-        buf_len = self.ffi.new("CK_ULONG *", padded_length)
-        rv = self.lib.C_WrapKey(session, mech, mkek, kek, buf, buf_len)
-        self.check_error(rv)
-        wrapped_key = self.ffi.buffer(buf, buf_len[0])[:]
-        hmac = self.compute_hmac(wrapped_key, session)
-        return {
-            'iv': base64.b64encode(self.ffi.buffer(iv)[:]),
-            'wrapped_key': base64.b64encode(wrapped_key),
-            'hmac': base64.b64encode(hmac),
-            'mkek_label': self.current_mkek_label,
-            'hmac_label': self.current_hmac_label
-        }
-
-    def compute_hmac(self, wrapped_key, session):
-        mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = CKM_SHA256_HMAC
-        hmac_key = self.key_handles[self.current_hmac_label]
-        rv = self.lib.C_SignInit(session, mech, hmac_key)
-        self.check_error(rv)
-
-        ck_bytes = self.ffi.new("CK_BYTE[]", wrapped_key)
-        buf = self.ffi.new("CK_BYTE[32]")
-        buf_len = self.ffi.new("CK_ULONG *", 32)
-        rv = self.lib.C_Sign(session, ck_bytes, len(wrapped_key), buf, buf_len)
-        self.check_error(rv)
-        return self.ffi.buffer(buf, buf_len[0])[:]
-
-    def verify_hmac(self, hmac_key, sig, wrapped_key, session):
-        mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = CKM_SHA256_HMAC
-
-        rv = self.lib.C_VerifyInit(session, mech, hmac_key)
-        self.check_error(rv)
-        ck_bytes = self.ffi.new("CK_BYTE[]", wrapped_key)
-        ck_sig = self.ffi.new("CK_BYTE[]", sig)
-        rv = self.lib.C_Verify(
-            session, ck_bytes, len(wrapped_key), ck_sig, len(sig)
-        )
-        self.check_error(rv)
-
-    def unwrap_key(self, iv, hmac, wrapped_key, mkek_label, hmac_label,
-                   session):
-        """Unwraps byte string to key handle in HSM.
-
-        :param iv: the initialization vector used for wrapped key
-        :param hmac: the hmac for used for wrapped key
-        :param wrapped_key: the key to be unwrapped
-        :param mkek_label: label of mkek for used for wrapped key
-        :param hmac_label: label of hmac for used for wrapped key
-        :param session: active HSM session
-
-        :returns: Key handle from HSM. No unencrypted bytes.
-        """
-        iv = base64.b64decode(iv)
-        hmac = base64.b64decode(hmac)
-        wrapped_key = base64.b64decode(wrapped_key)
-        mkek = self.get_key_handle(mkek_label, session)
-        hmac_key = self.get_key_handle(hmac_label, session)
-        LOG.debug("Unwrapping key with %s mkek label", mkek_label)
-
-        LOG.debug("Verifying key with %s hmac label", hmac_label)
-        self.verify_hmac(hmac_key, hmac, wrapped_key, session)
-
-        unwrapped = self.ffi.new("CK_OBJECT_HANDLE *")
-        mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = CKM_AES_CBC_PAD
-        iv = self.ffi.new("CK_BYTE[]", iv)
-        mech.parameter = iv
-        mech.parameter_len = 16
-
-        ck_attributes = self.build_attributes([
-            Attribute(CKA_CLASS, CKO_SECRET_KEY),
-            Attribute(CKA_KEY_TYPE, CKK_AES),
-            Attribute(CKA_ENCRYPT, True),
-            Attribute(CKA_DECRYPT, True),
-            Attribute(CKA_TOKEN, False),
-            Attribute(CKA_WRAP, True),
-            Attribute(CKA_UNWRAP, True),
-            Attribute(CKA_EXTRACTABLE, True)
-        ])
-
-        rv = self.lib.C_UnwrapKey(
-            session, mech, mkek, wrapped_key, len(wrapped_key),
-            ck_attributes.template, len(ck_attributes.template), unwrapped
-        )
-        self.check_error(rv)
-
-        return unwrapped[0]
-
-    def pad(self, unencrypted):
-        padder = padding.PKCS7(self.block_size * 8).padder()
-        return padder.update(unencrypted) + padder.finalize()
-
-    def unpad(self, unencrypted):
-        unpadder = padding.PKCS7(self.block_size * 8).unpadder()
-        return unpadder.update(unencrypted) + unpadder.finalize()
