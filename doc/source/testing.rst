@@ -18,7 +18,7 @@ Unit Tests
 Currently, we provide tox environments for Python 2.7. By default
 all available test environments within the tox configuration will execute
 when calling ``tox``. If you want to run them independently, you can do so
-with the following commands
+with the following command:
 
 .. code-block:: bash
 
@@ -31,6 +31,20 @@ with the following commands
     If you do not have the appropriate Python versions available, consider
     setting up PyEnv to install multiple versions of Python. See the
     documentation regarding :doc:`/setup/dev` for more information.
+
+You can also setup breakpoints in the unit tests. This can be done by
+adding ``import pdb; pdb.set_trace()`` to the line of the unit test you
+want to examine, then running the following command:
+
+.. code-block:: bash
+
+    # Executes tests on Python 2.7
+    tox -e debug
+
+.. note::
+
+    For a list of pdb commands, please see:
+    https://docs.python.org/2/library/pdb.html
 
 Functional Tests
 -----------------
@@ -57,3 +71,27 @@ job will actually use ``testr`` instead of ``nosetests``. If you discover
 issues while running your tests in the gate, then consider running ``testr``
 or :doc:`Devstack</setup/devstack>` to more closely replicate the gating
 environment.
+
+Remote Debugging
+----------------
+
+In order to be able to hit break-points on API calls, you must use remote
+debugging. This can be done by adding ``import rpdb; rpdb.set_trace()`` to
+the line of the API call you wish to test. For example, adding the
+breakpoint in ``def on_post`` in ``barbican.api.controllers.secrets.py``
+will allow you to hit the breakpoint when a ``POST`` is done on the
+secrets URL.
+
+..note::
+
+    After performing the ``POST`` the application will freeze. In order to use
+    ``rpdb``, you must open up another terminal and run the following:
+
+    .. code-block:: bash
+
+        # enter rpdb using telnet
+        telnet localhost 4444
+
+    Once in rpdb, you can use the same commands as pdb, as seen here:
+    https://docs.python.org/2/library/pdb.html
+
