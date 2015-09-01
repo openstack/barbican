@@ -174,6 +174,50 @@ def check_certificate_request(order_model, project_model, result_follow_on):
         unavailable_status=ORDER_STATUS_CA_UNAVAIL_FOR_CHECK)
 
 
+def create_subordinate_ca(project_model, name, subject_dn, parent_ca_ref,
+                          creator_id):
+    """Create a subordinate CA
+
+    :param ca_info: dict containing data required to create a new sub-CA
+    :return: :class models.CertificateAuthority model object for new sub CA
+    """
+    # check that the parent ref exists and is accessible
+    parent_ca_id = hrefs.get_ca_id_from_ref(parent_ca_ref)
+    ca_repo = repos.get_ca_repository()
+    parent_ca = ca_repo.get(entity_id=parent_ca_id, suppress_exception=True)
+    if not parent_ca:
+        raise excep.InvalidParentCA(parent_ca_ref=parent_ca_ref)
+
+    # TODO(alee) check if the parent_ca is accessible for this project
+
+    # get the parent plugin, raises CertPluginNotFound if missing
+    cert_plugin = cert.CertificatePluginManager().get_plugin_by_name(
+        parent_ca.plugin_name)
+
+    # confirm that the plugin supports creating subordinate CAs
+    if not cert_plugin.supports_create_ca():
+        raise excep.SubCAsNotSupported()
+
+    # make call to create the subordinate ca
+    create_ca_dto = cert.CACreateDTO(
+        name=name,
+        subject_dn=subject_dn,
+        parent_ca_id=parent_ca.plugin_ca_id)
+
+    new_ca_dict = cert_plugin.create_ca(create_ca_dto)
+    if not new_ca_dict:
+        raise excep.SubCANotCreated(name=name)
+
+    # create and store the subordinate CA as a new certificate authority object
+    new_ca_dict['plugin_name'] = parent_ca.plugin_name
+    new_ca_dict['creator_id'] = creator_id
+    new_ca_dict['project_id'] = project_model.id
+    new_ca = models.CertificateAuthority(new_ca_dict)
+    ca_repo.create_from(new_ca)
+
+    return new_ca
+
+
 def _handle_task_result(result, result_follow_on, order_model,
                         project_model, request_type, unavailable_status):
     if cert.CertificateStatus.WAITING_FOR_CA == result.status:

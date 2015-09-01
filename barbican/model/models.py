@@ -824,6 +824,11 @@ class CertificateAuthority(BASE, SoftDeleteMixIn, ModelBase):
     plugin_name = sa.Column(sa.String(255), nullable=False)
     plugin_ca_id = sa.Column(sa.Text, nullable=False)
     expiration = sa.Column(sa.DateTime, default=None)
+    creator_id = sa.Column(sa.String(255), nullable=True)
+    project_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('projects.id', name='cas_project_fk'),
+        nullable=True)
 
     ca_meta = orm.relationship(
         'CertificateAuthorityMetadatum',
@@ -853,6 +858,14 @@ class CertificateAuthority(BASE, SoftDeleteMixIn, ModelBase):
 
         expiration = parsed_ca.pop('expiration', None)
         self.expiration = self._iso_to_datetime(expiration)
+
+        creator_id = parsed_ca.pop('creator_id', None)
+        if creator_id is not None:
+            self.creator_id = creator_id
+
+        project_id = parsed_ca.pop('project_id', None)
+        if project_id is not None:
+            self.project_id = project_id
 
         for key in parsed_ca:
             meta = CertificateAuthorityMetadatum(key, parsed_ca[key])

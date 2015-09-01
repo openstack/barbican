@@ -15,6 +15,7 @@
 import pecan
 from six.moves.urllib import parse
 
+from barbican import api
 from barbican.api import controllers
 from barbican.common import hrefs
 from barbican.common import resources as res
@@ -22,6 +23,7 @@ from barbican.common import utils
 from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repo
+from barbican.tasks import certificate_resources as cert_resources
 
 LOG = utils.getLogger(__name__)
 
@@ -325,3 +327,39 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
             'cas':
             [hrefs.convert_certificate_authority_to_href(pref_ca[0].ca_id)]
         }
+
+    @index.when(method='POST', template='json')
+    @controllers.handle_exceptions(u._('CA creation'))
+    @controllers.enforce_rbac('cas:post')
+    @controllers.enforce_content_types(['application/json'])
+    def on_post(self, external_project_id, **kwargs):
+        LOG.debug('Start on_post for project-ID %s:...', external_project_id)
+
+        data = api.load_body(pecan.request)
+        project = res.get_or_create_project(external_project_id)
+
+        ctxt = controllers._get_barbican_context(pecan.request)
+        if ctxt:  # in authenticated pipeline case, always use auth token user
+            creator_id = ctxt.user
+
+        # TODO(alee) Add quota enforcement
+        # self.quota_enforcer.enforce(project)
+
+        new_ca = cert_resources.create_subordinate_ca(
+            project,
+            name=data.get('name'),
+            subject_dn=data.get('subject_dn'),
+            parent_ca_ref=data.get('parent_ca_ref'),
+            creator_id=creator_id
+        )
+
+        url = hrefs.convert_certificate_authority_to_href(new_ca.id)
+        LOG.debug('URI to sub-CA is %s', url)
+
+        pecan.response.status = 201
+        pecan.response.headers['Location'] = url
+
+        LOG.info(u._LI('Created a sub CA for project: %s'),
+                 external_project_id)
+
+        return {'ca_ref': url}
