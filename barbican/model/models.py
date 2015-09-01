@@ -745,6 +745,8 @@ class ContainerConsumerMetadatum(BASE, SoftDeleteMixIn, ModelBase):
 
     container_id = sa.Column(sa.String(36), sa.ForeignKey('containers.id'),
                              index=True, nullable=False)
+    project_id = sa.Column(sa.String(36), sa.ForeignKey('projects.id'),
+                           index=True, nullable=True)
     name = sa.Column(sa.String(36))
     URL = sa.Column(sa.String(500))
     data_hash = sa.Column(sa.CHAR(64))
@@ -755,7 +757,7 @@ class ContainerConsumerMetadatum(BASE, SoftDeleteMixIn, ModelBase):
         sa.Index('values_index', 'container_id', 'name', 'URL')
     )
 
-    def __init__(self, container_id, parsed_request):
+    def __init__(self, container_id, project_id, parsed_request):
         """Registers a Consumer to a Container."""
         super(ContainerConsumerMetadatum, self).__init__()
 
@@ -763,6 +765,7 @@ class ContainerConsumerMetadatum(BASE, SoftDeleteMixIn, ModelBase):
         # data_hash attribute.
         if container_id and parsed_request:
             self.container_id = container_id
+            self.project_id = project_id
             self.name = parsed_request.get('name')
             self.URL = parsed_request.get('URL')
             hash_text = ''.join((self.container_id, self.name, self.URL))

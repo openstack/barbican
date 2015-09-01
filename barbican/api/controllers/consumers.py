@@ -144,6 +144,7 @@ class ContainerConsumersController(controllers.ACLMixin):
         self.quota_enforcer.enforce(project)
 
         new_consumer = models.ContainerConsumerMetadatum(self.container_id,
+                                                         project.id,
                                                          data)
         new_consumer.project_id = project.id
         self.consumer_repo.create_or_update_from(new_consumer, container)

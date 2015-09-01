@@ -66,3 +66,57 @@ class WhenTestingOrderRepository(database_utils.RepositoryTestCase):
         )
 
         self.assertEqual(order.id, order_from_get.id)
+
+    def test_should_get_count_zero(self):
+        session = self.repo.get_session()
+
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        session.commit()
+        count = self.repo.get_count(project.id, session=session)
+
+        self.assertEqual(count, 0)
+
+    def test_should_get_count_one(self):
+        session = self.repo.get_session()
+
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        order_model = models.Order()
+        order_model.project_id = project.id
+        self.repo.create_from(order_model, session=session)
+
+        session.commit()
+        count = self.repo.get_count(project.id, session=session)
+
+        self.assertEqual(count, 1)
+
+    def test_should_get_count_one_after_delete(self):
+        session = self.repo.get_session()
+
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        order_model = models.Order()
+        order_model.project_id = project.id
+        self.repo.create_from(order_model, session=session)
+
+        order_model = models.Order()
+        order_model.project_id = project.id
+        self.repo.create_from(order_model, session=session)
+
+        session.commit()
+        count = self.repo.get_count(project.id, session=session)
+        self.assertEqual(count, 2)
+
+        self.repo.delete_entity_by_id(order_model.id, "my keystone id",
+                                      session=session)
+        session.commit()
+
+        count = self.repo.get_count(project.id, session=session)
+        self.assertEqual(count, 1)

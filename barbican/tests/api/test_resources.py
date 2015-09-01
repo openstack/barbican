@@ -114,13 +114,15 @@ def create_container(id_ref, project_id=None, external_project_id=None):
     return container
 
 
-def create_consumer(container_id, id_ref):
+def create_consumer(container_id, project_id, id_ref):
     """Generate a ContainerConsumerMetadatum entity instance."""
     data = {
         'name': 'test name',
         'URL': 'http://test/url'
     }
-    consumer = models.ContainerConsumerMetadatum(container_id, data)
+    consumer = models.ContainerConsumerMetadatum(container_id,
+                                                 project_id,
+                                                 data)
     consumer.id = id_ref
     return consumer
 
@@ -880,8 +882,12 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
             external_project_id=self.external_project_id)
 
         # Set up mocked consumers
-        self.consumer = create_consumer(self.container.id, id_ref='id2')
-        self.consumer2 = create_consumer(self.container.id, id_ref='id3')
+        self.consumer = create_consumer(self.container.id,
+                                        self.project_internal_id,
+                                        id_ref='id2')
+        self.consumer2 = create_consumer(self.container.id,
+                                         self.project_internal_id,
+                                         id_ref='id3')
 
         self.consumer_ref = {
             'name': self.consumer.name,
@@ -1085,8 +1091,12 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
             external_project_id=self.external_project_id)
 
         # Set up mocked container consumers
-        self.consumer = create_consumer(self.container.id, id_ref='id2')
-        self.consumer2 = create_consumer(self.container.id, id_ref='id3')
+        self.consumer = create_consumer(self.container.id,
+                                        self.project_internal_id,
+                                        id_ref='id2')
+        self.consumer2 = create_consumer(self.container.id,
+                                         self.project_internal_id,
+                                         id_ref='id3')
 
         self.consumer_ref = {
             'name': self.consumer.name,

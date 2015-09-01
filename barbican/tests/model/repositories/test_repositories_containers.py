@@ -55,3 +55,57 @@ class WhenTestingContainerRepository(database_utils.RepositoryTestCase):
     def test_should_suppress_notfound_exception(self):
         self.assertIsNone(self.repo.get_container_by_id(
             "invalid_id", suppress_exception=True))
+
+    def test_should_get_count_zero(self):
+        session = self.repo.get_session()
+
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        session.commit()
+        count = self.repo.get_count(project.id, session=session)
+
+        self.assertEqual(count, 0)
+
+    def test_should_get_count_one(self):
+        session = self.repo.get_session()
+
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        container_model = models.Container()
+        container_model.project_id = project.id
+        self.repo.create_from(container_model, session=session)
+
+        session.commit()
+        count = self.repo.get_count(project.id, session=session)
+
+        self.assertEqual(count, 1)
+
+    def test_should_get_count_one_after_delete(self):
+        session = self.repo.get_session()
+
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        container_model = models.Container()
+        container_model.project_id = project.id
+        self.repo.create_from(container_model, session=session)
+
+        container_model = models.Container()
+        container_model.project_id = project.id
+        self.repo.create_from(container_model, session=session)
+
+        session.commit()
+        count = self.repo.get_count(project.id, session=session)
+        self.assertEqual(count, 2)
+
+        self.repo.delete_entity_by_id(container_model.id, "my keystone id",
+                                      session=session)
+        session.commit()
+
+        count = self.repo.get_count(project.id, session=session)
+        self.assertEqual(count, 1)
