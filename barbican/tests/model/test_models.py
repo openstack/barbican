@@ -514,14 +514,16 @@ class WhenCreatingNewProjectQuotas(utils.BaseTestCase):
         super(WhenCreatingNewProjectQuotas, self).setUp()
 
     def test_create_new_project_quotas(self):
-        project_id = '12345'
+        project = models.Project()
+        project.id = '12345'
+        project.external_id = '67890'
         parsed_project_quotas = {
             'secrets': 101,
             'orders': 102,
             'containers': 103,
             'transport_keys': 104,
             'consumers': 105}
-        project_quotas = models.ProjectQuotas(project_id,
+        project_quotas = models.ProjectQuotas(project.id,
                                               parsed_project_quotas)
 
         self.assertEqual('12345', project_quotas.project_id)
@@ -532,8 +534,10 @@ class WhenCreatingNewProjectQuotas(utils.BaseTestCase):
         self.assertEqual(105, project_quotas.consumers)
 
     def test_create_new_project_quotas_with_all_default_quotas(self):
-        project_id = '12345'
-        project_quotas = models.ProjectQuotas(project_id,
+        project = models.Project()
+        project.id = '12345'
+        project.external_id = '67890'
+        project_quotas = models.ProjectQuotas(project.id,
                                               None)
 
         self.assertEqual('12345', project_quotas.project_id)
@@ -544,12 +548,14 @@ class WhenCreatingNewProjectQuotas(utils.BaseTestCase):
         self.assertEqual(None, project_quotas.consumers)
 
     def test_create_new_project_quotas_with_some_default_quotas(self):
-        project_id = '12345'
+        project = models.Project()
+        project.id = '12345'
+        project.external_id = '67890'
         parsed_project_quotas = {
             'secrets': 101,
             'containers': 103,
             'consumers': 105}
-        project_quotas = models.ProjectQuotas(project_id,
+        project_quotas = models.ProjectQuotas(project.id,
                                               parsed_project_quotas)
 
         self.assertEqual('12345', project_quotas.project_id)
@@ -561,20 +567,21 @@ class WhenCreatingNewProjectQuotas(utils.BaseTestCase):
 
     def test_should_throw_exception_missing_project_id(self):
         self.assertRaises(exception.MissingArgumentError,
-                          models.ProjectQuotas, None,
-                          None)
+                          models.ProjectQuotas, None, None)
 
     def test_project_quotas_check_to_dict_fields(self):
-        project_id = '12345'
+        project = models.Project()
+        project.id = '12345'
+        project.external_id = '67890'
         parsed_project_quotas = {
             'secrets': 101,
             'orders': 102,
             'containers': 103,
             'transport_keys': 104,
             'consumers': 105}
-        project_quotas = models.ProjectQuotas(project_id,
+        project_quotas = models.ProjectQuotas(project.id,
                                               parsed_project_quotas)
-        self.assertEqual(project_id,
+        self.assertEqual(project.id,
                          project_quotas.to_dict_fields()['project_id'])
         self.assertEqual(101,
                          project_quotas.to_dict_fields()['secrets'])

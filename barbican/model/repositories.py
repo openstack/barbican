@@ -1874,7 +1874,7 @@ class ProjectQuotasRepo(BaseRepo):
 
         query = session.query(models.ProjectQuotas)
         query = query.order_by(models.ProjectQuotas.created_at)
-        query = query.filter_by(deleted=False)
+        query = query.join(models.Project, models.ProjectQuotas.project)
 
         start = offset
         end = offset + limit
@@ -1889,7 +1889,8 @@ class ProjectQuotasRepo(BaseRepo):
 
         return entities, offset, limit, total
 
-    def create_or_update_by_project_id(self, project_id, parsed_project_quotas,
+    def create_or_update_by_project_id(self, project_id,
+                                       parsed_project_quotas,
                                        session=None):
         """Create or update Project Quotas config for a project by project_id.
 
@@ -1905,25 +1906,27 @@ class ProjectQuotasRepo(BaseRepo):
             entity = query.one()
         except sa_orm.exc.NoResultFound:
             self.create_from(
-                models.ProjectQuotas(project_id, parsed_project_quotas),
+                models.ProjectQuotas(project_id,
+                                     parsed_project_quotas),
                 session=session)
         else:
             self._update_values(entity, parsed_project_quotas)
+            entity.save(session)
 
-    def get_by_project_id(self, project_id,
-                          suppress_exception=False, session=None):
+    def get_by_external_project_id(self, external_project_id,
+                                   suppress_exception=False, session=None):
         """Return configured Project Quotas for a project by project_id.
 
-        :param project_id: ID of project whose quota config will be deleted
+        :param external_project_id: external ID of project to get quotas for
         :param suppress_exception: when True, NotFound is not raised
         :param session: SQLAlchemy session object.
         :raises NotFound: if no quota config is found for the project
         :return: None or Python dict of project quotas for project
         """
-
         session = self.get_session(session)
         query = session.query(models.ProjectQuotas)
-        query = query.filter_by(project_id=project_id)
+        query = query.join(models.Project, models.ProjectQuotas.project)
+        query = query.filter(models.Project.external_id == external_project_id)
         try:
             entity = query.one()
         except sa_orm.exc.NoResultFound:
@@ -1933,11 +1936,11 @@ class ProjectQuotasRepo(BaseRepo):
                 _raise_no_entities_found(self._do_entity_name())
         return entity
 
-    def delete_by_project_id(self, project_id,
-                             suppress_exception=False, session=None):
+    def delete_by_external_project_id(self, external_project_id,
+                                      suppress_exception=False, session=None):
         """Remove configured Project Quotas for a project by project_id.
 
-        :param project_id: ID of project whose quota config will be deleted
+        :param external_project_id: external ID of project to delete quotas
         :param suppress_exception: when True, NotFound is not raised
         :param session: SQLAlchemy session object.
         :raises NotFound: if no quota config is found for the project
@@ -1946,7 +1949,8 @@ class ProjectQuotasRepo(BaseRepo):
 
         session = self.get_session(session)
         query = session.query(models.ProjectQuotas)
-        query = query.filter_by(project_id=project_id)
+        query = query.join(models.Project, models.ProjectQuotas.project)
+        query = query.filter(models.Project.external_id == external_project_id)
         try:
             entity = query.one()
         except sa_orm.exc.NoResultFound:
