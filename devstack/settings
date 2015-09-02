@@ -1,0 +1,27 @@
+# Defaults
+# --------
+
+# Set up default directories
+BARBICAN_DIR=$DEST/barbican
+BARBICANCLIENT_DIR=$DEST/python-barbicanclient
+BARBICAN_CONF_DIR=${BARBICAN_CONF_DIR:-/etc/barbican}
+BARBICAN_CONF=$BARBICAN_CONF_DIR/barbican.conf
+BARBICAN_PASTE_CONF=$BARBICAN_CONF_DIR/barbican-api-paste.ini
+BARBICAN_API_LOG_DIR=$DEST/logs
+BARBICAN_AUTH_CACHE_DIR=${BARBICAN_AUTH_CACHE_DIR:-/var/cache/barbican}
+
+# Support potential entry-points console scripts
+BARBICAN_BIN_DIR=$(get_python_exec_prefix)
+
+# Set Barbican repository
+BARBICAN_REPO=${BARBICAN_REPO:-${GIT_BASE}/openstack/barbican.git}
+BARBICAN_BRANCH=${BARBICAN_BRANCH:-master}
+
+# Set client library repository
+BARBICANCLIENT_REPO=${BARBICANCLIENT_REPO:-${GIT_BASE}/openstack/python-barbicanclient.git}
+BARBICANCLIENT_BRANCH=${BARBICANCLIENT_BRANCH:-master}
+
+# Tell Tempest this project is present
+TEMPEST_SERVICES+=,barbican
+
+enable_service barbican

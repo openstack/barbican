@@ -1,0 +1,15 @@
+[[local|localrc]]
+disable_all_services
+
+enable_plugin barbican https://git.openstack.org/openstack/barbican stable/liberty
+enable_service rabbit mysql key
+
+# This is to keep the token small for testing
+KEYSTONE_TOKEN_FORMAT=UUID
+
+# Modify passwords as needed
+DATABASE_PASSWORD=secretdatabase
+RABBIT_PASSWORD=secretrabbit
+ADMIN_PASSWORD=secretadmin
+SERVICE_PASSWORD=secretservice
+SERVICE_TOKEN=111222333444
