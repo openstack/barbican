@@ -10,9 +10,8 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
-import urllib
-
 import pecan
+from six.moves.urllib import parse
 
 from barbican import api
 from barbican.api import controllers
@@ -261,7 +260,7 @@ class SecretsController(controllers.ACLMixin):
 
         name = kw.get('name', '')
         if name:
-            name = urllib.unquote_plus(name)
+            name = parse.unquote_plus(name)
 
         bits = kw.get('bits', 0)
         try:

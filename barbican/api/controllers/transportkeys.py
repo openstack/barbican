@@ -12,9 +12,8 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
-import urllib
-
 import pecan
+from six.moves.urllib import parse
 
 from barbican import api
 from barbican.api import controllers
@@ -98,7 +97,7 @@ class TransportKeysController(controllers.ACLMixin):
 
         plugin_name = kw.get('plugin_name', None)
         if plugin_name is not None:
-            plugin_name = urllib.unquote_plus(plugin_name)
+            plugin_name = parse.unquote_plus(plugin_name)
 
         result = self.repo.get_by_create_date(
             plugin_name=plugin_name,
