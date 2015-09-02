@@ -37,25 +37,29 @@ class TaskClient(object):
         #   standalone single-node mode for Barbican.
         self._client = queue.get_client() or _DirectTaskInvokerClient()
 
-    def process_type_order(self, order_id, project_id):
+    def process_type_order(self, order_id, project_id, request_id):
         """Process TypeOrder."""
 
-        self._cast('process_type_order', order_id=order_id,
-                   project_id=project_id)
+        self._cast('process_type_order',
+                   order_id=order_id,
+                   project_id=project_id,
+                   request_id=request_id)
 
-    def update_order(self, order_id, project_id, updated_meta):
+    def update_order(self, order_id, project_id, updated_meta, request_id):
         """Update Order."""
 
         self._cast('update_order',
                    order_id=order_id,
                    project_id=project_id,
-                   updated_meta=updated_meta)
+                   updated_meta=updated_meta,
+                   request_id=request_id)
 
-    def check_certificate_status(self, order_id, project_id):
+    def check_certificate_status(self, order_id, project_id, request_id):
         """Check the status of a certificate order."""
         self._cast('check_certificate_status',
                    order_id=order_id,
-                   project_id=project_id)
+                   project_id=project_id,
+                   request_id=request_id)
 
     def _cast(self, name, **kwargs):
         """Asynchronous call handler. Barbican probably only needs casts.
