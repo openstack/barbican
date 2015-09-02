@@ -134,7 +134,7 @@ class OrdersController(controllers.ACLMixin):
         self.order_repo = repo.get_order_repository()
         self.queue = queue_resource or async_client.TaskClient()
         self.type_order_validator = validators.TypeOrderValidator()
-        self.quota_enforcer = quota.QuotaEnforcer('orders')
+        self.quota_enforcer = quota.QuotaEnforcer('orders', self.order_repo)
 
     @pecan.expose()
     def _lookup(self, order_id, *remainder):
@@ -216,7 +216,7 @@ class OrdersController(controllers.ACLMixin):
                     external_project_id,
                     container_ref, pecan.request)
 
-        self.quota_enforcer.enforce(project)
+        self.quota_enforcer.enforce(external_project_id)
 
         new_order = models.Order()
         new_order.meta = body.get('meta')

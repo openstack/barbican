@@ -23,7 +23,9 @@ from barbican.model import repositories as repo
 
 
 LOG = logging.getLogger(__name__)
+# All negative values will be treated as unlimited
 UNLIMITED_VALUE = -1
+DISABLED_VALUE = 0
 
 
 quota_opt_group = cfg.OptGroup(name='quotas',
@@ -99,9 +101,29 @@ class QuotaDriver(object):
                 resp_quotas[resource] = default_quotas[resource]
         return resp_quotas
 
-    def _is_unlimited_value(self, v):
+    def get_effective_quotas(self, external_project_id):
+        """Collect and return the effective quotas for a project
+
+        :param external_project_id: external ID of current project
+        :return: dict with effective quotas
+        """
+        try:
+            retrieved_project_quotas = self.repo.get_by_external_project_id(
+                external_project_id)
+        except exception.NotFound:
+            resp_quotas = self._get_defaults()
+        else:
+            resp_quotas = self._compute_effective_quotas(
+                self._extract_project_quotas(retrieved_project_quotas))
+        return resp_quotas
+
+    def is_unlimited_value(self, v):
         """A helper method to check for unlimited value."""
-        return v is not None and v <= UNLIMITED_VALUE
+        return v <= UNLIMITED_VALUE
+
+    def is_disabled_value(self, v):
+        """A helper method to check for disabled value."""
+        return v == DISABLED_VALUE
 
     def set_project_quotas(self, external_project_id, parsed_project_quotas):
         """Create a new database entry, or update existing one
@@ -166,27 +188,41 @@ class QuotaDriver(object):
         :param external_project_id: ID of project for which to get quotas
         :return: dict of effective quota values
         """
-        try:
-            retrieved_project_quotas = self.repo.get_by_external_project_id(
-                external_project_id)
-        except exception.NotFound:
-            resp_quotas = self._get_defaults()
-        else:
-            resp_quotas = self._compute_effective_quotas(
-                self._extract_project_quotas(retrieved_project_quotas))
+        resp_quotas = self.get_effective_quotas(external_project_id)
         resp = {'quotas': resp_quotas}
         return resp
 
 
 class QuotaEnforcer(object):
     """Checks quotas limits and current resource usage levels"""
-    def __init__(self, resource_type):
+    def __init__(self, resource_type, resource_repo):
+        self.quota_driver = QuotaDriver()
         self.resource_type = resource_type
+        self.resource_repo = resource_repo
 
-    def enforce(self, project):
-        """This is a dummy implementation for developing the API"""
-        # TODO(dave) implement
-        if project.id is None:  # dummy logic, dummy code
-            raise exception.QuotaReached(project_id=project.external_id,
-                                         resource_type=self.resource_type,
-                                         count=0)
+    def enforce(self, external_project_id):
+        """Enforce the quota limit for the resource
+
+        :param external_project_id: ID of project requesting to create
+        :raises QuotaReached: exception raised if quota forbids request
+        :return: None
+        """
+        quotas = self.quota_driver.get_effective_quotas(external_project_id)
+        quota = quotas[self.resource_type]
+
+        reached = False
+        count = 0
+        if self.quota_driver.is_unlimited_value(quota):
+            pass
+        elif self.quota_driver.is_disabled_value(quota):
+            reached = True
+        else:
+            count = self.resource_repo.get_count(external_project_id)
+            if count >= quota:
+                reached = True
+
+        if reached:
+            raise exception.QuotaReached(
+                external_project_id=external_project_id,
+                resource_type=self.resource_type,
+                quota=quota)

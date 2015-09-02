@@ -57,13 +57,16 @@ class WhenTestingQuotaDriverFunctions(database_utils.RepositoryTestCase):
         self.assertEqual(expected_quotas, quotas)
 
     def test_is_unlimited_true(self):
-        self.assertTrue(self.quota_driver._is_unlimited_value(-1))
+        self.assertTrue(self.quota_driver.is_unlimited_value(-1))
 
     def test_is_unlimited_false(self):
-        self.assertFalse(self.quota_driver._is_unlimited_value(1))
+        self.assertFalse(self.quota_driver.is_unlimited_value(1))
 
-    def test_is_unlimited_none_is_false(self):
-        self.assertFalse(self.quota_driver._is_unlimited_value(None))
+    def test_is_disabled_true(self):
+        self.assertTrue(self.quota_driver.is_disabled_value(0))
+
+    def test_is_disabled_false(self):
+        self.assertFalse(self.quota_driver.is_disabled_value(1))
 
     def test_should_get_project_quotas(self):
         self.create_a_test_project_quotas()
@@ -195,32 +198,92 @@ class WhenTestingQuotaDriverFunctions(database_utils.RepositoryTestCase):
             self.create_a_test_project_quotas(index)
 
 
+class DummyRepoForTestingQuotaEnforcement(object):
+
+    def __init__(self, get_count_return_value):
+        self.get_count_return_value = get_count_return_value
+
+    def get_count(self, external_project_id):
+        return self.get_count_return_value
+
+
 class WhenTestingQuotaEnforcingFunctions(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingQuotaEnforcingFunctions, self).setUp()
+        self.quota_driver = quota.QuotaDriver()
         self.project = models.Project()
         self.project.id = 'my_internal_id'
         self.project.external_id = 'my_keystone_id'
 
-    def test_should_pass(self):
-        quota_enforcer = quota.QuotaEnforcer('my_resource')
-        quota_enforcer.enforce(self.project)
+    def test_should_pass_default_unlimited(self):
+        test_repo = DummyRepoForTestingQuotaEnforcement(0)
+        quota_enforcer = quota.QuotaEnforcer('secrets', test_repo)
+        quota_enforcer.enforce(self.project.external_id)
 
-    def test_should_raise(self):
-        """This is a dummy implementation for developing the API"""
-        # TODO(dave) implement
-        quota_enforcer = quota.QuotaEnforcer('my_resource')
-        self.project.id = None
+    def test_should_raise_disabled_value(self):
+        test_repo = DummyRepoForTestingQuotaEnforcement(0)
+        quota_enforcer = quota.QuotaEnforcer('secrets', test_repo)
+        disabled_project_quotas = {'consumers': 0, 'containers': 0,
+                                   'orders': 0, 'secrets': 0,
+                                   'transport_keys': 0}
+        self.quota_driver.set_project_quotas(self.project.external_id,
+                                             disabled_project_quotas)
         exception = self.assertRaises(
             excep.QuotaReached,
             quota_enforcer.enforce,
-            self.project
+            self.project.external_id
         )
         self.assertIn('Quota reached for project', exception.message)
         self.assertIn('my_keystone_id', exception.message)
-        self.assertIn('my_resource', exception.message)
+        self.assertIn('secrets', exception.message)
         self.assertIn(str(0), exception.message)
+
+    def test_should_pass_below_limit(self):
+        test_repo = DummyRepoForTestingQuotaEnforcement(4)
+        quota_enforcer = quota.QuotaEnforcer('secrets', test_repo)
+        five_project_quotas = {'consumers': 5, 'containers': 5,
+                               'orders': 5, 'secrets': 5,
+                               'transport_keys': 5}
+        self.quota_driver.set_project_quotas(self.project.external_id,
+                                             five_project_quotas)
+        quota_enforcer.enforce(self.project.external_id)
+
+    def test_should_raise_equal_limit(self):
+        test_repo = DummyRepoForTestingQuotaEnforcement(5)
+        quota_enforcer = quota.QuotaEnforcer('secrets', test_repo)
+        five_project_quotas = {'consumers': 5, 'containers': 5,
+                               'orders': 5, 'secrets': 5,
+                               'transport_keys': 5}
+        self.quota_driver.set_project_quotas(self.project.external_id,
+                                             five_project_quotas)
+        exception = self.assertRaises(
+            excep.QuotaReached,
+            quota_enforcer.enforce,
+            self.project.external_id
+        )
+        self.assertIn('Quota reached for project', exception.message)
+        self.assertIn('my_keystone_id', exception.message)
+        self.assertIn('secrets', exception.message)
+        self.assertIn(str(5), exception.message)
+
+    def test_should_raise_above_limit(self):
+        test_repo = DummyRepoForTestingQuotaEnforcement(6)
+        quota_enforcer = quota.QuotaEnforcer('secrets', test_repo)
+        five_project_quotas = {'consumers': 5, 'containers': 5,
+                               'orders': 5, 'secrets': 5,
+                               'transport_keys': 5}
+        self.quota_driver.set_project_quotas(self.project.external_id,
+                                             five_project_quotas)
+        exception = self.assertRaises(
+            excep.QuotaReached,
+            quota_enforcer.enforce,
+            self.project.external_id
+        )
+        self.assertIn('Quota reached for project', exception.message)
+        self.assertIn('my_keystone_id', exception.message)
+        self.assertIn('secrets', exception.message)
+        self.assertIn(str(5), exception.message)
 
 
 if __name__ == '__main__':

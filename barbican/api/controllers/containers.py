@@ -112,7 +112,8 @@ class ContainersController(controllers.ACLMixin):
         self.container_repo = repo.get_container_repository()
         self.secret_repo = repo.get_secret_repository()
         self.validator = validators.ContainerValidator()
-        self.quota_enforcer = quota.QuotaEnforcer('containers')
+        self.quota_enforcer = quota.QuotaEnforcer('containers',
+                                                  self.container_repo)
 
     @pecan.expose()
     def _lookup(self, container_id, *remainder):
@@ -180,7 +181,7 @@ class ContainersController(controllers.ACLMixin):
         if ctxt:  # in authenticated pipleline case, always use auth token user
             data['creator_id'] = ctxt.user
 
-        self.quota_enforcer.enforce(project)
+        self.quota_enforcer.enforce(external_project_id)
 
         LOG.debug('Start on_post...%s', data)
 
