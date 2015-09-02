@@ -30,7 +30,7 @@ class BaseContextMiddleware(mw.Middleware):
     def process_request(self, req):
         request_id = req.headers.get('x-openstack-request-id')
         if not request_id:
-            request_id = b'req-{0}'.format(str(uuid.uuid4()))
+            request_id = b'req-' + str(uuid.uuid4()).encode('ascii')
         setattr(req, 'request_id', request_id)
 
     def process_response(self, resp):
