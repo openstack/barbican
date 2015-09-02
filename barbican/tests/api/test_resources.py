@@ -778,6 +778,12 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
         self.project_repo.get.return_value = self.project
         self.setup_project_repository_mock(self.project_repo)
 
+        # Set up mocked quota enforcer
+        self.quota_patch = mock.patch(
+            'barbican.common.quota.QuotaEnforcer.enforce', return_value=None)
+        self.quota_patch.start()
+        self.addCleanup(self.quota_patch.stop)
+
         # Set up mocked container
         self.container = create_container(
             id_ref='id1',

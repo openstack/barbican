@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from testtools import testcase
+
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import quota_behaviors
 from functionaltests.api.v1.models import quota_models
@@ -100,6 +102,7 @@ class QuotasTestCase(base.TestCase):
         self.assertEqual(404, resp.status_code)
 
 
+@testcase.attr('no_parallel')
 class ProjectQuotasPagingTestCase(base.PagingTestCase):
 
     def setUp(self):

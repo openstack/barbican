@@ -203,7 +203,7 @@ class DummyRepoForTestingQuotaEnforcement(object):
     def __init__(self, get_count_return_value):
         self.get_count_return_value = get_count_return_value
 
-    def get_count(self, external_project_id):
+    def get_count(self, internal_project_id):
         return self.get_count_return_value
 
 
@@ -219,7 +219,7 @@ class WhenTestingQuotaEnforcingFunctions(utils.BaseTestCase):
     def test_should_pass_default_unlimited(self):
         test_repo = DummyRepoForTestingQuotaEnforcement(0)
         quota_enforcer = quota.QuotaEnforcer('secrets', test_repo)
-        quota_enforcer.enforce(self.project.external_id)
+        quota_enforcer.enforce(self.project)
 
     def test_should_raise_disabled_value(self):
         test_repo = DummyRepoForTestingQuotaEnforcement(0)
@@ -232,7 +232,7 @@ class WhenTestingQuotaEnforcingFunctions(utils.BaseTestCase):
         exception = self.assertRaises(
             excep.QuotaReached,
             quota_enforcer.enforce,
-            self.project.external_id
+            self.project
         )
         self.assertIn('Quota reached for project', exception.message)
         self.assertIn('my_keystone_id', exception.message)
@@ -247,7 +247,7 @@ class WhenTestingQuotaEnforcingFunctions(utils.BaseTestCase):
                                'transport_keys': 5}
         self.quota_driver.set_project_quotas(self.project.external_id,
                                              five_project_quotas)
-        quota_enforcer.enforce(self.project.external_id)
+        quota_enforcer.enforce(self.project)
 
     def test_should_raise_equal_limit(self):
         test_repo = DummyRepoForTestingQuotaEnforcement(5)
@@ -260,7 +260,7 @@ class WhenTestingQuotaEnforcingFunctions(utils.BaseTestCase):
         exception = self.assertRaises(
             excep.QuotaReached,
             quota_enforcer.enforce,
-            self.project.external_id
+            self.project
         )
         self.assertIn('Quota reached for project', exception.message)
         self.assertIn('my_keystone_id', exception.message)
@@ -278,7 +278,7 @@ class WhenTestingQuotaEnforcingFunctions(utils.BaseTestCase):
         exception = self.assertRaises(
             excep.QuotaReached,
             quota_enforcer.enforce,
-            self.project.external_id
+            self.project
         )
         self.assertIn('Quota reached for project', exception.message)
         self.assertIn('my_keystone_id', exception.message)

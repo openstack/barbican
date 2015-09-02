@@ -311,7 +311,7 @@ class SecretsController(controllers.ACLMixin):
         data = api.load_body(pecan.request, validator=self.validator)
         project = res.get_or_create_project(external_project_id)
 
-        self.quota_enforcer.enforce(external_project_id)
+        self.quota_enforcer.enforce(project)
 
         transport_key_needed = data.get('transport_key_needed',
                                         'false').lower() == 'true'

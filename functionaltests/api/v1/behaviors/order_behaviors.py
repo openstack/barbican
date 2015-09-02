@@ -45,6 +45,8 @@ class OrderBehaviors(base_behaviors.BaseBehaviors):
 
         # remember this order and its admin for our housekeeping cleanup
         if order_ref:
+            if admin is None:
+                admin = user_name
             self.created_entities.append((order_ref, admin))
 
         return resp, order_ref

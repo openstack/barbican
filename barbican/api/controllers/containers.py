@@ -181,7 +181,7 @@ class ContainersController(controllers.ACLMixin):
         if ctxt:  # in authenticated pipleline case, always use auth token user
             data['creator_id'] = ctxt.user
 
-        self.quota_enforcer.enforce(external_project_id)
+        self.quota_enforcer.enforce(project)
 
         LOG.debug('Start on_post...%s', data)
 
