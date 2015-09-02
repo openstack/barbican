@@ -10,7 +10,6 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
-import itertools
 
 import pecan
 import six
@@ -104,8 +103,8 @@ class SecretACLsController(controllers.ACLMixin):
 
         existing_acls_map = {acl.operation: acl for acl in
                              self.secret.secret_acls}
-        for operation in itertools.ifilter(lambda x: data.get(x),
-                                           validators.ACL_OPERATIONS):
+        for operation in six.moves.filter(lambda x: data.get(x),
+                                          validators.ACL_OPERATIONS):
             project_access = data[operation].get('project-access')
             user_ids = data[operation].get('users')
             s_acl = None
@@ -165,8 +164,8 @@ class SecretACLsController(controllers.ACLMixin):
 
         existing_acls_map = {acl.operation: acl for acl in
                              self.secret.secret_acls}
-        for operation in itertools.ifilter(lambda x: data.get(x),
-                                           validators.ACL_OPERATIONS):
+        for operation in six.moves.filter(lambda x: data.get(x),
+                                          validators.ACL_OPERATIONS):
             project_access = data[operation].get('project-access', True)
             user_ids = data[operation].get('users', [])
             s_acl = None
@@ -269,8 +268,8 @@ class ContainerACLsController(controllers.ACLMixin):
 
         existing_acls_map = {acl.operation: acl for acl in
                              self.container.container_acls}
-        for operation in itertools.ifilter(lambda x: data.get(x),
-                                           validators.ACL_OPERATIONS):
+        for operation in six.moves.filter(lambda x: data.get(x),
+                                          validators.ACL_OPERATIONS):
             project_access = data[operation].get('project-access')
             user_ids = data[operation].get('users')
             if operation in existing_acls_map:  # update if matching acl exists
@@ -333,8 +332,8 @@ class ContainerACLsController(controllers.ACLMixin):
 
         existing_acls_map = {acl.operation: acl for acl in
                              self.container.container_acls}
-        for operation in itertools.ifilter(lambda x: data.get(x),
-                                           validators.ACL_OPERATIONS):
+        for operation in six.moves.filter(lambda x: data.get(x),
+                                          validators.ACL_OPERATIONS):
             project_access = data[operation].get('project-access', True)
             user_ids = data[operation].get('users', [])
             if operation in existing_acls_map:  # update if matching acl exists
