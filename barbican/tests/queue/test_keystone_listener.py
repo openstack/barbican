@@ -17,7 +17,6 @@ import uuid
 import mock
 import oslo_messaging
 from oslo_service import service
-import six
 
 from barbican.common import config
 from barbican import queue
@@ -36,7 +35,7 @@ class UtilMixin(object):
 
     def revert_overrides(self):
         '''Reverts configuration override values after test end.'''
-        for k, v in six.iteritems(self.overrides):
+        for k, v in self.overrides.items():
             value, group = v
             self.conf.set_override(k, value, group)
 
@@ -45,7 +44,7 @@ class UtilMixin(object):
         self.addCleanup(self.revert_overrides)
 
     def opt_in_group(self, group, **kw):
-        for k, v in six.iteritems(kw):
+        for k, v in kw.items():
             # add to local overrides if its not already set
             # we want to keep the original value from first override
             dict_value = self.overrides.get(k)
