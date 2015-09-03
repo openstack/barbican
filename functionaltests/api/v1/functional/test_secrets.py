@@ -559,12 +559,10 @@ class SecretsTestCase(base.TestCase):
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 400)
 
-    @utils.parameterized_dataset({
-        'invalid': ['invalid']
-    })
-    @testcase.attr('positive')
-    def test_secret_create_valid_algorithms(self, algorithm):
+    @testcase.attr('positive', 'non-standard-algorithm')
+    def test_secret_create_valid_algorithms(self):
         """Creates secrets with various valid algorithms."""
+        algorithm = 'invalid'
         test_model = secret_models.SecretModel(
             **self.default_secret_create_data)
         test_model.algorithm = algorithm
@@ -586,7 +584,6 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(resp.status_code, 400)
 
     @utils.parameterized_dataset({
-        '512': [512],
         'sixteen': [16],
         'fifteen': [15],
         'eight': [8],
@@ -594,12 +591,35 @@ class SecretsTestCase(base.TestCase):
         'one': [1],
         'none': [None]
     })
-    @testcase.attr('positive')
-    def test_secret_create_defaults_valid_bit_length(self, bit_length):
+    @testcase.attr('positive', 'non-standard-algorithm')
+    def test_secret_create_with_non_standard_bit_length(self, bit_length):
         """Covers cases of creating secrets with valid bit lengths."""
         test_model = secret_models.SecretModel(
             **self.default_secret_create_data)
         test_model.bit_length = bit_length
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+    @utils.parameterized_dataset({
+        '128': [128],
+        '192': [192],
+        '256': [256],
+        '512': [512]
+    })
+    @testcase.attr('positive')
+    def test_secret_create_with_valid_bit_length(self, bit_length):
+        """Covers cases of creating secrets with valid bit lengths."""
+        byte_length = bit_length / 8
+        secret = bytearray(byte_length)
+        for x in range(0, byte_length):
+            secret[x] = x
+        secret64 = base64.b64encode(secret)
+
+        test_model = secret_models.SecretModel(
+            **self.default_secret_create_data)
+        test_model.bit_length = bit_length
+        test_model.payload = secret64
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 201)
