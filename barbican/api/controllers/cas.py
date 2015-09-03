@@ -347,8 +347,9 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
         # self.quota_enforcer.enforce(project)
 
         new_ca = cert_resources.create_subordinate_ca(
-            project,
+            project_model=project,
             name=data.get('name'),
+            description=data.get('description'),
             subject_dn=data.get('subject_dn'),
             parent_ca_ref=data.get('parent_ca_ref'),
             creator_id=creator_id

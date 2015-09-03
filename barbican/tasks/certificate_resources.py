@@ -131,8 +131,10 @@ def _get_cert_plugin(barbican_meta, barbican_meta_for_plugins_dto,
             cert_plugin_name)
     ca_id = _get_ca_id(order_model.meta, project_model.id)
     if ca_id:
-        barbican_meta_for_plugins_dto.plugin_ca_id = ca_id
-        return cert.CertificatePluginManager().get_plugin_by_ca_id(ca_id)
+        ca = repos.get_ca_repository().get(ca_id)
+        barbican_meta_for_plugins_dto.plugin_ca_id = ca.plugin_ca_id
+        return cert.CertificatePluginManager().get_plugin_by_name(
+            ca.plugin_name)
     else:
         return cert.CertificatePluginManager().get_plugin(order_model.meta)
 
@@ -174,11 +176,15 @@ def check_certificate_request(order_model, project_model, result_follow_on):
         unavailable_status=ORDER_STATUS_CA_UNAVAIL_FOR_CHECK)
 
 
-def create_subordinate_ca(project_model, name, subject_dn, parent_ca_ref,
-                          creator_id):
+def create_subordinate_ca(project_model, name, description, subject_dn,
+                          parent_ca_ref, creator_id):
     """Create a subordinate CA
 
-    :param ca_info: dict containing data required to create a new sub-CA
+    :param name - name of the subordinate CA
+    :param: description - description of the subordinate CA
+    :param: subject_dn - subject DN of the subordinate CA
+    :param: parent_ca_ref - Barbican URL reference to the parent CA
+    :param: creator_id - id for creator of the subordinate CA
     :return: :class models.CertificateAuthority model object for new sub CA
     """
     # check that the parent ref exists and is accessible
@@ -201,6 +207,7 @@ def create_subordinate_ca(project_model, name, subject_dn, parent_ca_ref,
     # make call to create the subordinate ca
     create_ca_dto = cert.CACreateDTO(
         name=name,
+        description=description,
         subject_dn=subject_dn,
         parent_ca_id=parent_ca.plugin_ca_id)
 

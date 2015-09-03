@@ -154,15 +154,42 @@ class BaseCertificateRequestsTestCase(utils.BaseTestCase):
 
         self.store_plugin = mock.MagicMock()
 
+        parsed_ca = {
+            'plugin_name': "cert_plugin",
+            'plugin_ca_id': "XXXX",
+            'name': "test ca",
+            'description': 'Test CA',
+            'ca_signing_certificate': 'ZZZZZ',
+            'intermediates': 'YYYYY'
+        }
+
+        self.ca = models.CertificateAuthority(parsed_ca)
+        ca_repo.create_from(self.ca)
+        self.ca_id = self.ca.id
+
+        # second ca for testing
+        parsed_ca = {
+            'plugin_name': "cert_plugin",
+            'plugin_ca_id': "XXXX2",
+            'name': "test ca2",
+            'description': 'Test CA2',
+            'ca_signing_certificate': 'ZZZZZ2',
+            'intermediates': 'YYYYY2'
+        }
+
+        self.ca2 = models.CertificateAuthority(parsed_ca)
+        ca_repo.create_from(self.ca2)
+        self.ca_id2 = self.ca2.id
+
         # data for preferred CA and global preferred CA tests
         # add those to the repo in those tests
         self.pref_ca = models.PreferredCertificateAuthority(
             self.project.id,
-            "ca_id")
+            self.ca_id)
 
         self.global_pref_ca = models.PreferredCertificateAuthority(
             1,
-            "ca_id")
+            self.ca_id)
 
         # data for stored key cases
         self.private_key = models.Secret()
@@ -479,7 +506,7 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
         # code that dave-mccowan is adding.
 
     def test_should_return_for_openssl_stored_key_ca_id_passed_in(self):
-        self.stored_key_meta['ca_id'] = "ca1"
+        self.stored_key_meta['ca_id'] = self.ca_id2
         self._do_pyopenssl_stored_key_request()
         self._verify_issue_certificate_plugins_called()
         self.assertIsNotNone(
@@ -815,6 +842,7 @@ class WhenCreatingSubordinateCAs(utils.BaseTestCase):
         self.subject_name = "cn=subca1 signing certificate, o=example.com"
         self.creator_id = "user12345"
         self.name = "Subordinate CA #1"
+        self.description = "This is a test subordinate CA"
         self.plugin_name = "dogtag_plugin"
 
         # create parent ca
@@ -855,6 +883,7 @@ class WhenCreatingSubordinateCAs(utils.BaseTestCase):
         subca = cert_res.create_subordinate_ca(
             project_model=self.project,
             name=self.name,
+            description=self.description,
             subject_dn=self.subject_name,
             parent_ca_ref=self.parent_ca_ref,
             creator_id=self.creator_id
@@ -871,6 +900,7 @@ class WhenCreatingSubordinateCAs(utils.BaseTestCase):
             cert_res.create_subordinate_ca,
             project_model=self.project,
             name=self.name,
+            description=self.description,
             subject_dn=self.subject_name,
             parent_ca_ref=self.parent_ca_ref,
             creator_id=self.creator_id
@@ -883,6 +913,7 @@ class WhenCreatingSubordinateCAs(utils.BaseTestCase):
             cert_res.create_subordinate_ca,
             project_model=self.project,
             name=self.name,
+            description=self.description,
             subject_dn=self.subject_name,
             parent_ca_ref=self.parent_ca_ref,
             creator_id=self.creator_id
@@ -895,6 +926,7 @@ class WhenCreatingSubordinateCAs(utils.BaseTestCase):
             cert_res.create_subordinate_ca,
             project_model=self.project,
             name=self.name,
+            description=self.description,
             subject_dn=self.subject_name,
             parent_ca_ref=self.parent_ca_ref,
             creator_id=self.creator_id

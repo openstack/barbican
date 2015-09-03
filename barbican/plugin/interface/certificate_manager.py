@@ -459,18 +459,21 @@ class CertificatePluginBase(object):
 class CACreateDTO(object):
     """Class that includes data needed to create a subordinate CA """
 
-    def __init__(self, name=None, subject_dn=None, parent_ca_id=None):
+    def __init__(self, name=None, description=None, subject_dn=None,
+                 parent_ca_id=None):
         """Creates a new CACreateDTO object.
 
         :param name: Name for the  subordinate CA
+        :param description: Description for the subordinate CA
         :param subject_dn:
             Subject DN for the new subordinate CA's signing certificate
         :param parent_ca_id:
-            ID of the CA which is supposed to sign the
-            subordinate CA's signing certificate.  This is ID as known to the
-            plugin (not the Barbican UUID)
+            ID of the CA which is supposed to sign the subordinate CA's
+            signing certificate.  This is ID as known to the plugin
+            (not the Barbican UUID)
         """
         self.name = name
+        self.description = description
         self.subject_dn = subject_dn
         self.parent_ca_id = parent_ca_id
 
