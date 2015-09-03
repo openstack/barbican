@@ -302,7 +302,7 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
 
         pref_ca = self.preferred_ca_repo.get_global_preferred_ca()
         if not pref_ca:
-            pecan.abort(404, "No global preferred CA defined")
+            pecan.abort(404, u._("No global preferred CA defined"))
 
         return {
             'cas': [hrefs.convert_certificate_authority_to_href(pref_ca.ca_id)]
@@ -319,7 +319,7 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
 
         pref_ca = self.preferred_ca_repo.get_project_entities(project.id)
         if not pref_ca:
-            pecan.abort(404, "No preferred CA defined for this project")
+            pecan.abort(404, u._("No preferred CA defined for this project"))
 
         return {
             'cas':
