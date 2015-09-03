@@ -187,14 +187,14 @@ class WhenGettingContainersListUsingContainersResource(
         self.assertTrue('next' in resp.namespace)
 
         url_nav_next = self._create_url(self.offset + self.limit, self.limit)
-        self.assertEqual(1, resp.body.count(url_nav_next))
+        self.assertEqual(1, resp.body.decode('utf-8').count(url_nav_next))
 
         url_nav_prev = self._create_url(0, self.limit)
-        self.assertEqual(1, resp.body.count(url_nav_prev))
+        self.assertEqual(1, resp.body.decode('utf-8').count(url_nav_prev))
 
         url_hrefs = self._create_url()
         self.assertEqual((self.limit + 2),
-                         resp.body.count(url_hrefs))
+                         resp.body.decode('utf-8').count(url_hrefs))
 
     def test_response_should_include_total(self):
         self._create_containers()
