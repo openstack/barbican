@@ -14,6 +14,7 @@ Quick Start
    ./quickstart/pkcs11keygeneration
    ./quickstart/certificates
    ./quickstart/dogtag_setup
+   ./quickstart/quotas
 
 API Reference
 #############
