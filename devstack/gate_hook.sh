@@ -15,6 +15,6 @@
 set -ex
 
 # Install barbican devstack integration
-export DEVSTACK_LOCAL_CONFIG="enable_plugin barbican https://review.openstack.org/openstack/barbican refs/changes/85/167885/25"
+export DEVSTACK_LOCAL_CONFIG="enable_plugin barbican https://git.openstack.org/openstack/barbican"
 
 $BASE/new/devstack-gate/devstack-vm-gate.sh
