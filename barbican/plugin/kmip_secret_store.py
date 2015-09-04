@@ -24,29 +24,13 @@ import stat
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 
-from kmip.core.attributes import CryptographicAlgorithm
-from kmip.core.attributes import CryptographicLength
 from kmip.core import enums
-from kmip.core.factories import attributes
 from kmip.core.factories import credentials
-from kmip.core import misc
-from kmip.core.objects import CommonTemplateAttribute
-from kmip.core.objects import KeyBlock
-from kmip.core.objects import KeyMaterial
-from kmip.core.objects import KeyMaterialStruct
-from kmip.core.objects import KeyValue
-from kmip.core.objects import TemplateAttribute
-from kmip.core.secrets import Certificate
-from kmip.core.secrets import OpaqueObject as Opaque
-from kmip.core.secrets import PrivateKey
-from kmip.core.secrets import PublicKey
-from kmip.core.secrets import SecretData
-from kmip.core.secrets import SymmetricKey
-from kmip.services import kmip_client
+from kmip.pie import client
+from kmip.pie import objects
 
 from oslo_config import cfg
 from oslo_log import log
-import six
 
 from barbican.common import config
 from barbican import i18n as u  # noqa
@@ -179,6 +163,26 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 [1024, 2048, 3072],
                 KMIPSecretStore.KMIP_ALGORITHM_ENUM:
                 enums.CryptographicAlgorithm.DSA},
+            ss.KeyAlgorithm.HMACSHA1: {
+                KMIPSecretStore.VALID_BIT_LENGTHS:
+                [],
+                KMIPSecretStore.KMIP_ALGORITHM_ENUM:
+                enums.CryptographicAlgorithm.HMAC_SHA1},
+            ss.KeyAlgorithm.HMACSHA256: {
+                KMIPSecretStore.VALID_BIT_LENGTHS:
+                [],
+                KMIPSecretStore.KMIP_ALGORITHM_ENUM:
+                enums.CryptographicAlgorithm.HMAC_SHA256},
+            ss.KeyAlgorithm.HMACSHA384: {
+                KMIPSecretStore.VALID_BIT_LENGTHS:
+                [],
+                KMIPSecretStore.KMIP_ALGORITHM_ENUM:
+                enums.CryptographicAlgorithm.HMAC_SHA384},
+            ss.KeyAlgorithm.HMACSHA512: {
+                KMIPSecretStore.VALID_BIT_LENGTHS:
+                [],
+                KMIPSecretStore.KMIP_ALGORITHM_ENUM:
+                enums.CryptographicAlgorithm.HMAC_SHA512},
             ss.KeyAlgorithm.RSA: {
                 KMIPSecretStore.VALID_BIT_LENGTHS:
                 [1024, 2048, 3072, 4096],
@@ -189,6 +193,20 @@ class KMIPSecretStore(ss.SecretStoreBase):
         if self.pkcs1_only:
             LOG.debug("KMIP secret store only supports PKCS#1")
             del self.valid_alg_dict[ss.KeyAlgorithm.DSA]
+        self.kmip_barbican_alg_map = {
+            enums.CryptographicAlgorithm.AES: ss.KeyAlgorithm.AES,
+            enums.CryptographicAlgorithm.DES: ss.KeyAlgorithm.DES,
+            enums.CryptographicAlgorithm.TRIPLE_DES: ss.KeyAlgorithm.DESEDE,
+            enums.CryptographicAlgorithm.DSA: ss.KeyAlgorithm.DSA,
+            enums.CryptographicAlgorithm.HMAC_SHA1: ss.KeyAlgorithm.HMACSHA1,
+            enums.CryptographicAlgorithm.HMAC_SHA256:
+                ss.KeyAlgorithm.HMACSHA256,
+            enums.CryptographicAlgorithm.HMAC_SHA384:
+                ss.KeyAlgorithm.HMACSHA384,
+            enums.CryptographicAlgorithm.HMAC_SHA512:
+                ss.KeyAlgorithm.HMACSHA512,
+            enums.CryptographicAlgorithm.RSA: ss.KeyAlgorithm.RSA
+        }
 
         if conf.kmip_plugin.keyfile is not None:
             self._validate_keyfile_permissions(conf.kmip_plugin.keyfile)
@@ -205,15 +223,16 @@ class KMIPSecretStore(ss.SecretStoreBase):
                     credential_type,
                     credential_value))
 
-        self.client = kmip_client.KMIPProxy(
-            host=conf.kmip_plugin.host,
-            port=int(conf.kmip_plugin.port),
-            ssl_version=conf.kmip_plugin.ssl_version,
-            ca_certs=conf.kmip_plugin.ca_certs,
-            certfile=conf.kmip_plugin.certfile,
-            keyfile=conf.kmip_plugin.keyfile,
-            username=conf.kmip_plugin.username,
-            password=conf.kmip_plugin.password)
+        config = conf.kmip_plugin
+        self.client = client.ProxyKmipClient(
+            hostname=config.host,
+            port=config.port,
+            cert=config.certfile,
+            key=config.keyfile,
+            ca=config.ca_certs,
+            ssl_version=config.ssl_version,
+            username=config.username,
+            password=config.password)
 
     def generate_symmetric_key(self, key_spec):
         """Generate a symmetric key.
@@ -236,41 +255,18 @@ class KMIPSecretStore(ss.SecretStoreBase):
                     "'generate_symmetric_key' method").format(
                         algorithm=key_spec.alg))
 
-        object_type = enums.ObjectType.SYMMETRIC_KEY
-
-        algorithm = self._create_cryptographic_algorithm_attribute(
-            key_spec.alg)
-
-        usage_mask = self._create_usage_mask_attribute(object_type)
-
-        length = self._create_cryptographic_length_attribute(
-            key_spec.bit_length)
-
-        attribute_list = [algorithm, usage_mask, length]
-        template_attribute = TemplateAttribute(
-            attributes=attribute_list)
-
+        algorithm = self._get_kmip_algorithm(key_spec.alg)
         try:
-            self.client.open()
-            LOG.debug("Opened connection to KMIP client for secret " +
-                      "generation")
-            result = self.client.create(object_type=object_type,
-                                        template_attribute=template_attribute,
-                                        credential=self.credential)
+            with self.client:
+                LOG.debug("Opened connection to KMIP client for secret " +
+                          "generation")
+                uuid = self.client.create(algorithm, key_spec.bit_length)
+                LOG.debug("SUCCESS: Symmetric key generated with "
+                          "uuid: %s", uuid)
+                return {KMIPSecretStore.KEY_UUID: uuid}
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
             raise ss.SecretGeneralException(str(e))
-        else:
-            if result.result_status.enum == enums.ResultStatus.SUCCESS:
-                LOG.debug("SUCCESS: Symmetric key generated with "
-                          "uuid: %s", result.uuid.value)
-                return {KMIPSecretStore.KEY_UUID: result.uuid.value}
-            else:
-                self._raise_secret_general_exception(result)
-        finally:
-            self.client.close()
-            LOG.debug("Closed connection to KMIP client for secret " +
-                      "generation")
 
     def generate_asymmetric_key(self, key_spec):
         """Generate an asymmetric key pair.
@@ -299,48 +295,27 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 u._('KMIP plugin does not currently support protecting the '
                     'private key with a passphrase'))
 
-        algorithm = self._create_cryptographic_algorithm_attribute(
-            key_spec.alg)
-
-        length = self._create_cryptographic_length_attribute(
-            key_spec.bit_length)
-
-        attributes = [algorithm, length]
-        common = CommonTemplateAttribute(
-            attributes=attributes)
+        algorithm = self._get_kmip_algorithm(key_spec.alg)
+        length = key_spec.bit_length
 
         try:
-            self.client.open()
-            LOG.debug("Opened connection to KMIP client for asymmetric " +
-                      "secret generation")
-            result = self.client.create_key_pair(
-                common_template_attribute=common,
-                credential=self.credential)
-        except Exception as e:
-            LOG.exception(u._LE("Error opening or writing to client"))
-            raise ss.SecretGeneralException(str(e))
-        else:
-            if result.result_status.enum == enums.ResultStatus.SUCCESS:
+            with self.client:
+                LOG.debug("Opened connection to KMIP client for asymmetric " +
+                          "secret generation")
+                public_uuid, private_uuid = self.client.create_key_pair(
+                    algorithm, length)
                 LOG.debug("SUCCESS: Asymmetric key pair generated with "
                           "public key uuid: %s and private key uuid: %s",
-                          result.public_key_uuid.value,
-                          result.private_key_uuid.value)
-                private_key_metadata = {
-                    KMIPSecretStore.KEY_UUID:
-                    result.private_key_uuid.value}
-                public_key_metadata = {
-                    KMIPSecretStore.KEY_UUID:
-                    result.public_key_uuid.value}
+                          public_uuid, private_uuid)
+                private_key_metadata = {KMIPSecretStore.KEY_UUID: private_uuid}
+                public_key_metadata = {KMIPSecretStore.KEY_UUID: public_uuid}
                 passphrase_metadata = None
                 return ss.AsymmetricKeyMetadataDTO(private_key_metadata,
                                                    public_key_metadata,
                                                    passphrase_metadata)
-            else:
-                self._raise_secret_general_exception(result)
-        finally:
-            self.client.close()
-            LOG.debug("Closed connection to KMIP client for asymmetric "
-                      "secret generation")
+        except Exception as e:
+            LOG.exception(u._LE("Error opening or writing to client"))
+            raise ss.SecretGeneralException(str(e))
 
     def store_secret(self, secret_dto):
         """Stores a secret
@@ -364,33 +339,17 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 u._('Secret object type {object_type} is '
                     'not supported').format(object_type=object_type))
 
-        usage_mask = self._create_usage_mask_attribute(object_type)
-        attribute_list = [usage_mask]
-        template_attribute = TemplateAttribute(
-            attributes=attribute_list)
         secret = self._get_kmip_secret(secret_dto)
 
         try:
-            self.client.open()
-            LOG.debug("Opened connection to KMIP client for secret storage")
-            result = self.client.register(
-                object_type=object_type,
-                template_attribute=template_attribute,
-                secret=secret,
-                credential=self.credential)
+            with self.client:
+                LOG.debug("Opened connection to KMIP client")
+                uuid = self.client.register(secret)
+                LOG.debug("SUCCESS: Key stored with uuid: %s", uuid)
+                return {KMIPSecretStore.KEY_UUID: uuid}
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
             raise ss.SecretGeneralException(str(e))
-        else:
-            if result.result_status.enum == enums.ResultStatus.SUCCESS:
-                LOG.debug("SUCCESS: Key stored with uuid: %s",
-                          result.uuid.value)
-                return {KMIPSecretStore.KEY_UUID: result.uuid.value}
-            else:
-                self._raise_secret_general_exception(result)
-        finally:
-            self.client.close()
-            LOG.debug("Closed connection to KMIP client for secret storage")
 
     def get_secret(self, secret_type, secret_metadata):
         """Gets a secret
@@ -403,34 +362,15 @@ class KMIPSecretStore(ss.SecretStoreBase):
         """
         LOG.debug("Starting secret retrieval with KMIP plugin")
         uuid = str(secret_metadata[KMIPSecretStore.KEY_UUID])
-        object_type, key_format_enum = self._map_type_ss_to_kmip(secret_type)
-        if (key_format_enum is not None and
-                object_type != enums.ObjectType.CERTIFICATE):
-            key_format_type = misc.KeyFormatType(key_format_enum)
-        else:
-            key_format_type = None
         try:
-            self.client.open()
-            LOG.debug("Opened connection to KMIP client for secret " +
-                      "retrieval")
-            result = self.client.get(uuid=uuid,
-                                     key_format_type=key_format_type,
-                                     credential=self.credential)
+            with self.client:
+                LOG.debug("Opened connection to KMIP client for secret " +
+                          "retrieval")
+                managed_object = self.client.get(uuid)
+                return self._get_barbican_secret(managed_object, secret_type)
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
             raise ss.SecretGeneralException(str(e))
-        else:
-            if result.result_status.enum == enums.ResultStatus.SUCCESS:
-                ret_secret_dto = self._get_barbican_secret(result, secret_type)
-                LOG.debug("SUCCESS: Key retrieved with uuid: %s",
-                          uuid)
-                return ret_secret_dto
-            else:
-                self._raise_secret_general_exception(result)
-        finally:
-            self.client.close()
-            LOG.debug("Closed connection to KMIP client for secret " +
-                      "retrieval")
 
     def generate_supports(self, key_spec):
         """Key generation supported?
@@ -445,9 +385,12 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :returns: boolean indicating if secret can be generated
         """
         alg_dict_entry = self.valid_alg_dict.get(key_spec.alg.lower())
-        if (alg_dict_entry and key_spec.bit_length in
-                alg_dict_entry.get(KMIPSecretStore.VALID_BIT_LENGTHS)):
-            return True
+        if alg_dict_entry:
+            valid_bit_lengths = alg_dict_entry.get(
+                KMIPSecretStore.VALID_BIT_LENGTHS)
+            if (key_spec.bit_length in valid_bit_lengths
+                    or not valid_bit_lengths):
+                return True
         return False
 
     def delete_secret(self, secret_metadata):
@@ -460,23 +403,13 @@ class KMIPSecretStore(ss.SecretStoreBase):
         """
         LOG.debug("Starting secret deletion with KMIP plugin")
         uuid = str(secret_metadata[KMIPSecretStore.KEY_UUID])
-
         try:
-            self.client.open()
-            LOG.debug("Opened connection to KMIP client for secret deletion")
-            result = self.client.destroy(uuid=uuid,
-                                         credential=self.credential)
+            with self.client:
+                LOG.debug("Opened connection to KMIP client")
+                self.client.destroy(uuid)
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
             raise ss.SecretGeneralException(str(e))
-        else:
-            if result.result_status.enum == enums.ResultStatus.SUCCESS:
-                LOG.debug("SUCCESS: Key with uuid %s deleted", uuid)
-            else:
-                self._raise_secret_general_exception(result)
-        finally:
-            self.client.close()
-            LOG.debug("Closed connection to KMIP client for secret deletion")
 
     def store_secret_supports(self, key_spec):
         """Key storage supported?
@@ -508,6 +441,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :returns: KMIP object
         """
         secret_type = secret_dto.type
+        key_spec = secret_dto.key_spec
         object_type, key_format_type = (
             self._map_type_ss_to_kmip(secret_type))
 
@@ -515,166 +449,59 @@ class KMIPSecretStore(ss.SecretStoreBase):
                                                    secret_type)
         kmip_object = None
         if object_type == enums.ObjectType.CERTIFICATE:
-            kmip_object = Certificate(
-                certificate_type=enums.CertificateTypeEnum.X_509,
-                certificate_value=normalized_secret)
+            kmip_object = objects.X509Certificate(normalized_secret)
         elif object_type == enums.ObjectType.OPAQUE_DATA:
-            opaque_type = Opaque.OpaqueDataType(enums.OpaqueDataType.NONE)
-            opaque_value = Opaque.OpaqueDataValue(normalized_secret)
-            kmip_object = Opaque(opaque_type, opaque_value)
-        elif (object_type == enums.ObjectType.SYMMETRIC_KEY or
-              object_type == enums.ObjectType.SECRET_DATA or
-              object_type == enums.ObjectType.PRIVATE_KEY or
-              object_type == enums.ObjectType.PUBLIC_KEY):
-            key_material = KeyMaterial(normalized_secret)
-            key_value = KeyValue(key_material)
-
-            key_spec = secret_dto.key_spec
-            algorithm = None
-            if key_spec.alg is not None:
-                algorithm_name = self._map_algorithm_ss_to_kmip(
-                    key_spec.alg.lower())
-                algorithm = CryptographicAlgorithm(algorithm_name)
-            bit_length = None
-            if key_spec.bit_length is not None:
-                bit_length = CryptographicLength(key_spec.bit_length)
-
-            key_block = KeyBlock(
-                key_format_type=misc.KeyFormatType(key_format_type),
-                key_compression_type=None,
-                key_value=key_value,
-                cryptographic_algorithm=algorithm,
-                cryptographic_length=bit_length,
-                key_wrapping_data=None)
-
-            if object_type == enums.ObjectType.SYMMETRIC_KEY:
-                kmip_object = SymmetricKey(key_block)
-            elif object_type == enums.ObjectType.PRIVATE_KEY:
-                kmip_object = PrivateKey(key_block)
-            elif object_type == enums.ObjectType.PUBLIC_KEY:
-                kmip_object = PublicKey(key_block)
-            elif object_type == enums.ObjectType.SECRET_DATA:
-                kind = SecretData.SecretDataType(enums.SecretDataType.PASSWORD)
-                return SecretData(secret_data_type=kind,
-                                  key_block=key_block)
+            opaque_type = enums.OpaqueDataType.NONE
+            kmip_object = objects.OpaqueObject(normalized_secret,
+                                               opaque_type)
+        elif object_type == enums.ObjectType.PRIVATE_KEY:
+            algorithm = self._get_kmip_algorithm(key_spec.alg)
+            length = key_spec.bit_length
+            format_type = enums.KeyFormatType.PKCS_8
+            kmip_object = objects.PrivateKey(
+                algorithm, length, normalized_secret, format_type)
+        elif object_type == enums.ObjectType.PUBLIC_KEY:
+            algorithm = self._get_kmip_algorithm(key_spec.alg)
+            length = key_spec.bit_length
+            format_type = enums.KeyFormatType.X_509
+            kmip_object = objects.PublicKey(
+                algorithm, length, normalized_secret, format_type)
+        elif object_type == enums.ObjectType.SYMMETRIC_KEY:
+            algorithm = self._get_kmip_algorithm(key_spec.alg)
+            length = key_spec.bit_length
+            kmip_object = objects.SymmetricKey(algorithm, length,
+                                               normalized_secret)
+        elif object_type == enums.ObjectType.SECRET_DATA:
+            data_type = enums.SecretDataType.PASSWORD
+            kmip_object = objects.SecretData(normalized_secret, data_type)
 
         return kmip_object
 
-    def _get_barbican_secret(self, result, secret_type):
-        object_type = result.object_type.value
-        if object_type == enums.ObjectType.CERTIFICATE.value:
-            certificate = result.secret
-            secret_value = certificate.certificate_value.value
+    def _get_kmip_algorithm(self, ss_algorithm):
+        alg_entry = self.valid_alg_dict.get(ss_algorithm)
+        return alg_entry.get(KMIPSecretStore.KMIP_ALGORITHM_ENUM)
+
+    def _get_barbican_secret(self, managed_object, secret_type):
+        object_type = managed_object.object_type
+        secret = managed_object.value
+        if (object_type == enums.ObjectType.SYMMETRIC_KEY or
+                object_type == enums.ObjectType.PRIVATE_KEY or
+                object_type == enums.ObjectType.PUBLIC_KEY):
+            algorithm = self.kmip_barbican_alg_map[
+                managed_object.cryptographic_algorithm]
+            length = managed_object.cryptographic_length
+            key_spec = ss.KeySpec(algorithm, length)
+        else:
             key_spec = ss.KeySpec()
-        elif object_type == enums.ObjectType.OPAQUE_DATA.value:
-            opaque_secret = result.secret
-            secret_value = opaque_secret.opaque_data_value.value
-            key_spec = ss.KeySpec()
-        elif (object_type == enums.ObjectType.SYMMETRIC_KEY.value or
-              object_type == enums.ObjectType.PRIVATE_KEY.value or
-              object_type == enums.ObjectType.PUBLIC_KEY.value or
-              object_type == enums.ObjectType.SECRET_DATA.value):
 
-            secret_block = result.secret.key_block
-            key_value_type = type(secret_block.key_value.key_material)
-            if (key_value_type == KeyMaterialStruct or
-                    key_value_type == KeyMaterial):
-                secret_value = secret_block.key_value.key_material.value
-            else:
-                msg = u._(
-                    "Unknown key value type received from KMIP "
-                    "server, expected {key_value_struct} or "
-                    "{key_value_string}, received: {key_value_type}"
-                ).format(
-                    key_value_struct=KeyValue,
-                    key_value_string=KeyMaterial,
-                    key_value_type=key_value_type
-                )
-                LOG.exception(msg)
-                raise ss.SecretGeneralException(msg)
-
-            if secret_block.cryptographic_algorithm:
-                secret_alg = self._map_algorithm_kmip_to_ss(
-                    secret_block.cryptographic_algorithm.value)
-            else:
-                secret_alg = None
-            if secret_block.cryptographic_length:
-                secret_bit_length = secret_block.cryptographic_length.value
-            else:
-                secret_bit_length = None
-            key_spec = ss.KeySpec(secret_alg, secret_bit_length),
-
-        secret_value = self._denormalize_secret(secret_value, secret_type)
+        secret = self._denormalize_secret(secret, secret_type)
         secret_dto = ss.SecretDTO(
             secret_type,
-            secret_value,
+            secret,
             key_spec,
             content_type=None,
             transport_key=None)
         return secret_dto
-
-    def _create_cryptographic_algorithm_attribute(self, alg):
-        """Creates a KMIP Cryptographic Algorithm attribute.
-
-        This attribute is used when telling the KMIP server what kind of
-        key to generate.
-        :param algorithm: A SecretStore KeyAlgorithm enum value
-        :returns: A KMIP Cryptographic Algorithm attribute
-        """
-        attribute_type = enums.AttributeType.CRYPTOGRAPHIC_ALGORITHM
-        algorithm_name = self._map_algorithm_ss_to_kmip(alg.lower())
-        algorithm = attributes.AttributeFactory().create_attribute(
-            attribute_type,
-            algorithm_name)
-        LOG.debug(attribute_debug_msg,
-                  attribute_type.value,
-                  algorithm_name.name)
-        return algorithm
-
-    def _create_usage_mask_attribute(self, kmip_type):
-        """Creates a KMIP Usage Mask attribute.
-
-        :param kmip_type: A PyKMIP enums ObjectType value
-        :returns: A KMIP Usage Mask attribute specific to the object type
-        """
-        if (kmip_type == enums.ObjectType.SYMMETRIC_KEY or
-                kmip_type == enums.ObjectType.SECRET_DATA or
-                kmip_type == enums.ObjectType.OPAQUE_DATA):
-            flags = [enums.CryptographicUsageMask.ENCRYPT,
-                     enums.CryptographicUsageMask.DECRYPT]
-        elif (kmip_type == enums.ObjectType.PUBLIC_KEY or
-                kmip_type == enums.ObjectType.CERTIFICATE):
-            flags = [enums.CryptographicUsageMask.ENCRYPT,
-                     enums.CryptographicUsageMask.VERIFY]
-        elif kmip_type == enums.ObjectType.PRIVATE_KEY:
-            flags = [enums.CryptographicUsageMask.DECRYPT,
-                     enums.CryptographicUsageMask.SIGN]
-
-        attribute_type = enums.AttributeType.CRYPTOGRAPHIC_USAGE_MASK
-        usage_mask = attributes.AttributeFactory().create_attribute(
-            attribute_type,
-            flags)
-        LOG.debug(attribute_debug_msg,
-                  attribute_type.value,
-                  ', '.join(map(str, flags)))
-        return usage_mask
-
-    def _create_cryptographic_length_attribute(self, bit_length):
-        """Creates a KMIP Cryptographic Length attribute.
-
-        This attribute is used when telling the KMIP server what kind of
-        key to generate.
-        :param bit_length: Bit length of the secret's algorithm
-        :returns: KMIP Cryptographic Length attribute
-        """
-        attribute_type = enums.AttributeType.CRYPTOGRAPHIC_LENGTH
-        length = attributes.AttributeFactory().create_attribute(
-            attribute_type,
-            int(bit_length))
-        LOG.debug(attribute_debug_msg,
-                  attribute_type.value,
-                  bit_length)
-        return length
 
     def _map_type_ss_to_kmip(self, object_type):
         """Map SecretType to KMIP type enum
@@ -704,33 +531,6 @@ class KMIPSecretStore(ss.SecretStoreBase):
             return enums.ObjectType.OPAQUE_DATA, enums.KeyFormatType.RAW
         else:
             return None, None
-
-    def _map_algorithm_ss_to_kmip(self, algorithm):
-        """Map SecretStore enum value to the KMIP algorithm enum
-
-        Returns None if the algorithm is not supported.
-        :param algorithm: SecretStore algorithm enum value
-        :returns: KMIP algorithm enum value if supported, None if not
-        supported
-        """
-        alg_dict_entry = self.valid_alg_dict.get(algorithm, None)
-        if alg_dict_entry:
-            return alg_dict_entry.get(KMIPSecretStore.KMIP_ALGORITHM_ENUM)
-        else:
-            return None
-
-    def _map_algorithm_kmip_to_ss(self, algorithm):
-        """Map KMIP algorithm enum to SecretStore algorithm enum
-
-        Returns None if the algorithm is not supported.
-        :param algorithm: KMIP algorithm enum
-        :returns: SecretStore algorithm enum value if supported, None if not
-        supported
-        """
-        for ss_alg, ss_dict in six.iteritems(self.valid_alg_dict):
-            if ss_dict.get(KMIPSecretStore.KMIP_ALGORITHM_ENUM) == algorithm:
-                return ss_alg
-        return None
 
     def _raise_secret_general_exception(self, result):
         msg = u._(
