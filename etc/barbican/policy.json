@@ -51,6 +51,7 @@
     "transport_keys:get": "rule:all_users",
     "transport_keys:post": "rule:admin",
     "certificate_authorities:get": "rule:all_but_audit",
+    "certificate_authorities:post": "rule:all_but_audit",
     "certificate_authority:get": "rule:all_users",
     "certificate_authority:get_cacert": "rule:all_users",
     "certificate_authority:get_ca_cert_chain": "rule:all_users",

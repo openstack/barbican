@@ -331,7 +331,7 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
 
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('CA creation'))
-    @controllers.enforce_rbac('cas:post')
+    @controllers.enforce_rbac('certificate_authorities:post')
     @controllers.enforce_content_types(['application/json'])
     def on_post(self, external_project_id, **kwargs):
         LOG.debug('Start on_post for project-ID %s:...', external_project_id)

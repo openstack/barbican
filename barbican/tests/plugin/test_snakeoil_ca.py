@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import base64
 import os
 
 from Crypto.Util import asn1
@@ -146,6 +147,7 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         req = certificate_utils.get_valid_csr_object()
 
         req_enc = crypto.dump_certificate_request(crypto.FILETYPE_PEM, req)
+        req_enc = base64.b64encode(req_enc)
         order_meta = {'request_data': req_enc}
         resp = self.plugin.issue_certificate_request(self.order_id,
                                                      order_meta, {},
@@ -157,6 +159,7 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         req = certificate_utils.get_valid_csr_object()
 
         req_enc = crypto.dump_certificate_request(crypto.FILETYPE_PEM, req)
+        req_enc = base64.b64encode(req_enc)
         order_meta = {'request_data': req_enc}
         plugin_meta = {'plugin_ca_id': self.plugin.get_default_ca_name()}
         resp = self.plugin.issue_certificate_request(self.order_id,
@@ -170,6 +173,7 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         req = certificate_utils.get_valid_csr_object()
 
         req_enc = crypto.dump_certificate_request(crypto.FILETYPE_PEM, req)
+        req_enc = base64.b64encode(req_enc)
         order_meta = {'request_data': req_enc}
         plugin_meta = {'plugin_ca_id': "invalid_ca_id"}
         self.assertRaises(
@@ -192,6 +196,7 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         subj.commonName = 'Testing'
 
         req_enc = crypto.dump_certificate_request(crypto.FILETYPE_PEM, req)
+        req_enc = base64.b64encode(req_enc)
         order_meta = {'request_data': req_enc}
         resp = self.plugin.issue_certificate_request(self.order_id,
                                                      order_meta, {},

@@ -30,6 +30,18 @@ class CABehaviors(base_behaviors.BaseBehaviors):
                                response_model_type=ca_models.CAModel,
                                extra_headers=extra_headers)
 
+    def get_cacert(self, ca_ref, payload_content_type,
+                   payload_content_encoding=None, extra_headers=None,
+                   use_auth=True, user_name=None):
+        headers = {'Accept': payload_content_type,
+                   'Accept-Encoding': payload_content_encoding}
+        if extra_headers:
+            headers.update(extra_headers)
+
+        return self.client.get(ca_ref + '/cacert',
+                               extra_headers=headers, use_auth=use_auth,
+                               user_name=user_name)
+
     def get_cas(self, limit=10, offset=0):
         """Handles getting a list of CAs.
 
@@ -58,3 +70,31 @@ class CABehaviors(base_behaviors.BaseBehaviors):
                 total = resp_json.get('total')
 
         return resp, cas, total, next_ref, prev_ref
+
+    def create_ca(self, model, headers=None, use_auth=True,
+                  user_name=None, admin=None):
+        """Create a subordinate CA from the data in the model.
+
+        :param model: The metadata used to create the subCA
+        :param use_auth: Boolean for whether to send authentication headers
+        :param user_name: The user name used to create the subCA
+        :param admin: The user with permissions to delete the subCA
+        :return: A tuple containing the response from the create
+        and the href to the newly created subCA
+        """
+
+        resp = self.client.post('cas', request_model=model,
+                                extra_headers=headers, use_auth=use_auth,
+                                user_name=user_name)
+
+        # handle expected JSON parsing errors for unauthenticated requests
+        if resp.status_code == 401 and not use_auth:
+            return resp, None
+
+        returned_data = self.get_json(resp)
+        ca_ref = returned_data.get('ca_ref')
+        if ca_ref:
+            if admin is None:
+                admin = user_name
+            self.created_entities.append((ca_ref, admin))
+        return resp, ca_ref

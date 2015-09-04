@@ -257,7 +257,7 @@ class SnakeoilCACertificatePlugin(cert_manager.CertificatePluginBase):
             encoded_csr = barbican_meta_dto.generated_csr
         else:
             try:
-                encoded_csr = order_meta['request_data']
+                encoded_csr = base64.b64decode(order_meta['request_data'])
             except KeyError:
                 return cert_manager.ResultDTO(
                     cert_manager.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,

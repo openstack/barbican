@@ -21,7 +21,8 @@ class CAModel(BaseModel):
 
     def __init__(self, expiration=None, ca_id=None, status=None,
                  updated=None, created=None, plugin_name=None,
-                 plugin_ca_id=None, meta=None):
+                 plugin_ca_id=None, meta=None, parent_ca_ref=None,
+                 subject_dn=None, name=None, description=None):
         super(CAModel, self).__init__()
 
         self.expiration = expiration
@@ -32,3 +33,7 @@ class CAModel(BaseModel):
         self.plugin_name = plugin_name
         self.plugin_ca_id = plugin_ca_id
         self.meta = meta
+        self.parent_ca_ref = parent_ca_ref
+        self.subject_dn = subject_dn
+        self.name = name
+        self.description = description
