@@ -16,6 +16,8 @@
 """
 API application handler for Barbican
 """
+import os
+
 import pecan
 
 try:
@@ -36,7 +38,10 @@ from barbican import queue
 CONF = config.CONF
 
 if newrelic_loaded:
-    newrelic.agent.initialize('/etc/newrelic/newrelic.ini')
+    newrelic.agent.initialize(
+        os.environ.get('NEW_RELIC_CONFIG_FILE', '/etc/newrelic/newrelic.ini'),
+        os.environ.get('NEW_RELIC_ENVIRONMENT')
+    )
 
 
 def build_wsgi_app(controller=None, transactional=False):
