@@ -133,7 +133,7 @@ ks_queue_opts = [
 def parse_args(conf, args=None, usage=None, default_config_files=None):
     conf(args=args if args else [],
          project='barbican',
-         prog='barbican-api',
+         prog='barbican',
          version=barbican.version.__version__,
          usage=usage,
          default_config_files=default_config_files)
