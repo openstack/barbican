@@ -20,6 +20,7 @@ from barbican.api import controllers
 from barbican.common import hrefs
 from barbican.common import resources as res
 from barbican.common import utils
+from barbican.common import validators
 from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repo
@@ -232,7 +233,7 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
         self.project_ca_repo = repo.get_project_ca_repository()
         self.preferred_ca_repo = repo.get_preferred_ca_repository()
         self.project_repo = repo.get_project_repository()
-        self.validator = None
+        self.validator = validators.NewCAValidator()
 
     def __getattr__(self, name):
         route_table = {
@@ -335,7 +336,7 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
     def on_post(self, external_project_id, **kwargs):
         LOG.debug('Start on_post for project-ID %s:...', external_project_id)
 
-        data = api.load_body(pecan.request)
+        data = api.load_body(pecan.request, validator=self.validator)
         project = res.get_or_create_project(external_project_id)
 
         ctxt = controllers._get_barbican_context(pecan.request)
