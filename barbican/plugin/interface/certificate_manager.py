@@ -429,6 +429,51 @@ class CertificatePluginBase(object):
 
         return {name: default_info}
 
+    def supports_create_ca(self):
+        """Returns whether the plugin supports on-the-fly generation of subCAs
+
+        :return: boolean, True if supported, defaults to False
+        """
+        return False    # pragma: no cover
+
+    def create_ca(self, ca_create_dto):
+        """Creates a subordinate CA upon request
+
+        This call should only be made if a plugin returns True for
+        supports_create_ca().
+
+        :param ca_create_dto:
+            Data transfer object :class:`CACreateDTO` containing data
+            required to generate a subordinate CA.  This data includes
+            the subject DN of the new CA signing certificate, a name for
+            the new CA and a reference to the CA that will issue the new
+            subordinate CA's signing certificate,
+
+        :return: ca_info:
+            Dictionary containing the data needed to create a
+            models.CertificateAuthority object
+        """
+        raise NotImplementedError    # pragma: no cover
+
+
+class CACreateDTO(object):
+    """Class that includes data needed to create a subordinate CA """
+
+    def __init__(self, name=None, subject_dn=None, parent_ca_id=None):
+        """Creates a new CACreateDTO object.
+
+        :param name: Name for the  subordinate CA
+        :param subject_dn:
+            Subject DN for the new subordinate CA's signing certificate
+        :param parent_ca_id:
+            ID of the CA which is supposed to sign the
+            subordinate CA's signing certificate.  This is ID as known to the
+            plugin (not the Barbican UUID)
+        """
+        self.name = name
+        self.subject_dn = subject_dn
+        self.parent_ca_id = parent_ca_id
+
 
 class CertificateStatus(object):
     """Defines statuses for certificate request process.

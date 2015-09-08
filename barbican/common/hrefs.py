@@ -150,3 +150,13 @@ def get_secret_id_from_ref(secret_ref):
     :param secret_ref: HTTP reference of secret
     :return: a string containing the ID of the secret
     """
+
+
+def get_ca_id_from_ref(ca_ref):
+    """Parse a ca_ref and return the CA ID
+
+    :param ca_ref: HHTO reference of the CA
+    :return: a string containing the ID of the CA
+    """
+    ca_id = ca_ref.rsplit('/', 1)[1]
+    return ca_id

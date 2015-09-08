@@ -263,7 +263,10 @@ class WhenCreatingNewCertificateAuthority(utils.BaseTestCase):
                           'name': 'Dogtag CA',
                           'description': 'Master CA for Dogtag plugin',
                           'ca_signing_certificate': 'XXXXX',
-                          'intermediates': 'YYYYY'}
+                          'intermediates': 'YYYYY',
+                          'creator_id': 'user12345',
+                          'parent_ca_id': '12330-223-22',
+                          'project_id': '12345'}
 
     def test_new_ca_is_created_from_dict(self):
         ca = models.CertificateAuthority(self.parsed_ca)
@@ -278,6 +281,8 @@ class WhenCreatingNewCertificateAuthority(utils.BaseTestCase):
                          ca.ca_meta['intermediates'].value)
         self.assertIsInstance(ca.expiration, datetime.datetime)
         self.assertEqual(ca.created_at, ca.updated_at)
+        self.assertEqual(self.parsed_ca['creator_id'], ca.creator_id)
+        self.assertEqual(self.parsed_ca['project_id'], ca.project_id)
 
 
 class WhenCreatingNewProjectCertificateAuthority(utils.BaseTestCase):

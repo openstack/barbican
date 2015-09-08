@@ -12,6 +12,7 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import mock
 from six import moves
 
 from barbican.common import hrefs
@@ -274,6 +275,37 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
             '/cas/bogus_ca/projects'.format(self.project_ca_ids[0]),
             expect_errors=True)
         self.assertEqual(404, resp.status_int)
+
+    @mock.patch('barbican.tasks.certificate_resources.create_subordinate_ca')
+    def test_should_create_subca(self, mocked_task):
+        self.create_cas()
+        self.create_subca_request(self.selected_ca_id)
+
+        mocked_task.return_value = models.CertificateAuthority(
+            self.parsed_subca)
+
+        resp = self.app.post_json(
+            '/cas',
+            self.subca_request,
+            expect_errors=False)
+        self.assertEqual(201, resp.status_int)
+
+    def create_subca_request(self, parent_ca_id):
+        self.subca_request = {
+            'name': "Subordinate CA",
+            'subject_dn': 'cn=subordinate ca signing cert, o=example.com',
+            'parent_ca_ref': "https://localhost:9311/cas/" + parent_ca_id
+        }
+
+        self.parsed_subca = {
+            'plugin_name': self.plugin_name,
+            'plugin_ca_id': self.plugin_ca_id + '_subca_id',
+            'name': self.plugin_name,
+            'description': 'Subordinate CA',
+            'ca_signing_certificate': 'ZZZZZ...Subordinate...',
+            'intermediates': 'YYYYY...subordinate...',
+            'parent_ca_id': parent_ca_id
+        }
 
     def create_cas(self):
         self.project = res.get_or_create_project(self.project_id)
