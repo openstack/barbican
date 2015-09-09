@@ -865,7 +865,8 @@ class ProjectQuotaValidator(ValidatorBase):
                         'orders': {'type': 'integer'},
                         'containers': {'type': 'integer'},
                         'transport_keys': {'type': 'integer'},
-                        'consumers': {'type': 'integer'}
+                        'consumers': {'type': 'integer'},
+                        'cas': {'type': 'integer'}
                     },
                     'additionalProperties': False,
                 }

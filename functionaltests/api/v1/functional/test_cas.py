@@ -90,6 +90,8 @@ class CertificateAuthoritiesTestCase(base.TestCase):
         self.send_test_order()
 
     def tearDown(self):
+        self.order_behaviors.delete_all_created_orders()
+        self.ca_behaviors.delete_all_created_cas()
         super(CertificateAuthoritiesTestCase, self).tearDown()
 
     def get_signing_cert(self, ca_ref):

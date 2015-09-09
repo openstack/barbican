@@ -18,6 +18,7 @@ from six.moves.urllib import parse
 from barbican import api
 from barbican.api import controllers
 from barbican.common import hrefs
+from barbican.common import quota
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican.common import validators
@@ -234,6 +235,7 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
         self.preferred_ca_repo = repo.get_preferred_ca_repository()
         self.project_repo = repo.get_project_repository()
         self.validator = validators.NewCAValidator()
+        self.quota_enforcer = quota.QuotaEnforcer('cas', self.ca_repo)
 
     def __getattr__(self, name):
         route_table = {
@@ -343,8 +345,7 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
         if ctxt:  # in authenticated pipeline case, always use auth token user
             creator_id = ctxt.user
 
-        # TODO(alee) Add quota enforcement
-        # self.quota_enforcer.enforce(project)
+        self.quota_enforcer.enforce(project)
 
         new_ca = cert_resources.create_subordinate_ca(
             project_model=project,

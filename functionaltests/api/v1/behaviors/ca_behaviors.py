@@ -98,3 +98,30 @@ class CABehaviors(base_behaviors.BaseBehaviors):
                 admin = user_name
             self.created_entities.append((ca_ref, admin))
         return resp, ca_ref
+
+    def delete_ca(self, ca_ref, extra_headers=None,
+                  expected_fail=False, use_auth=True, user_name=None):
+        """Delete a secret.
+
+        :param ca_ref: HATEOS ref of the secret to be deleted
+        :param extra_headers: Optional HTTP headers to add to the request
+        :param expected_fail: If test is expected to fail the deletion
+        :param use_auth: Boolean for whether to send authentication headers
+        :param user_name: The user name used to delete the entity
+        :return A request response object
+        """
+        resp = self.client.delete(ca_ref, extra_headers=extra_headers,
+                                  use_auth=use_auth, user_name=user_name)
+
+        if not expected_fail:
+            for item in self.created_entities:
+                if item[0] == ca_ref:
+                    self.created_entities.remove(item)
+
+        return resp
+
+    def delete_all_created_cas(self):
+        """Delete all of the cas that we have created."""
+        entities = list(self.created_entities)
+        for (ca_ref, admin) in entities:
+            self.delete_ca(ca_ref, user_name=admin)
