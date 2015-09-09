@@ -41,9 +41,6 @@ quota_opts = [
     cfg.IntOpt('quota_containers',
                default=-1,
                help='Number of containers allowed per project'),
-    cfg.IntOpt('quota_transport_keys',
-               default=-1,
-               help='Number of transport keys allowed per project'),
     cfg.IntOpt('quota_consumers',
                default=-1,
                help='Number of consumers allowed per project'),
@@ -62,7 +59,7 @@ class QuotaDriver(object):
 
     def _get_resources(self):
         """List of resources that can be constrained by a quota"""
-        return ['secrets', 'orders', 'containers', 'transport_keys',
+        return ['secrets', 'orders', 'containers',
                 'consumers']
 
     def _get_defaults(self):
@@ -71,7 +68,6 @@ class QuotaDriver(object):
             'secrets': CONF.quotas.quota_secrets,
             'orders': CONF.quotas.quota_orders,
             'containers': CONF.quotas.quota_containers,
-            'transport_keys': CONF.quotas.quota_transport_keys,
             'consumers': CONF.quotas.quota_consumers
         }
         return quotas

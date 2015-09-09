@@ -1280,7 +1280,6 @@ class ProjectQuotas(BASE, ModelBase):
     secrets = sa.Column(sa.Integer, nullable=True)
     orders = sa.Column(sa.Integer, nullable=True)
     containers = sa.Column(sa.Integer, nullable=True)
-    transport_keys = sa.Column(sa.Integer, nullable=True)
     consumers = sa.Column(sa.Integer, nullable=True)
 
     def __init__(self, project_id=None, parsed_project_quotas=None):
@@ -1304,13 +1303,11 @@ class ProjectQuotas(BASE, ModelBase):
             self.secrets = None
             self.orders = None
             self.containers = None
-            self.transport_keys = None
             self.consumers = None
         else:
             self.secrets = parsed_project_quotas.get('secrets')
             self.orders = parsed_project_quotas.get('orders')
             self.containers = parsed_project_quotas.get('containers')
-            self.transport_keys = parsed_project_quotas.get('transport_keys')
             self.consumers = parsed_project_quotas.get('consumers')
 
     def _do_extra_dict_fields(self):
@@ -1324,8 +1321,6 @@ class ProjectQuotas(BASE, ModelBase):
             ret['orders'] = self.orders
         if self.containers:
             ret['containers'] = self.containers
-        if self.transport_keys:
-            ret['transport_keys'] = self.transport_keys
         if self.consumers:
             ret['consumers'] = self.consumers
         return ret

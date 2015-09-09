@@ -51,7 +51,6 @@ class QuotasTestCase(base.TestCase):
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual(-1, resp.model.quotas.secrets)
-        self.assertEqual(-1, resp.model.quotas.transport_keys)
         self.assertEqual(-1, resp.model.quotas.orders)
         self.assertEqual(-1, resp.model.quotas.containers)
         self.assertEqual(-1, resp.model.quotas.consumers)
@@ -71,7 +70,6 @@ class QuotasTestCase(base.TestCase):
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual(50, resp.model.project_quotas.secrets)
-        self.assertIsNone(resp.model.project_quotas.transport_keys)
         self.assertEqual(10, resp.model.project_quotas.orders)
         self.assertEqual(20, resp.model.project_quotas.containers)
         self.assertIsNone(resp.model.project_quotas.consumers)

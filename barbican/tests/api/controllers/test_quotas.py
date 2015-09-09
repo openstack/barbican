@@ -26,7 +26,7 @@ class WhenTestingQuotas(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(200, resp.status_int)
         quotas_list = resp.json.get('quotas')
         self.assertEqual({'consumers': -1, 'containers': -1, 'orders': -1,
-                          'secrets': -1, 'transport_keys': -1},
+                          'secrets': -1},
                          quotas_list)
 
     def test_should_get_specific_project_quotas(self):
@@ -38,7 +38,7 @@ class WhenTestingQuotas(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(200, resp.status_int)
         project_quotas = resp.json.get('project_quotas')
         self.assertEqual({'consumers': 105, 'containers': 103, 'orders': 102,
-                          'secrets': 101, 'transport_keys': 104},
+                          'secrets': 101},
                          project_quotas)
 
     def test_should_return_not_found_get_specific_project_quotas(self):
@@ -164,7 +164,6 @@ class WhenTestingQuotas(utils.BarbicanAPIBaseTestCase):
             'secrets': index * 100 + 1,
             'orders': index * 100 + 2,
             'containers': index * 100 + 3,
-            'transport_keys': index * 100 + 4,
             'consumers': index * 100 + 5}
         request = {'project_quotas': parsed_project_quotas}
         resp = self.app.put_json(

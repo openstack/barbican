@@ -45,13 +45,11 @@ class WhenTestingProjectQuotasRepo(database_utils.RepositoryTestCase):
             'secrets': 101,
             'orders': 102,
             'containers': 103,
-            'transport_keys': 104,
             'consumers': 105}
         self.parsed_project_quotas_2 = {
             'secrets': 201,
             'orders': 202,
             'containers': 203,
-            'transport_keys': 204,
             'consumers': 205}
         self.parsed_project_quotas_3 = {
             'secrets': 301,
@@ -80,8 +78,6 @@ class WhenTestingProjectQuotasRepo(database_utils.RepositoryTestCase):
                          [s.orders for s in retrieved_project_quotas])
         self.assertEqual([103],
                          [s.containers for s in retrieved_project_quotas])
-        self.assertEqual([104],
-                         [s.transport_keys for s in retrieved_project_quotas])
         self.assertEqual([105],
                          [s.consumers for s in retrieved_project_quotas])
 
@@ -112,9 +108,6 @@ class WhenTestingProjectQuotasRepo(database_utils.RepositoryTestCase):
                               [s.orders for s in retrieved_project_quotas])
         self.assertItemsEqual([103, 203],
                               [s.containers for s in retrieved_project_quotas])
-        self.assertItemsEqual([104, 204],
-                              [s.transport_keys for s in
-                               retrieved_project_quotas])
         self.assertItemsEqual([105, 205],
                               [s.consumers for s in retrieved_project_quotas])
 
@@ -149,7 +142,6 @@ class WhenTestingProjectQuotasRepo(database_utils.RepositoryTestCase):
         self.assertEqual(101, retrieved_project_quotas.secrets)
         self.assertEqual(102, retrieved_project_quotas.orders)
         self.assertEqual(103, retrieved_project_quotas.containers)
-        self.assertEqual(104, retrieved_project_quotas.transport_keys)
         self.assertEqual(105, retrieved_project_quotas.consumers)
 
     def test_project_quotas_with_some_defaults(self):
@@ -168,7 +160,6 @@ class WhenTestingProjectQuotasRepo(database_utils.RepositoryTestCase):
         self.assertEqual(301, retrieved_project_quotas.secrets)
         self.assertIsNone(retrieved_project_quotas.orders)
         self.assertEqual(303, retrieved_project_quotas.containers)
-        self.assertIsNone(retrieved_project_quotas.transport_keys)
         self.assertEqual(305, retrieved_project_quotas.consumers)
 
     def test_update_specific_project_quotas(self):
@@ -192,7 +183,6 @@ class WhenTestingProjectQuotasRepo(database_utils.RepositoryTestCase):
         self.assertEqual(201, retrieved_project_quotas.secrets)
         self.assertEqual(202, retrieved_project_quotas.orders)
         self.assertEqual(203, retrieved_project_quotas.containers)
-        self.assertEqual(204, retrieved_project_quotas.transport_keys)
         self.assertEqual(205, retrieved_project_quotas.consumers)
 
     def test_should_raise_get_missing_specific_project_quotas(self):
