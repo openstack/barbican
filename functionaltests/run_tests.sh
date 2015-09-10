@@ -22,12 +22,6 @@ fi
 
 echo "Successfully contacted the Barbican API"
 
-# Where tempest code lives
-TEMPEST_DIR=${TEMPEST_DIR:-/opt/stack/new/tempest}
-
-# Install tempest
-pip install -e $TEMPEST_DIR
-
 # run the tests sequentially
 testr init
 testr run --subunit | subunit-trace --no-failure-debug -f
