@@ -43,7 +43,7 @@ class CABehaviors(base_behaviors.BaseBehaviors):
                                extra_headers=headers, use_auth=use_auth,
                                user_name=user_name)
 
-    def get_cas(self, limit=10, offset=0):
+    def get_cas(self, limit=10, offset=0, user_name=None):
         """Handles getting a list of CAs.
 
         :param limit: limits number of returned CAs
@@ -52,8 +52,8 @@ class CABehaviors(base_behaviors.BaseBehaviors):
         :return: the response, a list of cas, total number of cas, next and
                  prev references
         """
-        resp = self.client.get('cas', params={'limit': limit,
-                                              'offset': offset})
+        resp = self.client.get('cas', user_name=user_name,
+                               params={'limit': limit, 'offset': offset})
 
         # TODO(alee) refactor to use he client's get_list_of_models()
 
@@ -126,3 +126,17 @@ class CABehaviors(base_behaviors.BaseBehaviors):
         entities = list(self.created_entities)
         for (ca_ref, admin) in entities:
             self.delete_ca(ca_ref, user_name=admin)
+
+    def add_ca_to_project(self, ca_ref, headers=None, use_auth=True,
+                          user_name=None):
+        resp = self.client.post(ca_ref + '/add-to-project',
+                                extra_headers=headers, use_auth=use_auth,
+                                user_name=user_name)
+        return resp
+
+    def remove_ca_from_project(self, ca_ref, headers=None, use_auth=True,
+                               user_name=None):
+        resp = self.client.post(ca_ref + '/remove-from-project',
+                                extra_headers=headers, use_auth=use_auth,
+                                user_name=user_name)
+        return resp
