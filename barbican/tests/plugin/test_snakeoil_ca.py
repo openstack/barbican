@@ -292,6 +292,25 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         # TODO(alee) Verify that the ca cert has correct subject name
         # TODO(alee) Verify that ca cert is signed by parent CA
 
+    def test_delete_ca(self):
+        subca_dict = self._create_subca()
+        ca_id = subca_dict.get(cm.PLUGIN_CA_ID)
+        self.assertIsNotNone(ca_id)
+
+        cert_path = os.path.join(self.subca_cert_key_directory,
+                                 ca_id + ".cert")
+        key_path = os.path.join(self.subca_cert_key_directory,
+                                ca_id + ".key")
+        self.assertTrue(os.path.exists(cert_path))
+        self.assertTrue(os.path.exists(key_path))
+
+        self.plugin.delete_ca(ca_id)
+        self.assertFalse(os.path.exists(cert_path))
+        self.assertFalse(os.path.exists(key_path))
+
+        cas = self.plugin.get_ca_info()
+        self.assertNotIn(ca_id, cas.keys())
+
     def test_raises_no_parent_id_passed_in(self):
         create_ca_dto = cm.CACreateDTO(
             name="sub ca1",

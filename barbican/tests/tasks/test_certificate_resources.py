@@ -837,8 +837,9 @@ class WhenCreatingSubordinateCAs(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenCreatingSubordinateCAs, self).setUp()
-        self.project = models.Project()
-        self.project.id = '12345'
+        self.project = res.get_or_create_project('12345')
+        self.project2 = res.get_or_create_project('56789')
+
         self.subject_name = "cn=subca1 signing certificate, o=example.com"
         self.creator_id = "user12345"
         self.name = "Subordinate CA #1"
@@ -930,6 +931,43 @@ class WhenCreatingSubordinateCAs(utils.BaseTestCase):
             subject_dn=self.subject_name,
             parent_ca_ref=self.parent_ca_ref,
             creator_id=self.creator_id
+        )
+
+    def test_should_delete_subca(self):
+        subca = cert_res.create_subordinate_ca(
+            project_model=self.project,
+            name=self.name,
+            description=self.description,
+            subject_dn=self.subject_name,
+            parent_ca_ref=self.parent_ca_ref,
+            creator_id=self.creator_id
+        )
+        self.assertIsInstance(subca, models.CertificateAuthority)
+        cert_res.delete_subordinate_ca(self.project.external_id, subca)
+        self.cert_plugin.delete_ca.assert_called_once_with(subca.plugin_ca_id)
+
+    def test_should_raise_cannot_delete_base_ca(self):
+        self.assertRaises(
+            excep.CannotDeleteBaseCA,
+            cert_res.delete_subordinate_ca,
+            self.project.external_id,
+            self.parent_ca
+        )
+
+    def test_should_raise_unauthorized_subca_delete(self):
+        subca = cert_res.create_subordinate_ca(
+            project_model=self.project,
+            name=self.name,
+            description=self.description,
+            subject_dn=self.subject_name,
+            parent_ca_ref=self.parent_ca_ref,
+            creator_id=self.creator_id
+        )
+        self.assertRaises(
+            excep.UnauthorizedSubCADelete,
+            cert_res.delete_subordinate_ca,
+            self.project2.external_id,
+            subca
         )
 
     def _config_cert_plugin(self):

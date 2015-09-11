@@ -462,3 +462,13 @@ class SubCAsNotSupported(BarbicanHTTPException):
 class SubCANotCreated(BarbicanHTTPException):
     message = u._("Errors in creating subordinate CA: %(name)")
     client_message = message
+
+
+class CannotDeleteBaseCA(BarbicanHTTPException):
+    message = u._("Only subordinate CAs can be deleted.")
+    status_code = 403
+
+
+class UnauthorizedSubCADelete(BarbicanHTTPException):
+    message = u._("Subordinate CA is not owned by this project")
+    status_code = 403

@@ -48,7 +48,7 @@ def is_snakeoil_enabled():
 
 
 def convert_to_X509Name(dn):
-    target = crypto.X509Name()
+    target = crypto.X509().get_subject()
     fields = dn.split(',')
     for field in fields:
         m = re.search(r"(\w+)\s*=\s*(.+)", field.strip())
@@ -96,7 +96,7 @@ class CertificateAuthoritiesTestCase(base.TestCase):
 
     def get_signing_cert(self, ca_ref):
         resp = self.ca_behaviors.get_cacert(ca_ref)
-        return crypto.load_certificate(crypto.FILETYPE_PEM, resp)
+        return crypto.load_certificate(crypto.FILETYPE_PEM, resp.text)
 
     def verify_signing_cert(self, ca_ref, subject_dn, issuer_dn):
         cacert = self.get_signing_cert(ca_ref)
@@ -163,14 +163,13 @@ class CertificateAuthoritiesTestCase(base.TestCase):
         resp, ca_ref = self.ca_behaviors.create_ca(ca_model)
         self.assertEqual(201, resp.status_code)
 
-        # TODO(alee) Get this additional test code working
-        # root_subject = self.get_signing_cert(
-        #    self.get_root_ca_ref()).get_subject()
+        root_subject = self.get_signing_cert(
+            self.get_root_ca_ref()).get_subject()
 
-        # self.verify_signing_cert(
-        #    ca_ref=ca_ref,
-        #    subject_dn=convert_to_X509Name(self.subca_subject),
-        #    issuer_dn=root_subject)
+        self.verify_signing_cert(
+            ca_ref=ca_ref,
+            subject_dn=convert_to_X509Name(self.subca_subject),
+            issuer_dn=root_subject)
 
     @testtools.skipIf(not is_snakeoil_enabled(),
                       "This test is only usable with snakeoil")
@@ -183,12 +182,11 @@ class CertificateAuthoritiesTestCase(base.TestCase):
         resp, child_ref = self.ca_behaviors.create_ca(child_model)
         self.assertEqual(201, resp.status_code)
 
-        # TODO(alee) Get this additional test code working
-        # parent_subject = self.get_signing_cert(parent_ref).get_subject()
-        # self.verify_signing_cert(
-        #    ca_ref=child_ref,
-        #    subject_dn=convert_to_X509Name(self.subca_subca_subject),
-        #    issuer_dn=parent_subject)
+        parent_subject = self.get_signing_cert(parent_ref).get_subject()
+        self.verify_signing_cert(
+            ca_ref=child_ref,
+            subject_dn=convert_to_X509Name(self.subca_subca_subject),
+            issuer_dn=parent_subject)
 
     def test_create_subca_with_invalid_parent_ca_id(self):
         ca_model = self.get_snakeoil_subca_model()
@@ -215,3 +213,30 @@ class CertificateAuthoritiesTestCase(base.TestCase):
         resp, ca_ref = self.ca_behaviors.create_ca(ca_model)
         self.assertEqual(201, resp.status_code)
         self.send_test_order(ca_ref)
+
+    @testtools.skipIf(not is_snakeoil_enabled(),
+                      "This test is only usable with snakeoil")
+    def test_create_and_delete_snakeoil_subca(self):
+        ca_model = self.get_snakeoil_subca_model()
+        resp, ca_ref = self.ca_behaviors.create_ca(ca_model)
+        self.assertEqual(201, resp.status_code)
+
+        self.ca_behaviors.delete_ca(ca_ref)
+        resp = self.ca_behaviors.get_ca(ca_ref)
+        self.assertEqual(404, resp.status_code)
+
+    @testtools.skipIf(not is_snakeoil_enabled(),
+                      "This test is only usable with snakeoil")
+    def test_fail_to_delete_top_level_snakeoil_ca(self):
+        resp = self.ca_behaviors.delete_ca(self.get_root_ca_ref())
+        self.assertEqual(403, resp.status_code)
+
+    @testtools.skipIf(not is_snakeoil_enabled(),
+                      "This test is only usable with snakeoil")
+    def test_create_snakeoil_subca_and_get_cacert(self):
+        ca_model = self.get_snakeoil_subca_model()
+        resp, ca_ref = self.ca_behaviors.create_ca(ca_model)
+        self.assertEqual(201, resp.status_code)
+        resp = self.ca_behaviors.get_cacert(ca_ref)
+        self.assertEqual(200, resp.status_code)
+        crypto.load_certificate(crypto.FILETYPE_PEM, resp.text)

@@ -225,6 +225,34 @@ def create_subordinate_ca(project_model, name, description, subject_dn,
     return new_ca
 
 
+def delete_subordinate_ca(external_project_id, ca):
+    """Deletes a subordinate CA
+
+    :param external_project_id: external project ID
+    :param ca: class:`models.CertificateAuthority` to be deleted
+    :return: None
+     """
+    # TODO(alee) See if the checks below can be moved to the RBAC code
+    if ca.project_id is None:
+        raise excep.CannotDeleteBaseCA()
+
+    project = repos.get_project_repository().find_by_external_project_id(
+        external_project_id)
+    if ca.project_id != project.id:
+        raise excep.UnauthorizedSubCADelete()
+
+    cert_plugin = cert.CertificatePluginManager().get_plugin_by_name(
+        ca.plugin_name)
+
+    cert_plugin.delete_ca(ca.plugin_ca_id)
+
+    # Delete the CA from the data model.
+    ca_repo = repos.get_ca_repository()
+    ca_repo.delete_entity_by_id(
+        entity_id=ca.id,
+        external_project_id=external_project_id)
+
+
 def _handle_task_result(result, result_follow_on, order_model,
                         project_model, request_type, unavailable_status):
     if cert.CertificateStatus.WAITING_FOR_CA == result.status:

@@ -78,6 +78,7 @@ class CertificateAuthorityController(controllers.ACLMixin):
         return self.ca.to_dict_fields()
 
     @pecan.expose()
+    @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('CA Signing Cert retrieval'))
     @controllers.enforce_rbac('certificate_authority:get_cacert')
     def cacert(self, external_project_id):
@@ -223,6 +224,14 @@ class CertificateAuthorityController(controllers.ACLMixin):
             self.preferred_ca_repo.delete_entity_by_id(
                 global_preferred_ca[0].id,
                 external_project_id)
+
+    @index.when(method='DELETE')
+    @utils.allow_all_content_types
+    @controllers.handle_exceptions(u._('CA deletion'))
+    @controllers.enforce_rbac('certificate_authority:delete')
+    def on_delete(self, external_project_id, **kwargs):
+        cert_resources.delete_subordinate_ca(external_project_id, self.ca)
+        LOG.info(u._LI('Deleted CA for project: %s'), external_project_id)
 
 
 class CertificateAuthoritiesController(controllers.ACLMixin):
