@@ -33,7 +33,8 @@ Request/Response:
               "secrets": 10,
               "orders": 20,
               "containers": 10,
-              "consumers": -1
+              "consumers": -1,
+              "cas": 5
             }
           }
 
@@ -59,6 +60,9 @@ Response Attributes
 +------------+---------+--------------------------------------------------------------+
 | consumers  | integer | Contains the effective quota value of the current project    |
 |            |         | for the consumers resource.                                  |
++------------+---------+--------------------------------------------------------------+
+| cas        | integer | Contains the effective quota value of the current project    |
+|            |         | for the CAs resource.                                        |
 +------------+---------+--------------------------------------------------------------+
 
 Effective quota values are interpreted as follows:
@@ -122,7 +126,8 @@ Request/Response:
                      "secrets": 2000,
                      "orders": 0,
                      "containers": -1,
-                     "consumers": null
+                     "consumers": null,
+                     "cas": null
                  }
               },
               {
@@ -131,7 +136,8 @@ Request/Response:
                      "secrets": 200,
                      "orders": 100,
                      "containers": -1,
-                     "consumers": null
+                     "consumers": null,
+                     "cas": null
                  }
               },
             ],
@@ -176,6 +182,9 @@ Response Attributes
 +----------------+---------+--------------------------------------------------------------+
 | consumers      | integer | Contains the effective quota value of the current project    |
 |                |         | for the consumers resource.                                  |
++----------------+---------+--------------------------------------------------------------+
+| cas            | integer | Contains the effective quota value of the current project    |
+|                |         | for the CAs resource.                                        |
 +----------------+---------+--------------------------------------------------------------+
 | total          | integer | The total number of configured project quotas records.       |
 +----------------+---------+--------------------------------------------------------------+
@@ -250,7 +259,8 @@ Request/Response:
               "secrets": 10,
               "orders": 20,
               "containers": -1,
-              "consumers": 10
+              "consumers": 10,
+              "cas": 5
             }
           }
 
@@ -276,6 +286,9 @@ Response Attributes
 +----------------+---------+--------------------------------------------------------------+
 | consumers      | integer | Contains the configured quota value of the requested project |
 |                |         | for the consumers resource.                                  |
++----------------+---------+--------------------------------------------------------------+
+| cas            | integer | Contains the configured quota value of the requested project |
+|                |         | for the CAs resource.                                        |
 +----------------+---------+--------------------------------------------------------------+
 
 .. _get_project_quotas_uuid_status_codes:
@@ -350,6 +363,9 @@ Request Attributes
 +----------------+---------+----------------------------------------------+
 | consumers      | integer | The value to set for this project's          |
 |                |         | consumer quota.                              |
++----------------+---------+----------------------------------------------+
+| cas            | integer | The value to set for this project's          |
+|                |         | CA quota.                                    |
 +----------------+---------+----------------------------------------------+
 
 Configured project quota values are specified as follows:

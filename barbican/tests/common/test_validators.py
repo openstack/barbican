@@ -1372,7 +1372,8 @@ class WhenTestingProjectQuotasValidator(utils.BaseTestCase):
         self.good_project_quotas = {"project_quotas":
                                     {"secrets": 50,
                                      "orders": 10,
-                                     "containers": 20}}
+                                     "containers": 20,
+                                     "cas": 30}}
         self.bad_project_quotas = {"bad key": "bad value"}
         self.validator = validators.ProjectQuotaValidator()
 

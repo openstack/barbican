@@ -54,6 +54,7 @@ class QuotasTestCase(base.TestCase):
         self.assertEqual(-1, resp.model.quotas.orders)
         self.assertEqual(-1, resp.model.quotas.containers)
         self.assertEqual(-1, resp.model.quotas.consumers)
+        self.assertEqual(-1, resp.model.quotas.cas)
 
     def test_get_project_quotas_by_project_id(self):
         """Get project quota information for specific project"""
@@ -73,6 +74,7 @@ class QuotasTestCase(base.TestCase):
         self.assertEqual(10, resp.model.project_quotas.orders)
         self.assertEqual(20, resp.model.project_quotas.containers)
         self.assertIsNone(resp.model.project_quotas.consumers)
+        self.assertIsNone(resp.model.project_quotas.cas)
 
     def test_get_project_quotas_by_project_id_not_found(self):
         """Get project quota information for specific project"""

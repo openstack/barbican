@@ -44,7 +44,9 @@ quota_opts = [
     cfg.IntOpt('quota_consumers',
                default=-1,
                help='Number of consumers allowed per project'),
-]
+    cfg.IntOpt('quota_cas',
+               default=-1,
+               help='Number of CAs allowed per project')]
 
 CONF = cfg.CONF
 CONF.register_group(quota_opt_group)
@@ -59,8 +61,7 @@ class QuotaDriver(object):
 
     def _get_resources(self):
         """List of resources that can be constrained by a quota"""
-        return ['secrets', 'orders', 'containers',
-                'consumers']
+        return ['secrets', 'orders', 'containers', 'consumers', 'cas']
 
     def _get_defaults(self):
         """Return list of default quotas"""
@@ -68,7 +69,8 @@ class QuotaDriver(object):
             'secrets': CONF.quotas.quota_secrets,
             'orders': CONF.quotas.quota_orders,
             'containers': CONF.quotas.quota_containers,
-            'consumers': CONF.quotas.quota_consumers
+            'consumers': CONF.quotas.quota_consumers,
+            'cas': CONF.quotas.quota_cas
         }
         return quotas
 

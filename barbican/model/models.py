@@ -1281,6 +1281,7 @@ class ProjectQuotas(BASE, ModelBase):
     orders = sa.Column(sa.Integer, nullable=True)
     containers = sa.Column(sa.Integer, nullable=True)
     consumers = sa.Column(sa.Integer, nullable=True)
+    cas = sa.Column(sa.Integer, nullable=True)
 
     def __init__(self, project_id=None, parsed_project_quotas=None):
         """Creates Project Quotas entity from a project and a dict.
@@ -1304,11 +1305,13 @@ class ProjectQuotas(BASE, ModelBase):
             self.orders = None
             self.containers = None
             self.consumers = None
+            self.cas = None
         else:
             self.secrets = parsed_project_quotas.get('secrets')
             self.orders = parsed_project_quotas.get('orders')
             self.containers = parsed_project_quotas.get('containers')
             self.consumers = parsed_project_quotas.get('consumers')
+            self.cas = parsed_project_quotas.get('cas')
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -1323,4 +1326,6 @@ class ProjectQuotas(BASE, ModelBase):
             ret['containers'] = self.containers
         if self.consumers:
             ret['consumers'] = self.consumers
+        if self.cas:
+            ret['cas'] = self.cas
         return ret

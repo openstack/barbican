@@ -13,14 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from testtools import testcase
+import base64
+import testtools
+
+from barbican.common import hrefs
+from barbican.plugin.interface import certificate_manager as cert_interface
+from barbican.tests import certificate_utils as certutil
 
 from functionaltests.api import base
+from functionaltests.api.v1.behaviors import ca_behaviors
 from functionaltests.api.v1.behaviors import consumer_behaviors
 from functionaltests.api.v1.behaviors import container_behaviors
 from functionaltests.api.v1.behaviors import order_behaviors
 from functionaltests.api.v1.behaviors import quota_behaviors
 from functionaltests.api.v1.behaviors import secret_behaviors
+from functionaltests.api.v1.models import ca_models
 from functionaltests.api.v1.models import consumer_model
 from functionaltests.api.v1.models import container_models
 from functionaltests.api.v1.models import order_models
@@ -34,7 +41,12 @@ admin_b = CONF.rbac_users.admin_b
 service_admin = CONF.identity.service_admin
 
 
-@testcase.attr('no_parallel')
+def is_ca_backend_snakeoil():
+    return 'snakeoil_ca' in\
+           cert_interface.CONF.certificate.enabled_certificate_plugins
+
+
+@testtools.testcase.attr('no_parallel')
 class QuotaEnforcementTestCase(base.TestCase):
 
     def setUp(self):
@@ -46,18 +58,22 @@ class QuotaEnforcementTestCase(base.TestCase):
         self.order_behaviors = order_behaviors.OrderBehaviors(self.client)
         self.consumer_behaviors = consumer_behaviors.ConsumerBehaviors(
             self.client)
+        self.ca_behaviors = ca_behaviors.CABehaviors(self.client)
 
         self.secret_data = self.get_default_secret_data()
         self.quota_data = self.get_default_quota_data()
         self.project_id = self.quota_behaviors.get_project_id_from_name(
             admin_b)
         self.order_secrets = []
+        self.root_ca_ref = None
+        self.test_order_sent = False
 
     def tearDown(self):
         self.quota_behaviors.delete_all_created_quotas()
         self.consumer_behaviors.delete_all_created_consumers()
         self.container_behaviors.delete_all_created_containers()
         self.secret_behaviors.delete_all_created_secrets()
+        self.ca_behaviors.delete_all_created_cas()
         for secret_ref in self.order_secrets:
             resp = self.secret_behaviors.delete_secret(
                 secret_ref, user_name=admin_b)
@@ -136,6 +152,32 @@ class QuotaEnforcementTestCase(base.TestCase):
         self.set_quotas('consumers', 5)
         self.create_consumers(count=5)
         self.create_consumers(expected_return=403)
+
+    @testtools.skipIf(not is_ca_backend_snakeoil(),
+                      "This test is only usable with snakeoil")
+    def test_snakeoil_cas_unlimited(self):
+        self.set_quotas('cas', -1)
+        self.create_snakeoil_cas(count=5)
+
+    @testtools.skipIf(not is_ca_backend_snakeoil(),
+                      "This test is only usable with snakeoil")
+    def test_snakeoil_cas_disabled(self):
+        self.set_quotas('cas', 0)
+        self.create_snakeoil_cas(expected_return=403)
+
+    @testtools.skipIf(not is_ca_backend_snakeoil(),
+                      "This test is only usable with snakeoil")
+    def test_snakeoil_cas_limited_one(self):
+        self.set_quotas('cas', 1)
+        self.create_snakeoil_cas(count=1)
+        self.create_snakeoil_cas(expected_return=403)
+
+    @testtools.skipIf(not is_ca_backend_snakeoil(),
+                      "This test is only usable with snakeoil")
+    def test_snakeoil_cas_limited_five(self):
+        self.set_quotas('cas', 5)
+        self.create_snakeoil_cas(count=5)
+        self.create_snakeoil_cas(expected_return=403)
 
 # ----------------------- Helper Functions ---------------------------
 
@@ -229,4 +271,64 @@ class QuotaEnforcementTestCase(base.TestCase):
                 **self.get_default_consumer_data())
             resp, consumer_dat = self.consumer_behaviors.create_consumer(
                 model, container_ref, user_name=admin_b)
+            self.assertEqual(expected_return, resp.status_code)
+
+    def get_order_simple_cmc_request_data(self):
+        return {
+            'type': 'certificate',
+            'meta': {
+                'request_type': 'simple-cmc',
+                'requestor_name': 'Barbican User',
+                'requestor_email': 'user@example.com',
+                'requestor_phone': '555-1212'
+            }
+        }
+
+    def send_test_order(self, ca_ref=None):
+        if self.test_order_sent:
+            return
+        self.test_order_sent = True
+        test_model = order_models.OrderModel(
+            **self.get_order_simple_cmc_request_data())
+        test_model.meta['request_data'] = base64.b64encode(
+            certutil.create_good_csr())
+        if ca_ref is not None:
+            ca_id = hrefs.get_ca_id_from_ref(ca_ref)
+            test_model.meta['ca_id'] = ca_id
+
+        create_resp, order_ref = self.order_behaviors.create_order(test_model)
+        self.assertEqual(202, create_resp.status_code)
+        self.assertIsNotNone(order_ref)
+
+    def get_root_ca_ref(self):
+        self.send_test_order()
+        if self.root_ca_ref is not None:
+            return self.root_ca_ref
+
+        (resp, cas, total, next_ref, prev_ref) = self.ca_behaviors.get_cas()
+        snake_name = 'barbican.plugin.snakeoil_ca.SnakeoilCACertificatePlugin'
+        snake_plugin_ca_id = "Snakeoil CA"
+
+        for item in cas:
+            ca = self.ca_behaviors.get_ca(item)
+            if ca.model.plugin_name == snake_name:
+                if ca.model.plugin_ca_id == snake_plugin_ca_id:
+                    return item
+        return None
+
+    def get_snakeoil_subca_model(self):
+        parent_ca_ref = self.get_root_ca_ref()
+        return ca_models.CAModel(
+            parent_ca_ref=parent_ca_ref,
+            description="Test Snake Oil Subordinate CA",
+            name="Subordinate CA",
+            subject_dn="CN=Subordinate CA, O=example.com"
+        )
+
+    def create_snakeoil_cas(self, count=1, expected_return=201):
+        """Utility function to create snakeoil cas"""
+        for _ in range(count):
+            ca_model = self.get_snakeoil_subca_model()
+            resp, ca_ref = self.ca_behaviors.create_ca(ca_model,
+                                                       user_name=admin_b)
             self.assertEqual(expected_return, resp.status_code)

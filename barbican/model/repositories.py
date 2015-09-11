@@ -1475,6 +1475,15 @@ class CertificateAuthorityRepo(BaseRepo):
         """Sub-class hook: validate values."""
         pass
 
+    def _build_get_project_entities_query(self, project_id, session):
+        """Builds query for retrieving CA related to given project.
+
+        :param project_id: id of barbican project entity
+        :param session: existing db session reference.
+        """
+        return session.query(models.CertificateAuthority).filter_by(
+            project_id=project_id).filter_by(deleted=False)
+
 
 class CertificateAuthorityMetadatumRepo(BaseRepo):
     """Repository for the CertificateAuthorityMetadatum entity

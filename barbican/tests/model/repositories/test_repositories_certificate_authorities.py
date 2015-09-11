@@ -120,6 +120,60 @@ class WhenTestingCertificateAuthorityRepo(database_utils.RepositoryTestCase):
             session=session,
             suppress_exception=False)
 
+    def test_get_count_should_return_zero(self):
+        session = self.ca_repo.get_session()
+
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        session.commit()
+        count = self.ca_repo.get_count(project.id, session=session)
+
+        self.assertEqual(count, 0)
+
+    def test_get_count_should_return_one(self):
+        session = self.ca_repo.get_session()
+
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        ca_model = models.CertificateAuthority(self.parsed_ca)
+        ca_model.project_id = project.id
+        self.ca_repo.create_from(ca_model, session=session)
+
+        session.commit()
+        count = self.ca_repo.get_count(project.id, session=session)
+
+        self.assertEqual(count, 1)
+
+    def test_get_count_should_return_one_after_delete(self):
+        session = self.ca_repo.get_session()
+
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        ca_model = models.CertificateAuthority(self.parsed_ca)
+        ca_model.project_id = project.id
+        self.ca_repo.create_from(ca_model, session=session)
+
+        ca_model = models.CertificateAuthority(self.parsed_ca)
+        ca_model.project_id = project.id
+        self.ca_repo.create_from(ca_model, session=session)
+
+        session.commit()
+        count = self.ca_repo.get_count(project.id, session=session)
+        self.assertEqual(count, 2)
+
+        self.ca_repo.delete_entity_by_id(ca_model.id, "my keystone id",
+                                         session=session)
+        session.commit()
+
+        count = self.ca_repo.get_count(project.id, session=session)
+        self.assertEqual(count, 1)
+
 
 class WhenTestingProjectCARepo(database_utils.RepositoryTestCase):
 

@@ -33,7 +33,7 @@ role.  The service administrator's role is defined in Barbican's policy.json fil
 The default role for a service admin is "key-manager:service-admin".
 
 Quotas can be enforced for the following Barbican resources: secrets, containers,
-orders, and consumers.  The configured quota value can be None (use the default),
+orders, consumers, and CAs.  The configured quota value can be None (use the default),
 -1 (unlimited), 0 (disabled), or a positive integer defining the maximum number
 allowed for a project.
 
@@ -61,6 +61,8 @@ in the standard configuration file are as follows.
     # default number of consumers allowed per project
     quota_consumers = -1
 
+    # default number of CAs allowed per project
+    quota_cas = -1
 
 The default quotas are returned via a **GET** on the **quotas** resource when no
 explicit project quotas have been set for the current project.
@@ -92,7 +94,8 @@ with the request.
         {"secrets": -1,
          "orders": -1,
          "containers": -1,
-         "consumers": -1
+         "consumers": -1,
+         "cas": -1
         }
     }
 
@@ -119,7 +122,8 @@ To set or replace the quotas for the project with the ID 1234:
     curl -i -X PUT -H "content-type:application/json" \
         -H "X-Auth-Token:$TOKEN" \
         -d '{"project_quotas": {"secrets": 500,
-        "orders": 100, "containers": -1, "consumers": 100}}' \
+        "orders": 100, "containers": -1, "consumers": 100,
+        "cas": 50}}' \
         http://localhost:9311/v1/project-quotas/1234
 
     Response:
@@ -156,10 +160,11 @@ To get project quota information for a single project:
     HTTP/1.1 200 OK
     Content-Type: application/json; charset=UTF-8
     {"project_quotas":
-     {"secrets": 500,
-       "orders": 100,
-        "containers": -1,
-         "consumers": 100}}
+        {"secrets": 500,
+         "orders": 100,
+         "containers": -1,
+         "consumers": 100,
+         "cas": 50}}
 
 
 The project quota information defined for all projects can be retrieved by using
@@ -185,13 +190,15 @@ The returned response contains a list with all project quota data.
           {"secrets": 500,
            "orders": 100,
             "containers": -1,
-             "consumers": 100}},
+             "consumers": 100,
+             "cas": 50}},
        {"project_id": "5678",
         "project_quotas":
           {"secrets": 500,
            "orders": 100,
            "containers": -1,
-           "consumers": 100}}]}
+           "consumers": 100,
+           "cas": 50}}]}
 
 
 To get more details on project quota lookup APIs you can reference

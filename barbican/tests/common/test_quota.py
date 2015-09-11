@@ -34,21 +34,26 @@ class WhenTestingQuotaDriverFunctions(database_utils.RepositoryTestCase):
         self.assertEqual(-1, quotas['orders'])
         self.assertEqual(-1, quotas['containers'])
         self.assertEqual(-1, quotas['consumers'])
+        self.assertEqual(-1, quotas['cas'])
 
     def test_compute_effective_quotas_using_some_defaults(self):
         configured_quotas = {'consumers': None, 'containers': 66,
-                             'orders': None, 'secrets': 55}
+                             'orders': None, 'secrets': 55,
+                             'cas': None}
         quotas = self.quota_driver._compute_effective_quotas(configured_quotas)
         expected_quotas = {'consumers': -1, 'containers': 66,
-                           'orders': -1, 'secrets': 55}
+                           'orders': -1, 'secrets': 55,
+                           'cas': -1}
         self.assertEqual(expected_quotas, quotas)
 
     def test_compute_effective_quotas_using_all_defaults(self):
         configured_quotas = {'consumers': None, 'containers': None,
-                             'orders': None, 'secrets': None}
+                             'orders': None, 'secrets': None,
+                             'cas': None}
         quotas = self.quota_driver._compute_effective_quotas(configured_quotas)
         expected_quotas = {'consumers': -1, 'containers': -1,
-                           'orders': -1, 'secrets': -1}
+                           'orders': -1, 'secrets': -1,
+                           'cas': -1}
         self.assertEqual(expected_quotas, quotas)
 
     def test_is_unlimited_true(self):
@@ -83,7 +88,8 @@ class WhenTestingQuotaDriverFunctions(database_utils.RepositoryTestCase):
             'project_quotas': {'consumers': 105,
                                'containers': 103,
                                'orders': 102,
-                               'secrets': 101}}], 'total': 1},
+                               'secrets': 101,
+                               'cas': 106}}], 'total': 1},
                          project_quotas)
 
     def test_should_get_empty_project_quotas_list(self):
@@ -122,13 +128,15 @@ class WhenTestingQuotaDriverFunctions(database_utils.RepositoryTestCase):
         quotas = self.quota_driver.get_quotas(
             self.get_test_project_id('partial'))
         expected_quotas = {'quotas': {'consumers': -1, 'containers': 66,
-                                      'orders': -1, 'secrets': 55}}
+                                      'orders': -1, 'secrets': 55,
+                                      'cas': -1}}
         self.assertEqual(expected_quotas, quotas)
 
     def test_get_quotas_using_all_defaults(self):
         quotas = self.quota_driver.get_quotas('not_configured')
         expected_quotas = {'quotas': {'consumers': -1, 'containers': -1,
-                                      'orders': -1, 'secrets': -1}}
+                                      'orders': -1, 'secrets': -1,
+                                      'cas': -1}}
         self.assertEqual(expected_quotas, quotas)
 
     # ----------------------- Helper Functions ---------------------------
@@ -152,7 +160,8 @@ class WhenTestingQuotaDriverFunctions(database_utils.RepositoryTestCase):
                 'secrets': index * 100 + 1,
                 'orders': index * 100 + 2,
                 'containers': index * 100 + 3,
-                'consumers': index * 100 + 5}
+                'consumers': index * 100 + 5,
+                'cas': index * 100 + 6}
         return parsed_project_quotas
 
     def get_test_response_project_quotas(self, index=1):
@@ -161,19 +170,22 @@ class WhenTestingQuotaDriverFunctions(database_utils.RepositoryTestCase):
                 'secrets': 55,
                 'orders': None,
                 'containers': 66,
-                'consumers': None}
+                'consumers': None,
+                'cas': None}
         elif index == 'none':
             response_project_quotas = {
                 'secrets': None,
                 'orders': None,
                 'containers': None,
-                'consumers': None}
+                'consumers': None,
+                'cas': None}
         else:
             response_project_quotas = {
                 'secrets': index * 100 + 1,
                 'orders': index * 100 + 2,
                 'containers': index * 100 + 3,
-                'consumers': index * 100 + 5}
+                'consumers': index * 100 + 5,
+                'cas': index * 100 + 6}
         return response_project_quotas
 
     def create_a_test_project_quotas(self, index=1):
@@ -213,7 +225,8 @@ class WhenTestingQuotaEnforcingFunctions(utils.BaseTestCase):
         test_repo = DummyRepoForTestingQuotaEnforcement(0)
         quota_enforcer = quota.QuotaEnforcer('secrets', test_repo)
         disabled_project_quotas = {'consumers': 0, 'containers': 0,
-                                   'orders': 0, 'secrets': 0}
+                                   'orders': 0, 'secrets': 0,
+                                   'cas': 0}
         self.quota_driver.set_project_quotas(self.project.external_id,
                                              disabled_project_quotas)
         exception = self.assertRaises(
@@ -230,7 +243,8 @@ class WhenTestingQuotaEnforcingFunctions(utils.BaseTestCase):
         test_repo = DummyRepoForTestingQuotaEnforcement(4)
         quota_enforcer = quota.QuotaEnforcer('secrets', test_repo)
         five_project_quotas = {'consumers': 5, 'containers': 5,
-                               'orders': 5, 'secrets': 5}
+                               'orders': 5, 'secrets': 5,
+                               'cas': 5}
         self.quota_driver.set_project_quotas(self.project.external_id,
                                              five_project_quotas)
         quota_enforcer.enforce(self.project)
@@ -239,7 +253,8 @@ class WhenTestingQuotaEnforcingFunctions(utils.BaseTestCase):
         test_repo = DummyRepoForTestingQuotaEnforcement(5)
         quota_enforcer = quota.QuotaEnforcer('secrets', test_repo)
         five_project_quotas = {'consumers': 5, 'containers': 5,
-                               'orders': 5, 'secrets': 5}
+                               'orders': 5, 'secrets': 5,
+                               'cas': 5}
         self.quota_driver.set_project_quotas(self.project.external_id,
                                              five_project_quotas)
         exception = self.assertRaises(
@@ -256,7 +271,8 @@ class WhenTestingQuotaEnforcingFunctions(utils.BaseTestCase):
         test_repo = DummyRepoForTestingQuotaEnforcement(6)
         quota_enforcer = quota.QuotaEnforcer('secrets', test_repo)
         five_project_quotas = {'consumers': 5, 'containers': 5,
-                               'orders': 5, 'secrets': 5}
+                               'orders': 5, 'secrets': 5,
+                               'cas': 5}
         self.quota_driver.set_project_quotas(self.project.external_id,
                                              five_project_quotas)
         exception = self.assertRaises(
