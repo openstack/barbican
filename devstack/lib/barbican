@@ -101,6 +101,9 @@ function configure_barbican {
     # Do not set to DEBUG
     iniset $BARBICAN_CONF DEFAULT debug False
 
+    # Set the host_href
+    iniset $BARBICAN_CONF DEFAULT host_href "$BARBICAN_HOST_HREF"
+
     # Set the log file location
     iniset $BARBICAN_CONF DEFAULT log_file "$BARBICAN_API_LOG_DIR/barbican.log"
 
@@ -487,4 +490,3 @@ function install_dogtag_components {
 
 # Restore xtrace
 $XTRACE
-

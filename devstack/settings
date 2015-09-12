@@ -21,6 +21,9 @@ BARBICAN_BRANCH=${BARBICAN_BRANCH:-master}
 BARBICANCLIENT_REPO=${BARBICANCLIENT_REPO:-${GIT_BASE}/openstack/python-barbicanclient.git}
 BARBICANCLIENT_BRANCH=${BARBICANCLIENT_BRANCH:-master}
 
+# Set host href
+BARBICAN_HOST_HREF=${BARBICAN_HOST_HREF:-http://${SERVICE_HOST}:9311}
+
 # Tell Tempest this project is present
 TEMPEST_SERVICES+=,barbican
 
