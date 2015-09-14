@@ -64,13 +64,22 @@ the functional tests through tox.
     tox -e functional
 
 
-By default, the functional tox job will use ``nosetests`` to execute the
-functional tests. This is primarily due to nose being a very well known and
-common workflow among developers. It is important to note that the gating
-job will actually use ``testr`` instead of ``nosetests``. If you discover
-issues while running your tests in the gate, then consider running ``testr``
-or :doc:`Devstack</setup/devstack>` to more closely replicate the gating
-environment.
+By default, the functional tox job will use ``testr`` to execute the
+functional tests as used in the gating job.
+
+.. note::
+
+    In order to run an individual functional test function, you must use the
+    following command:
+
+    .. code-block:: bash
+
+        # path starts inside functionaltests folder
+        tox -e functional -- path.to.test.file.class_name.function
+
+    Groups of tests can also be run with a regex match after the ``--``.
+    For more information on what can be done with ``testr``, please see:
+    http://testrepository.readthedocs.org/en/latest/MANUAL.html
 
 Remote Debugging
 ----------------
@@ -82,7 +91,7 @@ breakpoint in ``def on_post`` in ``barbican.api.controllers.secrets.py``
 will allow you to hit the breakpoint when a ``POST`` is done on the
 secrets URL.
 
-..note::
+.. note::
 
     After performing the ``POST`` the application will freeze. In order to use
     ``rpdb``, you must open up another terminal and run the following:
