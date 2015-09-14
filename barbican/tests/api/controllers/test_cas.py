@@ -15,6 +15,7 @@
 import mock
 from six import moves
 
+from barbican.common import exception
 from barbican.common import hrefs
 from barbican.common import resources as res
 from barbican.model import models
@@ -288,7 +289,41 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
             '/cas',
             self.subca_request,
             expect_errors=False)
+
         self.assertEqual(201, resp.status_int)
+
+    def test_should_raise_delete_subca_not_found(self):
+        self.create_cas()
+        resp = self.app.delete('/cas/foobar', expect_errors=True)
+        self.assertEqual(404, resp.status_int)
+
+    @mock.patch('barbican.tasks.certificate_resources.delete_subordinate_ca')
+    def test_should_delete_subca(self, mocked_task):
+        self.create_cas()
+        resp = self.app.delete('/cas/' + self.subca.id)
+        mocked_task.assert_called_once_with(self.project_id,
+                                            self.subca)
+        self.assertEqual(204, resp.status_int)
+
+    @mock.patch('barbican.tasks.certificate_resources.delete_subordinate_ca')
+    def test_should_raise_delete_not_a_subca(self, mocked_task):
+        self.create_cas()
+        mocked_task.side_effect = exception.CannotDeleteBaseCA()
+        resp = self.app.delete('/cas/' + self.subca.id,
+                               expect_errors=True)
+        mocked_task.assert_called_once_with(self.project_id,
+                                            self.subca)
+        self.assertEqual(403, resp.status_int)
+
+    @mock.patch('barbican.tasks.certificate_resources.delete_subordinate_ca')
+    def test_should_raise_delete_not_authorized(self, mocked_task):
+        self.create_cas()
+        mocked_task.side_effect = exception.UnauthorizedSubCADelete()
+        resp = self.app.delete('/cas/' + self.subca.id,
+                               expect_errors=True)
+        mocked_task.assert_called_once_with(self.project_id,
+                                            self.subca)
+        self.assertEqual(403, resp.status_int)
 
     def create_subca_request(self, parent_ca_id):
         self.subca_request = {
@@ -371,6 +406,24 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
                 self.selected_plugin_ca_id = self.plugin_ca_id + str(ca_id)
                 self.selected_signing_cert = 'ZZZZZ' + str(ca_id)
                 self.selected_intermediates = 'YYYYY' + str(ca_id)
+
+        # create subca for DELETE testing
+        parsed_ca = {
+            'plugin_name': self.plugin_name,
+            'plugin_ca_id': self.plugin_ca_id + "subca 1",
+            'name': self.plugin_name,
+            'description': 'Sub CA for default plugin',
+            'ca_signing_certificate': 'ZZZZZ' + "sub ca1",
+            'intermediates': 'YYYYY' + "sub ca1",
+            'project_id': self.project_id,
+            'creator_id': 'user12345'
+        }
+        ca = models.CertificateAuthority(parsed_ca)
+        ca_repo.create_from(ca)
+        ca_repo.save(ca)
+        self.subca = ca
+
+        self.num_cas += 1
 
     def _create_url(self, external_project_id, offset_arg=None,
                     limit_arg=None):

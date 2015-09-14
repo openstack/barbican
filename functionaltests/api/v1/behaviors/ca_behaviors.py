@@ -30,10 +30,11 @@ class CABehaviors(base_behaviors.BaseBehaviors):
                                response_model_type=ca_models.CAModel,
                                extra_headers=extra_headers)
 
-    def get_cacert(self, ca_ref, payload_content_type,
-                   payload_content_encoding=None, extra_headers=None,
+    def get_cacert(self, ca_ref, payload_content_encoding=None,
+                   extra_headers=None,
                    use_auth=True, user_name=None):
-        headers = {'Accept': payload_content_type,
+        """Retrieve the CA signing certificate. """
+        headers = {'Accept': 'application/octet-stream',
                    'Accept-Encoding': payload_content_encoding}
         if extra_headers:
             headers.update(extra_headers)

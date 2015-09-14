@@ -100,7 +100,7 @@ PLUGIN_CA_ID = "plugin_ca_id"
 # fields for ca_info dict keys
 INFO_NAME = "name"
 INFO_DESCRIPTION = "description"
-INFO_CA_SIGNING_CERT = "ca_signing_cert"
+INFO_CA_SIGNING_CERT = "ca_signing_certificate"
 INFO_INTERMEDIATES = "intermediates"
 INFO_EXPIRATION = "expiration"
 
@@ -454,6 +454,17 @@ class CertificatePluginBase(object):
             models.CertificateAuthority object
         """
         raise NotImplementedError    # pragma: no cover
+
+    def delete_ca(self, ca_id):
+        """Deletes a subordinate CA
+
+        Like the create_ca call, this should only be made if the plugin
+        returns Ture for supports_create_ca()
+
+        :param ca_id: id for the CA as specified by the plugin
+        :return: None
+        """
+        raise NotImplementedError   # pragma: no cover
 
 
 class CACreateDTO(object):

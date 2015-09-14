@@ -364,3 +364,15 @@ class SnakeoilCACertificatePlugin(cert_manager.CertificatePluginBase):
             ret[ca_id] = ca_info
 
         return ret
+
+    def delete_ca(self, ca_id):
+        self.cas.pop(ca_id)
+
+        cert_path = os.path.join(self.subca_directory, ca_id + ".cert")
+        key_path = os.path.join(self.subca_directory, ca_id + ".key")
+
+        if os.path.exists(key_path):
+            os.remove(key_path)
+
+        if os.path.exists(cert_path):
+            os.remove(cert_path)
