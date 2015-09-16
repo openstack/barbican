@@ -16,9 +16,9 @@
 import base64
 import copy
 import re
+import testtools
 
 from OpenSSL import crypto
-import testtools
 
 from barbican.common import hrefs
 from barbican.plugin.interface import certificate_manager as cert_interface
@@ -121,6 +121,12 @@ class CATestCommon(base.TestCase):
                     return item
         return None
 
+    def get_snakeoil_root_ca_ref(self):
+        return self.get_root_ca_ref(
+            ca_plugin_name=('barbican.plugin.snakeoil_ca.'
+                            'SnakeoilCACertificatePlugin'),
+            ca_plugin_id="Snakeoil CA")
+
 
 class CertificateAuthoritiesTestCase(CATestCommon):
 
@@ -145,12 +151,8 @@ class CertificateAuthoritiesTestCase(CATestCommon):
                 (cacert.get_issuer() == issuer_dn))
 
     def get_snakeoil_subca_model(self):
-        parent_ca_ref = self.get_root_ca_ref(
-            ca_plugin_name=('barbican.plugin.snakeoil_ca.'
-                            'SnakeoilCACertificatePlugin'),
-            ca_plugin_id="Snakeoil CA")
         return ca_models.CAModel(
-            parent_ca_ref=parent_ca_ref,
+            parent_ca_ref=self.get_snakeoil_root_ca_ref(),
             description=self.subca_description,
             name=self.subca_name,
             subject_dn=self.subca_subject
@@ -170,10 +172,7 @@ class CertificateAuthoritiesTestCase(CATestCommon):
         resp, ca_ref = self.ca_behaviors.create_ca(ca_model)
         self.assertEqual(201, resp.status_code)
 
-        root_ca_ref = self.get_root_ca_ref(
-            ca_plugin_name=('barbican.plugin.snakeoil_ca.'
-                            'SnakeoilCACertificatePlugin'),
-            ca_plugin_id="Snakeoil CA")
+        root_ca_ref = self.get_snakeoil_root_ca_ref()
         root_subject = self.get_signing_cert(root_ca_ref).get_subject()
 
         self.verify_signing_cert(
@@ -222,6 +221,16 @@ class CertificateAuthoritiesTestCase(CATestCommon):
         self.assertEqual(201, resp.status_code)
         self.send_test_order(ca_ref)
 
+    # @depends_on_ca_plugins('snakeoil_ca')
+    @testtools.skip("Skip test until ca behaviors tracks project cas")
+    def test_add_snakeoil_ca__to_project_and_get_preferred(self):
+        ca_ref = self.get_snakeoil_root_ca_ref()
+        resp = self.ca_behaviors.add_ca_to_project(ca_ref, user_name=admin_a)
+        self.assertEqual(204, resp.status_code)
+
+        ca = self.ca_behaviors.get_preferred(user_name=admin_a)
+        self.assertEqual(hrefs.get_ca_id_from_ref(ca_ref), ca.model.ca_id)
+
     @depends_on_ca_plugins('snakeoil_ca')
     def test_create_and_delete_snakeoil_subca(self):
         ca_model = self.get_snakeoil_subca_model()
@@ -234,11 +243,9 @@ class CertificateAuthoritiesTestCase(CATestCommon):
 
     @depends_on_ca_plugins('snakeoil_ca')
     def test_fail_to_delete_top_level_snakeoil_ca(self):
-        root_ca_ref = self.get_root_ca_ref(
-            ca_plugin_name=('barbican.plugin.snakeoil_ca.'
-                            'SnakeoilCACertificatePlugin'),
-            ca_plugin_id="Snakeoil CA")
-        resp = self.ca_behaviors.delete_ca(root_ca_ref, expected_fail=True)
+        resp = self.ca_behaviors.delete_ca(
+            self.get_snakeoil_root_ca_ref(),
+            expected_fail=True)
         self.assertEqual(403, resp.status_code)
 
     @depends_on_ca_plugins('snakeoil_ca')
@@ -285,22 +292,22 @@ class ProjectCATestCase(CATestCommon):
     def setUp(self):
         super(ProjectCATestCase, self).setUp()
 
-    # @depends_on_ca_plugins('snakeoil_ca', 'simple_certificate')
-    @testtools.skip("re-enable once CA list code is fixed")
+    @depends_on_ca_plugins('snakeoil_ca', 'simple_certificate')
     def test_addition_of_project_ca_affects_getting_ca_list(self):
         # Getting list of CAs should get the total configured CAs
         (resp, cas, initial_total, _, __) = self.ca_behaviors.get_cas()
-        self.assertGreater(initial_total, 0)
+        self.assertEqual(initial_total, 2)
 
         # Set project CA
-        ca_ref = self.get_root_ca_ref(
-            ca_plugin_name=('barbican.plugin.snakeoil_ca.'
-                            'SnakeoilCACertificatePlugin'),
-            ca_plugin_id="Snakeoil CA")
+        ca_ref = self.get_snakeoil_root_ca_ref()
         resp = self.ca_behaviors.add_ca_to_project(ca_ref, user_name=admin_a)
         self.assertEqual(204, resp.status_code)
 
-        # Getting list of CAs should get only the project CA
+        # Getting list of CAs should get only the project CA for admin
+        (resp, cas, project_ca_total, _, __) = self.ca_behaviors.get_cas(
+            user_name=admin_a)
+        self.assertEqual(1, project_ca_total)
+        # Getting list of CAs should get only the project CA for non-admin
         (resp, cas, project_ca_total, _, __) = self.ca_behaviors.get_cas(
             user_name=creator_a)
         self.assertEqual(1, project_ca_total)
@@ -313,4 +320,4 @@ class ProjectCATestCase(CATestCommon):
         # Getting list of CAs should get the total configured CAs (as seen
         # before)
         (resp, cas, final_total, _, __) = self.ca_behaviors.get_cas()
-        self.assertGreater(initial_total, final_total)
+        self.assertEqual(initial_total, final_total)
