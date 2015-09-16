@@ -247,6 +247,8 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
         self.project_repo = repo.get_project_repository()
         self.validator = validators.NewCAValidator()
         self.quota_enforcer = quota.QuotaEnforcer('cas', self.ca_repo)
+        # Populate the CA table at start up
+        cert_resources.refresh_certificate_resources()
 
     def __getattr__(self, name):
         route_table = {
@@ -280,6 +282,9 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
         plugin_ca_id = kw.get('plugin_ca_id', None)
         if plugin_ca_id is not None:
             plugin_ca_id = parse.unquote_plus(plugin_ca_id)
+
+        # refresh CA table, in case plugin entries have expired
+        cert_resources.refresh_certificate_resources()
 
         result = self.ca_repo.get_by_create_date(
             offset_arg=kw.get('offset', 0),

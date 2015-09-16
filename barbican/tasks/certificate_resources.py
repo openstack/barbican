@@ -65,6 +65,11 @@ ORDER_STATUS_CA_UNAVAIL_FOR_CHECK = models.OrderStatus(
 )
 
 
+def refresh_certificate_resources():
+    # Before CA operations can be performed, the CA table must be populated
+    cert.CertificatePluginManager().refresh_ca_table()
+
+
 def issue_certificate_request(order_model, project_model, result_follow_on):
     """Create the initial order with CA.
 

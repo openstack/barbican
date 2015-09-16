@@ -281,9 +281,11 @@ class WhenTestingCertificatePluginManager(utils.BaseTestCase,
         self.plugin_returned.get_ca_info.assert_called_once_with()
         self.ca_repo.update_entity.assert_called_once_with(
             ca1,
-            ca1_modified_info)
+            ca1_modified_info,
+            session=mock.ANY)
 
         self.ca_repo.delete_entity_by_id.assert_called_once_with(
             ca2.id,
-            None)
+            None,
+            session=mock.ANY)
         self.ca_repo.create_from.assert_has_calls([])
