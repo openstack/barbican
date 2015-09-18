@@ -13,12 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
 import testtools
 
-from barbican.common import hrefs
 from barbican.plugin.interface import certificate_manager as cert_interface
-from barbican.tests import certificate_utils as certutil
 
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import ca_behaviors
@@ -284,24 +281,7 @@ class QuotaEnforcementTestCase(base.TestCase):
             }
         }
 
-    def send_test_order(self, ca_ref=None):
-        if self.test_order_sent:
-            return
-        self.test_order_sent = True
-        test_model = order_models.OrderModel(
-            **self.get_order_simple_cmc_request_data())
-        test_model.meta['request_data'] = base64.b64encode(
-            certutil.create_good_csr())
-        if ca_ref is not None:
-            ca_id = hrefs.get_ca_id_from_ref(ca_ref)
-            test_model.meta['ca_id'] = ca_id
-
-        create_resp, order_ref = self.order_behaviors.create_order(test_model)
-        self.assertEqual(202, create_resp.status_code)
-        self.assertIsNotNone(order_ref)
-
     def get_root_ca_ref(self):
-        self.send_test_order()
         if self.root_ca_ref is not None:
             return self.root_ca_ref
 

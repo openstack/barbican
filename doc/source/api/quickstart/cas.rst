@@ -44,16 +44,6 @@ This should provide a response like the following:
 
     {"cas": ["http://localhost:9311/v1/cas/3a2a533d-ed4d-4c68-a418-2ee79f4c9581"], "total": 1}
 
-Note: The list of available CAs is currently populated by the plugins the first
-time a certificate order is initiated.  At that time, each plugin is queried
-for details for each CA with which it is connected.  These details have an
-expiration time set by the plugin, after which the CA data is requested anew
-from the plugin.
-
-This means of course that the CA list is empty until the first certificate
-order is processed.  You can order a certificate using instructions in
-:doc:`Certificates Quick Start <./certificates>`.
-
 .. _getting_ca_details:
 
 Getting Details about a CA

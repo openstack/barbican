@@ -94,10 +94,6 @@ class CATestCommon(base.TestCase):
 
         self.simple_cmc_data = copy.deepcopy(order_simple_cmc_request_data)
 
-        # we need to prime the pump ie. populate the CA table by sending
-        # in an order (just in case)
-        self.send_test_order()
-
     def tearDown(self):
         self.order_behaviors.delete_all_created_orders()
         self.ca_behaviors.delete_all_created_cas()

@@ -59,9 +59,11 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
 
     def test_response_should_include_total(self):
         self.create_cas()
+        self.params['plugin_name'] = self.plugin_name
         resp = self.app.get('/cas/', self.params)
         self.assertIn('total', resp.namespace)
-        self.assertEqual(self.num_cas, resp.namespace['total'])
+        self.assertEqual(self.num_cas,
+                         resp.namespace['total'])
 
     def test_should_get_list_certificate_authorities_with_params(self):
         self.create_cas()
@@ -76,7 +78,7 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(resp.namespace['total'], 1)
 
     def test_should_handle_no_cas(self):
-        self.params = {'offset': 0, 'limit': 2}
+        self.params = {'offset': 0, 'limit': 2, 'plugin_name': 'dummy'}
         resp = self.app.get('/cas/', self.params)
         self.assertEqual(resp.namespace.get('cas'), [])
         self.assertEqual(resp.namespace.get('total'), 0)
@@ -357,6 +359,7 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
         self.plugin_ca_id = 'default_plugin_ca_id_'
         self.ca_id = "id1"
 
+        self.num_root_cas = 2
         self.num_cas = 10
         self.offset = 2
         self.limit = 4
@@ -415,7 +418,7 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
 
         # create subca for DELETE testing
         parsed_ca = {
-            'plugin_name': self.plugin_name,
+            'plugin_name': self.plugin_name + '_delete_me',
             'plugin_ca_id': self.plugin_ca_id + "subca 1",
             'name': self.plugin_name,
             'description': 'Sub CA for default plugin',
@@ -428,8 +431,6 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
         ca_repo.create_from(ca)
         ca_repo.save(ca)
         self.subca = ca
-
-        self.num_cas += 1
 
     def _create_url(self, external_project_id, offset_arg=None,
                     limit_arg=None):
