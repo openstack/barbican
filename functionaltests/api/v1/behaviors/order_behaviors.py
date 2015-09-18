@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from functionaltests.api.v1.behaviors import base_behaviors
+from functionaltests.api.v1.behaviors import container_behaviors
+from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import order_models
 
 
@@ -127,7 +129,36 @@ class OrderBehaviors(base_behaviors.BaseBehaviors):
         return resp
 
     def delete_all_created_orders(self):
-        """Delete all of the orders that we have created."""
+        """Delete all orders and other entities created by orders.
+
+        """
+        container_client = container_behaviors.ContainerBehaviors(self.client)
+        secret_client = secret_behaviors.SecretBehaviors(self.client)
+
         orders_to_delete = [order for order in self.created_entities]
+
         for (order_ref, admin) in orders_to_delete:
+            order_resp = self.get_order(order_ref, user_name=admin)
+
+            # If order has secrets
+            if order_resp.model.secret_ref:
+                secret_client.delete_secret(order_resp.model.secret_ref,
+                                            user_name=admin)
+
+            # If containers supported
+            container_attr_exists = getattr(order_resp.model,
+                                            "container_ref",
+                                            None)
+            if container_attr_exists and order_resp.model.container_ref:
+                container_resp = container_client.get_container(
+                    order_resp.model.container_ref, user_name=admin)
+                # remove secrets in the containers in the orders
+                if container_resp.model.secret_refs:
+                    for secret in container_resp.model.secret_refs:
+                        secret_client.delete_secret(secret.secret_ref,
+                                                    user_name=admin)
+
+                container_client.delete_container(
+                    order_resp.model.container_ref, user_name=admin)
+
             self.delete_order(order_ref, user_name=admin)
