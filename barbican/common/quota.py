@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from oslo_config import cfg
 from oslo_log import log as logging
 
+from barbican.common import config
 from barbican.common import exception
 from barbican.common import hrefs
 from barbican.common import resources as res
@@ -27,30 +27,7 @@ LOG = logging.getLogger(__name__)
 UNLIMITED_VALUE = -1
 DISABLED_VALUE = 0
 
-
-quota_opt_group = cfg.OptGroup(name='quotas',
-                               title='Quota Options')
-
-quota_opts = [
-    cfg.IntOpt('quota_secrets',
-               default=-1,
-               help='Number of secrets allowed per project'),
-    cfg.IntOpt('quota_orders',
-               default=-1,
-               help='Number of orders allowed per project'),
-    cfg.IntOpt('quota_containers',
-               default=-1,
-               help='Number of containers allowed per project'),
-    cfg.IntOpt('quota_consumers',
-               default=-1,
-               help='Number of consumers allowed per project'),
-    cfg.IntOpt('quota_cas',
-               default=-1,
-               help='Number of CAs allowed per project')]
-
-CONF = cfg.CONF
-CONF.register_group(quota_opt_group)
-CONF.register_opts(quota_opts, group=quota_opt_group)
+CONF = config.CONF
 
 
 class QuotaDriver(object):

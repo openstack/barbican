@@ -129,6 +129,27 @@ ks_queue_opts = [
                         'notification server processing functionality.')),
 ]
 
+quota_opt_group = cfg.OptGroup(name='quotas',
+                               title='Quota Options')
+
+quota_opts = [
+    cfg.IntOpt('quota_secrets',
+               default=-1,
+               help='Number of secrets allowed per project'),
+    cfg.IntOpt('quota_orders',
+               default=-1,
+               help='Number of orders allowed per project'),
+    cfg.IntOpt('quota_containers',
+               default=-1,
+               help='Number of containers allowed per project'),
+    cfg.IntOpt('quota_consumers',
+               default=-1,
+               help='Number of consumers allowed per project'),
+    cfg.IntOpt('quota_cas',
+               default=-1,
+               help='Number of CAs allowed per project')
+]
+
 
 def parse_args(conf, args=None, usage=None, default_config_files=None):
     conf(args=args if args else [],
@@ -162,6 +183,10 @@ def new_config():
 
     conf.register_group(ks_queue_opt_group)
     conf.register_opts(ks_queue_opts, group=ks_queue_opt_group)
+
+    conf.register_group(quota_opt_group)
+    conf.register_opts(quota_opts, group=quota_opt_group)
+
     return conf
 
 
