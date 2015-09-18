@@ -91,8 +91,8 @@ class SecretController(controllers.ACLMixin):
                      external_project_id)
             return resp
         else:
-            LOG.warning('Decrypted secret %s requested using deprecated '
-                        'API call.', self.secret.id)
+            LOG.warning(u._LW('Decrypted secret %s requested using deprecated '
+                        'API call.'), self.secret.id)
             return self._on_get_secret_payload(self.secret,
                                                external_project_id,
                                                **kwargs)
