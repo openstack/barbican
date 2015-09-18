@@ -35,6 +35,11 @@ def _certificate_authority_not_found():
     pecan.abort(404, u._('Not Found. CA not found.'))
 
 
+def _certificate_authority_attribute_not_found():
+    """Throw exception indicating CA attribute was not found."""
+    pecan.abort(404, u._('Not Found. CA attribute not found.'))
+
+
 def _requested_preferred_ca_not_a_project_ca():
     """Throw exception indicating that preferred CA is not a project CA."""
     pecan.abort(
@@ -65,6 +70,10 @@ class CertificateAuthorityController(controllers.ACLMixin):
         if name in route_table:
             return route_table[name]
         raise AttributeError
+
+    @pecan.expose()
+    def _lookup(self, attribute, *remainder):
+        _certificate_authority_attribute_not_found()
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):

@@ -143,6 +143,12 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
         resp = self.app.get('/cas/bogus_ca/intermediates', expect_errors=True)
         self.assertEqual(404, resp.status_int)
 
+    def test_should_raise_for_ca_attribute_not_found(self):
+        self.create_cas()
+        resp = self.app.get('/cas/{0}/bogus'.format(self.selected_ca_id),
+                            expect_errors=True)
+        self.assertEqual(404, resp.status_int)
+
     def test_should_add_to_project(self):
         self.create_cas()
         resp = self.app.post('/cas/{0}/add-to-project'.format(
