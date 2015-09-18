@@ -112,6 +112,7 @@ class CertificateAuthorityController(controllers.ACLMixin):
         return ca_projects_resp
 
     @pecan.expose()
+    @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('Add CA to project'))
     @controllers.enforce_rbac('certificate_authority:add_to_project')
     def add_to_project(self, external_project_id):
@@ -140,6 +141,7 @@ class CertificateAuthorityController(controllers.ACLMixin):
             self.preferred_ca_repo.create_from(preferred_ca)
 
     @pecan.expose()
+    @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('Remove CA from project'))
     @controllers.enforce_rbac('certificate_authority:remove_from_project')
     def remove_from_project(self, external_project_id):
