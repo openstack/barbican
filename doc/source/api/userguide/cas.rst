@@ -1,5 +1,5 @@
 *****************************************
-Certificate Authorities API - Quick Start
+Certificate Authorities API - User Guide
 *****************************************
 
 Barbican is used as an interface to interact with Certificate Authorities (both

@@ -1,5 +1,5 @@
 *************************
-Secrets API - Quick Start
+Secrets API - User Guide
 *************************
 
 The secrets resource is the heart of the Barbican service. It provides access
@@ -24,7 +24,7 @@ Some examples of a secret may include:
   * Password
   * SSH Keys
 
-For the purpose of this quickstart guide, we will use a simple plaintext
+For the purpose of this user guide, we will use a simple plaintext
 secret. If you would like to learn more in detail about :ref:`secret parameters <secret_parameters>`,
 :ref:`responses <secret_response_attributes>`, and :ref:`status codes <secret_status_codes>`
 you can reference the :doc:`secret reference <../reference/secrets>`

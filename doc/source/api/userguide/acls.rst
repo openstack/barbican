@@ -1,5 +1,5 @@
 *************************
-ACL API - Quick Start
+ACL API - User Guide
 *************************
 
 By default Barbican manages access to its resources (secrets, containers) on a per project

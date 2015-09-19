@@ -1,5 +1,5 @@
 ******************************
-Certificates API - Quick Start
+Certificates API - User Guide
 ******************************
 
 Barbican will be used to manage the lifecycle of x509 certificates covering
