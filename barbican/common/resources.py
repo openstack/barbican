@@ -23,6 +23,12 @@ from barbican.model import repositories
 
 LOG = utils.getLogger(__name__)
 
+GLOBAL_PREFERRED_PROJECT_ID = "GLOBAL_PREFERRED"
+
+
+def get_or_create_global_preferred_project():
+    return get_or_create_project(GLOBAL_PREFERRED_PROJECT_ID)
+
 
 def get_or_create_project(project_id):
     """Returns project with matching project_id.

@@ -1629,9 +1629,11 @@ class ProjectCertificateAuthorityRepo(BaseRepo):
 
 
 class PreferredCertificateAuthorityRepo(BaseRepo):
-    """Repository for the PreferredCertificateAuthority entity."""
+    """Repository for the PreferredCertificateAuthority entity.
 
-    PREFERRED_PROJECT_ID = "0"
+    PreferredCertificateAuthority entries are not soft delete. So there is no
+    need to have deleted=False filter in queries.
+    """
 
     def get_by_create_date(self, offset_arg=None, limit_arg=None,
                            project_id=None, ca_id=None,
@@ -1648,7 +1650,6 @@ class PreferredCertificateAuthorityRepo(BaseRepo):
 
         query = session.query(models.PreferredCertificateAuthority)
         query = query.order_by(models.PreferredCertificateAuthority.created_at)
-        query = query.filter_by(deleted=False)
 
         if project_id:
             query = query.filter(
@@ -1672,22 +1673,26 @@ class PreferredCertificateAuthorityRepo(BaseRepo):
 
         return entities, offset, limit, total
 
-    def get_global_preferred_ca(self):
-        pref_cas = self.get_project_entities(self.PREFERRED_PROJECT_ID)
-        if len(pref_cas) > 0:
-            return pref_cas[0]
-        return None
+    def create_or_update_by_project_id(self, project_id, ca_id, session=None):
+        """Create or update preferred CA for a project by project_id.
 
-    def update_global_preferred_ca(self, new_ca):
-        self.update_preferred_ca(self.PREFERRED_PROJECT_ID, new_ca)
-
-    def update_preferred_ca(self, project_id, new_ca):
-        session = self.get_session()
-        query = session.query(models.PreferredCertificateAuthority).filter_by(
-            project_id=project_id)
-        entity = query.one()
-        entity.ca_id = new_ca.id
-        entity.save()
+        :param project_id: ID of project whose preferred CA will be saved
+        :param ca_id: ID of preferred CA
+        :param session: SQLAlchemy session object.
+        :return: None
+        """
+        session = self.get_session(session)
+        query = session.query(models.PreferredCertificateAuthority)
+        query = query.filter_by(project_id=project_id)
+        try:
+            entity = query.one()
+        except sa_orm.exc.NoResultFound:
+            self.create_from(
+                models.PreferredCertificateAuthority(project_id, ca_id),
+                session=session)
+        else:
+            entity.ca_id = ca_id
+            entity.save(session)
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
@@ -1709,7 +1714,7 @@ class PreferredCertificateAuthorityRepo(BaseRepo):
         :param session: existing db session reference.
         """
         return session.query(models.PreferredCertificateAuthority).filter_by(
-            project_id=project_id).filter_by(deleted=False)
+            project_id=project_id)
 
 
 class SecretACLRepo(BaseRepo):

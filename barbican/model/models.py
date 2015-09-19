@@ -982,7 +982,7 @@ class ProjectCertificateAuthority(BASE, SoftDeleteMixIn, ModelBase):
                 'ca_id': self.ca_id}
 
 
-class PreferredCertificateAuthority(BASE, SoftDeleteMixIn, ModelBase):
+class PreferredCertificateAuthority(BASE, ModelBase):
     """Stores preferred CAs for any project.
 
     Admins can define a set of CAs available for issuance requests for

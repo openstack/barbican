@@ -13,6 +13,7 @@
 import datetime
 
 from barbican.common import exception
+from barbican.common import resources as res
 from barbican.model import models
 from barbican.model import repositories
 from barbican.tests import database_utils
@@ -334,6 +335,8 @@ class WhenTestingPreferredCARepo(database_utils.RepositoryTestCase):
             'ca_signing_certificate': 'XXXXX-updated-XXXXX',
             'intermediates': 'YYYYY'}
 
+        self.global_project = res.get_or_create_global_preferred_project()
+
     def _add_ca(self, parsed_ca, session):
         ca = self.ca_repo.create_from(models.CertificateAuthority(parsed_ca),
                                       session=session)
@@ -354,7 +357,7 @@ class WhenTestingPreferredCARepo(database_utils.RepositoryTestCase):
     def _add_global_preferred_ca(self, ca_id, session):
         preferred_ca = self.preferred_ca_repo.create_from(
             models.PreferredCertificateAuthority(
-                self.preferred_ca_repo.PREFERRED_PROJECT_ID,
+                self.global_project.id,
                 ca_id),
             session)
         return preferred_ca
@@ -460,13 +463,28 @@ class WhenTestingPreferredCARepo(database_utils.RepositoryTestCase):
         session.commit()
 
         pca = self.preferred_ca_repo.get_project_entities(
-            self.preferred_ca_repo.PREFERRED_PROJECT_ID,
+            self.global_project.id,
             session)
         self.assertEqual([ca.id], [s.ca_id for s in pca])
 
-    def test_should_update(self):
+    def test_should_create(self):
         session = self.ca_repo.get_session()
         ca = self._add_ca(self.parsed_ca, session)
+        project = self._add_project("project_1", session)
+
+        self.preferred_ca_repo.create_or_update_by_project_id(
+            project.id, ca.id)
         session.commit()
 
-        self.ca_repo.update_entity(ca, self.parsed_modified_ca, session)
+    def test_should_update(self):
+        session = self.ca_repo.get_session()
+        ca1 = self._add_ca(self.parsed_ca, session)
+        ca2 = self._add_ca(self.parsed_ca2, session)
+        project = self._add_project("project_1", session)
+
+        self.preferred_ca_repo.create_or_update_by_project_id(
+            project.id, ca1.id)
+        session.commit()
+        self.preferred_ca_repo.create_or_update_by_project_id(
+            project.id, ca2.id)
+        session.commit()
