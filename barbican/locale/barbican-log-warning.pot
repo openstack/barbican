@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 1.0.0.0b3.dev5\n"
+"Project-Id-Version: barbican 1.0.0.0b4.dev50\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-08-03 06:15+0000\n"
+"POT-Creation-Date: 2015-09-19 06:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.0\n"
 
-#: barbican/model/repositories.py:249
+#: barbican/api/controllers/secrets.py:94
+#, python-format
+msgid "Decrypted secret %s requested using deprecated API call."
+msgstr ""
+
+#: barbican/model/repositories.py:250
 #, python-format
 msgid "SQL connection failed. %d attempts left."
 msgstr ""
