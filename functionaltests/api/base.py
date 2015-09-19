@@ -53,16 +53,20 @@ class TestCase(oslotest.BaseTestCase):
 
         self.client = client.BarbicanClient()
 
-        if (os.environ.get('OS_STDOUT_CAPTURE').lower() == 'true' or
-                os.environ.get('OS_STDOUT_CAPTURE') == '1'):
+        stdout_capture = os.environ.get('OS_STDOUT_CAPTURE')
+        stderr_capture = os.environ.get('OS_STDERR_CAPTURE')
+        log_capture = os.environ.get('OS_LOG_CAPTURE')
+
+        if ((stdout_capture and stdout_capture.lower() == 'true') or
+                stdout_capture == '1'):
             stdout = self.useFixture(fixtures.StringStream('stdout')).stream
             self.useFixture(fixtures.MonkeyPatch('sys.stdout', stdout))
-        if (os.environ.get('OS_STDERR_CAPTURE').lower() == 'true' or
-                os.environ.get('OS_STDERR_CAPTURE') == '1'):
+        if ((stderr_capture and stderr_capture.lower() == 'true') or
+                stderr_capture == '1'):
             stderr = self.useFixture(fixtures.StringStream('stderr')).stream
             self.useFixture(fixtures.MonkeyPatch('sys.stderr', stderr))
-        if (os.environ.get('OS_LOG_CAPTURE').lower() == 'true' or
-                os.environ.get('OS_LOG_CAPTURE') == '1'):
+        if ((log_capture and log_capture.lower() == 'true') or
+                log_capture == '1'):
             self.useFixture(fixtures.LoggerFixture(nuke_handlers=False,
                                                    format=self.log_format,
                                                    level=logging.DEBUG))
