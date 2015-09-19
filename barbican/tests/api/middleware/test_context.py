@@ -37,7 +37,10 @@ class TestUnauthenticatedContextMiddleware(oslotest.BaseTestCase):
                 is_admin=True,
                 user=None,
                 roles=['admin'],
-                request_id=request.request_id
+                request_id=request.request_id,
+                project_domain=None,
+                domain=None,
+                user_domain=None
             )
 
     def test_role_used_from_header(self):
@@ -52,5 +55,8 @@ class TestUnauthenticatedContextMiddleware(oslotest.BaseTestCase):
                 is_admin=False,
                 user=None,
                 roles=['something'],
-                request_id=request.request_id
+                request_id=request.request_id,
+                project_domain=None,
+                domain=None,
+                user_domain=None
             )

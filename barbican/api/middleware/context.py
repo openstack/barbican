@@ -138,7 +138,10 @@ class UnauthenticatedContextMiddleware(BaseContextMiddleware):
             roles = [config_admin_role]
 
         kwargs = {
-            'user': None,
+            'user': req.headers.get('X-User-Id'),
+            'domain': req.headers.get('X-Domain-Id'),
+            'user_domain': req.headers.get('X-User-Domain-Id'),
+            'project_domain': req.headers.get('X-Project-Domain-Id'),
             'project': project_id,
             'roles': roles,
             'is_admin': config_admin_role in roles,
