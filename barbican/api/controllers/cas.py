@@ -326,7 +326,8 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
 
     @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Retrieve global preferred CA'))
-    @controllers.enforce_rbac('certificate_authorities:get_global_ca')
+    @controllers.enforce_rbac(
+        'certificate_authorities:get_global_preferred_ca')
     def get_global_preferred(self, external_project_id, **kw):
         LOG.debug('Start certificate_authorities get_global_preferred CA')
 
@@ -344,8 +345,7 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
     def preferred(self, external_project_id, **kw):
         LOG.debug('Start certificate_authorities get project preferred CA')
 
-        project = self.project_repo.find_by_external_project_id(
-            external_project_id)
+        project = res.get_or_create_project(external_project_id)
 
         pref_ca = self.preferred_ca_repo.get_project_entities(project.id)
         if not pref_ca:
