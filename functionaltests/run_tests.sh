@@ -32,7 +32,7 @@ testr slowest
 SKIP=^\(\?\!\.\*\(ProjectQuotasPagingTestCase\|QuotaEnforcementTestCase\|ListingCAsTestCase\)\)
 testr init
 testr run $SKIP --parallel --subunit | subunit-trace --no-failure-debug -f
-retval=$?
+retval=$(($retval || $?))
 testr slowest
 
 exit $retval
