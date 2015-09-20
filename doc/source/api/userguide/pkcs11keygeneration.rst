@@ -1,5 +1,5 @@
 ***********************************
-PKCS11 Key Generation - Quick Start
+PKCS11 Key Generation - User Guide
 ***********************************
 
 The Key Generation script was written with the Deployer in mind. It allows the

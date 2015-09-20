@@ -1,5 +1,5 @@
 ****************************
-Containers API - Quick Start
+Containers API - User Guide
 ****************************
 
 The containers resource is the organizational center piece of Barbican. It
@@ -153,7 +153,7 @@ How to Create a Container
 
 In order to create a container, we must first have secrets. If you are unfamiliar
 with creating secrets, please take some time to refer to the
-:doc:`Secret Quickstart Guide <secrets>` before moving forward.
+:doc:`Secret User Guide <secrets>` before moving forward.
 
 .. _create_generic_container:
 

@@ -1,5 +1,5 @@
 **************************
-Dogtag Setup - Quick Start
+Dogtag Setup - User Guide
 **************************
 
 Dogtag is the Open Source upstream community version of the Red Hat Certificate

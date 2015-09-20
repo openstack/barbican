@@ -1,5 +1,5 @@
 ************************
-Quotas API - Quick Start
+Quotas API - User Guide
 ************************
 
 Running with default settings, the Barbican REST API doesn't impose an upper
@@ -11,14 +11,14 @@ can exhaust available resources, impacting other projects.
 
 The answer to this, on a per-project basis, is project quotas.
 
-This quick start guide will show you how a user can lookup his current effective
+This user guide will show you how a user can lookup his current effective
 quotas and how a service admin can create, update, read, and delete project quota
 configuration for all projects in his cloud.
 
 This guide will assume you will be using a local running development environment of Barbican.
 If you need assistance with getting set up, please reference the :doc:`development guide </setup/dev>`.
 
-.. _quick_project_quotas_overview:
+.. _user_project_quotas_overview:
 
 Project Quotas Overview
 #######################
@@ -68,7 +68,7 @@ The default quotas are returned via a **GET** on the **quotas** resource when no
 explicit project quotas have been set for the current project.
 
 
-.. _quick_get_quotas:
+.. _user_get_quotas:
 
 How to Read Effective Quotas
 ############################
@@ -104,7 +104,7 @@ To get more details on the quota lookup API, you can reference the
 :ref:`Get Quotas <get_quotas_request>` documentation.
 
 
-.. _quick_put_project_quotas:
+.. _user_put_project_quotas:
 
 How to Set or Replace Project Quotas
 ####################################
@@ -135,7 +135,7 @@ To get more details on the project quota setting API you can reference
 the :ref:`Set Project Quotas <put_project_quotas>` documentation.
 
 
-.. _quick_get_project_quotas:
+.. _user_get_project_quotas:
 
 How to Retrieve Configured Project Quotas
 #########################################
@@ -206,7 +206,7 @@ the :ref:`Get Project Quota <get_project_quotas_uuid>` and
 :ref:`Get Project Quota List <get_project_quotas>` documentation.
 
 
-.. _quick_delete_project_quotas:
+.. _user_delete_project_quotas:
 
 How to Delete Configured Project Quotas
 #######################################
