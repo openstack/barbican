@@ -1372,7 +1372,8 @@ class CertificateAuthorityRepo(BaseRepo):
     def get_by_create_date(self, offset_arg=None, limit_arg=None,
                            plugin_name=None, plugin_ca_id=None,
                            suppress_exception=False, session=None,
-                           show_expired=False):
+                           show_expired=False, project_id=None,
+                           restrict_to_project_cas=False):
         """Returns a list of certificate authorities
 
         The returned certificate authorities are ordered by the date they
@@ -1380,10 +1381,35 @@ class CertificateAuthorityRepo(BaseRepo):
         """
 
         offset, limit = clean_paging_values(offset_arg, limit_arg)
-
         session = self.get_session(session)
 
-        query = session.query(models.CertificateAuthority)
+        if restrict_to_project_cas:
+            # get both subCAs which have been defined for your project
+            # (cas for which the ca.project_id == project_id) AND
+            # project_cas which are defined for your project
+            # (pca.project_id = project_id)
+            query1 = session.query(models.CertificateAuthority)
+            query1 = query1.filter(
+                models.CertificateAuthority.project_id == project_id)
+
+            query2 = session.query(models.CertificateAuthority)
+            query2 = query2.join(models.ProjectCertificateAuthority)
+            query2 = query2.filter(
+                models.ProjectCertificateAuthority.project_id == project_id)
+
+            query = query1.union(query2)
+        else:
+            # get both subcas that have been defined for your project
+            # (cas for which ca.project_id == project_id) AND
+            # all top-level CAs (ca.project_id == None)
+            # Note(alee) for sqlalchemy, use '== None', not 'is None'
+
+            query = session.query(models.CertificateAuthority)
+            query = query.filter(or_(
+                models.CertificateAuthority.project_id == project_id,
+                models.CertificateAuthority.project_id == None
+            ))
+
         query = query.order_by(models.CertificateAuthority.created_at)
         query = query.filter_by(deleted=False)
 

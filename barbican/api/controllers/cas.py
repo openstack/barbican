@@ -40,11 +40,24 @@ def _certificate_authority_attribute_not_found():
     pecan.abort(404, u._('Not Found. CA attribute not found.'))
 
 
+def _ca_not_in_project():
+    """Throw exception certificate authority is not in project."""
+    pecan.abort(404, u._('Not Found. CA not in project.'))
+
+
 def _requested_preferred_ca_not_a_project_ca():
     """Throw exception indicating that preferred CA is not a project CA."""
     pecan.abort(
         400,
         u._('Cannot set CA as a preferred CA as it is not a project CA.')
+    )
+
+
+def _cant_remove_preferred_ca_from_project():
+    pecan.abort(
+        405,
+        u._('Please change the preferred CA to a different project CA '
+            'before removing it.')
     )
 
 
@@ -168,9 +181,32 @@ class CertificateAuthorityController(controllers.ACLMixin):
                 suppress_exception=True))
 
         if project_ca:
-            self.project_ca_repo.delete_entity_by_id(
-                project_ca[0].id,
-                None)
+            self._do_remove_from_project(project_ca[0])
+        else:
+            _ca_not_in_project()
+
+    def _do_remove_from_project(self, project_ca):
+        project_id = project_ca.project_id
+        ca_id = project_ca.ca_id
+        preferred_ca = self.preferred_ca_repo.get_project_entities(
+            project_id)[0]
+        if self._is_last_project_ca(project_id):
+            self.preferred_ca_repo.delete_entity_by_id(preferred_ca.id, None)
+        else:
+            self._assert_is_not_preferred_ca(preferred_ca.ca_id, ca_id)
+
+        self.project_ca_repo.delete_entity_by_id(project_ca.id, None)
+
+    def _is_last_project_ca(self, project_id):
+        _cas, _offset, _limit, total = self.project_ca_repo.get_by_create_date(
+            project_id=project_id,
+            suppress_exception=True
+        )
+        return total == 1
+
+    def _assert_is_not_preferred_ca(self, preferred_ca_id, ca_id):
+        if preferred_ca_id == ca_id:
+            _cant_remove_preferred_ca_from_project()
 
     @pecan.expose()
     @controllers.handle_exceptions(u._('Set preferred project CA'))
@@ -261,7 +297,9 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
 
     def __getattr__(self, name):
         route_table = {
-            'global-preferred': self.get_global_preferred
+            'all': self.get_all,
+            'global-preferred': self.get_global_preferred,
+            'preferred': self.preferred
         }
         if name in route_table:
             return route_table[name]
@@ -279,9 +317,46 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
         pecan.abort(405)  # HTTP 405 Method Not Allowed as default
 
     @index.when(method='GET', template='json')
+    @controllers.handle_exceptions(
+        u._('Certificate Authorities retrieval (limited)'))
+    @controllers.enforce_rbac('certificate_authorities:get_limited')
+    def on_get(self, external_project_id, **kw):
+        LOG.debug('Start certificate_authorities on_get (limited)')
+
+        plugin_name = kw.get('plugin_name')
+        if plugin_name is not None:
+            plugin_name = parse.unquote_plus(plugin_name)
+
+        plugin_ca_id = kw.get('plugin_ca_id', None)
+        if plugin_ca_id is not None:
+            plugin_ca_id = parse.unquote_plus(plugin_ca_id)
+
+        # refresh CA table, in case plugin entries have expired
+        cert_resources.refresh_certificate_resources()
+
+        project_model = res.get_or_create_project(external_project_id)
+
+        if self._project_cas_defined(project_model.id):
+            cas, offset, limit, total = self._get_subcas_and_project_cas(
+                offset=kw.get('offset', 0),
+                limit=kw.get('limit', None),
+                plugin_name=plugin_name,
+                plugin_ca_id=plugin_ca_id,
+                project_id=project_model.id)
+        else:
+            cas, offset, limit, total = self._get_subcas_and_root_cas(
+                offset=kw.get('offset', 0),
+                limit=kw.get('limit', None),
+                plugin_name=plugin_name,
+                plugin_ca_id=plugin_ca_id,
+                project_id=project_model.id)
+
+        return self._display_cas(cas, offset, limit, total)
+
+    @pecan.expose(generic=True, template='json')
     @controllers.handle_exceptions(u._('Certificate Authorities retrieval'))
     @controllers.enforce_rbac('certificate_authorities:get')
-    def on_get(self, external_project_id, **kw):
+    def get_all(self, external_project_id, **kw):
         LOG.debug('Start certificate_authorities on_get')
 
         plugin_name = kw.get('plugin_name')
@@ -295,31 +370,62 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
         # refresh CA table, in case plugin entries have expired
         cert_resources.refresh_certificate_resources()
 
-        result = self.ca_repo.get_by_create_date(
-            offset_arg=kw.get('offset', 0),
-            limit_arg=kw.get('limit', None),
+        project_model = res.get_or_create_project(external_project_id)
+
+        cas, offset, limit, total = self._get_subcas_and_root_cas(
+            offset=kw.get('offset', 0),
+            limit=kw.get('limit', None),
             plugin_name=plugin_name,
             plugin_ca_id=plugin_ca_id,
+            project_id=project_model.id)
+
+        return self._display_cas(cas, offset, limit, total)
+
+    def _get_project_cas(self, project_id, query_filters):
+        cas, offset, limit, total = self.project_ca_repo.get_by_create_date(
+            offset_arg=query_filters.get('offset', 0),
+            limit_arg=query_filters.get('limit', None),
+            project_id=project_id,
             suppress_exception=True
         )
+        return cas, offset, limit, total
 
-        cas, offset, limit, total = result
+    def _project_cas_defined(self, project_id):
+        _cas, _offset, _limit, total = self._get_project_cas(project_id, {})
+        return total > 0
 
+    def _get_subcas_and_project_cas(self, offset, limit, plugin_name,
+                                    plugin_ca_id, project_id):
+        return self.ca_repo.get_by_create_date(
+            offset_arg=offset,
+            limit_arg=limit,
+            plugin_name=plugin_name,
+            plugin_ca_id=plugin_ca_id,
+            project_id=project_id,
+            restrict_to_project_cas=True,
+            suppress_exception=True)
+
+    def _get_subcas_and_root_cas(self, offset, limit, plugin_name,
+                                 plugin_ca_id, project_id):
+        return self.ca_repo.get_by_create_date(
+            offset_arg=offset,
+            limit_arg=limit,
+            plugin_name=plugin_name,
+            plugin_ca_id=plugin_ca_id,
+            project_id=project_id,
+            restrict_to_project_cas=False,
+            suppress_exception=True)
+
+    def _display_cas(self, cas, offset, limit, total):
         if not cas:
             cas_resp_overall = {'cas': [],
                                 'total': total}
         else:
             cas_resp = [
-                hrefs.convert_certificate_authority_to_href(s.id)
-                for s in cas
-            ]
-            cas_resp_overall = hrefs.add_nav_hrefs(
-                'cas',
-                offset,
-                limit,
-                total,
-                {'cas': cas_resp}
-            )
+                hrefs.convert_certificate_authority_to_href(ca.id)
+                for ca in cas]
+            cas_resp_overall = hrefs.add_nav_hrefs('cas', offset, limit, total,
+                                                   {'cas': cas_resp})
             cas_resp_overall.update({'total': total})
 
         return cas_resp_overall
@@ -335,11 +441,11 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
         if not pref_ca:
             pecan.abort(404, u._("No global preferred CA defined"))
 
-        return {
-            'cas': [hrefs.convert_certificate_authority_to_href(pref_ca.ca_id)]
-        }
+        ca = self.ca_repo.get(entity_id=pref_ca.ca_id)
+        return ca.to_dict_fields()
 
     @pecan.expose(generic=True, template='json')
+    @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('Retrieve project preferred CA'))
     @controllers.enforce_rbac('certificate_authorities:get_preferred_ca')
     def preferred(self, external_project_id, **kw):
@@ -351,10 +457,8 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
         if not pref_ca:
             pecan.abort(404, u._("No preferred CA defined for this project"))
 
-        return {
-            'cas':
-            [hrefs.convert_certificate_authority_to_href(pref_ca[0].ca_id)]
-        }
+        ca = self.ca_repo.get(entity_id=pref_ca[0].ca_id)
+        return ca.to_dict_fields()
 
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('CA creation'))
