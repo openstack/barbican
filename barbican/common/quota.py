@@ -71,7 +71,7 @@ class QuotaDriver(object):
         """
         default_quotas = self._get_defaults()
         resp_quotas = dict(configured_quotas)
-        for resource, quota in resp_quotas.iteritems():
+        for resource, quota in resp_quotas.items():
             if quota is None:
                 resp_quotas[resource] = default_quotas[resource]
         return resp_quotas
