@@ -593,7 +593,7 @@ class SecretRepo(BaseRepo):
     def get_by_create_date(self, external_project_id, offset_arg=None,
                            limit_arg=None, name=None, alg=None, mode=None,
                            bits=0, secret_type=None, suppress_exception=False,
-                           session=None):
+                           session=None, acl_only=None, user_id=None):
         """Returns a list of secrets
 
         The returned secrets are ordered by the date they were created at
@@ -625,8 +625,14 @@ class SecretRepo(BaseRepo):
         if secret_type:
             query = query.filter(models.Secret.secret_type == secret_type)
 
-        query = query.join(models.Project)
-        query = query.filter(models.Project.external_id == external_project_id)
+        if acl_only and acl_only.lower() == 'true' and user_id:
+            query = query.join(models.SecretACL)
+            query = query.join(models.SecretACLUser)
+            query = query.filter(models.SecretACLUser.user_id == user_id)
+        else:
+            query = query.join(models.Project)
+            query = query.filter(
+                models.Project.external_id == external_project_id)
 
         total = query.count()
         end_offset = offset + limit

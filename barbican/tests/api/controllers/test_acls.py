@@ -490,6 +490,43 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
             expect_errors=True)
         self.assertEqual(405, resp.status_int)
 
+    def test_list_secrets_with_no_acls_and_acl_only_should_be_empty(self):
+        """Return list should be empty"""
+        creator_user_id = 'creatorUserID'
+        self._create_secret_with_creator_user(
+            self.app, creator_user_id)
+
+        resp = self.app.get(
+            '/secrets/?acl_only=TRUE')
+        self.assertEqual(200, resp.status_int)
+        self.assertEqual([], resp.json['secrets'])
+
+    def test_list_secrets_with_acls(self):
+        """Return List should not include secrets with no ACL for user"""
+        creator_user_id = 'creatorUserID'
+        secret_uuid_acl_1 = self._create_secret_with_creator_user(
+            self.app, creator_user_id)
+        secret_uuid_acl_2 = self._create_secret_with_creator_user(
+            self.app, creator_user_id)
+        secret_uuid_no_acl = self._create_secret_with_creator_user(
+            self.app, creator_user_id)
+        create_acls(
+            self.app, 'secrets', secret_uuid_acl_1,
+            read_user_ids=[creator_user_id],
+            read_project_access=False)
+
+        create_acls(
+            self.app, 'secrets', secret_uuid_acl_2,
+            read_user_ids=[creator_user_id],
+            read_project_access=False)
+        resp = self.app.get(
+            '/secrets/?acl_only=TrUe')
+        self.assertEqual(200, resp.status_int)
+        secret_list = resp.json.get('secrets')
+        self.assertEqual(len(secret_list), 2)
+
+        self.assertNotIn(secret_uuid_no_acl, secret_list)
+
 
 class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
                                        TestACLsWithContextMixin):

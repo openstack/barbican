@@ -270,6 +270,11 @@ class SecretsController(controllers.ACLMixin):
             # the default should be used.
             bits = 0
 
+        ctxt = controllers._get_barbican_context(pecan.request)
+        user_id = None
+        if ctxt:
+            user_id = ctxt.user
+
         result = self.secret_repo.get_by_create_date(
             external_project_id,
             offset_arg=kw.get('offset', 0),
@@ -278,7 +283,9 @@ class SecretsController(controllers.ACLMixin):
             alg=kw.get('alg'),
             mode=kw.get('mode'),
             bits=bits,
-            suppress_exception=True
+            suppress_exception=True,
+            acl_only=kw.get('acl_only', None),
+            user_id=user_id
         )
 
         secrets, offset, limit, total = result
