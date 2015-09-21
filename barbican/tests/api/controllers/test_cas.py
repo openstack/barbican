@@ -175,10 +175,10 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
         self.create_cas()
 
         resp = self.app.get('/cas/global-preferred')
-        self.assertEqual(self.global_preferred_ca.id,
-                         resp.namespace['ca_id'])
-        self.assertEqual(self.global_preferred_ca.plugin_ca_id,
-                         resp.namespace['plugin_ca_id'])
+        self.assertEqual(
+            hrefs.convert_certificate_authority_to_href(
+                self.global_preferred_ca.id),
+            resp.namespace['ca_ref'])
 
     def test_should_get_no_global_preferred_ca(self):
         resp = self.app.get('/cas/global-preferred', expect_errors=True)
@@ -193,10 +193,10 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
     def test_should_get_preferred_ca(self):
         self.create_cas()
         resp = self.app.get('/cas/preferred')
-        self.assertEqual(self.preferred_ca.id,
-                         resp.namespace['ca_id'])
-        self.assertEqual(self.preferred_ca.plugin_ca_id,
-                         resp.namespace['plugin_ca_id'])
+        self.assertEqual(
+            hrefs.convert_certificate_authority_to_href(
+                self.preferred_ca.id),
+            resp.namespace['ca_ref'])
 
     def test_should_get_ca(self):
         self.create_cas()

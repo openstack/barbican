@@ -413,8 +413,10 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
         if not pref_ca:
             pecan.abort(404, u._("No global preferred CA defined"))
 
-        ca = self.ca_repo.get(entity_id=pref_ca.ca_id)
-        return ca.to_dict_fields()
+        return {
+            'ca_ref':
+                hrefs.convert_certificate_authority_to_href(pref_ca.ca_id)
+        }
 
     @pecan.expose()
     @utils.allow_all_content_types
@@ -442,12 +444,15 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
 
         project = res.get_or_create_project(external_project_id)
 
-        pref_ca = self.preferred_ca_repo.get_project_entities(project.id)
-        if not pref_ca:
+        pref_cas = self.preferred_ca_repo.get_project_entities(project.id)
+        if not pref_cas:
             pecan.abort(404, u._("No preferred CA defined for this project"))
 
-        ca = self.ca_repo.get(entity_id=pref_ca[0].ca_id)
-        return ca.to_dict_fields()
+        ca = pref_cas[0]
+        return {
+            'ca_ref':
+                hrefs.convert_certificate_authority_to_href(ca.ca_id)
+        }
 
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('CA creation'))
