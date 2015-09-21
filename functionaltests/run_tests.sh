@@ -29,7 +29,7 @@ retval=$?
 testr slowest
 
 # run the tests in parallel
-SKIP=^\(\?\!\.\*\(ProjectQuotasPagingTestCase\|QuotaEnforcementTestCase\|ListingCAsTestCase\|ProjectCATestCase\)\)
+SKIP=^\(\?\!\.\*\(ProjectQuotasPagingTestCase\|QuotaEnforcementTestCase\|ListingCAsTestCase\|ProjectCATestCase\|GlobalPreferredCATestCase\)\)
 testr init
 testr run $SKIP --parallel --subunit | subunit-trace --no-failure-debug -f
 retval=$(($retval || $?))

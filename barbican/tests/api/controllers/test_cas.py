@@ -352,22 +352,16 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
 
     def test_should_unset_global_preferred(self):
         self.create_cas()
-        resp = self.app.post('/cas/{0}/unset-global-preferred'.format(
-            self.global_preferred_ca.id))
+        resp = self.app.post(
+            '/cas/unset-global-preferred')
         self.assertEqual(204, resp.status_int)
 
     def test_should_unset_global_preferred_not_post(self):
         self.create_cas()
         resp = self.app.get(
-            '/cas/{0}/unset-global-preferred'.format(self.selected_ca_id),
+            '/cas/unset-global-preferred',
             expect_errors=True)
         self.assertEqual(405, resp.status_int)
-
-    def test_should_raise_unset_global_preferred_ca_not_found(self):
-        resp = self.app.post(
-            '/cas/bogus_ca/unset-global-preferred',
-            expect_errors=True)
-        self.assertEqual(404, resp.status_int)
 
     def test_should_get_projects(self):
         self.create_cas()
@@ -456,6 +450,7 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
 
     def create_cas(self, set_project_cas=True):
         self.project = res.get_or_create_project(self.project_id)
+        self.global_project = res.get_or_create_global_preferred_project()
         project_repo.save(self.project)
         self.project_ca_ids = []
 
@@ -505,7 +500,7 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
             if ca_id == 1:
                 # set global preferred ca
                 pref_ca = models.PreferredCertificateAuthority(
-                    preferred_ca_repo.PREFERRED_PROJECT_ID,
+                    self.global_project.id,
                     ca.id)
                 preferred_ca_repo.create_from(pref_ca)
                 preferred_ca_repo.save(pref_ca)

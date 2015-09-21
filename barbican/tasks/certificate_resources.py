@@ -18,6 +18,7 @@ from OpenSSL import crypto
 
 from barbican.common import exception as excep
 from barbican.common import hrefs
+from barbican.common import resources as res
 import barbican.common.utils as utils
 from barbican.model import models
 from barbican.model import repositories as repos
@@ -315,6 +316,16 @@ def modify_certificate_request(order_model, updated_meta):
     raise NotImplementedError  # pragma: no cover
 
 
+def get_global_preferred_ca():
+    project = res.get_or_create_global_preferred_project()
+    preferred_ca_repository = repos.get_preferred_ca_repository()
+    cas = preferred_ca_repository.get_project_entities(project.id)
+    if not cas:
+        return None
+    else:
+        return cas[0]
+
+
 def _get_ca_id(order_meta, project_id):
     ca_id = order_meta.get(cert.CA_ID)
     if ca_id:
@@ -326,7 +337,7 @@ def _get_ca_id(order_meta, project_id):
     if total > 0:
         return cas[0].ca_id
 
-    global_ca = preferred_ca_repository.get_global_preferred_ca()
+    global_ca = get_global_preferred_ca()
     if global_ca:
         return global_ca.ca_id
 
