@@ -19,7 +19,6 @@ from barbican.common import exception as excep
 from barbican.common import quota
 from barbican.model import models
 from barbican.tests import database_utils
-from barbican.tests import utils
 
 
 class WhenTestingQuotaDriverFunctions(database_utils.RepositoryTestCase):
@@ -207,7 +206,7 @@ class DummyRepoForTestingQuotaEnforcement(object):
         return self.get_count_return_value
 
 
-class WhenTestingQuotaEnforcingFunctions(utils.BaseTestCase):
+class WhenTestingQuotaEnforcingFunctions(database_utils.RepositoryTestCase):
 
     def setUp(self):
         super(WhenTestingQuotaEnforcingFunctions, self).setUp()
