@@ -71,6 +71,17 @@ def setup_config(config_file=''):
     TEST_CONF.register_group(keymanager_group)
     TEST_CONF.register_opts(keymanager_options, group=keymanager_group)
 
+    quotas_group = cfg.OptGroup(name='quotas')
+    quotas_options = [
+        cfg.IntOpt('quota_secrets', default=-1),
+        cfg.IntOpt('quota_orders', default=-1),
+        cfg.IntOpt('quota_containers', default=-1),
+        cfg.IntOpt('quota_consumers', default=-1),
+        cfg.IntOpt('quota_cas', default=-1)
+    ]
+    TEST_CONF.register_group(quotas_group)
+    TEST_CONF.register_opts(quotas_options, group=quotas_group)
+
     # Figure out which config to load
     config_to_load = []
     local_config = './etc/barbican/barbican-functional.conf'

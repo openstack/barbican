@@ -50,11 +50,16 @@ class QuotasTestCase(base.TestCase):
         resp = self.behaviors.get_quotas()
 
         self.assertEqual(200, resp.status_code)
-        self.assertEqual(-1, resp.model.quotas.secrets)
-        self.assertEqual(-1, resp.model.quotas.orders)
-        self.assertEqual(-1, resp.model.quotas.containers)
-        self.assertEqual(-1, resp.model.quotas.consumers)
-        self.assertEqual(-1, resp.model.quotas.cas)
+        self.assertEqual(CONF.quotas.quota_secrets,
+                         resp.model.quotas.secrets)
+        self.assertEqual(CONF.quotas.quota_orders,
+                         resp.model.quotas.orders)
+        self.assertEqual(CONF.quotas.quota_containers,
+                         resp.model.quotas.containers)
+        self.assertEqual(CONF.quotas.quota_consumers,
+                         resp.model.quotas.consumers)
+        self.assertEqual(CONF.quotas.quota_cas,
+                         resp.model.quotas.cas)
 
     def test_get_project_quotas_by_project_id(self):
         """Get project quota information for specific project"""
