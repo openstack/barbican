@@ -150,10 +150,11 @@ class CABehaviors(base_behaviors.BaseBehaviors):
 
     def get_preferred(self, extra_headers=None, use_auth=True,
                       user_name=None):
-        return self.client.get('cas/preferred',
+        resp = self.client.get('cas/preferred',
                                response_model_type=ca_models.CAModel,
                                extra_headers=extra_headers, use_auth=use_auth,
                                user_name=user_name)
+        return resp
 
     def set_global_preferred(self, ca_ref, headers=None,
                              use_auth=True, user_name=None):
@@ -171,7 +172,8 @@ class CABehaviors(base_behaviors.BaseBehaviors):
 
     def get_global_preferred(self, extra_headers=None,
                              use_auth=True, user_name=None):
-        return self.client.get('cas/global-preferred',
+        resp = self.client.get('cas/global-preferred',
                                response_model_type=ca_models.CAModel,
                                extra_headers=extra_headers,
                                use_auth=use_auth, user_name=user_name)
+        return resp

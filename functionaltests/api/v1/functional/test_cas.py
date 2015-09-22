@@ -16,7 +16,6 @@
 import base64
 import copy
 import re
-import testtools
 
 from OpenSSL import crypto
 
@@ -181,6 +180,9 @@ class CertificateAuthoritiesTestCase(CATestCommon):
             subject_dn=convert_to_X509Name(self.subca_subject),
             issuer_dn=root_subject)
 
+        resp = self.ca_behaviors.delete_ca(ca_ref=ca_ref)
+        self.assertEqual(204, resp.status_code)
+
     @depends_on_ca_plugins('snakeoil_ca')
     def test_create_subca_of_snakeoil_subca(self):
         parent_model = self.get_snakeoil_subca_model()
@@ -196,6 +198,11 @@ class CertificateAuthoritiesTestCase(CATestCommon):
             ca_ref=child_ref,
             subject_dn=convert_to_X509Name(self.subca_subca_subject),
             issuer_dn=parent_subject)
+
+        resp = self.ca_behaviors.delete_ca(ca_ref=child_ref)
+        self.assertEqual(204, resp.status_code)
+        resp = self.ca_behaviors.delete_ca(ca_ref=parent_ref)
+        self.assertEqual(204, resp.status_code)
 
     def test_create_subca_with_invalid_parent_ca_id(self):
         ca_model = self.get_snakeoil_subca_model()
@@ -222,15 +229,26 @@ class CertificateAuthoritiesTestCase(CATestCommon):
         self.assertEqual(201, resp.status_code)
         self.send_test_order(ca_ref)
 
-    # @depends_on_ca_plugins('snakeoil_ca')
-    @testtools.skip("Skip test until ca behaviors tracks project cas")
+        resp = self.ca_behaviors.delete_ca(ca_ref=ca_ref)
+        self.assertEqual(204, resp.status_code)
+
+    @depends_on_ca_plugins('snakeoil_ca')
     def test_add_snakeoil_ca__to_project_and_get_preferred(self):
         ca_ref = self.get_snakeoil_root_ca_ref()
         resp = self.ca_behaviors.add_ca_to_project(ca_ref, user_name=admin_a)
         self.assertEqual(204, resp.status_code)
 
-        ca = self.ca_behaviors.get_preferred(user_name=admin_a)
-        self.assertEqual(hrefs.get_ca_id_from_ref(ca_ref), ca.model.ca_id)
+        resp = self.ca_behaviors.get_preferred(user_name=admin_a)
+        self.assertEqual(200, resp.status_code)
+        ca_id = hrefs.get_ca_id_from_ref(resp.model.ca_ref)
+        self.assertEqual(hrefs.get_ca_id_from_ref(ca_ref), ca_id)
+
+        resp = self.ca_behaviors.remove_ca_from_project(
+            ca_ref, user_name=admin_a)
+        self.assertEqual(204, resp.status_code)
+
+        resp = self.ca_behaviors.get_preferred(user_name=admin_a)
+        self.assertEqual(404, resp.status_code)
 
     @depends_on_ca_plugins('snakeoil_ca')
     def test_create_and_delete_snakeoil_subca(self):
@@ -257,6 +275,9 @@ class CertificateAuthoritiesTestCase(CATestCommon):
         resp = self.ca_behaviors.get_cacert(ca_ref)
         self.assertEqual(200, resp.status_code)
         crypto.load_certificate(crypto.FILETYPE_PEM, resp.text)
+
+        resp = self.ca_behaviors.delete_ca(ca_ref=ca_ref)
+        self.assertEqual(204, resp.status_code)
 
 
 class ListingCAsTestCase(CATestCommon):
@@ -332,66 +353,50 @@ class GlobalPreferredCATestCase(CATestCommon):
         self.ca_ids = [hrefs.get_ca_id_from_ref(ref) for ref in self.cas]
 
     def tearDown(self):
-        self.ca_behaviors.unset_global_preferred(user_name=service_admin)
         super(CATestCommon, self).tearDown()
 
     def test_global_preferred_no_project_admin_access(self):
         resp = self.ca_behaviors.get_global_preferred()
         self.assertEqual(403, resp.status_code)
-        resp = self.ca_behaviors.set_global_preferred(ca_ref=self.cas[1])
+        resp = self.ca_behaviors.set_global_preferred(ca_ref=self.cas[0])
         self.assertEqual(403, resp.status_code)
         resp = self.ca_behaviors.unset_global_preferred()
         self.assertEqual(403, resp.status_code)
 
     def test_global_preferred_update(self):
         if self.num_cas < 2:
-            self.skipTest("At least two CAs are required for this test")
+            self.sTest("At least two CAs are required for this test")
         resp = self.ca_behaviors.set_global_preferred(
             ca_ref=self.cas[0], user_name=service_admin)
         self.assertEqual(204, resp.status_code)
         resp = self.ca_behaviors.get_global_preferred(user_name=service_admin)
         self.assertEqual(200, resp.status_code)
-        self.assertEqual(self.ca_ids[0], resp.model.ca_id)
+        ca_id = hrefs.get_ca_id_from_ref(resp.model.ca_ref)
+        self.assertEqual(self.ca_ids[0], ca_id)
 
         resp = self.ca_behaviors.set_global_preferred(
             ca_ref=self.cas[1], user_name=service_admin)
         self.assertEqual(204, resp.status_code)
         resp = self.ca_behaviors.get_global_preferred(user_name=service_admin)
         self.assertEqual(200, resp.status_code)
-        self.assertEqual(self.ca_ids[1], resp.model.ca_id)
+        ca_id = hrefs.get_ca_id_from_ref(resp.model.ca_ref)
+        self.assertEqual(self.ca_ids[1], ca_id)
+
+        resp = self.ca_behaviors.unset_global_preferred(
+            user_name=service_admin)
+        self.assertEqual(204, resp.status_code)
 
     def test_global_preferred_set_and_unset(self):
-        resp = self.ca_behaviors.unset_global_preferred(
-            user_name=service_admin)
-        self.assertEqual(204, resp.status_code)
-        resp = self.ca_behaviors.get_global_preferred(user_name=service_admin)
-        self.assertEqual(404, resp.status_code)
-
         resp = self.ca_behaviors.set_global_preferred(
             ca_ref=self.cas[0], user_name=service_admin)
         self.assertEqual(204, resp.status_code)
         resp = self.ca_behaviors.get_global_preferred(user_name=service_admin)
         self.assertEqual(200, resp.status_code)
-        self.assertEqual(self.ca_ids[0], resp.model.ca_id)
+        ca_id = hrefs.get_ca_id_from_ref(resp.model.ca_ref)
+        self.assertEqual(self.ca_ids[0], ca_id)
 
         resp = self.ca_behaviors.unset_global_preferred(
             user_name=service_admin)
         self.assertEqual(204, resp.status_code)
         resp = self.ca_behaviors.get_global_preferred(user_name=service_admin)
         self.assertEqual(404, resp.status_code)
-
-    @testtools.skip("Skip test until ca behaviors tracks project cas")
-    def test_global_preferred_affects_project_preferred(self):
-        if self.num_cas < 2:
-            self.skipTest("At least two CAs are required for this test")
-        resp = self.ca_behaviors.get_preferred(user_name=admin_a)
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual(self.ca_ids[0], resp.model.ca_id)
-
-        resp = self.ca_behaviors.set_global_preferred(
-            ca_ref=self.cas[1], user_name=service_admin)
-        self.assertEqual(204, resp.status_code)
-
-        resp = self.ca_behaviors.get_preferred(user_name=admin_a)
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual(self.ca_ids[1], resp.model.ca_id)

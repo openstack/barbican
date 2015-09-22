@@ -935,7 +935,7 @@ class CertificateAuthorityMetadatum(BASE, ModelBase):
         }
 
 
-class ProjectCertificateAuthority(BASE, SoftDeleteMixIn, ModelBase):
+class ProjectCertificateAuthority(BASE, ModelBase):
     """Stores CAs available for a project.
 
     Admins can define a set of CAs that are available for use in a particular

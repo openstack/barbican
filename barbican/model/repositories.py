@@ -1571,7 +1571,11 @@ class CertificateAuthorityMetadatumRepo(BaseRepo):
 
 
 class ProjectCertificateAuthorityRepo(BaseRepo):
-    """Repository for the ProjectCertificateAuthority entity."""
+    """Repository for the ProjectCertificateAuthority entity.
+
+    ProjectCertificateAuthority entries are not soft delete. So there is no
+    need to have deleted=False filter in queries.
+    """
 
     def get_by_create_date(self, offset_arg=None, limit_arg=None,
                            project_id=None, ca_id=None,
@@ -1631,7 +1635,7 @@ class ProjectCertificateAuthorityRepo(BaseRepo):
         :param session: existing db session reference.
         """
         return session.query(models.ProjectCertificateAuthority).filter_by(
-            project_id=project_id).filter_by(deleted=False)
+            project_id=project_id)
 
 
 class PreferredCertificateAuthorityRepo(BaseRepo):
