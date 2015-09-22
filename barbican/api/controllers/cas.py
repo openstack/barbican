@@ -444,14 +444,13 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
 
         project = res.get_or_create_project(external_project_id)
 
-        pref_cas = self.preferred_ca_repo.get_project_entities(project.id)
-        if not pref_cas:
+        pref_ca_id = cert_resources.get_project_preferred_ca_id(project.id)
+        if not pref_ca_id:
             pecan.abort(404, u._("No preferred CA defined for this project"))
 
-        ca = pref_cas[0]
         return {
             'ca_ref':
-                hrefs.convert_certificate_authority_to_href(ca.ca_id)
+                hrefs.convert_certificate_authority_to_href(pref_ca_id)
         }
 
     @index.when(method='POST', template='json')

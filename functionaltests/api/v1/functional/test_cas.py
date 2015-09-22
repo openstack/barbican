@@ -365,7 +365,7 @@ class GlobalPreferredCATestCase(CATestCommon):
 
     def test_global_preferred_update(self):
         if self.num_cas < 2:
-            self.sTest("At least two CAs are required for this test")
+            self.skipTest("At least two CAs are required for this test")
         resp = self.ca_behaviors.set_global_preferred(
             ca_ref=self.cas[0], user_name=service_admin)
         self.assertEqual(204, resp.status_code)
@@ -399,4 +399,67 @@ class GlobalPreferredCATestCase(CATestCommon):
             user_name=service_admin)
         self.assertEqual(204, resp.status_code)
         resp = self.ca_behaviors.get_global_preferred(user_name=service_admin)
+        self.assertEqual(404, resp.status_code)
+
+    def test_global_preferred_affects_project_preferred(self):
+        if self.num_cas < 2:
+            self.skipTest("At least two CAs are required for this test")
+
+        resp = self.ca_behaviors.get_preferred(user_name=admin_a)
+        self.assertEqual(404, resp.status_code)
+
+        resp = self.ca_behaviors.set_global_preferred(
+            ca_ref=self.cas[1], user_name=service_admin)
+        self.assertEqual(204, resp.status_code)
+
+        resp = self.ca_behaviors.get_preferred(user_name=admin_a)
+        self.assertEqual(200, resp.status_code)
+        ca_id = hrefs.get_ca_id_from_ref(resp.model.ca_ref)
+        self.assertEqual(self.ca_ids[1], ca_id)
+
+        resp = self.ca_behaviors.unset_global_preferred(
+            user_name=service_admin)
+        self.assertEqual(204, resp.status_code)
+
+        resp = self.ca_behaviors.get_preferred(user_name=admin_a)
+        self.assertEqual(404, resp.status_code)
+
+    def test_project_preferred_overrides_global_preferred(self):
+        if self.num_cas < 2:
+            self.skipTest("At least two CAs are required for this test")
+
+        resp = self.ca_behaviors.get_preferred(user_name=admin_a)
+        self.assertEqual(404, resp.status_code)
+
+        resp = self.ca_behaviors.set_global_preferred(
+            ca_ref=self.cas[1], user_name=service_admin)
+        self.assertEqual(204, resp.status_code)
+
+        resp = self.ca_behaviors.get_preferred(user_name=admin_a)
+        self.assertEqual(200, resp.status_code)
+        ca_id = hrefs.get_ca_id_from_ref(resp.model.ca_ref)
+        self.assertEqual(self.ca_ids[1], ca_id)
+
+        resp = self.ca_behaviors.add_ca_to_project(
+            ca_ref=self.cas[0], user_name=admin_a)
+        self.assertEqual(204, resp.status_code)
+
+        resp = self.ca_behaviors.get_preferred(user_name=admin_a)
+        self.assertEqual(200, resp.status_code)
+        ca_id = hrefs.get_ca_id_from_ref(resp.model.ca_ref)
+        self.assertEqual(self.ca_ids[0], ca_id)
+
+        resp = self.ca_behaviors.remove_ca_from_project(
+            ca_ref=self.cas[0], user_name=admin_a)
+        self.assertEqual(204, resp.status_code)
+
+        resp = self.ca_behaviors.get_preferred(user_name=admin_a)
+        ca_id = hrefs.get_ca_id_from_ref(resp.model.ca_ref)
+        self.assertEqual(self.ca_ids[1], ca_id)
+
+        resp = self.ca_behaviors.unset_global_preferred(
+            user_name=service_admin)
+        self.assertEqual(204, resp.status_code)
+
+        resp = self.ca_behaviors.get_preferred(user_name=admin_a)
         self.assertEqual(404, resp.status_code)
