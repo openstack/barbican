@@ -18,6 +18,7 @@ import datetime
 import fnmatch
 import os
 import re
+from tempfile import mkstemp
 import uuid
 
 from OpenSSL import crypto
@@ -40,6 +41,10 @@ snakeoil_ca_plugin_opts = [
                help=u._('Path to CA certicate file')),
     cfg.StrOpt('ca_cert_key_path',
                help=u._('Path to CA certificate key file')),
+    cfg.StrOpt('ca_cert_chain_path',
+               help=u._('Path to CA certicate chain file')),
+    cfg.StrOpt('ca_cert_pkcs7_path',
+               help=u._('Path to CA chain pkcs7 file')),
     cfg.StrOpt('subca_cert_key_directory',
                default='/etc/barbican/snakeoil-cas',
                help=u._('Directory in which to store certs/keys for subcas')),
@@ -78,12 +83,15 @@ def set_subject_X509Name(target, dn):
 
 class SnakeoilCA(object):
 
-    def __init__(self, cert_path=None, key_path=None, name=None, serial=1,
+    def __init__(self, cert_path=None, key_path=None, chain_path=None,
+                 pkcs7_path=None, name=None, serial=1,
                  key_size=2048, expiry_days=10 * 365, x509_version=2,
-                 subject_dn="cn=Snakeoil Certificate, o=example.com",
-                 signing_dn=None, signing_key=None):
+                 subject_dn=None, signing_dn=None, signing_key=None,
+                 parent_chain_path=None):
         self.cert_path = cert_path
         self.key_path = key_path
+        self.chain_path = chain_path
+        self.pkcs7_path = pkcs7_path
         self.name = name
         self.serial = serial
         self.key_size = key_size
@@ -92,15 +100,18 @@ class SnakeoilCA(object):
 
         self.subject_dn = subject_dn
 
-        if signing_dn:
+        if signing_dn is not None:
             self.signing_dn = signing_dn
         else:
             self.signing_dn = subject_dn    # self-signed
+
         self.signing_key = signing_key
+        self.parent_chain_path = parent_chain_path
 
         self._cert_val = None
         self._key_val = None
-        self._intermediates_val = None    # TODO(alee) fix intermediates
+        self._chain_val = None
+        self._pkcs7_val = None
 
     @property
     def cert(self):
@@ -140,22 +151,69 @@ class SnakeoilCA(object):
             self._key_val = crypto.dump_privatekey(crypto.FILETYPE_PEM, val)
 
     @property
-    def exists(self):
-        cert_exists = self._cert_val is not None
-        key_exists = self._key_val is not None
+    def chain(self):
+        self.ensure_exists()
+        if self.chain_path:
+            with open(self.chain_path) as chain_fh:
+                return chain_fh.read()
+        else:
+            return self._chain_val
 
+    @chain.setter
+    def chain(self, val):
+        if self.chain_path:
+            with open(self.chain_path, 'w') as chain_fh:
+                chain_fh.write(val)
+        else:
+            self._chain_val = val
+
+    @property
+    def pkcs7(self):
+        self.ensure_exists()
+        if self.pkcs7_path:
+            with open(self.pkcs7_path) as pkcs7_fh:
+                return pkcs7_fh.read()
+        else:
+            return self._pkcs7_val
+
+    @pkcs7.setter
+    def pkcs7(self, val):
+        if self.pkcs7_path:
+            with open(self.pkcs7_path, 'w') as pkcs7_fh:
+                pkcs7_fh.write(val)
+        else:
+            self._pkcs7_val = val
+
+    @property
+    def exists(self):
         if self.cert_path is not None:
             cert_exists = os.path.isfile(self.cert_path)
+        else:
+            cert_exists = self._cert_val is not None
 
         if self.key_path is not None:
             key_exists = os.path.isfile(self.key_path)
+        else:
+            key_exists = self._key_val is not None
 
-        return cert_exists and key_exists
+        if self.chain_path is not None:
+            chain_exists = os.path.isfile(self.chain_path)
+        else:
+            chain_exists = self._chain_val is not None
+
+        if self.pkcs7_path is not None:
+            pkcs7_exists = os.path.isfile(self.pkcs7_path)
+        else:
+            pkcs7_exists = self._pkcs7_val is not None
+
+        return (cert_exists and key_exists and
+                pkcs7_exists and chain_exists)
 
     def ensure_exists(self):
         if not self.exists:
             LOG.debug('Keypair not found, creating new cert/key')
-            self.cert, self.key = self.create_keypair()
+            self.cert, self.key, self.chain, self.pkcs7 = (
+                self.create_keypair())
 
     def create_keypair(self):
         LOG.debug('Generating Snakeoil CA')
@@ -165,8 +223,9 @@ class SnakeoilCA(object):
         cert = crypto.X509()
         cert.set_version(self.x509_version)
         cert.set_serial_number(self.serial)
-        cert.set_subject(set_subject_X509Name(
-            cert.get_subject(), self.subject_dn))
+        subject = cert.get_subject()
+        set_subject_X509Name(subject, self.subject_dn)
+        cert.set_subject(subject)
         cert.gmtime_adj_notBefore(0)
         cert.gmtime_adj_notAfter(self.expiry_days)
         cert.set_issuer(set_subject_X509Name(
@@ -183,7 +242,32 @@ class SnakeoilCA(object):
 
         LOG.debug('Snakeoil CA cert/key generated')
 
-        return cert, key
+        chain = ""
+        if self.parent_chain_path:
+            with open(self.parent_chain_path) as fh:
+                chain = fh.read()
+        chain += crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
+
+        pkcs7 = self._generate_pkcs7(chain)
+        return cert, key, chain, pkcs7
+
+    def _generate_pkcs7(self, chain):
+        fin, temp_in = mkstemp()
+        os.write(fin, chain)
+        os.close(fin)
+
+        fout, temp_out = mkstemp()
+        os.close(fout)
+
+        command = ("openssl crl2pkcs7 -nocrl -out " + temp_out +
+                   " -certfile " + temp_in)
+        os.system(command)
+        with open(temp_out) as pkcs7_fh:
+            pkcs7 = pkcs7_fh.read()
+
+        os.remove(temp_in)
+        os.remove(temp_out)
+        return pkcs7
 
 
 class CertManager(object):
@@ -218,7 +302,12 @@ class SnakeoilCACertificatePlugin(cert_manager.CertificatePluginBase):
         self.ca = SnakeoilCA(
             cert_path=conf.snakeoil_ca_plugin.ca_cert_path,
             key_path=conf.snakeoil_ca_plugin.ca_cert_key_path,
-            name=self.get_default_ca_name())
+            chain_path=conf.snakeoil_ca_plugin.ca_cert_chain_path,
+            pkcs7_path=conf.snakeoil_ca_plugin.ca_cert_pkcs7_path,
+            name=self.get_default_ca_name(),
+            subject_dn="cn=Snakeoil Certificate,o=example.com"
+        )
+
         self.cas[self.get_default_ca_name()] = self.ca
 
         self.subca_directory = conf.snakeoil_ca_plugin.subca_cert_key_directory
@@ -235,8 +324,14 @@ class SnakeoilCACertificatePlugin(cert_manager.CertificatePluginBase):
             if fnmatch.fnmatch(file, '*.key'):
                 ca_id, _ext = os.path.splitext(file)
                 self.cas[ca_id] = SnakeoilCA(
-                    os.path.join(self.subca_directory, ca_id + ".cert"),
-                    os.path.join(self.subca_directory, file))
+                    cert_path=os.path.join(self.subca_directory,
+                                           ca_id + ".cert"),
+                    key_path=os.path.join(self.subca_directory, file),
+                    chain_path=os.path.join(self.subca_directory,
+                                            ca_id + ".chain"),
+                    pkcs7_path=os.path.join(self.subca_directory,
+                                            ca_id + ".p7b")
+                )
 
     def get_default_ca_name(self):
         return "Snakeoil CA"
@@ -276,13 +371,11 @@ class SnakeoilCACertificatePlugin(cert_manager.CertificatePluginBase):
         cert_mgr = CertManager(ca)
         cert = cert_mgr.make_certificate(csr)
         cert_enc = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
-        ca_enc = crypto.dump_certificate(crypto.FILETYPE_PEM, ca.cert)
 
-        # TODO(alee) Create correct intermediates for SnakeOIl plugin
         return cert_manager.ResultDTO(
             cert_manager.CertificateStatus.CERTIFICATE_GENERATED,
             certificate=base64.b64encode(cert_enc),
-            intermediates=base64.b64encode(ca_enc))
+            intermediates=base64.b64encode(ca.pkcs7))
 
     def modify_certificate_request(self, order_id, order_meta, plugin_meta,
                                    barbican_meta_dto):
@@ -321,28 +414,33 @@ class SnakeoilCACertificatePlugin(cert_manager.CertificatePluginBase):
         new_ca_id = str(uuid.uuid4())
         new_cert_path = os.path.join(self.subca_directory, new_ca_id + ".cert")
         new_key_path = os.path.join(self.subca_directory, new_ca_id + ".key")
+        new_chain_path = os.path.join(self.subca_directory,
+                                      new_ca_id + ".chain")
+        new_pkcs7_path = os.path.join(self.subca_directory,
+                                      new_ca_id + ".p7b")
+        parent_chain_path = parent_ca.chain_path
 
         new_ca = SnakeoilCA(cert_path=new_cert_path,
                             key_path=new_key_path,
+                            chain_path=new_chain_path,
+                            pkcs7_path=new_pkcs7_path,
                             name=ca_create_dto.name,
                             subject_dn=ca_create_dto.subject_dn,
                             signing_dn=parent_ca.subject_dn,
-                            signing_key=parent_ca.key)
+                            signing_key=parent_ca.key,
+                            parent_chain_path=parent_chain_path)
 
         self.cas[new_ca_id] = new_ca
 
         expiration = (datetime.datetime.utcnow() + datetime.timedelta(
             days=cert_manager.CA_INFO_DEFAULT_EXPIRATION_DAYS))
 
-        # TODO(alee) fix intermediates
-
         return {
             cert_manager.INFO_NAME: new_ca.name,
             cert_manager.INFO_CA_SIGNING_CERT: crypto.dump_certificate(
                 crypto.FILETYPE_PEM, new_ca.cert),
             cert_manager.INFO_EXPIRATION: expiration,
-            cert_manager.INFO_INTERMEDIATES: crypto.dump_certificate(
-                crypto.FILETYPE_PEM, new_ca.cert),
+            cert_manager.INFO_INTERMEDIATES: new_ca.pkcs7,
             cert_manager.PLUGIN_CA_ID: new_ca_id
         }
 
@@ -350,15 +448,13 @@ class SnakeoilCACertificatePlugin(cert_manager.CertificatePluginBase):
         expiration = (datetime.datetime.utcnow() + datetime.timedelta(
             days=cert_manager.CA_INFO_DEFAULT_EXPIRATION_DAYS))
 
-        # TODO(alee) Fix intermediates
         ret = {}
         for ca_id, ca in self.cas.items():
             ca_info = {
                 cert_manager.INFO_NAME: ca.name,
                 cert_manager.INFO_CA_SIGNING_CERT: crypto.dump_certificate(
                     crypto.FILETYPE_PEM, ca.cert),
-                cert_manager.INFO_INTERMEDIATES: crypto.dump_certificate(
-                    crypto.FILETYPE_PEM, ca.cert),
+                cert_manager.INFO_INTERMEDIATES: ca.pkcs7,
                 cert_manager.INFO_EXPIRATION: expiration
             }
             ret[ca_id] = ca_info
@@ -368,11 +464,11 @@ class SnakeoilCACertificatePlugin(cert_manager.CertificatePluginBase):
     def delete_ca(self, ca_id):
         self.cas.pop(ca_id)
 
-        cert_path = os.path.join(self.subca_directory, ca_id + ".cert")
-        key_path = os.path.join(self.subca_directory, ca_id + ".key")
+        ca_files = [os.path.join(self.subca_directory, ca_id + ".cert"),
+                    os.path.join(self.subca_directory, ca_id + ".key"),
+                    os.path.join(self.subca_directory, ca_id + ".chain"),
+                    os.path.join(self.subca_directory, ca_id + ".p7b")]
 
-        if os.path.exists(key_path):
-            os.remove(key_path)
-
-        if os.path.exists(cert_path):
-            os.remove(cert_path)
+        for ca_file in ca_files:
+            if os.path.exists(ca_file):
+                os.remove(ca_file)
