@@ -55,7 +55,7 @@ def _requested_preferred_ca_not_a_project_ca():
 
 def _cant_remove_preferred_ca_from_project():
     pecan.abort(
-        405,
+        409,
         u._('Please change the preferred CA to a different project CA '
             'before removing it.')
     )

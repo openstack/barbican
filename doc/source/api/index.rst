@@ -13,6 +13,7 @@ User Guide
    ./userguide/acls
    ./userguide/pkcs11keygeneration
    ./userguide/certificates
+   ./userguide/cas
    ./userguide/dogtag_setup
    ./userguide/quotas
 
@@ -26,4 +27,5 @@ API Reference
     ./reference/containers
     ./reference/acls
     ./reference/certificates
+    ./reference/cas
     ./reference/quotas

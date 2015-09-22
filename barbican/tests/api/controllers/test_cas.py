@@ -276,7 +276,7 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
         resp = self.app.post('/cas/{0}/remove-from-project'.format(
             self.project_ca_ids[1]),
             expect_errors=True)
-        self.assertEqual(405, resp.status_int)
+        self.assertEqual(409, resp.status_int)
 
     def test_should_remove_preferred_ca_if_last_project_ca(self):
         self.create_cas()

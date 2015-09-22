@@ -99,7 +99,7 @@ Request:
 ********
 
 The request below shows a simple CMC request.  For examples of each type,
-see the :doc:`Certificate Quick Start Guide <../quickstart/certificates>`.
+see the :doc:`Certificate User's Guide <../userguide/certificates>`.
 
 .. code-block:: javascript
 
