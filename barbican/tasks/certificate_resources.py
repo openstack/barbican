@@ -326,22 +326,29 @@ def get_global_preferred_ca():
         return cas[0]
 
 
-def _get_ca_id(order_meta, project_id):
-    ca_id = order_meta.get(cert.CA_ID)
-    if ca_id:
-        return ca_id
+def get_project_preferred_ca_id(project_id):
+    """Compute the preferred CA ID for a project
 
+    First priority: a preferred CA is defined for the project
+    Second priority: a preferred CA is defined globally
+    Else: None
+    """
     preferred_ca_repository = repos.get_preferred_ca_repository()
     cas, offset, limit, total = preferred_ca_repository.get_by_create_date(
         project_id=project_id, suppress_exception=True)
     if total > 0:
         return cas[0].ca_id
-
     global_ca = get_global_preferred_ca()
     if global_ca:
         return global_ca.ca_id
 
-    return None
+
+def _get_ca_id(order_meta, project_id):
+    ca_id = order_meta.get(cert.CA_ID)
+    if ca_id:
+        return ca_id
+
+    return get_project_preferred_ca_id(project_id)
 
 
 def _update_result_follow_on(
