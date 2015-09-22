@@ -469,6 +469,7 @@ class CannotDeleteBaseCA(BarbicanHTTPException):
     status_code = 403
 
 
-class UnauthorizedSubCADelete(BarbicanHTTPException):
+class UnauthorizedSubCA(BarbicanHTTPException):
     message = u._("Subordinate CA is not owned by this project")
+    client_message = message
     status_code = 403

@@ -424,7 +424,7 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
     @mock.patch('barbican.tasks.certificate_resources.delete_subordinate_ca')
     def test_should_raise_delete_not_authorized(self, mocked_task):
         self.create_cas()
-        mocked_task.side_effect = exception.UnauthorizedSubCADelete()
+        mocked_task.side_effect = exception.UnauthorizedSubCA()
         resp = self.app.delete('/cas/' + self.subca.id,
                                expect_errors=True)
         mocked_task.assert_called_once_with(self.project_id,
