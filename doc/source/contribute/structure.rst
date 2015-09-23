@@ -10,8 +10,6 @@ Project Structure
 
    #. ``common/`` (Modules shared across other Barbican folders)
    #. ``model/`` (SQLAlchemy-based model classes)
-   #. ``openstack/`` (OpenStack utility Python source and folders - generated
-      from oslo-incubator)
    #. ``plugin/`` (Plugin related logic, interfaces and look-up management)
 
       #. ``resources.py`` (Supports interactions with plugins)
