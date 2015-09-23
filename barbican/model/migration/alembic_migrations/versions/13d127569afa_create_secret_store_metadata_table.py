@@ -16,14 +16,14 @@
 """create_secret_store_metadata_table
 
 Revision ID: 13d127569afa
-Revises: 1a0c2cdafb38
+Revises: juno
 Create Date: 2014-04-24 13:15:41.858266
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '13d127569afa'
-down_revision = '1a0c2cdafb38'
+down_revision = 'juno'
 
 from alembic import op
 import sqlalchemy as sa
