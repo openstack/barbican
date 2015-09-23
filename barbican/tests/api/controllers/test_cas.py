@@ -368,7 +368,7 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
         resp = self.app.get(
             '/cas/{0}/projects'.format(self.project_ca_ids[0]))
         self.assertEqual(
-            self.project.id,
+            self.project.external_id,
             resp.namespace['projects'][0])
 
     def test_should_get_no_projects(self):
