@@ -55,14 +55,29 @@ class CaTestCase(BaseTestCase):
         self.assertEqual("Test O", subject.O)
         self.assertEqual("Test CN", subject.CN)
         self.assertEqual("Test OU", subject.OU)
+        self.assertEqual(
+            ca.chain,
+            crypto.dump_certificate(crypto.FILETYPE_PEM, ca.cert))
 
     def test_gen_cacert_with_file_storage(self):
         cert_path = self.tmp_dir + 'cert.pem'
         key_path = self.tmp_dir + 'key.pem'
+        chain_path = self.tmp_dir + 'cert.chain'
+        pkcs7_path = self.tmp_dir + 'cert.p7b'
+
         subject_dn = 'cn=Test CN,o=Test O,L=Test L,st=Test ST'
-        ca = snakeoil_ca.SnakeoilCA(cert_path=cert_path, key_path=key_path,
-                                    key_size=512, subject_dn=subject_dn)
+        ca = snakeoil_ca.SnakeoilCA(
+            cert_path=cert_path,
+            key_path=key_path,
+            chain_path=chain_path,
+            pkcs7_path=pkcs7_path,
+            key_size=2048,
+            subject_dn=subject_dn)
+
         subject = ca.cert.get_subject()
+        self.assertEqual(
+            ca.chain,
+            crypto.dump_certificate(crypto.FILETYPE_PEM, ca.cert))
         self.assertNotEqual(ca.key, None)
         self.assertEqual("Test ST", subject.ST)
         self.assertEqual("Test L", subject.L)
@@ -70,12 +85,58 @@ class CaTestCase(BaseTestCase):
         self.assertEqual("Test CN", subject.CN)
 
         # Make sure we preserve existing keypairs
-        ca = snakeoil_ca.SnakeoilCA(cert_path=cert_path, key_path=key_path)
+        ca = snakeoil_ca.SnakeoilCA(
+            cert_path=cert_path,
+            key_path=key_path,
+            chain_path=chain_path,
+            pkcs7_path=pkcs7_path
+        )
         subject = ca.cert.get_subject()
         self.assertEqual("Test ST", subject.ST)
         self.assertEqual("Test L", subject.L)
         self.assertEqual("Test O", subject.O)
         self.assertEqual("Test CN", subject.CN)
+
+    def test_gen_sub_cacert_with_file_storage(self):
+        cert_path = self.tmp_dir + 'cert.pem'
+        key_path = self.tmp_dir + 'key.pem'
+        chain_path = self.tmp_dir + 'cert.chain'
+        pkcs7_path = self.tmp_dir + 'cert.p7b'
+
+        subject_dn = 'cn=Test CN,o=Test O,L=Test L,st=Test ST'
+        parent_ca = snakeoil_ca.SnakeoilCA(
+            cert_path=cert_path,
+            key_path=key_path,
+            chain_path=chain_path,
+            pkcs7_path=pkcs7_path,
+            key_size=2048,
+            subject_dn=subject_dn)
+        self.assertIsNotNone(parent_ca)
+
+        # create a sub-ca
+        subject_dn = 'cn=Sub CA Test CN,o=Test O,L=Test L,st=Test ST'
+        cert_path = self.tmp_dir + 'sub_cert.pem'
+        key_path = self.tmp_dir + 'sub_key.pem'
+        chain_path = self.tmp_dir + 'sub_cert.chain'
+        pkcs7_path = self.tmp_dir + 'sub_cert.p7b'
+
+        sub_ca = snakeoil_ca.SnakeoilCA(
+            cert_path=cert_path,
+            key_path=key_path,
+            chain_path=chain_path,
+            pkcs7_path=pkcs7_path,
+            key_size=2048,
+            subject_dn=subject_dn,
+            parent_chain_path=parent_ca.chain_path,
+            signing_dn=parent_ca.subject_dn,
+            signing_key=parent_ca.key
+        )
+
+        subject = sub_ca.cert.get_subject()
+        self.assertEqual("Test ST", subject.ST)
+        self.assertEqual("Test L", subject.L)
+        self.assertEqual("Test O", subject.O)
+        self.assertEqual("Sub CA Test CN", subject.CN)
 
 
 class CertManagerTestCase(BaseTestCase):
@@ -131,6 +192,8 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         super(SnakeoilCAPluginTestCase, self).setUp()
         self.ca_cert_path = os.path.join(self.tmp_dir, 'ca.cert')
         self.ca_key_path = os.path.join(self.tmp_dir, 'ca.key')
+        self.ca_chain_path = os.path.join(self.tmp_dir, 'ca.chain')
+        self.ca_pkcs7_path = os.path.join(self.tmp_dir, 'ca.pkcs7')
         self.db_dir = self.tmp_dir
 
         self.conf.snakeoil_ca_plugin.subca_cert_key_directory = os.path.join(
@@ -289,7 +352,18 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         ca_cert = subca_dict.get(cm.INFO_CA_SIGNING_CERT)
         self.assertIsNotNone(ca_cert)
 
-        # TODO(alee) Verify that the ca cert has correct subject name
+        intermediates = subca_dict.get(cm.INFO_INTERMEDIATES)
+        self.assertIsNotNone(intermediates)
+
+        cacert = crypto.load_certificate(crypto.FILETYPE_PEM, ca_cert)
+        subject = cacert.get_subject()
+        self.assertEqual(
+            "subordinate ca signing cert",
+            subject.CN)
+
+        pkcs7 = crypto.load_pkcs7_data(crypto.FILETYPE_PEM, intermediates)
+        self.assertTrue(pkcs7.type_is_signed())
+
         # TODO(alee) Verify that ca cert is signed by parent CA
 
     def test_delete_ca(self):
