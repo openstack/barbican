@@ -14,7 +14,7 @@ then
 fi
 LOCAL_CONFIG=$LOCAL_CONFIG_DIR/barbican.conf
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 echo 'DIR: '$DIR
 
 debug_barbican()
