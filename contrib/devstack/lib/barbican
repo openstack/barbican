@@ -188,8 +188,6 @@ function install_barbican {
     if is_fedora; then
         install_package sqlite-devel openldap-devel
     fi
-    # TODO(ravips): We need this until barbican gets into devstack
-    ERROR_ON_CLONE=False
     git_clone $BARBICAN_REPO $BARBICAN_DIR $BARBICAN_BRANCH
     setup_develop $BARBICAN_DIR
     pip_install 'uwsgi'
@@ -197,8 +195,6 @@ function install_barbican {
 
 # install_barbicanclient - Collect source and prepare
 function install_barbicanclient {
-    # TODO(ravips): We need this until barbican gets into devstack
-    ERROR_ON_CLONE=False
     git_clone $BARBICANCLIENT_REPO $BARBICANCLIENT_DIR $BARBICANCLIENT_BRANCH
     setup_develop $BARBICANCLIENT_DIR
 }
