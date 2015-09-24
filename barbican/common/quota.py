@@ -110,6 +110,9 @@ class QuotaDriver(object):
         project = res.get_or_create_project(external_project_id)
         self.repo.create_or_update_by_project_id(project.id,
                                                  parsed_project_quotas)
+        # commit to DB to avoid async issues if the enforcer is called from
+        # another thread
+        repo.commit()
 
     def get_project_quotas(self, external_project_id):
         """Retrieve configured quota information from database

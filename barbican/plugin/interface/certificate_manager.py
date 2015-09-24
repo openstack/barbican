@@ -622,25 +622,23 @@ class CertificatePluginManager(named.NamedExtensionManager):
 
     def refresh_ca_table(self):
         """Refreshes the CertificateAuthority table."""
-        session = self.ca_repo.get_session()
         updates_made = False
         for plugin in plugin_utils.get_active_plugins(self):
             plugin_name = utils.generate_fullname_for(plugin)
             cas, offset, limit, total = self.ca_repo.get_by_create_date(
                 plugin_name=plugin_name,
-                session=session,
                 suppress_exception=True)
             if total < 1:
                 # if no entries are found, then the plugin has not yet been
                 # queried or that plugin's entries have expired.
                 # Most of the time, this will be a no-op for plugins.
-                self.update_ca_info(plugin, session=session)
+                self.update_ca_info(plugin)
                 updates_made = True
         if updates_made:
-            session.flush()
-            session.commit()
+            # commit to DB to avoid async issues with different threads
+            repos.commit()
 
-    def update_ca_info(self, cert_plugin, session=None):
+    def update_ca_info(self, cert_plugin):
         """Update the CA info for a particular plugin."""
 
         plugin_name = utils.generate_fullname_for(cert_plugin)
@@ -649,20 +647,18 @@ class CertificatePluginManager(named.NamedExtensionManager):
         old_cas, offset, limit, total = self.ca_repo.get_by_create_date(
             plugin_name=plugin_name,
             suppress_exception=True,
-            session=session,
             show_expired=True)
 
         for old_ca in old_cas:
             plugin_ca_id = old_ca.plugin_ca_id
             if plugin_ca_id not in new_ca_infos.keys():
                 # remove CAs that no longer exist
-                self._delete_ca(old_ca, session=session)
+                self._delete_ca(old_ca)
             else:
                 # update those that still exist
                 self.ca_repo.update_entity(
                     old_ca,
-                    new_ca_infos[plugin_ca_id],
-                    session=session)
+                    new_ca_infos[plugin_ca_id])
 
         old_ids = set([ca.plugin_ca_id for ca in old_cas])
         new_ids = set(new_ca_infos.keys())
@@ -670,18 +666,17 @@ class CertificatePluginManager(named.NamedExtensionManager):
         # add new CAs
         add_ids = new_ids - old_ids
         for add_id in add_ids:
-            self._add_ca(plugin_name, add_id, new_ca_infos[add_id],
-                         session=session)
+            self._add_ca(plugin_name, add_id, new_ca_infos[add_id])
 
-    def _add_ca(self, plugin_name, plugin_ca_id, ca_info, session=None):
+    def _add_ca(self, plugin_name, plugin_ca_id, ca_info):
         parsed_ca = dict(ca_info)
         parsed_ca['plugin_name'] = plugin_name
         parsed_ca['plugin_ca_id'] = plugin_ca_id
         new_ca = models.CertificateAuthority(parsed_ca)
-        self.ca_repo.create_from(new_ca, session=session)
+        self.ca_repo.create_from(new_ca)
 
-    def _delete_ca(self, ca, session=None):
-        self.ca_repo.delete_entity_by_id(ca.id, None, session=session)
+    def _delete_ca(self, ca):
+        self.ca_repo.delete_entity_by_id(ca.id, None)
 
 
 class _CertificateEventPluginManager(named.NamedExtensionManager,

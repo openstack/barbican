@@ -19,6 +19,7 @@ import testtools
 from barbican.common import utils as common_utils
 from barbican.model import models
 from barbican.plugin.interface import certificate_manager as cm
+from barbican.tests import database_utils
 from barbican.tests import utils
 
 
@@ -105,7 +106,7 @@ class WhenTestingCertificateEventPluginManager(testtools.TestCase):
         )
 
 
-class WhenTestingCertificatePluginManager(utils.BaseTestCase,
+class WhenTestingCertificatePluginManager(database_utils.RepositoryTestCase,
                                           utils.MockModelRepositoryMixin):
 
     def setUp(self):
@@ -281,11 +282,9 @@ class WhenTestingCertificatePluginManager(utils.BaseTestCase,
         self.plugin_returned.get_ca_info.assert_called_once_with()
         self.ca_repo.update_entity.assert_called_once_with(
             ca1,
-            ca1_modified_info,
-            session=mock.ANY)
+            ca1_modified_info)
 
         self.ca_repo.delete_entity_by_id.assert_called_once_with(
             ca2.id,
-            None,
-            session=mock.ANY)
+            None)
         self.ca_repo.create_from.assert_has_calls([])
