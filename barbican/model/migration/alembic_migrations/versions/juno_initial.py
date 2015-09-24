@@ -25,22 +25,20 @@ revision = 'juno'
 down_revision = '1a0c2cdafb38'
 
 
-from barbican.model.migration.alembic_migrations import ca_init_ops
 from barbican.model.migration.alembic_migrations import container_init_ops
 from barbican.model.migration.alembic_migrations import encrypted_init_ops
 from barbican.model.migration.alembic_migrations import kek_init_ops
 from barbican.model.migration.alembic_migrations import order_ops
 from barbican.model.migration.alembic_migrations import projects_init_ops
-from barbican.model.migration.alembic_migrations import secretes_init_ops
+from barbican.model.migration.alembic_migrations import secrets_init_ops
 from barbican.model.migration.alembic_migrations import transport_keys_init_ops
 
 
 def upgrade():
-    ca_init_ops.upgrade()
-    container_init_ops.upgrade()
-    encrypted_init_ops.upgrade()
-    kek_init_ops.upgrade()
-    order_ops.upgrade()
     projects_init_ops.upgrade()
-    secretes_init_ops.upgrade()
+    secrets_init_ops.upgrade()
+    container_init_ops.upgrade()
+    kek_init_ops.upgrade()
+    encrypted_init_ops.upgrade()
+    order_ops.upgrade()
     transport_keys_init_ops.upgrade()

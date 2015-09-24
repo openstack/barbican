@@ -24,13 +24,13 @@ import sqlalchemy as sa
 
 def upgrade():
     op.create_table(
-        'projects',
+        'tenants',
         sa.Column('id', sa.String(length=36), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
         sa.Column('deleted_at', sa.DateTime(), nullable=True),
         sa.Column('deleted', sa.Boolean(), nullable=False),
         sa.Column('status', sa.String(length=20), nullable=False),
-        sa.Column('external_id', sa.String(length=255), nullable=True),
+        sa.Column('keystone_id', sa.String(length=255), nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
