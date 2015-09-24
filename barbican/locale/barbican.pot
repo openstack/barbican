@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 1.0.0.0b4.dev50\n"
+"Project-Id-Version: barbican 1.0.0.dev98.g4d3f206\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-09-19 06:15+0000\n"
+"POT-Creation-Date: 2015-09-24 21:15+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -79,71 +79,85 @@ msgstr ""
 msgid "Not Found. CA attribute not found."
 msgstr ""
 
-#: barbican/api/controllers/cas.py:47
+#: barbican/api/controllers/cas.py:45
+msgid "Not Found. CA not in project."
+msgstr ""
+
+#: barbican/api/controllers/cas.py:52
 msgid "Cannot set CA as a preferred CA as it is not a project CA."
 msgstr ""
 
-#: barbican/api/controllers/cas.py:83
+#: barbican/api/controllers/cas.py:59
+msgid ""
+"Please change the preferred CA to a different project CA before removing "
+"it."
+msgstr ""
+
+#: barbican/api/controllers/cas.py:95
 msgid "Certificate Authority retrieval"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:91
+#: barbican/api/controllers/cas.py:103
 msgid "CA Signing Cert retrieval"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:99
+#: barbican/api/controllers/cas.py:111
 msgid "CA Cert Chain retrieval"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:107
+#: barbican/api/controllers/cas.py:119
 msgid "CA projects retrieval"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:125
+#: barbican/api/controllers/cas.py:137
 msgid "Add CA to project"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:154
+#: barbican/api/controllers/cas.py:166
 msgid "Remove CA from project"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:176
+#: barbican/api/controllers/cas.py:211
 msgid "Set preferred project CA"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:206
+#: barbican/api/controllers/cas.py:235
 msgid "Set global preferred CA"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:223
-msgid "Unset global preferred CA"
-msgstr ""
-
-#: barbican/api/controllers/cas.py:241
+#: barbican/api/controllers/cas.py:248
 msgid "CA deletion"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:282
+#: barbican/api/controllers/cas.py:296
+msgid "Certificate Authorities retrieval (limited)"
+msgstr ""
+
+#: barbican/api/controllers/cas.py:332
 msgid "Certificate Authorities retrieval"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:328
+#: barbican/api/controllers/cas.py:409
 msgid "Retrieve global preferred CA"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:336
+#: barbican/api/controllers/cas.py:417
 msgid "No global preferred CA defined"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:343
+#: barbican/api/controllers/cas.py:426
+msgid "Unset global preferred CA"
+msgstr ""
+
+#: barbican/api/controllers/cas.py:443
 msgid "Retrieve project preferred CA"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:352
+#: barbican/api/controllers/cas.py:452
 msgid "No preferred CA defined for this project"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:360
+#: barbican/api/controllers/cas.py:460
 msgid "CA creation"
 msgstr ""
 
@@ -286,7 +300,7 @@ msgstr ""
 msgid "Secret(s) retrieval"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:305
+#: barbican/api/controllers/secrets.py:312
 msgid "Secret creation"
 msgstr ""
 
@@ -802,133 +816,133 @@ msgstr ""
 msgid "Cannot generate a fullname for a null instance"
 msgstr ""
 
-#: barbican/common/validators.py:91
+#: barbican/common/validators.py:94
 msgid "Bad Container Reference {ref}"
 msgstr ""
 
-#: barbican/common/validators.py:101
+#: barbican/common/validators.py:104
 msgid "Container Not Found"
 msgstr ""
 
-#: barbican/common/validators.py:105
+#: barbican/common/validators.py:108
 msgid "Container Wrong Type"
 msgstr ""
 
-#: barbican/common/validators.py:141
+#: barbican/common/validators.py:144
 msgid "{schema_name}' within '{parent_schema_name}"
 msgstr ""
 
-#: barbican/common/validators.py:235
+#: barbican/common/validators.py:238
 msgid "If 'payload' specified, must be non empty"
 msgstr ""
 
-#: barbican/common/validators.py:243
+#: barbican/common/validators.py:246
 msgid "payload must be provided when payload_content_type is specified"
 msgstr ""
 
-#: barbican/common/validators.py:251
+#: barbican/common/validators.py:254
 msgid "payload_content_type is not one of {supported}"
 msgstr ""
 
-#: barbican/common/validators.py:277 barbican/common/validators.py:582
+#: barbican/common/validators.py:280 barbican/common/validators.py:585
 msgid "Invalid date for 'expiration'"
 msgstr ""
 
-#: barbican/common/validators.py:291
+#: barbican/common/validators.py:294
 msgid "'expiration' is before current time"
 msgstr ""
 
-#: barbican/common/validators.py:304
+#: barbican/common/validators.py:307
 msgid "If 'payload' is supplied, 'payload_content_type' must also be supplied."
 msgstr ""
 
-#: barbican/common/validators.py:311
+#: barbican/common/validators.py:314
 msgid "payload_content_type {supplied} is not one of {supported}"
 msgstr ""
 
-#: barbican/common/validators.py:321
+#: barbican/common/validators.py:324
 msgid "payload_content_encoding is not one of {supported}"
 msgstr ""
 
-#: barbican/common/validators.py:334
+#: barbican/common/validators.py:337
 msgid "Invalid payload for payload_content_encoding"
 msgstr ""
 
-#: barbican/common/validators.py:417
+#: barbican/common/validators.py:420
 msgid "'payload' not allowed for key type order"
 msgstr ""
 
-#: barbican/common/validators.py:434
+#: barbican/common/validators.py:437
 msgid "'payload' not allowed for asymmetric type order"
 msgstr ""
 
-#: barbican/common/validators.py:451
+#: barbican/common/validators.py:454
 msgid "'payload' not allowed for certificate type order"
 msgstr ""
 
-#: barbican/common/validators.py:525
+#: barbican/common/validators.py:528
 msgid "Bad format"
 msgstr ""
 
-#: barbican/common/validators.py:532
+#: barbican/common/validators.py:535
 msgid "Signing key incorrect"
 msgstr ""
 
-#: barbican/common/validators.py:565
+#: barbican/common/validators.py:568
 msgid "'algorithm' is required field for {0} type order"
 msgstr ""
 
-#: barbican/common/validators.py:594
+#: barbican/common/validators.py:597
 msgid "Must have non-zero positive bit_length to generate secret"
 msgstr ""
 
-#: barbican/common/validators.py:602
+#: barbican/common/validators.py:605
 msgid "Must be a positive integer that is a multiple of 8"
 msgstr ""
 
-#: barbican/common/validators.py:610
+#: barbican/common/validators.py:613
 msgid "Feature not implemented for '{0}' order type"
 msgstr ""
 
-#: barbican/common/validators.py:719
+#: barbican/common/validators.py:722
 msgid "Duplicate reference names are not allowed"
 msgstr ""
 
-#: barbican/common/validators.py:731
+#: barbican/common/validators.py:734
 msgid "Duplicate secret ids are not allowed"
 msgstr ""
 
-#: barbican/common/validators.py:742
+#: barbican/common/validators.py:745
 msgid "Secret_ref does not match the configured hostname, please try again"
 msgstr ""
 
-#: barbican/common/validators.py:763
+#: barbican/common/validators.py:766
 msgid ""
 "only 'private_key', 'public_key' and 'private_key_passphrase' reference "
 "names are allowed for RSA type"
 msgstr ""
 
-#: barbican/common/validators.py:771
+#: barbican/common/validators.py:774
 msgid ""
 "The minimum required reference names are 'public_key' and'private_key' "
 "for RSA type"
 msgstr ""
 
-#: barbican/common/validators.py:784
+#: barbican/common/validators.py:787
 msgid ""
 "only 'private_key', 'certificate' , 'private_key_passphrase',  or "
 "'intermediates' reference names are allowed for Certificate type"
 msgstr ""
 
-#: barbican/common/validators.py:792
+#: barbican/common/validators.py:795
 msgid "The minimum required reference name is 'certificate' for Certificate type"
 msgstr ""
 
-#: barbican/common/validators.py:838
+#: barbican/common/validators.py:841
 msgid "plugin_name must be provided"
 msgstr ""
 
-#: barbican/common/validators.py:845
+#: barbican/common/validators.py:848
 msgid "transport_key must be provided"
 msgstr ""
 
@@ -1023,35 +1037,35 @@ msgstr ""
 msgid "No {entity_name} found with keystone-ID {id}"
 msgstr ""
 
-#: barbican/model/repositories.py:702
+#: barbican/model/repositories.py:708
 msgid "No secret found with secret-ID {id}"
 msgstr ""
 
-#: barbican/model/repositories.py:794
+#: barbican/model/repositories.py:800
 msgid "Tried to register crypto plugin with null or empty name."
 msgstr ""
 
-#: barbican/model/repositories.py:1176
+#: barbican/model/repositories.py:1182
 msgid "No container found with container-ID {id}"
 msgstr ""
 
-#: barbican/model/repositories.py:1253
+#: barbican/model/repositories.py:1259
 msgid "Could not find {entity_name}"
 msgstr ""
 
-#: barbican/model/repositories.py:2131
+#: barbican/model/repositories.py:2176
 msgid "No {entity} found with ID {id}"
 msgstr ""
 
-#: barbican/model/repositories.py:2137
+#: barbican/model/repositories.py:2182
 msgid "Entity ID {entity_id} not found"
 msgstr ""
 
-#: barbican/model/repositories.py:2143
+#: barbican/model/repositories.py:2188
 msgid "No entities of type {entity_name} found"
 msgstr ""
 
-#: barbican/model/repositories.py:2149
+#: barbican/model/repositories.py:2194
 msgid "Entity '{entity_name}' already exists"
 msgstr ""
 
@@ -1248,19 +1262,27 @@ msgstr ""
 msgid "Bad key file permissions found, expected 400 for path: {file_path}"
 msgstr ""
 
-#: barbican/plugin/snakeoil_ca.py:40
+#: barbican/plugin/snakeoil_ca.py:41
 msgid "Path to CA certicate file"
 msgstr ""
 
-#: barbican/plugin/snakeoil_ca.py:42
+#: barbican/plugin/snakeoil_ca.py:43
 msgid "Path to CA certificate key file"
 msgstr ""
 
 #: barbican/plugin/snakeoil_ca.py:45
+msgid "Path to CA certicate chain file"
+msgstr ""
+
+#: barbican/plugin/snakeoil_ca.py:47
+msgid "Path to CA chain pkcs7 file"
+msgstr ""
+
+#: barbican/plugin/snakeoil_ca.py:50
 msgid "Directory in which to store certs/keys for subcas"
 msgstr ""
 
-#: barbican/plugin/snakeoil_ca.py:264
+#: barbican/plugin/snakeoil_ca.py:359
 msgid "No request_data specified"
 msgstr ""
 
