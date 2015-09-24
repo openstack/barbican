@@ -248,6 +248,9 @@ class CertificateAuthorityController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('CA deletion'))
     @controllers.enforce_rbac('certificate_authority:delete')
     def on_delete(self, external_project_id, **kwargs):
+        # ensure user's project exists in DB before calling DB operation
+        res.get_or_create_project(external_project_id)
+
         cert_resources.delete_subordinate_ca(external_project_id, self.ca)
         LOG.info(u._LI('Deleted CA for project: %s'), external_project_id)
 

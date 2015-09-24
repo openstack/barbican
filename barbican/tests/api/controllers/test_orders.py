@@ -344,6 +344,21 @@ class WhenCreatingCertificateOrders(utils.BarbicanAPIBaseTestCase):
             ca_model = models.CertificateAuthority(ca_information)
             ca = ca_repo.create_from(ca_model)
             self.available_ca_ids.append(ca.id)
+
+        foreign_project = resources.get_or_create_project('foreign_project')
+        foreign_ca_information = {
+            'project_id': foreign_project.id,
+            'plugin_name': 'plugin_name',
+            'plugin_ca_id': 'plugin_name ca_id1',
+            'name': 'plugin name',
+            'description': 'Master CA for default plugin',
+            'ca_signing_certificate': 'XXXXX',
+            'intermediates': 'YYYYY'
+        }
+        foreign_ca_model = models.CertificateAuthority(foreign_ca_information)
+        foreign_ca = ca_repo.create_from(foreign_ca_model)
+        self.foreign_ca_id = foreign_ca.id
+
         repositories.commit()
 
     def test_can_create_new_cert_order(self):
@@ -427,6 +442,18 @@ class WhenCreatingCertificateOrders(utils.BarbicanAPIBaseTestCase):
             expect_errors=True
         )
         self.assertEqual(403, create_resp.status_int)
+
+    def test_create_with_wrong_projects_subca_should_fail(self):
+        self.certificate_meta['ca_id'] = self.foreign_ca_id
+
+        create_resp, order_uuid = create_order(
+            self.app,
+            order_type='certificate',
+            meta=self.certificate_meta,
+            expect_errors=True
+        )
+        self.assertEqual(403, create_resp.status_int)
+        self.assertIn("not owned", create_resp.json['description'])
 
 
 class WhenCreatingStoredKeyOrders(utils.BarbicanAPIBaseTestCase,

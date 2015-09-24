@@ -964,7 +964,7 @@ class WhenCreatingSubordinateCAs(utils.BaseTestCase):
             creator_id=self.creator_id
         )
         self.assertRaises(
-            excep.UnauthorizedSubCADelete,
+            excep.UnauthorizedSubCA,
             cert_res.delete_subordinate_ca,
             self.project2.external_id,
             subca

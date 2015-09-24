@@ -245,7 +245,7 @@ def delete_subordinate_ca(external_project_id, ca):
     project = repos.get_project_repository().find_by_external_project_id(
         external_project_id)
     if ca.project_id != project.id:
-        raise excep.UnauthorizedSubCADelete()
+        raise excep.UnauthorizedSubCA()
 
     cert_plugin = cert.CertificatePluginManager().get_plugin_by_name(
         ca.plugin_name)

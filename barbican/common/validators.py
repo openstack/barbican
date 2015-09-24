@@ -67,6 +67,9 @@ def validate_ca_id(project_id, order_meta):
     if not ca:
         raise exception.InvalidCAID(ca_id=ca_id)
 
+    if ca.project_id and ca.project_id != project_id:
+        raise exception.UnauthorizedSubCA()
+
     project_ca_repo = repo.get_project_ca_repository()
     project_cas, offset, limit, total = project_ca_repo.get_by_create_date(
         project_id=project_id,

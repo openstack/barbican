@@ -32,6 +32,7 @@ from functionaltests.common import config
 CONF = config.get_config()
 
 admin_a = CONF.rbac_users.admin_a
+admin_b = CONF.rbac_users.admin_b
 creator_a = CONF.rbac_users.creator_a
 service_admin = CONF.identity.service_admin
 
@@ -99,7 +100,8 @@ class CATestCommon(base.TestCase):
         self.ca_behaviors.delete_all_created_cas()
         super(CATestCommon, self).tearDown()
 
-    def send_test_order(self, ca_ref=None):
+    def send_test_order(self, ca_ref=None, user_name=None,
+                        expected_return=202):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
         test_model.meta['request_data'] = base64.b64encode(
             certutil.create_good_csr())
@@ -107,9 +109,11 @@ class CATestCommon(base.TestCase):
             ca_id = hrefs.get_ca_id_from_ref(ca_ref)
             test_model.meta['ca_id'] = ca_id
 
-        create_resp, order_ref = self.order_behaviors.create_order(test_model)
-        self.assertEqual(202, create_resp.status_code)
-        self.assertIsNotNone(order_ref)
+        create_resp, order_ref = self.order_behaviors.create_order(
+            test_model, user_name=user_name)
+        self.assertEqual(expected_return, create_resp.status_code)
+        if expected_return == 202:
+            self.assertIsNotNone(order_ref)
 
     def get_root_ca_ref(self, ca_plugin_name, ca_plugin_id):
         (resp, cas, total, next_ref, prev_ref) = self.ca_behaviors.get_cas()
@@ -277,6 +281,20 @@ class CertificateAuthoritiesTestCase(CATestCommon):
         crypto.load_certificate(crypto.FILETYPE_PEM, resp.text)
 
         resp = self.ca_behaviors.delete_ca(ca_ref=ca_ref)
+        self.assertEqual(204, resp.status_code)
+
+    @depends_on_ca_plugins('snakeoil_ca')
+    def test_try_and_fail_to_use_subca_that_is_not_mine(self):
+        ca_model = self.get_snakeoil_subca_model()
+        resp, ca_ref = self.ca_behaviors.create_ca(ca_model, user_name=admin_a)
+        self.assertEqual(201, resp.status_code)
+
+        self.send_test_order(ca_ref=ca_ref, user_name=admin_a)
+
+        self.send_test_order(ca_ref=ca_ref, user_name=admin_b,
+                             expected_return=403)
+
+        resp = self.ca_behaviors.delete_ca(ca_ref=ca_ref, user_name=admin_a)
         self.assertEqual(204, resp.status_code)
 
 
