@@ -814,7 +814,7 @@ class TransportKey(BASE, SoftDeleteMixIn, ModelBase):
                 'plugin_name': self.plugin_name}
 
 
-class CertificateAuthority(BASE, SoftDeleteMixIn, ModelBase):
+class CertificateAuthority(BASE, ModelBase):
     """CertificateAuthority model to specify the CAs available to Barbican
 
     Represents the CAs available for certificate issuance to Barbican.

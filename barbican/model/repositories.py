@@ -1373,7 +1373,11 @@ class TransportKeyRepo(BaseRepo):
 
 
 class CertificateAuthorityRepo(BaseRepo):
-    """Repository for the CertificateAuthority entity."""
+    """Repository for the CertificateAuthority entity.
+
+    CertificateAuthority entries are not soft delete. So there is no
+    need to have deleted=False filter in queries.
+    """
 
     def get_by_create_date(self, offset_arg=None, limit_arg=None,
                            plugin_name=None, plugin_ca_id=None,
