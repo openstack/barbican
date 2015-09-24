@@ -33,6 +33,19 @@ Installing system dependencies
     # Install dependency for the PyEnv - virtualenvwrapper plugin
     sudo pip install virtualenvwrapper
 
+**Fedora 22:**
+
+.. code-block:: bash
+
+    # Install dependencies required to build Barbican
+    sudo dnf install -y python-pip python-devel libffi-devel openssl-devel \
+                        libsq3-devel openldap-devel cyrus-sasl-devel
+
+    # Install dependencies required for PyEnv
+    sudo dnf install -y git curl make gcc
+
+    # Install dependency for the PyEnv - virtualenvwrapper plugin
+    sudo dnf install -y python-virtualenvwrapper
 
 Installing PyEnv
 -----------------
