@@ -126,7 +126,7 @@ class CertificateAuthorityController(controllers.ACLMixin):
         else:
             project_list = []
             for p in project_cas:
-                project_list.append(p.project_id)
+                project_list.append(p.project.external_id)
 
             ca_projects_resp = {'projects': project_list}
 
