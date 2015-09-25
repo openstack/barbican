@@ -34,48 +34,10 @@ def upgrade():
         sa.Column('name', sa.String(length=255), nullable=True),
         sa.Column('type', sa.Enum('generic', 'rsa', 'dsa', 'certificate',
                                   name='container_types'), nullable=True),
-        sa.Column('creator_id', sa.String(length=255), nullable=True),
-        sa.Column('project_id', sa.String(length=36), nullable=False),
-        sa.ForeignKeyConstraint(['project_id'], ['projects.id'],),
+        sa.Column('tenant_id', sa.String(length=36), nullable=False),
+        sa.ForeignKeyConstraint(['tenant_id'], ['tenants.id'],),
         sa.PrimaryKeyConstraint('id')
     )
-
-    op.create_table(
-        'container_acls',
-        sa.Column('id', sa.String(length=36), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('updated_at', sa.DateTime(), nullable=False),
-        sa.Column('deleted_at', sa.DateTime(), nullable=True),
-        sa.Column('deleted', sa.Boolean(), nullable=False),
-        sa.Column('status', sa.String(length=20), nullable=False),
-        sa.Column('container_id', sa.String(length=36), nullable=False),
-        sa.Column('operation', sa.String(length=255), nullable=False),
-        sa.Column('creator_only', sa.Boolean(), nullable=False),
-        sa.ForeignKeyConstraint(['container_id'], ['containers.id'],),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('container_id', 'operation',
-                            name='_container_acl_operation_uc')
-    )
-    op.create_index(op.f('ix_container_acls_container_id'),
-                    'container_acls', ['container_id'], unique=False)
-
-    op.create_table(
-        'container_acl_users',
-        sa.Column('id', sa.String(length=36), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('updated_at', sa.DateTime(), nullable=False),
-        sa.Column('deleted_at', sa.DateTime(), nullable=True),
-        sa.Column('deleted', sa.Boolean(), nullable=False),
-        sa.Column('status', sa.String(length=20), nullable=False),
-        sa.Column('acl_id', sa.String(length=36), nullable=False),
-        sa.Column('user_id', sa.String(length=255), nullable=False),
-        sa.ForeignKeyConstraint(['acl_id'], ['container_acls.id'], ),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('acl_id', 'user_id',
-                            name='_container_acl_user_uc')
-    )
-    op.create_index(op.f('ix_container_acl_users_acl_id'),
-                    'container_acl_users', ['acl_id'], unique=False)
 
     op.create_table(
         'container_consumer_metadata',
@@ -98,18 +60,11 @@ def upgrade():
 
     op.create_table(
         'container_secret',
-        sa.Column('id', sa.String(length=36), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('updated_at', sa.DateTime(), nullable=False),
-        sa.Column('deleted_at', sa.DateTime(), nullable=True),
-        sa.Column('deleted', sa.Boolean(), nullable=False),
-        sa.Column('status', sa.String(length=20), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=True),
         sa.Column('container_id', sa.String(length=36), nullable=False),
         sa.Column('secret_id', sa.String(length=36), nullable=False),
         sa.ForeignKeyConstraint(['container_id'], ['containers.id'],),
         sa.ForeignKeyConstraint(['secret_id'], ['secrets.id'],),
-        sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('container_id', 'secret_id', 'name',
                             name='_container_secret_name_uc')
     )

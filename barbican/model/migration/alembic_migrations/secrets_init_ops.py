@@ -24,22 +24,27 @@ import sqlalchemy as sa
 
 def upgrade():
     op.create_table(
-        'kek_data',
+        'secrets',
         sa.Column('id', sa.String(length=36), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
         sa.Column('deleted_at', sa.DateTime(), nullable=True),
         sa.Column('deleted', sa.Boolean(), nullable=False),
         sa.Column('status', sa.String(length=20), nullable=False),
-        sa.Column('plugin_name', sa.String(length=255), nullable=False),
-        sa.Column('kek_label', sa.String(length=255), nullable=True),
-        sa.Column('tenant_id', sa.String(length=36), nullable=False),
-        sa.Column('active', sa.Boolean(), nullable=False),
-        sa.Column('bind_completed', sa.Boolean(), nullable=False),
+        sa.Column('name', sa.String(length=255), nullable=True),
+        sa.Column('expiration', sa.DateTime(), nullable=True),
         sa.Column('algorithm', sa.String(length=255), nullable=True),
         sa.Column('bit_length', sa.Integer(), nullable=True),
         sa.Column('mode', sa.String(length=255), nullable=True),
-        sa.Column('plugin_meta', sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(['tenant_id'], ['tenants.id'],),
         sa.PrimaryKeyConstraint('id')
+    )
+
+    op.create_table(
+        'tenant_secret',
+        sa.Column('tenant_id', sa.String(length=36), nullable=False),
+        sa.Column('secret_id', sa.String(length=36), nullable=False),
+        sa.ForeignKeyConstraint(['tenant_id'], ['tenants.id'],),
+        sa.ForeignKeyConstraint(['secret_id'], ['secrets.id'],),
+        sa.UniqueConstraint('tenant_id', 'secret_id',
+                            name='_tenant_secret_uc')
     )
