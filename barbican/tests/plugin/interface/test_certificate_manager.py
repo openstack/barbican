@@ -15,6 +15,7 @@ import datetime
 
 import mock
 import testtools
+import unittest
 
 from barbican.common import utils as common_utils
 from barbican.model import models
@@ -288,3 +289,33 @@ class WhenTestingCertificatePluginManager(database_utils.RepositoryTestCase,
             ca2.id,
             None)
         self.ca_repo.create_from.assert_has_calls([])
+
+    def test_refresh_ca_list_plugin_when_get_ca_info_raises(self):
+        self.ca_repo.get_by_create_date.return_value = (None, 0, 4, 0)
+        self.plugin_returned.get_ca_info.side_effect = Exception()
+
+        self.manager.refresh_ca_table()
+
+        self.plugin_returned.get_ca_info.assert_called_once_with()
+
+    def test_refresh_ca_list_with_bad_ca_returned_from_plugin(self):
+
+        ca3_info = {
+            cm.INFO_DESCRIPTION: "PLUGIN FAIL: this-ca-has-no-info",
+        }
+
+        self.plugin_returned.get_ca_info.return_value = {
+            'plugin_ca_id_ca3': ca3_info
+        }
+
+        self.ca_repo.get_by_create_date.return_value = (None, 0, 4, 0)
+        self.ca_repo.create_from.side_effect = Exception()
+
+        self.manager.refresh_ca_table()
+
+        self.plugin_returned.get_ca_info.assert_called_once_with()
+        self.ca_repo.create_from.assert_has_calls([])
+
+
+if __name__ == '__main__':
+    unittest.main()
