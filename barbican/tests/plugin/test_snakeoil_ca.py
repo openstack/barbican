@@ -225,6 +225,7 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         req_enc = base64.b64encode(req_enc)
         order_meta = {'request_data': req_enc}
         plugin_meta = {'plugin_ca_id': self.plugin.get_default_ca_name()}
+        self.barbican_meta_dto.plugin_ca_id = self.plugin.get_default_ca_name()
         resp = self.plugin.issue_certificate_request(self.order_id,
                                                      order_meta,
                                                      plugin_meta,
@@ -239,6 +240,7 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         req_enc = base64.b64encode(req_enc)
         order_meta = {'request_data': req_enc}
         plugin_meta = {'plugin_ca_id': "invalid_ca_id"}
+        self.barbican_meta_dto.plugin_ca_id = "invalid_ca_id"
         self.assertRaises(
             cm.CertificateGeneralException,
             self.plugin.issue_certificate_request,
@@ -365,6 +367,26 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         self.assertTrue(pkcs7.type_is_signed())
 
         # TODO(alee) Verify that ca cert is signed by parent CA
+
+    def test_issue_certificate_request_with_subca_id(self):
+        subca_dict = self._create_subca()
+        req = certificate_utils.get_valid_csr_object()
+
+        req_enc = crypto.dump_certificate_request(crypto.FILETYPE_PEM, req)
+        req_enc = base64.b64encode(req_enc)
+        order_meta = {'request_data': req_enc}
+        plugin_meta = {'plugin_ca_id': subca_dict.get(cm.PLUGIN_CA_ID)}
+        self.barbican_meta_dto.plugin_ca_id = subca_dict.get(cm.PLUGIN_CA_ID)
+        resp = self.plugin.issue_certificate_request(self.order_id,
+                                                     order_meta,
+                                                     plugin_meta,
+                                                     self.barbican_meta_dto)
+        new_cert = crypto.load_certificate(
+            crypto.FILETYPE_PEM, resp.certificate.decode('base64'))
+        signing_cert = crypto.load_certificate(
+            crypto.FILETYPE_PEM, subca_dict['ca_signing_certificate'])
+
+        self.assertEqual(signing_cert.get_subject(), new_cert.get_issuer())
 
     def test_delete_ca(self):
         subca_dict = self._create_subca()

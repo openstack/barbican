@@ -359,7 +359,7 @@ class SnakeoilCACertificatePlugin(cert_manager.CertificatePluginBase):
                     status_message=u._("No request_data specified"))
         csr = crypto.load_certificate_request(crypto.FILETYPE_PEM, encoded_csr)
 
-        ca_id = plugin_meta.get('plugin_ca_id')
+        ca_id = barbican_meta_dto.plugin_ca_id
         if ca_id:
             ca = self.cas.get(ca_id)
             if ca is None:
