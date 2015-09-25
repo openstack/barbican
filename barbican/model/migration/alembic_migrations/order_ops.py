@@ -31,7 +31,7 @@ def upgrade():
         sa.Column('deleted_at', sa.DateTime(), nullable=True),
         sa.Column('deleted', sa.Boolean(), nullable=False),
         sa.Column('status', sa.String(length=20), nullable=False),
-        sa.Column('project_id', sa.String(length=36), nullable=False),
+        sa.Column('tenant_id', sa.String(length=36), nullable=False),
         sa.Column('error_status_code', sa.String(length=16), nullable=True),
         sa.Column('error_reason', sa.String(length=255), nullable=True),
         sa.Column('secret_id', sa.String(length=36), nullable=True),
