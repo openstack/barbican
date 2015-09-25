@@ -15,10 +15,19 @@
 
 import base64
 import copy
+import datetime
 import re
+import testtools
 import time
 
 from OpenSSL import crypto
+
+dogtag_subcas_enabled = True
+try:
+    import pki.authority    # noqa
+    import pki.feature      # noqa
+except ImportError:
+    dogtag_subcas_enabled = False
 
 from barbican.common import hrefs
 from barbican.plugin.interface import certificate_manager as cert_interface
@@ -130,7 +139,8 @@ class CATestCommon(base.TestCase):
             order_resp = self.behaviors.get_order(order_ref)
 
     def get_root_ca_ref(self, ca_plugin_name, ca_plugin_id):
-        (resp, cas, total, next_ref, prev_ref) = self.ca_behaviors.get_cas()
+        (resp, cas, total, next_ref, prev_ref) = self.ca_behaviors.get_cas(
+            limit=100)
 
         for item in cas:
             ca = self.ca_behaviors.get_ca(item)
@@ -145,17 +155,19 @@ class CATestCommon(base.TestCase):
                             'SnakeoilCACertificatePlugin'),
             ca_plugin_id="Snakeoil CA")
 
+    def get_dogtag_root_ca_ref(self):
+        return self.get_root_ca_ref(
+            ca_plugin_name='barbican.plugin.dogtag.DogtagCAPlugin',
+            ca_plugin_id="Dogtag CA")
+
 
 class CertificateAuthoritiesTestCase(CATestCommon):
 
     def setUp(self):
         super(CertificateAuthoritiesTestCase, self).setUp()
 
-        self.subca_subject = "CN=Subordinate CA, O=example.com"
         self.subca_name = "Subordinate CA"
         self.subca_description = "Test Snake Oil Subordinate CA"
-
-        self.subca_subca_subject = "CN=sub-sub CA, O=example.com"
         self.subca_subca_name = "Sub-Sub CA"
         self.subca_subca_description = "Test Snake Oil Sub-Sub CA"
 
@@ -168,34 +180,44 @@ class CertificateAuthoritiesTestCase(CATestCommon):
         return ((cacert.get_subject() == subject_dn) and
                 (cacert.get_issuer() == issuer_dn))
 
-    def get_snakeoil_subca_model(self):
+    def get_subca_model(self, root_ref):
+        now = datetime.datetime.utcnow().isoformat()
+        subject = "CN=Subordinate CA " + now + ", O=example.com"
         return ca_models.CAModel(
-            parent_ca_ref=self.get_snakeoil_root_ca_ref(),
+            parent_ca_ref=root_ref,
             description=self.subca_description,
             name=self.subca_name,
-            subject_dn=self.subca_subject
+            subject_dn=subject
         )
 
-    def get_snakeoil_sub_subca_model(self, parent_ca_ref):
+    def get_sub_subca_model(self, parent_ca_ref):
+        now = datetime.datetime.utcnow().isoformat()
+        subject = "CN=sub sub CA " + now + ", O=example.com"
         return ca_models.CAModel(
             parent_ca_ref=parent_ca_ref,
             description=self.subca_subca_description,
             name=self.subca_subca_name,
-            subject_dn=self.subca_subca_subject
+            subject_dn=subject
         )
 
     @depends_on_ca_plugins('snakeoil_ca')
     def test_create_snakeoil_subca(self):
-        ca_model = self.get_snakeoil_subca_model()
+        self._create_and_verify_subca(self.get_snakeoil_root_ca_ref())
+
+    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @depends_on_ca_plugins('dogtag')
+    def test_create_dogtag_subca(self):
+        self._create_and_verify_subca(self.get_dogtag_root_ca_ref())
+
+    def _create_and_verify_subca(self, root_ca_ref):
+        ca_model = self.get_subca_model(root_ca_ref)
         resp, ca_ref = self.ca_behaviors.create_ca(ca_model)
         self.assertEqual(201, resp.status_code)
 
-        root_ca_ref = self.get_snakeoil_root_ca_ref()
         root_subject = self.get_signing_cert(root_ca_ref).get_subject()
-
         self.verify_signing_cert(
             ca_ref=ca_ref,
-            subject_dn=convert_to_X509Name(self.subca_subject),
+            subject_dn=convert_to_X509Name(ca_model.subject_dn),
             issuer_dn=root_subject)
 
         resp = self.ca_behaviors.delete_ca(ca_ref=ca_ref)
@@ -203,18 +225,26 @@ class CertificateAuthoritiesTestCase(CATestCommon):
 
     @depends_on_ca_plugins('snakeoil_ca')
     def test_create_subca_of_snakeoil_subca(self):
-        parent_model = self.get_snakeoil_subca_model()
+        self._create_subca_of_subca(self.get_snakeoil_root_ca_ref())
+
+    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @depends_on_ca_plugins('dogtag')
+    def test_create_subca_of_dogtag_subca(self):
+        self._create_subca_of_subca(self.get_dogtag_root_ca_ref())
+
+    def _create_subca_of_subca(self, root_ca_ref):
+        parent_model = self.get_subca_model(root_ca_ref)
         resp, parent_ref = self.ca_behaviors.create_ca(parent_model)
         self.assertEqual(201, resp.status_code)
 
-        child_model = self.get_snakeoil_sub_subca_model(parent_ref)
+        child_model = self.get_sub_subca_model(parent_ref)
         resp, child_ref = self.ca_behaviors.create_ca(child_model)
         self.assertEqual(201, resp.status_code)
 
         parent_subject = self.get_signing_cert(parent_ref).get_subject()
         self.verify_signing_cert(
             ca_ref=child_ref,
-            subject_dn=convert_to_X509Name(self.subca_subca_subject),
+            subject_dn=convert_to_X509Name(child_model.subject_dn),
             issuer_dn=parent_subject)
 
         resp = self.ca_behaviors.delete_ca(ca_ref=child_ref)
@@ -223,26 +253,50 @@ class CertificateAuthoritiesTestCase(CATestCommon):
         self.assertEqual(204, resp.status_code)
 
     def test_create_subca_with_invalid_parent_ca_id(self):
-        ca_model = self.get_snakeoil_subca_model()
-        ca_model.parent_ca_ref = 'http://localhost:9311/cas/invalid_ref'
+        ca_model = self.get_subca_model(
+            'http://localhost:9311/cas/invalid_ref'
+        )
         resp, ca_ref = self.ca_behaviors.create_ca(ca_model)
         self.assertEqual(400, resp.status_code)
 
     def test_create_subca_with_missing_parent_ca_id(self):
-        ca_model = self.get_snakeoil_subca_model()
+        ca_model = self.get_subca_model(
+            'http://localhost:9311/cas/missing_ref'
+        )
         del ca_model.parent_ca_ref
         resp, ca_ref = self.ca_behaviors.create_ca(ca_model)
         self.assertEqual(400, resp.status_code)
 
-    def test_create_subca_with_missing_subjectdn(self):
-        ca_model = self.get_snakeoil_subca_model()
+    @depends_on_ca_plugins('snakeoil_ca')
+    def test_create_snakeoil_subca_with_missing_subjectdn(self):
+        self._create_subca_with_missing_subjectdn(
+            self.get_snakeoil_root_ca_ref())
+
+    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @depends_on_ca_plugins('dogtag')
+    def test_create_dogtag_subca_with_missing_subjectdn(self):
+        self._create_subca_with_missing_subjectdn(
+            self.get_dogtag_root_ca_ref())
+
+    def _create_subca_with_missing_subjectdn(self, root_ca_ref):
+        ca_model = self.get_subca_model(root_ca_ref)
         del ca_model.subject_dn
         resp, ca_ref = self.ca_behaviors.create_ca(ca_model)
         self.assertEqual(400, resp.status_code)
 
     @depends_on_ca_plugins('snakeoil_ca')
     def test_create_snakeoil_subca_and_send_cert_order(self):
-        ca_model = self.get_snakeoil_subca_model()
+        self._create_subca_and_send_cert_order(
+            self.get_snakeoil_root_ca_ref())
+
+    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @depends_on_ca_plugins('dogtag')
+    def test_create_dogtag_subca_and_send_cert_order(self):
+        self._create_subca_and_send_cert_order(
+            self.get_dogtag_root_ca_ref())
+
+    def _create_subca_and_send_cert_order(self, root_ca):
+        ca_model = self.get_subca_model(root_ca)
         resp, ca_ref = self.ca_behaviors.create_ca(ca_model)
         self.assertEqual(201, resp.status_code)
         self.send_test_order(ca_ref)
@@ -252,7 +306,17 @@ class CertificateAuthoritiesTestCase(CATestCommon):
 
     @depends_on_ca_plugins('snakeoil_ca')
     def test_add_snakeoil_ca__to_project_and_get_preferred(self):
-        ca_ref = self.get_snakeoil_root_ca_ref()
+        self._add_ca__to_project_and_get_preferred(
+            self.get_snakeoil_root_ca_ref()
+        )
+
+    @depends_on_ca_plugins('dogtag')
+    def test_add_dogtag_ca__to_project_and_get_preferred(self):
+        self._add_ca__to_project_and_get_preferred(
+            self.get_dogtag_root_ca_ref()
+        )
+
+    def _add_ca__to_project_and_get_preferred(self, ca_ref):
         resp = self.ca_behaviors.add_ca_to_project(ca_ref, user_name=admin_a)
         self.assertEqual(204, resp.status_code)
 
@@ -270,7 +334,19 @@ class CertificateAuthoritiesTestCase(CATestCommon):
 
     @depends_on_ca_plugins('snakeoil_ca')
     def test_create_and_delete_snakeoil_subca(self):
-        ca_model = self.get_snakeoil_subca_model()
+        self._create_and_delete_subca(
+            self.get_snakeoil_root_ca_ref()
+        )
+
+    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @depends_on_ca_plugins('dogtag')
+    def test_create_and_delete_dogtag_subca(self):
+        self._create_and_delete_subca(
+            self.get_dogtag_root_ca_ref()
+        )
+
+    def _create_and_delete_subca(self, root_ca_ref):
+        ca_model = self.get_subca_model(root_ca_ref)
         resp, ca_ref = self.ca_behaviors.create_ca(ca_model)
         self.assertEqual(201, resp.status_code)
 
@@ -280,14 +356,37 @@ class CertificateAuthoritiesTestCase(CATestCommon):
 
     @depends_on_ca_plugins('snakeoil_ca')
     def test_fail_to_delete_top_level_snakeoil_ca(self):
+        self._fail_to_delete_top_level_ca(
+            self.get_snakeoil_root_ca_ref()
+        )
+
+    @depends_on_ca_plugins('dogtag')
+    def test_fail_to_delete_top_level_dogtag_ca(self):
+        self._fail_to_delete_top_level_ca(
+            self.get_dogtag_root_ca_ref()
+        )
+
+    def _fail_to_delete_top_level_ca(self, root_ca_ref):
         resp = self.ca_behaviors.delete_ca(
-            self.get_snakeoil_root_ca_ref(),
+            root_ca_ref,
             expected_fail=True)
         self.assertEqual(403, resp.status_code)
 
     @depends_on_ca_plugins('snakeoil_ca')
     def test_create_snakeoil_subca_and_get_cacert(self):
-        ca_model = self.get_snakeoil_subca_model()
+        self._create_subca_and_get_cacert(
+            self.get_snakeoil_root_ca_ref()
+        )
+
+    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @depends_on_ca_plugins('dogtag')
+    def test_create_dogtag_subca_and_get_cacert(self):
+        self._create_subca_and_get_cacert(
+            self.get_dogtag_root_ca_ref()
+        )
+
+    def _create_subca_and_get_cacert(self, root_ca_ref):
+        ca_model = self.get_subca_model(root_ca_ref)
         resp, ca_ref = self.ca_behaviors.create_ca(ca_model)
         self.assertEqual(201, resp.status_code)
         resp = self.ca_behaviors.get_cacert(ca_ref)
@@ -298,8 +397,20 @@ class CertificateAuthoritiesTestCase(CATestCommon):
         self.assertEqual(204, resp.status_code)
 
     @depends_on_ca_plugins('snakeoil_ca')
-    def test_try_and_fail_to_use_subca_that_is_not_mine(self):
-        ca_model = self.get_snakeoil_subca_model()
+    def test_try_and_fail_to_use_snakeoil_subca_that_is_not_mine(self):
+        self._try_and_fail_to_use_subca_that_is_not_mine(
+            self.get_snakeoil_root_ca_ref()
+        )
+
+    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @depends_on_ca_plugins('dogtag')
+    def test_try_and_fail_to_use_dogtag_subca_that_is_not_mine(self):
+        self._try_and_fail_to_use_subca_that_is_not_mine(
+            self.get_dogtag_root_ca_ref()
+        )
+
+    def _try_and_fail_to_use_subca_that_is_not_mine(self, root_ca_ref):
+        ca_model = self.get_subca_model(root_ca_ref)
         resp, ca_ref = self.ca_behaviors.create_ca(ca_model, user_name=admin_a)
         self.assertEqual(201, resp.status_code)
 
@@ -313,7 +424,7 @@ class CertificateAuthoritiesTestCase(CATestCommon):
 
     @depends_on_ca_plugins('snakeoil_ca')
     def test_create_snakeoil_subca_and_send_cert_order_and_verify_cert(self):
-        ca_model = self.get_snakeoil_subca_model()
+        ca_model = self.get_subca_model(self.get_snakeoil_root_ca_ref())
         resp, ca_ref = self.ca_behaviors.create_ca(ca_model)
         self.assertEqual(201, resp.status_code)
         order_ref = self.send_test_order(ca_ref)
@@ -374,6 +485,12 @@ class ListingCAsTestCase(CATestCommon):
         """
         (resp, cas, total, next_ref, prev_ref) = self.ca_behaviors.get_cas()
         self.assertEqual(total, 2)
+
+    @depends_on_ca_plugins('dogtag')
+    def test_list_dogtag_cas(self):
+        """Test if backend loads this specific CA"""
+        (resp, cas, total, next_ref, prev_ref) = self.ca_behaviors.get_cas()
+        self.assertGreater(total, 0)
 
 
 class ProjectCATestCase(CATestCommon):

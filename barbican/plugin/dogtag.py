@@ -15,6 +15,7 @@
 
 import base64
 import copy
+import datetime
 import os
 import uuid
 
@@ -22,6 +23,14 @@ from Crypto.PublicKey import RSA
 from Crypto.Util import asn1
 from oslo_config import cfg
 import pki
+
+subcas_available = True
+try:
+    import pki.authority as authority
+    import pki.feature as feature
+except ImportError:
+    subcas_available = False
+
 import pki.cert
 import pki.client
 import pki.crypto as cryptoutil
@@ -59,7 +68,12 @@ dogtag_plugin_opts = [
                help=u._('Profile for simple CMC requests')),
     cfg.StrOpt('auto_approved_profiles',
                default="caServerCert",
-               help=u._('List of automatically approved enrollment profiles'))
+               help=u._('List of automatically approved enrollment profiles')),
+    cfg.StrOpt('ca_expiration_time',
+               default=cm.CA_INFO_DEFAULT_EXPIRATION_DAYS,
+               help=u._('Time in days for CA entries to expire')),
+    cfg.StrOpt('plugin_working_dir',
+               help=u._('Working directory for Dogtag plugin'))
 ]
 
 CONF.register_group(dogtag_plugin_group)
@@ -628,6 +642,37 @@ def _catch_enrollment_exceptions(ca_related_function):
     return _catch_enrollment_exception
 
 
+def _catch_subca_creation_exceptions(ca_related_function):
+    def _catch_subca_exception(self, *args, **kwargs):
+        try:
+            return ca_related_function(self, *args, **kwargs)
+        except pki.BadRequestException as e:
+            raise exception.BadSubCACreationRequest(reason=e.message)
+        except pki.PKIException as e:
+            raise exception.SubCACreationErrors(reason=e.message)
+        except request_exceptions.RequestException:
+            raise exception.SubCACreationErrors(
+                reason="Unable to connect to CA")
+
+    return _catch_subca_exception
+
+
+def _catch_subca_deletion_exceptions(ca_related_function):
+    def _catch_subca_exception(self, *args, **kwargs):
+        try:
+            return ca_related_function(self, *args, **kwargs)
+        except pki.ResourceNotFoundException as e:
+            LOG.warning(u._LI("Sub-CA already deleted"))
+            pass
+        except pki.PKIException as e:
+            raise exception.SubCADeletionErrors(reason=e.message)
+        except request_exceptions.RequestException:
+            raise exception.SubCACreationErrors(
+                reason="Unable to connect to CA")
+
+    return _catch_subca_exception
+
+
 class DogtagCAPlugin(cm.CertificatePluginBase):
     """Implementation of the cert plugin with Dogtag CA as the backend."""
 
@@ -643,6 +688,88 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
         self.certclient = pki.cert.CertClient(connection)
         self.simple_cmc_profile = conf.dogtag_plugin.simple_cmc_profile
         self.auto_approved_profiles = conf.dogtag_plugin.auto_approved_profiles
+
+        self.working_dir = conf.dogtag_plugin.plugin_working_dir
+        if not os.path.isdir(self.working_dir):
+            os.mkdir(self.working_dir)
+
+        self._expiration = None
+        self._expiration_delta = conf.dogtag_plugin.ca_expiration_time
+        self._expiration_data_path = os.path.join(self.working_dir,
+                                                  "expiration_data.txt")
+
+        self._host_aid_path = os.path.join(self.working_dir, "host_aid.txt")
+        self._host_aid = None
+
+        if not os.path.isfile(self._expiration_data_path):
+            self.expiration = datetime.datetime.utcnow()
+
+        global subcas_available
+        subcas_available = self._are_subcas_enabled_on_backend(connection)
+        if subcas_available:
+            self.authority_client = authority.AuthorityClient(connection)
+            if not os.path.isfile(self._host_aid_path):
+                self.host_aid = self.get_host_aid()
+
+    @property
+    def expiration(self):
+        if self._expiration is None:
+            try:
+                with open(self._expiration_data_path) as expiration_fh:
+                    self._expiration = datetime.datetime.strptime(
+                        expiration_fh.read(),
+                        "%Y-%m-%d %H:%M:%S.%f"
+                    )
+            except (ValueError, TypeError):
+                LOG.warning(u._LI("Invalid data read from expiration file"))
+                self.expiration = datetime.utcnow()
+        return self._expiration
+
+    @expiration.setter
+    def expiration(self, val):
+        with open(self._expiration_data_path, 'w') as expiration_fh:
+            expiration_fh.write(val.strftime("%Y-%m-%d %H:%M:%S.%f"))
+        self._expiration = val
+
+    @property
+    def host_aid(self):
+        if self._host_aid is None:
+            with open(self._host_aid_path) as host_aid_fh:
+                self._host_aid = host_aid_fh.read()
+        return self._host_aid
+
+    @host_aid.setter
+    def host_aid(self, val):
+        if val is not None:
+            with open(self._host_aid_path, 'w') as host_aid_fh:
+                host_aid_fh.write(val)
+        self._host_aid = val
+
+    def _are_subcas_enabled_on_backend(self, connection):
+        """Check if subca feature is available
+
+        SubCA creation must be supported in both the Dogtag client as well
+        as on the back-end server.  Moreover, it must be enabled on the
+        backend server.  This method sets the subcas_available global variable.
+        :return: True/False
+        """
+        global subcas_available
+        if subcas_available:
+            # subcas are supported in the Dogtag client
+            try:
+                feature_client = feature.FeatureClient(connection)
+                authority_feature = feature_client.get_feature("authority")
+                if authority_feature.enabled:
+                    LOG.info(u._LI("Sub-CAs are enabled by Dogtag server"))
+                    return True
+                else:
+                    LOG.info(u._LI("Sub-CAs are not enabled by Dogtag server"))
+            except (request_exceptions.HTTPError,
+                    pki.ResourceNotFoundException):
+                LOG.info(u._LI("Sub-CAs are not supported by Dogtag server"))
+        else:
+            LOG.info(u._LI("Sub-CAs are not supported by Dogtag client"))
+        return False
 
     def _get_request_id(self, order_id, plugin_meta, operation):
         request_id = plugin_meta.get(self.REQUEST_ID, None)
@@ -893,14 +1020,24 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
         :param barbican_meta_dto: Extra data to aid in processing.
         :return: cm.ResultDTO
         """
+        ca_id = barbican_meta_dto.plugin_ca_id or self.get_default_ca_name()
+
         if profile_id in self.auto_approved_profiles:
-            results = self.certclient.enroll_cert(profile_id, inputs)
+            if ca_id == self.get_default_ca_name():
+                results = self.certclient.enroll_cert(profile_id, inputs)
+            else:
+                results = self.certclient.enroll_cert(
+                    profile_id, inputs, ca_id)
             return self._process_auto_enrollment_results(
                 results, plugin_meta, barbican_meta_dto)
         else:
             request = self.certclient.create_enrollment_request(
                 profile_id, inputs)
-            results = self.certclient.submit_enrollment_request(request)
+            if ca_id == self.get_default_ca_name():
+                results = self.certclient.submit_enrollment_request(request)
+            else:
+                results = self.certclient.submit_enrollment_request(
+                    request, ca_id)
             return self._process_pending_enrollment_results(
                 results, plugin_meta, barbican_meta_dto)
 
@@ -1089,3 +1226,121 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
         return [cm.CertificateRequestType.SIMPLE_CMC_REQUEST,
                 cm.CertificateRequestType.STORED_KEY_REQUEST,
                 cm.CertificateRequestType.CUSTOM_REQUEST]
+
+    def supports_create_ca(self):
+        """Returns if this plugin and the backend CA supports subCAs
+
+        :return: True/False
+        """
+        return subcas_available
+
+    @_catch_subca_creation_exceptions
+    def create_ca(self, ca_create_dto):
+        """Creates a subordinate CA upon request
+
+        :param ca_create_dto:
+            Data transfer object :class:`CACreateDTO` containing data
+            required to generate a subordinate CA.  This data includes
+            the subject DN of the new CA signing certificate, a name for
+            the new CA and a reference to the CA that will issue the new
+            subordinate CA's signing certificate,
+
+        :return: ca_info:
+            Dictionary containing the data needed to create a
+            models.CertificateAuthority object
+        """
+        if not subcas_available:
+            raise exception.SubCAsNotSupported(
+                "Subordinate CAs are not supported by this Dogtag CA")
+
+        parent_ca_id = self._get_correct_ca_id(ca_create_dto.parent_ca_id)
+        ca_data = authority.AuthorityData(
+            dn=ca_create_dto.subject_dn,
+            parent_aid=parent_ca_id,
+            description=ca_create_dto.name)
+
+        new_ca_data = self.authority_client.create_ca(ca_data)
+
+        cert = self.authority_client.get_cert(new_ca_data.aid, "PEM")
+        chain = self.authority_client.get_chain(new_ca_data.aid, "PEM")
+
+        return {
+            cm.INFO_NAME: new_ca_data.description,
+            cm.INFO_CA_SIGNING_CERT: cert,
+            cm.INFO_EXPIRATION: self.expiration.isoformat(),
+            cm.INFO_INTERMEDIATES: chain,
+            cm.PLUGIN_CA_ID: new_ca_data.aid
+        }
+
+    def _get_correct_ca_id(self, plugin_ca_id):
+        """Returns the correct authority id
+
+        When the Dogtag plugin updates its CA list, any subcas will
+        have a plugin_ca_id that matches the authority_id (aid) as
+        returned from the backend CA.
+
+        For migration purposes, though, ie. migrating from a non-subca
+        environment to a subca one, we want the host CA to keep the same
+        plugin_ca_id (which is the default_ca_name) so that no disruption
+        occurs.  Therefore, we need to store the host CA's authority ID
+        (in get_ca_info) and return it here instead.
+        """
+        if plugin_ca_id == self.get_default_ca_name():
+            return self.host_aid
+        else:
+            return plugin_ca_id
+
+    @_catch_subca_deletion_exceptions
+    def delete_ca(self, ca_id):
+        """Deletes a subordinate CA
+
+        :param ca_id: id for the CA as specified by the plugin
+        :return: None
+        """
+        if not subcas_available:
+            raise exception.SubCAsNotSupported(
+                "Subordinate CAs are not supported by this Dogtag CA")
+
+        # ca must be disabled first
+        self.authority_client.disable_ca(ca_id)
+        self.authority_client.delete_ca(ca_id)
+
+    def get_ca_info(self):
+        if not subcas_available:
+            return super(DogtagCAPlugin, self).get_ca_info()
+
+        self.expiration = (datetime.datetime.utcnow() + datetime.timedelta(
+            days=int(self._expiration_delta)))
+
+        ret = {}
+        cas = self.authority_client.list_cas()
+        for ca_data in cas.ca_list:
+            if not ca_data.enabled:
+                continue
+
+            cert = self.authority_client.get_cert(ca_data.aid, "PEM")
+            chain = self.authority_client.get_chain(ca_data.aid, "PEM")
+            ca_info = {
+                cm.INFO_NAME: ca_data.description,
+                cm.INFO_CA_SIGNING_CERT: cert,
+                cm.INFO_INTERMEDIATES: chain,
+                cm.INFO_EXPIRATION: self.expiration.isoformat()
+            }
+
+            # handle the migration case.  The top level CA should continue
+            # to work as before
+
+            if ca_data.is_host_authority:
+                ret[self.get_default_ca_name()] = ca_info
+                self.host_aid = ca_data.aid
+            else:
+                ret[ca_data.aid] = ca_info
+
+        return ret
+
+    def get_host_aid(self):
+        cas = self.authority_client.list_cas()
+        for ca_data in cas.ca_list:
+            if ca_data.is_host_authority:
+                return ca_data.aid
+        return None
