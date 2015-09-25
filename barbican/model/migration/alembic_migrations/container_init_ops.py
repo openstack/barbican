@@ -64,7 +64,5 @@ def upgrade():
         sa.Column('container_id', sa.String(length=36), nullable=False),
         sa.Column('secret_id', sa.String(length=36), nullable=False),
         sa.ForeignKeyConstraint(['container_id'], ['containers.id'],),
-        sa.ForeignKeyConstraint(['secret_id'], ['secrets.id'],),
-        sa.UniqueConstraint('container_id', 'secret_id', 'name',
-                            name='_container_secret_name_uc')
+        sa.ForeignKeyConstraint(['secret_id'], ['secrets.id'],)
     )
