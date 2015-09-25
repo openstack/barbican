@@ -355,6 +355,23 @@ class CertificateAuthoritiesTestCase(CATestCommon):
         self.assertEqual(404, resp.status_code)
 
     @depends_on_ca_plugins('snakeoil_ca')
+    def test_create_and_delete_snakeoil_subca_and_artifacts(self):
+        ca_model = self.get_subca_model(self.get_snakeoil_root_ca_ref())
+        resp, ca_ref = self.ca_behaviors.create_ca(ca_model, user_name=admin_a)
+        self.assertEqual(201, resp.status_code)
+        resp = self.ca_behaviors.add_ca_to_project(ca_ref, user_name=admin_a)
+        self.assertEqual(204, resp.status_code)
+        resp = self.ca_behaviors.get_preferred(user_name=admin_a)
+        self.assertEqual(200, resp.status_code)
+
+        self.ca_behaviors.delete_ca(ca_ref, user_name=admin_a)
+
+        resp = self.ca_behaviors.get_preferred(user_name=admin_a)
+        self.assertEqual(404, resp.status_code)
+        resp = self.ca_behaviors.get_ca(ca_ref, user_name=admin_a)
+        self.assertEqual(404, resp.status_code)
+
+    @depends_on_ca_plugins('snakeoil_ca')
     def test_fail_to_delete_top_level_snakeoil_ca(self):
         self._fail_to_delete_top_level_ca(
             self.get_snakeoil_root_ca_ref()
@@ -387,13 +404,13 @@ class CertificateAuthoritiesTestCase(CATestCommon):
 
     def _create_subca_and_get_cacert(self, root_ca_ref):
         ca_model = self.get_subca_model(root_ca_ref)
-        resp, ca_ref = self.ca_behaviors.create_ca(ca_model)
+        resp, ca_ref = self.ca_behaviors.create_ca(ca_model, user_name=admin_a)
         self.assertEqual(201, resp.status_code)
-        resp = self.ca_behaviors.get_cacert(ca_ref)
+        resp = self.ca_behaviors.get_cacert(ca_ref, user_name=admin_a)
         self.assertEqual(200, resp.status_code)
         crypto.load_certificate(crypto.FILETYPE_PEM, resp.text)
 
-        resp = self.ca_behaviors.delete_ca(ca_ref=ca_ref)
+        resp = self.ca_behaviors.delete_ca(ca_ref=ca_ref, user_name=admin_a)
         self.assertEqual(204, resp.status_code)
 
     @depends_on_ca_plugins('snakeoil_ca')
@@ -509,11 +526,11 @@ class ProjectCATestCase(CATestCommon):
         resp = self.ca_behaviors.add_ca_to_project(ca_ref, user_name=admin_a)
         self.assertEqual(204, resp.status_code)
 
-        # Getting list of CAs should get only the project CA for admin
+        # Getting list of CAs should get only the project CA for all users
         (resp, cas, project_ca_total, _, __) = self.ca_behaviors.get_cas(
             user_name=admin_a)
         self.assertEqual(1, project_ca_total)
-        # Getting list of CAs should get only the project CA for non-admin
+        # Getting list of CAs should get only the project CA for all users
         (resp, cas, project_ca_total, _, __) = self.ca_behaviors.get_cas(
             user_name=creator_a)
         self.assertEqual(1, project_ca_total)

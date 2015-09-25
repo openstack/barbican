@@ -35,6 +35,7 @@ from barbican.tests import utils
 container_repo = repositories.get_container_repository()
 secret_repo = repositories.get_secret_repository()
 ca_repo = repositories.get_ca_repository()
+project_ca_repo = repositories.get_project_ca_repository()
 preferred_ca_repo = repositories.get_preferred_ca_repository()
 project_repo = repositories.get_project_repository()
 order_repo = repositories.get_order_repository()
@@ -945,6 +946,65 @@ class WhenCreatingSubordinateCAs(utils.BaseTestCase):
         self.assertIsInstance(subca, models.CertificateAuthority)
         cert_res.delete_subordinate_ca(self.project.external_id, subca)
         self.cert_plugin.delete_ca.assert_called_once_with(subca.plugin_ca_id)
+
+    def test_should_delete_subca_and_all_related_db_entities(self):
+        subca = cert_res.create_subordinate_ca(
+            project_model=self.project,
+            name=self.name,
+            description=self.description,
+            subject_dn=self.subject_name,
+            parent_ca_ref=self.parent_ca_ref,
+            creator_id=self.creator_id
+        )
+        project_ca = models.ProjectCertificateAuthority(
+            self.project.id,
+            subca.id
+        )
+        project_ca_repo.create_from(project_ca)
+        preferred_ca = models.PreferredCertificateAuthority(
+            self.project.id,
+            subca.id)
+        preferred_ca_repo.create_from(preferred_ca)
+        cert_res.delete_subordinate_ca(self.project.external_id, subca)
+        self.cert_plugin.delete_ca.assert_called_once_with(subca.plugin_ca_id)
+
+    def test_should_raise_when_delete_pref_subca_with_other_project_ca(self):
+        subca = cert_res.create_subordinate_ca(
+            project_model=self.project,
+            name=self.name,
+            description=self.description,
+            subject_dn=self.subject_name,
+            parent_ca_ref=self.parent_ca_ref,
+            creator_id=self.creator_id
+        )
+        project_ca = models.ProjectCertificateAuthority(
+            self.project.id,
+            subca.id
+        )
+        project_ca_repo.create_from(project_ca)
+        preferred_ca = models.PreferredCertificateAuthority(
+            self.project.id,
+            subca.id)
+        preferred_ca_repo.create_from(preferred_ca)
+        subca2 = cert_res.create_subordinate_ca(
+            project_model=self.project,
+            name=self.name,
+            description=self.description,
+            subject_dn=self.subject_name,
+            parent_ca_ref=self.parent_ca_ref,
+            creator_id=self.creator_id
+        )
+        project_ca2 = models.ProjectCertificateAuthority(
+            self.project.id,
+            subca2.id
+        )
+        project_ca_repo.create_from(project_ca2)
+        self.assertRaises(
+            excep.CannotDeletePreferredCA,
+            cert_res.delete_subordinate_ca,
+            self.project.external_id,
+            subca
+        )
 
     def test_should_raise_cannot_delete_base_ca(self):
         self.assertRaises(
