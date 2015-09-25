@@ -418,6 +418,7 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         self.assertIsNotNone(ca_dict)
         self.assertEqual(self.plugin.ca.name, ca_dict.get(cm.INFO_NAME))
         self.assertIsNotNone(ca_dict.get(cm.INFO_CA_SIGNING_CERT))
+        self.assertEqual(str, type(ca_dict.get(cm.INFO_EXPIRATION)))
 
     def test_get_ca_info_with_subca(self):
         subca_dict = self._create_subca()
@@ -425,3 +426,4 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         ca_info = self.plugin.get_ca_info()
         self.assertIn(subca_id, ca_info.keys())
         self.assertIn(self.plugin.get_default_ca_name(), ca_info.keys())
+        self.assertEqual(str, type(subca_dict.get(cm.INFO_EXPIRATION)))

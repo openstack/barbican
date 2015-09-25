@@ -439,7 +439,7 @@ class SnakeoilCACertificatePlugin(cert_manager.CertificatePluginBase):
             cert_manager.INFO_NAME: new_ca.name,
             cert_manager.INFO_CA_SIGNING_CERT: crypto.dump_certificate(
                 crypto.FILETYPE_PEM, new_ca.cert),
-            cert_manager.INFO_EXPIRATION: expiration,
+            cert_manager.INFO_EXPIRATION: expiration.isoformat(),
             cert_manager.INFO_INTERMEDIATES: new_ca.pkcs7,
             cert_manager.PLUGIN_CA_ID: new_ca_id
         }
@@ -455,7 +455,7 @@ class SnakeoilCACertificatePlugin(cert_manager.CertificatePluginBase):
                 cert_manager.INFO_CA_SIGNING_CERT: crypto.dump_certificate(
                     crypto.FILETYPE_PEM, ca.cert),
                 cert_manager.INFO_INTERMEDIATES: ca.pkcs7,
-                cert_manager.INFO_EXPIRATION: expiration
+                cert_manager.INFO_EXPIRATION: expiration.isoformat()
             }
             ret[ca_id] = ca_info
 
