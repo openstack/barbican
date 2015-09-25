@@ -232,31 +232,70 @@ def create_subordinate_ca(project_model, name, description, subject_dn,
 
 
 def delete_subordinate_ca(external_project_id, ca):
-    """Deletes a subordinate CA
+    """Deletes a subordinate CA and any related artifacts
 
     :param external_project_id: external project ID
     :param ca: class:`models.CertificateAuthority` to be deleted
     :return: None
      """
     # TODO(alee) See if the checks below can be moved to the RBAC code
+
+    # Check that this CA is a subCA
     if ca.project_id is None:
         raise excep.CannotDeleteBaseCA()
 
-    project = repos.get_project_repository().find_by_external_project_id(
-        external_project_id)
+    # Check that the user's project owns this subCA
+    project = res.get_or_create_project(external_project_id)
     if ca.project_id != project.id:
         raise excep.UnauthorizedSubCA()
 
+    project_ca_repo = repos.get_project_ca_repository()
+    (project_cas, _, _, _) = project_ca_repo.get_by_create_date(
+        project_id=project.id, ca_id=ca.id,
+        suppress_exception=True)
+
+    preferred_ca_repo = repos.get_preferred_ca_repository()
+    (preferred_cas, _, _, _) = preferred_ca_repo.get_by_create_date(
+        project_id=project.id, ca_id=ca.id, suppress_exception=True)
+
+    # Can not delete a project preferred CA, if other project CAs exist. One
+    # of those needs to be designated as the preferred CA first.
+    if project_cas and preferred_cas and not is_last_project_ca(project.id):
+        raise excep.CannotDeletePreferredCA()
+
+    # Remove the CA as preferred
+    if preferred_cas:
+        preferred_ca_repo.delete_entity_by_id(preferred_cas[0].id,
+                                              external_project_id)
+    # Remove the CA from project list
+    if project_cas:
+        project_ca_repo.delete_entity_by_id(project_cas[0].id,
+                                            external_project_id)
+
+    # Delete the CA entry from plugin
     cert_plugin = cert.CertificatePluginManager().get_plugin_by_name(
         ca.plugin_name)
-
     cert_plugin.delete_ca(ca.plugin_ca_id)
 
-    # Delete the CA from the data model.
+    # Finally, delete the CA entity from the CA repository
     ca_repo = repos.get_ca_repository()
     ca_repo.delete_entity_by_id(
         entity_id=ca.id,
         external_project_id=external_project_id)
+
+
+def is_last_project_ca(project_id):
+    """Returns True iff project has exactly one project CA
+
+    :param project_id: internal project ID
+    :return: Boolean
+     """
+    project_ca_repo = repos.get_project_ca_repository()
+    _, _, _, total = project_ca_repo.get_by_create_date(
+        project_id=project_id,
+        suppress_exception=True
+    )
+    return total == 1
 
 
 def _handle_task_result(result, result_follow_on, order_model,

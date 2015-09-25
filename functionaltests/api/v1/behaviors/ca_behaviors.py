@@ -19,16 +19,20 @@ from functionaltests.api.v1.models import ca_models
 
 class CABehaviors(base_behaviors.BaseBehaviors):
 
-    def get_ca(self, ca_ref, extra_headers=None):
+    def get_ca(self, ca_ref, extra_headers=None,
+               use_auth=True, user_name=None):
         """Handles getting a CA
 
         :param ca_ref: href for a CA
         :param extra_headers: extra HTTP headers for the GET request
+        :param use_auth: Boolean for whether to send authentication headers
+        :param user_name: The user name used for request
         :return: a request Response object
         """
         return self.client.get(ca_ref,
                                response_model_type=ca_models.CAModel,
-                               extra_headers=extra_headers)
+                               extra_headers=extra_headers,
+                               use_auth=use_auth, user_name=user_name)
 
     def get_cacert(self, ca_ref, payload_content_encoding=None,
                    extra_headers=None,

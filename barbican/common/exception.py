@@ -475,6 +475,12 @@ class UnauthorizedSubCA(BarbicanHTTPException):
     status_code = 403
 
 
+class CannotDeletePreferredCA(BarbicanHTTPException):
+    message = u._("A new project preferred CA must be set "
+                  "before this one can be deleted.")
+    status_code = 409
+
+
 class BadSubCACreationRequest(BarbicanHTTPException):
     message = u._("Errors returned by CA when attempting to "
                   "create subordinate CA: %(reason)")
