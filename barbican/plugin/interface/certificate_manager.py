@@ -35,7 +35,7 @@ from barbican.model import models
 from barbican.model import repositories as repos
 from barbican.plugin.util import utils as plugin_utils
 
-
+LOG = utils.getLogger(__name__)
 CONF = config.new_config()
 
 # Configuration for certificate processing plugins:
@@ -642,31 +642,43 @@ class CertificatePluginManager(named.NamedExtensionManager):
         """Update the CA info for a particular plugin."""
 
         plugin_name = utils.generate_fullname_for(cert_plugin)
-        new_ca_infos = cert_plugin.get_ca_info()
+        try:
+            new_ca_infos = cert_plugin.get_ca_info()
+        except Exception as e:
+            # The plugin gave an invalid CA, log and continue
+            LOG.error(u._LE("ERROR getting CA from plugin: %s"), e.message)
+            return
 
         old_cas, offset, limit, total = self.ca_repo.get_by_create_date(
             plugin_name=plugin_name,
             suppress_exception=True,
             show_expired=True)
 
-        for old_ca in old_cas:
-            plugin_ca_id = old_ca.plugin_ca_id
-            if plugin_ca_id not in new_ca_infos.keys():
-                # remove CAs that no longer exist
-                self._delete_ca(old_ca)
-            else:
-                # update those that still exist
-                self.ca_repo.update_entity(
-                    old_ca,
-                    new_ca_infos[plugin_ca_id])
+        if old_cas:
+            for old_ca in old_cas:
+                plugin_ca_id = old_ca.plugin_ca_id
+                if plugin_ca_id not in new_ca_infos.keys():
+                    # remove CAs that no longer exist
+                    self._delete_ca(old_ca)
+                else:
+                    # update those that still exist
+                    self.ca_repo.update_entity(
+                        old_ca,
+                        new_ca_infos[plugin_ca_id])
+            old_ids = set([ca.plugin_ca_id for ca in old_cas])
+        else:
+            old_ids = set()
 
-        old_ids = set([ca.plugin_ca_id for ca in old_cas])
         new_ids = set(new_ca_infos.keys())
 
         # add new CAs
         add_ids = new_ids - old_ids
         for add_id in add_ids:
-            self._add_ca(plugin_name, add_id, new_ca_infos[add_id])
+            try:
+                self._add_ca(plugin_name, add_id, new_ca_infos[add_id])
+            except Exception as e:
+                # The plugin gave an invalid CA, log and continue
+                LOG.error(u._LE("ERROR adding CA from plugin: %s"), e.message)
 
     def _add_ca(self, plugin_name, plugin_ca_id, ca_info):
         parsed_ca = dict(ca_info)
