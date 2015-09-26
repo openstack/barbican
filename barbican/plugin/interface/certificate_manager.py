@@ -645,7 +645,7 @@ class CertificatePluginManager(named.NamedExtensionManager):
         try:
             new_ca_infos = cert_plugin.get_ca_info()
         except Exception as e:
-            # The plugin gave an invalid CA, log and continue
+            # The plugin gave an invalid CA, log and return
             LOG.error(u._LE("ERROR getting CA from plugin: %s"), e.message)
             return
 
