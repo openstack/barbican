@@ -230,7 +230,8 @@ class WhenUsingKeystoneEventConsumerProcessMethod(
         # Get secret_store_metadata for related secret
         self.assertTrue(len(db_secrets[0].secret_store_metadata) > 0)
 
-        secret_metadata_id = db_secrets[0].secret_store_metadata.values()[0].id
+        secret_metadata_id = list(db_secrets[0].
+                                  secret_store_metadata.values())[0].id
         self.assertIsNotNone(secret_metadata_id)
 
         # Get db entry for secret_store_metadata by id to make sure its

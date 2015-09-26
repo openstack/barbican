@@ -538,11 +538,11 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
         key_pem = crypto.dump_privatekey(
             crypto.FILETYPE_PEM,
             pkey,
-            passphrase=passphrase
+            passphrase=passphrase.encode('utf-8')
         )
         self.private_key_value = base64.b64encode(key_pem)
         self.public_key_value = "public_key"
-        self.passphrase_value = base64.b64encode(passphrase)
+        self.passphrase_value = base64.b64encode(passphrase.encode('utf-8'))
         self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
         self._test_should_return_waiting_for_ca(
             cert_res.issue_certificate_request)
@@ -568,7 +568,7 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
         self.private_key_value = base64.b64encode(private_key_pem)
         public_key_pem = public_key.exportKey()
         self.public_key_value = base64.b64encode(public_key_pem)
-        self.passphrase_value = base64.b64encode(passphrase)
+        self.passphrase_value = base64.b64encode(passphrase.encode('utf-8'))
 
         self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
         self._test_should_return_waiting_for_ca(
