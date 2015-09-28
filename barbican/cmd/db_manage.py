@@ -135,9 +135,10 @@ def main():
         dm = DatabaseManager(CONF)
         dm.execute()
     except Exception as ex:
-        if _exception_is_successfull_exit(ex):
-            pass
-        LOG.exception('Problem trying to execute Alembic commands')
+        if not _exception_is_successfull_exit(ex):
+            LOG.exception('Problem seen trying to execute Alembic commands')
+            sys.stderr.write("ERROR: {0}\n".format(ex))
+            sys.exit(1)
 
 
 if __name__ == '__main__':
