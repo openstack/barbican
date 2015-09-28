@@ -106,13 +106,13 @@ class WhenCreatingContainersUsingContainersResource(
         )
         self.assertEqual(400, resp.status_int)
 
-    def test_should_raise_container_no_content_type_header(self):
+    def test_should_raise_container_bad_content_type_header(self):
         resp, container_uuid = create_container(
             self.app,
             name='test container name',
             container_type='generic',
             expect_errors=True,
-            headers={'Content-Type': ''}
+            headers={'Content-Type': 'bad_content_type'}
         )
         self.assertEqual(415, resp.status_int)
 
