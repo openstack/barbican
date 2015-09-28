@@ -15,7 +15,6 @@ import datetime
 
 import mock
 import testtools
-import unittest
 
 from barbican.common import utils as common_utils
 from barbican.model import models
@@ -315,7 +314,3 @@ class WhenTestingCertificatePluginManager(database_utils.RepositoryTestCase,
 
         self.plugin_returned.get_ca_info.assert_called_once_with()
         self.ca_repo.create_from.assert_has_calls([])
-
-
-if __name__ == '__main__':
-    unittest.main()
