@@ -21,6 +21,18 @@ def _get_database_metadata():
     return metadata
 
 
+def _drop_constraint(ctx, name, table):
+    if ctx.dialect.name == 'mysql':
+        # MySQL won't allow some operations with constraints in place
+        op.drop_constraint(name, table, type_='foreignkey')
+
+
+def _create_constraint(ctx, name, tableone, tabletwo, columnone, columntwo):
+    if ctx.dialect.name == 'mysql':
+        # Recreate foreign key constraint
+        op.create_foreign_key(name, tableone, tabletwo, columnone, columntwo)
+
+
 def upgrade():
     metadata = _get_database_metadata()
 
@@ -35,5 +47,16 @@ def upgrade():
                where(secrets.c.project_id == None)
                )
 
+    # Need to drop foreign key constraint before mysql will allow changes
+    ctx = op.get_context()
+    _drop_constraint(ctx, 'secrets_project_fk', 'secrets')
+
     # make project_id no longer nullable
-    op.alter_column('secrets', 'project_id', nullable=False)
+    op.alter_column('secrets', 'project_id',
+                    type_=sa.String(36), nullable=False)
+
+    # Create foreign key constraint again
+    _create_constraint(ctx, 'secrets_project_fk', 'secrets', 'projects',
+                       ['project_id'], ['id'])
+
+

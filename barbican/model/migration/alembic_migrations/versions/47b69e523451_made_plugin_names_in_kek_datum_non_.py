@@ -15,4 +15,5 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.alter_column('kek_data', 'plugin_name', nullable=False)
+    op.alter_column('kek_data', 'plugin_name',
+                    type_=sa.String(255), nullable=False)
