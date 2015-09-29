@@ -381,7 +381,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret_repo.get_secret_by_id.assert_called_once_with(
             entity_id=self.secret.id,
             suppress_exception=True)
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
         self.assertNotIn('content_encodings', resp.namespace)
         self.assertIn('content_types', resp.namespace)
@@ -404,9 +404,9 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret_repo.get_secret_by_id.assert_called_once_with(
             entity_id=self.secret.id,
             suppress_exception=True)
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
-        self.assertEqual(resp.body, data)
+        self.assertEqual(data, resp.body)
         mock_get_secret.assert_called_once_with(
             'text/plain',
             self.secret,
@@ -431,9 +431,9 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret_repo.get_secret_by_id.assert_called_once_with(
             entity_id=self.secret.id,
             suppress_exception=True)
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
-        self.assertEqual(resp.body, data)
+        self.assertEqual(data, resp.body)
         mock_get_secret.assert_called_once_with(
             'text/plain',
             self.secret,
@@ -460,9 +460,9 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret_repo.get_secret_by_id.assert_called_once_with(
             entity_id=self.secret.id,
             suppress_exception=True)
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
-        self.assertEqual(resp.body, data)
+        self.assertEqual(data, resp.body)
         mock_get_secret.assert_called_once_with(
             'text/plain',
             self.secret,
@@ -488,7 +488,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret_repo.get_secret_by_id.assert_called_once_with(
             entity_id=self.secret.id,
             suppress_exception=True)
-        self.assertEqual(resp.status_int, 400)
+        self.assertEqual(400, resp.status_int)
 
     @testcase.attr('deprecated')
     @mock.patch('barbican.plugin.resources.get_secret')
@@ -508,7 +508,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.secret_repo.get_secret_by_id.assert_called_once_with(
             entity_id=self.secret.id,
             suppress_exception=True)
-        self.assertEqual(resp.status_int, 400)
+        self.assertEqual(400, resp.status_int)
 
     @mock.patch('barbican.plugin.resources.get_transport_key_id_for_retrieval')
     def test_should_get_secret_meta_for_binary(self, mock_get_transport_key):
@@ -528,7 +528,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             entity_id=self.secret.id,
             suppress_exception=True)
 
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
         self.assertIsNotNone(resp.namespace)
         self.assertIn('content_types', resp.namespace)
@@ -555,7 +555,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             entity_id=self.secret.id,
             suppress_exception=True)
 
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
         self.assertIsNotNone(resp.namespace)
         self.assertIn('content_types', resp.namespace)
@@ -563,9 +563,8 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
                       six.itervalues(resp.namespace['content_types']))
         self.assertIn('transport_key_ref', resp.namespace)
         self.assertEqual(
-            resp.namespace['transport_key_ref'],
-            hrefs.convert_transport_key_to_href(
-                self.transport_key_id)
+            hrefs.convert_transport_key_to_href(self.transport_key_id),
+            resp.namespace['transport_key_ref']
         )
 
     @testcase.attr('deprecated')
@@ -586,7 +585,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             }
         )
 
-        self.assertEqual(resp.body, data)
+        self.assertEqual(data, resp.body)
 
         mock_get_secret.assert_called_once_with(
             'application/octet-stream',
@@ -608,7 +607,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             headers={'Accept': 'text/plain', 'Content-Type': 'text/plain'},
         )
 
-        self.assertEqual(resp.status_int, 204)
+        self.assertEqual(204, resp.status_int)
 
         mock_store_secret.assert_called_once_with(
             unencrypted_raw='plain text',
@@ -634,7 +633,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             },
         )
 
-        self.assertEqual(resp.status_int, 204)
+        self.assertEqual(204, resp.status_int)
 
         mock_store_secret.assert_called_once_with(
             unencrypted_raw='plain text',
@@ -815,7 +814,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
             '/containers/{0}/consumers/'.format(self.container.id),
             self.consumer_ref
         )
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
         self.assertNotIn(self.external_project_id, resp.headers['Location'])
 
         args, kwargs = self.consumer_repo.create_or_update_from.call_args
@@ -828,7 +827,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
             '',
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 415)
+        self.assertEqual(415, resp.status_int)
 
     def test_should_404_consumer_bad_container_id(self):
         self.container_repo.get.side_effect = excep.NotFound()
@@ -837,7 +836,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
             self.consumer_ref, expect_errors=True
         )
         self.container_repo.get.side_effect = None
-        self.assertEqual(resp.status_int, 404)
+        self.assertEqual(404, resp.status_int)
 
     def test_should_raise_exception_when_container_ref_doesnt_exist(self):
         self.container_repo.get.return_value = None
@@ -846,7 +845,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
             self.consumer_ref,
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 404)
+        self.assertEqual(404, resp.status_int)
 
 
 class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
@@ -922,7 +921,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         resp = self.app.get('/containers/{0}/consumers/'.format(
             self.container.id
         ))
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
         self.consumer_repo.get_by_container_id.assert_called_once_with(
             self.container.id,
@@ -940,28 +939,28 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
             'bad_id'
         ), expect_errors=True)
         self.container_repo.get.side_effect = None
-        self.assertEqual(resp.status_int, 404)
+        self.assertEqual(404, resp.status_int)
 
     def test_should_get_consumer_by_id(self):
         self.consumer_repo.get.return_value = self.consumer
         resp = self.app.get('/containers/{0}/consumers/{1}/'.format(
             self.container.id, self.consumer.id
         ))
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
     def test_should_404_with_bad_consumer_id(self):
         self.consumer_repo.get.return_value = None
         resp = self.app.get('/containers/{0}/consumers/{1}/'.format(
             self.container.id, 'bad_id'
         ), expect_errors=True)
-        self.assertEqual(resp.status_int, 404)
+        self.assertEqual(404, resp.status_int)
 
     def test_should_get_no_consumers(self):
         self.consumer_repo.get_by_container_id.return_value = ([], 0, 0, 0)
         resp = self.app.get('/containers/{0}/consumers/'.format(
             self.container.id
         ))
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
     def test_should_delete_consumer(self):
         self.app.delete_json('/containers/{0}/consumers/'.format(
@@ -977,7 +976,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
             '',
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 415)
+        self.assertEqual(415, resp.status_int)
 
     def test_should_404_on_delete_when_consumer_not_found(self):
         old_return = self.consumer_repo.get_by_values.return_value
@@ -986,9 +985,9 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
             self.container.id
         ), self.consumer_ref, expect_errors=True)
         self.consumer_repo.get_by_values.return_value = old_return
-        self.assertEqual(resp.status_int, 404)
+        self.assertEqual(404, resp.status_int)
         # Error response should have json content type
-        self.assertEqual(resp.content_type, "application/json")
+        self.assertEqual("application/json", resp.content_type)
 
     def test_should_404_on_delete_when_consumer_not_found_later(self):
         self.consumer_repo.delete_entity_by_id.side_effect = excep.NotFound()
@@ -996,9 +995,9 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
             self.container.id
         ), self.consumer_ref, expect_errors=True)
         self.consumer_repo.delete_entity_by_id.side_effect = None
-        self.assertEqual(resp.status_int, 404)
+        self.assertEqual(404, resp.status_int)
         # Error response should have json content type
-        self.assertEqual(resp.content_type, "application/json")
+        self.assertEqual("application/json", resp.content_type)
 
     def test_should_delete_consumers_on_container_delete(self):
         consumers = [self.consumer, self.consumer2]
@@ -1008,7 +1007,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         resp = self.app.delete(
             '/containers/{0}/'.format(self.container.id)
         )
-        self.assertEqual(resp.status_int, 204)
+        self.assertEqual(204, resp.status_int)
 
         # Verify consumers were deleted
         calls = []
@@ -1027,7 +1026,7 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         resp = self.app.delete(
             '/containers/{0}/'.format(self.container.id)
         )
-        self.assertEqual(resp.status_int, 204)
+        self.assertEqual(204, resp.status_int)
 
         # Verify consumers were deleted
         calls = []
@@ -1132,7 +1131,7 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
             self.consumer_ref,
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 405)
+        self.assertEqual(405, resp.status_int)
 
     def test_should_not_allow_post_on_consumer_by_id(self):
         self.consumer_repo.get.return_value = self.consumer
@@ -1142,7 +1141,7 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
             self.consumer_ref,
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 405)
+        self.assertEqual(405, resp.status_int)
 
     def test_should_not_allow_put_on_consumer_by_id(self):
         self.consumer_repo.get.return_value = self.consumer
@@ -1152,7 +1151,7 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
             self.consumer_ref,
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 405)
+        self.assertEqual(405, resp.status_int)
 
     def test_should_not_allow_delete_on_consumer_by_id(self):
         self.consumer_repo.get.return_value = self.consumer
@@ -1161,4 +1160,4 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
                                                     self.consumer.id),
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 405)
+        self.assertEqual(405, resp.status_int)

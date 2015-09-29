@@ -37,9 +37,9 @@ class WhenInvokingRetryServiceCommand(utils.BaseTestCase):
 
         retry_scheduler.main()
 
-        self.assertEqual(mock_queue_init.call_count, 1)
-        self.assertEqual(mock_service_launch.call_count, 1)
-        self.assertEqual(mock_periodic_server.call_count, 1)
+        self.assertEqual(1, mock_queue_init.call_count)
+        self.assertEqual(1, mock_service_launch.call_count)
+        self.assertEqual(1, mock_periodic_server.call_count)
 
     @mock.patch('oslo_log.log.setup')
     @mock.patch('sys.exit')
@@ -49,4 +49,4 @@ class WhenInvokingRetryServiceCommand(utils.BaseTestCase):
 
         retry_scheduler.main()
 
-        self.assertEqual(mock_sys_exit.call_count, 1)
+        self.assertEqual(1, mock_sys_exit.call_count)

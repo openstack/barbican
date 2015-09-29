@@ -173,7 +173,7 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
         resp = self.app.get('/transport_keys/',
                             self.params)
         self.assertIn('total', resp.namespace)
-        self.assertEqual(resp.namespace['total'], self.total)
+        self.assertEqual(self.total, resp.namespace['total'])
 
     def test_should_handle_no_transport_keys(self):
 
@@ -236,7 +236,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
             '/transport_keys/',
             self.transport_key_req
         )
-        self.assertEqual(resp.status_int, 201)
+        self.assertEqual(201, resp.status_int)
 
         args, kwargs = self.repo.create_from.call_args
         order = args[0]
@@ -248,7 +248,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
             {},
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 400)
+        self.assertEqual(400, resp.status_int)
 
     def test_should_raise_add_new_transport_key_bad_json(self):
         resp = self.app.post(
@@ -257,7 +257,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
             expect_errors=True,
             content_type='application/json'
         )
-        self.assertEqual(resp.status_int, 400)
+        self.assertEqual(400, resp.status_int)
 
     def test_should_raise_add_new_transport_key_no_content_type_header(self):
         resp = self.app.post(
@@ -265,7 +265,7 @@ class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
             self.transport_key_req,
             expect_errors=True,
         )
-        self.assertEqual(resp.status_int, 415)
+        self.assertEqual(415, resp.status_int)
 
 
 class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
@@ -311,7 +311,7 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
             '/transport_keys/{0}/'.format(self.tkey.id),
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 404)
+        self.assertEqual(404, resp.status_int)
 
     def test_should_delete_transport_key(self):
         self.app.delete('/transport_keys/{0}/'.format(self.tkey.id))
@@ -326,4 +326,4 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
             '/transport_keys/{0}/'.format(self.tkey.id),
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 404)
+        self.assertEqual(404, resp.status_int)

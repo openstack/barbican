@@ -41,14 +41,12 @@ class WhenTestingHostnameForRefsGetter(test_utils.BaseTestCase):
 
     def test_hostname_for_refs(self):
         uri = utils.hostname_for_refs(resource=self.resource)
-        self.assertEqual(uri, "{0}/{1}/{2}".format(self.host,
-                                                   self.version,
-                                                   self.resource))
+        self.assertEqual("{0}/{1}/{2}".format(self.host, self.version,
+                                              self.resource), uri)
 
     def test_hostname_for_refs_no_resource(self):
         uri = utils.hostname_for_refs()
-        self.assertEqual(uri, "{0}/{1}".format(self.host,
-                                               self.version))
+        self.assertEqual("{0}/{1}".format(self.host, self.version), uri)
 
 
 class WhenTestingAcceptEncodingGetter(test_utils.BaseTestCase):
@@ -62,7 +60,7 @@ class WhenTestingAcceptEncodingGetter(test_utils.BaseTestCase):
         self.req.get_header.return_value = '*'
         ae = utils.get_accepted_encodings(self.req)
         self.req.get_header.assert_called_once_with('Accept-Encoding')
-        self.assertEqual(ae, ['*'])
+        self.assertEqual(['*'], ae)
 
     def test_returns_none_for_empty_encoding(self):
         self.req.get_header.return_value = None
@@ -72,17 +70,17 @@ class WhenTestingAcceptEncodingGetter(test_utils.BaseTestCase):
     def test_parses_single_accept_with_quality_value(self):
         self.req.get_header.return_value = 'base64;q=0.7'
         ae = utils.get_accepted_encodings(self.req)
-        self.assertEqual(ae, ['base64'])
+        self.assertEqual(['base64'], ae)
 
     def test_parses_more_than_one_encoding(self):
         self.req.get_header.return_value = 'base64, gzip'
         ae = utils.get_accepted_encodings(self.req)
-        self.assertEqual(ae, ['base64', 'gzip'])
+        self.assertEqual(['base64', 'gzip'], ae)
 
     def test_can_sort_by_quality_value(self):
         self.req.get_header.return_value = 'base64;q=0.5, gzip;q=0.6, compress'
         ae = utils.get_accepted_encodings(self.req)
-        self.assertEqual(ae, ['compress', 'gzip', 'base64'])
+        self.assertEqual(['compress', 'gzip', 'base64'], ae)
 
     def test_returns_none_on_invalid_quality_type(self):
         self.req.get_header.return_value = 'base64;q=three'
@@ -102,7 +100,7 @@ class WhenTestingAcceptEncodingGetter(test_utils.BaseTestCase):
     def test_ignores_encoding_with_zero_quality_value(self):
         self.req.get_header.return_value = 'base64;q=0.5, gzip;q=0.0, compress'
         ae = utils.get_accepted_encodings(self.req)
-        self.assertEqual(ae, ['compress', 'base64'])
+        self.assertEqual(['compress', 'base64'], ae)
 
 
 class WhenTestingGenerateFullClassnameForInstance(test_utils.BaseTestCase):

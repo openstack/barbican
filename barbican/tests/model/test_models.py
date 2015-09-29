@@ -39,13 +39,13 @@ class WhenCreatingNewSecret(utils.BaseTestCase):
         date_time = datetime.datetime.now().isoformat()
         self.parsed_secret['expiration'] = date_time
         secret = models.Secret(self.parsed_secret)
-        self.assertEqual(secret.name, self.parsed_secret['name'])
-        self.assertEqual(secret.secret_type, self.parsed_secret['secret_type'])
-        self.assertEqual(secret.algorithm, self.parsed_secret['algorithm'])
-        self.assertEqual(secret.bit_length, self.parsed_secret['bit_length'])
-        self.assertEqual(secret.mode, self.parsed_secret['mode'])
+        self.assertEqual(self.parsed_secret['name'], secret.name)
+        self.assertEqual(self.parsed_secret['secret_type'], secret.secret_type)
+        self.assertEqual(self.parsed_secret['algorithm'], secret.algorithm)
+        self.assertEqual(self.parsed_secret['bit_length'], secret.bit_length)
+        self.assertEqual(self.parsed_secret['mode'], secret.mode)
         self.assertIsInstance(secret.expiration, datetime.datetime)
-        self.assertEqual(secret.creator_id, self.parsed_secret['creator_id'])
+        self.assertEqual(self.parsed_secret['creator_id'], secret.creator_id)
         self.assertEqual(secret.created_at, secret.updated_at)
 
         fields = secret.to_dict_fields()
@@ -61,7 +61,7 @@ class WhenCreatingNewSecret(utils.BaseTestCase):
         secret_spec['expiration'] = date_time
         del secret_spec['secret_type']
         secret = models.Secret(secret_spec)
-        self.assertEqual(secret.secret_type, self.parsed_secret['secret_type'])
+        self.assertEqual(self.parsed_secret['secret_type'], secret.secret_type)
 
 
 class WhenCreatingNewOrder(utils.BaseTestCase):
@@ -80,13 +80,13 @@ class WhenCreatingNewOrder(utils.BaseTestCase):
     def test_new_order_is_created(self):
         order = models.Order(self.parsed_order)
 
-        self.assertEqual(order.type, self.parsed_order['type'])
-        self.assertEqual(order.meta, self.parsed_order['meta'])
-        self.assertEqual(order.sub_status, self.parsed_order['sub_status'])
-        self.assertEqual(order.creator_id, self.parsed_order['creator_id'])
+        self.assertEqual(self.parsed_order['type'], order.type)
+        self.assertEqual(self.parsed_order['meta'], order.meta)
+        self.assertEqual(self.parsed_order['sub_status'], order.sub_status)
+        self.assertEqual(self.parsed_order['creator_id'], order.creator_id)
         self.assertEqual(
-            order.sub_status_message,
-            self.parsed_order['sub_status_message']
+            self.parsed_order['sub_status_message'],
+            order.sub_status_message
         )
         fields = order.to_dict_fields()
         self.assertEqual(self.parsed_order['sub_status'], fields['sub_status'])
@@ -112,27 +112,27 @@ class WhenCreatingNewContainer(utils.BaseTestCase):
 
     def test_new_container_is_created_from_dict(self):
         container = models.Container(self.parsed_container)
-        self.assertEqual(container.name, self.parsed_container['name'])
-        self.assertEqual(container.type, self.parsed_container['type'])
-        self.assertEqual(container.creator_id,
-                         self.parsed_container['creator_id'])
-        self.assertEqual(len(container.container_secrets),
-                         len(self.parsed_container['secret_refs']))
+        self.assertEqual(self.parsed_container['name'], container.name)
+        self.assertEqual(self.parsed_container['type'], container.type)
+        self.assertEqual(self.parsed_container['creator_id'],
+                         container.creator_id)
+        self.assertEqual(len(self.parsed_container['secret_refs']),
+                         len(container.container_secrets))
 
-        self.assertEqual(container.container_secrets[0].name,
-                         self.parsed_container['secret_refs'][0]['name'])
-        self.assertEqual(container.container_secrets[0].secret_id,
-                         self.parsed_container['secret_refs'][0]['secret_ref'])
+        self.assertEqual(self.parsed_container['secret_refs'][0]['name'],
+                         container.container_secrets[0].name)
+        self.assertEqual(self.parsed_container['secret_refs'][0]['secret_ref'],
+                         container.container_secrets[0].secret_id)
 
-        self.assertEqual(container.container_secrets[1].name,
-                         self.parsed_container['secret_refs'][1]['name'])
-        self.assertEqual(container.container_secrets[1].secret_id,
-                         self.parsed_container['secret_refs'][1]['secret_ref'])
+        self.assertEqual(self.parsed_container['secret_refs'][1]['name'],
+                         container.container_secrets[1].name)
+        self.assertEqual(self.parsed_container['secret_refs'][1]['secret_ref'],
+                         container.container_secrets[1].secret_id)
 
-        self.assertEqual(container.container_secrets[2].name,
-                         self.parsed_container['secret_refs'][2]['name'])
-        self.assertEqual(container.container_secrets[2].secret_id,
-                         self.parsed_container['secret_refs'][2]['secret_ref'])
+        self.assertEqual(self.parsed_container['secret_refs'][2]['name'],
+                         container.container_secrets[2].name)
+        self.assertEqual(self.parsed_container['secret_refs'][2]['secret_ref'],
+                         container.container_secrets[2].secret_id)
         fields = container.to_dict_fields()
         self.assertEqual(self.parsed_container['name'], fields['name'])
         self.assertEqual(self.parsed_container['type'], fields['type'])
@@ -142,38 +142,38 @@ class WhenCreatingNewContainer(utils.BaseTestCase):
     def test_new_certificate_container_is_created_from_dict(self):
         self.parsed_container['type'] = 'certificate'
         container = models.Container(self.parsed_container)
-        self.assertEqual(container.name, self.parsed_container['name'])
-        self.assertEqual(container.type, self.parsed_container['type'])
-        self.assertEqual(container.creator_id,
-                         self.parsed_container['creator_id'])
-        self.assertEqual(len(container.container_secrets),
-                         len(self.parsed_container['secret_refs']))
+        self.assertEqual(self.parsed_container['name'], container.name)
+        self.assertEqual(self.parsed_container['type'], container.type)
+        self.assertEqual(self.parsed_container['creator_id'],
+                         container.creator_id)
+        self.assertEqual(len(self.parsed_container['secret_refs']),
+                         len(container.container_secrets))
 
-        self.assertEqual(container.container_secrets[0].name,
-                         self.parsed_container['secret_refs'][0]['name'])
-        self.assertEqual(container.container_secrets[0].secret_id,
-                         self.parsed_container['secret_refs'][0]['secret_ref'])
+        self.assertEqual(self.parsed_container['secret_refs'][0]['name'],
+                         container.container_secrets[0].name)
+        self.assertEqual(self.parsed_container['secret_refs'][0]['secret_ref'],
+                         container.container_secrets[0].secret_id)
 
-        self.assertEqual(container.container_secrets[1].name,
-                         self.parsed_container['secret_refs'][1]['name'])
-        self.assertEqual(container.container_secrets[1].secret_id,
-                         self.parsed_container['secret_refs'][1]['secret_ref'])
+        self.assertEqual(self.parsed_container['secret_refs'][1]['name'],
+                         container.container_secrets[1].name,)
+        self.assertEqual(self.parsed_container['secret_refs'][1]['secret_ref'],
+                         container.container_secrets[1].secret_id)
 
-        self.assertEqual(container.container_secrets[2].name,
-                         self.parsed_container['secret_refs'][2]['name'])
-        self.assertEqual(container.container_secrets[2].secret_id,
-                         self.parsed_container['secret_refs'][2]['secret_ref'])
+        self.assertEqual(self.parsed_container['secret_refs'][2]['name'],
+                         container.container_secrets[2].name)
+        self.assertEqual(self.parsed_container['secret_refs'][2]['secret_ref'],
+                         container.container_secrets[2].secret_id)
 
     def test_parse_secret_ref_uri(self):
         self.parsed_container['secret_refs'][0]['secret_ref'] = (
             'http://localhost:9110/123/secrets/123456')
         container = models.Container(self.parsed_container)
-        self.assertEqual(container.container_secrets[0].secret_id, '123456')
+        self.assertEqual('123456', container.container_secrets[0].secret_id)
 
         self.parsed_container['secret_refs'][0]['secret_ref'] = (
             'http://localhost:9110/123/secrets/123456/')
         container = models.Container(self.parsed_container)
-        self.assertEqual(container.container_secrets[0].secret_id, '123456')
+        self.assertEqual('123456', container.container_secrets[0].secret_id)
 
 
 class WhenCreatingNewConsumer(utils.BaseTestCase):
@@ -188,9 +188,9 @@ class WhenCreatingNewConsumer(utils.BaseTestCase):
         consumer = models.ContainerConsumerMetadatum(self.container_id,
                                                      self.project_id,
                                                      self.parsed_consumer)
-        self.assertEqual(consumer.name, self.parsed_consumer['name'])
-        self.assertEqual(consumer.URL, self.parsed_consumer['URL'])
-        self.assertEqual(consumer.status, models.States.ACTIVE)
+        self.assertEqual(self.parsed_consumer['name'], consumer.name)
+        self.assertEqual(self.parsed_consumer['URL'], consumer.URL)
+        self.assertEqual(models.States.ACTIVE, consumer.status)
 
     def test_new_consumer_has_correct_hash(self):
         consumer_one = models.ContainerConsumerMetadatum(self.container_id,
@@ -213,7 +213,7 @@ class WhenProcessingJsonBlob(utils.BaseTestCase):
 
     def test_process_bind_param_w_dict(self):
         res = self.json_blob.process_bind_param({'test': True}, None)
-        self.assertEqual(res, '{"test": true}')
+        self.assertEqual('{"test": true}', res)
 
     def test_process_result_value_w_json_str(self):
         res = self.json_blob.process_result_value('{"test": true}', None)
@@ -239,9 +239,9 @@ class WhenCreatingOrderRetryTask(utils.BaseTestCase):
         order_retry_task.retry_args = ["one", "two"]
         order_retry_task.retry_kwargs = {"three": "four"}
 
-        self.assertEqual(order_retry_task.order_id, order.id)
-        self.assertEqual(order_retry_task.retry_task, "foobar")
-        self.assertEqual(order_retry_task.retry_at, at)
+        self.assertEqual(order.id, order_retry_task.order_id)
+        self.assertEqual("foobar", order_retry_task.retry_task)
+        self.assertEqual(at, order_retry_task.retry_at)
         self.assertEqual(
             ["one", "two"],
             order_retry_task.retry_args,
@@ -364,7 +364,7 @@ class WhenCreatingNewSecretACL(utils.BaseTestCase):
     def test_new_secretacl_for_bare_minimum_input(self):
         acl = models.SecretACL(self.secret_id, self.operation,
                                None, None)
-        self.assertEqual(acl.secret_id, self.secret_id)
+        self.assertEqual(self.secret_id, acl.secret_id)
         self.assertEqual(0, len(acl.acl_users))
         self.assertEqual(self.operation, acl.operation)
         self.assertEqual(None, acl.project_access)
@@ -406,9 +406,9 @@ class WhenCreatingNewContainerACL(utils.BaseTestCase):
     def test_new_containeracl_for_given_all_input(self):
         acl = models.ContainerACL(self.container_id, self.operation,
                                   self.project_access, self.user_ids)
-        self.assertEqual(acl.container_id, self.container_id)
-        self.assertEqual(acl.operation, self.operation)
-        self.assertEqual(acl.project_access, self.project_access)
+        self.assertEqual(self.container_id, acl.container_id)
+        self.assertEqual(self.operation, acl.operation)
+        self.assertEqual(self.project_access, acl.project_access)
         self.assertTrue(all(acl_user.user_id in self.user_ids for acl_user
                             in acl.acl_users))
 
