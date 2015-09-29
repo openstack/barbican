@@ -131,7 +131,7 @@ class WhenTestingCertificateAuthorityRepo(database_utils.RepositoryTestCase):
         session.commit()
         count = self.ca_repo.get_count(project.id, session=session)
 
-        self.assertEqual(count, 0)
+        self.assertEqual(0, count)
 
     def test_get_count_should_return_one(self):
         session = self.ca_repo.get_session()
@@ -147,7 +147,7 @@ class WhenTestingCertificateAuthorityRepo(database_utils.RepositoryTestCase):
         session.commit()
         count = self.ca_repo.get_count(project.id, session=session)
 
-        self.assertEqual(count, 1)
+        self.assertEqual(1, count)
 
     def test_get_count_should_return_one_after_delete(self):
         session = self.ca_repo.get_session()
@@ -166,14 +166,14 @@ class WhenTestingCertificateAuthorityRepo(database_utils.RepositoryTestCase):
 
         session.commit()
         count = self.ca_repo.get_count(project.id, session=session)
-        self.assertEqual(count, 2)
+        self.assertEqual(2, count)
 
         self.ca_repo.delete_entity_by_id(ca_model.id, "my keystone id",
                                          session=session)
         session.commit()
 
         count = self.ca_repo.get_count(project.id, session=session)
-        self.assertEqual(count, 1)
+        self.assertEqual(1, count)
 
 
 class WhenTestingProjectCARepo(database_utils.RepositoryTestCase):
@@ -429,8 +429,8 @@ class WhenTestingPreferredCARepo(database_utils.RepositoryTestCase):
         self.assertEqual(0, total)
 
     def test_do_entity_name(self):
-        self.assertEqual(self.preferred_ca_repo._do_entity_name(),
-                         "PreferredCertificateAuthority")
+        self.assertEqual("PreferredCertificateAuthority",
+                         self.preferred_ca_repo._do_entity_name())
 
     def test_should_raise_no_result_found(self):
         session = self.preferred_ca_repo.get_session()
