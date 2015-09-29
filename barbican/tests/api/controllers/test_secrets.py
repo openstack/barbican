@@ -46,8 +46,8 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(201, resp.status_int)
 
         secret = secrets_repo.get(secret_uuid, self.project_id)
-        self.assertEqual(secret.name, 'test')
-        self.assertEqual(secret.encrypted_data, [])
+        self.assertEqual('test', secret.name)
+        self.assertEqual([], secret.encrypted_data)
 
     def test_can_create_new_secret_if_project_doesnt_exist(self):
         # Build new context
@@ -105,7 +105,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
         local_datetime = timeutils.parse_isotime(target_expiration)
         datetime_utc = timeutils.normalize_time(local_datetime)
 
-        self.assertEqual(secret.expiration, datetime_utc)
+        self.assertEqual(datetime_utc, secret.expiration)
 
     @mock.patch('barbican.plugin.resources.store_secret')
     def test_can_create_new_secret_meta_w_transport_key(self, mocked_store):
@@ -202,7 +202,7 @@ class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
             name='secret mission'
         )
 
-        self.assertEqual(create_resp.status_int, 201)
+        self.assertEqual(201, create_resp.status_int)
 
         params = {'name': 'secret mission'}
 
@@ -210,7 +210,7 @@ class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
 
         self.assertEqual(200, get_resp.status_int)
         secret_list = get_resp.json.get('secrets')
-        self.assertEqual(secret_list[0].get('name'), 'secret mission')
+        self.assertEqual('secret mission', secret_list[0].get('name'))
 
     def test_list_secrets(self):
         # Creating a secret to be retrieved later
@@ -254,7 +254,7 @@ class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(200, get_resp.status_int)
 
         secret_list = get_resp.json.get('secrets')
-        self.assertEqual(len(secret_list), 0)
+        self.assertEqual(0, len(secret_list))
 
         # These should never exist in this scenario
         self.assertNotIn('previous', get_resp.json)
@@ -330,7 +330,7 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
         )
         decoded = 'k]\xb7'
 
-        self.assertEqual(get_resp.body, decoded)
+        self.assertEqual(decoded, get_resp.body)
 
     def test_returns_404_on_get_when_not_found(self):
         get_resp = self.app.get(
@@ -590,7 +590,7 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
         )
 
         self.assertEqual(404, delete_resp.status_int)
-        self.assertEqual(delete_resp.content_type, 'application/json')
+        self.assertEqual('application/json', delete_resp.content_type)
 
     def test_delete_with_json_accept_header(self):
         resp, secret_uuid = create_secret(

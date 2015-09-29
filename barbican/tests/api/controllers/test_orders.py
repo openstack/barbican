@@ -48,7 +48,7 @@ class WhenCreatingOrdersUsingOrdersResource(utils.BarbicanAPIBaseTestCase):
             order_type='key',
             meta=generic_key_meta
         )
-        self.assertEqual(resp.status_int, 202)
+        self.assertEqual(202, resp.status_int)
 
         # Make sure we get a valid uuid for the order
         uuid.UUID(order_uuid)
@@ -68,7 +68,7 @@ class WhenCreatingOrdersUsingOrdersResource(utils.BarbicanAPIBaseTestCase):
             meta=meta
         )
 
-        self.assertEqual(resp.status_int, 202)
+        self.assertEqual(202, resp.status_int)
 
     def test_order_creation_should_fail_without_a_type(self):
         resp, _ = create_order(
@@ -77,7 +77,7 @@ class WhenCreatingOrdersUsingOrdersResource(utils.BarbicanAPIBaseTestCase):
             expect_errors=True
         )
 
-        self.assertEqual(resp.status_int, 400)
+        self.assertEqual(400, resp.status_int)
 
     def test_order_creation_should_fail_without_metadata(self):
         resp, _ = create_order(
@@ -86,7 +86,7 @@ class WhenCreatingOrdersUsingOrdersResource(utils.BarbicanAPIBaseTestCase):
             expect_errors=True
         )
 
-        self.assertEqual(resp.status_int, 400)
+        self.assertEqual(400, resp.status_int)
 
     def test_order_create_should_fail_w_unsupported_payload_content_type(self):
         meta = {
@@ -101,7 +101,7 @@ class WhenCreatingOrdersUsingOrdersResource(utils.BarbicanAPIBaseTestCase):
             expect_errors=True
         )
 
-        self.assertEqual(resp.status_int, 400)
+        self.assertEqual(400, resp.status_int)
 
     def test_order_creation_should_fail_with_bogus_content(self):
         resp = self.app.post(
@@ -110,7 +110,7 @@ class WhenCreatingOrdersUsingOrdersResource(utils.BarbicanAPIBaseTestCase):
             headers={'Content-Type': 'application/json'},
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 400)
+        self.assertEqual(400, resp.status_int)
 
     def test_order_creation_should_fail_with_empty_dict(self):
         resp = self.app.post_json(
@@ -119,7 +119,7 @@ class WhenCreatingOrdersUsingOrdersResource(utils.BarbicanAPIBaseTestCase):
             headers={'Content-Type': 'application/json'},
             expect_errors=True
         )
-        self.assertEqual(resp.status_int, 400)
+        self.assertEqual(400, resp.status_int)
 
     def test_order_creation_should_fail_without_content_type_header(self):
         resp = self.app.post(
@@ -127,7 +127,7 @@ class WhenCreatingOrdersUsingOrdersResource(utils.BarbicanAPIBaseTestCase):
             'doesn\'t matter. headers are validated first',
             expect_errors=True,
         )
-        self.assertEqual(resp.status_int, 415)
+        self.assertEqual(415, resp.status_int)
 
 
 class WhenGettingOrdersListUsingOrdersResource(utils.BarbicanAPIBaseTestCase):
@@ -138,7 +138,7 @@ class WhenGettingOrdersListUsingOrdersResource(utils.BarbicanAPIBaseTestCase):
             order_type='key',
             meta=generic_key_meta
         )
-        self.assertEqual(resp.status_int, 202)
+        self.assertEqual(202, resp.status_int)
 
         # Get the list of orders
         resp = self.app.get(
@@ -309,7 +309,7 @@ class WhenCreatingOrders(utils.BarbicanAPIBaseTestCase):
         order = order_repo.get(order_uuid, self.project_id)
         self.assertIsInstance(order, models.Order)
         self.assertEqual('key', order.type)
-        self.assertEqual(order.meta, order_meta)
+        self.assertEqual(order_meta, order.meta)
 
     def test_should_return_400_when_creating_with_empty_json(self):
         resp = self.app.post_json('/orders/', {}, expect_errors=True)

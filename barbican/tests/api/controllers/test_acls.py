@@ -112,20 +112,20 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
             self.app, entity_type='secrets', op_type='create',
             entity_id=secret_uuid, roles=['creator'], user='NotSecretCreator',
             expect_errors=True)
-        self.assertEqual(resp.status_int, 403)
+        self.assertEqual(403, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='create',
             entity_id=secret_uuid, roles=['creator'],
             user=creator_user_id, expect_errors=False)
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
         # test for user with 'admin' role in secret project
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='create',
             entity_id=secret_uuid2, roles=['admin'], user='AdminUser',
             expect_errors=False)
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
     def test_create_new_secret_acls_with_project_access_false(self):
         """Should allow creating acls for a new secret with project-access."""
@@ -380,19 +380,19 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
             self.app, entity_type='secrets', op_type='update',
             entity_id=secret_uuid, roles=['creator'], user='NotSecretCreator',
             expect_errors=True)
-        self.assertEqual(resp.status_int, 403)
+        self.assertEqual(403, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='update',
             entity_id=secret_uuid, roles=['creator'],
             user=creator_user_id)
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
         # test for user with 'admin' role in secret project
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='update',
             entity_id=secret_uuid, roles=['admin'], user='AdminUser')
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
     def test_partial_update_secret_acls_modify_project_access_values(self):
         """Acls partial update where project-access flag is modified."""
@@ -462,14 +462,14 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
             entity_id=secret_uuid, roles=['creator'], user='NotSecretCreator',
             expect_errors=True)
 
-        self.assertEqual(resp.status_int, 403)
+        self.assertEqual(403, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='delete',
             entity_id=secret_uuid, roles=['creator'],
             user=creator_user_id)
 
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
         # Create new secret ACLs again.
         self._set_acls_with_context(
@@ -480,7 +480,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
             self.app, entity_type='secrets', op_type='delete',
             entity_id=secret_uuid, roles=['admin'],
             user='AdminUser')
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
     def test_invoke_secret_acls_head_should_fail(self):
         """Should fail as put request to secret acls URI is not supported."""
@@ -523,7 +523,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
             '/secrets/?acl_only=TrUe')
         self.assertEqual(200, resp.status_int)
         secret_list = resp.json.get('secrets')
-        self.assertEqual(len(secret_list), 2)
+        self.assertEqual(2, len(secret_list))
 
         self.assertNotIn(secret_uuid_no_acl, secret_list)
 
@@ -568,20 +568,20 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
             self.app, entity_type='containers', op_type='create',
             entity_id=container_id, roles=['creator'],
             user='NotContainerCreator', expect_errors=True)
-        self.assertEqual(resp.status_int, 403)
+        self.assertEqual(403, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='create',
             entity_id=container_id, roles=['creator'],
             user=creator_user_id, expect_errors=False)
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
         # test for user with 'admin' role in container project
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='create',
             entity_id=container_id2, roles=['admin'], user='AdminUser',
             expect_errors=False)
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
     def test_create_new_container_acls_with_project_access_true(self):
         """Should allow creating acls for new container with project-access."""
@@ -872,19 +872,19 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
             self.app, entity_type='containers', op_type='update',
             entity_id=container_id, roles=['creator'], user='NotCreator',
             expect_errors=True)
-        self.assertEqual(resp.status_int, 403)
+        self.assertEqual(403, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='update',
             entity_id=container_id, roles=['creator'],
             user=creator_user_id)
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
         # test for user with 'admin' role in container project
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='update',
             entity_id=container_id, roles=['admin'], user='AdminUser')
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
     def test_delete_container_acls_with_valid_container_id(self):
         """Delete existing acls for a given container."""
@@ -933,14 +933,14 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
             entity_id=container_id, roles=['creator'], user='NotCreator',
             expect_errors=True)
 
-        self.assertEqual(resp.status_int, 403)
+        self.assertEqual(403, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='delete',
             entity_id=container_id, roles=['creator'],
             user=creator_user_id)
 
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
         # Create new container ACLs again.
         self._set_acls_with_context(
@@ -951,7 +951,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
             self.app, entity_type='containers', op_type='delete',
             entity_id=container_id, roles=['admin'],
             user='AdminUser')
-        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(200, resp.status_int)
 
     def test_invoke_container_acls_head_should_fail(self):
         """PUT request to container acls URI is not supported."""

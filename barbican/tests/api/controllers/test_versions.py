@@ -43,5 +43,5 @@ class WhenTestingVersionsResource(utils.BarbicanAPIBaseTestCase):
         # might start using decimal numbers in the future. So when that happens
         # this test will still be valid.
         self.assertIn('v1', v1_info['id'])
-        self.assertEqual(len(v1_info['media-types']), 1)
-        self.assertEqual(v1_info['media-types'][0]['base'], 'application/json')
+        self.assertEqual(1, len(v1_info['media-types']))
+        self.assertEqual('application/json', v1_info['media-types'][0]['base'])

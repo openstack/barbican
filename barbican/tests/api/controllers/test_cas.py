@@ -45,21 +45,21 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
         self.create_cas(set_project_cas=False)
         resp = self.app.get('/cas/', self.params)
 
-        self.assertEqual(len(resp.namespace['cas']), self.limit)
+        self.assertEqual(self.limit, len(resp.namespace['cas']))
         self.assertIn('previous', resp.namespace)
         self.assertIn('next', resp.namespace)
 
         url_nav_next = self._create_url(self.project_id,
                                         self.offset + self.limit, self.limit)
-        self.assertEqual(resp.body.decode('utf-8').count(url_nav_next), 1)
+        self.assertEqual(1, resp.body.decode('utf-8').count(url_nav_next))
 
         url_nav_prev = self._create_url(self.project_id,
                                         0, self.limit)
-        self.assertEqual(resp.body.decode('utf-8').count(url_nav_prev), 1)
+        self.assertEqual(1, resp.body.decode('utf-8').count(url_nav_prev))
 
         url_hrefs = self._create_url(self.project_id)
-        self.assertEqual(resp.body.decode('utf-8').count(url_hrefs),
-                         (self.limit + 2))
+        self.assertEqual((self.limit + 2),
+                         resp.body.decode('utf-8').count(url_hrefs))
 
     def test_response_should_list_subca_and_project_cas(self):
         self.create_cas()
@@ -149,7 +149,7 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
 
         self.assertNotIn('previous', resp.namespace)
         self.assertNotIn('next', resp.namespace)
-        self.assertEqual(resp.namespace['total'], 1)
+        self.assertEqual(1, resp.namespace['total'])
 
     def test_should_get_with_params_on_all_resource(self):
         self.create_cas(set_project_cas=False)
@@ -161,13 +161,13 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
 
         self.assertNotIn('previous', resp.namespace)
         self.assertNotIn('next', resp.namespace)
-        self.assertEqual(resp.namespace['total'], 1)
+        self.assertEqual(1, resp.namespace['total'])
 
     def test_should_handle_no_cas(self):
         self.params = {'offset': 0, 'limit': 2, 'plugin_name': 'dummy'}
         resp = self.app.get('/cas/', self.params)
-        self.assertEqual(resp.namespace.get('cas'), [])
-        self.assertEqual(resp.namespace.get('total'), 0)
+        self.assertEqual([], resp.namespace.get('cas'))
+        self.assertEqual(0, resp.namespace.get('total'))
         self.assertNotIn('previous', resp.namespace)
         self.assertNotIn('next', resp.namespace)
 
@@ -374,7 +374,7 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
     def test_should_get_no_projects(self):
         self.create_cas()
         resp = self.app.get('/cas/{0}/projects'.format(self.selected_ca_id))
-        self.assertEqual(resp.namespace['projects'], [])
+        self.assertEqual([], resp.namespace['projects'])
 
     def test_should_raise_get_projects_ca_not_found(self):
         self.create_cas()
