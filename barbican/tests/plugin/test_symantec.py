@@ -66,7 +66,7 @@ class WhenTestingSymantecPlugin(utils.BaseTestCase):
             self.barbican_plugin_dto
         )
 
-        self.assertEqual(result.status, "waiting for CA")
+        self.assertEqual("waiting for CA", result.status)
 
     def test_unsuccessful_certificate_request_can_retry(self):
         self.mock_create_order.return_value = (False, self.error_msg, True)
@@ -81,7 +81,7 @@ class WhenTestingSymantecPlugin(utils.BaseTestCase):
             self.barbican_plugin_dto
         )
 
-        self.assertEqual(result.status, "client data issue seen")
+        self.assertEqual("client data issue seen", result.status)
 
     def test_unsuccessful_certificate_request_no_retry(self):
         self.mock_create_order.return_value = (False, self.error_msg, False)
@@ -96,7 +96,7 @@ class WhenTestingSymantecPlugin(utils.BaseTestCase):
             self.barbican_plugin_dto
         )
 
-        self.assertEqual(result.status, "CA unavailable for request")
+        self.assertEqual("CA unavailable for request", result.status)
 
     def test_should_raise_unsupported_certificate_request(self):
         order_id = '1234'

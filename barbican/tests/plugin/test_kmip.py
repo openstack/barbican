@@ -917,4 +917,4 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
             CONF = kss.CONF
             CONF.kmip_plugin.keyfile = '/some/path'
             kss.KMIPSecretStore(CONF)
-            self.assertEqual(len(m.mock_calls), 1)
+            self.assertEqual(1, len(m.mock_calls))

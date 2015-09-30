@@ -181,7 +181,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
 
         # Verify encrypt plugin and method where invoked.
         encrypt_mock = self.encrypting_plugin.encrypt
-        self.assertEqual(encrypt_mock.call_count, 1)
+        self.assertEqual(1, encrypt_mock.call_count)
         args, kwargs = encrypt_mock.call_args
         test_encrypt_dto, test_kek_meta_dto, test_project_id = tuple(args)
         self.assertIsInstance(test_encrypt_dto, crypto.EncryptDTO)
@@ -211,7 +211,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
 
         # Verify encrypt plugin and method where invoked.
         encrypt_mock = self.encrypting_plugin.encrypt
-        self.assertEqual(encrypt_mock.call_count, 1)
+        self.assertEqual(1, encrypt_mock.call_count)
         args, kwargs = encrypt_mock.call_args
         test_encrypt_dto, test_kek_meta_dto, test_project_id = tuple(args)
         self.assertIsInstance(test_encrypt_dto, crypto.EncryptDTO)
@@ -245,7 +245,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
 
         # Verify decrypt plugin and method where invoked.
         decrypt_mock = self.retrieving_plugin.decrypt
-        self.assertEqual(decrypt_mock.call_count, 1)
+        self.assertEqual(1, decrypt_mock.call_count)
         args, kwargs = decrypt_mock.call_args
         (
             test_decrypt,
@@ -315,7 +315,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         # Verify KEK objects finder was invoked.
         method_target = self.find_or_create_kek_objects_patcher.target
         method_mock = method_target._find_or_create_kek_objects
-        self.assertEqual(method_mock.call_count, 1)
+        self.assertEqual(1, method_mock.call_count)
 
         # Verify generating plugin and method where invoked.
         self._verify_generating_plugin_args(
@@ -326,7 +326,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         # Verify secret save was invoked.
         method_target = self.store_secret_and_datum_patcher.target
         method_mock = method_target._store_secret_and_datum
-        self.assertEqual(method_mock.call_count, 1)
+        self.assertEqual(1, method_mock.call_count)
 
     def test_generate_asymmetric_key_with_passphrase(self):
         """test asymmetric secret generation with passphrase."""
@@ -434,7 +434,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         # Verify KEK objects finder was invoked.
         method_target = self.find_or_create_kek_objects_patcher.target
         method_mock = method_target._find_or_create_kek_objects
-        self.assertEqual(method_mock.call_count, 1)
+        self.assertEqual(1, method_mock.call_count)
 
         # Verify generating plugin and method where invoked.
         self._verify_generating_plugin_args(
@@ -448,11 +448,11 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
             call_count = 3
         method_target = self.store_secret_and_datum_patcher.target
         method_mock = method_target._store_secret_and_datum
-        self.assertEqual(method_mock.call_count, call_count)
+        self.assertEqual(call_count, method_mock.call_count)
 
     def _verify_generating_plugin_args(self, generate_mock, alg, bit_length):
         """Verify generating plugin and method where invoked."""
-        self.assertEqual(generate_mock.call_count, 1)
+        self.assertEqual(1, generate_mock.call_count)
         args, kwargs = generate_mock.call_args
         test_generate_dto, test_kek_meta_dto, test_project_id = tuple(args)
         self.assertIsInstance(test_generate_dto, crypto.GenerateDTO)
@@ -604,11 +604,11 @@ class WhenTestingStoreCryptoFindOrCreateKekObjects(TestSecretStoreBase):
 
         # Verify bind operations.
         self.assertEqual(
-            plugin_inst.bind_kek_metadata.call_count, 1)
+            1, plugin_inst.bind_kek_metadata.call_count)
         self.assertEqual(
-            self.bind_completed_mock.call_count, 1)
+            1, self.bind_completed_mock.call_count)
         self.assertEqual(
-            self.kek_repo.save.call_count, 1)
+            1, self.kek_repo.save.call_count)
         args, kwargs = self.kek_repo.save.call_args
         kek_model = args[0]
         self.assertEqual(self.kek_meta_project_model, kek_model)
@@ -627,7 +627,7 @@ class WhenTestingStoreCryptoFindOrCreateKekObjects(TestSecretStoreBase):
     def _verify_kek_repository_interactions(self, plugin_inst):
         """Verify the KEK repository interactions."""
         self.assertEqual(
-            self.kek_repo.find_or_create_kek_datum.call_count, 1)
+            1, self.kek_repo.find_or_create_kek_datum.call_count)
         args, kwargs = self.kek_repo.find_or_create_kek_datum.call_args
         test_project_model = args[0]
         test_full_plugin_name = args[1]
@@ -683,12 +683,12 @@ class WhenTestingStoreCryptoStoreSecretAndDatum(TestSecretStoreBase):
 
         # Verify **not** these repository interactions.
         self.assertEqual(
-            self.secret_repo.create_from.call_count, 0)
+            0, self.secret_repo.create_from.call_count)
 
     def _verify_secret_repository_interactions(self):
         """Verify the secret repository interactions."""
         self.assertEqual(
-            self.secret_repo.create_from.call_count, 1)
+            1, self.secret_repo.create_from.call_count)
         args, kwargs = self.secret_repo.create_from.call_args
         test_secret_model = args[0]
         self.assertEqual(self.secret_model, test_secret_model)
@@ -696,7 +696,7 @@ class WhenTestingStoreCryptoStoreSecretAndDatum(TestSecretStoreBase):
     def _verify_encrypted_datum_repository_interactions(self):
         """Verify the encrypted datum repository interactions."""
         self.assertEqual(
-            self.datum_repo.create_from.call_count, 1)
+            1, self.datum_repo.create_from.call_count)
         args, kwargs = self.datum_repo.create_from.call_args
         test_datum_model = args[0]
         self.assertIsInstance(test_datum_model, models.EncryptedDatum)
@@ -722,10 +722,10 @@ class WhenTestingStoreCryptoIndicateBindCompleted(TestSecretStoreBase):
 
         self.assertTrue(self.kek_meta_project_model.bind_completed)
         self.assertEqual(
-            kek_meta_dto.algorithm, self.kek_meta_project_model.algorithm)
+            self.kek_meta_project_model.algorithm, kek_meta_dto.algorithm)
         self.assertEqual(
-            kek_meta_dto.bit_length, self.kek_meta_project_model.bit_length)
+            self.kek_meta_project_model.bit_length, kek_meta_dto.bit_length)
         self.assertEqual(
-            kek_meta_dto.mode, self.kek_meta_project_model.mode)
+            self.kek_meta_project_model.mode, kek_meta_dto.mode)
         self.assertEqual(
-            kek_meta_dto.plugin_meta, self.kek_meta_project_model.plugin_meta)
+            self.kek_meta_project_model.plugin_meta, kek_meta_dto.plugin_meta)

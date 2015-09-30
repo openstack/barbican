@@ -78,7 +78,7 @@ class CaTestCase(BaseTestCase):
         self.assertEqual(
             ca.chain,
             crypto.dump_certificate(crypto.FILETYPE_PEM, ca.cert))
-        self.assertNotEqual(ca.key, None)
+        self.assertNotEqual(None, ca.key)
         self.assertEqual("Test ST", subject.ST)
         self.assertEqual("Test L", subject.L)
         self.assertEqual("Test O", subject.O)
@@ -269,12 +269,12 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         cert = crypto.load_certificate(
             crypto.FILETYPE_PEM, resp.certificate.decode('base64'))
         cert_subj = cert.get_subject()
-        self.assertEqual(cert_subj.C, 'US')
-        self.assertEqual(cert_subj.ST, 'OR')
-        self.assertEqual(cert_subj.L, 'Testlandia')
-        self.assertEqual(cert_subj.O, 'Testers Anon')
-        self.assertEqual(cert_subj.OU, 'Testers OU')
-        self.assertEqual(cert_subj.CN, 'Testing')
+        self.assertEqual('US', cert_subj.C)
+        self.assertEqual('OR', cert_subj.ST)
+        self.assertEqual('Testlandia', cert_subj.L)
+        self.assertEqual('Testers Anon', cert_subj.O)
+        self.assertEqual('Testers OU', cert_subj.OU)
+        self.assertEqual('Testing', cert_subj.CN)
 
     def test_issue_certificate_request_stored_key(self):
         req = certificate_utils.get_valid_csr_object()
@@ -294,7 +294,7 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         self.assertEqual("No request_data specified", res.status_message)
 
     def test_get_default_ca_name(self):
-        self.assertEqual(self.plugin.get_default_ca_name(), "Snakeoil CA")
+        self.assertEqual("Snakeoil CA", self.plugin.get_default_ca_name())
 
     def test_get_default_signing_cert(self):
         ca_cert = self.plugin.get_default_signing_cert()

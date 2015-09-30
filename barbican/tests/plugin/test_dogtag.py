@@ -183,8 +183,8 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
         }
         result = self.plugin.get_secret(secret_metadata)
 
-        self.assertEqual(result.secret,
-                         test_key.exportKey('PEM').encode('utf-8'))
+        self.assertEqual(test_key.exportKey('PEM').encode('utf-8'),
+                         result.secret)
 
     def test_get_public_key(self):
         test_public_key = RSA.generate(2048).publickey()
@@ -201,8 +201,8 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
         }
         result = self.plugin.get_secret(secret_metadata)
 
-        self.assertEqual(result.secret,
-                         test_public_key.exportKey('PEM').encode('utf-8'))
+        self.assertEqual(test_public_key.exportKey('PEM').encode('utf-8'),
+                         result.secret)
 
     def test_store_passphrase_for_using_in_private_key_retrieval(self):
 
@@ -219,9 +219,10 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
         asym_key_DTO = self.plugin.generate_asymmetric_key(key_spec)
 
         self.assertEqual(
+            '1',
             asym_key_DTO.private_key_meta[
-                dogtag_import.DogtagKRAPlugin.PASSPHRASE_KEY_ID],
-            '1')
+                dogtag_import.DogtagKRAPlugin.PASSPHRASE_KEY_ID]
+        )
 
         self.keyclient_mock.generate_asymmetric_key.assert_called_once_with(
             mock.ANY,
@@ -326,19 +327,19 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.profile_id,
             order_meta)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.CERTIFICATE_GENERATED,
+        self.assertEqual(cm.CertificateStatus.CERTIFICATE_GENERATED,
+                         result_dto.status,
                          "result_dto status incorrect")
 
-        self.assertEqual(result_dto.certificate,
-                         self.cert_encoded_mock)
+        self.assertEqual(self.cert_encoded_mock,
+                         result_dto.certificate)
 
-        self.assertEqual(result_dto.intermediates,
-                         self.cert_pkcs7_mock)
+        self.assertEqual(self.cert_pkcs7_mock,
+                         result_dto.intermediates)
 
         self.assertEqual(
-            plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID),
-            self.request_id_mock
+            self.request_id_mock,
+            plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID)
         )
 
     def _process_simple_cmc_cert_request(self, order_meta, plugin_meta):
@@ -368,13 +369,13 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.submit_enrollment_request.assert_called_once_with(
             enrollment_request)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.WAITING_FOR_CA,
+        self.assertEqual(cm.CertificateStatus.WAITING_FOR_CA,
+                         result_dto.status,
                          "result_dto status incorrect")
 
         self.assertEqual(
-            plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID),
-            self.request_id_mock
+            self.request_id_mock,
+            plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID)
         )
 
     def test_issue_simple_cmc_request(self):
@@ -445,12 +446,12 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         result_dto = self.plugin.issue_certificate_request(
             self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
+        self.assertEqual(cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
+                         result_dto.status,
                          "result_dto status incorrect")
 
-        self.assertEqual(result_dto.status_message,
-                         "No profile_id specified")
+        self.assertEqual("No profile_id specified",
+                         result_dto.status_message)
 
     def test_issue_return_data_error_with_request_rejected(self):
         order_meta = {dogtag_import.DogtagCAPlugin.PROFILE_ID: self.profile_id}
@@ -469,13 +470,13 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.profile_id,
             order_meta)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
+        self.assertEqual(cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
+                         result_dto.status,
                          "result_dto status incorrect")
 
         self.assertEqual(
+            self.request_id_mock,
             plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID),
-            self.request_id_mock
         )
 
     def test_issue_return_canceled_with_request_canceled(self):
@@ -495,13 +496,13 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.profile_id,
             order_meta)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.REQUEST_CANCELED,
+        self.assertEqual(cm.CertificateStatus.REQUEST_CANCELED,
+                         result_dto.status,
                          "result_dto status incorrect")
 
         self.assertEqual(
+            self.request_id_mock,
             plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID),
-            self.request_id_mock
         )
 
     def test_issue_return_waiting_with_request_pending(self):
@@ -521,13 +522,13 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.profile_id,
             order_meta)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.WAITING_FOR_CA,
+        self.assertEqual(cm.CertificateStatus.WAITING_FOR_CA,
+                         result_dto.status,
                          "result_dto status incorrect")
 
         self.assertEqual(
-            plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID),
-            self.request_id_mock
+            self.request_id_mock,
+            plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID)
         )
 
     def test_issue_raises_error_request_complete_no_cert(self):
@@ -549,8 +550,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         )
 
         self.assertEqual(
-            plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID),
-            self.request_id_mock
+            self.request_id_mock,
+            plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID)
         )
 
     def test_issue_raises_error_request_unknown_status(self):
@@ -573,8 +574,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         )
 
         self.assertEqual(
-            plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID),
-            self.request_id_mock
+            self.request_id_mock,
+            plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID)
         )
 
     def test_issue_return_client_error_bad_request_exception(self):
@@ -591,8 +592,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.profile_id,
             order_meta)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
+        self.assertEqual(cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
+                         result_dto.status,
                          "result_dto status incorrect")
 
     def test_issue_raises_error_pki_exception(self):
@@ -625,8 +626,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.profile_id,
             order_meta)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST,
+        self.assertEqual(cm.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST,
+                         result_dto.status,
                          "result_dto status incorrect")
 
     def test_cancel_request(self):
@@ -643,8 +644,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.request_id_mock,
             self.review_response)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.REQUEST_CANCELED,
+        self.assertEqual(cm.CertificateStatus.REQUEST_CANCELED,
+                         result_dto.status,
                          "result_dto_status incorrect")
 
     def test_cancel_no_request_found(self):
@@ -660,8 +661,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.review_request.assert_called_once_with(
             self.request_id_mock)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
+        self.assertEqual(cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
+                         result_dto.status,
                          "result_dto_status incorrect")
 
     def test_cancel_conflicting_operation(self):
@@ -679,8 +680,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.request_id_mock,
             self.review_response)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.INVALID_OPERATION,
+        self.assertEqual(cm.CertificateStatus.INVALID_OPERATION,
+                         result_dto.status,
                          "result_dto_status incorrect")
 
     def test_cancel_ca_unavailable(self):
@@ -693,8 +694,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         result_dto = self.plugin.cancel_certificate_request(
             self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST,
+        self.assertEqual(cm.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST,
+                         result_dto.status,
                          "result_dto_status incorrect")
 
     def test_cancel_raise_error_no_request_id(self):
@@ -726,12 +727,12 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.get_cert.assert_called_once_with(
             self.cert_id_mock)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.CERTIFICATE_GENERATED,
+        self.assertEqual(cm.CertificateStatus.CERTIFICATE_GENERATED,
+                         result_dto.status,
                          "result_dto_status incorrect")
 
-        self.assertEqual(result_dto.certificate,
-                         self.cert_encoded_mock)
+        self.assertEqual(self.cert_encoded_mock,
+                         result_dto.certificate)
 
     def test_check_status_raise_error_no_request_id(self):
         order_meta = mock.ANY
@@ -759,12 +760,11 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.get_request.assert_called_once_with(
             self.request_id_mock)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
+        self.assertEqual(cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
+                         result_dto.status,
                          "result_dto_status incorrect")
 
-        self.assertEqual(result_dto.certificate,
-                         None)
+        self.assertEqual(None, result_dto.certificate)
 
     def test_check_status_canceled(self):
         order_meta = mock.ANY
@@ -779,12 +779,11 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.get_request.assert_called_once_with(
             self.request_id_mock)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.REQUEST_CANCELED,
+        self.assertEqual(cm.CertificateStatus.REQUEST_CANCELED,
+                         result_dto.status,
                          "result_dto_status incorrect")
 
-        self.assertEqual(result_dto.certificate,
-                         None)
+        self.assertEqual(None, result_dto.certificate)
 
     def test_check_status_pending(self):
         order_meta = mock.ANY
@@ -799,12 +798,11 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.get_request.assert_called_once_with(
             self.request_id_mock)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.WAITING_FOR_CA,
+        self.assertEqual(cm.CertificateStatus.WAITING_FOR_CA,
+                         result_dto.status,
                          "result_dto_status incorrect")
 
-        self.assertEqual(result_dto.certificate,
-                         None)
+        self.assertEqual(None, result_dto.certificate)
 
     def test_check_status_raises_error_complete_no_cert(self):
         order_meta = mock.ANY
@@ -846,19 +844,19 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.profile_id,
             order_meta)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.CERTIFICATE_GENERATED,
+        self.assertEqual(cm.CertificateStatus.CERTIFICATE_GENERATED,
+                         result_dto.status,
                          "result_dto_status incorrect")
 
-        self.assertEqual(result_dto.certificate,
-                         self.cert_encoded_mock)
+        self.assertEqual(self.cert_encoded_mock,
+                         result_dto.certificate)
 
-        self.assertEqual(result_dto.intermediates,
-                         self.cert_pkcs7_mock)
+        self.assertEqual(self.cert_pkcs7_mock,
+                         result_dto.intermediates)
 
         self.assertEqual(
-            plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID),
-            self.modified_request_id_mock
+            self.modified_request_id_mock,
+            plugin_meta.get(dogtag_import.DogtagCAPlugin.REQUEST_ID)
         )
 
     def test_modify_no_request_found(self):
@@ -874,8 +872,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         self.certclient_mock.review_request.assert_called_once_with(
             self.request_id_mock)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
+        self.assertEqual(cm.CertificateStatus.CLIENT_DATA_ISSUE_SEEN,
+                         result_dto.status,
                          "result_dto_status incorrect")
 
     def test_modify_conflicting_operation(self):
@@ -893,8 +891,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
             self.request_id_mock,
             self.review_response)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.INVALID_OPERATION,
+        self.assertEqual(cm.CertificateStatus.INVALID_OPERATION,
+                         result_dto.status,
                          "result_dto_status incorrect")
 
     def test_modify_ca_unavailable(self):
@@ -907,8 +905,8 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         result_dto = self.plugin.modify_certificate_request(
             self.order_id, order_meta, plugin_meta, self.barbican_meta_dto)
 
-        self.assertEqual(result_dto.status,
-                         cm.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST,
+        self.assertEqual(cm.CertificateStatus.CA_UNAVAILABLE_FOR_REQUEST,
+                         result_dto.status,
                          "result_dto_status incorrect")
 
     def test_modify_raise_error_no_request_id(self):

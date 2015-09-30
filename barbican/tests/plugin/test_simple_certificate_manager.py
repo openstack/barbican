@@ -63,7 +63,7 @@ class WhenTestingSimpleCertificateManagerPlugin(testtools.TestCase):
                           cm.CertificateRequestType.SIMPLE_CMC_REQUEST,
                           cm.CertificateRequestType.FULL_CMC_REQUEST,
                           cm.CertificateRequestType.STORED_KEY_REQUEST]
-        self.assertEqual(result, supported_list)
+        self.assertEqual(supported_list, result)
 
 
 class WhenTestingSimpleCertificateEventManagerPlugin(testtools.TestCase):
