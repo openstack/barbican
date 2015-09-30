@@ -189,12 +189,10 @@ class WhenTestingPluginResource(testtools.TestCase,
         )
 
         self.assertEqual("rsa", secret_container.type)
-        self.assertEqual(self.moc_plugin.generate_asymmetric_key.
-                         call_count, 1)
-        self.assertEqual(self.container_repo.create_from.
-                         call_count, 1)
-        self.assertEqual(self.container_secret_repo.create_from.
-                         call_count, 2)
+        self.assertEqual(1,
+                         self.moc_plugin.generate_asymmetric_key.call_count)
+        self.assertEqual(1, self.container_repo.create_from.call_count)
+        self.assertEqual(2, self.container_secret_repo.create_from.call_count)
 
     def test_delete_secret_w_metadata(self):
         project_id = "some_id"
