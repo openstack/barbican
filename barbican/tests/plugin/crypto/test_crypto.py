@@ -178,7 +178,7 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
         key = self.plugin.decrypt(decrypt_dto, kek_meta_dto,
                                   response_dto.kek_meta_extended,
                                   mock.MagicMock())
-        self.assertEqual(len(key), 32)
+        self.assertEqual(32, len(key))
 
     def test_generate_192_bit_key(self):
         secret = models.Secret()
@@ -198,7 +198,7 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
         key = self.plugin.decrypt(decrypt_dto, kek_meta_dto,
                                   response_dto.kek_meta_extended,
                                   mock.MagicMock())
-        self.assertEqual(len(key), 24)
+        self.assertEqual(24, len(key))
 
     def test_generate_128_bit_key(self):
         secret = models.Secret()
@@ -218,7 +218,7 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
         key = self.plugin.decrypt(decrypt_dto, kek_meta_dto,
                                   response_dto.kek_meta_extended,
                                   mock.MagicMock())
-        self.assertEqual(len(key), 16)
+        self.assertEqual(16, len(key))
 
     def test_supports_encrypt_decrypt(self):
         self.assertTrue(
@@ -259,9 +259,9 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
         kek_metadata_dto = mock.MagicMock()
         kek_metadata_dto = self.plugin.bind_kek_metadata(kek_metadata_dto)
 
-        self.assertEqual(kek_metadata_dto.algorithm, 'aes')
-        self.assertEqual(kek_metadata_dto.bit_length, 128)
-        self.assertEqual(kek_metadata_dto.mode, 'cbc')
+        self.assertEqual('aes', kek_metadata_dto.algorithm)
+        self.assertEqual(128, kek_metadata_dto.bit_length)
+        self.assertEqual('cbc', kek_metadata_dto.mode)
 
     def test_supports_asymmetric_key_generation(self):
         self.assertTrue(
@@ -331,8 +331,8 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
 
         public_dto = RSA.importKey(public_dto)
         private_dto = RSA.importKey(private_dto)
-        self.assertEqual(public_dto.size(), 1023)
-        self.assertEqual(private_dto.size(), 1023)
+        self.assertEqual(1023, public_dto.size())
+        self.assertEqual(1023, private_dto.size())
         self.assertTrue(private_dto.has_private)
 
     def test_generate_1024_bit_RSA_key_in_pem(self):
@@ -394,4 +394,4 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
         key = self.plugin.decrypt(decrypt_dto, kek_meta_dto,
                                   response_dto.kek_meta_extended,
                                   mock.MagicMock())
-        self.assertEqual(len(key), 16)
+        self.assertEqual(16, len(key))

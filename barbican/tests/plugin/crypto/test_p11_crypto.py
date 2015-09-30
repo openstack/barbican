@@ -75,7 +75,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
                 mock.MagicMock(),
                 mock.MagicMock()
             )
-            self.assertEqual(self.lib.C_GenerateRandom.call_count, 2)
+            self.assertEqual(2, self.lib.C_GenerateRandom.call_count)
 
     def test_raises_error_with_no_library_path(self):
         m = mock.MagicMock()
@@ -125,7 +125,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.lib.C_FindObjects.side_effect = one_key
 
         key = self.plugin.pkcs11.get_key_handle('mylabel', self.test_session)
-        self.assertEqual(key, 50)
+        self.assertEqual(50, key)
 
     def test_encrypt(self):
         payload = 'encrypt me!!'
@@ -144,8 +144,8 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
                                                kek_meta,
                                                mock.MagicMock())
 
-            self.assertEqual(self.lib.C_Encrypt.call_count, 1)
-            self.assertEqual(response_dto.cypher_text, b"\x00" * 32)
+            self.assertEqual(1, self.lib.C_Encrypt.call_count)
+            self.assertEqual(b"\x00" * 32, response_dto.cypher_text)
 
     def test_decrypt(self):
         def c_decrypt(session, ct, ctlen, pt, ptlen):
@@ -170,7 +170,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
                                 kek_meta,
                                 kek_meta_extended,
                                 mock.MagicMock())
-            self.assertEqual(self.lib.C_Decrypt.call_count, 1)
+            self.assertEqual(1, self.lib.C_Decrypt.call_count)
 
     def test_generate_wrapped_kek(self):
         self.lib.C_GenerateKey.return_value = pkcs11.CKR_OK
@@ -178,18 +178,18 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.lib.C_SignInit.return_value = pkcs11.CKR_OK
         self.lib.C_Sign.return_value = pkcs11.CKR_OK
         self.plugin.pkcs11.generate_wrapped_kek("label", 32, self.test_session)
-        self.assertEqual(self.lib.C_WrapKey.call_count, 1)
-        self.assertEqual(self.lib.C_SignInit.call_count, 1)
-        self.assertEqual(self.lib.C_Sign.call_count, 1)
+        self.assertEqual(1, self.lib.C_WrapKey.call_count)
+        self.assertEqual(1, self.lib.C_SignInit.call_count)
+        self.assertEqual(1, self.lib.C_Sign.call_count)
 
     def test_bind_kek_metadata_without_existing_key(self):
         with mock.patch.object(self.plugin.pkcs11, 'generate_wrapped_kek'):
             kek_datum = models.KEKDatum()
             dto = plugin_import.KEKMetaDTO(kek_datum)
             dto = self.plugin.bind_kek_metadata(dto)
-            self.assertEqual(dto.algorithm, "AES")
-            self.assertEqual(dto.bit_length, 256)
-            self.assertEqual(dto.mode, "CBC")
+            self.assertEqual("AES", dto.algorithm)
+            self.assertEqual(256, dto.bit_length)
+            self.assertEqual("CBC", dto.mode)
 
     def test_rng_self_test(self):
         with mock.patch.object(
@@ -229,8 +229,8 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
             plugin_meta['iv'], plugin_meta['hmac'], plugin_meta['wrapped_key'],
             plugin_meta['mkek_label'], plugin_meta['hmac'], self.test_session
         )
-        self.assertEqual(self.lib.C_UnwrapKey.call_count, 1)
-        self.assertEqual(self.lib.C_Verify.call_count, 1)
+        self.assertEqual(1, self.lib.C_UnwrapKey.call_count)
+        self.assertEqual(1, self.lib.C_Verify.call_count)
 
     def test_rewrap_kek(self):
         plugin_meta = {
@@ -256,9 +256,9 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
             32,
             self.test_session
         )
-        self.assertEqual(self.lib.C_UnwrapKey.call_count, 1)
-        self.assertEqual(self.lib.C_WrapKey.call_count, 1)
-        self.assertEqual(self.lib.C_Verify.call_count, 1)
+        self.assertEqual(1, self.lib.C_UnwrapKey.call_count)
+        self.assertEqual(1, self.lib.C_WrapKey.call_count)
+        self.assertEqual(1, self.lib.C_Verify.call_count)
 
     def test_generate_asymmetric_raises_error(self):
         self.assertRaises(NotImplementedError,
