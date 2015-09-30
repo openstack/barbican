@@ -160,8 +160,8 @@ class WhenNormalizingBeforeEncryption(utils.BaseTestCase):
             secret_type=s.SecretType.OPAQUE
         )
 
-        self.assertEqual(unencrypted, base64.b64encode('stuff'))
-        self.assertEqual(content_type, 'text/plain')
+        self.assertEqual(base64.b64encode('stuff'), unencrypted)
+        self.assertEqual('text/plain', content_type)
 
     def test_null_content_encoding_gets_passed_through(self):
         unencrypted, content_type = self.normalize(
@@ -228,12 +228,12 @@ class WhenDenormalizingAfterDecryption(utils.BaseTestCase):
         normalized_secret = secret.encode('utf-8')
         normalized_secret = base64.b64encode(normalized_secret)
         unencrypted = self.denormalize(normalized_secret, 'text/plain')
-        self.assertEqual(unencrypted, 'bam')
+        self.assertEqual('bam', unencrypted)
 
     def test_ascii_characters_to_utf8_with_app_octet_stream(self):
         unencrypted = self.denormalize(base64.b64encode('bam'),
                                        'application/octet-stream')
-        self.assertEqual(unencrypted, 'bam')
+        self.assertEqual('bam', unencrypted)
 
     def test_non_ascii_character_with_plain_text_raises_exception(self):
         exception = s.SecretAcceptNotSupportedException

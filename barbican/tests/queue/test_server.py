@@ -91,18 +91,18 @@ class WhenUsingTransactionalDecorator(utils.BaseTestCase):
         self.assertEqual(self.args, self.test_object.my_args)
         self.assertEqual(self.kwargs, self.test_object.my_kwargs)
 
-        self.assertEqual(self.commit_mock.call_count, 1)
-        self.assertEqual(self.rollback_mock.call_count, 0)
-        self.assertEqual(self.clear_mock.call_count, 1)
+        self.assertEqual(1, self.commit_mock.call_count)
+        self.assertEqual(0, self.rollback_mock.call_count)
+        self.assertEqual(1, self.clear_mock.call_count)
 
     def test_should_rollback(self):
         self.test_object.is_exception_needed = True
 
         self.test_object.test_method(*self.args, **self.kwargs)
 
-        self.assertEqual(self.commit_mock.call_count, 0)
-        self.assertEqual(self.rollback_mock.call_count, 1)
-        self.assertEqual(self.clear_mock.call_count, 1)
+        self.assertEqual(0, self.commit_mock.call_count)
+        self.assertEqual(1, self.rollback_mock.call_count)
+        self.assertEqual(1, self.clear_mock.call_count)
 
 
 class WhenUsingRetryableOrderDecorator(utils.BaseTestCase):
@@ -152,7 +152,7 @@ class WhenUsingRetryableOrderDecorator(utils.BaseTestCase):
         self.assertEqual(self.args, self.test_object.my_args)
         self.assertEqual(self.kwargs, self.test_object.my_kwargs)
 
-        self.assertEqual(self.schedule_retry_tasks_mock.call_count, 1)
+        self.assertEqual(1, self.schedule_retry_tasks_mock.call_count)
         self.schedule_retry_tasks_mock.assert_called_with(
             mock.ANY,
             self.test_object.result,
@@ -171,7 +171,7 @@ class WhenUsingRetryableOrderDecorator(utils.BaseTestCase):
             self.kwargs,
         )
 
-        self.assertEqual(self.schedule_retry_tasks_mock.call_count, 0)
+        self.assertEqual(0, self.schedule_retry_tasks_mock.call_count)
 
 
 class WhenCallingScheduleOrderRetryTasks(database_utils.RepositoryTestCase):

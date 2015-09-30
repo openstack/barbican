@@ -174,27 +174,27 @@ class WhenTestingNormalizationOfMIMETypes(utils.BaseTestCase):
 
     def _test_plain_text_mime_type(self, mime):
         r = mime_types.normalize_content_type(mime)
-        self.assertEqual(r, 'text/plain')
+        self.assertEqual('text/plain', r)
 
     def test_unsupported_charset_in_plain_text_mime(self):
         mime = 'text/plain; charset=ISO-8859-1'
         r = mime_types.normalize_content_type(mime)
-        self.assertEqual(r, mime)
+        self.assertEqual(mime, r)
 
     def test_malformed_charset_in_plain_text_mime(self):
         mime = 'text/plain; charset is ISO-8859-1'
         r = mime_types.normalize_content_type(mime)
-        self.assertEqual(r, mime)
+        self.assertEqual(mime, r)
 
     def test_binary_normalization(self):
         mime = 'application/octet-stream'
         r = mime_types.normalize_content_type(mime)
-        self.assertEqual(r, 'application/octet-stream')
+        self.assertEqual('application/octet-stream', r)
 
     def test_bogus_mime_normalization(self):
         mime = 'something/bogus'
         r = mime_types.normalize_content_type(mime)
-        self.assertEqual(r, 'something/bogus')
+        self.assertEqual('something/bogus', r)
 
 
 @utils.parameterized_test_case
