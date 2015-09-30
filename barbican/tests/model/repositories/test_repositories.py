@@ -37,7 +37,7 @@ class WhenCleaningRepositoryPagingParameters(utils.BaseTestCase):
         """The cleaner should use defaults when params are not specified."""
         clean_offset, clean_limit = repositories.clean_paging_values()
 
-        self.assertEqual(clean_offset, 0)
+        self.assertEqual(0, clean_offset)
         self.assertEqual(self.default_limit, clean_limit)
 
     def test_limit_as_none(self):
@@ -47,7 +47,7 @@ class WhenCleaningRepositoryPagingParameters(utils.BaseTestCase):
             offset_arg=offset,
             limit_arg=None)
 
-        self.assertEqual(clean_offset, offset)
+        self.assertEqual(offset, clean_offset)
         self.assertEqual(self.default_limit, clean_limit)
 
     def test_offset_as_none(self):
@@ -64,7 +64,7 @@ class WhenCleaningRepositoryPagingParameters(utils.BaseTestCase):
         clean_offset, clean_limit = repositories.clean_paging_values(
             offset_arg=0,
             limit_arg='boom')
-        self.assertEqual(clean_offset, 0)
+        self.assertEqual(0, clean_offset)
         self.assertEqual(self.default_limit, clean_limit)
 
     def test_offset_as_uncastable_str(self):
@@ -72,7 +72,7 @@ class WhenCleaningRepositoryPagingParameters(utils.BaseTestCase):
         clean_offset, clean_limit = repositories.clean_paging_values(
             offset_arg='boom',
             limit_arg=self.default_limit)
-        self.assertEqual(clean_offset, 0)
+        self.assertEqual(0, clean_offset)
         self.assertEqual(self.default_limit, clean_limit)
 
     def test_limit_is_less_than_one(self):
@@ -81,8 +81,8 @@ class WhenCleaningRepositoryPagingParameters(utils.BaseTestCase):
         clean_offset, clean_limit = repositories.clean_paging_values(
             offset_arg=1,
             limit_arg=limit)
-        self.assertEqual(clean_offset, 1)
-        self.assertEqual(clean_limit, 1)
+        self.assertEqual(1, clean_offset)
+        self.assertEqual(1, clean_limit)
 
     def test_limit_ist_too_big(self):
         """Limit should max out at configured value."""

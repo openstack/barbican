@@ -71,10 +71,10 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
             session=session,
         )
 
-        self.assertEqual([s.id for s in secrets], [secret.id])
-        self.assertEqual(offset, 0)
-        self.assertEqual(limit, 10)
-        self.assertEqual(total, 1)
+        self.assertEqual([secret.id], [s.id for s in secrets])
+        self.assertEqual(0, offset)
+        self.assertEqual(10, limit)
+        self.assertEqual(1, total)
 
     def test_get_secret_by_id(self):
         session = self.repo.get_session()
@@ -130,9 +130,9 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
         resulting_secret_ids = [s.id for s in secrets]
         self.assertIn(secret1.id, resulting_secret_ids)
         self.assertNotIn(secret2.id, resulting_secret_ids)
-        self.assertEqual(offset, 0)
-        self.assertEqual(limit, 10)
-        self.assertEqual(total, 1)
+        self.assertEqual(0, offset)
+        self.assertEqual(10, limit)
+        self.assertEqual(1, total)
 
     def test_get_by_create_date_nothing(self):
         session = self.repo.get_session()
@@ -143,13 +143,13 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
             suppress_exception=True
         )
 
-        self.assertEqual(secrets, [])
-        self.assertEqual(offset, 0)
-        self.assertEqual(limit, 10)
-        self.assertEqual(total, 0)
+        self.assertEqual([], secrets)
+        self.assertEqual(0, offset)
+        self.assertEqual(10, limit)
+        self.assertEqual(0, total)
 
     def test_do_entity_name(self):
-        self.assertEqual(self.repo._do_entity_name(), "Secret")
+        self.assertEqual("Secret", self.repo._do_entity_name())
 
     def test_should_raise_no_result_found(self):
         session = self.repo.get_session()
@@ -171,7 +171,7 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
         session.commit()
         count = self.repo.get_count(project.id, session=session)
 
-        self.assertEqual(count, 0)
+        self.assertEqual(0, count)
 
     def test_should_get_count_one(self):
         session = self.repo.get_session()
@@ -187,7 +187,7 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
         session.commit()
         count = self.repo.get_count(project.id, session=session)
 
-        self.assertEqual(count, 1)
+        self.assertEqual(1, count)
 
     def test_should_get_count_one_after_delete(self):
         session = self.repo.get_session()
@@ -206,11 +206,11 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
 
         session.commit()
         count = self.repo.get_count(project.id, session=session)
-        self.assertEqual(count, 2)
+        self.assertEqual(2, count)
 
         self.repo.delete_entity_by_id(secret_model.id, "my keystone id",
                                       session=session)
         session.commit()
 
         count = self.repo.get_count(project.id, session=session)
-        self.assertEqual(count, 1)
+        self.assertEqual(1, count)

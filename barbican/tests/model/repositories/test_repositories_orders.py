@@ -77,7 +77,7 @@ class WhenTestingOrderRepository(database_utils.RepositoryTestCase):
         session.commit()
         count = self.repo.get_count(project.id, session=session)
 
-        self.assertEqual(count, 0)
+        self.assertEqual(0, count)
 
     def test_should_get_count_one(self):
         session = self.repo.get_session()
@@ -93,7 +93,7 @@ class WhenTestingOrderRepository(database_utils.RepositoryTestCase):
         session.commit()
         count = self.repo.get_count(project.id, session=session)
 
-        self.assertEqual(count, 1)
+        self.assertEqual(1, count)
 
     def test_should_get_count_one_after_delete(self):
         session = self.repo.get_session()
@@ -112,11 +112,11 @@ class WhenTestingOrderRepository(database_utils.RepositoryTestCase):
 
         session.commit()
         count = self.repo.get_count(project.id, session=session)
-        self.assertEqual(count, 2)
+        self.assertEqual(2, count)
 
         self.repo.delete_entity_by_id(order_model.id, "my keystone id",
                                       session=session)
         session.commit()
 
         count = self.repo.get_count(project.id, session=session)
-        self.assertEqual(count, 1)
+        self.assertEqual(1, count)
