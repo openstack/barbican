@@ -200,7 +200,10 @@ def create_subordinate_ca(project_model, name, description, subject_dn,
     if not parent_ca:
         raise excep.InvalidParentCA(parent_ca_ref=parent_ca_ref)
 
-    # TODO(alee) check if the parent_ca is accessible for this project
+    # Parent CA must be a base CA or a subCA owned by this project
+    if (parent_ca.project_id is not None and
+            parent_ca.project_id != project_model.id):
+        raise excep.UnauthorizedSubCA()
 
     # get the parent plugin, raises CertPluginNotFound if missing
     cert_plugin = cert.CertificatePluginManager().get_plugin_by_name(

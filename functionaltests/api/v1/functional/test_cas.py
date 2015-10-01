@@ -252,6 +252,30 @@ class CertificateAuthoritiesTestCase(CATestCommon):
         resp = self.ca_behaviors.delete_ca(ca_ref=parent_ref)
         self.assertEqual(204, resp.status_code)
 
+    @depends_on_ca_plugins('snakeoil_ca')
+    def test_fail_to_create_subca_of_snakeoil_not_owned_subca(self):
+        self._fail_to_create_subca_of_not_owned_subca(
+            self.get_snakeoil_root_ca_ref())
+
+    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @depends_on_ca_plugins('dogtag')
+    def test_fail_to_create_subca_of_dogtag_not_owned_subca(self):
+        self._fail_to_create_subca_of_not_owned_subca(
+            self.get_dogtag_root_ca_ref())
+
+    def _fail_to_create_subca_of_not_owned_subca(self, root_ca_ref):
+        parent_model = self.get_subca_model(root_ca_ref)
+        resp, parent_ref = self.ca_behaviors.create_ca(parent_model)
+        self.assertEqual(201, resp.status_code)
+
+        child_model = self.get_sub_subca_model(parent_ref)
+        resp, child_ref = self.ca_behaviors.create_ca(child_model,
+                                                      user_name=admin_a)
+        self.assertEqual(403, resp.status_code)
+
+        resp = self.ca_behaviors.delete_ca(ca_ref=parent_ref)
+        self.assertEqual(204, resp.status_code)
+
     def test_create_subca_with_invalid_parent_ca_id(self):
         ca_model = self.get_subca_model(
             'http://localhost:9311/cas/invalid_ref'
@@ -331,6 +355,30 @@ class CertificateAuthoritiesTestCase(CATestCommon):
 
         resp = self.ca_behaviors.get_preferred(user_name=admin_a)
         self.assertEqual(404, resp.status_code)
+
+    @depends_on_ca_plugins('snakeoil_ca')
+    def test_try_and_fail_to_add_to_proj_snakeoil_subca_that_is_not_mine(self):
+        self._try_and_fail_to_add_to_proj_subca_that_is_not_mine(
+            self.get_snakeoil_root_ca_ref()
+        )
+
+    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @depends_on_ca_plugins('dogtag')
+    def test_try_and_fail_to_add_to_proj_dogtag_subca_that_is_not_mine(self):
+        self._try_and_fail_to_add_to_proj_subca_that_is_not_mine(
+            self.get_dogtag_root_ca_ref()
+        )
+
+    def _try_and_fail_to_add_to_proj_subca_that_is_not_mine(self, root_ca_ref):
+        ca_model = self.get_subca_model(root_ca_ref)
+        resp, ca_ref = self.ca_behaviors.create_ca(ca_model, user_name=admin_a)
+        self.assertEqual(201, resp.status_code)
+
+        resp = self.ca_behaviors.add_ca_to_project(ca_ref, user_name=admin_b)
+        self.assertEqual(403, resp.status_code)
+
+        resp = self.ca_behaviors.delete_ca(ca_ref=ca_ref, user_name=admin_a)
+        self.assertEqual(204, resp.status_code)
 
     @depends_on_ca_plugins('snakeoil_ca')
     def test_create_and_delete_snakeoil_subca(self):
