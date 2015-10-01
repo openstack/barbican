@@ -257,6 +257,16 @@ class WhenTestingCAsResource(utils.BarbicanAPIBaseTestCase):
             '/cas/bogus_ca/add-to-project', expect_errors=True)
         self.assertEqual(404, resp.status_int)
 
+    def test_should_raise_add_to_project_on_ca_not_owned_by_project(self):
+        self.create_cas()
+        self.app.extra_environ = {
+            'barbican.context': self._build_context("other_project",
+                                                    user="user1")
+        }
+        resp = self.app.post('/cas/{0}/add-to-project'.format(
+            self.subca.id), expect_errors=True)
+        self.assertEqual(403, resp.status_int)
+
     def test_should_raise_add_to_project_not_post(self):
         self.create_cas()
         resp = self.app.get(

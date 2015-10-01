@@ -908,6 +908,26 @@ class WhenCreatingSubordinateCAs(utils.BaseTestCase):
             creator_id=self.creator_id
         )
 
+    def test_should_raise_unauthorized_parent_ca(self):
+        subca = cert_res.create_subordinate_ca(
+            project_model=self.project2,
+            name=self.name,
+            description=self.description,
+            subject_dn=self.subject_name,
+            parent_ca_ref=self.parent_ca_ref,
+            creator_id=self.creator_id
+        )
+        subca_ref = hrefs.convert_certificate_authority_to_href(subca.id)
+        self.assertRaises(
+            excep.UnauthorizedSubCA,
+            cert_res.create_subordinate_ca,
+            project_model=self.project,
+            name=self.name,
+            description=self.description,
+            subject_dn=self.subject_name,
+            parent_ca_ref=subca_ref,
+            creator_id=self.creator_id)
+
     def test_should_raise_subcas_not_supported(self):
         self.cert_plugin.supports_create_ca.return_value = False
         self.assertRaises(

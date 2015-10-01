@@ -17,6 +17,7 @@ from six.moves.urllib import parse
 
 from barbican import api
 from barbican.api import controllers
+from barbican.common import exception as excep
 from barbican.common import hrefs
 from barbican.common import quota
 from barbican.common import resources as res
@@ -143,6 +144,11 @@ class CertificateAuthorityController(controllers.ACLMixin):
         LOG.debug("== Saving CA %s to external_project_id %s",
                   self.ca.id, external_project_id)
         project_model = res.get_or_create_project(external_project_id)
+
+        # CA must be a base CA or a subCA owned by this project
+        if (self.ca.project_id is not None and
+                self.ca.project_id != project_model.id):
+            raise excep.UnauthorizedSubCA()
 
         project_cas = project_model.cas
         num_cas = len(project_cas)
