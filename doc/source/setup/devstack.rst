@@ -1,14 +1,16 @@
 Running Barbican on DevStack
-===================================
+============================
 
-Currently, Barbican is not available within the default DevStack installation.
-However, you can patch a DevStack installation to include Barbican in the
-manual setup process below.
+Barbican is currently available via the plugin interface within devstack
 
-It is suggested that you install DevStack into an empty VM due to the number
-of dependencies installed and configuration that is performed. With this in
-mind, we provide an easy way of running Barbican on DevStack within a Vagrant
-VM.
+We provide two ways of deploying a DevStack environment with a running
+Barbican. The easy mode uses vagrant and automatically creates the VM
+with all necessary dependencies to run DevStack. It is recommended to use
+this process if it is your first time.
+
+If you are familiar with DevStack you can use the steps in the manual
+setup section to install Barbican onto your already running DevStack
+installation.
 
 .. warning::
 
@@ -17,43 +19,53 @@ VM.
 
 
 Easy Mode
-------------
+---------
 
 To simplify the setup process of running Barbican on DevStack, there is a
 Vagrantfile that will automatically setup up a VM containing Barbican
 running on Devstack.
 
-1. Clone the Vagrantfile collection
+1. Obtain Barbican vagrant file
+   If you don't already have the file then clone the repo below
 
     .. code-block:: bash
 
-        git clone https://github.com/cloudkeep/vagrantfile-collection.git
+        git clone https://github.com/openstack/barbican.git
 
-2. Get into the ``barbican-devstack`` directory
+2. Move the ``barbican-vagrant`` directory outside of the Barbican directory
+   and into your current directory for vagrant files. If you do not have one,
+   then just copy it into your home directory.
+
 
     .. code-block:: bash
 
-        cd vagrantfile-collection/barbican-devstack
+        cp -r barbican/devstack/barbican-vagrant <directory>
 
-3. Start create a new VM based on the cloned configuration
+3. Get into the ``barbican-vagrant`` directory
+
+    .. code-block:: bash
+
+        cd barbican-vagrant
+
+4. Start create a new VM based on the cloned configuration
 
     .. code-block:: bash
 
         vagrant up
 
-4. Once the VM has been successfully started and provisioned, ssh into the VM.
+5. Once the VM has been successfully started and provisioned, ssh into the VM.
 
     .. code-block:: bash
 
         vagrant ssh
 
-5. Once inside the VM, change your directory to the ``devstack`` folder.
+6. Once inside the VM, change your directory to the ``devstack`` folder.
 
     .. code-block:: bash
 
         cd /opt/stack/devstack/
 
-6. Start DevStack
+7. Start DevStack
 
     .. code-block:: bash
 
@@ -61,7 +73,7 @@ running on Devstack.
 
 
 Manual Setup
----------------
+------------
 
 These steps assume you are running within a clean Ubuntu 14.04 virtual
 machine (local or cloud instance). If you are running locally, do not forget
@@ -72,36 +84,40 @@ to expose the following ports
 #. Keystone Admin API - ``35357``
 
 Installation
-^^^^^^^^^^^^^
+^^^^^^^^^^^^
 
-.. code-block:: bash
+1. Make sure you are logged in as a non-root user with sudo privileges
 
-    # Install system dependencies to start DevStack and install Barbican
-    sudo apt-get update
-    sudo apt-get install -y python-pip python-dev libffi-dev libssl-dev git \
-                            libldap2-dev libsasl2-dev
+2. Install git
 
-    # Clone DevStack and Barbican
-    git clone https://git.openstack.org/cgit/openstack-dev/devstack.git
-    git clone https://github.com/openstack/barbican.git
+    .. code-block:: bash
 
-    # Patch DevStack with Barbican setup files
-    cp barbican/contrib/devstack/lib/barbican devstack/lib/
-    cp barbican/contrib/devstack/local.conf devstack/
-    cp barbican/contrib/devstack/extras.d/70-barbican.sh devstack/extras.d/
+        sudo apt-get install git
 
-    # Copy to setup directory
-    sudo cp -R devstack/ /opt/stack/
+3. Clone DevStack
 
-    # Create a non-root user for DevStack
-    sudo ./devstack/tools/create-stack-user.sh
+    .. code-block:: bash
 
-    # Assign permissions to that user
-    sudo chown -R stack:stack /opt/stack/
+        git clone https://github.com/openstack-dev/devstack.git
 
-    # Set the service host to localhost (Only for Local VMs)
-    sudo su - stack -c "echo \"export SERVICE_HOST=\\\"localhost\\\"\" >> .bashrc"
+4. Add the Barbican plugin to the local.conf file and verify the minimum
+   services required are included. You can pull down a specific branch by
+   appending the name to the end of the git url. If you leave the space empty
+   like below, then origin/master will be pulled.
 
-    # Start DevStack
-    cd /opt/stack/devstack/
-    ./stack.sh
+    .. code-block:: ini
+
+        enable_plugin barbican https://git.openstack.org/openstack/barbican
+        enable_service rabbit mysql key
+
+   If this is your first time and you do not have a local.conf file, there is
+   an example in the `Barbican github
+   <https://github.com/openstack/barbican/tree/master/devstack>`_.
+   Copy the file and place it in the devstack/ directory.
+
+5. Start DevStack
+
+     .. code-block:: bash
+
+         cd devstack/
+         ./stack.sh
