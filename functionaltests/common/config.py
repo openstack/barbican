@@ -65,6 +65,10 @@ def setup_config(config_file=''):
 
     keymanager_group = cfg.OptGroup(name='keymanager')
     keymanager_options = [
+        cfg.StrOpt('service_type', default='key-manager'),
+        cfg.StrOpt('service_name', default='barbican'),
+        cfg.StrOpt('region_name', default='RegionOne'),
+        cfg.StrOpt('endpoint_type', default='public'),
         cfg.StrOpt('override_url', default=''),
         cfg.StrOpt('override_url_version', default='')
     ]

@@ -192,10 +192,10 @@ class BarbicanClient(object):
 
         auth = self._auth[self._default_user_name]
         endpoint = auth.service_catalog.get_endpoints(
-            service_type='key-manager',
-            service_name='barbican',
-            region_name='RegionOne',
-            endpoint_type='public')
+            service_type=CONF.keymanager.service_type,
+            service_name=CONF.keymanager.service_name,
+            region_name=CONF.keymanager.region_name,
+            endpoint_type=CONF.keymanager.endpoint_type)
 
         if auth.version.lower() == 'v2':
             base_url = endpoint['key-manager'][0].get('publicURL')
