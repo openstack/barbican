@@ -1,6 +1,6 @@
-*************************
-ACL API - User Guide
-*************************
+******************
+ACL API User Guide
+******************
 
 By default Barbican manages access to its resources (secrets, containers) on a per project
 level, whereby a user is allowed access to project resources based on the roles a user has

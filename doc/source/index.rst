@@ -25,6 +25,7 @@ Getting Started
    contribute/database_migrations
    setup/index
    testing
+   admin-guide-cloud/index
    plugin/index
 
 
