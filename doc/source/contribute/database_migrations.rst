@@ -34,7 +34,7 @@ To achieve this goal, the following rules will be observed for schema changes:
    a. Create a version of the application not dependent on the removed
       column/table
    b. Replace all nodes with this new application version
-   c. Create an Alembic version file to remove remove the column/table
+   c. Create an Alembic version file to remove the column/table
    d. Apply this change in production manually, or automatically with a future
       version of the application
 
@@ -122,7 +122,7 @@ instructions).
          `server_default='0'` for False, or `server_default='1'` for True. For
          DateTime attributes, use `server_default=str(timeutils.utcnow())` to
          default to the current time.
-      2. If you add `any` constraint, please always `always` name them in the
+      2. If you add `any` constraint, please `always` name them in the
          barbican.model.models.py module, and also in the Alembic version
          modules when creating/dropping constraints, otherwise MySQL migrations
          might crash.
