@@ -128,13 +128,11 @@ class WhenPerformingPrivateOperations(utils.BaseTestCase,
                           'between the expected and test dicts')
 
 
-class BaseCertificateRequestsTestCase(utils.BaseTestCase):
+class BaseCertificateRequestsTestCase(database_utils.RepositoryTestCase):
     """Base Certificate Case Test function """
 
     def setUp(self):
         super(BaseCertificateRequestsTestCase, self).setUp()
-
-        database_utils.setup_in_memory_db()
 
         self.external_project_id = "56789"
         self.project = res.get_or_create_project(self.external_project_id)
@@ -278,7 +276,6 @@ class BaseCertificateRequestsTestCase(utils.BaseTestCase):
 
     def tearDown(self):
         super(BaseCertificateRequestsTestCase, self).tearDown()
-        database_utils.in_memory_cleanup()
         self.cert_plugin_patcher.stop()
         self.save_plugin_meta_patcher.stop()
         self.get_plugin_meta_patcher.stop()
@@ -833,7 +830,7 @@ class WhenCheckingCertificateRequests(BaseCertificateRequestsTestCase):
         )
 
 
-class WhenCreatingSubordinateCAs(utils.BaseTestCase):
+class WhenCreatingSubordinateCAs(database_utils.RepositoryTestCase):
     """Tests the 'create_subordinate_ca()' function."""
 
     def setUp(self):
