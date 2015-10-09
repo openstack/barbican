@@ -312,7 +312,7 @@ def construct_new_test_function(original_func, name, build_params):
         argdefs=six.get_function_defaults(original_func)
     )
 
-    for key, val in six.iteritems(original_func.__dict__):
+    for key, val in original_func.__dict__.items():
         if key != 'build_data':
             new_func.__dict__[key] = val
 
@@ -335,7 +335,7 @@ def process_parameterized_function(name, func_obj, build_data):
     to_remove = []
     to_add = []
 
-    for subtest_name, params in six.iteritems(build_data):
+    for subtest_name, params in build_data.items():
         # Build new test function
         func_name = '{0}_{1}'.format(name, subtest_name)
         new_func = construct_new_test_function(func_obj, func_name, params)
@@ -357,7 +357,7 @@ def parameterized_test_case(cls):
     """
     tests_to_remove = []
     tests_to_add = []
-    for key, val in six.iteritems(vars(cls)):
+    for key, val in vars(cls).items():
         # Only process tests with build data on them
         if key.startswith('test_') and val.__dict__.get('build_data'):
             to_remove, to_add = process_parameterized_function(

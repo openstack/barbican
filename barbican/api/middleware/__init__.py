@@ -18,7 +18,6 @@ Barbican middleware modules.
 """
 import sys
 
-import six
 import webob.dec
 
 from barbican.common import utils
@@ -85,7 +84,7 @@ class Debug(Middleware):
         resp = req.get_response(self.application)
 
         LOG.debug(("*" * 40) + " RESPONSE HEADERS")
-        for (key, value) in six.iteritems(resp.headers):
+        for (key, value) in resp.headers.items():
             LOG.debug('%s=%s', key, value)
         LOG.debug(' ')
 

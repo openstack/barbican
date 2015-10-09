@@ -133,7 +133,7 @@ class ModelBase(object):
 
     def update(self, values):
         """dict.update() behaviour."""
-        for k, v in six.iteritems(values):
+        for k, v in values.items():
             self[k] = v
 
     def __setitem__(self, key, value):

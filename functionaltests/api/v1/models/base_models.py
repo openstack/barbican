@@ -16,8 +16,6 @@ limitations under the License.
 import json
 import logging
 
-import six
-
 LOG = logging.getLogger(__name__)
 
 
@@ -64,7 +62,7 @@ class BaseModel(object):
         resulting_dict = dictionary.copy()
 
         # Dumping the keys to a list as we'll be changing the dict size
-        empty_keys = [k for k, v in six.iteritems(dictionary) if v is None]
+        empty_keys = [k for k, v in dictionary.items() if v is None]
         for k in empty_keys:
             del resulting_dict[k]
         return resulting_dict
