@@ -15,6 +15,7 @@
 import os
 import uuid
 
+from barbican.common import config
 from barbican.common import exception
 from barbican.model import repositories
 from barbican.tests.api.controllers import test_secrets as secret_helper
@@ -126,6 +127,7 @@ class WhenCreatingContainersUsingContainersResource(
         self.assertNotIn(self.project_id, resp.headers['Location'])
 
     def test_should_throw_exception_when_secret_ref_doesnt_exist(self):
+        config.CONF.set_override("host_href", "http://localhost:9311")
         secret_refs = [
             {
                 'name': 'bad secret',
@@ -140,6 +142,7 @@ class WhenCreatingContainersUsingContainersResource(
             expect_errors=True,
         )
         self.assertEqual(404, resp.status_int)
+        config.CONF.clear_override('host_href')
 
 
 class WhenGettingContainersListUsingContainersResource(
