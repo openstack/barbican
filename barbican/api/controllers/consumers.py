@@ -165,7 +165,7 @@ class ContainerConsumersController(controllers.ACLMixin):
     @controllers.enforce_content_types(['application/json'])
     def on_delete(self, external_project_id, **kwargs):
         data = api.load_body(pecan.request, validator=self.validator)
-        LOG.debug(data)
+        LOG.debug('Start on_delete...%s', data)
         consumer = self.consumer_repo.get_by_values(
             self.container_id,
             data["name"],
