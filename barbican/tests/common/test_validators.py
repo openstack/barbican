@@ -15,6 +15,7 @@
 
 import base64
 import datetime
+import six
 import unittest
 
 import testtools
@@ -1028,6 +1029,31 @@ class WhenTestingKeyTypeOrderValidator(utils.BaseTestCase):
                           self.validator.validate,
                           self.key_order_req)
 
+    def test_should_raise_with_no_bit_length_in_order_refs(self):
+        del self.key_order_req['meta']['bit_length']
+
+        exception = self.assertRaises(excep.InvalidObject,
+                                      self.validator.validate,
+                                      self.key_order_req)
+        self.assertIn("bit_length' is required field for key type order",
+                      six.text_type(exception))
+
+    def test_should_raise_with_zero_bit_length_in_order_refs(self):
+        self.key_order_req['meta']['bit_length'] = 0
+
+        exception = self.assertRaises(excep.InvalidObject,
+                                      self.validator.validate,
+                                      self.key_order_req)
+        self.assertEqual('bit_length', exception.invalid_property)
+
+    def test_should_raise_with_negative_bit_length_in_order_refs(self):
+        self.key_order_req['meta']['bit_length'] = -1
+
+        exception = self.assertRaises(excep.InvalidObject,
+                                      self.validator.validate,
+                                      self.key_order_req)
+        self.assertEqual('bit_length', exception.invalid_property)
+
     def test_should_raise_with_wrong_exp_meta_in_order_refs(self):
         self.key_order_req['meta']['algorithm'] = 'AES'
         self.key_order_req['meta']['expiration'] = '2014-02-28T19:14:44.180394'
@@ -1090,6 +1116,32 @@ class WhenTestingAsymmetricTypeOrderValidator(utils.BaseTestCase):
         self.asymmetric_order_req['meta']['algorithm'] = 'aes'
         result = self.validator.validate(self.asymmetric_order_req)
         self.assertIsNone(result['meta']['expiration'])
+
+    def test_should_raise_with_no_bit_length_in_asymmetric_order_refs(self):
+        del self.asymmetric_order_req['meta']['bit_length']
+
+        exception = self.assertRaises(excep.InvalidObject,
+                                      self.validator.validate,
+                                      self.asymmetric_order_req)
+        self.assertIn(
+            "bit_length' is required field for asymmetric key type order",
+            six.text_type(exception))
+
+    def test_should_raise_with_zero_bit_length_in_asymmetric_order_refs(self):
+        self.asymmetric_order_req['meta']['bit_length'] = 0
+
+        exception = self.assertRaises(excep.InvalidObject,
+                                      self.validator.validate,
+                                      self.asymmetric_order_req)
+        self.assertEqual("bit_length", exception.invalid_property)
+
+    def test_should_raise_with_negative_bit_len_in_asymmetric_order_refs(self):
+        self.asymmetric_order_req['meta']['bit_length'] = -1
+
+        exception = self.assertRaises(excep.InvalidObject,
+                                      self.validator.validate,
+                                      self.asymmetric_order_req)
+        self.assertEqual("bit_length", exception.invalid_property)
 
 
 class WhenTestingSimpleCMCOrderValidator(utils.BaseTestCase):

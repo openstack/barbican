@@ -569,6 +569,12 @@ class TypeOrderValidator(ValidatorBase, CACommonHelpersMixin):
                                   "for {0} type order").format(order_type),
                               "meta")
 
+        self._assert_validity(meta.get('bit_length'),
+                              schema_name,
+                              u._("'bit_length' is required field "
+                                  "for {0} type order").format(order_type),
+                              "meta")
+
         self._validate_bit_length(meta, schema_name)
 
     def _extract_expiration(self, json_data, schema_name):
@@ -590,15 +596,7 @@ class TypeOrderValidator(ValidatorBase, CACommonHelpersMixin):
 
     def _validate_bit_length(self, meta, schema_name):
 
-        bit_length = int(meta.get('bit_length', 0))
-        if bit_length <= 0:
-            raise exception.UnsupportedField(field="bit_length",
-                                             schema=schema_name,
-                                             reason=u._("Must have "
-                                                        "non-zero positive"
-                                                        " bit_length to"
-                                                        " generate secret"
-                                                        ))
+        bit_length = int(meta.get('bit_length'))
         if bit_length % 8 != 0:
             raise exception.UnsupportedField(field="bit_length",
                                              schema=schema_name,
