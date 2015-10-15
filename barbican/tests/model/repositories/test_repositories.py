@@ -332,6 +332,7 @@ class WhenTestingMigrations(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingMigrations, self).setUp()
+        repositories.CONF.set_override("sql_connection", "connection")
         self.alembic_config = migration.init_config()
         self.alembic_config.barbican_config = cfg.CONF
 
