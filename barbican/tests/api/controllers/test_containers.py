@@ -183,8 +183,8 @@ class WhenGettingContainersListUsingContainersResource(
             self.params
         )
         self.assertEqual(200, resp.status_int)
-        self.assertTrue('previous' in resp.namespace)
-        self.assertTrue('next' in resp.namespace)
+        self.assertIn('previous', resp.namespace)
+        self.assertIn('next', resp.namespace)
 
         url_nav_next = self._create_url(self.offset + self.limit, self.limit)
         self.assertEqual(1, resp.body.decode('utf-8').count(url_nav_next))

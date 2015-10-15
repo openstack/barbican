@@ -154,8 +154,8 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
             suppress_exception=True
         )
 
-        self.assertTrue('previous' in resp.namespace)
-        self.assertTrue('next' in resp.namespace)
+        self.assertIn('previous', resp.namespace)
+        self.assertIn('next', resp.namespace)
 
         url_nav_next = self._create_url(self.external_project_id,
                                         self.offset + self.limit, self.limit)

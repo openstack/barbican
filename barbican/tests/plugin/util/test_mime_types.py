@@ -111,8 +111,8 @@ class WhenTestingAugmentFieldsWithContentTypes(utils.BaseTestCase):
 
     def test_static_supported_binary(self):
         for bin in mime_types.BINARY:
-            self.assertTrue(mime_types.INTERNAL_CTYPES[bin] in
-                            mime_types.BINARY)
+            self.assertIn(mime_types.INTERNAL_CTYPES[bin],
+                          mime_types.BINARY)
 
     def test_static_content_to_encodings(self):
         self.assertIn('text/plain', mime_types.CTYPES_TO_ENCODINGS)
