@@ -16,6 +16,7 @@ User Guide
    ./userguide/cas
    ./userguide/dogtag_setup
    ./userguide/quotas
+   ./userguide/consumers
 
 API Reference
 #############
@@ -29,3 +30,4 @@ API Reference
     ./reference/certificates
     ./reference/cas
     ./reference/quotas
+    ./reference/consumers
