@@ -56,7 +56,7 @@ def allow_all_content_types(f):
 
 
 def hostname_for_refs(resource=None):
-    """Return the HATEOS-style return URI reference for this service."""
+    """Return the HATEOAS-style return URI reference for this service."""
     ref = ['{base}/{version}'.format(base=CONF.host_href, version=API_VERSION)]
     if resource:
         ref.append('/' + resource)
