@@ -13,7 +13,7 @@ from barbican.common import utils
 
 
 def convert_resource_id_to_href(resource_slug, resource_id):
-    """Convert the resouce ID to a HATEOS-style href with resource slug."""
+    """Convert the resouce ID to a HATEOAS-style href with resource slug."""
     if resource_id:
         resource = '{slug}/{id}'.format(slug=resource_slug, id=resource_id)
     else:
@@ -22,38 +22,38 @@ def convert_resource_id_to_href(resource_slug, resource_id):
 
 
 def convert_secret_to_href(secret_id):
-    """Convert the secret IDs to a HATEOS-style href."""
+    """Convert the secret IDs to a HATEOAS-style href."""
     return convert_resource_id_to_href('secrets', secret_id)
 
 
 def convert_order_to_href(order_id):
-    """Convert the order IDs to a HATEOS-style href."""
+    """Convert the order IDs to a HATEOAS-style href."""
     return convert_resource_id_to_href('orders', order_id)
 
 
 def convert_container_to_href(container_id):
-    """Convert the container IDs to a HATEOS-style href."""
+    """Convert the container IDs to a HATEOAS-style href."""
     return convert_resource_id_to_href('containers', container_id)
 
 
 def convert_transport_key_to_href(transport_key_id):
-    """Convert the transport key IDs to a HATEOS-style href."""
+    """Convert the transport key IDs to a HATEOAS-style href."""
     return convert_resource_id_to_href('transport_keys', transport_key_id)
 
 
 def convert_consumer_to_href(consumer_id):
-    """Convert the consumer ID to a HATEOS-style href."""
+    """Convert the consumer ID to a HATEOAS-style href."""
     return convert_resource_id_to_href('consumers', consumer_id) + '/consumers'
 
 
 def convert_certificate_authority_to_href(ca_id):
-    """Convert the ca ID to a HATEOS-style href."""
+    """Convert the ca ID to a HATEOAS-style href."""
     return convert_resource_id_to_href('cas', ca_id)
 
 
 # TODO(hgedikli) handle list of fields in here
 def convert_to_hrefs(fields):
-    """Convert id's within a fields dict to HATEOS-style hrefs."""
+    """Convert id's within a fields dict to HATEOAS-style hrefs."""
     if 'secret_id' in fields:
         fields['secret_ref'] = convert_secret_to_href(fields['secret_id'])
         del fields['secret_id']
@@ -78,7 +78,7 @@ def convert_to_hrefs(fields):
 def convert_list_to_href(resources_name, offset, limit):
     """Supports pretty output of paged-list hrefs.
 
-    Convert the offset/limit info to a HATEOS-style href
+    Convert the offset/limit info to a HATEOAS-style href
     suitable for use in a list navigation paging interface.
     """
     resource = '{0}?limit={1}&offset={2}'.format(resources_name, limit,
@@ -89,7 +89,7 @@ def convert_list_to_href(resources_name, offset, limit):
 def previous_href(resources_name, offset, limit):
     """Supports pretty output of previous-page hrefs.
 
-    Create a HATEOS-style 'previous' href suitable for use in a list
+    Create a HATEOAS-style 'previous' href suitable for use in a list
     navigation paging interface, assuming the provided values are the
     currently viewed page.
     """
@@ -100,7 +100,7 @@ def previous_href(resources_name, offset, limit):
 def next_href(resources_name, offset, limit):
     """Supports pretty output of next-page hrefs.
 
-    Create a HATEOS-style 'next' href suitable for use in a list
+    Create a HATEOAS-style 'next' href suitable for use in a list
     navigation paging interface, assuming the provided values are the
     currently viewed page.
     """

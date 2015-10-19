@@ -106,7 +106,7 @@ class OrderBehaviors(base_behaviors.BaseBehaviors):
                      user_name=None, use_auth=True):
         """Delete an order.
 
-        :param order_ref: HATEOS ref of the order to be deleted
+        :param order_ref: HATEOAS ref of the order to be deleted
         :param extra_headers: Optional HTTP headers to add to the request
         :param expected_fail: Flag telling the delete whether or not this
                               operation is expected to fail (ie coming

@@ -108,7 +108,7 @@ class CABehaviors(base_behaviors.BaseBehaviors):
                   expected_fail=False, use_auth=True, user_name=None):
         """Delete a secret.
 
-        :param ca_ref: HATEOS ref of the secret to be deleted
+        :param ca_ref: HATEOAS ref of the secret to be deleted
         :param extra_headers: Optional HTTP headers to add to the request
         :param expected_fail: If test is expected to fail the deletion
         :param use_auth: Boolean for whether to send authentication headers

@@ -53,7 +53,7 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
                               user_name=None):
         """Updates a secret's payload data.
 
-        :param secret_ref: HATEOS ref of the secret to be updated
+        :param secret_ref: HATEOAS ref of the secret to be updated
         :param payload: new payload to be sent to server
         :param payload_content_type: value for the Content-Type header
         :param payload_content_encoding: value for the Content-Encoding header
@@ -107,7 +107,7 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
     def get_secret_metadata(self, secret_ref, use_auth=True, user_name=None):
         """Retrieves a secret's metadata.
 
-        :param secret_ref: HATEOS ref of the secret to be retrieved
+        :param secret_ref: HATEOAS ref of the secret to be retrieved
         :param use_auth: Boolean for whether to send authentication headers
         :param user_name: The user name used to get the metadata
         :return: A request response object
@@ -151,7 +151,7 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
                       expected_fail=False, use_auth=True, user_name=None):
         """Delete a secret.
 
-        :param secret_ref: HATEOS ref of the secret to be deleted
+        :param secret_ref: HATEOAS ref of the secret to be deleted
         :param extra_headers: Optional HTTP headers to add to the request
         :param expected_fail: If test is expected to fail the deletion
         :param use_auth: Boolean for whether to send authentication headers

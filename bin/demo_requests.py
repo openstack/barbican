@@ -173,7 +173,7 @@ def demo_retrieve_container_list():
 
 
 def demo_delete_secret(secret_ref):
-    """Delete secret by its HATEOS reference"""
+    """Delete secret by its HATEOAS reference"""
     ep_delete = secret_ref
 
     # DELETE secret:
@@ -184,7 +184,7 @@ def demo_delete_secret(secret_ref):
 
 
 def demo_delete_container(container_ref):
-    """Delete container by its HATEOS reference"""
+    """Delete container by its HATEOAS reference"""
     ep_delete = container_ref
 
     # DELETE container:
