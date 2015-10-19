@@ -32,12 +32,12 @@ class WhenUsingFollowOnProcessingStatusDTO(utils.BaseTestCase):
         self.assertEqual(u._('Unknown'), self.target.status)
         self.assertEqual(u._('Unknown'), self.target.status_message)
         self.assertEqual(common.RETRY_MSEC_DEFAULT, self.target.retry_msec)
-        self.assertEqual(False, self.target.is_follow_on_needed())
+        self.assertFalse(self.target.is_follow_on_needed())
 
     def test_should_indicate_no_follow_on_with_no_retry_task(self):
         self.target.retry_task = None
 
-        self.assertEqual(False, self.target.is_follow_on_needed())
+        self.assertFalse(self.target.is_follow_on_needed())
 
     def test_should_indicate_follow_on_when_retry_task_provided(self):
         self.target.retry_task = common.RetryTasks.INVOKE_SAME_TASK

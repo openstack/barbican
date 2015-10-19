@@ -132,7 +132,7 @@ class WhenTestingSecretACLRepository(database_utils.RepositoryTestCase,
 
         id_map = self._map_id_to_acl(acls)
         self.assertEqual(True, id_map[acl1.id].project_access)
-        self.assertEqual(False, id_map[acl2.id].project_access)
+        self.assertFalse(id_map[acl2.id].project_access)
         self.assertEqual('read', id_map[acl1.id].operation)
         self.assertEqual('write', id_map[acl2.id].operation)
         self.assertEqual('delete', id_map[acl3.id].operation)
@@ -211,7 +211,7 @@ class WhenTestingSecretACLRepository(database_utils.RepositoryTestCase,
         id_map = self._map_id_to_acl(acls)
 
         self.assertEqual(3, len(acls))
-        self.assertEqual(False, id_map[acl1.id].project_access)
+        self.assertFalse(id_map[acl1.id].project_access)
         self.assertEqual(True, id_map[acl2.id].project_access)
         self.assertEqual(True, id_map[acl3.id].project_access)
         self._assert_acl_users(['u5'], acls, acl1.id)
@@ -383,7 +383,7 @@ class WhenTestingContainerACLRepository(database_utils.RepositoryTestCase,
 
         id_map = self._map_id_to_acl(acls)
         self.assertEqual(True, id_map[acl1.id].project_access)
-        self.assertEqual(False, id_map[acl2.id].project_access)
+        self.assertFalse(id_map[acl2.id].project_access)
         self.assertEqual('read', id_map[acl1.id].operation)
         self.assertEqual('write', id_map[acl2.id].operation)
         self.assertEqual('list', id_map[acl3.id].operation)
@@ -462,7 +462,7 @@ class WhenTestingContainerACLRepository(database_utils.RepositoryTestCase,
         id_map = self._map_id_to_acl(acls)
 
         self.assertEqual(3, len(acls))
-        self.assertEqual(False, id_map[acl1.id].project_access)
+        self.assertFalse(id_map[acl1.id].project_access)
         self.assertEqual(True, id_map[acl2.id].project_access)
         self.assertEqual(True, id_map[acl3.id].project_access)
         self._assert_acl_users(['u5'], acls, acl1.id)
