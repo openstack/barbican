@@ -778,7 +778,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
                          result_dto.status,
                          "result_dto_status incorrect")
 
-        self.assertEqual(None, result_dto.certificate)
+        self.assertIsNone(result_dto.certificate)
 
     def test_check_status_canceled(self):
         order_meta = mock.ANY
@@ -797,7 +797,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
                          result_dto.status,
                          "result_dto_status incorrect")
 
-        self.assertEqual(None, result_dto.certificate)
+        self.assertIsNone(result_dto.certificate)
 
     def test_check_status_pending(self):
         order_meta = mock.ANY
@@ -816,7 +816,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
                          result_dto.status,
                          "result_dto_status incorrect")
 
-        self.assertEqual(None, result_dto.certificate)
+        self.assertIsNone(result_dto.certificate)
 
     def test_check_status_raises_error_complete_no_cert(self):
         order_meta = mock.ANY

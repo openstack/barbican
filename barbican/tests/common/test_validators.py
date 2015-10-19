@@ -983,7 +983,7 @@ class WhenTestingKeyTypeOrderValidator(utils.BaseTestCase):
         self.key_order_req['meta']['algorithm'] = 'AES'
         self.key_order_req['meta']['bit_length'] = 256
         result = self.validator.validate(self.key_order_req)
-        self.assertTrue(result['meta']['expiration'] is None)
+        self.assertIsNone(result['meta']['expiration'])
 
     def test_should_pass_good_exp_meta_in_order_refs(self):
         self.key_order_req['meta']['algorithm'] = 'AES'
@@ -1042,7 +1042,7 @@ class WhenTestingKeyTypeOrderValidator(utils.BaseTestCase):
         del self.key_order_req['meta']['mode']
 
         result = self.validator.validate(self.key_order_req)
-        self.assertTrue(result is not None)
+        self.assertIsNotNone(result)
         self.assertTrue(result['meta']['algorithm'] == 'hmacsha1')
 
     def test_should_raise_with_payload_in_order(self):

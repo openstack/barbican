@@ -177,7 +177,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         response_dict = self.plugin_to_test.store_secret(
             self.secret_dto, self.context)
 
-        self.assertEqual(None, response_dict)
+        self.assertIsNone(response_dict)
 
         # Verify encrypt plugin and method where invoked.
         encrypt_mock = self.encrypting_plugin.encrypt
@@ -205,7 +205,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         response_dict = self.plugin_to_test.store_secret(
             secret_dto, self.context)
 
-        self.assertEqual(None, response_dict)
+        self.assertIsNone(response_dict)
 
         raw_content = base64.b64decode(secret_dto.secret)
 
@@ -310,7 +310,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         response_dict = self.plugin_to_test.generate_symmetric_key(
             self.spec_aes, self.context)
 
-        self.assertEqual(None, response_dict)
+        self.assertIsNone(response_dict)
 
         # Verify KEK objects finder was invoked.
         method_target = self.find_or_create_kek_objects_patcher.target
@@ -427,9 +427,9 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         # Verify response.
         self.assertIsInstance(
             response_dto, secret_store.AsymmetricKeyMetadataDTO)
-        self.assertEqual(None, response_dto.private_key_meta)
-        self.assertEqual(None, response_dto.public_key_meta)
-        self.assertEqual(None, response_dto.passphrase_meta)
+        self.assertIsNone(response_dto.private_key_meta)
+        self.assertIsNone(response_dto.public_key_meta)
+        self.assertIsNone(response_dto.passphrase_meta)
 
         # Verify KEK objects finder was invoked.
         method_target = self.find_or_create_kek_objects_patcher.target

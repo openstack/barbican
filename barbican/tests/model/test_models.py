@@ -359,7 +359,7 @@ class WhenCreatingNewSecretACL(utils.BaseTestCase):
                          acl.to_dict_fields()['project_access'])
         self.assertTrue(all(user_id in self.user_ids for user_id in
                             acl.to_dict_fields()['users']))
-        self.assertEqual(None, acl.to_dict_fields()['acl_id'])
+        self.assertIsNone(acl.to_dict_fields()['acl_id'])
 
     def test_new_secretacl_for_bare_minimum_input(self):
         acl = models.SecretACL(self.secret_id, self.operation,
@@ -367,7 +367,7 @@ class WhenCreatingNewSecretACL(utils.BaseTestCase):
         self.assertEqual(self.secret_id, acl.secret_id)
         self.assertEqual(0, len(acl.acl_users))
         self.assertEqual(self.operation, acl.operation)
-        self.assertEqual(None, acl.project_access)
+        self.assertIsNone(acl.project_access)
 
     def test_new_secretacl_with_duplicate_userids_input(self):
         user_ids = list(self.user_ids)
@@ -376,7 +376,7 @@ class WhenCreatingNewSecretACL(utils.BaseTestCase):
                                None, user_ids=user_ids)
         self.assertEqual(self.secret_id, acl.secret_id)
         self.assertEqual(self.operation, acl.operation)
-        self.assertEqual(None, acl.project_access)
+        self.assertIsNone(acl.project_access)
         self.assertEqual(2, len(acl.acl_users))
 
     def test_should_throw_exception_missing_secret_id(self):
@@ -422,7 +422,7 @@ class WhenCreatingNewContainerACL(utils.BaseTestCase):
                          acl.to_dict_fields()['project_access'])
         self.assertTrue(all(user_id in self.user_ids for user_id
                             in acl.to_dict_fields()['users']))
-        self.assertEqual(None, acl.to_dict_fields()['acl_id'])
+        self.assertIsNone(acl.to_dict_fields()['acl_id'])
 
     def test_new_containeracl_for_bare_minimum_input(self):
         acl = models.ContainerACL(self.container_id, self.operation,
@@ -430,7 +430,7 @@ class WhenCreatingNewContainerACL(utils.BaseTestCase):
         self.assertEqual(self.container_id, acl.container_id)
         self.assertEqual(0, len(acl.acl_users))
         self.assertEqual(self.operation, acl.operation)
-        self.assertEqual(None, acl.project_access)
+        self.assertIsNone(acl.project_access)
 
     def test_new_containeracl_with_duplicate_userids_input(self):
         user_ids = list(self.user_ids)
@@ -550,11 +550,11 @@ class WhenCreatingNewProjectQuotas(utils.BaseTestCase):
                                               None)
 
         self.assertEqual('12345', project_quotas.project_id)
-        self.assertEqual(None, project_quotas.secrets)
-        self.assertEqual(None, project_quotas.orders)
-        self.assertEqual(None, project_quotas.containers)
-        self.assertEqual(None, project_quotas.consumers)
-        self.assertEqual(None, project_quotas.cas)
+        self.assertIsNone(project_quotas.secrets)
+        self.assertIsNone(project_quotas.orders)
+        self.assertIsNone(project_quotas.containers)
+        self.assertIsNone(project_quotas.consumers)
+        self.assertIsNone(project_quotas.cas)
 
     def test_create_new_project_quotas_with_some_default_quotas(self):
         project = models.Project()
@@ -569,10 +569,10 @@ class WhenCreatingNewProjectQuotas(utils.BaseTestCase):
 
         self.assertEqual('12345', project_quotas.project_id)
         self.assertEqual(101, project_quotas.secrets)
-        self.assertEqual(None, project_quotas.orders)
+        self.assertIsNone(project_quotas.orders)
         self.assertEqual(103, project_quotas.containers)
         self.assertEqual(105, project_quotas.consumers)
-        self.assertEqual(None, project_quotas.cas)
+        self.assertIsNone(project_quotas.cas)
 
     def test_should_throw_exception_missing_project_id(self):
         self.assertRaises(exception.MissingArgumentError,
