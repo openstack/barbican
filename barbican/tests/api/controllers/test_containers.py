@@ -212,8 +212,8 @@ class WhenGettingContainersListUsingContainersResource(
             self.params
         )
         self.assertEqual(0, resp.namespace['total'])
-        self.assertFalse('previous' in resp.namespace)
-        self.assertFalse('next' in resp.namespace)
+        self.assertNotIn('previous', resp.namespace)
+        self.assertNotIn('next', resp.namespace)
 
 
 class WhenGettingOrDeletingContainerUsingContainerResource(

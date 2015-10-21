@@ -189,8 +189,8 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
             suppress_exception=True
         )
 
-        self.assertFalse('previous' in resp.namespace)
-        self.assertFalse('next' in resp.namespace)
+        self.assertNotIn('previous', resp.namespace)
+        self.assertNotIn('next', resp.namespace)
 
     def _create_url(self, external_project_id, offset_arg=None,
                     limit_arg=None):

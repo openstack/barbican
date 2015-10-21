@@ -151,7 +151,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         del self.secret_req['payload_content_type']
         result = self.validator.validate(self.secret_req)
 
-        self.assertFalse('payload' in result)
+        self.assertNotIn('payload', result)
 
     def test_should_validate_payload_with_whitespace(self):
         self.secret_req['payload'] = '  ' + self.payload + '    '
