@@ -6,36 +6,36 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 1.0.0.dev98.g4d3f206\n"
+"Project-Id-Version: barbican 2.0.0.dev29\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-09-24 21:15+0200\n"
+"POT-Creation-Date: 2015-10-22 06:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.0\n"
+"Generated-By: Babel 2.1.1\n"
 
-#: barbican/api/__init__.py:56
+#: barbican/api/__init__.py:55
 msgid "Read Error"
 msgstr ""
 
-#: barbican/api/__init__.py:66
+#: barbican/api/__init__.py:65
 msgid "Malformed JSON"
 msgstr ""
 
-#: barbican/api/__init__.py:100
+#: barbican/api/__init__.py:99
 msgid ""
 "{operation} attempt not allowed - please review your user/project "
 "privileges"
 msgstr ""
 
-#: barbican/api/__init__.py:110
+#: barbican/api/__init__.py:109
 msgid "{operation} failure seen - please contact site administrator."
 msgstr ""
 
-#: barbican/api/__init__.py:114
+#: barbican/api/__init__.py:113
 msgid "{operation} issue seen - {reason}."
 msgstr ""
 
@@ -71,93 +71,93 @@ msgstr ""
 msgid "ContainerACL(s) deletion"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:35
+#: barbican/api/controllers/cas.py:36
 msgid "Not Found. CA not found."
 msgstr ""
 
-#: barbican/api/controllers/cas.py:40
+#: barbican/api/controllers/cas.py:41
 msgid "Not Found. CA attribute not found."
 msgstr ""
 
-#: barbican/api/controllers/cas.py:45
+#: barbican/api/controllers/cas.py:46
 msgid "Not Found. CA not in project."
 msgstr ""
 
-#: barbican/api/controllers/cas.py:52
+#: barbican/api/controllers/cas.py:53
 msgid "Cannot set CA as a preferred CA as it is not a project CA."
 msgstr ""
 
-#: barbican/api/controllers/cas.py:59
+#: barbican/api/controllers/cas.py:60
 msgid ""
 "Please change the preferred CA to a different project CA before removing "
 "it."
 msgstr ""
 
-#: barbican/api/controllers/cas.py:95
+#: barbican/api/controllers/cas.py:96
 msgid "Certificate Authority retrieval"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:103
+#: barbican/api/controllers/cas.py:104
 msgid "CA Signing Cert retrieval"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:111
+#: barbican/api/controllers/cas.py:112
 msgid "CA Cert Chain retrieval"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:119
+#: barbican/api/controllers/cas.py:120
 msgid "CA projects retrieval"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:137
+#: barbican/api/controllers/cas.py:138
 msgid "Add CA to project"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:166
+#: barbican/api/controllers/cas.py:172
 msgid "Remove CA from project"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:211
+#: barbican/api/controllers/cas.py:210
 msgid "Set preferred project CA"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:235
+#: barbican/api/controllers/cas.py:234
 msgid "Set global preferred CA"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:248
+#: barbican/api/controllers/cas.py:247
 msgid "CA deletion"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:296
+#: barbican/api/controllers/cas.py:292
 msgid "Certificate Authorities retrieval (limited)"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:332
+#: barbican/api/controllers/cas.py:328
 msgid "Certificate Authorities retrieval"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:409
+#: barbican/api/controllers/cas.py:405
 msgid "Retrieve global preferred CA"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:417
+#: barbican/api/controllers/cas.py:413
 msgid "No global preferred CA defined"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:426
+#: barbican/api/controllers/cas.py:422
 msgid "Unset global preferred CA"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:443
+#: barbican/api/controllers/cas.py:439
 msgid "Retrieve project preferred CA"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:452
+#: barbican/api/controllers/cas.py:448
 msgid "No preferred CA defined for this project"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:460
+#: barbican/api/controllers/cas.py:456
 msgid "CA creation"
 msgstr ""
 
@@ -812,6 +812,18 @@ msgstr ""
 msgid "Subordinate CA is not owned by this project"
 msgstr ""
 
+#: barbican/common/exception.py:479
+msgid "A new project preferred CA must be set before this one can be deleted."
+msgstr ""
+
+#: barbican/common/exception.py:485 barbican/common/exception.py:492
+msgid "Errors returned by CA when attempting to create subordinate CA: %(reason)"
+msgstr ""
+
+#: barbican/common/exception.py:498
+msgid "Errors returned by CA when attempting to delete subordinate CA: %(reason)"
+msgstr ""
+
 #: barbican/common/utils.py:134
 msgid "Cannot generate a fullname for a null instance"
 msgstr ""
@@ -1069,130 +1081,138 @@ msgstr ""
 msgid "Entity '{entity_name}' already exists"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:47
+#: barbican/plugin/dogtag.py:56
 msgid "Path to PEM file for authentication"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:50
+#: barbican/plugin/dogtag.py:59
 msgid "Hostname for the Dogtag instance"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:53
+#: barbican/plugin/dogtag.py:62
 msgid "Port for the Dogtag instance"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:55
+#: barbican/plugin/dogtag.py:64
 msgid "Path to the NSS certificate database"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:57
+#: barbican/plugin/dogtag.py:66
 msgid "Password for the NSS certificate databases"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:59
+#: barbican/plugin/dogtag.py:68
 msgid "Profile for simple CMC requests"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:62
+#: barbican/plugin/dogtag.py:71
 msgid "List of automatically approved enrollment profiles"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:107
+#: barbican/plugin/dogtag.py:74
+msgid "Time in days for CA entries to expire"
+msgstr ""
+
+#: barbican/plugin/dogtag.py:76
+msgid "Working directory for Dogtag plugin"
+msgstr ""
+
+#: barbican/plugin/dogtag.py:121
 msgid "nss_password is required"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:133
+#: barbican/plugin/dogtag.py:147
 msgid "pem_path is required"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:147
+#: barbican/plugin/dogtag.py:161
 msgid "Invalid algorithm passed in"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:151
+#: barbican/plugin/dogtag.py:165
 msgid "Operation not supported by Dogtag Plugin"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:399
+#: barbican/plugin/dogtag.py:413
 msgid ""
 "Passphrase encryption is not supported for symmetric key generating "
 "algorithms."
 msgstr ""
 
-#: barbican/plugin/dogtag.py:443
+#: barbican/plugin/dogtag.py:457
 msgid "Passphrase encryption is not supported for DSA algorithm"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:574
+#: barbican/plugin/dogtag.py:588
 msgid ""
 "DSA keys should not have a passphrase in the database, for being used "
 "during retrieval."
 msgstr ""
 
-#: barbican/plugin/dogtag.py:578
+#: barbican/plugin/dogtag.py:592
 msgid ""
 "Secrets of type {secret_type} should not have a passphrase in the "
 "database, for being used during retrieval."
 msgstr ""
 
-#: barbican/plugin/dogtag.py:596
+#: barbican/plugin/dogtag.py:610
 msgid ""
 "Encryption using session key is not supported when retrieving a "
 "{secret_type} key."
 msgstr ""
 
-#: barbican/plugin/dogtag.py:625
+#: barbican/plugin/dogtag.py:639
 msgid "Exception thrown by enroll_cert: {message}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:651
+#: barbican/plugin/dogtag.py:778
 msgid "{request} not found for {operation} for order_id {order_id}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:703
+#: barbican/plugin/dogtag.py:830
 msgid "No request found for request_id {request_id} for order {order_id}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:729
+#: barbican/plugin/dogtag.py:856
 msgid ""
 "Request {request_id} reports status_complete, but no cert_id has been "
 "returned"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:740
+#: barbican/plugin/dogtag.py:867
 msgid "Certificate not found for cert_id: {cert_id}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:750
+#: barbican/plugin/dogtag.py:877
 msgid "Invalid request_status returned by CA"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:783 barbican/plugin/dogtag.py:828
+#: barbican/plugin/dogtag.py:910 barbican/plugin/dogtag.py:955
 #, python-format
 msgid "Dogtag plugin does not support %s request type"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:869
+#: barbican/plugin/dogtag.py:996
 msgid "No profile_id specified"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:928
+#: barbican/plugin/dogtag.py:1065
 msgid "No request returned in enrollment_results"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:991
+#: barbican/plugin/dogtag.py:1128
 msgid "request_id {req_id} returns COMPLETE but no cert returned"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:1003
+#: barbican/plugin/dogtag.py:1140
 msgid "Invalid request_status {status} for request_id {request_id}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:1036
+#: barbican/plugin/dogtag.py:1173
 msgid "Modify request: unable to cancel: {message}"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:1067
+#: barbican/plugin/dogtag.py:1204
 msgid "no request found for this order"
 msgstr ""
 

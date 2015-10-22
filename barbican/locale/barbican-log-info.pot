@@ -6,27 +6,27 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 1.0.0.0b4.dev50\n"
+"Project-Id-Version: barbican 2.0.0.dev29\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-09-19 06:15+0000\n"
+"POT-Creation-Date: 2015-10-22 06:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.0\n"
+"Generated-By: Babel 2.1.1\n"
 
-#: barbican/api/app.py:83
+#: barbican/api/app.py:88
 msgid "Barbican app created and initialized"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:245
+#: barbican/api/controllers/cas.py:251
 #, python-format
 msgid "Deleted CA for project: %s"
 msgstr ""
 
-#: barbican/api/controllers/cas.py:390
+#: barbican/api/controllers/cas.py:486
 #, python-format
 msgid "Created a sub CA for project: %s"
 msgstr ""
@@ -103,12 +103,12 @@ msgstr ""
 msgid "Deleted secret for project: %s"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:300
+#: barbican/api/controllers/secrets.py:307
 #, python-format
 msgid "Retrieved secret list for project: %s"
 msgstr ""
 
-#: barbican/api/controllers/secrets.py:340
+#: barbican/api/controllers/secrets.py:347
 #, python-format
 msgid "Created a secret for project: %s"
 msgstr ""
@@ -129,10 +129,34 @@ msgstr ""
 msgid "Auto-creating barbican registry DB"
 msgstr ""
 
-#: barbican/plugin/dogtag.py:85
+#: barbican/plugin/dogtag.py:99
 msgid ""
 "The nss_db_path provided already exists, so the database is assumed to be"
 " already set up."
+msgstr ""
+
+#: barbican/plugin/dogtag.py:665
+msgid "Sub-CA already deleted"
+msgstr ""
+
+#: barbican/plugin/dogtag.py:724
+msgid "Invalid data read from expiration file"
+msgstr ""
+
+#: barbican/plugin/dogtag.py:763
+msgid "Sub-CAs are enabled by Dogtag server"
+msgstr ""
+
+#: barbican/plugin/dogtag.py:766
+msgid "Sub-CAs are not enabled by Dogtag server"
+msgstr ""
+
+#: barbican/plugin/dogtag.py:769
+msgid "Sub-CAs are not supported by Dogtag server"
+msgstr ""
+
+#: barbican/plugin/dogtag.py:771
+msgid "Sub-CAs are not supported by Dogtag client"
 msgstr ""
 
 #: barbican/plugin/simple_certificate_manager.py:54
