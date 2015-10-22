@@ -6,16 +6,16 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 1.0.0.0b3.dev5\n"
+"Project-Id-Version: barbican 2.0.0.dev29\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-08-03 06:15+0000\n"
+"POT-Creation-Date: 2015-10-22 06:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.0\n"
+"Generated-By: Babel 2.1.1\n"
 
 #: barbican/api/__init__.py:54
 msgid "Problem reading request JSON stream."
@@ -29,57 +29,67 @@ msgstr ""
 msgid "Webob error seen"
 msgstr ""
 
-#: barbican/api/controllers/consumers.py:177
+#: barbican/api/controllers/consumers.py:183
 msgid "Problem deleting consumer"
 msgstr ""
 
-#: barbican/api/controllers/containers.py:92
+#: barbican/api/controllers/containers.py:93
 msgid "Problem deleting container"
 msgstr ""
 
-#: barbican/api/controllers/transportkeys.py:73
+#: barbican/api/controllers/transportkeys.py:72
 msgid "Problem deleting transport_key"
 msgstr ""
 
-#: barbican/model/repositories.py:351
+#: barbican/model/repositories.py:352
 #, python-format
 msgid "Not found for %s"
 msgstr ""
 
-#: barbican/model/repositories.py:386
+#: barbican/model/repositories.py:387
 msgid "Problem saving entity for create"
 msgstr ""
 
-#: barbican/model/repositories.py:519
+#: barbican/model/repositories.py:538
 msgid "Problem finding project related entity to delete"
 msgstr ""
 
-#: barbican/model/repositories.py:556
+#: barbican/model/repositories.py:575
 #, python-format
 msgid "Problem getting Project %s"
 msgstr ""
 
-#: barbican/model/repositories.py:681
+#: barbican/model/repositories.py:706
 #, python-format
 msgid "Problem getting secret %s"
 msgstr ""
 
-#: barbican/model/repositories.py:1155
+#: barbican/model/repositories.py:1180
 #, python-format
 msgid "Problem getting container %s"
 msgstr ""
 
-#: barbican/plugin/kmip_secret_store.py:260
-#: barbican/plugin/kmip_secret_store.py:319
-#: barbican/plugin/kmip_secret_store.py:381
-#: barbican/plugin/kmip_secret_store.py:419
-#: barbican/plugin/kmip_secret_store.py:469
+#: barbican/plugin/kmip_secret_store.py:268
+#: barbican/plugin/kmip_secret_store.py:317
+#: barbican/plugin/kmip_secret_store.py:351
+#: barbican/plugin/kmip_secret_store.py:372
+#: barbican/plugin/kmip_secret_store.py:411
 msgid "Error opening or writing to client"
 msgstr ""
 
-#: barbican/plugin/kmip_secret_store.py:743
+#: barbican/plugin/kmip_secret_store.py:544
 #, python-format
 msgid "ERROR from KMIP server: %s"
+msgstr ""
+
+#: barbican/plugin/interface/certificate_manager.py:649
+#, python-format
+msgid "ERROR getting CA from plugin: %s"
+msgstr ""
+
+#: barbican/plugin/interface/certificate_manager.py:681
+#, python-format
+msgid "ERROR adding CA from plugin: %s"
 msgstr ""
 
 #: barbican/plugin/util/utils.py:46
