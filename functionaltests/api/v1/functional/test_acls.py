@@ -17,9 +17,11 @@ from testtools import testcase
 from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import acl_behaviors
+from functionaltests.api.v1.behaviors import consumer_behaviors
 from functionaltests.api.v1.behaviors import container_behaviors
 from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import acl_models
+from functionaltests.api.v1.models import consumer_model
 from functionaltests.api.v1.models import container_models
 from functionaltests.api.v1.models import secret_models
 from functionaltests.common import config
@@ -123,6 +125,33 @@ test_data_read_container_rbac_plus_acl = {
     'with_observer_b': {'user': observer_b, 'expected_return': 200},
 }
 
+test_data_read_container_consumer_acl_only = {
+    'with_admin_a': {'user': admin_a, 'expected_return': 200},
+    'with_creator_a': {'user': creator_a, 'expected_return': 200},
+    'with_observer_a': {'user': observer_a, 'expected_return': 200},
+    'with_auditor_a': {'user': auditor_a, 'expected_return': 200},
+    'with_admin_b': {'user': admin_b, 'expected_return': 404},
+    'with_observer_b': {'user': observer_b, 'expected_return': 404},
+}
+
+test_data_delete_container_consumer_acl_only = {
+    'with_admin_a': {'user': admin_a, 'expected_return': 200},
+    'with_creator_a': {'user': creator_a, 'expected_return': 403},
+    'with_observer_a': {'user': observer_a, 'expected_return': 403},
+    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_admin_b': {'user': admin_b, 'expected_return': 404},
+    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+}
+
+test_data_create_container_consumer_acl_only = {
+    'with_admin_a': {'user': admin_a, 'expected_return': 200},
+    'with_creator_a': {'user': creator_a, 'expected_return': 403},
+    'with_observer_a': {'user': observer_a, 'expected_return': 403},
+    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_admin_b': {'user': admin_b, 'expected_return': 404},
+    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+}
+
 
 @utils.parameterized_test_case
 class AclTestCase(base.TestCase):
@@ -133,6 +162,8 @@ class AclTestCase(base.TestCase):
         self.container_behaviors = container_behaviors.ContainerBehaviors(
             self.client)
         self.acl_behaviors = acl_behaviors.AclBehaviors(self.client)
+        self.consumer_behaviors = consumer_behaviors.ConsumerBehaviors(
+            self.client)
 
     def tearDown(self):
         self.acl_behaviors.delete_all_created_acls()
@@ -211,6 +242,121 @@ class AclTestCase(base.TestCase):
         self.set_container_acl(container_ref, get_rbac_plus_acl(user_id))
         status = self.get_container(container_ref, user_name=user)
         self.assertEqual(expected_return, status)
+
+    @utils.parameterized_dataset(test_data_read_container_consumer_acl_only)
+    def test_container_acl_read_consumers(self, user, expected_return):
+        """Acl access will not allow you to see the list of consumers"""
+        container_ref = self.store_container(user_name=creator_a,
+                                             admin=admin_a)
+        consumer_model = get_consumer_model()
+
+        resp, consumer_data = self.consumer_behaviors.create_consumer(
+            model=consumer_model,
+            container_ref=container_ref,
+            user_name=admin_a)
+        self.assertEqual(200, resp.status_code)
+
+        user_id = self.container_behaviors.get_user_id_from_name(user)
+        self.set_container_acl(container_ref, get_acl_only(user_id))
+
+        # Verify all users granted acl access can read the container
+        status_code = self.get_container(container_ref, user_name=user)
+        self.assertEqual(200, status_code)
+
+        resp, consumers, next_ref, prev_ref = \
+            self.consumer_behaviors.get_consumers(container_ref,
+                                                  user_name=user)
+
+        self.assertEqual(expected_return, resp.status_code)
+
+    @utils.parameterized_dataset(test_data_delete_container_consumer_acl_only)
+    def test_container_acl_remove_consumer(self, user, expected_return):
+        """Acl access will not allow you to delete a consumer"""
+        container_ref = self.store_container(user_name=creator_a,
+                                             admin=admin_a)
+        consumer_model = get_consumer_model()
+
+        resp, consumer_data = self.consumer_behaviors.create_consumer(
+            model=consumer_model,
+            container_ref=container_ref,
+            user_name=admin_a)
+        self.assertEqual(200, resp.status_code)
+
+        user_id = self.container_behaviors.get_user_id_from_name(user)
+        self.set_container_acl(container_ref, get_acl_only(user_id))
+
+        # Verify all users granted acl access can read the container
+        status_code = self.get_container(container_ref, user_name=user)
+        self.assertEqual(200, status_code)
+
+        resp, consumer_data = self.consumer_behaviors.delete_consumer(
+            model=consumer_model,
+            container_ref=container_ref,
+            user_name=user)
+        self.assertEqual(expected_return, resp.status_code)
+
+    @utils.parameterized_dataset(test_data_create_container_consumer_acl_only)
+    def test_container_acl_create_consumer(self, user, expected_return):
+        """Acl access will not allow you to add a consumer"""
+        container_ref = self.store_container(user_name=creator_a,
+                                             admin=admin_a)
+
+        user_id = self.container_behaviors.get_user_id_from_name(user)
+        self.set_container_acl(container_ref, get_acl_only(user_id))
+
+        # Verify all users granted acl access can read the container
+        status_code = self.get_container(container_ref, user_name=user)
+        self.assertEqual(200, status_code)
+
+        consumer_model = get_consumer_model()
+
+        resp, consumer_data = self.consumer_behaviors.create_consumer(
+            model=consumer_model,
+            container_ref=container_ref,
+            user_name=user)
+        self.assertEqual(expected_return, resp.status_code)
+
+    @testcase.attr('negative')
+    def test_secret_acl_auditor_with_acl_cannot_read(self):
+        """Auditor granted access to a secret cannot read that secret"""
+
+        secret_ref = self.store_secret()
+        self.set_secret_acl(secret_ref, get_rbac_plus_acl(auditor_a))
+
+        status_code = self.get_secret(secret_ref=secret_ref,
+                                      user_name=auditor_a)
+        self.assertEqual(403, status_code)
+
+    @testcase.attr('negative')
+    def test_secret_acl_put_as_observer(self):
+        """Observer can not put to a secret when granted access via acl"""
+
+        secret_no_payload = {
+            "name": "AES key",
+            "expiration": "2018-02-28T19:14:44.180394",
+            "algorithm": "aes",
+            "bit_length": 256,
+            "mode": "cbc",
+        }
+        secret_model = secret_models.SecretModel(**secret_no_payload)
+        resp, secret_ref = self.secret_behaviors.create_secret(
+            model=secret_model,
+            user_name=creator_a)
+
+        self.set_secret_acl(secret_ref, get_rbac_plus_acl(observer_a))
+
+        # Update
+        payload = "gF6+lLoF3ohA9aPRpt+6bQ=="
+        payload_content_type = "application/octet-stream"
+        payload_content_encoding = "base64"
+
+        update_resp = self.secret_behaviors.update_secret_payload(
+            secret_ref,
+            user_name=observer_a,
+            payload=payload,
+            payload_content_type=payload_content_type,
+            payload_content_encoding=payload_content_encoding)
+        self.assertEqual(403, update_resp.status_code)
 
 # ----------------------- Secret ACL Tests ---------------------------
 
@@ -353,3 +499,12 @@ def get_container_req(secret_ref):
     return {"name": "testcontainer",
             "type": "generic",
             "secret_refs": [{'name': 'secret1', 'secret_ref': secret_ref}]}
+
+
+def get_consumer_model():
+    test_consumer_model = consumer_model.ConsumerModel(
+        name="consumername",
+        URL="consumerURL"
+    )
+
+    return test_consumer_model
