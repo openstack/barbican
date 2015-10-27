@@ -903,6 +903,50 @@ class WhenTestingTransportKeyValidator(utils.BaseTestCase):
 
         self.assertEqual('transport_key', exception.invalid_property)
 
+    def test_should_raise_transport_key_is_non_string(self):
+        self.transport_req['transport_key'] = 123
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.transport_req
+        )
+
+        self.assertEqual('transport_key', exception.invalid_property)
+
+    def test_should_raise_transport_key_is_missing(self):
+        del self.transport_req['transport_key']
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.transport_req
+        )
+
+        self.assertEqual('transport_key', exception.invalid_property)
+
+    def test_should_raise_plugin_name_is_non_string(self):
+        self.transport_req['plugin_name'] = 123
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.transport_req
+        )
+
+        self.assertEqual('plugin_name', exception.invalid_property)
+
+    def test_should_raise_plugin_name_is_missing(self):
+        del self.transport_req['plugin_name']
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.transport_req
+        )
+
+        self.assertEqual('plugin_name', exception.invalid_property)
+
 
 class WhenTestingConsumerValidator(utils.BaseTestCase):
 
@@ -1392,6 +1436,30 @@ class WhenTestingProjectQuotasValidator(utils.BaseTestCase):
         self.assertRaises(excep.InvalidObject,
                           self.validator.validate,
                           {})
+
+    def test_should_raise_secrets_non_int(self):
+        self.good_project_quotas['project_quotas']['secrets'] = "abc"
+        self.assertRaises(excep.InvalidObject,
+                          self.validator.validate,
+                          self.good_project_quotas)
+
+    def test_should_raise_orders_non_int(self):
+        self.good_project_quotas['project_quotas']['orders'] = "abc"
+        self.assertRaises(excep.InvalidObject,
+                          self.validator.validate,
+                          self.good_project_quotas)
+
+    def test_should_raise_containers_non_int(self):
+        self.good_project_quotas['project_quotas']['containers'] = "abc"
+        self.assertRaises(excep.InvalidObject,
+                          self.validator.validate,
+                          self.good_project_quotas)
+
+    def test_should_raise_cas_non_int(self):
+        self.good_project_quotas['project_quotas']['cas'] = "abc"
+        self.assertRaises(excep.InvalidObject,
+                          self.validator.validate,
+                          self.good_project_quotas)
 
 
 @utils.parameterized_test_case
