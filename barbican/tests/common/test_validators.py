@@ -219,6 +219,15 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         )
         self.assertEqual('name', exception.invalid_property)
 
+    def test_should_raise_name_length_is_greater_than_max(self):
+        self.secret_req['name'] = 'a' * 256
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.secret_req,
+        )
+        self.assertEqual('name', exception.invalid_property)
+
     def test_should_raise_negative_bit_length(self):
         self.secret_req['bit_length'] = -23
 
@@ -240,6 +249,50 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         )
         self.assertEqual('bit_length', exception.invalid_property)
         self.assertIn('bit_length', exception.message)
+
+    def test_should_raise_bit_length_less_than_min(self):
+        self.secret_req['bit_length'] = 0
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.secret_req,
+        )
+        self.assertEqual('bit_length', exception.invalid_property)
+        self.assertIn('bit_length', exception.message)
+
+    def test_should_raise_bit_length_greater_than_max(self):
+        self.secret_req['bit_length'] = 32768
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.secret_req,
+        )
+        self.assertEqual('bit_length', exception.invalid_property)
+        self.assertIn('bit_length', exception.message)
+
+    def test_should_raise_mode_length_greater_than_max(self):
+        self.secret_req['mode'] = 'a' * 256
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.secret_req,
+        )
+        self.assertEqual('mode', exception.invalid_property)
+        self.assertIn('mode', exception.message)
+
+    def test_should_raise_mode_is_non_string(self):
+        self.secret_req['mode'] = 123
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.secret_req,
+        )
+        self.assertEqual('mode', exception.invalid_property)
+        self.assertIn('mode', exception.message)
 
     def test_validation_should_raise_with_empty_payload(self):
         self.secret_req['payload'] = '   '
@@ -273,6 +326,50 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         )
         self.assertEqual('expiration', exception.invalid_property)
         self.assertIn('expiration', exception.message)
+
+    def test_should_raise_expiration_is_non_string(self):
+        self.secret_req['expiration'] = 123
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.secret_req,
+        )
+        self.assertEqual('expiration', exception.invalid_property)
+        self.assertIn('expiration', exception.message)
+
+    def test_should_raise_expiration_greater_than_max(self):
+        self.secret_req['expiration'] = 'a' * 256
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.secret_req,
+        )
+        self.assertEqual('expiration', exception.invalid_property)
+        self.assertIn('expiration', exception.message)
+
+    def test_should_raise_algorithm_is_non_string(self):
+        self.secret_req['algorithm'] = 123
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.secret_req,
+        )
+        self.assertEqual('algorithm', exception.invalid_property)
+        self.assertIn('algorithm', exception.message)
+
+    def test_should_raise_algorithm_greater_than_max(self):
+        self.secret_req['algorithm'] = 'a' * 256
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.secret_req,
+        )
+        self.assertEqual('algorithm', exception.invalid_property)
+        self.assertIn('algorithm', exception.message)
 
     def test_should_raise_all_nulls(self):
         self.secret_req = {'name': None,
@@ -344,6 +441,27 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.validator.validate,
             self.secret_req,
         )
+
+    def test_should_raise_payload_content_type_greater_than_max(self):
+        self.secret_req['payload_content_type'] = 'a' * 256
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.secret_req,
+        )
+        self.assertEqual('payload_content_type', exception.invalid_property)
+        self.assertIn('payload_content_type', exception.message)
+
+    def test_should_raise_with_payload_content_encoding_greater_than_max(self):
+        self.secret_req['payload_content_encoding'] = 'a' * 256
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.secret_req,
+        )
+        self.assertEqual('payload_content_encoding',
+                         exception.invalid_property)
+        self.assertIn('payload_content_encoding', exception.message)
 
     def test_should_raise_with_plain_text_and_encoding(self):
         self.secret_req['payload_content_encoding'] = 'base64'
