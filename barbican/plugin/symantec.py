@@ -34,7 +34,8 @@ symantec_plugin_opts = [
     cfg.StrOpt('username',
                help=u._('Symantec username for authentication')),
     cfg.StrOpt('password',
-               help=u._('Symantec password for authentication')),
+               help=u._('Symantec password for authentication'),
+               secret=True),
     cfg.StrOpt('url',
                help=u._('Domain of Symantec API'))
 ]

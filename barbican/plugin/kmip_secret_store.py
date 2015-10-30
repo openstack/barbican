@@ -49,7 +49,8 @@ kmip_opts = [
                ),
     cfg.StrOpt('password',
                default=None,
-               help=u._('Password for authenticating with KMIP server')
+               help=u._('Password for authenticating with KMIP server'),
+               secret=True,
                ),
     cfg.StrOpt('host',
                default='localhost',
