@@ -146,6 +146,10 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         self.secret_req['name'] = '    '
         self.validator.validate(self.secret_req)
 
+    def test_should_validate_null_name(self):
+        self.secret_req['name'] = None
+        self.validator.validate(self.secret_req)
+
     def test_should_validate_no_payload(self):
         del self.secret_req['payload']
         del self.secret_req['payload_content_type']
