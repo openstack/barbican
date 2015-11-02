@@ -1145,6 +1145,11 @@ class WhenTestingKeyTypeOrderValidator(utils.BaseTestCase):
         result = self.validator.validate(self.key_order_req)
         self.assertEqual('certificate', result['type'])
 
+    def test_should_pass_with_null_content_type_in_meta(self):
+        self.key_order_req['meta']['payload_content_type'] = None
+        result = self.validator.validate(self.key_order_req)
+        self.assertIsNone(result['meta']['payload_content_type'])
+
     def test_should_pass_good_bit_meta_in_order_refs(self):
         self.key_order_req['meta']['algorithm'] = 'AES'
         self.key_order_req['meta']['bit_length'] = 256

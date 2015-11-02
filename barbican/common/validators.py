@@ -200,7 +200,10 @@ class NewSecretValidator(ValidatorBase):
                              secret_store.SecretType.CERTIFICATE,
                              secret_store.SecretType.OPAQUE]
                 },
-                "payload_content_type": {"type": "string", "maxLength": 255},
+                "payload_content_type": {
+                    "type": ["string", "null"],
+                    "maxLength": 255
+                },
                 "payload_content_encoding": {
                     "type": "string",
                     "maxLength": 255,
