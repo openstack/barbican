@@ -13,6 +13,7 @@
 
 from oslo_config import cfg
 from stevedore import named
+import threading
 
 from barbican.common import config
 from barbican.common import utils
@@ -23,6 +24,7 @@ from barbican.plugin.util import utils as plugin_utils
 
 
 _PLUGIN_MANAGER = None
+_PLUGIN_MANAGER_LOCK = threading.RLock()
 
 CONF = config.new_config()
 
@@ -113,6 +115,9 @@ class _CryptoPluginManager(named.NamedExtensionManager):
 def get_manager():
     """Return a singleton crypto plugin manager."""
     global _PLUGIN_MANAGER
+    global _PLUGIN_MANAGER_LOCK
     if not _PLUGIN_MANAGER:
-        _PLUGIN_MANAGER = _CryptoPluginManager()
+        with _PLUGIN_MANAGER_LOCK:
+            if not _PLUGIN_MANAGER:
+                _PLUGIN_MANAGER = _CryptoPluginManager()
     return _PLUGIN_MANAGER
