@@ -17,7 +17,7 @@
 Queue objects for Barbican
 """
 import oslo_messaging as messaging
-from oslo_messaging.notify import dispatcher as notfiy_dispatcher
+from oslo_messaging.notify import dispatcher as notify_dispatcher
 from oslo_messaging import server as msg_server
 
 from barbican.common import config
@@ -107,7 +107,7 @@ def get_notification_server(targets, endpoints, serializer=None):
     allow_requeue = getattr(getattr(CONF, KS_NOTIFICATIONS_GRP_NAME),
                             'allow_requeue')
     TRANSPORT._require_driver_features(requeue=allow_requeue)
-    dispatcher = notfiy_dispatcher.NotificationDispatcher(targets, endpoints,
+    dispatcher = notify_dispatcher.NotificationDispatcher(targets, endpoints,
                                                           serializer,
                                                           allow_requeue)
     # we don't want blocking executor so use eventlet as executor choice
