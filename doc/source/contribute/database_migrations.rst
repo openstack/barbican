@@ -98,10 +98,10 @@ instructions).
 
 1. Make changes to the 'barbican/model/models.py' SQLAlchemy models or
    checkout your branch that includes your changes using git.
-2. Execute ``bin/barbican-db-manage.py -d <Full URL to database, including
+2. Execute ``barbican-db-manage -d <Full URL to database, including
    user/pw> revision -m '<your-summary-of-changes>' --autogenerate``
 
-   a. For example: ``bin/barbican-db-manage.py -d
+   a. For example: ``barbican-db-manage -d
       mysql+pymysql://root:password@127.0.0.1/barbican?charset=utf8
       revision -m 'Make unneeded verification columns nullable' --autogenerate``
 
@@ -150,7 +150,7 @@ and maintenance-window downtimes might be called for.*
 Manually
 '''''''''
 
-1. Execute: ``bin/barbican-db-manage.py revision -m "<insert your change
+1. Execute: ``barbican-db-manage revision -m "<insert your change
    description here>"``
 2. This will generate a new file in the
    ``barbican/model/migration/alembic_migrations/versions/`` folder, with this
@@ -171,7 +171,7 @@ time-zero database tables.
 To create the initial Barbican tables in the database, execute the Barbican
 application per the 'Via Application' section.
 
-Thereafter, it is suggested that only the ``barbican-db-manage.py`` script
+Thereafter, it is suggested that only the ``barbican-db-manage`` command
 above be used to update the database schema per the 'Manually' section. Also,
 automatic database updates from the Barbican application should be disabled by
 adding/updating ``db_auto_create = False`` in the ``barbican.conf``
@@ -202,13 +202,13 @@ schema revision (called ``head`` in the docs).
 Manually
 '''''''''
 
-Run ``bin/barbican-db-manage.py -d <Full URL to database, including user/pw>
+Run ``barbican-db-manage -d <Full URL to database, including user/pw>
 upgrade -v head``, which will cause Alembic to apply the changes found in all
 version files after the version currently written in the target database, up
 until the latest version file in the linked chain of files.
 
 To upgrade to a specific version, run this command:
-``bin/barbican-db-manage.py -d <Full URL to database, including user/pw>
+``barbican-db-manage -d <Full URL to database, including user/pw>
 upgrade -v <Alembic-ID-of-version>``. The ``Alembic-ID-of-version`` is a
 unique ID assigned to the change such ``as1a0c2cdafb38``.
 
