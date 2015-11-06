@@ -1254,6 +1254,7 @@ class ContainerConsumerRepo(BaseRepo):
                 query.filter_by(deleted=False)
             consumer = query.one()
         except sa_orm.exc.NoResultFound:
+            consumer = None
             if not suppress_exception:
                 raise exception.NotFound(
                     u._("Could not find {entity_name}").format(
