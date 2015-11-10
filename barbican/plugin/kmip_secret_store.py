@@ -44,11 +44,9 @@ CONF = config.new_config()
 kmip_opt_group = cfg.OptGroup(name='kmip_plugin', title='KMIP Plugin')
 kmip_opts = [
     cfg.StrOpt('username',
-               default=None,
                help=u._('Username for authenticating with KMIP server')
                ),
     cfg.StrOpt('password',
-               default=None,
                help=u._('Password for authenticating with KMIP server'),
                secret=True,
                ),
@@ -65,16 +63,13 @@ kmip_opts = [
                help=u._('SSL version, maps to the module ssl\'s constants'),
                ),
     cfg.StrOpt('ca_certs',
-               default=None,
                help=u._('File path to concatenated "certification authority" '
                         'certificates'),
                ),
     cfg.StrOpt('certfile',
-               default=None,
                help=u._('File path to local client certificate'),
                ),
     cfg.StrOpt('keyfile',
-               default=None,
                help=u._('File path to local client certificate keyfile'),
                ),
     cfg.BoolOpt('pkcs1_only',
