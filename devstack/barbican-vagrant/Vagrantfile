@@ -1,0 +1,24 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "ubuntu/trusty64"
+
+  # Barbican Ports
+  config.vm.network "forwarded_port", guest: 9311, host: 9311
+
+  # Keystone Ports
+  config.vm.network "forwarded_port", guest: 35357, host: 35357
+  config.vm.network "forwarded_port", guest: 5000, host: 5000
+
+  config.vm.provision "shell", path: "install_devstack.sh"
+  config.vm.synced_folder "./devstack", "/opt/stack", create: true
+
+  config.vm.provider "virtualbox" do |v|
+    v.name = "Devstack"
+    v.memory = 2048
+    v.cpus = 2
+  end
+end
