@@ -60,10 +60,10 @@ db_opts = [
     cfg.BoolOpt('db_auto_create', default=True),
     cfg.IntOpt('max_limit_paging', default=100),
     cfg.IntOpt('default_limit_paging', default=10),
-    cfg.StrOpt('sql_pool_class', default=None),
+    cfg.StrOpt('sql_pool_class'),
     cfg.BoolOpt('sql_pool_logging', default=False),
-    cfg.IntOpt('sql_pool_size', default=None),
-    cfg.IntOpt('sql_pool_max_overflow', default=None),
+    cfg.IntOpt('sql_pool_size'),
+    cfg.IntOpt('sql_pool_max_overflow'),
 ]
 
 retry_opt_group = cfg.OptGroup(name='retry_scheduler',
