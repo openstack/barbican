@@ -188,7 +188,7 @@ What you might see
 .. code-block:: text
 
     ...
-    File ".../oslo/config/cfg.py", line 1275, in register_cli_opt
+    File ".../oslo_config/cfg.py", line 1275, in register_cli_opt
     raise ArgsAlreadyParsedError("cannot register CLI option")
     ArgsAlreadyParsedError: arguments already parsed: cannot register CLI option
 
@@ -200,7 +200,7 @@ An attempt to call the olso.config's ``register_cli_opt()`` function after the
 configuration arguments were 'parsed' (see the comments and method in
 `the oslo.config project's cfg.py file`__ for details.
 
-__ https://github.com/openstack/oslo.config/blob/master/oslo/config/cfg.py
+__ https://github.com/openstack/oslo.config/blob/master/oslo_config/cfg.py
 
 
 How to avoid
