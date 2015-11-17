@@ -34,9 +34,9 @@ as well as inform you of any changes.
 
 .. code-block:: bash
 
-    $ python pkcs11-key-generation.py --help
+    $ pkcs11-key-generation --help
 
-    usage: pkcs11-key-generation.py [-h] [--library-path LIBRARY_PATH]
+    usage: pkcs11-key-generation [-h] [--library-path LIBRARY_PATH]
                                 [--passphrase PASSPHRASE] [--slot-id SLOT_ID]
                                 {mkek,hmac} ...
 
@@ -69,7 +69,7 @@ To generate an MKEK, the user must provide a length and a label for the MKEK.
 
 .. code-block:: bash
 
-    $ python pkcs11-key-generation.py --library-path {library_path here}
+    $ pkcs11-key-generation --library-path {library_path here}
     --passphrase {HSM password here} --slot-id {HSM slot here} mkek --length 32
     --label 'HMACLabelHere'
     MKEK successfully generated!
@@ -82,7 +82,7 @@ To generate an HMAC, the user must provide a label for the HMAC.
 
 .. code-block:: bash
 
-    $ python pkcs11-key-generation.py --library-path {library_path here}
+    $ pkcs11-key-generation --library-path {library_path here}
     --passphrase {HSM password here} --slot-id {HSM slot here} hmac
     --label 'HMACLabelHere'
     HMAC successfully generated!
