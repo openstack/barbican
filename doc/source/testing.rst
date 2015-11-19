@@ -1,5 +1,5 @@
 Writing and Running Barbican Tests
-===================================
+==================================
 
 As a part of every code review that is submitted to the Barbican project
 there are a number of gating jobs which aid in the prevention of regression
@@ -13,7 +13,7 @@ refer to the `tox documentation`_ for assistance.
 .. _`tox documentation`: https://tox.readthedocs.org/en/latest/
 
 Unit Tests
-------------
+----------
 
 Currently, we provide tox environments for Python 2.7. By default
 all available test environments within the tox configuration will execute
@@ -25,12 +25,32 @@ with the following command:
     # Executes tests on Python 2.7
     tox -e py27
 
-
 .. note::
 
     If you do not have the appropriate Python versions available, consider
     setting up PyEnv to install multiple versions of Python. See the
     documentation regarding :doc:`/setup/dev` for more information.
+
+.. note::
+
+    Individual unit tests can also be run, using the following commands:
+
+    .. code-block:: bash
+
+        # runs a single test with the function named
+        # test_can_create_new_secret_one_step
+        tox -e py27 -- test_can_create_new_secret_one_step
+
+        # runs only tests in the WhenTestingSecretsResource class and
+        # the WhenTestingCAsResource class
+        tox -e py27 -- '(WhenTestingSecretsResource|WhenTestingCAsResource)'
+
+    The function name or class specified must be one located in the
+    `barbican/tests` directory.
+
+    Groups of tests can also be run with a regex match after the ``--``.
+    For more information on what can be done with ``testr``, please see:
+    http://testrepository.readthedocs.org/en/latest/MANUAL.html
 
 You can also setup breakpoints in the unit tests. This can be done by
 adding ``import pdb; pdb.set_trace()`` to the line of the unit test you
@@ -47,7 +67,7 @@ want to examine, then running the following command:
     https://docs.python.org/2/library/pdb.html
 
 Functional Tests
------------------
+----------------
 
 Unlike running unit tests, the functional tests require Barbican and
 Keystone services to be running in order to execute. For more
@@ -74,8 +94,16 @@ functional tests as used in the gating job.
 
     .. code-block:: bash
 
-        # path starts inside functionaltests folder
-        tox -e functional -- path.to.test.file.class_name.function
+        # runs a single test with the function named
+        # test_secret_create_then_check_content_types
+        tox -e functional -- test_secret_create_then_check_content_types
+
+        # runs only tests in the SecretsTestCase class and
+        # the OrdersTestCase class
+        tox -e functional -- '(SecretsTestCase|OrdersTestCase)'
+
+    The function name or class specified must be one located in the
+    `functionaltests` directory.
 
     Groups of tests can also be run with a regex match after the ``--``.
     For more information on what can be done with ``testr``, please see:
