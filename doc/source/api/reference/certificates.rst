@@ -5,7 +5,7 @@ Certificates API - Reference
 .. _reference_post_certificate_orders:
 
 POST /v1/orders
-################
+###############
 Certificates are requested using the Orders interface.  Detailed description of this interface
 is deferred to the Orders API reference.  This reference identifies the parameters that are specific
 to each of the certificate order types i.e. those orders for which the parameter *type*
@@ -122,7 +122,7 @@ see the :doc:`Certificate User's Guide <../userguide/certificates>`.
 Response:
 *********
 
-.. code-block:: none
+.. code-block:: javascript
 
     201 Created
 

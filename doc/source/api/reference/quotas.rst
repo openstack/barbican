@@ -413,7 +413,7 @@ the specified project.
 Request/Response:
 *****************
 
-.. code-block:: none
+.. code-block:: javascript
 
     Request:
 
