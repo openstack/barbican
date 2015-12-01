@@ -31,7 +31,7 @@ Request:
 
     GET {container_ref}/consumers
     Headers:
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
 
 Response:
 *********
@@ -74,7 +74,7 @@ Request:
 
     GET {container_ref}/consumers?limit=1&offset=1
     Headers:
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
 
 .. code-block:: None
     {
@@ -155,7 +155,7 @@ Request:
 
     POST {container_ref}/consumers
     Headers:
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
 
     Content:
     {
@@ -237,7 +237,7 @@ Request:
 
     POST {container_ref}/consumers
     Headers:
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
 
     Content:
     {

@@ -47,7 +47,7 @@ secrets you can view the :ref:`POST /v1/secrets <post_secrets>` section.
 
 .. code-block:: bash
 
-    curl -X POST -H 'content-type:application/json' -H 'X-Project-Id:12345' \
+    curl -X POST -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
     -d '{"payload": "my-secret-here", "payload_content_type": "text/plain"}' \
     http://localhost:9311/v1/secrets
 
@@ -72,7 +72,7 @@ data after the fact. In this example we will not provide a payload.
 
 .. code-block:: bash
 
-    curl -X POST -H 'content-type:application/json' -H 'X-Project-Id:12345' \
+    curl -X POST -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
     -d '{}' http://localhost:9311/v1/secrets
 
 This should provide a response as follows:
@@ -96,7 +96,7 @@ your own in order to update the secret.
 
 .. code-block:: bash
 
-    curl -X PUT -H 'content-type:text/plain' -H 'X-Project-Id:12345' \
+    curl -X PUT -H "content-type:text/plain" -H "X-Auth-Token: $TOKEN" \
     -d 'my-secret-here' \
     http://localhost:9311/v1/secrets/2a549393-0710-444b-8aa5-84cf0f85ea79
 
@@ -115,7 +115,7 @@ provided via the initial creation (See :ref:`How to Create a Secret <create_secr
 
 .. code-block:: bash
 
-    curl -H 'Accept: text/plain' -H 'X-Project-Id:12345' \
+    curl -H "Accept: text/plain" -H "X-Auth-Token: $TOKEN" \
     http://localhost:9311/v1/secrets/2a549393-0710-444b-8aa5-84cf0f85ea79/payload
 
 This should provide a response as follows:
@@ -134,7 +134,7 @@ the initial creation (See :ref:`How to Create a Secret <create_secret>`.)
 
 .. code-block:: bash
 
-    curl -X DELETE -H 'X-Project-Id:12345' \
+    curl -X DELETE -H "X-Auth-Token: $TOKEN" \
     http://localhost:9311/v1/secrets/2a549393-0710-444b-8aa5-84cf0f85ea79
 
 No response will be provided. This is expected behavior! If you do receive a

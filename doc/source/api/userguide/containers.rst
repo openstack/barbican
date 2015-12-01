@@ -165,7 +165,7 @@ To create a generic container we must have a secret to store as well.
 
 .. code-block:: bash
 
-    curl -X POST -H 'X-Project-Id:12345' -H 'Content-Type:application/json' -d '{
+    curl -X POST -H "X-Auth-Token: $TOKEN" -H "Content-Type:application/json" -d '{
         "type": "generic",
         "name": "generic name",
         "secret_refs": [
@@ -199,7 +199,7 @@ named private_key, private_key_passphrase, and intermediates.
 
 .. code-block:: bash
 
-    curl -X POST -H 'X-Project-Id:12345' -H 'Content-Type:application/json' -d '{
+    curl -X POST -H "X-Auth-Token: $TOKEN" -H "Content-Type:application/json" -d '{
         "type": "certificate",
         "name": "certificate container",
         "secret_refs": [
@@ -245,7 +245,7 @@ to provide a secret named public_key, private_key, and private_key_passphrase.
 
 .. code-block:: bash
 
-    curl -X POST -H 'X-Project-Id:12345' -H 'Content-Type:application/json' -d '{
+    curl -X POST -H "X-Auth-Token: $TOKEN" -H "Content-Type:application/json" -d '{
         "type": "rsa",
         "name": "rsa container",
         "secret_refs": [
@@ -283,7 +283,7 @@ To retrieve a container we must have a container reference.
 
 .. code-block:: bash
 
-    curl -X GET -H 'X-Project-Id:12345'  http://localhost:9311/v1/containers/49d3c5e9-80bb-47ec-8787-968bb500d76e
+    curl -X GET -H "X-Auth-Token: $TOKEN"  http://localhost:9311/v1/containers/49d3c5e9-80bb-47ec-8787-968bb500d76e
 
 This should provide a response as follows:
 
@@ -317,7 +317,7 @@ To delete a container we must have a container reference.
 
 .. code-block:: bash
 
-    curl -X DELETE -H 'X-Project-Id:12345' http://localhost:9311/v1/containers/d1c23e06-476b-4684-be9f-8afbef42768d
+    curl -X DELETE -H "X-Auth-Token: $TOKEN" http://localhost:9311/v1/containers/d1c23e06-476b-4684-be9f-8afbef42768d
 
 No response will be provided. This is expected behavior! If you do receive a
 response, something went wrong and you will have to address that before

@@ -135,7 +135,7 @@ Request:
     POST /v1/secrets
     Headers:
         Content-Type: application/json
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
 
     Content:
     {
@@ -204,7 +204,7 @@ Metadata Request:
     GET /v1/secrets/{uuid}
     Headers:
         Accept: application/json
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
 
 
 Metadata Response:
@@ -238,7 +238,7 @@ Payload Request:
     GET /v1/secrets/{uuid}
     Headers:
         Accept: application/octet-stream
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
 
 
 Payload Response:
@@ -298,7 +298,7 @@ Request:
 
     PUT /v1/secrets/{uuid}
     Headers:
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
         Content-Type: application/octet-stream
         Content-Encoding: base64
 
@@ -339,7 +339,7 @@ Request:
 
     DELETE /v1/secrets/{uuid}
     Headers:
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
 
 Response:
 ****************
@@ -380,7 +380,7 @@ Request:
     GET /v1/secrets/{uuid}/payload
     Headers:
         Accept: text/plain
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
 
 Response:
 *********

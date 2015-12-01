@@ -22,7 +22,7 @@ How to Create a Consumer
 
 .. code-block:: bash
 
-     curl -X POST -H 'X-Project-Id:12345' -H 'Content-Type: application/json' \
+     curl -X POST -H "X-Auth-Token: $TOKEN" -H "Content-Type: application/json" \
      -d '{"name": "consumername", "URL": "consumerURL"}' \
       http://localhost:9311/v1/containers/74bbd3fd-9ba8-42ee-b87e-2eecf10e47b9/consumers
 
@@ -65,7 +65,7 @@ limit and offset query parameter.
 
 .. code-block:: bash
 
-    curl -H 'X-Project-Id:12345' \
+    curl -H "X-Auth-Token: $TOKEN" \
     http://192.168.99.100:9311/v1/containers/74bbd3fd-9ba8-42ee-b87e-2eecf10e47b9/consumers
 
 This will return the following response:
@@ -94,7 +94,7 @@ the consumers for this container.
 
 .. code-block:: bash
 
-    curl -H 'X-Project-Id:12345' \
+    curl -H "X-Auth-Token: $TOKEN" \
     http://192.168.99.100:9311/v1/containers/74bbd3fd-9ba8-42ee-b87e-2eecf10e47b9/consumers?limit=1\&offset=1
 
 This will return the following response:
@@ -125,7 +125,7 @@ URL which were used when the consumer was created.
 
 .. code-block:: bash
 
-    curl -X DELETE -H 'X-Project-Id:12345' -H 'Content-Type: application/json' \
+    curl -X DELETE -H "X-Auth-Token: $TOKEN" -H "Content-Type: application/json" \
      -d '{"name": "consumername", "URL": "consumerURL"}' \
       http://localhost:9311/v1/containers/74bbd3fd-9ba8-42ee-b87e-2eecf10e47b9/consumers
 

@@ -9,3 +9,4 @@ Setting up Barbican
    devstack
    certificate
    troubleshooting
+   noauth
