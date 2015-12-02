@@ -63,3 +63,6 @@ ChangeLog
 
 # Mac OS
 .DS_Store
+
+# Files created by releasenotes build
+releasenotes/build
