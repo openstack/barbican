@@ -55,8 +55,8 @@ Request:
         X-Project-Id: {project_id}
 
 
-Request:
-********
+Response:
+************
 
 .. code-block:: javascript
 
