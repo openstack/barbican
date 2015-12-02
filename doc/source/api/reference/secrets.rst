@@ -152,7 +152,7 @@ Request:
 Response:
 *********
 
-.. code-block:: none
+.. code-block:: javascript
 
     201 Created
 
@@ -199,7 +199,7 @@ Accept Header Options:
 Metadata Request:
 *****************
 
-.. code-block:: none
+.. code-block:: javascript
 
     GET /v1/secrets/{uuid}
     Headers:
@@ -233,7 +233,7 @@ Metadata Response:
 Payload Request:
 ****************
 
-.. code-block:: none
+.. code-block:: javascript
 
     GET /v1/secrets/{uuid}
     Headers:
@@ -244,7 +244,7 @@ Payload Request:
 Payload Response:
 *****************
 
-.. code-block:: none
+.. code-block:: javascript
 
     200 OK
 
@@ -294,7 +294,7 @@ Required Headers
 Request:
 ********
 
-.. code-block:: none
+.. code-block:: javascript
 
     PUT /v1/secrets/{uuid}
     Headers:
@@ -308,7 +308,7 @@ Request:
 Response:
 *********
 
-.. code-block:: none
+.. code-block:: javascript
 
     204 No Content
 
@@ -333,18 +333,18 @@ DELETE /v1/secrets/{uuid}
 Delete a secret by uuid
 
 Request:
-****************
+********
 
-.. code-block:: none
+.. code-block:: javascript
 
     DELETE /v1/secrets/{uuid}
     Headers:
         X-Project-Id: {project_id}
 
 Response:
-****************
+*********
 
-.. code-block:: none
+.. code-block:: javascript
 
     204 No Content
 
@@ -375,7 +375,7 @@ Accept Header Options:
 Request:
 ********
 
-.. code-block:: none
+.. code-block:: javascript
 
     GET /v1/secrets/{uuid}/payload
     Headers:
@@ -385,7 +385,7 @@ Request:
 Response:
 *********
 
-.. code-block:: none
+.. code-block:: javascript
 
     200 OK
 

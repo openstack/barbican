@@ -1,6 +1,6 @@
-***********************
+*******************
 ACL API - Reference
-***********************
+*******************
 
 .. note::
 
@@ -31,7 +31,7 @@ If no ACL is defined for that secret, then :ref:`Default ACL<default_implicit_ac
 Request/Response (With ACL defined):
 ************************************
 
-.. code-block:: none
+.. code-block:: javascript
 
     Request:
 
@@ -59,7 +59,7 @@ Request/Response (With ACL defined):
 Request/Response (With no ACL defined):
 ***************************************
 
-.. code-block:: none
+.. code-block:: javascript
 
     Request:
 
@@ -133,7 +133,7 @@ This access is configured via operations on those secrets. Currently only the 'r
 Request/Response (Set or Replace ACL):
 **************************************
 
-.. code-block:: none
+.. code-block:: javascript
 
     Request:
 
@@ -218,7 +218,7 @@ Attributes
 Request/Response (Updating project-access flag):
 ************************************************
 
-.. code-block:: none
+.. code-block:: javascript
 
     PATCH /v1/secrets/{uuid}/acl
     Headers:
@@ -241,7 +241,7 @@ Request/Response (Updating project-access flag):
 Request/Response (Removing all users from ACL):
 ***********************************************
 
-.. code-block:: none
+.. code-block:: javascript
 
     PATCH /v1/secrets/{uuid}/acl
     Headers:
@@ -283,7 +283,7 @@ HTTP Status Codes
 .. _delete_secret_acl:
 
 DELETE /v1/secrets/{uuid}/acl
-##############################
+#############################
 
 Delete ACL for a given secret. No content is returned in the case of successful
 deletion.
@@ -291,7 +291,7 @@ deletion.
 Request/Response:
 *****************
 
-.. code-block:: none
+.. code-block:: javascript
 
     DELETE /v1/secrets/{uuid}/acl
     Headers:
@@ -317,7 +317,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 
 Container ACL API
-==================
+=================
 
 .. _get_container_acl:
 
@@ -330,7 +330,7 @@ If no ACL is defined for that container, then :ref:`Default ACL<default_implicit
 Request/Response (With ACL defined):
 ************************************
 
-.. code-block:: none
+.. code-block:: javascript
 
     Request:
 
@@ -358,7 +358,7 @@ Request/Response (With ACL defined):
 Request/Response (With no ACL defined):
 ***************************************
 
-.. code-block:: none
+.. code-block:: javascript
 
     Request:
 
@@ -431,7 +431,7 @@ This access is configured via operations on those containers. Currently only the
 Request/Response (Set or Replace ACL):
 **************************************
 
-.. code-block:: none
+.. code-block:: javascript
 
     PUT /v1/containers/{uuid}/acl
     Headers:
@@ -514,7 +514,7 @@ Attributes
 Request/Response (Updating project-access flag):
 ************************************************
 
-.. code-block:: none
+.. code-block:: javascript
 
     PATCH /v1/containers/{uuid}/acl
     Headers:
@@ -537,7 +537,7 @@ Request/Response (Updating project-access flag):
 Request/Response (Removing all users from ACL):
 ***********************************************
 
-.. code-block:: none
+.. code-block:: javascript
 
     PATCH /v1/containers/{uuid}/acl
     Headers:
@@ -587,7 +587,7 @@ deletion.
 Request/Response:
 *****************
 
-.. code-block:: none
+.. code-block:: javascript
 
     DELETE /v1/containers/{uuid}/acl
     Headers:

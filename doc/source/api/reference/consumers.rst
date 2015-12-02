@@ -27,7 +27,7 @@ Parameters
 Request:
 ********
 
-.. code-block:: None
+.. code-block:: javascript
 
     GET {container_ref}/consumers
     Headers:
@@ -36,7 +36,7 @@ Request:
 Response:
 *********
 
-.. code-block:: None
+.. code-block:: javascript
 
     200 OK
 
@@ -70,13 +70,14 @@ Response:
 Request:
 ********
 
-.. code-block:: None
+.. code-block:: javascript
 
     GET {container_ref}/consumers?limit=1&offset=1
     Headers:
         X-Project-Id: {project_id}
 
-.. code-block:: None
+.. code-block:: javascript
+
     {
         "total": 3,
         "next": "http://localhost:9311/v1/consumers?limit=1&offset=2",
@@ -151,7 +152,7 @@ Attributes
 Request:
 ********
 
-.. code-block:: None
+.. code-block:: javascript
 
     POST {container_ref}/consumers
     Headers:
@@ -166,7 +167,7 @@ Request:
 Response:
 *********
 
-.. code-block:: None
+.. code-block:: javascript
 
     200 OK
 
@@ -233,7 +234,7 @@ Attributes
 Request:
 ********
 
-.. code-block:: None
+.. code-block:: javascript
 
     POST {container_ref}/consumers
     Headers:
@@ -249,7 +250,8 @@ Request:
 Response:
 *********
 
-.. code-block:: None
+.. code-block:: javascript
+
     200 OK
 
     {
