@@ -16,7 +16,6 @@ import copy
 
 from testtools import testcase
 
-from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import consumer_behaviors
 from functionaltests.api.v1.behaviors import container_behaviors
@@ -41,36 +40,25 @@ default_consumer_data = {
     "URL": "consumerURL"
 }
 
-create_container_data = {
+create_generic_container_data = {
     "name": "containername",
     "type": "generic",
-    "secret_refs": [
-        {
-            "name": "secret1",
-        },
-        {
-            "name": "secret2",
-        }
-    ]
+    "secret_refs": []
+}
+
+create_cert_container_data = {
+    "name": "A Certificate Container",
+    "type": "certificate",
+    "secret_refs": []
 }
 
 dummy_project_id = 'dummy123'
 
 
-@utils.parameterized_test_case
-class ConsumersUnauthedTestCase(base.TestCase):
-    default_data = default_consumer_data
-
-    def _create_a_secret(self):
-        secret_model = secret_models.SecretModel(**create_secret_data)
-        resp, secret_ref = self.secret_behaviors.create_secret(secret_model)
-        self.assertEqual(resp.status_code, 201)
-        self.assertIsNotNone(secret_ref)
-
-        return secret_ref
+class ConsumersBaseTestCase(base.TestCase):
 
     def setUp(self):
-        super(ConsumersUnauthedTestCase, self).setUp()
+        super(ConsumersBaseTestCase, self).setUp()
         self.secret_behaviors = secret_behaviors.SecretBehaviors(self.client)
         self.container_behaviors = container_behaviors.ContainerBehaviors(
             self.client
@@ -79,17 +67,40 @@ class ConsumersUnauthedTestCase(base.TestCase):
             self.client
         )
 
-        self.consumer_data = copy.deepcopy(self.default_data)
+        self.consumer_data = copy.deepcopy(default_consumer_data)
 
+        self.generic_container_ref = self._create_populated_generic_container()
+
+    def tearDown(self):
+        self.secret_behaviors.delete_all_created_secrets()
+        super(ConsumersBaseTestCase, self).tearDown()
+
+    def _create_a_secret(self):
+        secret_model = secret_models.SecretModel(**create_secret_data)
+        resp, secret_ref = self.secret_behaviors.create_secret(secret_model)
+        self.assertEqual(resp.status_code, 201)
+        self.assertIsNotNone(secret_ref)
+        return secret_ref
+
+    def _add_secret_ref_to_container(self, container, name, ref):
+        container['secret_refs'].append({"name": name, "secret_ref": ref})
+
+    def _create_populated_generic_container(self):
         # Set up two secrets
         secret_ref_1 = self._create_a_secret()
         secret_ref_2 = self._create_a_secret()
 
-        # Create a container with our secrets
-        create_container_data['secret_refs'][0]['secret_ref'] = secret_ref_1
-        create_container_data['secret_refs'][1]['secret_ref'] = secret_ref_2
+        # Create a generic container with our secrets
+
+        generic_container_data = copy.deepcopy(create_generic_container_data)
+
+        self._add_secret_ref_to_container(generic_container_data,
+                                          'secret_ref_1', secret_ref_1)
+        self._add_secret_ref_to_container(generic_container_data,
+                                          'secret_ref_2', secret_ref_2)
+
         container_model = container_models.ContainerModel(
-            **create_container_data
+            **generic_container_data
         )
 
         resp, container_ref = self.container_behaviors.create_container(
@@ -98,11 +109,149 @@ class ConsumersUnauthedTestCase(base.TestCase):
         self.assertEqual(resp.status_code, 201)
         self.assertIsNotNone(container_ref)
 
-        self.container_ref = container_ref
+        return container_ref
 
-    def tearDown(self):
-        self.secret_behaviors.delete_all_created_secrets()
-        super(ConsumersUnauthedTestCase, self).tearDown()
+
+class ConsumersCertContainerTestCase(ConsumersBaseTestCase):
+
+    def setUp(self):
+        super(ConsumersCertContainerTestCase, self).setUp()
+
+        self.container_default_data = copy.deepcopy(create_cert_container_data)
+        self.consumer_default_data = copy.deepcopy(default_consumer_data)
+
+    def _create_consumer(self, container_ref):
+        self.consumer_test_model = consumer_model.ConsumerModel(
+            **self.consumer_default_data)
+        resp, consumer_data = self.consumer_behaviors.create_consumer(
+            self.consumer_test_model, container_ref)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertIsNotNone(consumer_data)
+        return consumer_data
+
+    def _get_decrypted_secrets_from_container(self, container_href):
+        get_resp = self.container_behaviors.get_container(container_href)
+        self.assertEqual(get_resp.status_code, 200)
+
+        private_key_ref = get_resp.model.secret_refs[0].secret_ref
+        tls_cert_ref = get_resp.model.secret_refs[1].secret_ref
+        passphrase_ref = get_resp.model.secret_refs[2].secret_ref
+        intermediates_ref = get_resp.model.secret_refs[3].secret_ref
+
+        private_key = self.secret_behaviors.get_secret(
+            private_key_ref, 'application/octet-stream')
+        tls_cert = self.secret_behaviors.get_secret(
+            tls_cert_ref, 'application/octet-stream')
+        passphrase = self.secret_behaviors.get_secret(
+            passphrase_ref, 'application/octet-stream')
+        intermediates = self.secret_behaviors.get_secret(
+            intermediates_ref, 'application/octet-stream')
+
+        return private_key, tls_cert, passphrase, intermediates
+
+    def _create_populated_cert_container(self):
+        dummy_private_key_ref = self._create_a_secret()
+        dummy_tls_certificate_ref = self._create_a_secret()
+        dummy_passphrase_ref = self._create_a_secret()
+        dummy_intermediates_ref = self._create_a_secret()
+        container_ref = self._create_cert_container(dummy_private_key_ref,
+                                                    dummy_tls_certificate_ref,
+                                                    dummy_passphrase_ref,
+                                                    dummy_intermediates_ref)
+        return container_ref
+
+    def _create_cert_container(self, private_key_ref, tls_certificate_ref,
+                               passphrase_ref=None, intermediates_ref=None):
+
+        container_data = copy.deepcopy(self.container_default_data)
+        self._add_secret_ref_to_container(container_data, "certificate",
+                                          tls_certificate_ref)
+        self._add_secret_ref_to_container(container_data, "private_key",
+                                          private_key_ref)
+
+        if passphrase_ref:
+            self._add_secret_ref_to_container(container_data,
+                                              "private_key_passphrase",
+                                              passphrase_ref)
+
+        if intermediates_ref:
+            self._add_secret_ref_to_container(container_data, "intermediates",
+                                              intermediates_ref)
+
+        test_model = container_models.ContainerModel(
+            **container_data)
+
+        resp, container_ref = self.container_behaviors.create_container(
+            test_model)
+        self.assertEqual(resp.status_code, 201)
+        self.assertIsNotNone(container_ref)
+        return container_ref
+
+    def _deregister_consumer(self, container_ref):
+        resp, consumer_data = self.consumer_behaviors.delete_consumer(
+            self.consumer_test_model, container_ref
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIsNotNone(consumer_data)
+        self.assertNotIn(self.consumer_test_model.name, consumer_data)
+        self.assertNotIn(self.consumer_test_model.URL, consumer_data)
+        return consumer_data
+
+    @testcase.attr('positive')
+    def test_consumer_of_cert_container_full_flow(self):
+        """Simulate the typical flow for a consumer of a cert container.
+
+        First, create a container and load it up with a key, cert and
+        passphrase.
+
+        Second, register as a consumer for that container
+
+        Third, fetch the data from that container
+
+        Finally, deregister as a consumer for the container
+        """
+
+        # create the populated container with a cert
+        container_ref = self._create_populated_cert_container()
+        self.assertIsNotNone(container_ref)
+
+        # register as a consumer here
+        consumer_data = self._create_consumer(container_ref)
+        self.assertIsNotNone(consumer_data)
+        self.assertEqual(1, len(consumer_data))
+
+        # fetch the cert info from the container
+        pk_response, cert_response, passphrase_response, inters_response =\
+            self._get_decrypted_secrets_from_container(container_ref)
+        self.assertIsNotNone(pk_response)
+        self.assertIsNotNone(cert_response)
+        self.assertIsNotNone(passphrase_response)
+        self.assertIsNotNone(inters_response)
+
+        # deregister as a consumer
+        updated_consumer_data = self._deregister_consumer(container_ref)
+        self.assertIsNotNone(updated_consumer_data)
+        self.assertEqual(0, len(updated_consumer_data))
+
+
+class ConsumersAuthedTestCase(ConsumersBaseTestCase):
+
+    @testcase.attr('negative', 'security')
+    def test_consumer_create_authed(self):
+        """Create a consumer as an authenticated user
+
+        Should return 200
+        """
+
+        model = consumer_model.ConsumerModel(**self.consumer_data)
+        resp, consumer_dat = self.consumer_behaviors.create_consumer(
+            model, self.generic_container_ref, use_auth=True
+        )
+        self.assertEqual(200, resp.status_code)
+
+
+class ConsumersUnauthedTestCase(ConsumersBaseTestCase):
 
     @testcase.attr('negative', 'security')
     def test_consumer_create_unauthed_no_proj_id(self):
@@ -113,7 +262,7 @@ class ConsumersUnauthedTestCase(base.TestCase):
 
         model = consumer_model.ConsumerModel(**self.consumer_data)
         resp, consumer_dat = self.consumer_behaviors.create_consumer(
-            model, self.container_ref, use_auth=False
+            model, self.generic_container_ref, use_auth=False
         )
         self.assertEqual(401, resp.status_code)
 
@@ -126,7 +275,7 @@ class ConsumersUnauthedTestCase(base.TestCase):
 
         resp, consumers, next_ref, prev_ref = (
             self.consumer_behaviors.get_consumers(
-                self.container_ref, use_auth=False
+                self.generic_container_ref, use_auth=False
             )
         )
 
@@ -140,7 +289,7 @@ class ConsumersUnauthedTestCase(base.TestCase):
         """
 
         resp, consumer_dat = self.consumer_behaviors.delete_consumer(
-            None, self.container_ref, use_auth=False
+            None, self.generic_container_ref, use_auth=False
         )
 
         self.assertEqual(401, resp.status_code)
@@ -155,7 +304,8 @@ class ConsumersUnauthedTestCase(base.TestCase):
         model = consumer_model.ConsumerModel(**self.consumer_data)
         headers = {'X-Project-Id': dummy_project_id}
         resp, consumer_dat = self.consumer_behaviors.create_consumer(
-            model, self.container_ref, extra_headers=headers, use_auth=False
+            model, self.generic_container_ref, extra_headers=headers,
+            use_auth=False
         )
 
         self.assertEqual(401, resp.status_code)
@@ -170,7 +320,8 @@ class ConsumersUnauthedTestCase(base.TestCase):
         headers = {'X-Project-Id': dummy_project_id}
         resp, consumers, next_ref, prev_ref = (
             self.consumer_behaviors.get_consumers(
-                self.container_ref, extra_headers=headers, use_auth=False
+                self.generic_container_ref, extra_headers=headers,
+                use_auth=False
             )
         )
 
@@ -185,7 +336,8 @@ class ConsumersUnauthedTestCase(base.TestCase):
 
         headers = {'X-Project-Id': dummy_project_id}
         resp, consumer_dat = self.consumer_behaviors.delete_consumer(
-            None, self.container_ref, extra_headers=headers, use_auth=False
+            None, self.generic_container_ref, extra_headers=headers,
+            use_auth=False
         )
 
         self.assertEqual(401, resp.status_code)
