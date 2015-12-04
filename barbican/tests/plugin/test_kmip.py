@@ -602,9 +602,6 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         register_call_args, _ = proxy.register.call_args
         actual_secret = register_call_args[2]
         self.assertEqual(
-            enums.CertificateTypeEnum.X_509.value,
-            actual_secret.certificate_type.value)
-        self.assertEqual(
             keys.get_certificate_der(),
             actual_secret.certificate_value.value)
 
@@ -857,9 +854,6 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
     def test_credential(self):
         actual_credential = self.secret_store.credential
 
-        self.assertEqual(
-            enums.CredentialType.USERNAME_AND_PASSWORD.value,
-            actual_credential.credential_type.value)
         self.assertEqual(
             self.expected_username,
             actual_credential.credential_value.username.value)
