@@ -13,8 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import mock
+from oslo_config import cfg
 import six
 
+from barbican.common import config
 from barbican.common import utils
 from barbican.tests import utils as test_utils
 
@@ -128,3 +130,32 @@ class WhenTestingGenerateFullClassnameForInstance(test_utils.BaseTestCase):
         self.instance.__class__.__module__ = 'dummy'
         name = utils.generate_fullname_for(self.instance)
         self.assertEqual('dummy.DummyClassForTesting', name)
+
+
+class TestConfigValues(test_utils.BaseTestCase):
+
+    def setUp(self):
+        super(TestConfigValues, self).setUp()
+        self.barbican_config = config.CONF
+        self.oslo_config = cfg.CONF
+
+    def test_barbican_conf_values_made_visible_to_oslo_conf(self):
+        """In this, checking oslo CONF values are same as barbican config
+
+        This tests shows that after the change values referenced via
+        oslo_config.cfg.CONF value are same as
+        barbican.common.config.CONF.
+        """
+
+        # Checking that 'admin_role' value referred via
+        # barbican.common.config.CONF is same as oslo_config.cfg.CONF
+        self.assertEqual('admin', self.barbican_config._get('admin_role'))
+        self.assertEqual('admin', self.barbican_config.admin_role)
+
+        self.assertEqual('admin', self.oslo_config._get('admin_role'))
+        self.assertEqual('admin', self.oslo_config.admin_role)
+
+        # No error in getting 'project' value from both config reading
+        # mechanism
+        self.assertEqual('barbican', self.barbican_config.project)
+        self.assertEqual('barbican', self.oslo_config.project)

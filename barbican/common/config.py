@@ -150,8 +150,12 @@ quota_opts = [
                help='Number of CAs allowed per project')
 ]
 
+# Flag to indicate barbican configuration is already parsed once or not
+_CONFIG_PARSED_ONCE = False
+
 
 def parse_args(conf, args=None, usage=None, default_config_files=None):
+    global _CONFIG_PARSED_ONCE
     conf(args=args if args else [],
          project='barbican',
          prog='barbican',
@@ -161,6 +165,12 @@ def parse_args(conf, args=None, usage=None, default_config_files=None):
 
     conf.pydev_debug_host = os.environ.get('PYDEV_DEBUG_HOST')
     conf.pydev_debug_port = os.environ.get('PYDEV_DEBUG_PORT')
+
+    # Assign cfg.CONF handle to parsed barbican configuration once at startup
+    # only. No need to keep re-assigning it with separate plugin conf usage
+    if not _CONFIG_PARSED_ONCE:
+        cfg.CONF = conf
+        _CONFIG_PARSED_ONCE = True
 
 
 def new_config():
