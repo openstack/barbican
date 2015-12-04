@@ -38,7 +38,7 @@ as shown below:
 
 .. code-block:: bash
 
-    curl -H 'content-type:application/json' -H 'X-Project-Id: 12345' \
+    curl -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
         http://localhost:9311/v1/orders/df1d1a0f-8454-46ca-9287-c57ced0418e7
 
 .. code-block:: javascript
@@ -67,7 +67,7 @@ Barbican).
 
 .. code-block:: bash
 
-     curl -H 'content-type:application/json' -H 'X-Project-Id: 12345' \
+     curl -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
         http://localhost:9311/v1/containers/1e71dc2b-cf63-4aa4-91f7-41ea1a9e5493
 
 .. code-block:: javascript
@@ -97,8 +97,8 @@ You can get the certificate itself by extracting the payload of the secret_ref p
 
 .. code-block:: bash
 
-    curl -H 'content-type:application/json' -H 'X-Project-Id: 12345' \
-        -H 'Accept:application/pkix-cert' \
+    curl -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
+        -H "Accept:application/pkix-cert" \
         http://localhost:9311/v1/secrets/acd47891-9e72-4542-b9de-be66cc343610/payload
 
 .. code-block:: bash
@@ -125,7 +125,7 @@ resource:
 
 .. code-block:: bash
 
-    curl  -H 'content-type:application/json' -H 'X-Project-Id:12345' \
+    curl  -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
         http://localhost:9311/v1/cas
 
 This should provide a response like the following:
@@ -138,7 +138,7 @@ More details on each CA can be obtained by querying the specific CA:
 
 .. code-block:: bash
 
-    curl  -H 'content-type:application/json' -H 'X-Project-Id:12345' \
+    curl  -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
         http://localhost:9311/v1/cas/3a2a533d-ed4d-4c68-a418-2ee79f4c9581
 
 The output shows the status of the CA and the plugin used to communicate with it:
@@ -195,7 +195,7 @@ into a JSON request for a Simple CMC Certificate order.
 
 .. code-block:: bash
 
-    curl -X POST -H 'content-type:application/json' -H 'X-Project-Id: 12345' -d '{
+    curl -X POST -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" -d '{
          "type": "certificate",
          "meta": {
             "request_data": "LS0tLS1CRUdJT..... oK2Fkh6dXBTVC0tLS0tCg==",
@@ -247,7 +247,7 @@ use this generated secret to create a Stored Key Order.
 
 .. code-block:: bash
 
-    curl -X POST -H 'content-type:application/json' -H 'X-Project-Id: 12345' -d '{
+    curl -X POST -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" -d '{
         "type": "asymmetric",
         "meta": {
             "algorithm": "rsa",
@@ -265,7 +265,7 @@ We can retrieve the reference to the container containing the RSA key pair from 
 
 .. code-block:: bash
 
-    curl -H 'content-type:application/json' -H 'X-Project-Id: 12345' \
+    curl -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
     http://localhost:9311/v1/orders/cb3c43d6-e30c-40c0-b28c-b0dd58a6209d
 
 .. code-block:: javascript
@@ -287,7 +287,7 @@ Now that we have a reference to the container, we can create a stored-key reques
 
 .. code-block:: bash
 
-    curl -X POST -H 'content-type:application/json' -H 'X-Project-Id: 12345' -d '{
+    curl -X POST -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" -d '{
         "type": "certificate",
         "meta": {
             "container_ref": "http://localhost:9311/v1/containers/1e71dc2b-cf63-4aa4-91f7-41ea1a9e5493",
@@ -318,7 +318,7 @@ the response is an order reference.
 
 .. code-block:: bash
 
-    curl -X POST -H 'content-type:application/json' -H 'X-Project-Id: 12345' -d '{
+    curl -X POST -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" -d '{
         "type": "certificate",
         "meta": {
             "request_data": "LS0tLS1CRUdJT..... oK2Fkh6dXBTVC0tLS0tCg==",

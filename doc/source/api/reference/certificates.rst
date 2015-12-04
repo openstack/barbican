@@ -106,7 +106,7 @@ see the :doc:`Certificate User's Guide <../userguide/certificates>`.
     POST /v1/orders
     Headers:
         Content-Type: application/json
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
 
     Content:
     {

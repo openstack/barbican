@@ -52,7 +52,7 @@ Request:
 
     GET /v1/containers
     Headers:
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
 
 
 Request:
@@ -118,7 +118,7 @@ Request:
 
     GET /v1/containers/{uuid}
     Headers:
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
 
 Response:
 *********
@@ -202,7 +202,7 @@ Request:
 
     POST /v1/containers
     Headers:
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
 
     Content:
     {
@@ -255,7 +255,7 @@ Request:
 
     DELETE /v1/containers/{container_uuid}
     Headers:
-        X-Project-Id: {project_id}
+        X-Auth-Token: <token>
 
 Response:
 *********

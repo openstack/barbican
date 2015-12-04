@@ -35,7 +35,7 @@ resource:
 
 .. code-block:: bash
 
-    curl  -H 'content-type:application/json' -H 'X-Project-Id:12345' \
+    curl  -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
         http://localhost:9311/v1/cas
 
 This should provide a response like the following:
@@ -53,7 +53,7 @@ More details on each CA can be obtained by querying the specific CA:
 
 .. code-block:: bash
 
-    curl  -H 'content-type:application/json' -H 'X-Project-Id:12345' \
+    curl  -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
         http://localhost:9311/v1/cas/3a2a533d-ed4d-4c68-a418-2ee79f4c9581
 
 The output shows the status of the CA and the plugin used to communicate with it:
@@ -79,7 +79,7 @@ client), use the cacert sub-resource:
 
 .. code-block:: bash
 
-    curl  -H 'content-type:application/json' -H 'X-Project-Id:12345' \
+    curl  -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
         http://localhost:9311/v1/cas/3a2a533d-ed4d-4c68-a418-2ee79f4c9581/cacert
 
 To get the PKCS#7 certificate chain (which contains the signing certificate and
@@ -87,7 +87,7 @@ all intermediate certificates), use the intermediates sub-resource.
 
 .. code-block:: bash
 
-    curl  -H 'content-type:application/json' -H 'X-Project-Id:12345' \
+    curl  -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
         http://localhost:9311/v1/cas/3a2a533d-ed4d-4c68-a418-2ee79f4c9581/intermediates
 
 .. _managing_project_cas:
@@ -105,14 +105,14 @@ To add a CA to a particular project, a project administrator would do:
 
 .. code-block:: bash
 
-    curl  -X POST -H 'content-type:application/json' -H 'X-Project-Id:12345' \
+    curl  -X POST -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
         http://localhost:9311/v1/cas/3a2a533d-ed4d-4c68-a418-2ee79f4c9581/add-to-project
 
 To remove the CA from the set of project CAs, a project administrator would do:
 
 .. code-block:: bash
 
-    curl  -X POST -H 'content-type:application/json' -H 'X-Project-Id:12345' \
+    curl  -X POST -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
         http://localhost:9311/v1/cas/3a2a533d-ed4d-4c68-a418-2ee79f4c9581/remove-from-project
 
 The first CA added to the project will be designated as the preferred CA. This
@@ -122,7 +122,7 @@ CA as the preferred CA as follows:
 
 .. code-block:: bash
 
-    curl  -X POST -H 'content-type:application/json' -H 'X-Project-Id:12345' \
+    curl  -X POST -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
         http://localhost:9311/v1/cas/3a2a533d-ed4d-4c68-a418-2ee79f4c9581/set-preferred
 
 As a global administrator, it is possible to determine which projects a CA
@@ -131,7 +131,7 @@ sub-resource:
 
 .. code-block:: bash
 
-    curl  -X GET -H 'content-type:application/json' -H 'X-Project-Id:12345' \
+    curl  -X GET -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
         http://localhost:9311/v1/cas/3a2a533d-ed4d-4c68-a418-2ee79f4c9581/projects
 
 .. _setting_a_global_preferred_ca:
@@ -149,7 +149,7 @@ To set a global preferred CA plugin, do:
 
 .. code-block:: bash
 
-    curl  -X POST -H 'content-type:application/json' -H 'X-Project-Id:12345' \
+    curl  -X POST -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
         http://localhost:9311/v1/cas/3a2a533d-ed4d-4c68-a418-2ee79f4c9581/set-global-preferred
 
 .. _creating_a_subca:
@@ -171,7 +171,7 @@ A subordinate CA can then be created as follows:
 
 .. code-block:: bash
 
-    curl -X POST -H 'content-type:application/json' -H 'X-Project-Id: 12345' -d '{
+    curl -X POST -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" -d '{
          "parent_ca_ref": "http://localhost:9311/cas/422e6ad3-24ae-45e3-b165-4e9487cd0ded",
          "subject_dn": "cn=Subordinate CA Signing Certificate, o=example.com",
          'name': "Subordinate CA"
@@ -202,5 +202,5 @@ follows:
 
 .. code-block:: bash
 
-    curl  -X DEL -H 'content-type:application/json' -H 'X-Project-Id:12345' \
+    curl  -X DEL -H "content-type:application/json" -H "X-Auth-Token: $TOKEN" \
         http://localhost:9311/v1/cas/3a2a533d-ed4d-4c68-a418-2ee79f4c9581
