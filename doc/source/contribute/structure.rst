@@ -8,7 +8,9 @@ Project Structure
       #. ``controllers/`` (Pecan-based controllers handling REST-based requests)
       #. ``middleware/`` (Middleware business logic to process REST requests)
 
+   #. ``cmd/`` (Barbican admin command source files)
    #. ``common/`` (Modules shared across other Barbican folders)
+   #. ``locale/`` (Translation templates)
    #. ``model/`` (SQLAlchemy-based model classes)
    #. ``plugin/`` (Plugin related logic, interfaces and look-up management)
 
@@ -26,9 +28,10 @@ Project Structure
    #. ``tasks/`` (Worker-related controllers and implementations)
    #. ``tests/`` (Unit tests)
 
-#. ``bin/`` (Start-up scripts for the Barbican nodes (API and worker))
-#. ``rpmbuild/`` (RPM package artifacts)
+#. ``bin/`` (Start-up scripts for the Barbican nodes)
+#. ``devstack/`` (Barbican DevStack plugin, DevStack gate configuration and
+    Vagrantfile for installing DevStack VM)
 #. ``etc/barbican/`` (Configuration files)
-#. ``functionaltests`` (Functional Barbican tests, DevStack gate configuration)
+#. ``functionaltests`` (Functional Barbican tests)
 #. ``doc/source`` (Sphinx documentation)
-#. ``docs/src`` (Docbook documentation - on hold pending project tagging)
+#. ``releasenotes`` (Barbican Release Notes)
