@@ -108,6 +108,9 @@ class ConsumerBehaviors(base_behaviors.BaseBehaviors):
         if resp.status_code == 401 and not use_auth:
             return resp, None
 
+        if resp.status_code != 200:
+            return resp, None
+
         returned_data = self.get_json(resp)
         consumer_data = returned_data['consumers']
 
