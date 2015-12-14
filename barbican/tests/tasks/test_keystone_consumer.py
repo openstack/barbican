@@ -34,8 +34,9 @@ class InitializeDatabaseMixin(object):
         # Force a refresh of the singleton plugin manager for each test.
         manager._PLUGIN_MANAGER = None
         manager.CONF.set_override('enabled_crypto_plugins',
-                                  'simple_crypto',
-                                  group='crypto')
+                                  ['simple_crypto'],
+                                  group='crypto',
+                                  enforce_type=True)
 
         self.project_id1 = uuid.uuid4().hex
         self.project_id2 = uuid.uuid4().hex
