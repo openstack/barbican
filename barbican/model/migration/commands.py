@@ -44,8 +44,8 @@ def init_config(sql_url=None):
                            "the CLI or the configuration file.")
 
     if sqlalchemy_url and 'sqlite' in sqlalchemy_url:
-        LOG.warn('!!! Limited support for migration commands using sqlite'
-                 ' databases; This operation may not succeed.')
+        LOG.warning('!!! Limited support for migration commands using sqlite'
+                    ' databases; This operation may not succeed.')
 
     config = alembic_config.Config(
         os.path.join(os.path.dirname(__file__), 'alembic.ini')
