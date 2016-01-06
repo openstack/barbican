@@ -127,7 +127,8 @@ class WhenCreatingContainersUsingContainersResource(
         self.assertNotIn(self.project_id, resp.headers['Location'])
 
     def test_should_throw_exception_when_secret_ref_doesnt_exist(self):
-        config.CONF.set_override("host_href", "http://localhost:9311")
+        config.CONF.set_override("host_href", "http://localhost:9311",
+                                 enforce_type=True)
         secret_refs = [
             {
                 'name': 'bad secret',

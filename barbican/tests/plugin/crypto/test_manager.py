@@ -26,7 +26,8 @@ class WhenTestingManager(utils.BaseTestCase):
         manager.CONF.set_override(
             "enabled_crypto_plugins",
             ['foo_plugin'],
-            group='crypto')
+            group='crypto',
+            enforce_type=True)
 
         manager_to_test = manager.get_manager()
 
