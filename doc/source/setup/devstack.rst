@@ -25,6 +25,14 @@ To simplify the setup process of running Barbican on DevStack, there is a
 Vagrantfile that will automatically setup up a VM containing Barbican
 running on Devstack.
 
+.. warning::
+
+    Upon following these steps, you will not be able to use tox tools
+    if you setup a shared folder. This is because making hard-links is
+    required, but not permitted if the project is in a shared folder.
+    If you wish to use tox, comment out the `Create Synced Folder`
+    section in `barbican/devstack/barbican-vagrant/Vagrantfile`.
+
 1. Obtain Barbican vagrant file
    If you don't already have the file then clone the repo below
 
