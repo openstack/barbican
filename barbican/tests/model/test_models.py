@@ -439,7 +439,7 @@ class WhenCreatingNewContainerACL(utils.BaseTestCase):
                                   True, user_ids=user_ids)
         self.assertEqual(self.container_id, acl.container_id)
         self.assertEqual(self.operation, acl.operation)
-        self.assertEqual(True, acl.project_access)
+        self.assertTrue(acl.project_access)
         self.assertEqual(2, len(acl.acl_users))
 
     def test_should_throw_exception_missing_container_id(self):
