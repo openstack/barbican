@@ -18,7 +18,6 @@ This test module focuses on typical-flow business logic tests with the API
 resource classes. For RBAC tests of these classes, see the
 'resources_policy_test.py' module.
 """
-import logging
 import mimetypes
 
 import mock
@@ -36,9 +35,6 @@ from barbican.common import utils as barbican_utils
 import barbican.context
 from barbican.model import models
 from barbican.tests import utils
-
-
-LOG = logging.getLogger(__name__)
 
 
 def get_barbican_env(external_project_id):
