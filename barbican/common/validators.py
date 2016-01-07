@@ -684,7 +684,7 @@ class ContainerValidator(ValidatorBase):
         self.schema = {
             "type": "object",
             "properties": {
-                "name": {"type": ["string", "null"]},
+                "name": {"type": ["string", "null"], "maxLength": 255},
                 "type": {
                     "type": "string",
                     # TODO(hgedikli): move this to a common location

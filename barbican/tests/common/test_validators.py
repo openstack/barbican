@@ -616,6 +616,29 @@ class WhenTestingContainerValidator(utils.BaseTestCase):
         self.container_req['name'] = '    '
         self.validator.validate(self.container_req)
 
+    def test_should_raise_name_length_greater_than_max(self):
+        self.container_req['name'] = 'a' * 256
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.container_req,
+        )
+        self.assertEqual('name', exception.invalid_property)
+        self.assertIn('name', exception.message)
+
+    def test_should_raise_numeric_name(self):
+        self.container_req['name'] = 123
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.container_req,
+        )
+
+        self.assertEqual('name', exception.invalid_property)
+        self.assertIn('name', exception.message)
+
     def test_should_raise_no_type(self):
         del self.container_req['type']
 
@@ -649,17 +672,6 @@ class WhenTestingContainerValidator(utils.BaseTestCase):
         )
 
         self.assertEqual('type', exception.invalid_property)
-
-    def test_should_raise_numeric_name(self):
-        self.container_req['name'] = 123
-
-        exception = self.assertRaises(
-            excep.InvalidObject,
-            self.validator.validate,
-            self.container_req,
-        )
-
-        self.assertEqual('name', exception.invalid_property)
 
     def test_should_raise_all_nulls(self):
         self.container_req = {'name': None,
