@@ -259,7 +259,7 @@ class WhenCallingScheduleOrderRetryTasks(database_utils.RepositoryTestCase):
         # small amount of time.
         delta = retry_model.retry_at - self.date_to_retry_at
         delta_seconds = delta.seconds
-        self.assertEqual(True, delta_seconds <= 2)
+        self.assertTrue(delta_seconds <= 2)
 
 
 class WhenCallingTasksMethod(utils.BaseTestCase):

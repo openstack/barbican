@@ -42,4 +42,4 @@ class WhenUsingFollowOnProcessingStatusDTO(utils.BaseTestCase):
     def test_should_indicate_follow_on_when_retry_task_provided(self):
         self.target.retry_task = common.RetryTasks.INVOKE_SAME_TASK
 
-        self.assertEqual(True, self.target.is_follow_on_needed())
+        self.assertTrue(self.target.is_follow_on_needed())
