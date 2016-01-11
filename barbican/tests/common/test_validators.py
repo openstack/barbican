@@ -628,6 +628,27 @@ class WhenTestingContainerValidator(utils.BaseTestCase):
         self.assertEqual('name', exception.invalid_property)
         self.assertIn('name', exception.message)
 
+    def test_should_raise_nonstring_secret_name(self):
+        self.secret_refs[0]["name"] = 5
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.container_req,
+        )
+
+        self.assertEqual('secret_refs', exception.invalid_property)
+
+    def test_should_raise_secret_name_too_long(self):
+        self.secret_refs[0]['name'] = 'a' * 256
+
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.container_req,
+        )
+        self.assertEqual('secret_refs', exception.invalid_property)
+
     def test_should_raise_numeric_name(self):
         self.container_req['name'] = 123
 
