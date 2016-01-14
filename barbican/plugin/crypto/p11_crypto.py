@@ -289,7 +289,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
                     kek = self.pkcs11.unwrap_key(mkek, iv, wrapped_key,
                                                  session)
 
-                self._pkek_cache_add(key_label, kek)
+                self._pkek_cache_add(kek, key_label)
 
         return kek
 

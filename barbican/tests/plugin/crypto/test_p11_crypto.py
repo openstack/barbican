@@ -204,14 +204,6 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
 
     def test_cached_kek_expired(self):
         self.plugin.pkek_cache['expired_kek'] = p11_crypto.CachedKEK(4, 0)
-        kek_meta = mock.MagicMock()
-        kek_meta.kek_label = 'expired_kek'
-        kek_meta.plugin_meta = ('{"iv": "iv==",'
-                                '"hmac": "hmac",'
-                                '"wrapped_key": "wrappedkey==",'
-                                '"mkek_label": "mkek_label",'
-                                '"hmac_label": "hmac_label"}')
-        self.plugin._load_kek_from_meta_dto(kek_meta)
         self.assertEqual(self.plugin._pkek_cache_get('expired_kek'), None)
 
     def test_generate_mkek(self):
