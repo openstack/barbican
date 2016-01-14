@@ -144,17 +144,6 @@ class WhenInvokingExceptionMethods(utils.BaseTestCase):
             "No entities of type test_entity found",
             exception_result.message)
 
-    def test_should_raise_for_entity_already_exists(self):
-
-        exception_result = self.assertRaises(
-            exception.Duplicate,
-            repositories._raise_entity_already_exists,
-            self.entity_name)
-
-        self.assertEqual(
-            "Entity 'test_entity' already exists",
-            exception_result.message)
-
 
 class WhenTestingBaseRepository(database_utils.RepositoryTestCase):
 

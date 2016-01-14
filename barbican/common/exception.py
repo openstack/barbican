@@ -167,8 +167,8 @@ class BadStoreUri(BarbicanException):
     message = u._("The Store URI was malformed.")
 
 
-class Duplicate(BarbicanException):
-    message = u._("An object with the same identifier already exists.")
+class ConstraintCheck(BarbicanException):
+    message = u._("A defined SQL constraint check failed: %(error)s")
 
 
 class StorageFull(BarbicanException):
