@@ -55,7 +55,7 @@ Request:
         X-Auth-Token: <token>
 
 
-Request:
+Response:
 ********
 
 .. code-block:: javascript
