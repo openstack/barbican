@@ -53,13 +53,13 @@ class SymantecCertificatePlugin(cert.CertificatePluginBase):
         self.password = conf.symantec_plugin.password
         self.url = conf.symantec_plugin.url
 
-        if self.username == None:
+        if self.username is None:
             raise ValueError(u._("username is required"))
 
-        if self.password == None:
+        if self.password is None:
             raise ValueError(u._("password is required"))
 
-        if self.url == None:
+        if self.url is None:
             raise ValueError(u._("url is required"))
 
     def get_default_ca_name(self):
