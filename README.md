@@ -89,4 +89,5 @@ CAs).
 5. Improve security through sane defaults and centralized management of
    [policies for all
    secrets](https://github.com/cloudkeep/barbican/wiki/Policies).
-6. Out of band communication mechanism to notify and protect sensitive assets.
+6. Provide an out of band communication mechanism to notify and protect sensitive 
+   assets.
