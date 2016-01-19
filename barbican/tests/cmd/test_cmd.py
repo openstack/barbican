@@ -15,6 +15,8 @@
 import mock
 
 from barbican.cmd import retry_scheduler
+from barbican.cmd import worker
+from barbican.tests.queue import test_keystone_listener
 from barbican.tests import utils
 
 
@@ -50,3 +52,29 @@ class WhenInvokingRetryServiceCommand(utils.BaseTestCase):
         retry_scheduler.main()
 
         self.assertEqual(1, mock_sys_exit.call_count)
+
+
+class WhenInvokingWorkerCommand(test_keystone_listener.UtilMixin,
+                                utils.BaseTestCase):
+    """Test the asynchronous worker functionality."""
+
+    def setUp(self):
+        super(WhenInvokingWorkerCommand, self).setUp()
+
+    @mock.patch('barbican.queue.init')
+    @mock.patch('barbican.queue.get_server')
+    @mock.patch('oslo_service.service.launch')
+    def test_should_launch_service(
+            self,
+            mock_service_launch,
+            mock_queue_task_server,
+            mock_queue_init):
+
+        self.opt_in_group('queue', asynchronous_workers=3)
+        worker.main()
+
+        self.assertEqual(1, mock_queue_init.call_count)
+        self.assertEqual(1, mock_service_launch.call_count)
+        # check keyword argument for number of worker matches
+        workers_kwarg = {'workers': 3}
+        self.assertEqual(workers_kwarg, mock_service_launch.call_args[1])
