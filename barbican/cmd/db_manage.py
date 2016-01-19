@@ -22,8 +22,15 @@ import sys
 sys.path.insert(0, os.getcwd())
 
 from barbican.common import config
+from barbican.model import clean
 from barbican.model.migration import commands
 from oslo_log import log
+
+
+# Import and configure logging.
+CONF = config.CONF
+log.setup(CONF, 'barbican')
+LOG = log.getLogger(__name__)
 
 
 class DatabaseManager(object):
@@ -43,6 +50,7 @@ class DatabaseManager(object):
         self.add_upgrade_args()
         self.add_history_args()
         self.add_current_args()
+        self.add_clean_args()
 
     def get_main_parser(self):
         """Create top-level parser and arguments."""
@@ -94,6 +102,13 @@ class DatabaseManager(object):
                                         'revision.')
         create_parser.set_defaults(func=self.current)
 
+    def add_clean_args(self):
+        """Create 'clean' command parser and arguments."""
+        create_parser = self.subparsers.add_parser(
+            'clean',
+            help='Clean up soft deletions in the database')
+        create_parser.set_defaults(func=self.clean)
+
     def revision(self, args):
         """Process the 'revision' Alembic command."""
         commands.generate(autogenerate=args.autogenerate,
@@ -102,6 +117,7 @@ class DatabaseManager(object):
 
     def upgrade(self, args):
         """Process the 'upgrade' Alembic command."""
+        LOG.debug("Performing database schema migration...")
         commands.upgrade(to_version=args.version, sql_url=args.dburl)
 
     def history(self, args):
@@ -109,6 +125,9 @@ class DatabaseManager(object):
 
     def current(self, args):
         commands.current(args.verbose, sql_url=args.dburl)
+
+    def clean(self, args):
+        clean.clean_command(args.dburl)
 
     def execute(self):
         """Parse the command line arguments."""
@@ -125,18 +144,13 @@ def _exception_is_successfull_exit(thrown_exception):
 
 
 def main():
-    # Import and configure logging.
-    CONF = config.CONF
-    log.setup(CONF, 'barbican')
-    LOG = log.getLogger(__name__)
-    LOG.debug("Performing database schema migration...")
 
     try:
         dm = DatabaseManager(CONF)
         dm.execute()
     except Exception as ex:
         if not _exception_is_successfull_exit(ex):
-            LOG.exception('Problem seen trying to execute Alembic commands')
+            LOG.exception('Problem seen trying to run barbican db manage')
             sys.stderr.write("ERROR: {0}\n".format(ex))
             sys.exit(1)
 
