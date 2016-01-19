@@ -273,7 +273,7 @@ TODO Items
 .. _Alembic Example: https://julo.ch/blog/migrating-content-with-alembic/
 .. _Alembic Operation Reference: https://alembic.readthedocs.org/en/latest/ops.html
 .. _Alembic tutorial: https://alembic.readthedocs.org/en/latest/tutorial.html
-.. _Barbican DevStack: https://wiki.openstack.org/wiki/BarbicanDevStack
+.. _Barbican DevStack: http://docs.openstack.org/developer/barbican/setup/devstack.html
 .. _Developer Guide: https://github.com/cloudkeep/barbican/wiki/Developer-Guide
 .. _Need to alter column types in production database: http://stackoverflow.com/questions/5329255/need-to-alter-column-types-in-production-database-sql-server-2005
 .. _OpenStack and SQLAlchemy: https://wiki.openstack.org/wiki/OpenStack_and_SQLAlchemy#Migrations
