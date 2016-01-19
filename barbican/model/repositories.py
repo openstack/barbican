@@ -609,9 +609,7 @@ class SecretRepo(BaseRepo):
         query = session.query(models.Secret)
         query = query.filter_by(deleted=False)
 
-        # Note(john-wood-w): SQLAlchemy requires '== None' below,
-        #   not 'is None'.
-        query = query.filter(or_(models.Secret.expiration == None,
+        query = query.filter(or_(models.Secret.expiration.is_(None),
                                  models.Secret.expiration > utcnow))
 
         if name:
@@ -658,9 +656,7 @@ class SecretRepo(BaseRepo):
         """Sub-class hook: build a retrieve query."""
         utcnow = timeutils.utcnow()
 
-        # Note(john-wood-w): SQLAlchemy requires '== None' below,
-        #   not 'is None'.
-        expiration_filter = or_(models.Secret.expiration == None,
+        expiration_filter = or_(models.Secret.expiration.is_(None),
                                 models.Secret.expiration > utcnow)
 
         query = session.query(models.Secret)
@@ -691,9 +687,7 @@ class SecretRepo(BaseRepo):
         session = self.get_session(session)
         try:
             utcnow = timeutils.utcnow()
-            # Note(john-wood-w): SQLAlchemy requires '== None' below,
-            #   not 'is None'.
-            expiration_filter = or_(models.Secret.expiration == None,
+            expiration_filter = or_(models.Secret.expiration.is_(None),
                                     models.Secret.expiration > utcnow)
 
             query = session.query(models.Secret)
@@ -1413,23 +1407,20 @@ class CertificateAuthorityRepo(BaseRepo):
             # get both subcas that have been defined for your project
             # (cas for which ca.project_id == project_id) AND
             # all top-level CAs (ca.project_id == None)
-            # Note(alee) for sqlalchemy, use '== None', not 'is None'
 
             query = session.query(models.CertificateAuthority)
             query = query.filter(or_(
                 models.CertificateAuthority.project_id == project_id,
-                models.CertificateAuthority.project_id == None
+                models.CertificateAuthority.project_id.is_(None)
             ))
 
         query = query.order_by(models.CertificateAuthority.created_at)
         query = query.filter_by(deleted=False)
 
-        # Note(alee) SQLAlchemy requires '== None' below,
-        #   not 'is None'.
         if not show_expired:
             utcnow = timeutils.utcnow()
             query = query.filter(or_(
-                models.CertificateAuthority.expiration == None,
+                models.CertificateAuthority.expiration.is_(None),
                 models.CertificateAuthority.expiration > utcnow))
 
         if plugin_name:
@@ -1495,11 +1486,9 @@ class CertificateAuthorityRepo(BaseRepo):
         """Sub-class hook: build a retrieve query."""
         utcnow = timeutils.utcnow()
 
-        # Note(alee): SQLAlchemy requires '== None' below,
-        #   not 'is None'.
         # TODO(jfwood): Performance? Is the many-to-many join needed?
         expiration_filter = or_(
-            models.CertificateAuthority.expiration == None,
+            models.CertificateAuthority.expiration.is_(None),
             models.CertificateAuthority.expiration > utcnow)
 
         query = session.query(models.CertificateAuthority)
