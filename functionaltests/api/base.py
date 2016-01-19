@@ -389,3 +389,28 @@ class PagingTestCase(TestCase):
                                       prev_ref=prev_ref, expected_size=10,
                                       next_ref_should_be_none=False,
                                       prev_ref_should_be_none=True)
+
+    @testcase.attr('positive')
+    def test_paging_with_default_limit_and_large_offsets(self):
+        """Covers resource paging limit and offset attributes."""
+        test_model = self.create_model()
+
+        number_of_resources = 25
+
+        # create a number of resources
+        filter = self._set_filter_field(test_model)
+        self.create_resources(count=number_of_resources, model=test_model)
+
+        large_offset = 265613988875874769338781322035779626829233452653394495
+        limit = 10
+
+        # pass in non-integer values for limit and offset
+        resp, resources, next_ref, prev_ref = self.get_resources(
+            limit=limit,
+            offset=large_offset, filter=filter)
+
+        self.assertEqual(200, resp.status_code)
+        self._validate_resource_group(resources=resources, next_ref=next_ref,
+                                      prev_ref=prev_ref, expected_size=10,
+                                      next_ref_should_be_none=False,
+                                      prev_ref_should_be_none=True)
