@@ -421,7 +421,7 @@ class PKCS11(object):
         self._check_error(rv)
 
         ct_len = len(ct_data)
-        pt_len = self.ffi.new("CK_ULONG *", ct_len - self.gcmtagsize)
+        pt_len = self.ffi.new("CK_ULONG *", ct_len)
         pt = self.ffi.new("CK_BYTE[{0}]".format(pt_len[0]))
         rv = self.lib.C_Decrypt(session, ct_data, ct_len, pt, pt_len)
         self._check_error(rv)
