@@ -109,7 +109,8 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         return pkcs11.CKR_OK
 
     def _decrypt(self, session, ct, ct_len, pt, pt_len):
-        self.ffi.buffer(pt)[:] = ct[:-self.pkcs11.gcmtagsize][::-1]
+        tmp = ct[:-self.pkcs11.gcmtagsize][::-1]
+        self.ffi.buffer(pt)[:len(tmp)] = tmp
         return pkcs11.CKR_OK
 
     def _wrap_key(self, *args, **kwargs):
@@ -237,7 +238,8 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         iv = b'0' * self.pkcs11.noncesize
         pt = self.pkcs11.decrypt(mock.MagicMock(), iv, ct, mock.MagicMock())
 
-        self.assertEqual(pt, ct[:-self.pkcs11.gcmtagsize][::-1])
+        pt_len = len(ct) - self.pkcs11.gcmtagsize
+        self.assertEqual(pt[:pt_len], ct[:-self.pkcs11.gcmtagsize][::-1])
 
         self.assertEqual(self.lib.C_DecryptInit.call_count, 1)
         self.assertEqual(self.lib.C_Decrypt.call_count, 1)
