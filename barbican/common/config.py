@@ -93,6 +93,8 @@ queue_opts = [
                help=u._('Version of tasks invoked via queue')),
     cfg.StrOpt('server_name', default='barbican.queue',
                help=u._('Server name for RPC task processing server')),
+    cfg.IntOpt('asynchronous_workers', default=1,
+               help=u._('Number of asynchronous worker processes')),
 ]
 
 ks_queue_opt_group = cfg.OptGroup(name=KS_NOTIFICATIONS_GRP_NAME,
