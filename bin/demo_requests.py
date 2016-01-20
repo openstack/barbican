@@ -17,7 +17,7 @@
 Demonstrates the various Barbican API calls, against an unauthenticated local
 Barbican server. This script is intended to be a lightweight way to demonstrate
 and 'smoke test' the Barbican API via it's REST API, with no other dependencies
-required including the Barbican Python client. Not that this script is not
+required including the Barbican Python client. Note that this script is not
 intended to replace DevStack or Tempest style testing.
 """
 
