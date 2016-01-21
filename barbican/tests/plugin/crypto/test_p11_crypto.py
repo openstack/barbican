@@ -84,6 +84,16 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.assertEqual(self.pkcs11.wrap_key.call_count, 1)
         self.assertEqual(self.pkcs11.compute_hmac.call_count, 1)
 
+    def test_bind_kek_metadata_with_existing_key(self):
+        kek_datum = models.KEKDatum()
+        dto = plugin_import.KEKMetaDTO(kek_datum)
+        dto.plugin_meta = '{}'
+        dto = self.plugin.bind_kek_metadata(dto)
+
+        self.assertEqual(self.pkcs11.generate_key.call_count, 0)
+        self.assertEqual(self.pkcs11.wrap_key.call_count, 0)
+        self.assertEqual(self.pkcs11.compute_hmac.call_count, 0)
+
     def test_encrypt(self):
         payload = b'test payload'
         encrypt_dto = plugin_import.EncryptDTO(payload)
@@ -107,6 +117,33 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.assertEqual(self.pkcs11.unwrap_key.call_count, 1)
         self.assertEqual(self.pkcs11.encrypt.call_count, 1)
         self.assertEqual(self.pkcs11.return_session.call_count, 1)
+
+    def test_encrypt_bad_session(self):
+        self.pkcs11.get_session.return_value = mock.DEFAULT
+        self.pkcs11.get_session.side_effect = pkcs11.P11CryptoPluginException(
+            'Testing error handling'
+        )
+        payload = b'test payload'
+        encrypt_dto = plugin_import.EncryptDTO(payload)
+        kek_meta = mock.MagicMock()
+        kek_meta.kek_label = 'pkek'
+        kek_meta.plugin_meta = ('{"iv": "iv==",'
+                                '"hmac": "hmac",'
+                                '"wrapped_key": "wrappedkey==",'
+                                '"mkek_label": "mkek_label",'
+                                '"hmac_label": "hmac_label"}')
+        self.assertRaises(pkcs11.P11CryptoPluginException,
+                          self.plugin.encrypt,
+                          encrypt_dto,
+                          kek_meta,
+                          mock.MagicMock())
+
+        self.assertEqual(self.pkcs11.get_key_handle.call_count, 2)
+        self.assertEqual(self.pkcs11.get_session.call_count, 2)
+        self.assertEqual(self.pkcs11.verify_hmac.call_count, 1)
+        self.assertEqual(self.pkcs11.unwrap_key.call_count, 1)
+        self.assertEqual(self.pkcs11.encrypt.call_count, 0)
+        self.assertEqual(self.pkcs11.return_session.call_count, 0)
 
     def test_decrypt(self):
         ct = b'ctct'
@@ -132,6 +169,35 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.assertEqual(self.pkcs11.unwrap_key.call_count, 1)
         self.assertEqual(self.pkcs11.decrypt.call_count, 1)
         self.assertEqual(self.pkcs11.return_session.call_count, 1)
+
+    def test_decrypt_bad_session(self):
+        self.pkcs11.get_session.return_value = mock.DEFAULT
+        self.pkcs11.get_session.side_effect = pkcs11.P11CryptoPluginException(
+            'Testing error handling'
+        )
+        ct = b'ctct'
+        kek_meta_extended = '{"iv":"AAAA"}'
+        decrypt_dto = plugin_import.DecryptDTO(ct)
+        kek_meta = mock.MagicMock()
+        kek_meta.kek_label = 'pkek'
+        kek_meta.plugin_meta = ('{"iv": "iv==",'
+                                '"hmac": "hmac",'
+                                '"wrapped_key": "wrappedkey==",'
+                                '"mkek_label": "mkek_label",'
+                                '"hmac_label": "hmac_label"}')
+        self.assertRaises(pkcs11.P11CryptoPluginException,
+                          self.plugin.decrypt,
+                          decrypt_dto,
+                          kek_meta,
+                          kek_meta_extended,
+                          mock.MagicMock())
+
+        self.assertEqual(self.pkcs11.get_key_handle.call_count, 2)
+        self.assertEqual(self.pkcs11.get_session.call_count, 2)
+        self.assertEqual(self.pkcs11.verify_hmac.call_count, 1)
+        self.assertEqual(self.pkcs11.unwrap_key.call_count, 1)
+        self.assertEqual(self.pkcs11.decrypt.call_count, 0)
+        self.assertEqual(self.pkcs11.return_session.call_count, 0)
 
     def test_generate_symmetric(self):
         secret = models.Secret()

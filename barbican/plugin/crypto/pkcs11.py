@@ -425,8 +425,24 @@ class PKCS11(object):
         pt = self.ffi.new("CK_BYTE[{0}]".format(pt_len[0]))
         rv = self.lib.C_Decrypt(session, ct_data, ct_len, pt, pt_len)
         self._check_error(rv)
+        pt = self.ffi.buffer(pt, pt_len[0])[:]
 
-        return self.ffi.buffer(pt, pt_len[0])[:]
+        # Secrets stored by the old code uses 16 byte IVs, while the new code
+        # uses 12 byte IVs to be more efficient with GCM. We can use this to
+        # detect secrets stored by the old code and perform padding removal.
+        # If we find a 16 byte IV, we check to make sure the decrypted plain
+        # text is a multiple of the block size, and then that the end of the
+        # plain text looks like padding, ie the last character is a value
+        # between 1 and blocksize, and that there are that many consecutive
+        # bytes of that value at the end. If all of that is true, we remove
+        # the found padding.
+        if len(iv) == self.blocksize and \
+           (len(pt) % self.blocksize) == 0 and \
+           1 <= ord(pt[-1]) <= self.blocksize and \
+           pt.endswith(pt[-1] * ord(pt[-1])):
+            pt = pt[:-(ord(pt[-1]))]
+
+        return pt
 
     def generate_key(self, key_length, session, key_label=None,
                      encrypt=False, sign=False, wrap=False, master_key=False):
