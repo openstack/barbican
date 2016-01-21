@@ -64,6 +64,42 @@ class WhenCreatingNewSecret(utils.BaseTestCase):
         self.assertEqual(self.parsed_secret['secret_type'], secret.secret_type)
 
 
+class WhenCreatingNewSecretMetadata(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenCreatingNewSecretMetadata, self).setUp()
+        self.key = 'dog'
+        self.value = 'poodle'
+
+        self.metadata = {
+            'key': self.key,
+            'value': self.value
+        }
+
+    def test_new_secret_metadata_is_created_from_dict(self):
+        secret_meta = models.SecretUserMetadatum(self.key, self.value)
+
+        self.assertEqual(self.key, secret_meta.key)
+        self.assertEqual(self.value, secret_meta.value)
+
+        fields = secret_meta.to_dict_fields()
+        self.assertEqual(self.metadata['key'],
+                         fields['key'])
+        self.assertEqual(self.metadata['value'],
+                         fields['value'])
+
+    def test_should_raise_exception_metadata_with_no_key(self):
+        self.assertRaises(exception.MissingArgumentError,
+                          models.SecretUserMetadatum,
+                          None,
+                          self.value)
+
+    def test_should_raise_exception_metadata_with_no_value(self):
+        self.assertRaises(exception.MissingArgumentError,
+                          models.SecretUserMetadatum,
+                          self.key,
+                          None)
+
+
 class WhenCreatingNewOrder(utils.BaseTestCase):
     def setUp(self):
         super(WhenCreatingNewOrder, self).setUp()

@@ -64,6 +64,7 @@ _PROJECT_CA_REPOSITORY = None
 _PROJECT_QUOTAS_REPOSITORY = None
 _SECRET_ACL_REPOSITORY = None
 _SECRET_META_REPOSITORY = None
+_SECRET_USER_META_REPOSITORY = None
 _SECRET_REPOSITORY = None
 _TRANSPORT_KEY_REPOSITORY = None
 
@@ -775,6 +776,58 @@ class SecretStoreMetadatumRepo(BaseRepo):
     def _do_build_get_query(self, entity_id, external_project_id, session):
         """Sub-class hook: build a retrieve query."""
         query = session.query(models.SecretStoreMetadatum)
+        return query.filter_by(id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
+class SecretUserMetadatumRepo(BaseRepo):
+    """Repository for the SecretUserMetadatum entity
+
+    Stores key/value information on behalf of a Secret.
+    """
+
+    def save(self, metadata, secret_model):
+        """Saves the the specified metadata for the secret.
+
+        :raises NotFound if entity does not exist.
+        """
+        now = timeutils.utcnow()
+
+        for k, v in metadata.items():
+            meta_model = models.SecretUserMetadatum(k, v)
+            meta_model.updated_at = now
+            meta_model.secret = secret_model
+            meta_model.save()
+
+    def get_metadata_for_secret(self, secret_id):
+        """Returns a dict of SecretUserMetadatum instances."""
+
+        session = get_session()
+
+        try:
+            query = session.query(models.SecretUserMetadatum)
+            query = query.filter_by(deleted=False)
+
+            query = query.filter(
+                models.SecretUserMetadatum.secret_id == secret_id)
+
+            metadata = query.all()
+
+        except sa_orm.exc.NoResultFound:
+            metadata = {}
+
+        return {m.key: m.value for m in metadata}
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "SecretUserMetadatum"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+        query = session.query(models.SecretUserMetadatum)
         return query.filter_by(id=entity_id)
 
     def _do_validate(self, values):
@@ -2147,6 +2200,13 @@ def get_secret_meta_repository():
     """Returns a singleton Secret meta repository instance."""
     global _SECRET_META_REPOSITORY
     return _get_repository(_SECRET_META_REPOSITORY, SecretStoreMetadatumRepo)
+
+
+def get_secret_user_meta_repository():
+    """Returns a singleton Secret user meta repository instance."""
+    global _SECRET_USER_META_REPOSITORY
+    return _get_repository(_SECRET_USER_META_REPOSITORY,
+                           SecretUserMetadatumRepo)
 
 
 def get_secret_repository():
