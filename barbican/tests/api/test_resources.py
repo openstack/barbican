@@ -22,7 +22,6 @@ import mimetypes
 
 import mock
 import pecan
-import six
 from testtools import testcase
 import webtest
 
@@ -382,7 +381,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.assertNotIn('content_encodings', resp.namespace)
         self.assertIn('content_types', resp.namespace)
         self.assertIn(self.datum.content_type,
-                      six.itervalues(resp.namespace['content_types']))
+                      resp.namespace['content_types'].values())
         self.assertNotIn('mime_type', resp.namespace)
 
     @testcase.attr('deprecated')
@@ -529,7 +528,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.assertIsNotNone(resp.namespace)
         self.assertIn('content_types', resp.namespace)
         self.assertIn(self.datum.content_type,
-                      six.itervalues(resp.namespace['content_types']))
+                      resp.namespace['content_types'].values())
 
     @mock.patch('barbican.plugin.resources.get_transport_key_id_for_retrieval')
     def test_should_get_secret_meta_for_binary_with_tkey(
@@ -556,7 +555,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.assertIsNotNone(resp.namespace)
         self.assertIn('content_types', resp.namespace)
         self.assertIn(self.datum.content_type,
-                      six.itervalues(resp.namespace['content_types']))
+                      resp.namespace['content_types'].values())
         self.assertIn('transport_key_ref', resp.namespace)
         self.assertEqual(
             hrefs.convert_transport_key_to_href(self.transport_key_id),
