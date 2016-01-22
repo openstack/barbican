@@ -33,10 +33,11 @@ class KeyGenerator(object):
         self.pkcs11 = pkcs11.PKCS11(
             library_path=self.args.library_path,
             login_passphrase=self.args.passphrase or password,
+            rw_session=True,
             slot_id=int(self.args.slot_id),
             ffi=ffi
         )
-        self.session = self.pkcs11.create_working_session()
+        self.session = self.pkcs11.get_session()
 
     def get_main_parser(self):
         """Create a top-level parser and arguments."""
@@ -75,6 +76,8 @@ class KeyGenerator(object):
         """Create HMAC generation parser and arguments."""
         create_parser = self.subparsers.add_parser('hmac', help='Generates a '
                                                    'new HMAC.')
+        create_parser.add_argument('--length', '-l', default=32,
+                                   help='the length of the HMACKEY')
         create_parser.add_argument('--label', '-L', default='primaryhmac',
                                    help='the label for the HMAC')
         create_parser.set_defaults(func=self.generate_hmac)
@@ -91,13 +94,15 @@ class KeyGenerator(object):
     def generate_mkek(self, args):
         """Process the generate MKEK with given arguments"""
         self.verify_label_does_not_exist(args.label, self.session)
-        self.pkcs11.generate_mkek(args.label, int(args.length), self.session)
+        self.pkcs11.generate_key(args.length, self.session, args.label,
+                                 encrypt=True, wrap=True, master_key=True)
         print ("MKEK successfully generated!")
 
     def generate_hmac(self, args):
         """Process the generate HMAC with given arguments"""
         self.verify_label_does_not_exist(args.label, self.session)
-        self.pkcs11.generate_hmac_key(args.label, self.session)
+        self.pkcs11.generate_key(args.length, self.session, args.label,
+                                 sign=True, master_key=True)
         print ("HMAC successfully generated!")
 
     def execute(self):
@@ -107,7 +112,7 @@ class KeyGenerator(object):
         except Exception as e:
             print(e)
         finally:
-            self.pkcs11.close_session(self.session)
+            self.pkcs11.return_session(self.session)
 
 
 def main():
