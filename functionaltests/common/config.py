@@ -29,13 +29,14 @@ def setup_config(config_file=''):
         cfg.StrOpt('uri', default='http://localhost:5000/v3'),
         cfg.StrOpt('version', default='v3'),
         cfg.StrOpt('username', default='admin'),
-        cfg.StrOpt('password', default='secretadmin'),
+        cfg.StrOpt('password', default='secretadmin', secret=True),
         cfg.StrOpt('project_name', default='admin'),
         cfg.StrOpt('domain_name', default='Default'),
         cfg.StrOpt('region', default='RegionOne'),
         cfg.StrOpt('service_admin', default='service-admin'),
         cfg.StrOpt('service_admin_project', default='service'),
-        cfg.StrOpt('service_admin_password', default='secretservice')]
+        cfg.StrOpt('service_admin_password', default='secretservice',
+                   secret=True)]
     TEST_CONF.register_group(identity_group)
     TEST_CONF.register_opts(identity_options, group=identity_group)
 
@@ -44,21 +45,21 @@ def setup_config(config_file=''):
         cfg.StrOpt('project_a', default='project_a'),
         cfg.StrOpt('project_b', default='project_b'),
         cfg.StrOpt('admin_a', default='project_a_admin'),
-        cfg.StrOpt('admin_a_password', default='barbican'),
+        cfg.StrOpt('admin_a_password', default='barbican', secret=True),
         cfg.StrOpt('creator_a', default='project_a_creator'),
-        cfg.StrOpt('creator_a_password', default='barbican'),
+        cfg.StrOpt('creator_a_password', default='barbican', secret=True),
         cfg.StrOpt('observer_a', default='project_a_observer'),
-        cfg.StrOpt('observer_a_password', default='barbican'),
+        cfg.StrOpt('observer_a_password', default='barbican', secret=True),
         cfg.StrOpt('auditor_a', default='project_a_auditor'),
-        cfg.StrOpt('auditor_a_password', default='barbican'),
+        cfg.StrOpt('auditor_a_password', default='barbican', secret=True),
         cfg.StrOpt('admin_b', default='project_b_admin'),
-        cfg.StrOpt('admin_b_password', default='barbican'),
+        cfg.StrOpt('admin_b_password', default='barbican', secret=True),
         cfg.StrOpt('creator_b', default='project_b_creator'),
-        cfg.StrOpt('creator_b_password', default='barbican'),
+        cfg.StrOpt('creator_b_password', default='barbican', secret=True),
         cfg.StrOpt('observer_b', default='project_b_observer'),
-        cfg.StrOpt('observer_b_password', default='barbican'),
+        cfg.StrOpt('observer_b_password', default='barbican', secret=True),
         cfg.StrOpt('auditor_b', default='project_b_auditor'),
-        cfg.StrOpt('auditor_b_password', default='barbican'),
+        cfg.StrOpt('auditor_b_password', default='barbican', secret=True),
     ]
     TEST_CONF.register_group(rbac_users_group)
     TEST_CONF.register_opts(rbac_users_options, group=rbac_users_group)
