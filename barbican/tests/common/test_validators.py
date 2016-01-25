@@ -169,14 +169,14 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         result = self.validator.validate(self.secret_req)
 
         self.assertIn('expiration', result)
-        self.assertTrue(isinstance(result['expiration'], datetime.datetime))
+        self.assertIsInstance(result['expiration'], datetime.datetime)
 
     def test_should_validate_future_expiration_no_t(self):
         self.secret_req['expiration'] = '2114-02-28 19:14:44.180394'
         result = self.validator.validate(self.secret_req)
 
         self.assertIn('expiration', result)
-        self.assertTrue(isinstance(result['expiration'], datetime.datetime))
+        self.assertIsInstance(result['expiration'], datetime.datetime)
 
     def test_should_validate_expiration_with_z(self):
         expiration = '2114-02-28 19:14:44.180394Z'
@@ -184,7 +184,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         result = self.validator.validate(self.secret_req)
 
         self.assertIn('expiration', result)
-        self.assertTrue(isinstance(result['expiration'], datetime.datetime))
+        self.assertIsInstance(result['expiration'], datetime.datetime)
         self.assertEqual(expiration[:-1], str(result['expiration']))
 
     def test_should_validate_expiration_with_tz(self):
@@ -193,7 +193,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         result = self.validator.validate(self.secret_req)
 
         self.assertIn('expiration', result)
-        self.assertTrue(isinstance(result['expiration'], datetime.datetime))
+        self.assertIsInstance(result['expiration'], datetime.datetime)
         expected = expiration[:-6].replace('12', '17', 1)
         self.assertEqual(expected, str(result['expiration']))
 
@@ -203,7 +203,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         result = self.validator.validate(self.secret_req)
 
         self.assertIn('expiration', result)
-        self.assertTrue(isinstance(result['expiration'], datetime.datetime))
+        self.assertIsInstance(result['expiration'], datetime.datetime)
         expected = expiration[:-12].replace('12', '17', 1)
         self.assertEqual(expected, str(result['expiration']))
 
@@ -1178,8 +1178,8 @@ class WhenTestingKeyTypeOrderValidator(utils.BaseTestCase):
         result = self.validator.validate(self.key_order_req)
 
         self.assertIn('expiration', result['meta'])
-        self.assertTrue(isinstance(result['meta']['expiration'],
-                                   datetime.datetime))
+        self.assertIsInstance(result['meta']['expiration'],
+                              datetime.datetime)
 
     def test_should_raise_with_no_type_in_order_refs(self):
         del self.key_order_req['type']
