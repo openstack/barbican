@@ -13,6 +13,7 @@
 #  under the License.
 import argparse
 import six
+import sys
 
 from barbican.plugin.crypto import pkcs11
 
@@ -89,7 +90,7 @@ class KeyGenerator(object):
                 "The label {label} already exists! "
                 "Please try again.".format(label=label)
             )
-            exit(1)
+            sys.exit(1)
 
     def generate_mkek(self, args):
         """Process the generate MKEK with given arguments"""
