@@ -33,7 +33,7 @@ class WhenTestingHostnameForRefsGetter(test_utils.BaseTestCase):
 
         self._old_host = utils.CONF.host_href
         self._old_version = utils.API_VERSION
-        utils.CONF.set_override('host_href', self.host)
+        utils.CONF.set_override('host_href', self.host, enforce_type=True)
         utils.API_VERSION = self.version
 
     def tearDown(self):

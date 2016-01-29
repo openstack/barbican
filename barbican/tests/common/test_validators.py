@@ -584,7 +584,8 @@ class WhenTestingContainerValidator(utils.BaseTestCase):
     def setUp(self):
         super(WhenTestingContainerValidator, self).setUp()
 
-        validators.CONF.set_override("host_href", "http://localhost:9311")
+        validators.CONF.set_override("host_href", "http://localhost:9311",
+                                     enforce_type=True)
 
         self.name = 'name'
         self.type = 'generic'
@@ -817,7 +818,8 @@ class WhenTestingRSAContainerValidator(utils.BaseTestCase):
     def setUp(self):
         super(WhenTestingRSAContainerValidator, self).setUp()
 
-        validators.CONF.set_override("host_href", "http://localhost:9311")
+        validators.CONF.set_override("host_href", "http://localhost:9311",
+                                     enforce_type=True)
 
         self.name = 'name'
         self.type = 'rsa'
@@ -932,7 +934,8 @@ class WhenTestingCertificateContainerValidator(utils.BaseTestCase):
     def setUp(self):
         super(WhenTestingCertificateContainerValidator, self).setUp()
 
-        validators.CONF.set_override("host_href", "http://localhost:9311")
+        validators.CONF.set_override("host_href", "http://localhost:9311",
+                                     enforce_type=True)
 
         self.name = 'name'
         self.type = 'certificate'
