@@ -476,7 +476,6 @@ EOF
 
 function install_dogtag_plugin_dependencies {
     install_package nss-devel
-    pip_install 'python-nss'
 }
 
 function install_dogtag_components {
