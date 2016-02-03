@@ -145,7 +145,8 @@ def clear():
     Typically performed at the end of a request cycle, after a
     commit() or rollback().
     """
-    _SESSION_FACTORY.remove()
+    if _SESSION_FACTORY:  # not initialized in some unit test
+        _SESSION_FACTORY.remove()
 
 
 def get_session():
@@ -175,14 +176,18 @@ def _get_engine(engine):
         if CONF.sql_pool_max_overflow:
             engine_args['max_overflow'] = CONF.sql_pool_max_overflow
 
+        db_connection = None
         try:
             engine = _create_engine(connection, **engine_args)
-            engine.connect()
+            db_connection = engine.connect()
         except Exception as err:
             msg = u._("Error configuring registry database with supplied "
                       "sql_connection. Got error: {error}").format(error=err)
             LOG.exception(msg)
             raise exception.BarbicanException(msg)
+        finally:
+            if db_connection:
+                db_connection.close()
 
         if CONF.db_auto_create:
             meta = sqlalchemy.MetaData()

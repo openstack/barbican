@@ -62,6 +62,8 @@ def build_wsgi_app(controller=None, transactional=False):
         hooks=request_hooks,
         force_canonical=False
     )
+    # clear the session created in controller initialization     60
+    repositories.clear()
     return wsgi_app
 
 
