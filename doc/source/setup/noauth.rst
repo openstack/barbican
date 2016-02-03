@@ -22,7 +22,7 @@ project_id instead of an access token which was retrieved from the token
 instead. In case of API, replace ``'X-Auth-Token: $TOKEN'`` with
 ``'X-Project-Id: {project_id}'`` for every API request in :doc:`../api/index`.
 
-You can also find detailed explaination to run barbican client with an
+You can also find detailed explanation to run barbican client with an
 unauthenticated context
 `here <http://docs.openstack.org/developer/python-barbicanclient/authentication.html#unauthenticated-context>`_ and run barbican CLI in no auth mode
 `here <http://docs.openstack.org/developer/python-barbicanclient/authentication.html#no-auth-mode>`_.
