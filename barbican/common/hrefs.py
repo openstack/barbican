@@ -46,6 +46,11 @@ def convert_consumer_to_href(consumer_id):
     return convert_resource_id_to_href('consumers', consumer_id) + '/consumers'
 
 
+def convert_user_meta_to_href(secret_id):
+    """Convert the consumer ID to a HATEOAS-style href."""
+    return convert_resource_id_to_href('secrets', secret_id) + '/metadata'
+
+
 def convert_certificate_authority_to_href(ca_id):
     """Convert the ca ID to a HATEOAS-style href."""
     return convert_resource_id_to_href('cas', ca_id)

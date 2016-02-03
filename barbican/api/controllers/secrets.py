@@ -16,6 +16,7 @@ from six.moves.urllib import parse
 from barbican import api
 from barbican.api import controllers
 from barbican.api.controllers import acls
+from barbican.api.controllers import secretmeta
 from barbican.common import exception
 from barbican.common import hrefs
 from barbican.common import quota
@@ -72,8 +73,16 @@ class SecretController(controllers.ACLMixin):
     def _lookup(self, sub_resource, *remainder):
         if sub_resource == 'acl':
             return acls.SecretACLsController(self.secret), remainder
+        elif sub_resource == 'metadata':
+            if len(remainder) == 0 or remainder == ('',):
+                return secretmeta.SecretMetadataController(self.secret), \
+                    remainder
+            else:
+                return secretmeta.SecretMetadatumController(self.secret), \
+                    remainder
         else:
-            pecan.abort(405)  # only 'acl' as sub-resource is supported
+            # only 'acl' and 'metadata' as sub-resource is supported
+            pecan.abort(405)
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):

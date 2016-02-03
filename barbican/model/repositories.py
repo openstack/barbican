@@ -755,18 +755,13 @@ class SecretStoreMetadatumRepo(BaseRepo):
 
         session = get_session()
 
-        try:
-            query = session.query(models.SecretStoreMetadatum)
-            query = query.filter_by(deleted=False)
+        query = session.query(models.SecretStoreMetadatum)
+        query = query.filter_by(deleted=False)
 
-            query = query.filter(
-                models.SecretStoreMetadatum.secret_id == secret_id)
+        query = query.filter(
+            models.SecretStoreMetadatum.secret_id == secret_id)
 
-            metadata = query.all()
-
-        except sa_orm.exc.NoResultFound:
-            metadata = {}
-
+        metadata = query.all()
         return {m.key: m.value for m in metadata}
 
     def _do_entity_name(self):
@@ -789,37 +784,56 @@ class SecretUserMetadatumRepo(BaseRepo):
     Stores key/value information on behalf of a Secret.
     """
 
-    def save(self, metadata, secret_model):
-        """Saves the the specified metadata for the secret.
-
-        :raises NotFound if entity does not exist.
-        """
+    def create_replace_user_metadata(self, secret_id, metadata):
+        """Creates or replaces the the specified metadata for the secret."""
         now = timeutils.utcnow()
+
+        session = get_session()
+        query = session.query(models.SecretUserMetadatum)
+        query = query.filter_by(secret_id=secret_id)
+        query.delete()
 
         for k, v in metadata.items():
             meta_model = models.SecretUserMetadatum(k, v)
+            meta_model.secret_id = secret_id
             meta_model.updated_at = now
-            meta_model.secret = secret_model
-            meta_model.save()
+            meta_model.save(session=session)
 
     def get_metadata_for_secret(self, secret_id):
         """Returns a dict of SecretUserMetadatum instances."""
-
         session = get_session()
 
-        try:
-            query = session.query(models.SecretUserMetadatum)
-            query = query.filter_by(deleted=False)
+        query = session.query(models.SecretUserMetadatum)
+        query = query.filter_by(deleted=False)
 
-            query = query.filter(
-                models.SecretUserMetadatum.secret_id == secret_id)
+        query = query.filter(
+            models.SecretUserMetadatum.secret_id == secret_id)
 
-            metadata = query.all()
-
-        except sa_orm.exc.NoResultFound:
-            metadata = {}
-
+        metadata = query.all()
         return {m.key: m.value for m in metadata}
+
+    def create_replace_user_metadatum(self, secret_id, key, value):
+        now = timeutils.utcnow()
+
+        session = get_session()
+        query = session.query(models.SecretUserMetadatum)
+        query = query.filter_by(secret_id=secret_id)
+        query = query.filter_by(key=key)
+        query.delete()
+
+        meta_model = models.SecretUserMetadatum(key, value)
+        meta_model.secret_id = secret_id
+        meta_model.updated_at = now
+        meta_model.save(session=session)
+
+    def delete_metadatum(self, secret_id, key):
+        """Removes a key from a SecretUserMetadatum instances."""
+        session = get_session()
+
+        query = session.query(models.SecretUserMetadatum)
+        query = query.filter_by(secret_id=secret_id)
+        query = query.filter_by(key=key)
+        query.delete()
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""

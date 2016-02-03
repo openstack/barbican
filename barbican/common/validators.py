@@ -15,6 +15,7 @@ API JSON validators.
 
 import abc
 import base64
+import re
 
 import jsonschema as schema
 from ldap3.core import exceptions as ldap_exceptions
@@ -351,6 +352,104 @@ class NewSecretValidator(ValidatorBase):
             raise exception.LimitExceeded()
 
         return payload.strip()
+
+
+class NewSecretMetadataValidator(ValidatorBase):
+    """Validate new secret metadata."""
+
+    def __init__(self):
+        self.name = 'SecretMetadata'
+        self.schema = {
+            "type": "object",
+            "$schema": "http://json-schema.org/draft-03/schema",
+            "properties": {
+                "metadata": {"type": "object", "required": True},
+                }
+        }
+
+    def validate(self, json_data, parent_schema=None):
+        """Validate the input JSON for the schema for secret metadata."""
+        schema_name = self._full_name(parent_schema)
+        self._assert_schema_is_valid(json_data, schema_name)
+        return self._extract_metadata(json_data)
+
+    def _extract_metadata(self, json_data):
+        """Extracts and returns the metadata from the JSON data."""
+        metadata = json_data['metadata']
+
+        for key in metadata:
+            # make sure key is a string and url-safe.
+            if not isinstance(key, six.string_types):
+                raise exception.InvalidMetadataRequest()
+            self._check_string_url_safe(key)
+
+            # make sure value is a string.
+            value = metadata[key]
+            if not isinstance(value, six.string_types):
+                raise exception.InvalidMetadataRequest()
+
+            # If key is not lowercase, then change it
+            if not key.islower():
+                del metadata[key]
+                metadata[key.lower()] = value
+
+        return metadata
+
+    def _check_string_url_safe(self, string):
+        """Checks if string can be part of a URL."""
+        if not re.match("^[A-Za-z0-9_-]*$", string):
+            raise exception.InvalidMetadataKey()
+
+
+class NewSecretMetadatumValidator(ValidatorBase):
+    """Validate new secret metadatum."""
+
+    def __init__(self):
+        self.name = 'SecretMetadatum'
+        self.schema = {
+            "type": "object",
+            "$schema": "http://json-schema.org/draft-03/schema",
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "required": True
+                },
+                "value": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "required": True
+                },
+            },
+            "additionalProperties": False
+        }
+
+    def validate(self, json_data, parent_schema=None):
+        """Validate the input JSON for the schema for secret metadata."""
+        schema_name = self._full_name(parent_schema)
+        self._assert_schema_is_valid(json_data, schema_name)
+
+        key = self._extract_key(json_data)
+        value = self._extract_value(json_data)
+
+        return {"key": key, "value": value}
+
+    def _extract_key(self, json_data):
+        """Extracts and returns the metadata from the JSON data."""
+        key = json_data['key']
+        self._check_string_url_safe(key)
+        key = key.lower()
+        return key
+
+    def _extract_value(self, json_data):
+        """Extracts and returns the metadata from the JSON data."""
+        value = json_data['value']
+        return value
+
+    def _check_string_url_safe(self, string):
+        """Checks if string can be part of a URL."""
+        if not re.match("^[A-Za-z0-9_-]*$", string):
+            raise exception.InvalidMetadataKey()
 
 
 class CACommonHelpersMixin(object):
