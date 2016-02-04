@@ -10,7 +10,7 @@ Setup
 #####
 
 Initially, the deployer will need to examine the settings in their
-barbican-api.conf file under the "Crypto plugin" settings section. Set these
+`barbican.conf` file under the "Crypto plugin" settings section. Set these
 values to whichever defaults you need. This will be used for both the script
 and your usage of Barbican.
 
