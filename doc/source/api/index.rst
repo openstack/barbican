@@ -3,7 +3,7 @@ Barbican API Documentation
 **************************
 
 User Guide
-###########
+##########
 
 .. toctree::
    :maxdepth: 1
@@ -17,6 +17,7 @@ User Guide
    ./userguide/dogtag_setup
    ./userguide/quotas
    ./userguide/consumers
+   ./userguide/orders
 
 API Reference
 #############
@@ -31,3 +32,4 @@ API Reference
     ./reference/cas
     ./reference/quotas
     ./reference/consumers
+    ./reference/orders
