@@ -15,7 +15,7 @@ refer to the `tox documentation`_ for assistance.
 Unit Tests
 ----------
 
-Currently, we provide tox environments for Python 2.7. By default
+Currently, we provide tox environments for Python 2.7 and 3.4. By default
 all available test environments within the tox configuration will execute
 when calling ``tox``. If you want to run them independently, you can do so
 with the following command:
@@ -65,6 +65,31 @@ want to examine, then running the following command:
 
     For a list of pdb commands, please see:
     https://docs.python.org/2/library/pdb.html
+
+**Python 3.4**
+
+In order to run the unit tests within the Python 3.4 unit testing environment
+you need to make sure you have all necessary packages installed.
+
+- On Ubuntu/Debian::
+
+    sudo apt-get install python3-dev
+
+- On Fedora 21/RHEL7/CensOS7::
+
+    sudo yum install python3-devel
+
+- On Fedora 22 and higher::
+
+    sudo dnf install python3-devel
+
+You then specify to run the unit tests within the Python 3.4 environment when
+invoking tox
+
+.. code-block:: bash
+
+    # Executes tests on Python 3.4
+    tox -e py34
 
 Functional Tests
 ----------------
