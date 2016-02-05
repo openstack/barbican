@@ -1,5 +1,5 @@
 Setting up Barbican
-=====================
+===================
 
 .. toctree::
    :maxdepth: 1
@@ -10,3 +10,4 @@ Setting up Barbican
    certificate
    troubleshooting
    noauth
+   audit
