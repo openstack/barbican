@@ -95,9 +95,6 @@ function configure_barbican {
     # Copy functional test config
     cp $BARBICAN_DIR/etc/barbican/barbican-functional.conf $BARBICAN_CONF_DIR
 
-    # Set the logging to INFO
-    iniset $BARBICAN_CONF DEFAULT verbose True
-
     # Do not set to DEBUG
     iniset $BARBICAN_CONF DEFAULT debug False
 
