@@ -178,7 +178,7 @@ class SecretACLsController(controllers.ACLMixin):
             self.acl_repo.create_or_replace_from(self.secret, secret_acl=s_acl,
                                                  user_ids=user_ids)
         # delete remaining existing acls as they are not present in input.
-        for acl in six.itervalues(existing_acls_map):
+        for acl in existing_acls_map.values():
             self.acl_repo.delete_entity_by_id(entity_id=acl.id,
                                               external_project_id=None)
         acl_ref = '{0}/acl'.format(
@@ -347,7 +347,7 @@ class ContainerACLsController(controllers.ACLMixin):
                                                  container_acl=c_acl,
                                                  user_ids=user_ids)
         # delete remaining existing acls as they are not present in input.
-        for acl in six.itervalues(existing_acls_map):
+        for acl in existing_acls_map.values():
             self.acl_repo.delete_entity_by_id(entity_id=acl.id,
                                               external_project_id=None)
         acl_ref = '{0}/acl'.format(
