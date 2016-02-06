@@ -664,14 +664,13 @@ class WhenTestingContainerValidator(utils.BaseTestCase):
     def test_should_raise_no_type(self):
         del self.container_req['type']
 
-        self.assertRaises(
+        exception = self.assertRaises(
             excep.InvalidObject,
             self.validator.validate,
             self.container_req,
         )
 
-        # TODO(hgedikli): figure out why invalid_property is null here
-        # self.assertEqual('type', e.exception.invalid_property)
+        self.assertIn('type', exception.message)
 
     def test_should_raise_empty_type(self):
         self.container_req['type'] = ''
