@@ -1,4 +1,5 @@
 .venv
+.python-version
 *.sqlite
 *.py[cod]
 
