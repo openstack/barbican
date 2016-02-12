@@ -30,25 +30,23 @@ CONF = p11_crypto.CONF
 
 class KekRewrap(object):
 
-    def __init__(self, db_connection, library_path, login, slot_id,
-                 new_mkek_label):
+    def __init__(self, conf):
         self.dry_run = False
-        self.new_label = new_mkek_label
-        self.db_engine = sqlalchemy.create_engine(db_connection)
+        self.db_engine = sqlalchemy.create_engine(conf.sql_connection)
         self._session_creator = scoping.scoped_session(
             orm.sessionmaker(
                 bind=self.db_engine,
                 autocommit=True
             )
         )
-        self.crypto_plugin = p11_crypto.P11CryptoPlugin(CONF)
+        self.crypto_plugin = p11_crypto.P11CryptoPlugin(conf)
         self.pkcs11 = self.crypto_plugin.pkcs11
         self.plugin_name = utils.generate_fullname_for(self.crypto_plugin)
         self.hsm_session = self.pkcs11.get_session()
-        self.new_mkek_label = self.plugin_crypto.mkek_label
-        self.new_hmac_label = self.plugin_crypto.hmac_label
-        self.new_mkek = self.crypto_plugin.get_master_key(self.new_mkek_label)
-        self.new_mkhk = self.crypto_plugin.get_master_key(self.new_hmac_label)
+        self.new_mkek_label = self.crypto_plugin.mkek_label
+        self.new_hmac_label = self.crypto_plugin.hmac_label
+        self.new_mkek = self.crypto_plugin._get_master_key(self.new_mkek_label)
+        self.new_mkhk = self.crypto_plugin._get_master_key(self.new_hmac_label)
 
     def rewrap_kek(self, project, kek):
         with self.db_session.begin():
@@ -56,7 +54,7 @@ class KekRewrap(object):
 
             if self.dry_run:
                 msg = 'Would have unwrapped key with {} and rewrapped with {}'
-                print(msg.format(meta_dict['mkek_label'], self.new_label))
+                print(msg.format(meta_dict['mkek_label'], self.new_mkek_label))
                 print('Would have updated KEKDatum in db {}'.format(kek.id))
 
                 print('Rewrapping KEK {}'.format(kek.id))
@@ -67,10 +65,10 @@ class KekRewrap(object):
             session = self.hsm_session
 
             # Get KEK's master keys
-            kek_mkek = self.pkcs11._get_key_handle(
+            kek_mkek = self.pkcs11.get_key_handle(
                 meta_dict['mkek_label'], session
             )
-            kek_mkhk = self.pkcs11._get_key_handle(
+            kek_mkhk = self.pkcs11.get_key_handle(
                 meta_dict['hmac_label'], session
             )
             # Decode data
@@ -160,14 +158,9 @@ def main():
     )
     args = parser.parse_args()
 
-    rewrapper = KekRewrap(
-        db_connection=CONF.sql_connection,
-        library_path=CONF.p11_crypto_plugin.library_path,
-        login=CONF.p11_crypto_plugin.login,
-        slot_id=CONF.p11_crypto_plugin.slot_id,
-        new_mkek_label=CONF.p11_crypto_plugin.mkek_label
-    )
+    rewrapper = KekRewrap(CONF)
     rewrapper.execute(args.dry_run)
+    rewrapper.pkcs11.return_session(rewrapper.hsm_session)
 
 if __name__ == '__main__':
     main()
