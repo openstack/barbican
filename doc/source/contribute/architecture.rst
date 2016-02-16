@@ -12,7 +12,7 @@ Overall Architecture
 
 The next figure presents an overall logical diagram for Barbican.
 
-.. image:: http://0a5aa9029f70acecc898-b578de5fa5a4bf8c8b1d7c616994834b.r11.cf1.rackcdn.com/barbican-overall-architecture.gif
+.. image:: ./../images/barbican-overall-architecture.gif
 
 The API node(s) handle incoming REST requests to Barbican. These nodes can
 interact with the database directly if the request can be completed
@@ -35,7 +35,7 @@ logging.
 
 The next figure examines the components within Barbican.
 
-.. image:: http://0a5aa9029f70acecc898-b578de5fa5a4bf8c8b1d7c616994834b.r11.cf1.rackcdn.com/barbican-components.gif
+.. image:: ./../images/barbican-components.gif
 
 Several potential clients of the Barbican REST interface are noted, including
 `Castellan <https://github.com/openstack/castellan>`_ which presents a generic
