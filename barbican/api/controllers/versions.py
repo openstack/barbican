@@ -44,7 +44,9 @@ def _version_not_found():
 def _get_versioned_url(version):
     if version[-1] != '/':
         version += '/'
-    return parse.urljoin(CONF.host_href, version)
+    # If host_href is not set in barbican conf, then derive it from request url
+    host_part = utils.get_base_url_from_request()
+    return parse.urljoin(host_part, version)
 
 
 class BaseVersionController(object):

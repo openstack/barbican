@@ -216,8 +216,11 @@ class ConsumersTestCase(base.TestCase):
         self.assertIn(self.consumer_data, consumer_data)
         self.assertEqual(1, count)
 
+    @testcase.skipIf(not base.conf_host_href_used, 'response href using '
+                     'wsgi request instead of CONF.host_href')
     @testcase.attr('positive')
-    def test_create_consumer_change_host_header(self, **kwargs):
+    def test_create_consumer_change_host_with_header_not_allowed(self,
+                                                                 **kwargs):
         """Create a consumer with a (possibly) malicious host name header."""
 
         test_model = consumer_model.ConsumerModel(**self.consumer_data)

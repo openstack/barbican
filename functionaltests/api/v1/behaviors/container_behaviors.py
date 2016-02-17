@@ -55,7 +55,7 @@ class ContainerBehaviors(base_behaviors.BaseBehaviors):
         """
         resp = self.client.get(
             container_ref, response_model_type=container_models.ContainerModel,
-            user_name=user_name)
+            user_name=user_name, extra_headers=extra_headers)
 
         return resp
 

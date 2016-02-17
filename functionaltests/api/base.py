@@ -30,6 +30,8 @@ from functionaltests.common import config
 
 CONF = config.get_config()
 
+conf_host_href_used = CONF.keymanager.server_host_href_set
+
 
 class TestCase(oslotest.BaseTestCase):
     max_payload_size = 10000

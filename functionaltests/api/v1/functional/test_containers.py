@@ -212,8 +212,10 @@ class GenericContainersTestCase(BaseContainerTestCase):
         resp = self.behaviors.delete_container("not_a_ref", expected_fail=True)
         self.assertEqual(resp.status_code, 404)
 
+    @testcase.skipIf(not base.conf_host_href_used, 'response href using '
+                     'wsgi request instead of CONF.host_href')
     @testcase.attr('positive')
-    def test_create_change_host_header(self, **kwargs):
+    def test_create_change_host_with_header_not_allowed(self, **kwargs):
         """Create a container with a (possibly) malicious host name header."""
 
         test_model = container_models.ContainerModel(**self.default_data)
@@ -230,6 +232,29 @@ class GenericContainersTestCase(BaseContainerTestCase):
         # malicious one.
         regex = '.*{0}.*'.format(malicious_hostname)
         self.assertNotRegexpMatches(resp.headers['location'], regex)
+
+    @testcase.skipIf(base.conf_host_href_used, 'response href using '
+                     'CONF.host_href instead of wsgi request')
+    @testcase.attr('positive')
+    def test_get_change_host_with_header_allowed(self, **kwargs):
+        """Get a container with a alternative proxy host name header."""
+
+        test_model = container_models.ContainerModel(**self.default_data)
+
+        another_proxy_hostname = 'proxy2.server.com'
+        changed_host_header = {'Host': another_proxy_hostname}
+
+        # In test, cannot pass different host header during create as returned
+        # container_href in response contains that host in url. That url is
+        # used in deleting that container during cleanup step.
+        resp, container_href = self.behaviors.create_container(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        resp = self.behaviors.get_container(container_href,
+                                            extra_headers=changed_host_header)
+        # Assert that returned href has provided proxy hostname
+        regex = '.*{0}.*'.format(another_proxy_hostname)
+        self.assertRegexpMatches(resp.model.container_ref, regex)
 
 
 @utils.parameterized_test_case
@@ -304,8 +329,10 @@ class RSAContainersTestCase(BaseContainerTestCase):
         resp, container_ref = self.behaviors.create_container(test_model)
         self.assertEqual(resp.status_code, 400)
 
+    @testcase.skipIf(not base.conf_host_href_used, 'response href using '
+                     'wsgi request instead of CONF.host_href')
     @testcase.attr('positive')
-    def test_create_rsa_change_host_header(self, **kwargs):
+    def test_create_rsa_change_host_with_header_not_allowed(self, **kwargs):
         """Create a container with a (possibly) malicious host name header."""
 
         test_model = container_models.ContainerModel(**self.default_data)
@@ -322,6 +349,29 @@ class RSAContainersTestCase(BaseContainerTestCase):
         # malicious one.
         regex = '.*{0}.*'.format(malicious_hostname)
         self.assertNotRegexpMatches(resp.headers['location'], regex)
+
+    @testcase.skipIf(base.conf_host_href_used, 'response href using '
+                     'CONF.host_href instead of wsgi request')
+    @testcase.attr('positive')
+    def test_get_rsa_change_host_with_header_allowed(self, **kwargs):
+        """Get a container with a alternative proxy host name header."""
+
+        test_model = container_models.ContainerModel(**self.default_data)
+
+        another_proxy_hostname = 'proxy2.server.com'
+        changed_host_header = {'Host': another_proxy_hostname}
+
+        # In test, cannot pass different host header during create as returned
+        # container_href in response contains that host in url. That url is
+        # used in deleting that container during cleanup step.
+        resp, container_href = self.behaviors.create_container(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        resp = self.behaviors.get_container(container_href,
+                                            extra_headers=changed_host_header)
+        # Assert that returned href has provided proxy hostname
+        regex = '.*{0}.*'.format(another_proxy_hostname)
+        self.assertRegexpMatches(resp.model.container_ref, regex)
 
 
 class ContainersPagingTestCase(base.PagingTestCase):

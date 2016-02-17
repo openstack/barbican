@@ -13,11 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from barbican.api import controllers
+from barbican.common import utils as cmn_utils
 from barbican.tests import utils
 
 
 class WhenTestingVersionsResource(utils.BarbicanAPIBaseTestCase):
     root_controller = controllers.versions.VersionsController()
+
+    def tearDown(self):
+        super(WhenTestingVersionsResource, self).tearDown()
+        cmn_utils.CONF.clear_override('host_href')
 
     def test_should_return_multiple_choices_on_get(self):
         resp = self.app.get('/')
@@ -45,6 +50,34 @@ class WhenTestingVersionsResource(utils.BarbicanAPIBaseTestCase):
         self.assertIn('v1', v1_info['id'])
         self.assertEqual(1, len(v1_info['media-types']))
         self.assertEqual('application/json', v1_info['media-types'][0]['base'])
+
+    def test_when_host_href_is_not_set_in_conf(self):
+        cmn_utils.CONF.set_override('host_href', '', enforce_type=True)
+        host_hdr = 'http://myproxy.server.com:9311'
+        utils.mock_pecan_request(self, host=host_hdr)
+        dummy_root = 'http://mylocalhost:9999'
+        resp = self.app.get(dummy_root)
+
+        versions_response = resp.json['versions']['values']
+
+        for v_info in versions_response:
+            self.assertIn(host_hdr, v_info['links'][0]['href'])
+            self.assertNotIn(dummy_root, v_info['links'][0]['href'])
+
+    def test_when_host_href_is_set_in_conf(self):
+        host_href = 'http://myapp.server.com:9311/'
+        cmn_utils.CONF.set_override('host_href', host_href, enforce_type=True)
+        host_hdr = 'http://myproxy.server.com:9311'
+        utils.mock_pecan_request(self, host=host_hdr)
+        dummy_root = 'http://mylocalhost:9999'
+        resp = self.app.get(dummy_root)
+
+        versions_response = resp.json['versions']['values']
+
+        for v_info in versions_response:
+            self.assertIn(host_href, v_info['links'][0]['href'])
+            self.assertNotIn(dummy_root, v_info['links'][0]['href'])
+            self.assertNotIn(host_hdr, v_info['links'][0]['href'])
 
 
 class WhenTestingV1Resource(utils.BarbicanAPIBaseTestCase):

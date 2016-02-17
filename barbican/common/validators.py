@@ -840,7 +840,7 @@ class ContainerValidator(ValidatorBase):
 
         # Ensure that our secret refs are valid relative to our config, no
         # spoofing allowed!
-        configured_host_href = CONF.host_href
+        configured_host_href = utils.get_base_url_from_request()
         for secret_ref in secret_refs:
             if configured_host_href not in secret_ref.get('secret_ref'):
                 raise exception.UnsupportedField(

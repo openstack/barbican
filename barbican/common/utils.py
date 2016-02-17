@@ -24,6 +24,7 @@ import uuid
 from oslo_log import log
 import pecan
 import six
+from six.moves.urllib import parse
 
 from barbican.common import config
 from barbican import i18n as u
@@ -55,9 +56,30 @@ def allow_all_content_types(f):
     return _do_allow_certain_content_types(f, mimetypes.types_map.values())
 
 
+def get_base_url_from_request():
+    """Derive base url from wsgi request if CONF.host_href is not set
+
+    Use host.href as base URL if its set in barbican.conf.
+    If its not set, then derives value from wsgi request. WSGI request uses
+    HOST header or HTTP_X_FORWARDED_FOR header (in case of proxy) for host +
+    port part of its url. Proxies can also set HTTP_X_FORWARDED_PROTO header
+    for indicating http vs https.
+
+    Some of unit tests does not have pecan context that's why using request
+    attr check on pecan instance.
+    """
+    if not CONF.host_href and hasattr(pecan.request, 'url'):
+        p_url = parse.urlsplit(pecan.request.url)
+        base_url = '%s://%s' % (p_url.scheme, p_url.netloc)
+        return base_url
+    else:  # when host_href is set or flow is not within wsgi request context
+        return CONF.host_href
+
+
 def hostname_for_refs(resource=None):
     """Return the HATEOAS-style return URI reference for this service."""
-    ref = ['{base}/{version}'.format(base=CONF.host_href, version=API_VERSION)]
+    base_url = get_base_url_from_request()
+    ref = ['{base}/{version}'.format(base=base_url, version=API_VERSION)]
     if resource:
         ref.append('/' + resource)
     return ''.join(ref)

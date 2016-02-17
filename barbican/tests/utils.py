@@ -12,6 +12,7 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from contextlib import contextmanager
 import datetime
 import functools
 import os
@@ -31,6 +32,19 @@ from OpenSSL import crypto
 from barbican.api import app
 import barbican.context
 from barbican.tests import database_utils
+
+
+def mock_pecan_request(test_instance, host=None):
+    patcher_obj = mock.patch('pecan.request')
+    mock_req = patcher_obj.start()
+    test_instance.addCleanup(patcher_obj.stop)
+    mock_req.url = host
+
+
+@contextmanager
+def pecan_context(test_instance, host=None):
+    mock_pecan_request(test_instance, host=host)
+    yield
 
 
 class BarbicanAPIBaseTestCase(oslotest.BaseTestCase):

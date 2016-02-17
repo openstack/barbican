@@ -51,6 +51,43 @@ class WhenTestingHostnameForRefsGetter(test_utils.BaseTestCase):
         self.assertEqual("{0}/{1}".format(self.host, self.version), uri)
 
 
+class WhenTestingHostByWsgiRequestForRefsGetter(test_utils.BaseTestCase):
+
+    def setUp(self):
+        super(WhenTestingHostByWsgiRequestForRefsGetter, self).setUp()
+
+        self._old_version = utils.API_VERSION
+        self.host = 'http://my_host:9311'
+        self.version = 'version1'
+        self.external_project_id = 'external_project_id'
+        self.resource = 'my_resource'
+
+        test_utils.mock_pecan_request(self, host=self.host)
+
+        utils.CONF.set_override('host_href', None, enforce_type=True)
+        utils.API_VERSION = self.version
+
+    def tearDown(self):
+        super(WhenTestingHostByWsgiRequestForRefsGetter, self).tearDown()
+        utils.CONF.clear_override('host_href')
+        utils.API_VERSION = self._old_version
+
+    def test_hostname_for_refs(self):
+        uri = utils.hostname_for_refs(resource=self.resource)
+        self.assertEqual("{0}/{1}/{2}".format(self.host, self.version,
+                                              self.resource), uri)
+
+    def test_blank_conf_hosthref_for_refs(self):
+        utils.CONF.set_override('host_href', '', enforce_type=True)
+        uri = utils.hostname_for_refs(resource=self.resource)
+        self.assertEqual("{0}/{1}/{2}".format(self.host, self.version,
+                                              self.resource), uri)
+
+    def test_hostname_for_refs_no_resource(self):
+        uri = utils.hostname_for_refs()
+        self.assertEqual("{0}/{1}".format(self.host, self.version), uri)
+
+
 class WhenTestingAcceptEncodingGetter(test_utils.BaseTestCase):
 
     def setUp(self):

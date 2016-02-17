@@ -485,8 +485,10 @@ class OrdersTestCase(base.TestCase):
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(create_resp.status_code, 400)
 
+    @testcase.skipIf(not base.conf_host_href_used, 'response href using '
+                     'wsgi request instead of CONF.host_href')
     @testcase.attr('positive')
-    def test_order_create_change_host_header(self, **kwargs):
+    def test_order_create_change_host_with_header_not_allowed(self, **kwargs):
         """Create an order with a (possibly) malicious host name in header."""
 
         test_model = order_models.OrderModel(**self.create_default_data)
@@ -503,6 +505,29 @@ class OrdersTestCase(base.TestCase):
         # malicious one.
         regex = '.*{0}.*'.format(malicious_hostname)
         self.assertNotRegexpMatches(resp.headers['location'], regex)
+
+    @testcase.skipIf(base.conf_host_href_used, 'response href using '
+                     'CONF.host_href instead of wsgi request')
+    @testcase.attr('positive')
+    def test_order_get_change_host_with_header_allowed(self, **kwargs):
+        """Get an order with a alternative proxy host name in header."""
+
+        test_model = order_models.OrderModel(**self.create_default_data)
+
+        another_proxy_hostname = 'proxy2.server.com'
+        changed_host_header = {'Host': another_proxy_hostname}
+
+        # In test, cannot pass different host header during create as returned
+        # order_ref in response contains that host in url. That url is
+        # used in deleting that order during cleanup step.
+        resp, order_ref = self.behaviors.create_order(test_model)
+        self.assertEqual(resp.status_code, 202)
+
+        order_resp = self.behaviors.get_order(
+            order_ref, extra_headers=changed_host_header)
+        # Assert that returned href has provided proxy hostname
+        regex = '.*{0}.*'.format(another_proxy_hostname)
+        self.assertRegexpMatches(order_resp.model.order_ref, regex)
 
     @testcase.attr('positive')
     def test_encryption_using_generated_key(self):
