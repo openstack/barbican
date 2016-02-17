@@ -10,7 +10,7 @@ If you need to add a new dependency to Barbican, you must edit a few things:
    requirements.txt file in the root directory.
 
    .. note:: All dependencies and their version specifiers must come from the
-             Openstack `global requirements`_ repository.
+             OpenStack `global requirements`_ repository.
 #. We support deployment on CentOS 6.4, so you should check CentOS + EPEL 6 yum
    repos to figure out the name of the rpm package that provides the package
    you're adding. Add this package name as a dependency in
