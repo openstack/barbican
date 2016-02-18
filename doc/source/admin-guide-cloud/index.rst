@@ -10,3 +10,5 @@ management of secrets.
    :maxdepth: 1
 
    access_control.rst
+
+   barbican_manage.rst
