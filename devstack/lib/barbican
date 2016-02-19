@@ -132,7 +132,7 @@ function configure_barbican {
     ## Set up keystone
 
     # Turn on the middleware
-    iniset $BARBICAN_PASTE_CONF 'pipeline:barbican_api' pipeline 'keystone_authtoken context apiapp'
+    iniset $BARBICAN_PASTE_CONF 'pipeline:barbican_api' pipeline 'barbican-api-keystone'
 
     # Set the keystone parameters
     iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' auth_protocol $KEYSTONE_AUTH_PROTOCOL
