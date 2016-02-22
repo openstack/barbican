@@ -280,6 +280,23 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(200, get_resp.status_int)
         self.assertEqual(payload, get_resp.body)
 
+    def test_get_secret_payload_with_pecan_default_accept_header(self):
+        payload = 'a very interesting string'
+        resp, secret_uuid = create_secret(
+            self.app,
+            payload=payload,
+            content_type='text/plain'
+        )
+
+        self.assertEqual(201, resp.status_int)
+
+        headers = {'Accept': '*/*'}
+        get_resp = self.app.get(
+            '/secrets/{0}/payload'.format(secret_uuid), headers=headers
+        )
+        self.assertEqual(200, get_resp.status_int)
+        self.assertEqual(payload, get_resp.body)
+
     def test_get_secret_payload_with_blank_accept_header(self):
         payload = 'a very interesting string'
         resp, secret_uuid = create_secret(

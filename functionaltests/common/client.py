@@ -235,6 +235,7 @@ class BarbicanClient(object):
         return models, next_ref, prev_ref
 
     def request(self, method, url, data=None, extra_headers=None,
+                omit_headers=None,
                 use_auth=True, response_model_type=None, request_model=None,
                 params=None, user_name=None):
         """Prepares and sends http request through Requests."""
@@ -246,6 +247,15 @@ class BarbicanClient(object):
         headers.update(self.default_headers)
         if extra_headers:
             headers.update(extra_headers)
+
+        if omit_headers:
+            for header in omit_headers:
+                try:
+                    del headers[header]
+                except KeyError:
+                    # key error means we tried to delete a nonexistent
+                    # entry - we don't care about that
+                    pass
 
         # Attempt to serialize model if required
         if request_model:

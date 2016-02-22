@@ -111,9 +111,14 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
 
 def get_secret(requesting_content_type, secret_model, project_model,
                twsk=None, transport_key=None):
-    tr.analyze_before_decryption(requesting_content_type)
-
     secret_metadata = _get_secret_meta(secret_model)
+
+    # NOTE: */* is the pecan default meaning no content type sent in.  In this
+    # case we should use the mime type stored in the metadata.
+    if requesting_content_type == '*/*':
+        requesting_content_type = secret_metadata['content_type']
+
+    tr.analyze_before_decryption(requesting_content_type)
 
     if twsk is not None:
         secret_metadata['trans_wrapped_session_key'] = twsk
