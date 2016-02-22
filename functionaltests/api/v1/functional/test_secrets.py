@@ -195,7 +195,8 @@ class SecretsTestCase(base.TestCase):
 
         get_resp = self.behaviors.get_secret(
             secret_ref,
-            payload_content_type='')
+            payload_content_type='',
+            omit_headers=['Accept'])
         self.assertEqual(get_resp.status_code, 200)
         self.assertIn(test_model.payload,
                       binascii.b2a_base64(get_resp.content))
@@ -928,7 +929,7 @@ class SecretsTestCase(base.TestCase):
         changed_host_header = {'Host': malicious_hostname}
 
         resp, secret_ref = self.behaviors.create_secret(
-            test_model, headers=changed_host_header)
+            test_model, extra_headers=changed_host_header)
 
         self.assertEqual(resp.status_code, 201)
 
@@ -1108,7 +1109,7 @@ class SecretsUnauthedTestCase(base.TestCase):
         model = secret_models.SecretModel(self.default_secret_create_data)
 
         resp, secret_ref = self.behaviors.create_secret(
-            model, headers=self.dummy_project_id_header, use_auth=False
+            model, extra_headers=self.dummy_project_id_header, use_auth=False
         )
         self.assertEqual(401, resp.status_code)
 
@@ -1122,7 +1123,7 @@ class SecretsUnauthedTestCase(base.TestCase):
         model = secret_models.SecretModel(self.default_secret_create_data)
 
         resp, secret_ref = self.behaviors.create_secret(
-            model, headers=self.project_id_header, use_auth=False
+            model, extra_headers=self.project_id_header, use_auth=False
         )
         self.assertEqual(401, resp.status_code)
 
