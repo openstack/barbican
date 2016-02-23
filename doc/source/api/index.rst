@@ -8,7 +8,8 @@ User Guide
 .. toctree::
    :maxdepth: 1
 
-   ./userguide/secrets
+   ./userguide/secret
+   ./userguide/secret_metadata
    ./userguide/containers
    ./userguide/acls
    ./userguide/pkcs11keygeneration
@@ -27,6 +28,7 @@ API Reference
 
     ./reference/secrets
     ./reference/secret_types
+    ./reference/secret_metadata
     ./reference/containers
     ./reference/acls
     ./reference/certificates
