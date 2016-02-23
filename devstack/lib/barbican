@@ -9,7 +9,7 @@
 # - functions
 # - OS_AUTH_URL for auth in api
 # - DEST set to the destination directory
-# - SERVICE_PASSWORD, SERVICE_TENANT_NAME for auth in api
+# - SERVICE_PASSWORD, SERVICE_PROJECT_NAME for auth in api
 # - STACK_USER service user
 
 # stack.sh
@@ -140,7 +140,7 @@ function configure_barbican {
     iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' auth_port $KEYSTONE_AUTH_PORT
     iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' admin_user barbican
     iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' admin_password $SERVICE_PASSWORD
-    iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' admin_tenant_name $SERVICE_TENANT_NAME
+    iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' admin_tenant_name $SERVICE_PROJECT_NAME
     iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' signing_dir $BARBICAN_AUTH_CACHE_DIR
 }
 
@@ -207,16 +207,16 @@ function create_barbican_accounts {
     #
     # Setup Default Admin User
     #
-    SERVICE_TENANT=$(openstack project list | awk "/ $SERVICE_TENANT_NAME / { print \$2 }")
+    SERVICE_PROJECT=$(openstack project list | awk "/ $SERVICE_PROJECT_NAME / { print \$2 }")
     ADMIN_ROLE=$(openstack role list | awk "/ admin / { print \$2 }")
 
     BARBICAN_USER=$(openstack user create \
                                 --password "$SERVICE_PASSWORD" \
-                                --project $SERVICE_TENANT \
+                                --project $SERVICE_PROJECT \
                                 --email "barbican@example.com" \
                                 barbican \
                                 | grep " id " | get_field 2)
-    openstack role add --project $SERVICE_TENANT \
+    openstack role add --project $SERVICE_PROJECT \
                             --user $BARBICAN_USER \
                             $ADMIN_ROLE
     #
@@ -230,7 +230,7 @@ function create_barbican_accounts {
         "key-manager:service-admin")
     openstack role add \
         --user "$SERVICE_ADMIN" \
-        --project "$SERVICE_TENANT" \
+        --project "$SERVICE_PROJECT" \
         "$SERVICE_ADMIN_ROLE"
     #
     # Setup RBAC User Projects and Roles
