@@ -251,7 +251,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                     "'generate_symmetric_key' method").format(
                         algorithm=key_spec.alg))
 
-        algorithm = self._get_kmip_algorithm(key_spec.alg)
+        algorithm = self._get_kmip_algorithm(key_spec.alg.lower())
         try:
             with self.client:
                 LOG.debug("Opened connection to KMIP client for secret " +
@@ -291,7 +291,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 u._('KMIP plugin does not currently support protecting the '
                     'private key with a passphrase'))
 
-        algorithm = self._get_kmip_algorithm(key_spec.alg)
+        algorithm = self._get_kmip_algorithm(key_spec.alg.lower())
         length = key_spec.bit_length
 
         try:
