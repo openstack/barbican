@@ -696,6 +696,9 @@ class ContainerValidator(ValidatorBase):
                         "type": "object",
                         "required": ["secret_ref"],
                         "properties": {
+                            "name": {
+                                "type": ["string", "null"], "maxLength": 255
+                            },
                             "secret_ref": {"type": "string", "minLength": 1}
                         }
                     }
