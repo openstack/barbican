@@ -1,9 +1,10 @@
-*************************
+**************************
 Consumers API - User Guide
-*************************
+**************************
 
 This guide assumes you will be using a local development environment of barbican.
-If you need assistance with getting set up, please reference the :doc:`development guide </setup/dev>`.
+If you need assistance with getting set up, please reference the
+`development guide <http://docs.openstack.org/developer/barbican/setup/dev.html>`__.
 
 
 What is a Consumer?
@@ -100,6 +101,7 @@ the consumers for this container.
 This will return the following response:
 
 .. code-block:: json
+
     {
         "total": 3,
         "next": "http://localhost:9311/v1/consumers?limit=1&offset=2",
@@ -132,6 +134,7 @@ URL which were used when the consumer was created.
 This will return the following response:
 
 .. code-block:: json
+
     {
         "status": "ACTIVE",
         "updated": "2015-10-15T17:56:18.626724",

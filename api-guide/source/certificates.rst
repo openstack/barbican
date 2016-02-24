@@ -9,7 +9,8 @@ certificates is implemented.
 
 This guide will provide some examples on how to use each of the supported operations.
 It assumes that you will be using a local running development environment of barbican.
-If you need assistance with getting set up, please reference the :doc:`development guide </setup/dev>`.
+If you need assistance with getting set up, please reference the
+`development guide <http://docs.openstack.org/developer/barbican/setup/dev.html>`__.
 
 Barbican can be used to request certificate issuance from a number of private and
 public Certificate Authorities (CAs).  This is done through the Orders interface.
@@ -163,7 +164,8 @@ A snake-oil CA plugin is included with the barbican source code for basic testin
 In addition, a robust, enterprise-ready CA plugin is provided for the Dogtag CA.
 Instructions for setting up the CA are provided at :doc:`Dogtag Setup Instructions <./dogtag_setup>`.
 
-More details can be found in the :doc:`certificate reference <../reference/certificates>`.
+More details can be found in the
+`certificate reference <http://docs.openstack.org/developer/barbican/api/reference/certificates.html>`__.
 
 .. _order_certificate:
 

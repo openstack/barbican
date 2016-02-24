@@ -5,20 +5,8 @@ Barbican API Documentation
 User Guide
 ##########
 
-.. toctree::
-   :maxdepth: 1
-
-   ./userguide/secrets
-   ./userguide/secret_metadata
-   ./userguide/containers
-   ./userguide/acls
-   ./userguide/pkcs11keygeneration
-   ./userguide/certificates
-   ./userguide/cas
-   ./userguide/dogtag_setup
-   ./userguide/quotas
-   ./userguide/consumers
-   ./userguide/orders
+API guide docs are built to:
+http://developer.openstack.org/api-guide/key-manager/
 
 API Reference
 #############

@@ -11,7 +11,8 @@ such as at the user level. The Access Control List (ACL) feature supports this m
 access.
 
 This guide will assume you will be using a local running development environment of barbican.
-If you need assistance with getting set up, please reference the :doc:`development guide </setup/dev>`.
+If you need assistance with getting set up, please reference the
+`development guide <http://docs.openstack.org/developer/barbican/setup/dev.html>`__
 
 .. warning::
 
@@ -69,7 +70,7 @@ to `project-access` as true and no `users` in ACL settings. That's why every sec
 default has following implicit ACL.
 
 .. code-block:: json
-    
+
     {
       "read":{
         "project-access": true
@@ -143,8 +144,10 @@ To set/replace an ACL for a container:
     HTTP/1.1 201 Created
     {"acl_ref": "http://localhost:9311/v1/containers/8c077991-d524-4e15-8eaf-bc0c3bb225f2/acl"}
 
-To get more details on the create API you can reference the :ref:`Set Secret ACL <put_secret_acl>`
-or :ref:`Set Container ACL <put_container_acl>` documentation.
+To get more details on the create API you can reference the
+`Set Secret ACL <http://docs.openstack.org/developer/barbican/api/reference/acls.html#put-v1-secrets-uuid-acl>`__
+or `Set Container ACL <http://docs.openstack.org/developer/barbican/api/reference/acls.html#put-v1-containers-uuid-acl>`__
+documentation.
 
 
 .. _update_acl:
@@ -255,9 +258,11 @@ To update only the users list for secret ACL (use PATCH):
 
 Container and Secret ACL(s) update operation are similar except `containers` resource is used
 instead of the `secrets` resource in URI. To get more details on ACL update APIs, you can reference
-the :ref:`Update Secret ACL <put_secret_acl>` , :ref:`Update Container ACL <put_container_acl>`
-, :ref:`Partial Update Secret ACL <patch_secret_acl>` or :ref:`Partial Update Container ACL
-<patch_container_acl>` documentation.
+the `Update Secret ACL <http://docs.openstack.org/developer/barbican/api/reference/acls.html#put-secret-acl>`__
+, `Update Container ACL <http://docs.openstack.org/developer/barbican/api/reference/acls.html#put-container-acl>`__
+, `Partial Update Secret ACL <http://docs.openstack.org/developer/barbican/api/reference/acls.html#patch-secret-acl>`__
+or `Partial Update Container ACL <http://docs.openstack.org/developer/barbican/api/reference/acls.html#patch-container-acl>`__
+documentation.
 
 
 .. _retrieve_acl:
@@ -320,8 +325,10 @@ To get container ACL data:
     }
 
 
-To get more details on ACL lookup APIs you can reference the :ref:`Get Secret ACL <get_secret_acl>` ,
-:ref:`Get Container ACL <get_container_acl>` documentation.
+To get more details on ACL lookup APIs you can reference the
+`Get Secret ACL <http://docs.openstack.org/developer/barbican/api/reference/acls.html#get-secret-acl>`__
+, `Get Container ACL <http://docs.openstack.org/developer/barbican/api/reference/acls.html#get-container-acl>`__
+documentation.
 
 
 .. _delete_acl:
@@ -329,12 +336,15 @@ To get more details on ACL lookup APIs you can reference the :ref:`Get Secret AC
 How to Delete ACL
 #################
 
-ACL defined for a secret or a container can be deleted by using the **DELETE** operation on their respective `acl`
-resource. There is no response content returned on successful deletion.
+ACL defined for a secret or a container can be deleted by using the **DELETE**
+operation on their respective `acl` resource. There is no response content
+returned on successful deletion.
 
-Delete operation removes existing ACL on a secret or a container if there. It can be treated as resetting a secret
-or a container to :ref:`Default ACL<default_implicit_acl>` setting. That's why invoking delete multiple times on
-this resource will not result in error.
+Delete operation removes existing ACL on a secret or a container if there. It
+can be treated as resetting a secret or a container to
+`Default ACL <http://docs.openstack.org/developer/barbican/api/userguide/acls.html#default-implicit-acl>`__
+setting. That's why invoking delete multiple times on this resource will not
+result in error.
 
 .. code-block:: bash
 
@@ -348,5 +358,7 @@ this resource will not result in error.
     200 OK
 
 
-To get more details on ACL delete APIs, you can reference the :ref:`Delete Secret ACL <delete_secret_acl>` ,
-:ref:`Delete Container ACL <delete_container_acl>` documentation.
+To get more details on ACL delete APIs, you can reference the
+`Delete Secret ACL <http://docs.openstack.org/developer/barbican/api/reference/acls.html#delete-secret-acl>`__
+, `Delete Container ACL <http://docs.openstack.org/developer/barbican/api/reference/acls.html#delete-container-acl>`__
+documentation.

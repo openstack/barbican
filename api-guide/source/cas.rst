@@ -18,12 +18,13 @@ certificates which have been signed by another CA maintained by that plugin
 
 The CAs made available to barbican by the plugins are exposed to the client
 through the /cas REST API, which is detailed in the
-:doc:`Certificate Authorities API reference <../reference/cas>`.
+`Certificate Authorities API reference <http://docs.openstack.org/developer/barbican/api/reference/cas.html>`__.
 
 This guide will provide some examples on how to use each of the supported
 operations.  It assumes that you will be using a local running development
 environment of barbican.  If you need assistance with getting set up, please
-reference the :doc:`development guide </setup/dev>`.
+reference the
+`development guide <http://docs.openstack.org/developer/barbican/setup/dev.html>`__.
 
 .. _listing_the_cas:
 
