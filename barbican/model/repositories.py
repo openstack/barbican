@@ -1783,7 +1783,7 @@ class SecretACLRepo(BaseRepo):
         If user_ids list is not None, then following change is made.
         For existing acl users, just update timestamp if user_id is present in
         input user ids list. Otherwise, remove existing acl user entries.
-        Then add the remainining input user ids as new acl user db entries.
+        Then add the remaining input user ids as new acl user db entries.
         """
         if user_ids is None:
             return
@@ -1878,7 +1878,7 @@ class ContainerACLRepo(BaseRepo):
         If user_ids list is not None, then following change is made.
         For existing acl users, just update timestamp if user_id is present in
         input user ids list. Otherwise, remove existing acl user entries.
-        Then add the remainining input user ids as new acl user db entries.
+        Then add the remaining input user ids as new acl user db entries.
         """
         if user_ids is None:
             return
