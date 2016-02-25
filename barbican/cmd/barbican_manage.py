@@ -30,6 +30,7 @@ from oslo_log import log as logging
 
 from barbican.cmd import pkcs11_kek_rewrap as pkcs11_rewrap
 from barbican.common import config
+from barbican.model import clean
 from barbican.model.migration import commands
 from barbican.plugin.crypto import pkcs11
 import barbican.version
@@ -51,12 +52,41 @@ class DbCommands(object):
 
     description = "Subcommands for managing barbican database"
 
-    cleanup_description = "Cleanup soft-deleted secrets in database"
+    clean_description = "Clean up soft deletions in the database"
 
     @args('--db-url', '-d', metavar='<db-url>', dest='dburl',
           help='barbican database URL')
-    def cleanup(self, dburl=None):
-        raise NotImplementedError
+    @args('--min-days', '-m', metavar='<min-days>', dest='min_days', type=int,
+          default=90, help='minimum number of days to keep soft deletions. '
+          'default is %(default)s days.')
+    @args('--verbose', '-V', action='store_true', dest='verbose',
+          default=False, help='Show verbose information about the clean up.')
+    @args('--log-file', '-L', metavar='<log-file>', type=str, default=None,
+          dest='log_file', help='Set log file location. '
+          'Default value for log_file can be found in barbican.conf')
+    @args('--clean-unassociated-projects', '-p', action='store_true',
+          dest='do_clean_unassociated_projects', default=False,
+          help='Remove projects that have no '
+               'associated resources.')
+    @args('--soft-delete-expired-secrets', '-e', action='store_true',
+          dest='do_soft_delete_expired_secrets', default=False,
+          help='Soft delete secrets that are expired.')
+    def clean(self, dburl=None, min_days=None, verbose=None, log_file=None,
+              do_clean_unassociated_projects=None,
+              do_soft_delete_expired_secrets=None):
+        """Clean soft deletions in the database"""
+        if dburl is None:
+            dburl = CONF.sql_connection
+        if log_file is None:
+            log_file = CONF.log_file
+
+        clean.clean_command(
+            sql_url=dburl,
+            min_num_days=min_days,
+            do_clean_unassociated_projects=do_clean_unassociated_projects,
+            do_soft_delete_expired_secrets=do_soft_delete_expired_secrets,
+            verbose=verbose,
+            log_file=log_file)
 
     revision_description = "Create a new database version file"
 

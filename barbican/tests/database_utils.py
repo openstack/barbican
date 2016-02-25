@@ -106,6 +106,16 @@ def create_secret_metadatum(secret=None, key="key", value="value",
     return secret_meta
 
 
+def create_secret_user_metadatum(secret=None, key="user_key",
+                                 value="user_value", session=None):
+    secret_user_metadatum = models.SecretUserMetadatum(key, value)
+    secret_user_metadatum.secret_id = secret.id
+    secret_user_metadatum_repo = repositories.get_secret_user_meta_repository()
+    secret_user_metadatum_repo.create_from(secret_user_metadatum,
+                                           session=session)
+    return secret_user_metadatum
+
+
 def create_container(project=None, session=None):
     container = models.Container()
     container.project_id = project.id
@@ -228,6 +238,14 @@ def create_project_quotas(project=None, parsed_project_quotas=None,
     project_quota_repo = repositories.get_project_quotas_repository()
     project_quota_repo.create_from(project_quota, session=session)
     return project_quota
+
+
+def create_acl_secret(secret=None, user_ids=[], session=None):
+    acl_secret = models.SecretACL(secret.id, "read")
+    acl_secret.secret_id = secret.id
+    acl_secret_repo = repositories.get_secret_acl_repository()
+    acl_secret_repo.create_from(acl_secret, session=session)
+    return acl_secret
 
 
 class RepositoryTestCase(oslotest.BaseTestCase):

@@ -26,7 +26,6 @@ from barbican.model import clean
 from barbican.model.migration import commands
 from oslo_log import log
 
-
 # Import and configure logging.
 CONF = config.CONF
 log.setup(CONF, 'barbican')
@@ -107,6 +106,26 @@ class DatabaseManager(object):
         create_parser = self.subparsers.add_parser(
             'clean',
             help='Clean up soft deletions in the database')
+        create_parser.add_argument(
+            '--min-days', '-m', type=int, default=90,
+            help='minimum number of days to keep soft deletions. default is'
+                 ' %(default)s days.')
+        create_parser.add_argument('--clean-unassociated-projects', '-p',
+                                   action="store_true",
+                                   help='Remove projects that have no '
+                                        'associated resources.')
+        create_parser.add_argument('--soft-delete-expired-secrets', '-e',
+                                   action="store_true",
+                                   help='Soft delete expired secrets.')
+        create_parser.add_argument('--verbose', '-V', action='store_true',
+                                   help='Show full information about the'
+                                        ' cleanup')
+        create_parser.add_argument('--log-file', '-L',
+                                   default=CONF.log_file,
+                                   type=str,
+                                   help='Set log file location. '
+                                        'Default value for log_file can be '
+                                        'found in barbican.conf')
         create_parser.set_defaults(func=self.clean)
 
     def revision(self, args):
@@ -127,7 +146,13 @@ class DatabaseManager(object):
         commands.current(args.verbose, sql_url=args.dburl)
 
     def clean(self, args):
-        clean.clean_command(args.dburl)
+        clean.clean_command(
+            sql_url=args.dburl,
+            min_num_days=args.min_days,
+            do_clean_unassociated_projects=args.clean_unassociated_projects,
+            do_soft_delete_expired_secrets=args.soft_delete_expired_secrets,
+            verbose=args.verbose,
+            log_file=args.log_file)
 
     def execute(self):
         """Parse the command line arguments."""

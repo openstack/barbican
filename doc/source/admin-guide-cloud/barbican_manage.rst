@@ -52,6 +52,11 @@ Barbican Database
 
     Show current revision of database.
 
+``barbican-manage db clean [--db-url] [--verbose] [--min-days] [--clean-unassociated-projects] [--soft-delete-expired-secrets] [--log-file]``
+
+    Clean up soft deletions in the database. More documentation can be
+    found here: :doc:`Database Cleaning <database_cleaning>`
+
 Barbican PKCS11/HSM
 ~~~~~~~~~~~~~~~~~~~
 

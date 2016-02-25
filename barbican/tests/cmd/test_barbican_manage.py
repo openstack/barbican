@@ -88,6 +88,37 @@ class TestBarbicanManage(TestBarbicanManageBase):
             ['barbican.cmd.barbican_manage', 'db', 'history'], mock_history,
             False, sql_url='mockdburl')
 
+    @mock.patch('barbican.model.clean.clean_command')
+    def test_db_clean_no_args(self, mock_clean_command):
+        manager.CONF.set_override('log_file', 'mock_log_file')
+        self._main_test_helper(
+            ['barbican.cmd.barbican_manage', 'db', 'clean'],
+            func_name=mock_clean_command,
+            sql_url='mockdburl',
+            min_num_days=90,
+            do_clean_unassociated_projects=False,
+            do_soft_delete_expired_secrets=False,
+            verbose=False,
+            log_file='mock_log_file')
+        manager.CONF.clear_override('log_file')
+
+    @mock.patch('barbican.model.clean.clean_command')
+    def test_db_clean_with_args(self, mock_clean_command):
+        manager.CONF.set_override('log_file', 'mock_log_file')
+        self._main_test_helper(
+            ['barbican.cmd.barbican_manage', 'db', 'clean',
+             '--db-url', 'somewhere', '--min-days', '180',
+             '--clean-unassociated-projects', '--soft-delete-expired-secrets',
+             '--verbose', '--log-file', '/tmp/whatevs'],
+            func_name=mock_clean_command,
+            sql_url='somewhere',
+            min_num_days=180,
+            do_clean_unassociated_projects=True,
+            do_soft_delete_expired_secrets=True,
+            verbose=True,
+            log_file='/tmp/whatevs')
+        manager.CONF.clear_override('log_file')
+
     @mock.patch('barbican.model.migration.commands.current')
     def test_db_current(self, mock_current):
         self._main_test_helper(
