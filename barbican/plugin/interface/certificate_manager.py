@@ -743,7 +743,7 @@ class _CertificateEventPluginManager(named.NamedExtensionManager,
         """Invoke same function on plugins as calling function."""
         active_plugins = plugin_utils.get_active_plugins(self)
 
-        if len(active_plugins) < 1:
+        if not active_plugins:
             raise CertificateEventPluginNotFound()
 
         for plugin in active_plugins:
