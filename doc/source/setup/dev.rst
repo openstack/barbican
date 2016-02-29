@@ -1,4 +1,4 @@
-Setting up a Barbican development environment
+Setting up a Barbican Development Environment
 ==============================================
 
 These instructions are designed to help you setup a standalone version of
@@ -8,140 +8,119 @@ encryption system such as an HSM (Hardware Security Module). In addition,
 the SQLite backend has known issues with thread-safety. This setup is purely
 to aid in development workflows.
 
-.. note::
+.. warning::
 
     The default key store implementation in Barbican **is not secure** in
     any way. **Do not use this development standalone mode to store sensitive
     information!**
 
-
 Installing system dependencies
-----------------------------------------
+------------------------------
 
-**Ubuntu:**
-
-.. code-block:: bash
-
-    # Install dependencies required to build Barbican
-    sudo apt-get install -y python-pip python-dev libffi-dev libssl-dev libsqlite3-dev \
-                            libldap2-dev libsasl2-dev
-
-    # Install dependencies required for PyEnv
-    sudo apt-get install -y git curl make build-essential zlib1g-dev libbz2-dev \
-                            libreadline-dev
-
-    # Install dependency for the PyEnv - virtualenvwrapper plugin
-    sudo pip install virtualenvwrapper
-
-**Fedora 22:**
+**Ubuntu 15.10:**
 
 .. code-block:: bash
 
-    # Install dependencies required to build Barbican
-    sudo dnf install -y python-pip python-devel libffi-devel openssl-devel \
-                        libsq3-devel openldap-devel cyrus-sasl-devel
+    # Install development tools
+    sudo apt-get install -y git python-tox
 
-    # Install dependencies required for PyEnv
-    sudo dnf install -y git curl make gcc
+    # Install dependency build requirements
+    sudo apt-get install -y libffi-dev libssl-dev python-dev
 
-    # Install dependency for the PyEnv - virtualenvwrapper plugin
-    sudo dnf install -y python-virtualenvwrapper
-
-Installing PyEnv
------------------
-
-PyEnv is a great utility to simplify the management of Python versions.
-
-The official installation guide is available on the `PyEnv GitHub`_ page. However,
-the following is a shortened guide based on a specific development workflow.
-
-It's important to note that this process should be done as the user that will
-be operating pyenv and not the root user.
-
-.. _`PyEnv GitHub`: https://github.com/yyuu/pyenv#installation
-
-**Ubuntu:**
+**Fedora 23:**
 
 .. code-block:: bash
 
-    # Get PyEnv and virtualenvwrapper plugin source
-    git clone https://github.com/yyuu/pyenv.git ~/.pyenv
-    git clone https://github.com/yyuu/pyenv-virtualenvwrapper.git \
-              ~/.pyenv/plugins/pyenv-virtualenvwrapper
+    # Install development tools
+    sudo dnf install -y git python-tox
 
-    # Add PyEnv Setup to your .bashrc file
-    echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
-    echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-    echo 'eval "$(pyenv init -)"' >> ~/.bashrc
-    echo 'pyenv virtualenvwrapper' >> ~/.bashrc
-
-    # Activate PyEnv by reactivating your shell
-    exec $SHELL
-
-
-Installing clean versions of Python in PyEnv
-----------------------------------------------
-
-Installing clean versions of Python allows for us to be able to run Barbican
-unit tests through tox without much difficulty. You can see the full list of
-available Python versions you can install by executing: ``pyenv install -l``
-
-For the Barbican development, we'll just be installing Python 2.7.9.
-
-.. code-block:: bash
-
-    # Install our Python Versions
-    pyenv install 2.7.9
-
-    # Set PyEnv to use those versions by default
-    pyenv global 2.7.9
-
+    # Install dependency build requirements
+    sudo dnf install -y gcc libffi-devel openssl-devel redhat-rpm-config
 
 Setting up a virtual environment
----------------------------------
-
-As we installed virtualenvwrapper earlier, we'll be using it to setup our
-Barbican virtual environment.
-
-For more information regarding the usage of virtualenvwrapper, see the
-`command reference`_
-
-.. _`command reference`: http://virtualenvwrapper.readthedocs.org/en/latest/command_ref.html
-
-.. code-block:: bash
-
-    # Create a virtual environment
-    mkvirtualenv Barbican
-
-.. note::
-
-    Virtualenvwrapper will attempt to reset the Python version that was active
-    when you created the virtualenv. As a result, if you have the version
-    2.7.9 active when you created the virtualenv, then the default Python
-    version will become 2.7.9 when you reactivate the virtualenv.
-
-
-Installing Barbican from source
 --------------------------------
 
-The running the ``barbican.sh install`` script available within the ``bin/``
-folder will copy the appropriate configuration to the ``/etc/barbican``
-directory, install all required dependencies, and start Barbican with uWSGI.
+We highly recommend using virtual environments for development.  You can learn
+more about `Virtual Environments`_ in the Python Guide.
+
+If you installed tox in the previous step you should already have virtualenv
+installed as well.
+
+.. _Virtual Environments: http://docs.python-guide.org/en/latest/dev/virtualenvs/
 
 .. code-block:: bash
 
-    # Clone Barbican
-    git clone https://github.com/openstack/barbican.git
+    # Clone barbican source
+    git clone https://git.openstack.org/openstack/barbican
     cd barbican
 
-    # Make sure we are in our virtual environment
-    workon Barbican
+    # Create and activate a virtual environment
+    virtualenv .barbicanenv
+    source .barbicanenv/bin/activate
 
-    # Install Barbican
-    bin/barbican.sh install
+    # Install barbican in development mode
+    pip install -e $PWD
 
-.. note::
+Configuring Barbican
+--------------------
 
-    It's important to note that the default configuration files do not activate
-    the Keystone middleware component for authentication and authorization. See
-    documentation on :doc:`using keystone with Barbican <./keystone>`
+Barbican uses oslo.config for configuration.  By default the api process will
+look for the configuration file in ``$HOME/barbican.conf`` or
+``/etc/barbican/barbican.conf``.  The sample configuration files included in the
+source code assume that you'll be using ``/etc/barbican/`` for configuration and
+``/var/lib/barbican`` for the database file location.
+
+.. code-block:: bash
+
+   # Create the directories and copy the config files
+   sudo mkdir /etc/barbican
+   sudo mkdir /var/lib/barbican
+   sudo chown $(whoami) /etc/barbican
+   sudo chown $(whoami) /var/lib/barbican
+   cp -r etc/barbican /etc
+
+All the locations are configurable, so you don't have to use ``/etc`` and
+``/var/lib`` in your development machine if you don't want to.
+
+Running Barbican
+----------------
+
+If you made it this far you should be able to run the barbican development
+server using this command:
+
+.. code-block:: bash
+
+   bin/barbican-api
+
+An instance of barbican will be listening on ``http://localhost:9311``.  Note
+that the default configuration uses the unauthenticated context.  This means
+that requests should include the ``X-Project-Id`` header instead of including
+a keystone token in the ``X-Auth-Token`` header.  For example:
+
+.. code-block:: bash
+
+   curl -v -H 'X-Project-Id: 12345' \
+           -H 'Accept: application/json' \
+           http://localhost:9311/v1/secrets
+
+For more information on configuring Barbican with Keystone auth see the
+:doc:`Keystone Configuration </setup/keystone>` page.
+
+Building the Documentation
+--------------------------
+
+You can build the html developer documentation using tox:
+
+.. code-block:: bash
+
+   tox -e docs
+
+
+Running the Unit Tests
+----------------------
+
+You can run the unit test suite using tox:
+
+.. code-block:: bash
+
+   tox -e py27
