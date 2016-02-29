@@ -2,19 +2,19 @@
 Secrets API - User Guide
 *************************
 
-The secrets resource is the heart of the Barbican service. It provides access
+The secrets resource is the heart of the barbican service. It provides access
 to the secret / keying material stored in the system.
 
 Barbican supports the storage of data for various content-types securely.
 
-This guide will assume you will be using a local running development environment of Barbican.
+This guide will assume you will be using a local running development environment of barbican.
 If you need assistance with getting set up, please reference the :doc:`development guide </setup/dev>`.
 
 
 What is a Secret?
 #################
 
-A secret is a singular item that is stored within Barbican. A secret is
+A secret is a singular item that is stored within barbican. A secret is
 anything you want it to be; however, the formal use case is a key that you wish
 to store away from prying eyes.
 
