@@ -477,7 +477,7 @@ class SecretStoreBase(object):
 
 def _enforce_extensions_configured(plugin_related_function):
     def _check_plugins_configured(self, *args, **kwargs):
-        if len(self.extensions) < 1:
+        if not self.extensions:
             raise SecretStorePluginsNotConfigured()
         return plugin_related_function(self, *args, **kwargs)
     return _check_plugins_configured

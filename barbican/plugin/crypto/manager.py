@@ -78,7 +78,7 @@ class _CryptoPluginManager(named.NamedExtensionManager):
         """
         active_plugins = plugin_utils.get_active_plugins(self)
 
-        if len(active_plugins) < 1:
+        if not active_plugins:
             raise crypto.CryptoPluginNotFound()
 
         for generating_plugin in active_plugins:
@@ -99,7 +99,7 @@ class _CryptoPluginManager(named.NamedExtensionManager):
         """
         active_plugins = plugin_utils.get_active_plugins(self)
 
-        if len(active_plugins) < 1:
+        if not active_plugins:
             raise crypto.CryptoPluginNotFound()
 
         for decrypting_plugin in active_plugins:
