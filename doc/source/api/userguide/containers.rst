@@ -2,7 +2,7 @@
 Containers API - User Guide
 ****************************
 
-The containers resource is the organizational center piece of Barbican. It
+The containers resource is the organizational center piece of barbican. It
 creates a logical object that can be used to hold secret references. This is helpful
 when having to deal with tracking and having access to hundreds of secrets.
 
@@ -14,7 +14,7 @@ Barbican supports 3 types of containers:
 Each of these types have explicit restrictions as to what type of secrets should be
 held within. These will be broken down in their respective sections.
 
-This guide will assume you will be using a local running development environment of Barbican.
+This guide will assume you will be using a local running development environment of barbican.
 If you need assistance with getting set up, please reference the
 :doc:`development guide </setup/dev>`.
 
