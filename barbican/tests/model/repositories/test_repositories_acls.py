@@ -143,7 +143,7 @@ class WhenTestingSecretACLRepository(database_utils.RepositoryTestCase,
 
         count = self.acl_repo.get_count(secret.id, session)
         self.assertEqual(3, count)
-        self.assertTrue(len(acls) == count)
+        self.assertEqual(count, len(acls))
 
     def test_create_or_replace_from_with_none_or_blank_users(self):
         session = self.acl_repo.get_session()
@@ -257,7 +257,7 @@ class WhenTestingSecretACLRepository(database_utils.RepositoryTestCase,
                                              user_ids=['u1', 'u3'])
 
         count = self.acl_repo.get_count(secret.id)
-        self.assertTrue(count == 3)
+        self.assertEqual(3, count)
 
         self.acl_repo.delete_entity_by_id(acl2.id, None)
         session.commit()
@@ -270,7 +270,7 @@ class WhenTestingSecretACLRepository(database_utils.RepositoryTestCase,
         self.assertEqual(2, len(acls))
 
         count = self.acl_repo.get_count(secret.id)
-        self.assertTrue(count == 2)
+        self.assertEqual(2, count)
 
     def test_delete_acls_for_secret(self):
         session = self.acl_repo.get_session()
@@ -394,7 +394,7 @@ class WhenTestingContainerACLRepository(database_utils.RepositoryTestCase,
 
         count = self.acl_repo.get_count(container.id, session)
         self.assertEqual(3, count)
-        self.assertTrue(len(acls) == count)
+        self.assertEqual(count, len(acls))
 
     def test_create_or_replace_from_with_none_or_blank_users(self):
         session = self.acl_repo.get_session()
@@ -505,7 +505,7 @@ class WhenTestingContainerACLRepository(database_utils.RepositoryTestCase,
                                              user_ids=['u1', 'u3'])
 
         count = self.acl_repo.get_count(container.id)
-        self.assertTrue(count == 3)
+        self.assertEqual(3, count)
 
         self.acl_repo.delete_entity_by_id(acl2.id, None)
         session.commit()  # commit the changes made so far
@@ -518,7 +518,7 @@ class WhenTestingContainerACLRepository(database_utils.RepositoryTestCase,
         self.assertEqual(2, len(acls))
 
         count = self.acl_repo.get_count(container.id)
-        self.assertTrue(count == 2)
+        self.assertEqual(2, count)
 
     def test_delete_acls_for_secret(self):
         session = self.acl_repo.get_session()

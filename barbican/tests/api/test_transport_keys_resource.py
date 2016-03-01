@@ -159,15 +159,14 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
 
         url_nav_next = self._create_url(self.external_project_id,
                                         self.offset + self.limit, self.limit)
-        self.assertTrue(resp.body.count(url_nav_next) == 1)
+        self.assertEqual(1, resp.body.count(url_nav_next))
 
         url_nav_prev = self._create_url(self.external_project_id,
                                         0, self.limit)
-        self.assertTrue(resp.body.count(url_nav_prev) == 1)
+        self.assertEqual(1, resp.body.count(url_nav_prev))
 
         url_hrefs = self._create_url(self.external_project_id)
-        self.assertTrue(resp.body.count(url_hrefs) ==
-                        (self.num_keys + 2))
+        self.assertEqual((self.num_keys + 2), resp.body.count(url_hrefs))
 
     def test_response_should_include_total(self):
         resp = self.app.get('/transport_keys/',
