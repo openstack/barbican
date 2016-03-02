@@ -187,7 +187,7 @@ class BaseCertificateRequestsTestCase(database_utils.RepositoryTestCase):
             self.ca_id)
 
         self.global_pref_ca = models.PreferredCertificateAuthority(
-            1,
+            self.project.id,
             self.ca_id)
 
         # data for stored key cases
