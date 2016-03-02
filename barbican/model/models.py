@@ -297,6 +297,12 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
         backref="secret",
         cascade="all, delete-orphan")
 
+    secret_user_metadata = orm.relationship(
+        "SecretUserMetadatum",
+        collection_class=col.attribute_mapped_collection('key'),
+        backref="secret",
+        cascade="all, delete-orphan")
+
     def __init__(self, parsed_request=None):
         """Creates secret from a dict."""
         super(Secret, self).__init__()
@@ -320,6 +326,9 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
     def _do_delete_children(self, session):
         """Sub-class hook: delete children relationships."""
         for k, v in self.secret_store_metadata.items():
+            v.delete(session)
+
+        for k, v in self.secret_user_metadata.items():
             v.delete(session)
 
         for datum in self.encrypted_data:
@@ -346,7 +355,7 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
             'algorithm': self.algorithm,
             'bit_length': self.bit_length,
             'mode': self.mode,
-            'creator_id': self.creator_id
+            'creator_id': self.creator_id,
         }
 
 
@@ -365,6 +374,41 @@ class SecretStoreMetadatum(BASE, SoftDeleteMixIn, ModelBase):
 
         msg = u._("Must supply non-None {0} argument "
                   "for SecretStoreMetadatum entry.")
+
+        if key is None:
+            raise exception.MissingArgumentError(msg.format("key"))
+        self.key = key
+
+        if value is None:
+            raise exception.MissingArgumentError(msg.format("value"))
+        self.value = value
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {
+            'key': self.key,
+            'value': self.value
+        }
+
+
+class SecretUserMetadatum(BASE, SoftDeleteMixIn, ModelBase):
+    """Represents Secret user metadatum for a single key-value pair."""
+
+    __tablename__ = "secret_user_metadata"
+
+    key = sa.Column(sa.String(255), nullable=False)
+    value = sa.Column(sa.String(255), nullable=False)
+    secret_id = sa.Column(
+        sa.String(36), sa.ForeignKey('secrets.id'), index=True, nullable=False)
+
+    __table_args__ = (sa.UniqueConstraint('secret_id', 'key',
+                                          name='_secret_key_uc'),)
+
+    def __init__(self, key, value):
+        super(SecretUserMetadatum, self).__init__()
+
+        msg = u._("Must supply non-None {0} argument "
+                  "for SecretUserMetadatum entry.")
 
         if key is None:
             raise exception.MissingArgumentError(msg.format("key"))
