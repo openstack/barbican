@@ -1276,7 +1276,7 @@ class WhenTestingKeyTypeOrderValidator(utils.BaseTestCase):
 
         result = self.validator.validate(self.key_order_req)
         self.assertIsNotNone(result)
-        self.assertTrue(result['meta']['algorithm'] == 'hmacsha1')
+        self.assertEqual('hmacsha1', result['meta']['algorithm'])
 
     def test_should_raise_with_payload_in_order(self):
         self.key_order_req['meta']['payload'] = 'payload'

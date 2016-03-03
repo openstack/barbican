@@ -227,7 +227,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         ct = self.pkcs11.encrypt(mock.MagicMock(), pt, mock.MagicMock())
 
         self.assertEqual(ct['ct'][:len(pt)], pt[::-1])
-        self.assertTrue(len(ct['iv']) > 0)
+        self.assertGreater(len(ct['iv']), 0)
 
         self.assertEqual(self.lib.C_GenerateRandom.call_count, 2)
         self.assertEqual(self.lib.C_EncryptInit.call_count, 1)
@@ -301,7 +301,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
 
     def test_wrap_key(self):
         wkek = self.pkcs11.wrap_key(mock.Mock(), mock.Mock(), mock.Mock())
-        self.assertTrue(len(wkek['iv']) > 0)
+        self.assertGreater(len(wkek['iv']), 0)
         self.assertEqual(wkek['wrapped_key'], b'0' * 16)
 
         self.assertEqual(self.lib.C_GenerateRandom.call_count, 2)

@@ -270,7 +270,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
 
     def test_cached_kek_expired(self):
         self.plugin.pkek_cache['expired_kek'] = p11_crypto.CachedKEK(4, 0)
-        self.assertEqual(self.plugin._pkek_cache_get('expired_kek'), None)
+        self.assertIsNone(self.plugin._pkek_cache_get('expired_kek'))
 
     def test_generate_mkek(self):
         self.pkcs11.get_key_handle.return_value = None
