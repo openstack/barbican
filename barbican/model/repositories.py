@@ -21,6 +21,7 @@ quite intense for sqlalchemy, and maybe could be simplified.
 """
 
 import logging
+import sys
 import time
 import uuid
 
@@ -279,6 +280,8 @@ def clean_paging_values(offset_arg=0, limit_arg=CONF.default_limit_paging):
     try:
         offset = int(offset_arg)
         if offset < 0:
+            offset = 0
+        if offset > sys.maxsize:
             offset = 0
     except ValueError:
         offset = 0

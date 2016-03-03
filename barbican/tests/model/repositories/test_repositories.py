@@ -84,13 +84,21 @@ class WhenCleaningRepositoryPagingParameters(utils.BaseTestCase):
         self.assertEqual(1, clean_offset)
         self.assertEqual(1, clean_limit)
 
-    def test_limit_ist_too_big(self):
+    def test_limit_is_too_big(self):
         """Limit should max out at configured value."""
         limit = self.CONF.max_limit_paging + 10
         clean_offset, clean_limit = repositories.clean_paging_values(
             offset_arg=1,
             limit_arg=limit)
         self.assertEqual(self.CONF.max_limit_paging, clean_limit)
+
+    def test_offset_is_too_big(self):
+        """When Offset exceeds sys.maxsize, it should be zero."""
+        clean_offset, clean_limit = repositories.clean_paging_values(
+            offset_arg=265613988875874769338781322035779626829233452653394495,
+            limit_arg=self.default_limit)
+        self.assertEqual(0, clean_offset)
+        self.assertEqual(self.default_limit, clean_limit)
 
 
 class WhenInvokingExceptionMethods(utils.BaseTestCase):
