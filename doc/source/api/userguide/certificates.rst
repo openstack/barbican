@@ -251,7 +251,7 @@ use this generated secret to create a Stored Key Order.
         "type": "asymmetric",
         "meta": {
             "algorithm": "rsa",
-            "bit_length": "2048"
+            "bit_length": 2048
         }
     }' http://localhost:9311/v1/orders
 
@@ -278,7 +278,7 @@ We can retrieve the reference to the container containing the RSA key pair from 
         "order_ref": "http://localhost:9311/v1/orders/cb3c43d6-e30c-40c0-b28c-b0dd58a6209d",
         "meta": {
             "algorithm": "rsa",
-            "bit_length": "2048"
+            "bit_length": 2048
         },
         "type": "asymmetric"
     }
