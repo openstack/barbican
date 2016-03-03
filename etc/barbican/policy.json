@@ -74,5 +74,9 @@
     "quotas:get": "rule:all_users",
     "project_quotas:get": "rule:service_admin",
     "project_quotas:put": "rule:service_admin",
-    "project_quotas:delete": "rule:service_admin"
+    "project_quotas:delete": "rule:service_admin",
+    "secret_meta:get": "rule:all_but_audit",
+    "secret_meta:post": "rule:admin_or_creator",
+    "secret_meta:put": "rule:admin_or_creator",
+    "secret_meta:delete": "rule:admin_or_creator"
 }

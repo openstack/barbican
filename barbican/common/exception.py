@@ -89,6 +89,18 @@ class MissingMetadataField(BarbicanHTTPException):
     status_code = 400
 
 
+class InvalidMetadataRequest(BarbicanHTTPException):
+    message = u._("Invalid Metadata. Keys and Values must be Strings.")
+    client_message = message
+    status_code = 400
+
+
+class InvalidMetadataKey(BarbicanHTTPException):
+    message = u._("Invalid Key. Key must be URL safe.")
+    client_message = message
+    status_code = 400
+
+
 class InvalidSubjectDN(BarbicanHTTPException):
     message = u._("Invalid subject DN: %(subject_dn)s")
     client_message = message
