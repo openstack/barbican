@@ -22,6 +22,7 @@ import os
 
 from oslo_config import cfg
 from oslo_log import log
+from oslo_middleware import cors
 from oslo_service import _options
 
 from barbican import i18n as u
@@ -199,6 +200,10 @@ def new_config():
     conf.register_group(quota_opt_group)
     conf.register_opts(quota_opts, group=quota_opt_group)
 
+    # Update default values from libraries that carry their own oslo.config
+    # initialization and configuration.
+    set_middleware_defaults()
+
     return conf
 
 
@@ -222,6 +227,39 @@ def setup_remote_pydev_debug():
                           'listening on debug-host \'%s\' debug-port \'%s\'.',
                           CONF.pydev_debug_host, CONF.pydev_debug_port)
             raise
+
+
+def set_middleware_defaults():
+    """Update default configuration options for oslo.middleware."""
+    # CORS Defaults
+    # TODO(krotscheck): Update with https://review.openstack.org/#/c/285368/
+    cfg.set_defaults(cors.CORS_OPTS,
+                     allow_headers=['X-Auth-Token',
+                                    'X-Openstack-Request-Id',
+                                    'X-Project-Id',
+                                    'X-Identity-Status',
+                                    'X-User-Id',
+                                    'X-Storage-Token',
+                                    'X-Domain-Id',
+                                    'X-User-Domain-Id',
+                                    'X-Project-Domain-Id',
+                                    'X-Roles'],
+                     expose_headers=['X-Auth-Token',
+                                     'X-Openstack-Request-Id',
+                                     'X-Project-Id',
+                                     'X-Identity-Status',
+                                     'X-User-Id',
+                                     'X-Storage-Token',
+                                     'X-Domain-Id',
+                                     'X-User-Domain-Id',
+                                     'X-Project-Domain-Id',
+                                     'X-Roles'],
+                     allow_methods=['GET',
+                                    'PUT',
+                                    'POST',
+                                    'DELETE',
+                                    'PATCH']
+                     )
 
 CONF = new_config()
 LOG = logging.getLogger(__name__)
