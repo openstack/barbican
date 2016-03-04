@@ -8,7 +8,7 @@ User Guide
 .. toctree::
    :maxdepth: 1
 
-   ./userguide/secret
+   ./userguide/secrets
    ./userguide/secret_metadata
    ./userguide/containers
    ./userguide/acls
