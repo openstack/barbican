@@ -7,16 +7,16 @@ System, an enterprise certificate management system that has been deployed in so
 of the largest PKI deployments worldwide.  RHCS is FIPS 140-2 and Common Criteria certified.
 
 The Dogtag Certificate Authority (CA) subsystem issues, renews and revokes many different
-kinds of certificates.  It can be used as a private CA back-end to Barbican, and interacts
-with Barbican through the Dogtag CA plugin.
+kinds of certificates.  It can be used as a private CA back-end to barbican, and interacts
+with barbican through the Dogtag CA plugin.
 
 The Dogtag KRA subsystem is used to securely store secrets after being encrypted by
 storage keys that are stored either in a software NSS database or in an HSM.  It
-can serve as a secret store for Barbican, and interacts with Barbican core through
+can serve as a secret store for barbican, and interacts with barbican core through
 the Dogtag KRA plugin.
 
 In this guide, we will provide instructions on how to set up a basic Dogtag instance
-containing a CA and a KRA, and how to configure Barbican to use this instance for a
+containing a CA and a KRA, and how to configure barbican to use this instance for a
 secret store and a certificate plugin.  Much more detail about Dogtag, its deployment
 options and its administration are available in the `RHCS documentation
 <https://access.redhat.com/documentation/en-US/Red_Hat_Certificate_System>`_.
@@ -153,7 +153,7 @@ server certificate for the KRA.
 Configuring Barbican to Communicate with the Dogtag CA and KRA
 **************************************************************
 
-In order for Barbican to interact with the Dogtag CA and KRA, a PEM file must be
+In order for barbican to interact with the Dogtag CA and KRA, a PEM file must be
 created with trusted agent credentials.
 
 .. code-block:: bash
@@ -165,9 +165,9 @@ created with trusted agent credentials.
         -out $BARBICAN_CONF_DIR/kra_admin_cert.pem -nodes
     chown $USER $BARBICAN_CONF_DIR/kra_admin_cert.pem
 
-The Barbican config file (/etc/barbican/barbican.conf) needs to be modified.
+The barbican config file (/etc/barbican/barbican.conf) needs to be modified.
 The modifications below set the Dogtag plugins as the only enabled secret store and
-certificate plugins.  Be sure to restart Barbican once these changes are made.
+certificate plugins.  Be sure to restart barbican once these changes are made.
 
 Note that the actual hostname of the machine should be used in the script (rather
 than localhost) because the hostname is used in the subject name for the SSL

@@ -2,8 +2,8 @@
 Quotas API - User Guide
 ************************
 
-Running with default settings, the Barbican REST API doesn't impose an upper
-limit on the number of resources that are allowed to be created. Barbican's
+Running with default settings, the barbican REST API doesn't impose an upper
+limit on the number of resources that are allowed to be created. barbican's
 backend depends on limited resources. These limited resources include database,
 plugin, and Hardware Security Module (HSM) storage space. This
 can be an issue in a multi-project or multi-user environment when one project
@@ -15,7 +15,7 @@ This user guide will show you how a user can lookup his current effective
 quotas and how a service admin can create, update, read, and delete project quota
 configuration for all projects in his cloud.
 
-This guide will assume you will be using a local running development environment of Barbican.
+This guide will assume you will be using a local running development environment of barbican.
 If you need assistance with getting set up, please reference the :doc:`development guide </setup/dev>`.
 
 .. _user_project_quotas_overview:
@@ -23,16 +23,16 @@ If you need assistance with getting set up, please reference the :doc:`developme
 Project Quotas Overview
 #######################
 
-All users authenticated with Barbican are able to read the effective quota values
+All users authenticated with barbican are able to read the effective quota values
 that apply to their project.  Barbican can derive the project that a user belongs
 to by reading the project scope from the authentication token.
 
 Service administrators can read, set, and delete quota configurations for each
-project known to Barbican.  The service administrator is recognized by his authenticated
-role.  The service administrator's role is defined in Barbican's policy.json file.
+project known to barbican.  The service administrator is recognized by his authenticated
+role.  The service administrator's role is defined in barbican's policy.json file.
 The default role for a service admin is "key-manager:service-admin".
 
-Quotas can be enforced for the following Barbican resources: secrets, containers,
+Quotas can be enforced for the following barbican resources: secrets, containers,
 orders, consumers, and CAs.  The configured quota value can be None (use the default),
 -1 (unlimited), 0 (disabled), or a positive integer defining the maximum number
 allowed for a project.
@@ -44,7 +44,7 @@ Default Quotas
 
 When no project quotas have been set for a project, the default
 project quotas are enforced for that project.  Default quotas are specified
-in the Barbican configuration file (barbican.conf).  The defaults provided
+in the barbican configuration file (barbican.conf).  The defaults provided
 in the standard configuration file are as follows.
 
 .. code-block:: none

@@ -2,7 +2,7 @@
 Consumers API - User Guide
 *************************
 
-This guide assumes you will be using a local development environment of Barbican.
+This guide assumes you will be using a local development environment of barbican.
 If you need assistance with getting set up, please reference the :doc:`development guide </setup/dev>`.
 
 

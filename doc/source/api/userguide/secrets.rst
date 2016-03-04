@@ -40,7 +40,7 @@ Single Step Secret Creation
 ***************************
 
 The first secret we will create is a single step secret. Using a single step,
-Barbican expects the user to provide the payload to be stored within the secret
+barbican expects the user to provide the payload to be stored within the secret
 itself. Once the secret has been created with a payload it cannot be updated. In
 this example we will provide a plain text secret. For more information on creating
 secrets you can view the :ref:`POST /v1/secrets <post_secrets>` section.
