@@ -100,7 +100,7 @@ class ContainerController(controllers.ACLMixin):
             try:
                 self.consumer_repo.delete_entity_by_id(
                     consumer.id, external_project_id)
-            except exception.NotFound:
+            except exception.NotFound:  # nosec
                 pass
 
 

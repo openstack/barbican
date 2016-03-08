@@ -18,6 +18,7 @@ import datetime
 import fnmatch
 import os
 import re
+import subprocess  # nosec
 from tempfile import mkstemp
 import uuid
 
@@ -259,9 +260,8 @@ class SnakeoilCA(object):
         fout, temp_out = mkstemp()
         os.close(fout)
 
-        command = ("openssl crl2pkcs7 -nocrl -out " + temp_out +
-                   " -certfile " + temp_in)
-        os.system(command)
+        subprocess.call(['/usr/bin/openssl', 'crl2pkcs7', '-nocrl',  # nosec
+                         '-out', temp_out, '-certfile', temp_in], shell=False)
         with open(temp_out) as pkcs7_fh:
             pkcs7 = pkcs7_fh.read()
 
