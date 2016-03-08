@@ -12,7 +12,7 @@ Setup
 Initially, the deployer will need to examine the settings in their
 `barbican.conf` file under the "Crypto plugin" settings section. Set these
 values to whichever defaults you need. This will be used for both the script
-and your usage of Barbican.
+and your usage of barbican.
 
 The following items are required to use the PKCS11 plugin:
 

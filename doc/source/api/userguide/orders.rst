@@ -2,7 +2,7 @@
 Orders API - User Guide
 ***********************
 
-The orders resource allows the user to request Barbican to generate a secret.
+The orders resource allows the user to request barbican to generate a secret.
 This is also very helpful for requesting the creation of certificates and
 public/private key pairs.
 
@@ -12,7 +12,7 @@ The orders resource supports the following types:
     * certificates
 
 This user guide provides high level examples of the orders resource.
-It will assume you will be using a local running development environment of Barbican.
+It will assume you will be using a local running development environment of barbican.
 If you need assistance with getting set up, please reference the :doc:`development guide </setup/dev>`.
 
 For a more in depth explanation on how to order a certificate, reference
@@ -23,7 +23,7 @@ the :ref:`How to Order a Certificate <order_certificate>` documentation.
 Creating an Order
 #################
 
-When you want Barbican to generate a secret you need to create an order.
+When you want barbican to generate a secret you need to create an order.
 For an order to be processed correctly the parameters mode,
 bit_length, and algorithm must be valid. Otherwise the order will fail and
 the secret will not be generated. The example below shows a valid order for
@@ -37,7 +37,7 @@ the parameters in the :doc:`Orders API <../reference/orders>` documentation.
     "bit_length": 256, "mode": "cbc", "payload_content_type": "application/octet-stream"}
     }' http://localhost:9311/v1/orders
 
-You should receive an order reference after placing your order with Barbican.
+You should receive an order reference after placing your order with barbican.
 
 .. code-block:: bash
 
@@ -155,7 +155,7 @@ refine your search among orders.
 Deleting an Order
 #################
 
-It is also possible to delete an order from Barbican.
+It is also possible to delete an order from barbican.
 
 .. code-block:: bash
 

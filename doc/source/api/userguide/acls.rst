@@ -2,15 +2,15 @@
 ACL API User Guide
 ******************
 
-By default Barbican manages access to its resources (secrets, containers) on a per project
+By default barbican manages access to its resources (secrets, containers) on a per project
 level, whereby a user is allowed access to project resources based on the roles a user has
 in that project.
 
-Some Barbican use cases prefer a more fine-grained access control for secrets and containers,
+Some barbican use cases prefer a more fine-grained access control for secrets and containers,
 such as at the user level. The Access Control List (ACL) feature supports this more restrictive
 access.
 
-This guide will assume you will be using a local running development environment of Barbican.
+This guide will assume you will be using a local running development environment of barbican.
 If you need assistance with getting set up, please reference the :doc:`development guide </setup/dev>`.
 
 .. warning::
@@ -51,7 +51,7 @@ Following ACL rules are defined and used as `OR` in resource access policy:
 
 .. note::
 
-    Currently Barbican default policy just makes use of `read` ACL data only. So only **GET**
+    Currently barbican default policy just makes use of `read` ACL data only. So only **GET**
     calls for a secret and a container resource will make use of ACL data. Other request methods on
     secret and container resource still uses project level RBAC checks in policy.
 
