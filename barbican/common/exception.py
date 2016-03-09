@@ -431,13 +431,6 @@ class ProvidedTransportKeyNotFound(BarbicanHTTPException):
     status_code = 400
 
 
-class InvalidUUIDInURI(BarbicanHTTPException):
-    message = u._("The provided UUID in the URI (%(uuid_string)s) is "
-                  "malformed.")
-    client_message = u._("The provided UUID in the URI is malformed.")
-    status_code = 404
-
-
 class InvalidCAID(BarbicanHTTPException):
     message = u._("Invalid CA_ID: %(ca_id)s")
     client_message = u._("The ca_id provided in the request is invalid")

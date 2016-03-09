@@ -10,13 +10,11 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 import collections
-import uuid
 
 import pecan
 from webob import exc
 
 from barbican import api
-from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
 
@@ -148,18 +146,6 @@ def enforce_content_types(valid_content_types=[]):
         return content_types_enforcer
 
     return content_types_decorator
-
-
-def assert_is_valid_uuid_from_uri(doubtful_uuid):
-    """Checks if the given string is actually a valid UUID
-
-    This assumes that the uuid comes from a URI.
-    :raises: exception.InvalidUUIDInURI
-    """
-    try:
-        uuid.UUID(doubtful_uuid)
-    except ValueError:
-        raise exception.InvalidUUIDInURI(uuid_string=doubtful_uuid)
 
 
 def flatten(d, parent_key=''):

@@ -142,7 +142,7 @@ class OrdersController(controllers.ACLMixin):
         # actually does a lookup in the database regardless of the RBAC policy
         # check, the execution only gets here if authentication of the user was
         # previously successful.
-        controllers.assert_is_valid_uuid_from_uri(order_id)
+
         ctx = controllers._get_barbican_context(pecan.request)
 
         order = self.order_repo.get(entity_id=order_id,
