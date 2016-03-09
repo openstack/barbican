@@ -78,8 +78,15 @@ class SecretController(controllers.ACLMixin):
                 return secretmeta.SecretMetadataController(self.secret), \
                     remainder
             else:
-                return secretmeta.SecretMetadatumController(self.secret), \
-                    remainder
+                request_method = pecan.request.method
+                allowed_methods = ['GET', 'PUT', 'DELETE']
+
+                if request_method in allowed_methods:
+                    return secretmeta.SecretMetadatumController(self.secret), \
+                        remainder
+                else:
+                    # methods cannot be handled at controller level
+                    pecan.abort(405)
         else:
             # only 'acl' and 'metadata' as sub-resource is supported
             pecan.abort(405)
