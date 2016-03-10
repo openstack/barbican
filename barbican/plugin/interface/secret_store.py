@@ -64,9 +64,16 @@ class SecretStorePluginNotFound(exception.BarbicanHTTPException):
         super(SecretStorePluginNotFound, self).__init__(message)
 
 
-class SecretStoreSupportedPluginNotFound(exception.BarbicanException):
+class SecretStoreSupportedPluginNotFound(exception.BarbicanHTTPException):
     """Raised if no plugins are found that support the requested operation."""
-    message = u._("Secret store plugin not found for requested operation.")
+
+    client_message = u._("Secret store supported plugin not found.")
+    status_code = 400
+
+    def __init__(self, plugin_name=None):
+        message = u._("Secret store plugin not found for requested operation.")
+        super(SecretStoreSupportedPluginNotFound, self).__init__(
+            message)
 
 
 class SecretContentTypeNotSupportedException(exception.BarbicanHTTPException):
