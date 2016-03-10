@@ -157,6 +157,17 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
             transport_key_needed=False
         )
 
+    def test_new_secret_fails_with_invalid_transport_key_ref(self):
+        resp, _ = create_secret(
+            self.app,
+            payload=b'superdupersecret',
+            content_type='text/plain',
+            transport_key_id="non_existing_transport_key_id",
+            transport_key_needed="true",
+            expect_errors=True
+        )
+        self.assertEqual(400, resp.status_int)
+
     def test_new_secret_w_unsupported_content_type_should_fail(self):
         resp, _ = create_secret(
             self.app,

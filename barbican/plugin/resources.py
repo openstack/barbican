@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from barbican.common import exception
 from barbican.common import utils
 from barbican.model import models
 from barbican.model import repositories as repos
@@ -47,10 +48,11 @@ def _get_plugin_name_and_transport_key(transport_key_id):
     transport_key = None
     if transport_key_id is not None:
         transport_key_repo = repos.get_transport_key_repository()
-        transport_key_model = transport_key_repo.get(
-            entity_id=transport_key_id)
-        if transport_key_model is None:
-            raise ValueError("Invalid transport key ID provided")
+        try:
+            transport_key_model = transport_key_repo.get(
+                entity_id=transport_key_id)
+        except exception.NotFound:
+            raise exception.ProvidedTransportKeyNotFound(str(transport_key_id))
 
         plugin_name = transport_key_model.plugin_name
         if plugin_name is None:
