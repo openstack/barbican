@@ -29,11 +29,6 @@ log.setup(CONF, 'barbican')
 LOG = log.getLogger(__name__)
 
 
-def _exception_is_successful_exit(thrown_exception):
-    return (isinstance(thrown_exception, SystemExit) and
-            (thrown_exception.code is None or thrown_exception.code == 0))
-
-
 def cleanup_unassociated_projects():
     """Clean up unassociated projects.
 
@@ -311,8 +306,6 @@ def clean_command(sql_url, min_num_days, do_clean_unassociated_projects,
     :param verbose: If True, log and print more information
     :param log_file: If set, override the log_file configured
     """
-    # TODO(edtubill) Make unit test for this method
-
     if verbose:
         # The verbose flag prints out log events to the screen, otherwise
         # the log events will only go to the log file
@@ -350,12 +343,10 @@ def clean_command(sql_url, min_num_days, do_clean_unassociated_projects,
         repo.commit()
 
     except Exception as ex:
-        if not _exception_is_successful_exit(ex):
-            LOG.exception('Failed to clean up soft deletions in database.')
-            LOG.exception(ex.message)
-            repo.rollback()
-            cleanup_total = 0  # rollback happened, no entries affected
-            raise ex
+        LOG.exception('Failed to clean up soft deletions in database.')
+        repo.rollback()
+        cleanup_total = 0  # rollback happened, no entries affected
+        raise ex
     finally:
         stop_watch.stop()
         elapsed_time = stop_watch.elapsed()

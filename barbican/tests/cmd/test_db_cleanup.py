@@ -20,6 +20,7 @@ from barbican.tests import database_utils as utils
 from sqlalchemy.exc import IntegrityError
 
 import datetime
+import mock
 
 
 def _create_project(project_name):
@@ -339,6 +340,82 @@ class WhenTestingDBCleanUpCommand(utils.RepositoryTestCase):
         clean.cleanup_all()
         clean.cleanup_unassociated_projects()
         self.assertFalse(_entry_exists(project_with_children))
+
+    @mock.patch('barbican.model.clean.cleanup_all')
+    @mock.patch('barbican.model.clean.soft_delete_expired_secrets')
+    @mock.patch('barbican.model.clean.cleanup_unassociated_projects')
+    @mock.patch('barbican.model.clean.repo')
+    @mock.patch('barbican.model.clean.log')
+    @mock.patch('barbican.model.clean.CONF')
+    def test_clean_up_command(self, mock_conf, mock_log, mock_repo,
+                              mock_clean_unc_projects,
+                              mock_soft_del_expire_secrets, mock_clean_all):
+        """Tests the clean command"""
+        test_sql_url = "mysql+pymysql://notrealuser:datab@127.0.0.1/barbican't"
+        min_num_days = 91
+        do_clean_unassociated_projects = True
+        do_soft_delete_expired_secrets = True
+        verbose = True
+        test_log_file = "/tmp/sometempfile"
+        clean.clean_command(test_sql_url, min_num_days,
+                            do_clean_unassociated_projects,
+                            do_soft_delete_expired_secrets, verbose,
+                            test_log_file)
+        set_calls = [mock.call('debug', True),
+                     mock.call('log_file', test_log_file),
+                     mock.call('sql_connection', test_sql_url)]
+        mock_conf.set_override.assert_has_calls(set_calls)
+
+        clear_calls = [mock.call('debug'), mock.call('log_file'),
+                       mock.call('sql_connection')]
+        mock_conf.clear_override.assert_has_calls(clear_calls)
+        self.assertTrue(mock_repo.setup_database_engine_and_factory.called)
+        self.assertTrue(mock_repo.commit.called)
+        self.assertTrue(mock_repo.clear.called)
+        self.assertTrue(mock_clean_unc_projects.called)
+        self.assertTrue(mock_soft_del_expire_secrets)
+        self.assertTrue(mock_clean_all)
+
+    @mock.patch('barbican.model.clean.cleanup_all')
+    @mock.patch('barbican.model.clean.soft_delete_expired_secrets')
+    @mock.patch('barbican.model.clean.cleanup_unassociated_projects')
+    @mock.patch('barbican.model.clean.repo')
+    @mock.patch('barbican.model.clean.log')
+    @mock.patch('barbican.model.clean.CONF')
+    def test_clean_up_command_with_false_args(
+        self, mock_conf, mock_log, mock_repo, mock_clean_unc_projects,
+            mock_soft_del_expire_secrets, mock_clean_all):
+        """Tests the clean command with false args"""
+        test_sql_url = None
+        min_num_days = -1
+        do_clean_unassociated_projects = False
+        do_soft_delete_expired_secrets = False
+        verbose = None
+        test_log_file = None
+        clean.clean_command(test_sql_url, min_num_days,
+                            do_clean_unassociated_projects,
+                            do_soft_delete_expired_secrets, verbose,
+                            test_log_file)
+        mock_conf.set_override.assert_not_called()
+        mock_conf.clear_override.assert_not_called()
+        self.assertTrue(mock_repo.setup_database_engine_and_factory.called)
+        self.assertTrue(mock_repo.commit.called)
+        self.assertTrue(mock_repo.clear.called)
+        self.assertTrue(mock_clean_all)
+        self.assertFalse(mock_clean_unc_projects.called)
+        self.assertFalse(mock_soft_del_expire_secrets.called)
+
+    @mock.patch('barbican.model.clean.cleanup_all',
+                side_effect=IntegrityError("", "", "", ""))
+    @mock.patch('barbican.model.clean.repo')
+    @mock.patch('barbican.model.clean.log')
+    @mock.patch('barbican.model.clean.CONF')
+    def test_clean_up_command_with_exception(
+            self, mock_conf, mock_log, mock_repo, mock_clean_all):
+        """Tests that the clean command throws exceptions"""
+        args = ("sql", 2, False, False, False, "/tmp/nope")
+        self.assertRaises(IntegrityError, clean.clean_command, *args)
+        self.assertTrue(mock_repo.rollback.called)
 
     @_create_project("my integrity error keystone id")
     def test_db_cleanup_raise_integrity_error(self, project):
