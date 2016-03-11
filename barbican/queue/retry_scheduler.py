@@ -40,7 +40,8 @@ def _compute_next_periodic_interval():
     )
 
     # Return +- 20% of interval.
-    return random.uniform(0.8 * periodic_interval, 1.2 * periodic_interval)
+    return random.uniform(0.8 * periodic_interval,  # nosec
+                          1.2 * periodic_interval)
 
 
 class PeriodicServer(service.Service):
