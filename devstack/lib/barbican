@@ -25,6 +25,12 @@
 XTRACE=$(set +o | grep xtrace)
 set +o xtrace
 
+# PyKMIP configuration
+PYKMIP_SERVER_KEY=${PYKMIP_SERVER_KEY:-$INT_CA_DIR/private/pykmip-server.key}
+PYKMIP_SERVER_CERT=${PYKMIP_SERVER_CERT:-$INT_CA_DIR/pykmip-server.crt}
+PYKMIP_CLIENT_KEY=${PYKMIP_CLIENT_KEY:-$INT_CA_DIR/private/pykmip-client.key}
+PYKMIP_CLIENT_CERT=${PYKMIP_CLIENT_CERT:-$INT_CA_DIR/pykmip-client.crt}
+PYKMIP_CA_PATH=${PYKMIP_CA_PATH:-$INT_CA_DIR/ca-chain.pem}
 
 # Functions
 # ---------
@@ -353,6 +359,59 @@ function create_barbican_accounts {
             internal "http://$SERVICE_HOST:9311"
     fi
 
+}
+
+# PyKMIP functions
+# ----------------
+
+# install_pykmip - install the PyKMIP python module
+# create keys and certificate for server
+function install_pykmip {
+    pip_install 'pykmip'
+
+    if is_service_enabled pykmip-server; then
+        [ ! -d ${PYKMIP_CONF_DIR} ] && sudo mkdir -p ${PYKMIP_CONF_DIR}
+        sudo chown ${USER} ${PYKMIP_CONF_DIR}
+        [ ! -d ${PYKMIP_LOG_DIR} ] && sudo mkdir -p ${PYKMIP_LOG_DIR}
+        sudo chown ${USER} ${PYKMIP_LOG_DIR}
+
+        init_CA
+        if [ ! -e ${PYKMIP_SERVER_KEY} ]; then
+            make_cert ${INT_CA_DIR} 'pykmip-server' 'pykmip-server'
+            chmod 400 ${PYKMIP_SERVER_KEY}
+        fi
+        if [ ! -e ${PYKMIP_CLIENT_KEY} ]; then
+            make_cert ${INT_CA_DIR} 'pykmip-client' 'pykmip-client'
+            chmod 400 ${PYKMIP_CLIENT_KEY}
+        fi
+
+        if [ ! -e ${PYKMIP_CONF} ]; then
+            cat > ${PYKMIP_CONF} <<EOF
+[server]
+hostname=127.0.0.1
+port=5696
+certificate_path=${PYKMIP_SERVER_CERT}
+key_path=${PYKMIP_SERVER_KEY}
+ca_path=${PYKMIP_CA_PATH}
+auth_suite=Basic
+EOF
+       fi
+   fi
+}
+
+# configure_pykmip - enable KMIP plugin and configure
+function configure_pykmip {
+    iniset $BARBICAN_CONF secretstore enabled_secretstore_plugins kmip_plugin
+    iniset $BARBICAN_CONF kmip_plugin username demo
+    iniset $BARBICAN_CONF kmip_plugin password secretpassword
+    iniset $BARBICAN_CONF kmip_plugin keyfile ${PYKMIP_CLIENT_KEY}
+    iniset $BARBICAN_CONF kmip_plugin certfile ${PYKMIP_CLIENT_CERT}
+    iniset $BARBICAN_CONF kmip_plugin ca_certs ${PYKMIP_CA_PATH}
+}
+
+# start_pykmip - start the PyKMIP server
+function start_pykmip {
+    run_process pykmip-server "pykmip-server -f \'${PYKMIP_CONF}\' -l \'${PYKMIP_LOG_DIR}/pykmip-devstack.log\'"
 }
 
 # Dogtag functions
