@@ -792,7 +792,7 @@ class ContainerConsumerMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     project_id = sa.Column(sa.String(36), sa.ForeignKey('projects.id'),
                            index=True, nullable=True)
     name = sa.Column(sa.String(36))
-    URL = sa.Column(sa.String(500))
+    URL = sa.Column(sa.String(255))
     data_hash = sa.Column(sa.CHAR(64))
 
     __table_args__ = (
