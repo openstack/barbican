@@ -1,4 +1,4 @@
-# Copyright (c) 2016 IBM
+# Copyright (c) 2017 IBM
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -253,6 +253,21 @@ class WhenTestingSecretMetadatumResource(utils.BarbicanAPIBaseTestCase):
         secret_id, secret_resp = create_secret(self.app)
         resp = self.app.delete('/secrets/{0}/metadata/'.format(secret_id),
                                expect_errors=True)
+        self.assertEqual(405, resp.status_int)
+
+    @mock.patch('barbican.model.repositories.SecretUserMetadatumRepo.'
+                'get_metadata_for_secret')
+    def test_returns_405_for_head_on_metadatum(self, mocked_get):
+        secret_id, secret_resp = create_secret(self.app)
+
+        mocked_get.return_value = self.valid_metadata['metadata']
+        meta_resp = create_secret_metadatum(self.app,
+                                            self.valid_metadatum,
+                                            secret_id)
+        self.assertEqual(201, meta_resp.status_int)
+
+        resp = self.app.head('/secrets/{0}/metadata/access-limit'.format(
+            secret_id), expect_errors=True)
         self.assertEqual(405, resp.status_int)
 
 
