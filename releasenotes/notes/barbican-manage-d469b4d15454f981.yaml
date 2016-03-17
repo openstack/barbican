@@ -1,0 +1,15 @@
+---
+prelude: >
+    This release includes a new command line utility
+    'barbican-manage' that consolidates and supersedes
+    the separate HSM and database management scripts.
+features:
+  - The 'barbican-manage' tool can be used to manage database schema changes
+    as well as provision and rotate keys in the HSM backend.
+deprecations:
+  - The 'barbican-db-manage' script is deprecated.  Use the new
+    'barbican-manage' utility instead.
+  - The 'pkcs11-kek-rewrap' script is deprecated.  Use the new
+    'barbican-manage' utility instead.
+  - The 'pkcs11-key-generation' script is deprecated.  Use the new
+    'barbican-manage' utility instead.
