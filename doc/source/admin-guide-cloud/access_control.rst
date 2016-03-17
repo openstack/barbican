@@ -79,4 +79,5 @@ a secret for which only they have access.   There is also no easy way to grant
 a user access to only a single secret.
 
 To address this limitations the Key Manager service includes an Access
-Control List (ACL) API.  For full details see the :doc:`../api/userguide/acls`
+Control List (ACL) API.  For full details see the
+`ACL API User Guide <http://developer.openstack.org/api-guide/key-manager/acls.html>`__

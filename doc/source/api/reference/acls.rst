@@ -26,7 +26,9 @@ GET /v1/secrets/{uuid}/acl
 ##########################
 Retrieve the ACL settings for a given secret.
 
-If no ACL is defined for that secret, then :ref:`Default ACL<default_implicit_acl>` is returned.
+If no ACL is defined for that secret, then
+`Default ACL <http://developer.openstack.org/api-guide/key-manager/acls.html#default-acl>`__
+is returned.
 
 Request/Response (With ACL defined):
 ************************************
@@ -325,7 +327,9 @@ GET /v1/containers/{uuid}/acl
 #############################
 Retrieve the ACL settings for a given container.
 
-If no ACL is defined for that container, then :ref:`Default ACL<default_implicit_acl>` is returned.
+If no ACL is defined for that container, then
+`Default ACL <http://developer.openstack.org/api-guide/key-manager/acls.html#default-acl>`__
+is returned.
 
 Request/Response (With ACL defined):
 ************************************

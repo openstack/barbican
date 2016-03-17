@@ -17,7 +17,7 @@ in the *meta* dictionary.
 
 The result of this operation is an order for a certificate, returned to the client as an order
 reference.  Upon completion, the order will contain a reference to a Certificate Container,
-see :ref:`certificate_containers`.
+see `Certificate Containers <http://developer.openstack.org/api-guide/key-manager/containers.html#certificate-containers>`__.
 
 
 Common Attributes
@@ -99,7 +99,7 @@ Request:
 ********
 
 The request below shows a simple CMC request.  For examples of each type,
-see the :doc:`Certificate User's Guide <../userguide/certificates>`.
+see the `Certificate User's Guide <http://developer.openstack.org/api-guide/key-manager/certificates.html>`.
 
 .. code-block:: javascript
 

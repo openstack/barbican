@@ -4,7 +4,7 @@ Certificates Authorities API - Reference
 
 Barbican provides an API to interact with certificate authorities (CAs).  For
 an introduction to CAs and how Barbican manages them, see the
-:doc:`Certificate Authorities User's Guide <../userguide/cas>`.
+`Certificate Authorities User's Guide <http://developer.openstack.org/api-guide/key-manager/cas.html>`__.
 
 Understanding the following concepts, explained in the user's
 guide, is important to understanding how to use this API.
@@ -569,8 +569,9 @@ Any user can request a reference to the preferred CA assigned to his project.  W
 a preferred CA is set for a project, that is the CA that will be used when a user
 of that project requests a certificate and does not specify a CA.  For more
 information, consult the
-:doc:`Certificate Authorities User's Guide <../userguide/cas>` and the
-:doc:`Certificates API User's Guide <../userguide/certificates>`.
+`Certificate Authorities User's Guide <http://developer.openstack.org/api-guide/key-manager/cas.html>`__
+and the
+`Certificates API User's Guide <http://developer.openstack.org/api-guide/key-manager/certificates.html>`__.
 
 .. _get_cas_preferred_request_response:
 
@@ -633,8 +634,9 @@ of the project.  The first created project CA becomes the project's preferred
 CA by default.
 
 For more information, consult the
-:doc:`Certificate Authorities User's Guide <../userguide/cas>` and the
-:doc:`Certificates API User's Guide <../userguide/certificates>`.
+`Certificate Authorities User's Guide <http://developer.openstack.org/api-guide/key-manager/cas.html>`__
+and the
+`Certificates API User's Guide <http://developer.openstack.org/api-guide/key-manager/certificates.html>`__.
 
 .. _post_cas_caid_add_request_response:
 
@@ -886,8 +888,9 @@ requests a certificate and does not specify a CA and his project does not
 have a project preferred CA.
 
 For more information, consult the
-:doc:`Certificate Authorities User's Guide <../userguide/cas>` and the
-:doc:`Certificates API User's Guide <../userguide/certificates>`.
+`Certificate Authorities User's Guide <http://developer.openstack.org/api-guide/key-manager/cas.html>`__
+and the
+`Certificates API User's Guide <http://developer.openstack.org/api-guide/key-manager/certificates.html>`__.
 
 .. _post_cas_caid_set_global_pref_request_response:
 

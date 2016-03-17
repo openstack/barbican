@@ -16,7 +16,8 @@ quotas and how a service admin can create, update, read, and delete project quot
 configuration for all projects in his cloud.
 
 This guide will assume you will be using a local running development environment of barbican.
-If you need assistance with getting set up, please reference the :doc:`development guide </setup/dev>`.
+If you need assistance with getting set up, please reference the
+`development guide <http://docs.openstack.org/developer/barbican/setup/dev.html>`__.
 
 .. _user_project_quotas_overview:
 
@@ -101,7 +102,8 @@ with the request.
 
 
 To get more details on the quota lookup API, you can reference the
-:ref:`Get Quotas <get_quotas_request>` documentation.
+`Get Quotas <http://docs.openstack.org/developer/barbican/api/reference/quotas.html#get-quotas-request>`__
+documentation.
 
 
 .. _user_put_project_quotas:
@@ -131,8 +133,9 @@ To set or replace the quotas for the project with the ID 1234:
     HTTP/1.1 204 No Content
 
 
-To get more details on the project quota setting API you can reference
-the :ref:`Set Project Quotas <put_project_quotas>` documentation.
+To get more details on the project quota setting API you can reference the
+`Set Project Quotas <http://docs.openstack.org/developer/barbican/api/reference/quotas.html#put-project-quotas>`__
+documentation.
 
 
 .. _user_get_project_quotas:
@@ -202,8 +205,11 @@ The returned response contains a list with all project quota data.
 
 
 To get more details on project quota lookup APIs you can reference
-the :ref:`Get Project Quota <get_project_quotas_uuid>` and
-:ref:`Get Project Quota List <get_project_quotas>` documentation.
+the
+`Get Project Quota <http://docs.openstack.org/developer/barbican/api/reference/quotas.html#get-project-quotas-uuid>`__
+and
+`Get Project Quota List <http://docs.openstack.org/developer/barbican/api/reference/quotas.html#get-project-quotas>`__
+documentation.
 
 
 .. _user_delete_project_quotas:
@@ -230,4 +236,5 @@ There is no response content returned on successful deletion.
 
 
 To get more details on project quota delete APIs, you can reference the
-:ref:`Delete Project Quotas <delete_project_quotas>` documentation.
+`Delete Project Quotas <http://docs.openstack.org/developer/barbican/api/reference/quotas.html#delete-project-quotas>`__
+documentation.
