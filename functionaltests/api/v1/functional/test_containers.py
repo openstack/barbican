@@ -99,6 +99,7 @@ class BaseContainerTestCase(base.TestCase):
 
     def tearDown(self):
         self.secret_behaviors.delete_all_created_secrets()
+        self.behaviors.delete_all_created_containers()
         super(BaseContainerTestCase, self).tearDown()
 
     def _create_a_secret(self):
