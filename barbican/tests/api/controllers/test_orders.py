@@ -196,6 +196,13 @@ class WhenGettingOrDeletingOrders(utils.BarbicanAPIBaseTestCase):
         )
         self.assertEqual(404, resp.status_int)
 
+    def test_returns_404_on_get_with_bad_uuid(self):
+        resp = self.app.get(
+            '/orders/98c876d9-aaac-44e4-8ea8-441932962b05X',
+            expect_errors=True
+        )
+        self.assertEqual(404, resp.status_int)
+
     def test_delete_call_on_non_existant_order_should_give_404(self):
         bogus_uuid = uuid.uuid4()
         resp = self.app.delete(

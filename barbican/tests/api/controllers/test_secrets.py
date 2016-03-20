@@ -366,7 +366,14 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
             headers={'Accept': 'application/json'},
             expect_errors=True
         )
+        self.assertEqual(404, get_resp.status_int)
 
+    def test_returns_404_on_get_with_bad_uuid(self):
+        get_resp = self.app.get(
+            '/secrets/98c876d9-aaac-44e4-8ea8-441932962b05X',
+            headers={'Accept': 'application/json'},
+            expect_errors=True
+        )
         self.assertEqual(404, get_resp.status_int)
 
     def test_returns_406_with_get_bad_accept_header(self):
