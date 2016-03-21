@@ -102,6 +102,10 @@ class BaseContainerTestCase(base.TestCase):
         self.behaviors.delete_all_created_containers()
         super(BaseContainerTestCase, self).tearDown()
 
+    def _cleanup_all_containers(self):
+        for user_name in self.client.get_all_functional_test_user_names():
+            self.behaviors.delete_all_containers_for_user(user_name=user_name)
+
     def _create_a_secret(self):
         secret_defaults_data = {
             "name": "AES key",

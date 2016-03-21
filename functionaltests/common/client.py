@@ -101,6 +101,12 @@ class BarbicanClient(object):
             password=CONF.rbac_users.auditor_b_password,
             project_name=CONF.rbac_users.project_b)
 
+    def get_all_functional_test_user_names(self):
+        retval = []
+        for username in self._auth:
+            retval.append(username)
+        return retval
+
     def _attempt_to_stringify_content(self, content, content_tag):
         if content is None:
             return content
