@@ -1,0 +1,30 @@
+---
+prelude: >
+    This release includes significant improvements to the performance
+    of the PKCS#11 Cryptographic Plugin driver.  These changes will require
+    a data migration of any existing data stored by previous versions
+    of the PKCS#11 backend.
+issues:
+  - >
+    The service will encounter errors if you attempt to run this new release
+    using data stored by a previous version of the PKCS#11 Cryptographic Plugin
+    that has not yet been migrated for this release.  The logged errors
+    will look like
+
+        ``'P11CryptoPluginException: HSM returned response code: 0xc0L CKR_SIGNATURE_INVALID'``
+
+upgrade:
+  - >
+    If you are upgrading from previous version of barbican that uses the
+    PKCS#11 Cryptographic Plugin driver, you will need to run the migration
+    script
+
+        ``python barbican/cmd/pkcs11_migrate_kek_signatures.py``
+
+critical:
+  - >
+    If you are upgrading from previous version of barbican that uses the
+    PKCS#11 Cryptographic Plugin driver, you will need to run the migration
+    script
+
+        ``python barbican/cmd/pkcs11_migrate_kek_signatures.py``
