@@ -32,6 +32,7 @@ class BarbicanClient(object):
 
     def __init__(self, api_version='v1'):
         self.timeout = CONF.keymanager.timeout
+        self.verify_ssl = CONF.keymanager.verify_ssl
         self.api_version = api_version
         self.default_headers = {
             'Content-Type': 'application/json',
@@ -268,6 +269,7 @@ class BarbicanClient(object):
             'headers': headers,
             'data': data,
             'timeout': self.timeout,
+            'verify': self.verify_ssl,
             'params': params
         }
         if use_auth:
