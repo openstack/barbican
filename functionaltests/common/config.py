@@ -70,6 +70,7 @@ def setup_config(config_file=''):
         cfg.StrOpt('service_name', default='barbican'),
         cfg.StrOpt('region_name', default='RegionOne'),
         cfg.StrOpt('endpoint_type', default='public'),
+        cfg.IntOpt('timeout', default=10),
         cfg.StrOpt('override_url', default=''),
         cfg.StrOpt('override_url_version', default='')
     ]
