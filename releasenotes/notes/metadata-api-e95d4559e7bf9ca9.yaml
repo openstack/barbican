@@ -1,0 +1,8 @@
+---
+prelude: >
+    The Mitaka release includes a new API to add arbitrary user-defined
+    metadata to Secrets.
+upgrade:
+  - The Metadata API requires an update to the Database Schema. Existing
+    deployments that are being upgraded to Mitaka should use the
+    'barbican-manage' utility to update the schema.
