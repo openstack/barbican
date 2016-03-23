@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+from barbican.tests import utils
 from functionaltests.api.v1.behaviors import base_behaviors
 from functionaltests.api.v1.models import container_models
 
@@ -132,3 +132,22 @@ class ContainerBehaviors(base_behaviors.BaseBehaviors):
         resp = self.client.put(container_ref, user_name=user_name)
 
         return resp
+
+    def delete_all_containers_for_user(self, user_name):
+        '''Delete all of the containers for the specified user'''
+        response, containers, next_ref, prev_ref = self.get_containers(
+            user_name=user_name)
+        container_refs_to_delete = []
+        while len(containers) > 0:
+            for container in containers:
+                container_refs_to_delete.append(container.container_ref)
+            if next_ref:
+                limit, offset = utils.get_limit_and_offset_from_ref(next_ref)
+                response, containers, next_ref, prev = self.get_containers(
+                    limit=limit, offset=offset, user_name=user_name)
+            else:
+                break
+
+        for container_ref in container_refs_to_delete:
+            self.delete_container(container_ref=container_ref,
+                                  user_name=user_name)
