@@ -61,7 +61,7 @@ HTTP Status Codes
 |      | resource.                                                                   |
 +------+-----------------------------------------------------------------------------+
 | 403  | Forbidden. The user has been authenticated, but is not authorized to        |
-|      | retrieve secret metadata. This can be based on the the user's role.         |
+|      | retrieve secret metadata. This can be based on the user's role.             |
 +------+-----------------------------------------------------------------------------+
 | 404  | Not Found                                                                   |
 +------+-----------------------------------------------------------------------------+
@@ -128,7 +128,7 @@ HTTP Status Codes
 |      | resource.                                                                   |
 +------+-----------------------------------------------------------------------------+
 | 403  | Forbidden. The user has been authenticated, but is not authorized to        |
-|      | create secret metadata. This can be based on the the user's role.           |
+|      | create secret metadata. This can be based on the user's role.               |
 +------+-----------------------------------------------------------------------------+
 
 .. _get_secret_metadatum:
@@ -171,7 +171,7 @@ HTTP Status Codes
 |      | resource                                                                    |
 +------+-----------------------------------------------------------------------------+
 | 403  | Forbidden. The user has been authenticated, but is not authorized to        |
-|      | retrieve secret metadata. This can be based on the the user's role.         |
+|      | retrieve secret metadata. This can be based on the user's role.             |
 +------+-----------------------------------------------------------------------------+
 | 404  | Not Found                                                                   |
 +------+-----------------------------------------------------------------------------+
@@ -228,7 +228,7 @@ HTTP Status Codes
 |      | resource.                                                                   |
 +------+-----------------------------------------------------------------------------+
 | 403  | Forbidden. The user has been authenticated, but is not authorized to        |
-|      | create secret metadata. This can be based on the the user's role.           |
+|      | create secret metadata. This can be based on the user's role.               |
 +------+-----------------------------------------------------------------------------+
 | 409  | Conflict. The provided metadata key already exists.                         |
 +------+-----------------------------------------------------------------------------+
@@ -286,7 +286,7 @@ HTTP Status Codes
 |      | resource.                                                                   |
 +------+-----------------------------------------------------------------------------+
 | 403  | Forbidden. The user has been authenticated, but is not authorized to        |
-|      | update secret metadata. This can be based on the the user's role.           |
+|      | update secret metadata. This can be based on the user's role.               |
 +------+-----------------------------------------------------------------------------+
 | 404  | Not Found                                                                   |
 +------+-----------------------------------------------------------------------------+
@@ -326,7 +326,7 @@ HTTP Status Codes
 |      | resource.                                                                   |
 +------+-----------------------------------------------------------------------------+
 | 403  | Forbidden. The user has been authenticated, but is not authorized to        |
-|      | delete secret metdata. This can be based on the the user's role.            |
+|      | delete secret metdata. This can be based on the user's role.                |
 +------+-----------------------------------------------------------------------------+
 | 404  | Not Found                                                                   |
 +------+-----------------------------------------------------------------------------+

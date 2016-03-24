@@ -10,7 +10,7 @@ If you need assistance with getting set up, please reference the
 What is a Consumer?
 ###################
 
-A consumer is a way to to register as an interested party for a container. All of the registered
+A consumer is a way to register as an interested party for a container. All of the registered
 consumers can be viewed by performing a GET on the {container_ref}/consumers. The idea
 being that before a container is deleted all consumers should be notified of the delete.
 

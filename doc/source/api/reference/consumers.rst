@@ -200,14 +200,14 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | Code | Description                                                                 |
 +======+=============================================================================+
-| 200  | OK                                              |
+| 200  | OK                                                                          |
 +------+-----------------------------------------------------------------------------+
 | 400  | Bad Request                                                                 |
 +------+-----------------------------------------------------------------------------+
 | 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource |
 +------+-----------------------------------------------------------------------------+
 | 403  | Forbidden.  The user has been authenticated, but is not authorized to       |
-|      | create a consumer. This can be based on the the user's role or the            |
+|      | create a consumer. This can be based on the user's role or the              |
 |      | project's quota.                                                            |
 +------+-----------------------------------------------------------------------------+
 

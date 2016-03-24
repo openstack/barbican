@@ -741,7 +741,7 @@ class SecretStoreMetadatumRepo(BaseRepo):
     """
 
     def save(self, metadata, secret_model):
-        """Saves the the specified metadata for the secret.
+        """Saves the specified metadata for the secret.
 
         :raises NotFound if entity does not exist.
         """
@@ -788,7 +788,7 @@ class SecretUserMetadatumRepo(BaseRepo):
     """
 
     def create_replace_user_metadata(self, secret_id, metadata):
-        """Creates or replaces the the specified metadata for the secret."""
+        """Creates or replaces the specified metadata for the secret."""
         now = timeutils.utcnow()
 
         session = get_session()
@@ -1005,7 +1005,7 @@ class OrderPluginMetadatumRepo(BaseRepo):
     """
 
     def save(self, metadata, order_model):
-        """Saves the the specified metadata for the order.
+        """Saves the specified metadata for the order.
 
         :raises NotFound if entity does not exist.
         """
@@ -1058,7 +1058,7 @@ class OrderBarbicanMetadatumRepo(BaseRepo):
     """
 
     def save(self, metadata, order_model):
-        """Saves the the specified metadata for the order.
+        """Saves the specified metadata for the order.
 
         :raises NotFound if entity does not exist.
         """
@@ -1593,7 +1593,7 @@ class CertificateAuthorityMetadatumRepo(BaseRepo):
     """
 
     def save(self, metadata, ca_model):
-        """Saves the the specified metadata for the CA.
+        """Saves the specified metadata for the CA.
 
         :raises NotFound if entity does not exist.
         """

@@ -318,7 +318,7 @@ def _store_secret_and_datum(
 def _indicate_bind_completed(kek_meta_dto, kek_datum):
     """Updates the supplied kek_datum instance
 
-    Updates the the kek_datum per the contents of the supplied
+    Updates the kek_datum per the contents of the supplied
     kek_meta_dto instance. This function is typically used once plugins
     have had a chance to bind kek_meta_dto to their crypto systems.
 
