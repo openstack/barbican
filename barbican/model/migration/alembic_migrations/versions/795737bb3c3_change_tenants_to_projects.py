@@ -75,4 +75,7 @@ def upgrade():
     # ---- Update orders table:
 
     _change_fk_to_project(
-        ctx, con, 'orders', 'orders_ibfk_1', 'orders_project_fk')
+        ctx, con, 'orders', 'orders_ibfk_2', 'orders_project_fk')
+
+    op.create_foreign_key('orders_ibfk_2', 'orders', 'containers',
+                          ['container_id'], ['id'])
