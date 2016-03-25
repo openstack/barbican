@@ -502,8 +502,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
     def _map_type_ss_to_kmip(self, object_type):
         """Map SecretType to KMIP type enum
 
-        Returns None if the type is not supported. The KMIP plugin only
-        supports symmetric and asymmetric keys for now.
+        Returns None if the type is not supported.
         :param object_type: SecretType enum value
         :returns: KMIP type enums if supported, None if not supported
         """
