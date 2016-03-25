@@ -16,7 +16,7 @@ import sqlalchemy as sa
 
 def upgrade():
     op.alter_column(
-        'ContainerConsumerMetadatum',
+        'container_consumer_metadata',
         'URL',
         type_=sa.String(length=255)
     )
