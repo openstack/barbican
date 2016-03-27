@@ -459,7 +459,7 @@ class CertificatePluginBase(object):
         """Deletes a subordinate CA
 
         Like the create_ca call, this should only be made if the plugin
-        returns Ture for supports_create_ca()
+        returns True for supports_create_ca()
 
         :param ca_id: id for the CA as specified by the plugin
         :return: None
