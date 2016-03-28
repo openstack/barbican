@@ -836,7 +836,7 @@ class TransportKey(BASE, SoftDeleteMixIn, ModelBase):
     transport_key = sa.Column(sa.Text, nullable=False)
 
     def __init__(self, plugin_name, transport_key):
-        """Creates transport key entity ."""
+        """Creates transport key entity."""
         super(TransportKey, self).__init__()
 
         msg = u._("Must supply non-None {0} argument for TransportKey entry.")
@@ -883,7 +883,7 @@ class CertificateAuthority(BASE, ModelBase):
     )
 
     def __init__(self, parsed_ca_in):
-        """Creates certificate authority entity ."""
+        """Creates certificate authority entity."""
         super(CertificateAuthority, self).__init__()
 
         msg = u._("Must supply Non-None {0} argument "
