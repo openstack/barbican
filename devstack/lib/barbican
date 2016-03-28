@@ -119,6 +119,9 @@ function configure_barbican {
     # Set the database connection url
     iniset $BARBICAN_CONF DEFAULT sql_connection `database_connection_url barbican`
 
+    # Disable auto-migration when deploying Barbican
+    iniset $BARBICAN_CONF DEFAULT db_auto_create False
+
     # Increase default request buffer size, keystone auth PKI tokens can be very long
     iniset $BARBICAN_CONF_DIR/vassals/barbican-api.ini uwsgi buffer-size 65535
 
@@ -152,6 +155,8 @@ function init_barbican {
     rm -f $BARBICAN_AUTH_CACHE_DIR/*
 
     recreate_database barbican utf8
+
+    $BARBICAN_BIN_DIR/barbican-manage db upgrade -v head
 }
 
 # install_barbican - Collect source and prepare
