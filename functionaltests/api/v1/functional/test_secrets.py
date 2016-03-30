@@ -185,6 +185,21 @@ class SecretsTestCase(base.TestCase):
         resp = self.behaviors.get_secret_metadata('not_a_uuid')
         self.assertEqual(resp.status_code, 404)
 
+    @testcase.attr('negative')
+    def test_secret_get_secret_payload_doesnt_exist(self):
+        """GET a non-existent payload.
+
+        Should return a 404.
+        """
+        test_model = secret_models.SecretModel(
+            **self.default_secret_create_all_none_data)
+
+        resp, secret_ref = self.behaviors.create_secret(test_model)
+        self.assertEqual(resp.status_code, 201)
+
+        resp = self.behaviors.get_secret(secret_ref, 'text/plain')
+        self.assertEqual(resp.status_code, 404)
+
     @testcase.attr('positive')
     def test_secret_get_payload_no_accept_header(self):
         """GET a secret payload, do not pass in accept header.
