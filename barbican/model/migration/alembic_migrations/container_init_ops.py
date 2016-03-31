@@ -49,7 +49,7 @@ def upgrade():
         sa.Column('status', sa.String(length=20), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=True),
         sa.Column('container_id', sa.String(length=36), nullable=False),
-        sa.Column('URL', sa.String(length=500), nullable=True),
+        sa.Column('URL', sa.String(length=255), nullable=True),
         sa.Column('data_hash', sa.CHAR(64), nullable=True),
         sa.ForeignKeyConstraint(['container_id'], ['containers.id'],),
         sa.PrimaryKeyConstraint('id'),
