@@ -113,6 +113,9 @@ class ProjectQuotasPagingTestCase(base.PagingTestCase):
     def setUp(self):
         super(ProjectQuotasPagingTestCase, self).setUp()
         self.behaviors = quota_behaviors.QuotaBehaviors(self.client)
+        resp, project_quotas_list, _, _ =\
+            self.behaviors.get_project_quotas_list(user_name=service_admin)
+        self.original_project_quota_count = len(project_quotas_list)
 
     def tearDown(self):
         self.behaviors.delete_all_created_quotas()
@@ -143,7 +146,8 @@ class ProjectQuotasPagingTestCase(base.PagingTestCase):
             self.behaviors.get_project_quotas_list(user_name=service_admin)
 
         self.assertEqual(200, resp.status_code)
-        self.assertEqual([], project_quotas_list)
+        self.assertEqual(self.original_project_quota_count,
+                         len(project_quotas_list))
 
     def test_get_project_quota_list_one(self):
         """Get list of all project quotas, when there is one"""
@@ -159,7 +163,8 @@ class ProjectQuotasPagingTestCase(base.PagingTestCase):
             self.behaviors.get_project_quotas_list(user_name=service_admin)
 
         self.assertEqual(200, resp.status_code)
-        self.assertEqual(1, len(project_quotas_list))
+        self.assertEqual(self.original_project_quota_count + 1,
+                         len(project_quotas_list))
 
     def test_get_project_quota_list_two(self):
         """Get list of all project quotas, when there is one"""
@@ -179,4 +184,5 @@ class ProjectQuotasPagingTestCase(base.PagingTestCase):
             self.behaviors.get_project_quotas_list(user_name=service_admin)
 
         self.assertEqual(200, resp.status_code)
-        self.assertEqual(2, len(project_quotas_list))
+        self.assertEqual(self.original_project_quota_count + 2,
+                         len(project_quotas_list))
