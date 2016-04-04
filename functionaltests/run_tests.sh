@@ -28,11 +28,17 @@ testr run --subunit | subunit-trace --no-failure-debug -f
 retval=$?
 testr slowest
 
+coverage combine
+coverage report -m
+
 # run the tests in parallel
 SKIP=^\(\?\!\.\*\(ProjectQuotasPagingTestCase\|QuotaEnforcementTestCase\|ListingCAsTestCase\|ProjectCATestCase\|GlobalPreferredCATestCase\|CertificateAuthoritiesTestCase\)\)
 testr init
 testr run $SKIP --parallel --subunit | subunit-trace --no-failure-debug -f
 retval=$(($retval || $?))
 testr slowest
+
+coverage combine
+coverage report -m
 
 exit $retval
