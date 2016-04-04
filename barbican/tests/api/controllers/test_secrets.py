@@ -368,6 +368,18 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
         )
         self.assertEqual(404, get_resp.status_int)
 
+    def test_returns_404_on_get_payload_when_no_payload(self):
+        resp, secret_uuid = create_secret(self.app)
+        headers = {
+            'Accept': 'text/plain',
+        }
+        get_resp = self.app.get(
+            '/secrets/{0}/payload'.format(secret_uuid),
+            headers=headers,
+            expect_errors=True
+        )
+        self.assertEqual(404, get_resp.status_int)
+
     def test_returns_404_on_get_with_bad_uuid(self):
         get_resp = self.app.get(
             '/secrets/98c876d9-aaac-44e4-8ea8-441932962b05X',

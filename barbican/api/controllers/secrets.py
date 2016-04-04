@@ -39,6 +39,11 @@ def _secret_not_found():
                          'another castle.'))
 
 
+def _secret_payload_not_found():
+    """Throw exception indicating secret's payload is not found."""
+    pecan.abort(404, u._('Not Found. Sorry but your secret has no payload.'))
+
+
 def _secret_already_has_data():
     """Throw exception that the secret already has data."""
     pecan.abort(409, u._("Secret already has data, cannot modify it."))
@@ -148,6 +153,11 @@ class SecretController(controllers.ACLMixin):
                                 'application/octet-stream')
         pecan.override_template('', accept_header)
 
+        # check if payload exists before proceeding
+        encrypted = getattr(secret, 'encrypted_data')
+        if not encrypted:
+            _secret_payload_not_found()
+
         twsk = kwargs.get('trans_wrapped_session_key', None)
         transport_key = None
 
@@ -178,11 +188,10 @@ class SecretController(controllers.ACLMixin):
     def payload(self, external_project_id, **kwargs):
         if pecan.request.method != 'GET':
             pecan.abort(405)
-        resp = self._on_get_secret_payload(
-            self.secret,
-            external_project_id,
-            **kwargs
-        )
+
+        resp = self._on_get_secret_payload(self.secret,
+                                           external_project_id,
+                                           **kwargs)
 
         LOG.info(u._LI('Retrieved secret payload for project: %s'),
                  external_project_id)
