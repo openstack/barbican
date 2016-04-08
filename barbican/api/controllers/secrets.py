@@ -154,8 +154,7 @@ class SecretController(controllers.ACLMixin):
         pecan.override_template('', accept_header)
 
         # check if payload exists before proceeding
-        encrypted = getattr(secret, 'encrypted_data')
-        if not encrypted:
+        if not secret.encrypted_data and not secret.secret_store_metadata:
             _secret_payload_not_found()
 
         twsk = kwargs.get('trans_wrapped_session_key', None)
