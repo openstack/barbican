@@ -45,3 +45,34 @@ class WhenTestingVersionsResource(utils.BarbicanAPIBaseTestCase):
         self.assertIn('v1', v1_info['id'])
         self.assertEqual(1, len(v1_info['media-types']))
         self.assertEqual('application/json', v1_info['media-types'][0]['base'])
+
+
+class WhenTestingV1Resource(utils.BarbicanAPIBaseTestCase):
+
+    def setUp(self):
+        super(WhenTestingV1Resource, self).setUp()
+        # For V1Controller, '/' URI maps to /v1 resource path
+        self.root_controller = controllers.versions.V1Controller
+
+    def test_get_for_json_accept_header(self):
+        headers = {'Accept': 'application/json'}
+        resp = self.app.get('/', headers=headers)  # / refers to /v1 path
+        self.assertEqual(200, resp.status_int)
+
+    def test_get_for_json_home_accept_header(self):
+        headers = {'Accept': 'application/json-home'}
+        resp = self.app.get('/', headers=headers)  # / refers to /v1 path
+        self.assertEqual(200, resp.status_int)
+
+    def test_get_response_should_return_version_json(self):
+        resp = self.app.get('/')  # / refers to /v1 path
+        self.assertEqual(200, resp.status_int)
+
+        v1_info = resp.json['version']
+
+        # NOTE(jaosorior): I used assertIn instead of assertEqual because we
+        # might start using decimal numbers in the future. So when that happens
+        # this test will still be valid.
+        self.assertIn('v1', v1_info['id'])
+        self.assertEqual(1, len(v1_info['media-types']))
+        self.assertEqual('application/json', v1_info['media-types'][0]['base'])

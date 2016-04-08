@@ -104,6 +104,7 @@ class V1Controller(BaseVersionController):
     @utils.allow_certain_content_types(MIME_TYPE_JSON, MIME_TYPE_JSON_HOME)
     @controllers.handle_exceptions(u._('Version retrieval'))
     def on_get(self):
+        pecan.core.override_template('json')
         return {'version': self.get_version_info(pecan.request)}
 
 
