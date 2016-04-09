@@ -91,7 +91,6 @@ def setup_database_engine_and_factory():
     global sa_logger, _SESSION_FACTORY, _ENGINE
 
     LOG.info('Setting up database engine and session factory')
-    LOG.debug('Sql connection = %s', CONF.sql_connection)
     if CONF.debug:
         sa_logger = logging.getLogger('sqlalchemy.engine')
         sa_logger.setLevel(logging.DEBUG)
@@ -215,7 +214,8 @@ def is_db_connection_error(args):
 
 
 def _create_engine(connection, **engine_args):
-    LOG.debug("Sql connection: %s; Args: %s", connection, engine_args)
+    LOG.debug('Sql connection: please check "sql_connection" property in '
+              'barbican configuration file; Args: %s', engine_args)
 
     engine = sqlalchemy.create_engine(connection, **engine_args)
 
