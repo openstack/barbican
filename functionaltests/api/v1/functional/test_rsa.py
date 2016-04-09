@@ -16,6 +16,7 @@ import base64
 
 from Crypto.PublicKey import RSA
 from OpenSSL import crypto
+import testtools
 from testtools import testcase
 
 from barbican.tests import keys
@@ -218,6 +219,8 @@ class RSATestCase(base.TestCase):
         self.verify_container_keys_equal(secrets)
 
     @testcase.attr('positive')
+    @testtools.skipIf(utils.is_kmip_enabled(),
+                      "PyKMIP does not support this operation")
     def test_rsa_store_and_get_container_with_passphrase(self):
         """Post and Get for container with passphrase"""
         public_ref = self.store_public_key()
@@ -238,6 +241,8 @@ class RSATestCase(base.TestCase):
         self.verify_container_keys_valid(secrets)
 
     @testcase.attr('positive')
+    @testtools.skipIf(utils.is_kmip_enabled(),
+                      "PyKMIP does not support this operation")
     def test_rsa_order_container_with_passphrase(self):
         """Post an order for a container with a passphrase"""
         order_ref = self.order_container(with_passphrase=True)
@@ -268,6 +273,8 @@ class RSATestCase(base.TestCase):
         self.verify_certificate_order_status(order_status)
 
     @testcase.attr('positive')
+    @testtools.skipIf(utils.is_kmip_enabled(),
+                      "PyKMIP does not support this operation")
     def test_rsa_order_certificate_from_ordered_container_with_pass(self):
         """Post an order for a certificate"""
         order_ref = self.order_container(with_passphrase=True)
@@ -293,6 +300,8 @@ class RSATestCase(base.TestCase):
         self.verify_certificate_order_status(order_status)
 
     @testcase.attr('positive')
+    @testtools.skipIf(utils.is_kmip_enabled(),
+                      "PyKMIP does not support this operation")
     def test_rsa_order_certificate_from_stored_container_with_pass(self):
         """Post an order for a certificate"""
         public_ref = self.store_public_key()

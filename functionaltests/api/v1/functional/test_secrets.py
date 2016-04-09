@@ -17,6 +17,7 @@ import base64
 import binascii
 import json
 import sys
+import testtools
 import time
 
 from testtools import testcase
@@ -580,6 +581,8 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(resp.status_code, 400)
 
     @testcase.attr('positive', 'non-standard-algorithm')
+    @testtools.skipIf(utils.is_kmip_enabled(),
+                      "KMIP does not support invalid algorithms")
     def test_secret_create_valid_algorithms(self):
         """Creates secrets with various valid algorithms."""
         algorithm = 'invalid'
@@ -603,6 +606,8 @@ class SecretsTestCase(base.TestCase):
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(resp.status_code, 400)
 
+    @testtools.skipIf(utils.is_kmip_enabled(),
+                      "KMIP does not support non-standard bit lengths")
     @utils.parameterized_dataset({
         'sixteen': [16],
         'fifteen': [15],
@@ -624,8 +629,7 @@ class SecretsTestCase(base.TestCase):
     @utils.parameterized_dataset({
         '128': [128],
         '192': [192],
-        '256': [256],
-        '512': [512]
+        '256': [256]
     })
     @testcase.attr('positive')
     def test_secret_create_with_valid_bit_length(self, bit_length):

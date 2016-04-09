@@ -14,6 +14,7 @@
 # limitations under the License.
 import datetime
 import functools
+import os
 from os import path
 import time
 import types
@@ -309,7 +310,8 @@ def construct_new_test_function(original_func, name, build_params):
         six.get_function_code(original_func),
         six.get_function_globals(original_func),
         name=name,
-        argdefs=six.get_function_defaults(original_func)
+        argdefs=six.get_function_defaults(original_func),
+        closure=six.get_function_closure(original_func)
     )
 
     for key, val in original_func.__dict__.items():
@@ -476,6 +478,10 @@ def is_private_key_valid(expected, observed):
 def is_public_key_valid(expected, observed):
     # TODO(alee) fill in the relevant test here
     return True
+
+
+def is_kmip_enabled():
+    return os.environ.get('KMIP_PLUGIN_ENABLED') is not None
 
 
 class DummyClassForTesting(object):
