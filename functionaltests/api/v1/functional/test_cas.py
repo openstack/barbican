@@ -72,7 +72,7 @@ def depends_on_ca_plugins(*plugins):
             plugins_enabled = (is_plugin_enabled(p) for p in plugins)
             if not all(plugins_enabled):
                 instance.skipTest("The following plugin(s) need to be "
-                                  "enabled: ".format(plugins))
+                                  "enabled: {}".format(plugins))
             function(instance, *args, **kwargs)
         return wrapper
     return depends_on_ca_plugins_decorator
