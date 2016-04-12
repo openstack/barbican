@@ -11,6 +11,7 @@
 #  under the License.
 import collections
 
+from oslo_policy import policy
 import pecan
 from webob import exc
 
@@ -103,6 +104,13 @@ def handle_exceptions(operation_name=u._('System')):
             except exc.HTTPError:
                 LOG.exception(u._LE('Webob error seen'))
                 raise  # Already converted to Webob exception, just reraise
+            # In case PolicyNotAuthorized, we do not want to expose payload by
+            # logging exception, so just LOG.error
+            except policy.PolicyNotAuthorized as pna:
+                status, message = api.generate_safe_exception_message(
+                    operation_name, pna)
+                LOG.error(message)
+                pecan.abort(status, message)
             except Exception as e:
                 # In case intervening modules have disabled logging.
                 LOG.logger.disabled = False

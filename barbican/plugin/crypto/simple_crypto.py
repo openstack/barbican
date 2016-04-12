@@ -32,7 +32,7 @@ simple_crypto_plugin_opts = [
     cfg.StrOpt('kek',
                default=b'dGhpcnR5X3R3b19ieXRlX2tleWJsYWhibGFoYmxhaGg=',
                help=u._('Key encryption key to be used by Simple Crypto '
-                        'Plugin'))
+                        'Plugin'), secret=True)
 ]
 CONF.register_group(simple_crypto_plugin_group)
 CONF.register_opts(simple_crypto_plugin_opts, group=simple_crypto_plugin_group)
