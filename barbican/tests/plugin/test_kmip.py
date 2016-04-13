@@ -357,7 +357,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.AES,
                                         128, 'mode')
         self.assertRaises(
-            kss.KMIPSecretStoreError,
+            secret_store.SecretAlgorithmNotSupportedException,
             self.secret_store.generate_asymmetric_key,
             key_spec)
 
@@ -365,7 +365,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA,
                                         2048, 'mode', 'passphrase')
         self.assertRaises(
-            kss.KMIPSecretStoreError,
+            kss.KMIPSecretStoreActionNotSupported,
             self.secret_store.generate_asymmetric_key,
             key_spec)
 
