@@ -395,7 +395,7 @@ class BaseCertificateRequestsTestCase(database_utils.RepositoryTestCase):
         """Mock the certificate event plugin manager."""
         self.cert_event_plugin_patcher = mock.patch(
             'barbican.plugin.interface.certificate_manager'
-            '.EVENT_PLUGIN_MANAGER'
+            '._EVENT_PLUGIN_MANAGER'
         )
         self.cert_event_plugin_patcher.start()
 
@@ -690,7 +690,7 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
 
         self._verify_issue_certificate_plugins_called()
 
-        epm = self.cert_event_plugin_patcher.target.EVENT_PLUGIN_MANAGER
+        epm = self.cert_event_plugin_patcher.target._EVENT_PLUGIN_MANAGER
         epm.notify_ca_is_unavailable.assert_called_once_with(
             self.project.id,
             order_ref,
@@ -775,7 +775,7 @@ class WhenCheckingCertificateRequests(BaseCertificateRequestsTestCase):
 
         self._verify_check_certificate_plugins_called()
 
-        epm = self.cert_event_plugin_patcher.target.EVENT_PLUGIN_MANAGER
+        epm = self.cert_event_plugin_patcher.target._EVENT_PLUGIN_MANAGER
         epm.notify_ca_is_unavailable.assert_called_once_with(
             self.project.id,
             order_ref,
