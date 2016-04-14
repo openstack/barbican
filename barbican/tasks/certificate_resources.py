@@ -516,7 +516,7 @@ def _get_container_from_order_meta(order_model, project_model):
 
 def _notify_ca_unavailable(order_model, result):
     """Notify observer(s) that the CA was unavailable at this time."""
-    cert.EVENT_PLUGIN_MANAGER.notify_ca_is_unavailable(
+    cert.get_event_plugin_manager().notify_ca_is_unavailable(
         order_model.project_id,
         hrefs.convert_order_to_href(order_model.id),
         result.status_message,

@@ -38,7 +38,7 @@ class WhenTestingCertificateEventPluginManager(testtools.TestCase):
         self.plugin_name = common_utils.generate_fullname_for(
             self.plugin_returned)
         self.plugin_loaded = mock.MagicMock(obj=self.plugin_returned)
-        self.manager = cm.EVENT_PLUGIN_MANAGER
+        self.manager = cm.get_event_plugin_manager()
         self.manager.extensions = [self.plugin_loaded]
 
     def test_get_plugin_by_name(self):

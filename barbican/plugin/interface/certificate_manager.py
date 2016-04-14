@@ -105,6 +105,10 @@ INFO_INTERMEDIATES = "intermediates"
 INFO_EXPIRATION = "expiration"
 
 
+# Singleton to avoid loading the CertificateEventManager plugins more than once
+_EVENT_PLUGIN_MANAGER = None
+
+
 class CertificateRequestType(object):
     """Constants to define the certificate request type."""
     CUSTOM_REQUEST = "custom"
@@ -702,8 +706,8 @@ class _CertificateEventPluginManager(named.NamedExtensionManager,
 
     Each time this class is initialized it will load a new instance
     of each enabled plugin. This is undesirable, so rather than initializing a
-    new instance of this class use the EVENT_PLUGIN_MANAGER at the module
-    level.
+    new instance of this class use the get_event_plugin_manager function
+    at the module level.
     """
     def __init__(self, conf=CONF, invoke_args=(), invoke_kwargs={}):
         super(_CertificateEventPluginManager, self).__init__(
@@ -750,4 +754,9 @@ class _CertificateEventPluginManager(named.NamedExtensionManager,
             getattr(plugin, method)(*args, **kwargs)
 
 
-EVENT_PLUGIN_MANAGER = _CertificateEventPluginManager()
+def get_event_plugin_manager():
+    global _EVENT_PLUGIN_MANAGER
+    if _EVENT_PLUGIN_MANAGER:
+        return _EVENT_PLUGIN_MANAGER
+    _EVENT_PLUGIN_MANAGER = _CertificateEventPluginManager()
+    return _EVENT_PLUGIN_MANAGER
