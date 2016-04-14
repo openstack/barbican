@@ -268,7 +268,7 @@ class MultipleChoices(BarbicanException):
 class LimitExceeded(BarbicanHTTPException):
     message = u._("The request returned a 413 Request Entity Too Large. This "
                   "generally means that rate limiting or a quota threshold "
-                  "was breached.\n\nThe response body:\n%(body)s")
+                  "was breached.")
     client_message = u._("Provided information too large to process")
     status_code = 413
 

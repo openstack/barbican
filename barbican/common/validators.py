@@ -860,8 +860,8 @@ class ContainerValidator(ValidatorBase):
         return json_data
 
     def _validate_rsa(self, secret_refs_names, schema_name):
-        required_names = set(['public_key', 'private_key'])
-        optional_names = set(['private_key_passphrase'])
+        required_names = {'public_key', 'private_key'}
+        optional_names = {'private_key_passphrase'}
         contains_unsupported_names = self._contains_unsupported_names(
             secret_refs_names, required_names | optional_names)
         self._assert_validity(
@@ -880,9 +880,9 @@ class ContainerValidator(ValidatorBase):
             "secret_refs")
 
     def _validate_certificate(self, secret_refs_names, schema_name):
-        required_names = set(['certificate'])
-        optional_names = set(['private_key', 'private_key_passphrase',
-                              'intermediates'])
+        required_names = {'certificate'}
+        optional_names = {'private_key', 'private_key_passphrase',
+                          'intermediates'}
         contains_unsupported_names = self._contains_unsupported_names(
             secret_refs_names, required_names.union(optional_names))
         self._assert_validity(

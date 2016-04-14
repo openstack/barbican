@@ -176,7 +176,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
         self.assertFalse(resp.json['read']['project-access'])
         self.assertIsNotNone(resp.json['read']['created'])
         self.assertIsNotNone(resp.json['read']['updated'])
-        self.assertEqual(set(['u1', 'u3']), set(resp.json['read']['users']))
+        self.assertEqual({'u1', 'u3'}, set(resp.json['read']['users']))
 
     def test_get_secret_acls_with_project_access_data(self):
         """Read existing acls for acl when only project-access flag is set."""
@@ -272,7 +272,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
         acl_map = _get_acl_map(secret_uuid, is_secret=True)
         self.assertTrue(acl_map['read']['project_access'])
         self.assertNotIn('u2', acl_map['read'].to_dict_fields()['users'])
-        self.assertEqual(set(['u1', 'u3', 'u5']),
+        self.assertEqual({'u1', 'u3', 'u5'},
                          set(acl_map['read'].to_dict_fields()['users']))
 
     def test_full_update_secret_acls_with_read_users_only(self):
@@ -305,7 +305,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
         # make sure 'list' operation is no longer after full update
         self.assertNotIn('list', acl_map)
         self.assertTrue(acl_map['read']['project_access'])
-        self.assertEqual(set(['u1', 'u3', 'u5']),
+        self.assertEqual({'u1', 'u3', 'u5'},
                          set(acl_map['read'].to_dict_fields()['users']))
         self.assertNotIn('u2', acl_map['read'].to_dict_fields()['users'])
 
@@ -336,10 +336,10 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
         acl_map = _get_acl_map(secret_uuid, is_secret=True)
         # For partial update, existing other operation ACL is not tocuhed.
         self.assertIn('list', acl_map)
-        self.assertEqual(set(['u1', 'u2']),
+        self.assertEqual({'u1', 'u2'},
                          set(acl_map['list'].to_dict_fields()['users']))
         self.assertTrue(acl_map['read']['project_access'])
-        self.assertEqual(set(['u1', 'u3', 'u5']),
+        self.assertEqual({'u1', 'u3', 'u5'},
                          set(acl_map['read'].to_dict_fields()['users']))
 
     def test_partial_update_secret_acls_when_no_acls_defined_should_pass(self):
@@ -412,7 +412,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
                       resp.json['acl_ref'])
         acl_map = _get_acl_map(secret_uuid, is_secret=True)
         self.assertTrue(acl_map['read']['project_access'])
-        self.assertEqual(set(['u1', 'u2']),
+        self.assertEqual({'u1', 'u2'},
                          set(acl_map['read'].to_dict_fields()['users']))
 
     def test_delete_secret_acls_with_valid_secret_id(self):
@@ -546,7 +546,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
         acl_map = _get_acl_map(container_id, is_secret=False)
         # Check project_access is True when not provided
         self.assertTrue(acl_map['read']['project_access'])
-        self.assertEqual(set(['u1', 'u2']),
+        self.assertEqual({'u1', 'u2'},
                          set(acl_map['read'].to_dict_fields()['users']))
 
     def test_who_can_create_new_container_acls(self):
@@ -647,7 +647,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
         self.assertFalse(resp.json['read']['project-access'])
         self.assertIsNotNone(resp.json['read']['created'])
         self.assertIsNotNone(resp.json['read']['updated'])
-        self.assertEqual(set(['u1', 'u3']), set(resp.json['read']['users']))
+        self.assertEqual({'u1', 'u3'}, set(resp.json['read']['users']))
 
     def test_get_container_acls_with_project_access_data(self):
         """Read existing acls for acl when only project-access flag is set."""
@@ -775,7 +775,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
         # make sure 'list' operation is no longer after full update
         self.assertNotIn('list', acl_map)
         self.assertTrue(acl_map['read']['project_access'])
-        self.assertEqual(set(['u1', 'u3', 'u5']),
+        self.assertEqual({'u1', 'u3', 'u5'},
                          set(acl_map['read'].to_dict_fields()['users']))
         self.assertNotIn('u2', acl_map['read'].to_dict_fields()['users'])
 
@@ -806,10 +806,10 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
         acl_map = _get_acl_map(container_id, is_secret=False)
         # For partial update, existing other operation ACL is not tocuhed.
         self.assertIn('list', acl_map)
-        self.assertEqual(set(['u1', 'u2']),
+        self.assertEqual({'u1', 'u2'},
                          set(acl_map['list'].to_dict_fields()['users']))
         self.assertTrue(acl_map['read']['project_access'])
-        self.assertEqual(set(['u1', 'u3', 'u5']),
+        self.assertEqual({'u1', 'u3', 'u5'},
                          set(acl_map['read'].to_dict_fields()['users']))
 
     def test_partial_update_container_acls_when_no_acls_defined(self):
@@ -847,7 +847,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
                       resp.json['acl_ref'])
         acl_map = _get_acl_map(container_id, is_secret=False)
         self.assertTrue(acl_map['read']['project_access'])
-        self.assertEqual(set(['u1', 'u2']),
+        self.assertEqual({'u1', 'u2'},
                          set(acl_map['read'].to_dict_fields()['users']))
 
     def test_who_can_update_container_acls(self):
