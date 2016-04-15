@@ -833,6 +833,26 @@ class WhenTestingContainerValidator(utils.BaseTestCase):
             container_req,
         )
 
+    def test_ensure_secret_ref_starts_with_request_hostname(self):
+        # Attempt to add some bogus secret refs.
+        secret_refs = [
+            {
+                'name': 'pass_malicious_hostname',
+                'secret_ref': 'http://www.malicious.com:8080/spoofForToken?'
+                'dummy=http://localhost:9311'
+            },
+        ]
+        container_req = {
+            'name': 'test-container',
+            'type': 'generic',
+            'secret_refs': secret_refs
+        }
+        self.assertRaises(
+            excep.UnsupportedField,
+            self.validator.validate,
+            container_req,
+        )
+
 
 class WhenTestingRSAContainerValidator(utils.BaseTestCase):
 
