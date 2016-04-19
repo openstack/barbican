@@ -3,7 +3,7 @@
 set -o pipefail
 
 TESTRARGS=$1
-python setup.py testr --testr-args="--subunit $TESTRARGS" | subunit-trace --no-failure-debug -f
+python setup.py testr --coverage --testr-args="--subunit $TESTRARGS" | subunit-trace --no-failure-debug -f
 retval=$?
 echo -e "\nSlowest Tests:\n"
 testr slowest

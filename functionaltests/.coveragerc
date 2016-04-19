@@ -1,0 +1,12 @@
+[run]
+branch = True
+source = ../barbican
+omit = ../barbican/tests/*,
+       ../barbican/model/migration/alembic_migrations/versions/*,
+       ../barbican/plugin/dogtag.py, ../barbican/plugin/symantec.py
+
+[report]
+ignore_errors = True
+exclude_lines =
+    pragma: no cover
+    @abc.abstractmethod
