@@ -93,8 +93,8 @@ class ModelBase(object):
     """Base class for Nova and Barbican Models."""
     __table_args__ = {'mysql_engine': 'InnoDB'}
     __table_initialized__ = False
-    __protected_attributes__ = set([
-        "created_at", "updated_at", "deleted_at", "deleted"])
+    __protected_attributes__ = {
+        "created_at", "updated_at", "deleted_at", "deleted"}
 
     id = sa.Column(sa.String(36), primary_key=True,
                    default=utils.generate_uuid)
