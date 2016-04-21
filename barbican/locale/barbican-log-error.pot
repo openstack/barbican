@@ -1,21 +1,21 @@
 # Translations template for barbican.
-# Copyright (C) 2015 ORGANIZATION
+# Copyright (C) 2016 ORGANIZATION
 # This file is distributed under the same license as the barbican project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2015.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2016.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 2.0.0.dev29\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-10-22 06:26+0000\n"
+"Project-Id-Version: barbican 2.0.1.dev26\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2016-04-21 06:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.1.1\n"
+"Generated-By: Babel 2.2.0\n"
 
 #: barbican/api/__init__.py:54
 msgid "Problem reading request JSON stream."
@@ -25,7 +25,7 @@ msgstr ""
 msgid "Problem loading request JSON."
 msgstr ""
 
-#: barbican/api/controllers/__init__.py:106
+#: barbican/api/controllers/__init__.py:104
 msgid "Webob error seen"
 msgstr ""
 
@@ -41,53 +41,53 @@ msgstr ""
 msgid "Problem deleting transport_key"
 msgstr ""
 
-#: barbican/model/repositories.py:352
+#: barbican/model/repositories.py:361
 #, python-format
 msgid "Not found for %s"
 msgstr ""
 
-#: barbican/model/repositories.py:387
+#: barbican/model/repositories.py:396
 msgid "Problem saving entity for create"
 msgstr ""
 
-#: barbican/model/repositories.py:538
+#: barbican/model/repositories.py:547
 msgid "Problem finding project related entity to delete"
 msgstr ""
 
-#: barbican/model/repositories.py:575
+#: barbican/model/repositories.py:584
 #, python-format
 msgid "Problem getting Project %s"
 msgstr ""
 
-#: barbican/model/repositories.py:706
+#: barbican/model/repositories.py:709
 #, python-format
 msgid "Problem getting secret %s"
 msgstr ""
 
-#: barbican/model/repositories.py:1180
+#: barbican/model/repositories.py:1249
 #, python-format
 msgid "Problem getting container %s"
 msgstr ""
 
-#: barbican/plugin/kmip_secret_store.py:268
-#: barbican/plugin/kmip_secret_store.py:317
-#: barbican/plugin/kmip_secret_store.py:351
-#: barbican/plugin/kmip_secret_store.py:372
-#: barbican/plugin/kmip_secret_store.py:411
+#: barbican/plugin/kmip_secret_store.py:264
+#: barbican/plugin/kmip_secret_store.py:313
+#: barbican/plugin/kmip_secret_store.py:347
+#: barbican/plugin/kmip_secret_store.py:368
+#: barbican/plugin/kmip_secret_store.py:407
 msgid "Error opening or writing to client"
 msgstr ""
 
-#: barbican/plugin/kmip_secret_store.py:544
+#: barbican/plugin/kmip_secret_store.py:539
 #, python-format
 msgid "ERROR from KMIP server: %s"
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:649
+#: barbican/plugin/interface/certificate_manager.py:653
 #, python-format
 msgid "ERROR getting CA from plugin: %s"
 msgstr ""
 
-#: barbican/plugin/interface/certificate_manager.py:681
+#: barbican/plugin/interface/certificate_manager.py:685
 #, python-format
 msgid "ERROR adding CA from plugin: %s"
 msgstr ""
@@ -97,11 +97,11 @@ msgstr ""
 msgid "Problem seen creating plugin: '%s'"
 msgstr ""
 
-#: barbican/queue/retry_scheduler.py:95
+#: barbican/queue/retry_scheduler.py:96
 msgid "Problem seen processing scheduled retry tasks"
 msgstr ""
 
-#: barbican/queue/retry_scheduler.py:163
+#: barbican/queue/retry_scheduler.py:164
 #, python-format
 msgid ""
 "Problem enqueuing method '%(name)s' with args '%(args)s' and kwargs "
