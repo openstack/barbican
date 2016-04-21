@@ -15,7 +15,6 @@
 
 import base64
 import datetime
-import fnmatch
 import os
 import re
 import subprocess  # nosec
@@ -24,6 +23,7 @@ import uuid
 
 from OpenSSL import crypto
 from oslo_config import cfg
+from oslo_utils import fnmatch
 
 from barbican.common import config
 from barbican.common import utils
