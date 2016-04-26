@@ -466,12 +466,12 @@ def generate_test_uuid(tail_value=0):
 
 
 def get_symmetric_key():
-    s = "MIICdgIBADANBgkqhkiG9w=="
+    s = b"MIICdgIBADANBgkqhkiG9w=="
     return s
 
 
 def get_triple_des_key():
-    s = "AQIDBAUGBwgBAgMEBQYHCAECAwQFBgcI"
+    s = b"AQIDBAUGBwgBAgMEBQYHCAECAwQFBgcI"
     return s
 
 

@@ -425,7 +425,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
     def test_store_passphrase_secret_assert_called(self):
         key_spec = secret_store.KeySpec(None, None, None)
-        passphrase = "supersecretpassphrase"
+        passphrase = b"supersecretpassphrase"
         secret_dto = secret_store.SecretDTO(secret_store.SecretType.PASSPHRASE,
                                             base64.b64encode(passphrase),
                                             key_spec,
@@ -451,7 +451,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
     def test_store_passphrase_secret_return_value(self):
         key_spec = secret_store.KeySpec(None, None, None)
-        passphrase = "supersecretpassphrase"
+        passphrase = b"supersecretpassphrase"
         secret_dto = secret_store.SecretDTO(secret_store.SecretType.PASSPHRASE,
                                             base64.b64encode(passphrase),
                                             key_spec,
@@ -460,11 +460,11 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         return_value = self.secret_store.store_secret(secret_dto)
         expected = {kss.KMIPSecretStore.KEY_UUID: 'uuid'}
 
-        self.assertEqual(0, cmp(expected, return_value))
+        self.assertEqual(expected, return_value)
 
     def test_store_opaque_secret_assert_called(self):
         key_spec = secret_store.KeySpec(None, None, None)
-        opaque = ('\x00\x01\x02\x03\x04\x05\x06\x07')
+        opaque = (b'\x00\x01\x02\x03\x04\x05\x06\x07')
         secret_dto = secret_store.SecretDTO(secret_store.SecretType.OPAQUE,
                                             base64.b64encode(opaque),
                                             key_spec,
@@ -487,7 +487,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
     def test_store_opaque_secret_return_value(self):
         key_spec = secret_store.KeySpec(None, None, None)
-        opaque = ('\x00\x01\x02\x03\x04\x05\x06\x07')
+        opaque = (b'\x00\x01\x02\x03\x04\x05\x06\x07')
         secret_dto = secret_store.SecretDTO(secret_store.SecretType.OPAQUE,
                                             base64.b64encode(opaque),
                                             key_spec,
@@ -496,7 +496,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         return_value = self.secret_store.store_secret(secret_dto)
         expected = {kss.KMIPSecretStore.KEY_UUID: 'uuid'}
 
-        self.assertEqual(0, cmp(expected, return_value))
+        self.assertEqual(expected, return_value)
 
     @utils.parameterized_dataset({
         'private_pkcs8': [secret_store.SecretType.PRIVATE,
