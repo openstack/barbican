@@ -30,7 +30,7 @@ simple_crypto_plugin_group = cfg.OptGroup(name='simple_crypto_plugin',
                                           title="Simple Crypto Plugin Options")
 simple_crypto_plugin_opts = [
     cfg.StrOpt('kek',
-               default=b'dGhpcnR5X3R3b19ieXRlX2tleWJsYWhibGFoYmxhaGg=',
+               default='dGhpcnR5X3R3b19ieXRlX2tleWJsYWhibGFoYmxhaGg=',
                help=u._('Key encryption key to be used by Simple Crypto '
                         'Plugin'))
 ]
