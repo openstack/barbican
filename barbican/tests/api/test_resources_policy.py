@@ -159,7 +159,7 @@ class BaseTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
         """
         # The 'Read Error' clause needs to match that asserted in
         #    _assert_post_rbac_exception() above.
-        return exc.HTTPServerError(message='Read Error')
+        return exc.HTTPServerError(detail='Read Error')
 
     def _assert_pass_rbac(self, roles, method_under_test, accept=None,
                           content_type=None, user_id=None, project_id=None):
