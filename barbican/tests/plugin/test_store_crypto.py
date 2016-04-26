@@ -64,9 +64,9 @@ class TestSecretStoreBase(testtools.TestCase,
         self.project_id = '12345'
         self.content_type = 'application/octet-stream'
         self.content_encoding = 'base64'
-        self.secret = base64.b64encode('secret')
-        self.decrypted_secret = 'decrypted_secret'
-        self.cypher_text = 'cypher_text'
+        self.secret = base64.b64encode(b'secret')
+        self.decrypted_secret = b'decrypted_secret'
+        self.cypher_text = b'cypher_text'
         self.kek_meta_extended = 'kek-meta-extended'
         self.spec_aes = secret_store.KeySpec('AES', 64, 'CBC')
         self.spec_rsa = secret_store.KeySpec(
@@ -99,7 +99,7 @@ class TestSecretStoreBase(testtools.TestCase,
         self.encrypted_datum_model.kek_meta_project = (
             self.kek_meta_project_model)
         self.encrypted_datum_model.cypher_text = base64.b64encode(
-            'cypher_text')
+            b'cypher_text')
         self.encrypted_datum_model.content_type = 'content_type'
         self.encrypted_datum_model.kek_meta_extended = 'extended_meta'
 
@@ -185,7 +185,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         args, kwargs = encrypt_mock.call_args
         test_encrypt_dto, test_kek_meta_dto, test_project_id = tuple(args)
         self.assertIsInstance(test_encrypt_dto, crypto.EncryptDTO)
-        self.assertEqual('secret', test_encrypt_dto.unencrypted)
+        self.assertEqual(b'secret', test_encrypt_dto.unencrypted)
         self.assertEqual(self.kek_meta_dto, test_kek_meta_dto)
         self.assertEqual(self.project_id, test_project_id)
 
@@ -231,7 +231,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         self.assertIsInstance(secret_dto, secret_store.SecretDTO)
         self.assertEqual(secret_store.SecretType.OPAQUE, secret_dto.type)
         self.assertEqual(
-            base64.encodestring(self.decrypted_secret).rstrip('\n'),
+            base64.encodestring(self.decrypted_secret).rstrip(b'\n'),
             secret_dto.secret)
         self.assertEqual(
             self.encrypted_datum_model.content_type, secret_dto.content_type)
@@ -703,7 +703,7 @@ class WhenTestingStoreCryptoStoreSecretAndDatum(TestSecretStoreBase):
         self.assertEqual(
             self.content_type, test_datum_model.content_type)
         self.assertEqual(
-            base64.encodestring(self.cypher_text).rstrip('\n'),
+            base64.encodestring(self.cypher_text).rstrip(b'\n'),
             test_datum_model.cypher_text)
         self.assertEqual(
             self.response_dto.kek_meta_extended,
