@@ -41,7 +41,7 @@ class WhenInvokingLoadBodyFunction(utils.BaseTestCase):
         exception = self.assertRaises(
             ValueError, api.load_body, req)
 
-        self.assertEqual('Abort!', exception.message)
+        self.assertEqual('Abort!', str(exception))
 
     @mock.patch('pecan.abort')
     def test_should_abort_with_validation_unsupported_field(
@@ -60,7 +60,7 @@ class WhenInvokingLoadBodyFunction(utils.BaseTestCase):
         exception_result = self.assertRaises(
             ValueError, api.load_body, req, validator=validator)
 
-        self.assertEqual('Abort!', exception_result.message)
+        self.assertEqual('Abort!', str(exception_result))
         validator.validate.assert_called_once_with(json.loads(body))
 
 
