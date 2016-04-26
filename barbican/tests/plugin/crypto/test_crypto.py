@@ -73,7 +73,7 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
         kek_meta_dto = self._get_mocked_kek_meta_dto()
         kek_meta_dto.plugin_meta = UENC_project_kek
 
-        unencrypted = 'PlainTextSecret'
+        unencrypted = b'PlainTextSecret'
         encrypt_dto = plugin.EncryptDTO(unencrypted)
         response_dto = self.plugin.encrypt(encrypt_dto,
                                            kek_meta_dto,
