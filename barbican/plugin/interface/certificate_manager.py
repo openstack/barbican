@@ -24,6 +24,7 @@ import abc
 import datetime
 
 from oslo_config import cfg
+from oslo_utils import encodeutils
 import six
 from stevedore import named
 
@@ -650,7 +651,8 @@ class CertificatePluginManager(named.NamedExtensionManager):
             new_ca_infos = cert_plugin.get_ca_info()
         except Exception as e:
             # The plugin gave an invalid CA, log and return
-            LOG.error(u._LE("ERROR getting CA from plugin: %s"), e.message)
+            LOG.error(u._LE("ERROR getting CA from plugin: %s"),
+                      encodeutils.exception_to_unicode(e))
             return
 
         old_cas, offset, limit, total = self.ca_repo.get_by_create_date(
@@ -682,7 +684,8 @@ class CertificatePluginManager(named.NamedExtensionManager):
                 self._add_ca(plugin_name, add_id, new_ca_infos[add_id])
             except Exception as e:
                 # The plugin gave an invalid CA, log and continue
-                LOG.error(u._LE("ERROR adding CA from plugin: %s"), e.message)
+                LOG.error(u._LE("ERROR adding CA from plugin: %s"),
+                          encodeutils.exception_to_unicode(e))
 
     def _add_ca(self, plugin_name, plugin_ca_id, ca_info):
         parsed_ca = dict(ca_info)
