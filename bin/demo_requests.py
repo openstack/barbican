@@ -92,7 +92,7 @@ def demo_store_secret_two_step_binary():
     pr = requests.post(ep_2step, data=json.dumps(payload), headers=hdrs)
     pr_j = pr.json()
     secret_ref = pr_j.get('secret_ref')
-    assert(secret_ref)
+    assert secret_ref
 
     # PUT data to store:
     hdrs_put = dict(hdrs)
@@ -201,7 +201,7 @@ def demo_consumers_add(container_ref):
     # POST metadata:
     pr = requests.post(ep_add, data=json.dumps(payload_consumer), headers=hdrs)
     pr_consumers = pr.json().get('consumers')
-    assert(pr_consumers)
+    assert pr_consumers
     assert(len(pr_consumers) == 1)
     LOG.info('...Consumer response: {0}'.format(pr_consumers))
 

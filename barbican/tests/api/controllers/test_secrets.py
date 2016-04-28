@@ -750,4 +750,4 @@ def create_secret(app, name=None, algorithm=None, bit_length=None, mode=None,
         secret_ref = resp.json.get('secret_ref', '')
         _, created_uuid = os.path.split(secret_ref)
 
-    return (resp, created_uuid)
+    return resp, created_uuid

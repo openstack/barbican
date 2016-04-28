@@ -58,7 +58,7 @@ class FunctionalTestAuth(auth.AuthBase):
                 tenant_name=self.project_name,
                 auth_url=self.endpoint
             )
-            return (self._client.auth_token, self._client.tenant_id)
+            return self._client.auth_token, self._client.tenant_id
 
         elif self.version.lower() == 'v3':
             self._client = v3_client.Client(
@@ -67,7 +67,7 @@ class FunctionalTestAuth(auth.AuthBase):
                 project_name=self.project_name,
                 auth_url=self.endpoint
             )
-            return (self._client.auth_token, self._client.project_id)
+            return self._client.auth_token, self._client.project_id
         else:
             raise Exception('Unknown authentication version')
 
