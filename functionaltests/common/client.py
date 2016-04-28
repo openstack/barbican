@@ -18,7 +18,7 @@ import os
 
 import requests
 from six.moves import urllib
-from tempest_lib.common.utils import misc as misc_utils
+from tempest.lib.common.utils import misc as misc_utils
 
 from functionaltests.common import auth
 from functionaltests.common import config
