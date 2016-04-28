@@ -85,7 +85,7 @@ class WhenTestingPluginResource(testtools.TestCase,
     def test_store_secret_dto(self):
         spec = {'algorithm': 'AES', 'bit_length': 256,
                 'secret_type': 'symmetric'}
-        secret = base64.b64encode('ABCDEFABCDEFABCDEFABCDEF')
+        secret = base64.b64encode(b'ABCDEFABCDEFABCDEFABCDEF')
 
         self.plugin_resource.store_secret(
             unencrypted_raw=secret,
@@ -145,7 +145,7 @@ class WhenTestingPluginResource(testtools.TestCase,
             self.moc_plugin.get_secret.side_effect = (
                 mock_secret_store_get_secret)
 
-        raw_secret = 'ABCDEFABCDEFABCDEFABCDEF'
+        raw_secret = b'ABCDEFABCDEFABCDEFABCDEF'
         spec = {'name': 'testsecret', 'algorithm': 'AES', 'bit_length': 256,
                 'secret_type': 'symmetric'}
 
