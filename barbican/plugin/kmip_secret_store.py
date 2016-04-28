@@ -88,11 +88,11 @@ def convert_pem_to_der(pem_pkcs1):
     # cryptography adds an extra '\n' to end of PEM file
     # added if statement so if future version removes extra \n tests will not
     # break
-    if pem_pkcs1.endswith('\n'):
+    if pem_pkcs1.endswith(b'\n'):
         pem_pkcs1 = pem_pkcs1[:-1]
     # neither PyCrypto or cryptography support export in DER format with PKCS1
     # encoding so doing by hand
-    der_pkcs1_b64 = ''.join(pem_pkcs1.split('\n')[1:-1])
+    der_pkcs1_b64 = b''.join(pem_pkcs1.split(b'\n')[1:-1])
     der_pkcs1 = base64.b64decode(der_pkcs1_b64)
     return der_pkcs1
 
