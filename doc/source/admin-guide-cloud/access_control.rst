@@ -5,8 +5,8 @@ Access Control
 Role Based Access Control (RBAC)
 --------------------------------
 
-Like many other services, the Key Manager service supports the protection of
-its APIs by enforcing policy rules defined in a policy file.  The Key Manager
+Like many other services, the Key Manager service supports the protection of its
+APIs by enforcing policy rules defined in a policy file.  The Key Manager
 service stores a reference to a policy JSON file in its configuration file,
 :file:`/etc/barbican/barbican.conf`.  Typically this file is named
 ``policy.json`` and it is stored in :file:`/etc/barbican/policy.json`.
@@ -58,9 +58,11 @@ admin
     by the project for which the admin role is scoped.
 
 creator
-    Users with this role are allowed to create new resources but are not
-    allowed to delete any existing resources.  They are also allowed full
-    access to existing secrets owned by the project in scope.
+    Users with this role are allowed to create new resources and can only
+    delete resources which are originally created (owned) by them. Users with
+    this role cannot delete other user's resources managed within same project.
+    They are also allowed full access to existing secrets owned by the project
+    in scope.
 
 observer
     Users with this role are allowed to access to existing resources but are
@@ -73,11 +75,11 @@ audit
 Access Control List API
 -----------------------
 
-There are some limitations that result from scoping ownership of a secret
-at the project level.  For example, there is no easy way for a user to upload
-a secret for which only they have access.   There is also no easy way to grant
-a user access to only a single secret.
+There are some limitations that result from scoping ownership of a secret at the
+project level.  For example, there is no easy way for a user to upload a secret
+for which only they have access.   There is also no easy way to grant a user
+access to only a single secret.
 
-To address this limitations the Key Manager service includes an Access
-Control List (ACL) API.  For full details see the
+To address this limitations the Key Manager service includes an Access Control
+List (ACL) API.  For full details see the
 `ACL API User Guide <http://developer.openstack.org/api-guide/key-manager/acls.html>`__

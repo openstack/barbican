@@ -648,11 +648,24 @@ class WhenTestingSecretResource(BaseTestCase):
                                project_id=self.external_project_id)
 
     def test_should_raise_delete_secret(self):
-        self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
-                               self._invoke_on_delete)
+        """A non-admin user cannot delete other user's secret.
 
-    # @mock.patch.object(secrets.SecretController, 'get_acl_tuple',
-    #                   return_value=(None, None))
+        User id is different from initial user who has created the secret.
+        """
+        self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
+                               self._invoke_on_delete,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_pass_delete_secret_for_owner(self):
+        """Non-admin user can delete his/her own secret
+
+        Secret creator_id should match with token user to establish ownership.
+        """
+        self._assert_pass_rbac(['creator'], self._invoke_on_delete,
+                               user_id=self.creator_user_id,
+                               project_id=self.external_project_id)
+
     def _invoke_on_get(self):
         self.resource.on_get(self.req, self.resp)
 
@@ -883,8 +896,24 @@ class WhenTestingContainerResource(BaseTestCase):
                                project_id=self.external_project_id)
 
     def test_should_raise_delete_container(self):
+        """A non-admin user cannot delete other user's container.
+
+        User id is different from initial user who has created the container.
+        """
         self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
-                               self._invoke_on_delete)
+                               self._invoke_on_delete,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_pass_delete_container_for_owner(self):
+        """Non-admin user can delete his/her own container
+
+        Container creator_id should match with token user to establish
+        ownership.
+        """
+        self._assert_pass_rbac(['creator'], self._invoke_on_delete,
+                               user_id=self.creator_user_id,
+                               project_id=self.external_project_id)
 
     def _invoke_on_get(self):
         self.resource.on_get(self.req, self.resp)

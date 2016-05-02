@@ -48,6 +48,8 @@ def setup_config(config_file=''):
         cfg.StrOpt('admin_a_password', default='barbican', secret=True),
         cfg.StrOpt('creator_a', default='project_a_creator'),
         cfg.StrOpt('creator_a_password', default='barbican', secret=True),
+        cfg.StrOpt('creator_a_2', default='project_a_creator_2'),
+        cfg.StrOpt('creator_a_2_password', default='barbican', secret=True),
         cfg.StrOpt('observer_a', default='project_a_observer'),
         cfg.StrOpt('observer_a_password', default='barbican', secret=True),
         cfg.StrOpt('auditor_a', default='project_a_auditor'),

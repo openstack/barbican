@@ -24,6 +24,7 @@ from functionaltests.common import config
 CONF = config.get_config()
 admin_a = CONF.rbac_users.admin_a
 creator_a = CONF.rbac_users.creator_a
+creator_a_2 = CONF.rbac_users.creator_a_2
 observer_a = CONF.rbac_users.observer_a
 auditor_a = CONF.rbac_users.auditor_a
 
@@ -86,8 +87,10 @@ test_data_rbac_get_list_of_secrets = {
 test_data_rbac_delete_secret = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 204},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 403},
+    'with_creator_a': {'user': creator_a, 'admin': creator_a,
+                       'expected_return': 204},
+    'with_creator_a_2': {'user': creator_a_2, 'admin': creator_a,
+                         'expected_return': 403},
     'with_observer_a': {'user': observer_a, 'admin': admin_a,
                         'expected_return': 403},
     'with_auditor_a': {'user': auditor_a, 'admin': admin_a,

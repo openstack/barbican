@@ -104,6 +104,15 @@ if [[ "$ENABLED_SERVICES" =~ "barbican" ]]; then
         --user "$USER_ID" \
         --project "$PROJECT_A_ID" \
         "$ROLE_CREATOR_ID"
+    # Adding second creator user in project_a
+    USER_ID=$(openstack user create \
+        --password "$PASSWORD" \
+        --email "creator2_a@example.net" \
+        "project_a_creator_2" -f value -c id)
+    openstack role add \
+        --user "$USER_ID" \
+        --project "$PROJECT_A_ID" \
+        "$ROLE_CREATOR_ID"
     #
     # Setup RBAC Observer of Project A
     #
