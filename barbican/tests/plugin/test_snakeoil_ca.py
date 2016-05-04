@@ -153,7 +153,7 @@ class CertManagerTestCase(BaseTestCase):
         der_sig = asn1.DerObject()
         der_sig.decode(der[2])
         sig = der_sig.payload
-        self.assertIs('\x00', sig[0])
+        self.assertEqual(b'\x00', sig[:1])
         crypto.verify(self.ca.cert, sig[1:], der[0], 'sha256')
 
     def test_gen_cert_no_file_storage(self):
@@ -216,7 +216,7 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
                                                      order_meta, {},
                                                      self.barbican_meta_dto)
         crypto.load_certificate(
-            crypto.FILETYPE_PEM, resp.certificate.decode('base64'))
+            crypto.FILETYPE_PEM, base64.b64decode(resp.certificate))
 
     def test_issue_certificate_request_with_ca_id(self):
         req = certificate_utils.get_valid_csr_object()
@@ -231,7 +231,7 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
                                                      plugin_meta,
                                                      self.barbican_meta_dto)
         crypto.load_certificate(
-            crypto.FILETYPE_PEM, resp.certificate.decode('base64'))
+            crypto.FILETYPE_PEM, base64.b64decode(resp.certificate))
 
     def test_issue_raises_with_invalid_ca_id(self):
         req = certificate_utils.get_valid_csr_object()
@@ -267,7 +267,7 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
                                                      order_meta, {},
                                                      self.barbican_meta_dto)
         cert = crypto.load_certificate(
-            crypto.FILETYPE_PEM, resp.certificate.decode('base64'))
+            crypto.FILETYPE_PEM, base64.b64decode(resp.certificate))
         cert_subj = cert.get_subject()
         self.assertEqual('US', cert_subj.C)
         self.assertEqual('OR', cert_subj.ST)
@@ -284,7 +284,7 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
         resp = self.plugin.issue_certificate_request(
             self.order_id, {}, {}, self.barbican_meta_dto)
         crypto.load_certificate(
-            crypto.FILETYPE_PEM, resp.certificate.decode('base64'))
+            crypto.FILETYPE_PEM, base64.b64decode(resp.certificate))
 
     def test_no_request_data(self):
         res = self.plugin.issue_certificate_request(
@@ -382,7 +382,7 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
                                                      plugin_meta,
                                                      self.barbican_meta_dto)
         new_cert = crypto.load_certificate(
-            crypto.FILETYPE_PEM, resp.certificate.decode('base64'))
+            crypto.FILETYPE_PEM, base64.b64decode(resp.certificate))
         signing_cert = crypto.load_certificate(
             crypto.FILETYPE_PEM, subca_dict['ca_signing_certificate'])
 

@@ -118,7 +118,7 @@ class SnakeoilCA(object):
     def cert(self):
         self.ensure_exists()
         if self.cert_path:
-            with open(self.cert_path) as cert_fh:
+            with open(self.cert_path, 'rb') as cert_fh:
                 return crypto.load_certificate(crypto.FILETYPE_PEM,
                                                cert_fh.read())
         else:
@@ -127,7 +127,7 @@ class SnakeoilCA(object):
     @cert.setter
     def cert(self, val):
         if self.cert_path:
-            with open(self.cert_path, 'w') as cert_fh:
+            with open(self.cert_path, 'wb') as cert_fh:
                 cert_fh.write(crypto.dump_certificate(crypto.FILETYPE_PEM,
                                                       val))
         else:
@@ -137,7 +137,7 @@ class SnakeoilCA(object):
     def key(self):
         self.ensure_exists()
         if self.key_path:
-            with open(self.key_path) as key_fh:
+            with open(self.key_path, 'rb') as key_fh:
                 return crypto.load_privatekey(crypto.FILETYPE_PEM,
                                               key_fh.read())
         else:
@@ -146,7 +146,7 @@ class SnakeoilCA(object):
     @key.setter
     def key(self, val):
         if self.key_path:
-            with open(self.key_path, 'w') as key_fh:
+            with open(self.key_path, 'wb') as key_fh:
                 key_fh.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, val))
         else:
             self._key_val = crypto.dump_privatekey(crypto.FILETYPE_PEM, val)
@@ -155,7 +155,7 @@ class SnakeoilCA(object):
     def chain(self):
         self.ensure_exists()
         if self.chain_path:
-            with open(self.chain_path) as chain_fh:
+            with open(self.chain_path, 'rb') as chain_fh:
                 return chain_fh.read()
         else:
             return self._chain_val
@@ -163,7 +163,7 @@ class SnakeoilCA(object):
     @chain.setter
     def chain(self, val):
         if self.chain_path:
-            with open(self.chain_path, 'w') as chain_fh:
+            with open(self.chain_path, 'wb') as chain_fh:
                 chain_fh.write(val)
         else:
             self._chain_val = val
@@ -172,7 +172,7 @@ class SnakeoilCA(object):
     def pkcs7(self):
         self.ensure_exists()
         if self.pkcs7_path:
-            with open(self.pkcs7_path) as pkcs7_fh:
+            with open(self.pkcs7_path, 'rb') as pkcs7_fh:
                 return pkcs7_fh.read()
         else:
             return self._pkcs7_val
@@ -180,7 +180,7 @@ class SnakeoilCA(object):
     @pkcs7.setter
     def pkcs7(self, val):
         if self.pkcs7_path:
-            with open(self.pkcs7_path, 'w') as pkcs7_fh:
+            with open(self.pkcs7_path, 'wb') as pkcs7_fh:
                 pkcs7_fh.write(val)
         else:
             self._pkcs7_val = val
@@ -243,9 +243,9 @@ class SnakeoilCA(object):
 
         LOG.debug('Snakeoil CA cert/key generated')
 
-        chain = ""
+        chain = b''
         if self.parent_chain_path:
-            with open(self.parent_chain_path) as fh:
+            with open(self.parent_chain_path, 'rb') as fh:
                 chain = fh.read()
         chain += crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
 
@@ -262,7 +262,7 @@ class SnakeoilCA(object):
 
         subprocess.call(['/usr/bin/openssl', 'crl2pkcs7', '-nocrl',  # nosec
                          '-out', temp_out, '-certfile', temp_in], shell=False)
-        with open(temp_out) as pkcs7_fh:
+        with open(temp_out, 'rb') as pkcs7_fh:
             pkcs7 = pkcs7_fh.read()
 
         os.remove(temp_in)
