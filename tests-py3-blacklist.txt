@@ -6,5 +6,4 @@ barbican.tests.api.test_resources
 barbican.tests.api.test_transport_keys_resource
 barbican.tests.cmd.test_barbican_manage
 barbican.tests.cmd.test_db_cleanup
-barbican.tests.common.test_validators
 barbican.tests.plugin.crypto.test_pkcs11
