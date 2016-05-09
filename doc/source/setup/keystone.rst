@@ -27,26 +27,32 @@ the get version call.
 1. Turn off any active instances of Barbican
 2. Edit ``/etc/barbican/barbican-api-paste.ini``
 
-   1. Replace the ``barbican_api`` pipeline with an authenticated pipeline
+   1. Change the pipeline ``/v1`` value from unauthenticated ``barbican-api``
+      to the authenticated ``barbican-api-keystone``
 
     .. code-block:: ini
 
-        [pipeline:barbican_api]
-        pipeline = keystone_authtoken context apiapp
+        [composite:main]
+        use = egg:Paste#urlmap
+        /: barbican_version
+        /v1: barbican-api-keystone
 
-   2. Replace ``keystone_authtoken`` filter values to match your Keystone
+   2. Replace ``authtoken`` filter values to match your Keystone
       setup
 
     .. code-block:: ini
 
-       [filter:keystone_authtoken]
+       [filter:authtoken]
        paste.filter_factory = keystonemiddleware.auth_token:filter_factory
        signing_dir = /tmp/barbican/cache
-       identity_uri = http://{YOUR_KEYSTONE_ENDPOINT}:35357
-       admin_tenant_name = service
-       admin_user = {YOUR_KEYSTONE_USERNAME}
-       admin_password = {YOUR_KEYSTONE_PASSWORD}
-       auth_version = v2.0
+       auth_uri = http://{YOUR_KEYSTONE_ENDPOINT}:5000/v3
+       auth_url = http://{YOUR_KEYSTONE_ENDPOINT}:35357/v3
+       auth_plugin = password
+       username = {YOUR_KEYSTONE_USERNAME}
+       password = {YOUR_KEYSTONE_PASSWORD}
+       user_domain_id = {YOUR_KEYSTONE_USER_DOMAIN}
+       project_name = {YOUR_KEYSTONE_PROJECT}
+       project_domain_id = {YOUR_KEYSTONE_PROJECT_DOMAIN}
 
 3. Start Barbican ``{barbican_home}/bin/barbican.sh start``
 
