@@ -266,7 +266,8 @@ class WhenUsingMessageServer(UtilMixin, utils.BaseTestCase):
         super(WhenUsingMessageServer, self).setUp()
         queue.init(self.conf)
 
-        patcher = mock.patch('oslo_messaging.server.MessageHandlingServer')
+        patcher = mock.patch('oslo_messaging.notify.listener.'
+                             'NotificationServer')
         mock_server_class = patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -316,7 +317,7 @@ class WhenUsingMessageServer(UtilMixin, utils.BaseTestCase):
         msg_server.start()
         self.msg_server_mock.start.assert_called_with()
 
-    @mock.patch.object(service.Service, 'stop')
+    @mock.patch.object(service.Service, 'stop', autospec=True)
     def test_should_stop(self, mock_service_stop):
         msg_server = keystone_listener.MessageServer(self.conf)
         msg_server.stop()
