@@ -406,6 +406,7 @@ class ContainersPagingTestCase(base.PagingTestCase):
         return secret_ref
 
     def tearDown(self):
+        self.secret_behaviors.delete_all_created_secrets()
         self.behaviors.delete_all_created_containers()
         super(ContainersPagingTestCase, self).tearDown()
 
