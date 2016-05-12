@@ -52,17 +52,19 @@ def fail(returncode, e):
     sys.exit(returncode)
 
 
-if __name__ == '__main__':
+def main():
     try:
         config.setup_remote_pydev_debug()
+
+        CONF = config.CONF
+
         # Import and configure logging.
-        log.setup('barbican')
+        log.setup(CONF, 'barbican')
 
         LOG = log.getLogger(__name__)
         LOG.info("Booting up Barbican Keystone listener node...")
 
         # Queuing initialization
-        CONF = config.CONF
         queue.init(CONF)
 
         if getattr(getattr(CONF, queue.KS_NOTIFICATIONS_GRP_NAME), 'enable'):
@@ -74,3 +76,6 @@ if __name__ == '__main__':
             LOG.info("Exiting as Barbican Keystone listener is not enabled...")
     except RuntimeError as e:
         fail(1, e)
+
+if __name__ == '__main__':
+    sys.exit(main())
