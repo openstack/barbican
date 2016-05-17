@@ -134,14 +134,20 @@ function configure_barbican {
     # Turn on the middleware
     iniset $BARBICAN_PASTE_CONF 'pipeline:barbican_api' pipeline 'barbican-api-keystone'
 
+    # Keystone complete URIs
+    KEYSTONE_AUTH_URI=${KEYSTONE_AUTH_PROTOCOL}://${KEYSTONE_AUTH_HOST}:${KEYSTONE_AUTH_PORT}/v3
+    KEYSTONE_SERVICE_URI=${KEYSTONE_SERVICE_PROTOCOL}://${KEYSTONE_SERVICE_HOST}:${KEYSTONE_SERVICE_PORT}/v3
+
     # Set the keystone parameters
-    iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' auth_protocol $KEYSTONE_AUTH_PROTOCOL
-    iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' auth_host $KEYSTONE_AUTH_HOST
-    iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' auth_port $KEYSTONE_AUTH_PORT
-    iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' admin_user barbican
-    iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' admin_password $SERVICE_PASSWORD
-    iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' admin_tenant_name $SERVICE_PROJECT_NAME
-    iniset $BARBICAN_PASTE_CONF 'filter:keystone_authtoken' signing_dir $BARBICAN_AUTH_CACHE_DIR
+    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' auth_plugin password
+    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' auth_url $KEYSTONE_AUTH_URI
+    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' username barbican
+    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' password $SERVICE_PASSWORD
+    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' user_domain_id default
+    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' project_name $SERVICE_PROJECT_NAME
+    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' project_domain_id default
+    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' auth_uri $KEYSTONE_SERVICE_URI
+    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' signing_dir $BARBICAN_AUTH_CACHE_DIR
 }
 
 # init_barbican - Initialize etc.
