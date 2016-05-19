@@ -407,7 +407,7 @@ class WhenCreatingNewSecretACL(utils.BaseTestCase):
 
     def test_new_secretacl_with_duplicate_userids_input(self):
         user_ids = list(self.user_ids)
-        user_ids = user_ids * 2  # duplicate ids
+        user_ids *= 2  # duplicate ids
         acl = models.SecretACL(self.secret_id, self.operation,
                                None, user_ids=user_ids)
         self.assertEqual(self.secret_id, acl.secret_id)
@@ -470,7 +470,7 @@ class WhenCreatingNewContainerACL(utils.BaseTestCase):
 
     def test_new_containeracl_with_duplicate_userids_input(self):
         user_ids = list(self.user_ids)
-        user_ids = user_ids * 2  # duplicate ids
+        user_ids *= 2  # duplicate ids
         acl = models.ContainerACL(self.container_id, self.operation,
                                   True, user_ids=user_ids)
         self.assertEqual(self.container_id, acl.container_id)

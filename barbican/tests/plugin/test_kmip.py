@@ -464,7 +464,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
     def test_store_opaque_secret_assert_called(self):
         key_spec = secret_store.KeySpec(None, None, None)
-        opaque = (b'\x00\x01\x02\x03\x04\x05\x06\x07')
+        opaque = b'\x00\x01\x02\x03\x04\x05\x06\x07'
         secret_dto = secret_store.SecretDTO(secret_store.SecretType.OPAQUE,
                                             base64.b64encode(opaque),
                                             key_spec,
@@ -487,7 +487,7 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
     def test_store_opaque_secret_return_value(self):
         key_spec = secret_store.KeySpec(None, None, None)
-        opaque = (b'\x00\x01\x02\x03\x04\x05\x06\x07')
+        opaque = b'\x00\x01\x02\x03\x04\x05\x06\x07'
         secret_dto = secret_store.SecretDTO(secret_store.SecretType.OPAQUE,
                                             base64.b64encode(opaque),
                                             key_spec,

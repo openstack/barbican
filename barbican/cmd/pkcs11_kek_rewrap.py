@@ -148,7 +148,7 @@ class KekRewrap(object):
 
 
 def main():
-    script_desc = ('Utility to re-wrap project KEKs after rotating an MKEK.')
+    script_desc = 'Utility to re-wrap project KEKs after rotating an MKEK.'
 
     parser = argparse.ArgumentParser(description=script_desc)
     parser.add_argument(

@@ -782,7 +782,7 @@ def create_order(app, order_type=None, meta=None, expect_errors=False):
         order_ref = resp.json.get('order_ref', '')
         _, created_uuid = os.path.split(order_ref)
 
-    return (resp, created_uuid)
+    return resp, created_uuid
 
 
 def create_container(app, name=None, container_type=None, secret_refs=None,
@@ -807,4 +807,4 @@ def create_container(app, name=None, container_type=None, secret_refs=None,
         container_ref = resp.json.get('container_ref', '')
         _, created_uuid = os.path.split(container_ref)
 
-    return (resp, created_uuid)
+    return resp, created_uuid

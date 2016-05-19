@@ -321,8 +321,7 @@ def main():
 
     # call the action with the remaining arguments
     try:
-        ret = fn(*fn_args, **fn_kwargs)
-        return(ret)
+        return fn(*fn_args, **fn_kwargs)
     except Exception as e:
         sys.exit("ERROR: %s" % e)
 

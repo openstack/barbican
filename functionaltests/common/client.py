@@ -154,7 +154,7 @@ class BarbicanClient(object):
                  str_request)
 
     def _status_is_2xx_success(self, status_code):
-        return status_code >= 200 and status_code < 300
+        return 200 <= status_code < 300
 
     def attempt_to_deserialize(self, response, model_type):
         if (self._status_is_2xx_success(response.status_code) and
