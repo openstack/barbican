@@ -56,7 +56,7 @@ Request:
 
 
 Response:
-********
+*********
 
 .. code-block:: javascript
 

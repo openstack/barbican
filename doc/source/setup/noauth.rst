@@ -24,5 +24,5 @@ instead. In case of API, replace ``'X-Auth-Token: $TOKEN'`` with
 
 You can also find detailed explanation to run barbican client with an
 unauthenticated context
-`here <http://docs.openstack.org/developer/python-barbicanclient/authentication.html#unauthenticated-context>`_ and run barbican CLI in no auth mode
-`here <http://docs.openstack.org/developer/python-barbicanclient/authentication.html#no-auth-mode>`_.
+`here <http://docs.openstack.org/developer/python-barbicanclient/authentication.html#unauthenticated-context>`__ and run barbican CLI in no auth mode
+`here <http://docs.openstack.org/developer/python-barbicanclient/authentication.html#no-auth-mode>`__.

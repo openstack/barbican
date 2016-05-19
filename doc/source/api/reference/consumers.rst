@@ -98,22 +98,22 @@ Request:
 Response Attributes
 *******************
 
-+----------+---------+---------------------------------------------------------------+
-| Name     | Type    | Description                                                   |
-+==========+=========+============================================================== +
-| consumers| list    | Contains a list of dictionaries filled with consumer metadata.|
-+----------+---------+---------------------------------------------------------------+
-| total    | integer | The total number of consumers available to the user.          |
-+----------+---------+---------------------------------------------------------------+
-| next     | string  | A HATEOAS url to retrieve the next set of consumers based on   |
-|          |         | the offset and limit parameters. This attribute is only       |
-|          |         | available when the total number of consumers is greater than  |
-|          |         | offset and limit parameter combined.                          |
-+----------+---------+---------------------------------------------------------------+
-| previous | string  | A HATEOAS url to retrieve the previous set of consumers based  |
-|          |         | on the offset and limit parameters. This attribute is only    |
-|          |         | available when the request offset is greater than 0.          |
-+----------+---------+---------------------------------------------------------------+
++-----------+---------+----------------------------------------------------------------+
+| Name      | Type    | Description                                                    |
++===========+=========+================================================================+
+| consumers | list    | Contains a list of dictionaries filled with consumer metadata. |
++-----------+---------+----------------------------------------------------------------+
+| total     | integer | The total number of consumers available to the user.           |
++-----------+---------+----------------------------------------------------------------+
+| next      | string  | A HATEOAS url to retrieve the next set of consumers based on   |
+|           |         | the offset and limit parameters. This attribute is only        |
+|           |         | available when the total number of consumers is greater than   |
+|           |         | offset and limit parameter combined.                           |
++-----------+---------+----------------------------------------------------------------+
+| previous  | string  | A HATEOAS url to retrieve the previous set of consumers based  |
+|           |         | on the offset and limit parameters. This attribute is only     |
+|           |         | available when the request offset is greater than 0.           |
++-----------+---------+----------------------------------------------------------------+
 
 
 .. _consumer_status_codes:

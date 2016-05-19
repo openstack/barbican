@@ -52,7 +52,7 @@ For **asynchronous** calls, the following sequence is generally followed:
          ``on_post()`` is invoked.
       #. The ``OrderRepo`` repository class (found in
          ``barbican/model/respositories.py``) is then used to create the
-         ``barbican/model/models.py``'s ``Order``entity in a 'PENDING' state.
+         ``barbican/model/models.py``'s ``Order`` entity in a 'PENDING' state.
       #. The Queue API's ``process_type_order()`` method on the ``TaskClient``
          class (found in ``barbican/queue/client.py``) is invoked to send a
          message to the queue for asynchronous processing.
