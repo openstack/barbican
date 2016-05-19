@@ -9,6 +9,10 @@ if is_service_enabled barbican; then
         echo_summary "Installing Barbican"
         install_barbican
         install_barbicanclient
+        if is_service_enabled barbican-pykmip; then
+            echo_summary "Installing PyKMIP"
+            install_pykmip
+        fi
         if is_service_enabled barbican-dogtag; then
             echo_summary "Installing Dogtag"
             install_dogtag_components
@@ -16,6 +20,10 @@ if is_service_enabled barbican; then
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring Barbican"
         configure_barbican
+        if is_service_enabled barbican-pykmip; then
+            echo_summary "Configuring KMIP plugin"
+            configure_pykmip
+        fi
         if is_service_enabled barbican-dogtag; then
             echo_summary "Configuring Dogtag plugin"
             configure_dogtag_plugin
@@ -29,6 +37,10 @@ if is_service_enabled barbican; then
         echo_summary "Initializing Barbican"
         init_barbican
         start_barbican
+        if is_service_enabled pykmip-server; then
+            echo_summary "Starting PyKMIP server"
+            start_pykmip
+        fi
     fi
 
     if [[ "$1" == "unstack" ]]; then
