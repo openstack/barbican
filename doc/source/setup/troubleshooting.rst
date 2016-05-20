@@ -126,7 +126,7 @@ tests should run.
 
 
 Barbican's tox tests fail with "ImportError: No module named _bsddb"
--------------------------------------------------
+--------------------------------------------------------------------
 
 What you might see
 ^^^^^^^^^^^^^^^^^^

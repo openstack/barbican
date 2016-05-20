@@ -86,9 +86,9 @@ Response:
             "type": "key",
             "updated": "2015-10-20T18:38:47"
         }
-    ],
-    "total": 2
-}
+        ],
+        "total": 2
+    }
 
 
 .. _get_order_response_attributes:
