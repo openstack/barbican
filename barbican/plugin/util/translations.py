@@ -11,10 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
-
 from Crypto.PublicKey import RSA
 from OpenSSL import crypto
+from oslo_serialization import base64
 
 from barbican import i18n as u  # noqa
 from barbican.plugin.interface import secret_store as s
@@ -49,12 +48,12 @@ def normalize_before_encryption(unencrypted, content_type, content_encoding,
     if normalized_media_type in mime_types.PLAIN_TEXT:
         # normalize text to binary and then base64 encode it
         unencrypted_bytes = unencrypted.encode('utf-8')
-        b64payload = base64.b64encode(unencrypted_bytes)
+        b64payload = base64.encode_as_bytes(unencrypted_bytes)
 
     # Process binary type.
     else:
         if not content_encoding:
-            b64payload = base64.b64encode(unencrypted)
+            b64payload = base64.encode_as_bytes(unencrypted)
         elif content_encoding.lower() == 'base64':
             b64payload = unencrypted
         elif enforce_text_only:
@@ -96,14 +95,13 @@ def denormalize_after_decryption(unencrypted, content_type):
     if content_type in mime_types.PLAIN_TEXT:
         # normalize text to binary string
         try:
-            unencrypted = base64.b64decode(unencrypted)
-            unencrypted = unencrypted.decode('utf-8')
+            unencrypted = base64.decode_as_text(unencrypted)
         except UnicodeDecodeError:
             raise s.SecretAcceptNotSupportedException(content_type)
 
     # Process binary type.
     elif content_type in mime_types.BINARY:
-        unencrypted = base64.b64decode(unencrypted)
+        unencrypted = base64.decode_as_bytes(unencrypted)
     else:
         raise s.SecretContentTypeNotSupportedException(content_type)
 

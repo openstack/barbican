@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
+from oslo_serialization import base64
 
 from barbican.plugin.interface import secret_store as s
 from barbican.plugin.util import translations
@@ -61,77 +61,77 @@ class WhenNormalizingBeforeEncryption(utils.BaseTestCase):
             'secret_type': s.SecretType.OPAQUE,
             'content_type': 'text/plain',
             'content_encoding': '',
-            'expected': base64.b64encode('stuff'.encode('utf-8'))
+            'expected': base64.encode_as_bytes('stuff')
         },
         'binary_base64': {
-            'unencrypted': base64.b64encode('stuff'),
+            'unencrypted': base64.encode_as_bytes('stuff'),
             'secret_type': s.SecretType.OPAQUE,
             'content_type': 'application/octet-stream',
             'content_encoding': 'base64',
-            'expected': base64.b64encode('stuff')
+            'expected': base64.encode_as_bytes('stuff')
         },
         'binary': {
             'unencrypted': 'stuff',
             'secret_type': s.SecretType.OPAQUE,
             'content_type': 'application/octet-stream',
             'content_encoding': None,
-            'expected': base64.b64encode('stuff')
+            'expected': base64.encode_as_bytes('stuff')
         },
         'symmetric_base64': {
-            'unencrypted': base64.b64encode('stuff'),
+            'unencrypted': base64.encode_as_bytes('stuff'),
             'secret_type': s.SecretType.SYMMETRIC,
             'content_type': 'application/octet-stream',
             'content_encoding': 'base64',
-            'expected': base64.b64encode('stuff')
+            'expected': base64.encode_as_bytes('stuff')
         },
         'symmetric': {
             'unencrypted': 'stuff',
             'secret_type': s.SecretType.SYMMETRIC,
             'content_type': 'application/octet-stream',
             'content_encoding': None,
-            'expected': base64.b64encode('stuff')
+            'expected': base64.encode_as_bytes('stuff')
         },
         'private_base64': {
-            'unencrypted': base64.b64encode(keys.get_private_key_pem()),
+            'unencrypted': base64.encode_as_bytes(keys.get_private_key_pem()),
             'secret_type': s.SecretType.PRIVATE,
             'content_type': 'application/octet-stream',
             'content_encoding': 'base64',
-            'expected': base64.b64encode(keys.get_private_key_pem())
+            'expected': base64.encode_as_bytes(keys.get_private_key_pem())
         },
         'private': {
             'unencrypted': keys.get_private_key_pem(),
             'secret_type': s.SecretType.PRIVATE,
             'content_type': 'application/octet-stream',
             'content_encoding': None,
-            'expected': base64.b64encode(keys.get_private_key_pem())
+            'expected': base64.encode_as_bytes(keys.get_private_key_pem())
         },
         'public_base64': {
-            'unencrypted': base64.b64encode(keys.get_public_key_pem()),
+            'unencrypted': base64.encode_as_bytes(keys.get_public_key_pem()),
             'secret_type': s.SecretType.PUBLIC,
             'content_type': 'application/octet-stream',
             'content_encoding': 'base64',
-            'expected': base64.b64encode(keys.get_public_key_pem())
+            'expected': base64.encode_as_bytes(keys.get_public_key_pem())
         },
         'public': {
             'unencrypted': keys.get_public_key_pem(),
             'secret_type': s.SecretType.PUBLIC,
             'content_type': 'application/octet-stream',
             'content_encoding': None,
-            'expected': base64.b64encode(keys.get_public_key_pem())
+            'expected': base64.encode_as_bytes(keys.get_public_key_pem())
         },
         'certificate_base64': {
-            'unencrypted': base64.b64encode(keys.get_certificate_pem()),
+            'unencrypted': base64.encode_as_bytes(keys.get_certificate_pem()),
             'secret_type': s.SecretType.CERTIFICATE,
             'content_type': 'application/octet-stream',
             'content_encoding': 'base64',
-            'expected': base64.b64encode(keys.get_certificate_pem())
+            'expected': base64.encode_as_bytes(keys.get_certificate_pem())
         },
         'certificate': {
             'unencrypted': keys.get_certificate_pem(),
             'secret_type': s.SecretType.CERTIFICATE,
             'content_type': 'application/octet-stream',
             'content_encoding': None,
-            'expected': base64.b64encode(keys.get_certificate_pem())
+            'expected': base64.encode_as_bytes(keys.get_certificate_pem())
         },
     }
 
@@ -160,7 +160,7 @@ class WhenNormalizingBeforeEncryption(utils.BaseTestCase):
             secret_type=s.SecretType.OPAQUE
         )
 
-        self.assertEqual(base64.b64encode('stuff'), unencrypted)
+        self.assertEqual(base64.encode_as_bytes('stuff'), unencrypted)
         self.assertEqual('text/plain', content_type)
 
     def test_null_content_encoding_gets_passed_through(self):
@@ -171,7 +171,7 @@ class WhenNormalizingBeforeEncryption(utils.BaseTestCase):
             secret_type=s.SecretType.OPAQUE
         )
 
-        self.assertEqual(base64.b64encode('bam'), unencrypted)
+        self.assertEqual(base64.encode_as_bytes('bam'), unencrypted)
         self.assertEqual('application/octet-stream', content_type)
 
     @utils.parameterized_dataset(dataset_for_raised_exceptions)
@@ -204,15 +204,15 @@ class WhenDenormalizingAfterDecryption(utils.BaseTestCase):
 
     dataset_for_pem_denormalize = {
         'private_key': {
-            'encoded_pem': base64.b64encode(keys.get_private_key_pem()),
+            'encoded_pem': base64.encode_as_bytes(keys.get_private_key_pem()),
             'content_type': 'application/octet-stream'
         },
         'public_key': {
-            'encoded_pem': base64.b64encode(keys.get_public_key_pem()),
+            'encoded_pem': base64.encode_as_bytes(keys.get_public_key_pem()),
             'content_type': 'application/octet-stream'
         },
         'certificate': {
-            'encoded_pem': base64.b64encode(keys.get_certificate_pem()),
+            'encoded_pem': base64.encode_as_bytes(keys.get_certificate_pem()),
             'content_type': 'application/octet-stream'
         }
     }
@@ -225,20 +225,19 @@ class WhenDenormalizingAfterDecryption(utils.BaseTestCase):
 
     def test_ascii_characters_to_utf8_with_plain_text(self):
         secret = 'bam'
-        normalized_secret = secret.encode('utf-8')
-        normalized_secret = base64.b64encode(normalized_secret)
+        normalized_secret = base64.encode_as_bytes(secret)
         unencrypted = self.denormalize(normalized_secret, 'text/plain')
         self.assertEqual('bam', unencrypted)
 
     def test_ascii_characters_to_utf8_with_app_octet_stream(self):
-        unencrypted = self.denormalize(base64.b64encode('bam'),
+        unencrypted = self.denormalize(base64.encode_as_bytes('bam'),
                                        'application/octet-stream')
-        self.assertEqual('bam', unencrypted)
+        self.assertEqual(b'bam', unencrypted)
 
     def test_non_ascii_character_with_plain_text_raises_exception(self):
         exception = s.SecretAcceptNotSupportedException
         kwargs = {
-            'unencrypted': base64.b64encode('\xff'),
+            'unencrypted': base64.encode_as_bytes(b'\xff'),
             'content_type': 'text/plain'
         }
 
@@ -256,7 +255,7 @@ class WhenDenormalizingAfterDecryption(utils.BaseTestCase):
     @utils.parameterized_dataset(dataset_for_pem_denormalize)
     def test_denormalize_pem(self, encoded_pem, content_type):
         denorm_secret = self.denormalize(encoded_pem, content_type)
-        self.assertEqual(base64.b64decode(encoded_pem), denorm_secret)
+        self.assertEqual(base64.decode_as_bytes(encoded_pem), denorm_secret)
 
 
 class WhenConvertingKeyFormats(utils.BaseTestCase):
