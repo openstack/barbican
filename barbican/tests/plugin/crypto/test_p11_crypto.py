@@ -16,6 +16,7 @@
 import mock
 import six
 
+from barbican.common import exception as ex
 from barbican.model import models
 from barbican.plugin.crypto import crypto as plugin_import
 from barbican.plugin.crypto import p11_crypto
@@ -48,6 +49,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.pkcs11.compute_hmac.return_value = b'1'
         self.pkcs11.verify_hmac.return_value = None
         self.pkcs11.destroy_object.return_value = None
+        self.pkcs11.finalize.return_value = None
 
         self.cfg_mock = mock.MagicMock(name='config mock')
         self.cfg_mock.p11_crypto_plugin.mkek_label = 'mkek_label'
@@ -120,7 +122,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
 
     def test_encrypt_bad_session(self):
         self.pkcs11.get_session.return_value = mock.DEFAULT
-        self.pkcs11.get_session.side_effect = pkcs11.P11CryptoPluginException(
+        self.pkcs11.get_session.side_effect = ex.P11CryptoPluginException(
             'Testing error handling'
         )
         payload = b'test payload'
@@ -132,8 +134,8 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
                                 '"wrapped_key": "wrappedkey==",'
                                 '"mkek_label": "mkek_label",'
                                 '"hmac_label": "hmac_label"}')
-        self.assertRaises(pkcs11.P11CryptoPluginException,
-                          self.plugin.encrypt,
+        self.assertRaises(ex.P11CryptoPluginException,
+                          self.plugin._encrypt,
                           encrypt_dto,
                           kek_meta,
                           mock.MagicMock())
@@ -172,7 +174,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
 
     def test_decrypt_bad_session(self):
         self.pkcs11.get_session.return_value = mock.DEFAULT
-        self.pkcs11.get_session.side_effect = pkcs11.P11CryptoPluginException(
+        self.pkcs11.get_session.side_effect = ex.P11CryptoPluginException(
             'Testing error handling'
         )
         ct = b'ctct'
@@ -185,8 +187,8 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
                                 '"wrapped_key": "wrappedkey==",'
                                 '"mkek_label": "mkek_label",'
                                 '"hmac_label": "hmac_label"}')
-        self.assertRaises(pkcs11.P11CryptoPluginException,
-                          self.plugin.decrypt,
+        self.assertRaises(ex.P11CryptoPluginException,
+                          self.plugin._decrypt,
                           decrypt_dto,
                           kek_meta,
                           kek_meta_extended,
@@ -264,7 +266,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
 
     def test_missing_mkek(self):
         self.pkcs11.get_key_handle.return_value = None
-        self.assertRaises(pkcs11.P11CryptoKeyHandleException,
+        self.assertRaises(ex.P11CryptoKeyHandleException,
                           self.plugin._get_master_key,
                           'bad_key_label')
 
@@ -282,12 +284,12 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.assertEqual(self.pkcs11.generate_key.call_count, 1)
 
     def test_cached_generate_mkek(self):
-        self.assertRaises(pkcs11.P11CryptoPluginKeyException,
+        self.assertRaises(ex.P11CryptoPluginKeyException,
                           self.plugin._generate_mkek, 256, 'mkek_label')
         self.assertEqual(self.pkcs11.get_key_handle.call_count, 2)
 
     def test_existing_generate_mkek(self):
-        self.assertRaises(pkcs11.P11CryptoPluginKeyException,
+        self.assertRaises(ex.P11CryptoPluginKeyException,
                           self.plugin._generate_mkek, 256, 'mkek2_label')
         self.assertEqual(self.pkcs11.get_key_handle.call_count, 3)
 
@@ -301,12 +303,12 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.assertEqual(self.pkcs11.generate_key.call_count, 1)
 
     def test_cached_generate_mkhk(self):
-        self.assertRaises(pkcs11.P11CryptoPluginKeyException,
+        self.assertRaises(ex.P11CryptoPluginKeyException,
                           self.plugin._generate_mkhk, 256, 'hmac_label')
         self.assertEqual(self.pkcs11.get_key_handle.call_count, 2)
 
     def test_existing_generate_mkhk(self):
-        self.assertRaises(pkcs11.P11CryptoPluginKeyException,
+        self.assertRaises(ex.P11CryptoPluginKeyException,
                           self.plugin._generate_mkhk, 256, 'mkhk2_label')
         self.assertEqual(self.pkcs11.get_key_handle.call_count, 3)
 
@@ -326,3 +328,33 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
 
         p11 = self.plugin._create_pkcs11(self.cfg_mock.p11_crypto_plugin, ffi)
         self.assertIsInstance(p11, pkcs11.PKCS11)
+
+    def test_call_pkcs11_with_token_error(self):
+        self.plugin._encrypt = mock.Mock()
+        self.plugin._encrypt.side_effect = [ex.P11CryptoTokenException(
+            'Testing error handling'
+        ),
+            'test payload']
+        self.plugin._reinitialize_pkcs11 = mock.Mock()
+        self.plugin._reinitialize_pkcs11.return_value = mock.DEFAULT
+
+        self.plugin.encrypt(mock.MagicMock(), mock.MagicMock(),
+                            mock.MagicMock())
+
+        self.assertEqual(self.pkcs11.get_key_handle.call_count, 2)
+        self.assertEqual(self.pkcs11.get_session.call_count, 1)
+        self.assertEqual(self.pkcs11.return_session.call_count, 0)
+        self.assertEqual(self.plugin._encrypt.call_count, 2)
+
+    def test_reinitialize_pkcs11(self):
+        pkcs11 = self.pkcs11
+        self.plugin._create_pkcs11 = mock.Mock()
+        self.plugin._create_pkcs11.return_value = pkcs11
+        self.plugin._configure_object_cache = mock.Mock()
+        self.plugin._configure_object_cache.return_value = mock.DEFAULT
+
+        self.plugin._reinitialize_pkcs11()
+
+        self.assertEqual(self.pkcs11.finalize.call_count, 1)
+        self.assertEqual(self.plugin._create_pkcs11.call_count, 1)
+        self.assertEqual(self.plugin._configure_object_cache.call_count, 1)

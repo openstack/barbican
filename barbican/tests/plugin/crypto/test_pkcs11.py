@@ -14,6 +14,7 @@
 import mock
 import six
 
+from barbican.common import exception
 from barbican.plugin.crypto import pkcs11
 from barbican.tests import utils
 
@@ -28,6 +29,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
 
         self.lib = mock.Mock()
         self.lib.C_Initialize.return_value = pkcs11.CKR_OK
+        self.lib.C_Finalize.return_value = pkcs11.CKR_OK
         self.lib.C_OpenSession.side_effect = self._open_session
         self.lib.C_CloseSession.return_value = pkcs11.CKR_OK
         self.lib.C_GetSessionInfo.side_effect = self._get_session_user
@@ -165,7 +167,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
             self.ffi.buffer(buf)[:] = b'\x00' * length
             return pkcs11.CKR_OK
         self.lib.C_GenerateRandom.side_effect = _bad_generate_random
-        self.assertRaises(pkcs11.P11CryptoPluginException,
+        self.assertRaises(exception.P11CryptoPluginException,
                           self.pkcs11._rng_self_test, mock.MagicMock())
 
     def test_get_key_handle_one_key(self):
@@ -190,7 +192,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
     def test_get_key_handle_multiple_keys(self):
         self.lib.C_FindObjects.side_effect = self._find_objects_two
 
-        self.assertRaises(pkcs11.P11CryptoPluginKeyException,
+        self.assertRaises(exception.P11CryptoPluginKeyException,
                           self.pkcs11.get_key_handle, 'foo', mock.MagicMock())
 
         self.assertEqual(self.lib.C_FindObjectsInit.call_count, 1)
@@ -213,7 +215,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertEqual(self.lib.C_GenerateKey.call_count, 1)
 
     def test_generate_key_no_flags(self):
-        self.assertRaises(pkcs11.P11CryptoPluginException,
+        self.assertRaises(exception.P11CryptoPluginException,
                           self.pkcs11.generate_key, mock.MagicMock(),
                           mock.MagicMock())
 
@@ -337,3 +339,19 @@ class WhenTestingPKCS11(utils.BaseTestCase):
     def test_invalid_build_attributes(self):
         self.assertRaises(TypeError, self.pkcs11._build_attributes,
                           [pkcs11.Attribute(pkcs11.CKA_CLASS, {})])
+
+    def test_finalize(self):
+        self.pkcs11.finalize()
+
+        self.assertEqual(self.lib.C_Finalize.call_count, 1)
+
+    def test_check_error(self):
+        self.assertIsNone(self.pkcs11._check_error(pkcs11.CKR_OK))
+
+    def test_check_error_with_without_specific_handling(self):
+        self.assertRaises(exception.P11CryptoPluginException,
+                          self.pkcs11._check_error, 5)
+
+    def test_check_error_with_token_error(self):
+        self.assertRaises(exception.P11CryptoTokenException,
+                          self.pkcs11._check_error, 0xe0)

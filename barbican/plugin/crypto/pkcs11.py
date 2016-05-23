@@ -279,6 +279,7 @@ def build_ffi():
     # FUNCTIONS
     ffi.cdef(textwrap.dedent("""
     CK_RV C_Initialize(void *);
+    CK_RV C_Finalize(void *);
     CK_RV C_OpenSession(CK_SLOT_ID, CK_FLAGS, void *, CK_NOTIFY,
                         CK_SESSION_HANDLE *);
     CK_RV C_CloseSession(CK_SESSION_HANDLE);
@@ -318,18 +319,6 @@ def build_ffi():
     CK_RV C_GenerateRandom(CK_SESSION_HANDLE, CK_BYTE_PTR, CK_ULONG);
     """))
     return ffi
-
-
-class P11CryptoPluginKeyException(exception.BarbicanException):
-    message = u._("More than one key found for label")
-
-
-class P11CryptoPluginException(exception.BarbicanException):
-    message = u._("General exception")
-
-
-class P11CryptoKeyHandleException(exception.BarbicanException):
-    message = u._("No key handle was found")
 
 
 class PKCS11(object):
@@ -394,7 +383,7 @@ class PKCS11(object):
         rv = self.lib.C_FindObjectsFinal(session)
         self._check_error(rv)
         if count[0] > 1:
-            raise P11CryptoPluginKeyException()
+            raise exception.P11CryptoPluginKeyException()
         return key
 
     def encrypt(self, key, pt_data, session):
@@ -447,7 +436,7 @@ class PKCS11(object):
     def generate_key(self, key_length, session, key_label=None,
                      encrypt=False, sign=False, wrap=False, master_key=False):
         if not encrypt and not sign and not wrap:
-            raise P11CryptoPluginException()
+            raise exception.P11CryptoPluginException()
         if master_key and not key_label:
             raise ValueError(u._("key_label must be set for master_keys"))
 
@@ -566,14 +555,20 @@ class PKCS11(object):
         rv = self.lib.C_DestroyObject(session, obj_handle)
         self._check_error(rv)
 
+    def finalize(self):
+        rv = self.lib.C_Finalize(self.ffi.NULL)
+        self._check_error(rv)
+
     def _check_error(self, value):
         if value != CKR_OK:
-            # TODO(jkf) Expand error handling to raise different exceptions
-            # for notable errors we want to handle programmatically
-            raise P11CryptoPluginException(u._(
-                "HSM returned response code: {hex_value} {code}").format(
-                    hex_value=hex(value),
-                    code=ERROR_CODES.get(value, 'CKR_????')))
+            code = ERROR_CODES.get(value, 'CKR_????')
+            hex_code = "{hex} {code}".format(hex=hex(value), code=code)
+
+            if code == 'CKR_TOKEN_NOT_PRESENT':
+                raise exception.P11CryptoTokenException(slot_id=self.slot_id)
+
+            raise exception.P11CryptoPluginException(u._(
+                "HSM returned response code: {code}").format(code=hex_code))
 
     def _generate_random(self, length, session):
         buf = self.ffi.new("CK_BYTE[{0}]".format(length))
@@ -635,7 +630,7 @@ class PKCS11(object):
     def _rng_self_test(self, session):
         test_random = self.generate_random(100, session)
         if test_random == b'\x00' * 100:
-            raise P11CryptoPluginException(
+            raise exception.P11CryptoPluginException(
                 u._("Apparent RNG self-test failure."))
 
     def _build_gcm_mechanism(self, iv):
