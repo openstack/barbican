@@ -685,8 +685,14 @@ class SecretRepo(BaseRepo):
         :param project_id: id of barbican project entity
         :param session: existing db session reference.
         """
+
+        utcnow = timeutils.utcnow()
+        expiration_filter = or_(models.Secret.expiration.is_(None),
+                                models.Secret.expiration > utcnow)
+
         query = session.query(models.Secret).filter_by(deleted=False)
         query = query.filter(models.Secret.project_id == project_id)
+        query = query.filter(expiration_filter)
 
         return query
 
