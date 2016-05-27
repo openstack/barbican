@@ -20,6 +20,7 @@ from oslo_config import cfg
 from oslo_serialization import jsonutils as json
 
 from barbican.common import config
+from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
 from barbican.plugin.crypto import crypto as plugin
@@ -95,23 +96,48 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         self.pkek_cache_limit = plugin_conf.pkek_cache_limit
         self.algorithm = plugin_conf.algorithm
 
-        # Master Key cache
-        self.mk_cache = {}
-        self.mk_cache_lock = threading.RLock()
-
-        # Project KEK cache
-        self.pkek_cache = collections.OrderedDict()
-        self.pkek_cache_lock = threading.RLock()
-
-        # Session for object caching
-        self.caching_session = self.pkcs11.get_session()
-        self.caching_session_lock = threading.RLock()
-
-        # Cache master keys
-        self._get_master_key(self.mkek_label)
-        self._get_master_key(self.hmac_label)
+        self._configure_object_cache()
 
     def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
+        return self._call_pkcs11(self._encrypt, encrypt_dto, kek_meta_dto,
+                                 project_id)
+
+    def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
+                project_id):
+        return self._call_pkcs11(self._decrypt, decrypt_dto, kek_meta_dto,
+                                 kek_meta_extended, project_id)
+
+    def bind_kek_metadata(self, kek_meta_dto):
+        return self._call_pkcs11(self._bind_kek_metadata, kek_meta_dto)
+
+    def generate_symmetric(self, generate_dto, kek_meta_dto, project_id):
+        return self._call_pkcs11(self._generate_symmetric, generate_dto,
+                                 kek_meta_dto, project_id)
+
+    def generate_asymmetric(self, generate_dto, kek_meta_dto, project_id):
+        raise NotImplementedError(u._("Feature not implemented for PKCS11"))
+
+    def supports(self, type_enum, algorithm=None, bit_length=None, mode=None):
+        if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:
+            return True
+        elif type_enum == plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION:
+            return True
+        elif type_enum == plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION:
+            return False
+        else:
+            return False
+
+    def _call_pkcs11(self, func, *args, **kwargs):
+        # Wrap pkcs11 calls to enable a single retry when exceptions are raised
+        # that can be fixed by reinitializing the pkcs11 library
+        try:
+            return func(*args, **kwargs)
+        except (exception.PKCS11Exception) as pe:
+            LOG.warn("Reinitializing PKCS#11 library: {e}".format(e=pe))
+            self._reinitialize_pkcs11()
+            return func(*args, **kwargs)
+
+    def _encrypt(self, encrypt_dto, kek_meta_dto, project_id):
         kek = self._load_kek_from_meta_dto(kek_meta_dto)
         try:
             session = self._get_session()
@@ -127,8 +153,8 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         )
         return plugin.ResponseDTO(ct_data['ct'], kek_meta_extended)
 
-    def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
-                project_id):
+    def _decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
+                 project_id):
         kek = self._load_kek_from_meta_dto(kek_meta_dto)
         meta_extended = json.loads(kek_meta_extended)
         iv = base64.b64decode(meta_extended['iv'])
@@ -144,7 +170,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
 
         return pt_data
 
-    def bind_kek_metadata(self, kek_meta_dto):
+    def _bind_kek_metadata(self, kek_meta_dto):
         if not kek_meta_dto.plugin_meta:
             # Generate wrapped kek and jsonify
             wkek = self._generate_wrapped_kek(
@@ -158,7 +184,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             kek_meta_dto.mode = 'CBC'
         return kek_meta_dto
 
-    def generate_symmetric(self, generate_dto, kek_meta_dto, project_id):
+    def _generate_symmetric(self, generate_dto, kek_meta_dto, project_id):
         kek = self._load_kek_from_meta_dto(kek_meta_dto)
         byte_length = int(generate_dto.bit_length) // 8
 
@@ -175,18 +201,22 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         )
         return plugin.ResponseDTO(ct_data['ct'], kek_meta_extended)
 
-    def generate_asymmetric(self, generate_dto, kek_meta_dto, project_id):
-        raise NotImplementedError(u._("Feature not implemented for PKCS11"))
+    def _configure_object_cache(self):
+        # Master Key cache
+        self.mk_cache = {}
+        self.mk_cache_lock = threading.RLock()
 
-    def supports(self, type_enum, algorithm=None, bit_length=None, mode=None):
-        if type_enum == plugin.PluginSupportTypes.ENCRYPT_DECRYPT:
-            return True
-        elif type_enum == plugin.PluginSupportTypes.SYMMETRIC_KEY_GENERATION:
-            return True
-        elif type_enum == plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION:
-            return False
-        else:
-            return False
+        # Project KEK cache
+        self.pkek_cache = collections.OrderedDict()
+        self.pkek_cache_lock = threading.RLock()
+
+        # Session for object caching
+        self.caching_session = self._get_session()
+        self.caching_session_lock = threading.RLock()
+
+        # Cache master keys
+        self._get_master_key(self.mkek_label)
+        self._get_master_key(self.hmac_label)
 
     def _pkek_cache_add(self, kek, label):
         with self.pkek_cache_lock:
@@ -227,7 +257,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             else:
                 break
 
-    def _create_pkcs11(self, plugin_conf, ffi):
+    def _create_pkcs11(self, plugin_conf, ffi=None):
         return pkcs11.PKCS11(
             library_path=plugin_conf.library_path,
             login_passphrase=plugin_conf.login,
@@ -236,6 +266,22 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             ffi=ffi,
             algorithm=plugin_conf.algorithm
         )
+
+    def _reinitialize_pkcs11(self):
+        self.pkcs11.finalize()
+        self.pkcs11 = None
+
+        with self.caching_session_lock:
+            self.caching_session = None
+
+        with self.pkek_cache_lock:
+            self.pkek_cache.clear()
+
+        with self.mk_cache_lock:
+            self.mk_cache.clear()
+
+        self.pkcs11 = self._create_pkcs11(self.conf.p11_crypto_plugin)
+        self._configure_object_cache()
 
     def _get_session(self):
         return self.pkcs11.get_session()
@@ -251,7 +297,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
                 with self.caching_session_lock:
                     key = self.pkcs11.get_key_handle(label, session)
                 if key is None:
-                    raise pkcs11.P11CryptoKeyHandleException(
+                    raise exception.P11CryptoKeyHandleException(
                         u._("Could not find key labeled {0}").format(label)
                     )
                 self.mk_cache[label] = key
@@ -326,7 +372,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             session = self.caching_session
             if key_label in self.mk_cache or \
                     self.pkcs11.get_key_handle(key_label, session) is not None:
-                raise pkcs11.P11CryptoPluginKeyException(
+                raise exception.P11CryptoPluginKeyException(
                     u._("A master key with that label already exists")
                 )
             mk = self.pkcs11.generate_key(
@@ -341,7 +387,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             session = self.caching_session
             if key_label in self.mk_cache or \
                     self.pkcs11.get_key_handle(key_label, session) is not None:
-                raise pkcs11.P11CryptoPluginKeyException(
+                raise exception.P11CryptoPluginKeyException(
                     u._("A master key with that label already exists")
                 )
             mk = self.pkcs11.generate_key(

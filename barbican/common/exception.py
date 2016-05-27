@@ -510,3 +510,23 @@ class SubCADeletionErrors(BarbicanHTTPException):
     message = u._("Errors returned by CA when attempting to delete "
                   "subordinate CA: %(reason)")
     client_message = message
+
+
+class PKCS11Exception(BarbicanException):
+    message = u._("There was an error with the PKCS#11 library.")
+
+
+class P11CryptoPluginKeyException(PKCS11Exception):
+    message = u._("More than one key found for label")
+
+
+class P11CryptoPluginException(PKCS11Exception):
+    message = u._("General exception")
+
+
+class P11CryptoKeyHandleException(PKCS11Exception):
+    message = u._("No key handle was found")
+
+
+class P11CryptoTokenException(PKCS11Exception):
+    message = u._("No token was found in slot %(slot_id)s")
