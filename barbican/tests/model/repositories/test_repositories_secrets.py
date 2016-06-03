@@ -17,6 +17,8 @@ from barbican.plugin.interface import secret_store as ss
 from barbican.tests import database_utils
 from barbican.tests import utils
 
+import datetime
+
 
 @utils.parameterized_test_case
 class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
@@ -210,6 +212,32 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
 
         self.repo.delete_entity_by_id(secret_model.id, "my keystone id",
                                       session=session)
+        session.commit()
+
+        count = self.repo.get_count(project.id, session=session)
+        self.assertEqual(1, count)
+
+    def test_should_get_count_one_after_expiration(self):
+        current_time = datetime.datetime.utcnow()
+        tomorrow = current_time + datetime.timedelta(days=1)
+        yesterday = current_time - datetime.timedelta(days=1)
+
+        session = self.repo.get_session()
+
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        secret_model = models.Secret()
+        secret_model.project_id = project.id
+        secret_model.expiration = tomorrow
+        self.repo.create_from(secret_model, session=session)
+
+        secret_model = models.Secret()
+        secret_model.project_id = project.id
+        secret_model.expiration = yesterday
+        self.repo.create_from(secret_model, session=session)
+
         session.commit()
 
         count = self.repo.get_count(project.id, session=session)
