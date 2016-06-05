@@ -2,8 +2,8 @@ HOST: https://dfw.barbican.api.rackspacecloud.com/v1/
 
 --- Barbican API v1 ---
 ---
-Barbican is a ReST based key management service. It is built with 
-[OpenStack](http://www.openstack.org/) in mind, but can bse used outside 
+Barbican is a ReST based key management service. It is built with
+[OpenStack](http://www.openstack.org/) in mind, but can be used outside
 an OpenStack implementation.
 
 More information can be found on [GitHub](https://github.com/cloudkeep/barbican).
@@ -11,12 +11,12 @@ More information can be found on [GitHub](https://github.com/cloudkeep/barbican)
 
 --
 Secrets Resource
-The following is a description of the resources dealing with generic secrets. 
+The following is a description of the resources dealing with generic secrets.
 These can be encryption keys or anything else a user wants to store in a secure,
 auditable manner
 --
-Allows a user to list all secrets in a tenant. Note: the actual secret 
-should not be listed here, a user must make a separate call to get the 
+Allows a user to list all secrets in a tenant. Note: the actual secret
+should not be listed here, a user must make a separate call to get the
 secret details to view the secret.
 GET /secrets
 < 200
@@ -34,7 +34,7 @@ GET /secrets
   "mime_type": "text/plain"
 }
 
-Allows a user to create a new secret. This call expects the user to 
+Allows a user to create a new secret. This call expects the user to
 provide a secret. To have the API generate a secret, see the provisioning
 API.
 POST /secrets
