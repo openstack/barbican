@@ -122,6 +122,9 @@ class ContainersController(controllers.ACLMixin):
         if not container:
             container_not_found()
 
+        if len(remainder) == 1 and remainder[0] == 'secrets':
+            return ContainersSecretsController(container), ()
+
         return ContainerController(container), remainder
 
     @pecan.expose(generic=True, template='json')
@@ -213,3 +216,107 @@ class ContainersController(controllers.ACLMixin):
                  external_project_id)
 
         return {'container_ref': url}
+
+
+class ContainersSecretsController(controllers.ACLMixin):
+    """Handles ContainerSecret creation and deletion requests."""
+
+    def __init__(self, container):
+        LOG.debug('=== Creating ContainerSecretsController ===')
+        self.container = container
+        self.container_secret_repo = repo.get_container_secret_repository()
+        self.secret_repo = repo.get_secret_repository()
+        self.validator = validators.ContainerSecretValidator()
+
+    @pecan.expose(generic=True)
+    def index(self, **kwargs):
+        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
+
+    @index.when(method='POST', template='json')
+    @controllers.handle_exceptions(u._('Container Secret creation'))
+    @controllers.enforce_rbac('container_secret:post')
+    @controllers.enforce_content_types(['application/json'])
+    def on_post(self, external_project_id, **kwargs):
+        """Handles adding an existing secret to an existing container."""
+
+        if self.container.type != 'generic':
+            pecan.abort(400, u._("Only 'generic' containers can be modified."))
+
+        data = api.load_body(pecan.request, validator=self.validator)
+
+        name = data.get('name')
+        secret_ref = data.get('secret_ref')
+        secret_id = hrefs.get_secret_id_from_ref(secret_ref)
+
+        secret = self.secret_repo.get(
+            entity_id=secret_id,
+            external_project_id=external_project_id,
+            suppress_exception=True)
+        if not secret:
+            pecan.abort(404, u._("Secret provided doesn't exist."))
+
+        found_container_secrets = list(
+            filter(lambda cs: cs.secret_id == secret_id and cs.name == name,
+                   self.container.container_secrets)
+        )
+
+        if found_container_secrets:
+            pecan.abort(409, u._('Conflict. A secret with that name and ID is '
+                                 'already stored in this container. The same '
+                                 'secret can exist in a container as long as '
+                                 'the name is unique.'))
+
+        LOG.debug('Start container secret on_post...%s', secret_ref)
+        new_container_secret = models.ContainerSecret()
+        new_container_secret.container_id = self.container.id
+        new_container_secret.name = name
+        new_container_secret.secret_id = secret_id
+        self.container_secret_repo.save(new_container_secret)
+
+        url = hrefs.convert_container_to_href(self.container.id)
+        LOG.debug('URI to container is %s', url)
+
+        pecan.response.status = 201
+        pecan.response.headers['Location'] = url
+        LOG.info(u._LI('Created a container secret for project: %s'),
+                 external_project_id)
+
+        return {'container_ref': url}
+
+    @index.when(method='DELETE')
+    @utils.allow_all_content_types
+    @controllers.handle_exceptions(u._('Container Secret deletion'))
+    @controllers.enforce_rbac('container_secret:delete')
+    def on_delete(self, external_project_id, **kwargs):
+        """Handles removing a secret reference from an existing container."""
+
+        data = api.load_body(pecan.request, validator=self.validator)
+
+        name = data.get('name')
+        secret_ref = data.get('secret_ref')
+        secret_id = hrefs.get_secret_id_from_ref(secret_ref)
+
+        secret = self.secret_repo.get(
+            entity_id=secret_id,
+            external_project_id=external_project_id,
+            suppress_exception=True)
+        if not secret:
+            pecan.abort(404, u._("Secret '{secret_name}' with reference "
+                                 "'{secret_ref}' doesn't exist.").format(
+                                     secret_name=name, secret_ref=secret_ref))
+
+        found_container_secrets = list(
+            filter(lambda cs: cs.secret_id == secret_id and cs.name == name,
+                   self.container.container_secrets)
+        )
+
+        if not found_container_secrets:
+            pecan.abort(404, u._('Secret provided is not in the container'))
+
+        for container_secret in found_container_secrets:
+            self.container_secret_repo.delete_entity_by_id(
+                container_secret.id, external_project_id)
+
+        pecan.response.status = 204
+        LOG.info(u._LI('Deleted container secret for project: %s'),
+                 external_project_id)

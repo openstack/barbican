@@ -150,11 +150,11 @@ def get_container_id_from_ref(container_ref):
 def get_secret_id_from_ref(secret_ref):
     """Parse a secret reference and return the secret ID
 
-    TODO(Dave) Implement this, or make one generic ID from REF function
-
     :param secret_ref: HTTP reference of secret
     :return: a string containing the ID of the secret
     """
+    secret_id = secret_ref.rsplit('/', 1)[1]
+    return secret_id
 
 
 def get_ca_id_from_ref(ca_ref):

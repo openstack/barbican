@@ -775,6 +775,27 @@ class ContainerConsumerValidator(ValidatorBase):
         return json_data
 
 
+class ContainerSecretValidator(ValidatorBase):
+    """Validate a Container Secret."""
+
+    def __init__(self):
+        self.name = 'ContainerSecret'
+        self.schema = {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "maxLength": 255},
+                "secret_ref": {"type": "string", "minLength": 1}
+            },
+            "required": ["secret_ref"]
+        }
+
+    def validate(self, json_data, parent_schema=None):
+        schema_name = self._full_name(parent_schema)
+
+        self._assert_schema_is_valid(json_data, schema_name)
+        return json_data
+
+
 class ContainerValidator(ValidatorBase):
     """Validator for all types of Container."""
 

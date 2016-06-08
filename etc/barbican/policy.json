@@ -46,6 +46,8 @@
     "containers:get": "rule:all_but_audit",
     "container:get": "rule:container_non_private_read or rule:container_project_creator or rule:container_project_admin or rule:container_acl_read",
     "container:delete": "rule:admin",
+    "container_secret:post": "rule:admin",
+    "container_secret:delete": "rule:admin",
     "transport_key:get": "rule:all_users",
     "transport_key:delete": "rule:admin",
     "transport_keys:get": "rule:all_users",

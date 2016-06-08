@@ -269,6 +269,484 @@ class WhenGettingOrDeletingContainerUsingContainerResource(
         self.assertEqual("application/json", resp.content_type)
 
 
+class WhenAddingOrRemovingContainerSecretsUsingContainersSecretsResource(
+        utils.BarbicanAPIBaseTestCase,
+        SuccessfulContainerCreateMixin):
+
+    def test_should_add_container_secret(self):
+        container_name = 'test container name'
+        container_type = 'generic'
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(0, len(container.container_secrets))
+
+        secret_name = 'test secret 1'
+        resp, _ = secret_helper.create_secret(
+            self.app,
+            name=secret_name
+        )
+        self.assertEqual(201, resp.status_int)
+        secret_ref = resp.json.get('secret_ref')
+
+        resp, updated_container_uuid = create_container_secret(
+            self.app,
+            container_id=container_uuid,
+            secret_ref=secret_ref,
+            name=secret_name
+        )
+
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(1, len(container.container_secrets))
+
+    def test_should_add_container_secret_without_name(self):
+        container_name = 'test container name'
+        container_type = 'generic'
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(0, len(container.container_secrets))
+
+        secret_name = 'test secret 1'
+        resp, _ = secret_helper.create_secret(
+            self.app,
+            name=secret_name
+        )
+        self.assertEqual(201, resp.status_int)
+        secret_ref = resp.json.get('secret_ref')
+
+        resp, updated_container_uuid = create_container_secret(
+            self.app,
+            container_id=container_uuid,
+            secret_ref=secret_ref
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(1, len(container.container_secrets))
+
+    def test_should_add_container_secret_with_different_name(self):
+        container_name = 'test container name'
+        container_type = 'generic'
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(0, len(container.container_secrets))
+
+        secret_name = 'test secret 1'
+        resp, _ = secret_helper.create_secret(
+            self.app,
+            name=secret_name
+        )
+        self.assertEqual(201, resp.status_int)
+        secret_ref = resp.json.get('secret_ref')
+
+        resp, updated_container_uuid = create_container_secret(
+            self.app,
+            container_id=container_uuid,
+            secret_ref=secret_ref,
+            name=secret_name
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(1, len(container.container_secrets))
+
+        secret_name = 'test secret 2'
+        resp, updated_container_uuid = create_container_secret(
+            self.app,
+            container_id=container_uuid,
+            secret_ref=secret_ref,
+            name=secret_name
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(2, len(container.container_secrets))
+
+    def test_should_not_add_when_secret_not_found(self):
+        container_name = 'test container name'
+        container_type = 'generic'
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(0, len(container.container_secrets))
+
+        secret_ref = '/secrets/bad_id'
+        resp, updated_container_uuid = create_container_secret(
+            self.app,
+            container_id=container_uuid,
+            secret_ref=secret_ref,
+            expect_errors=True
+        )
+
+        self.assertEqual(404, resp.status_int)
+
+    def test_should_not_add_container_secret_with_invalid_name(self):
+        container_name = 'test container name'
+        container_type = 'generic'
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(0, len(container.container_secrets))
+
+        secret_name = 'test secret 1'
+        resp, _ = secret_helper.create_secret(
+            self.app,
+            name=secret_name
+        )
+        self.assertEqual(201, resp.status_int)
+        secret_ref = resp.json.get('secret_ref')
+
+        container_secret_name = "x" * 256
+        resp, updated_container_uuid = create_container_secret(
+            self.app,
+            container_id=container_uuid,
+            secret_ref=secret_ref,
+            name=container_secret_name,
+            expect_errors=True
+        )
+
+        self.assertEqual(400, resp.status_int)
+
+    def test_should_not_add_container_secret_with_invalid_secret_ref(self):
+        container_name = 'test container name'
+        container_type = 'generic'
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(0, len(container.container_secrets))
+
+        secret_ref = ""
+        resp, updated_container_uuid = create_container_secret(
+            self.app,
+            container_id=container_uuid,
+            secret_ref=secret_ref,
+            expect_errors=True
+        )
+
+        self.assertEqual(400, resp.status_int)
+
+    def test_should_add_different_secret_refs_with_duplicate_name(self):
+        container_name = 'test container name'
+        container_type = 'generic'
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(0, len(container.container_secrets))
+
+        secret_name = 'test secret 1'
+        resp, _ = secret_helper.create_secret(
+            self.app,
+            name=secret_name
+        )
+        self.assertEqual(201, resp.status_int)
+        first_secret_ref = resp.json.get('secret_ref')
+
+        secret_name = 'test secret 2'
+        resp, _ = secret_helper.create_secret(
+            self.app,
+            name=secret_name
+        )
+        self.assertEqual(201, resp.status_int)
+        second_secret_ref = resp.json.get('secret_ref')
+
+        container_secret_name = 'test container secret name'
+        resp, updated_container_uuid = create_container_secret(
+            self.app,
+            container_id=container_uuid,
+            secret_ref=first_secret_ref,
+            name=container_secret_name
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(1, len(container.container_secrets))
+
+        resp, updated_container_uuid = create_container_secret(
+            self.app,
+            container_id=container_uuid,
+            secret_ref=second_secret_ref,
+            name=container_secret_name
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(2, len(container.container_secrets))
+
+    def test_should_not_allow_add_on_rsa_container(self):
+        container_name = 'test container name'
+        container_type = 'rsa'
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        secret_name = 'test secret 1'
+        resp, _ = secret_helper.create_secret(
+            self.app,
+            name=secret_name
+        )
+        self.assertEqual(201, resp.status_int)
+        secret_ref = resp.json.get('secret_ref')
+
+        resp, updated_container_uuid = create_container_secret(
+            self.app,
+            container_id=container_uuid,
+            secret_ref=secret_ref,
+            name=secret_name,
+            expect_errors=True
+        )
+
+        self.assertEqual(400, resp.status_int)
+
+    def test_should_not_allow_add_on_certificate_container(self):
+        container_name = 'test container name'
+        container_type = 'certificate'
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        secret_name = 'test secret 1'
+        resp, _ = secret_helper.create_secret(
+            self.app,
+            name=secret_name
+        )
+        self.assertEqual(201, resp.status_int)
+        secret_ref = resp.json.get('secret_ref')
+
+        resp, updated_container_uuid = create_container_secret(
+            self.app,
+            container_id=container_uuid,
+            secret_ref=secret_ref,
+            name=secret_name,
+            expect_errors=True
+        )
+
+        self.assertEqual(400, resp.status_int)
+
+    def test_should_not_allow_add_secret_when_exists_in_container(self):
+        container_name = 'test container name'
+        container_type = 'generic'
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        secret_name = 'test secret 1'
+        resp, _ = secret_helper.create_secret(
+            self.app,
+            name=secret_name
+        )
+        self.assertEqual(201, resp.status_int)
+        secret_ref = resp.json.get('secret_ref')
+
+        resp, updated_container_uuid = create_container_secret(
+            self.app,
+            container_id=container_uuid,
+            secret_ref=secret_ref,
+            name=secret_name
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        resp, updated_container_uuid = create_container_secret(
+            self.app,
+            container_id=container_uuid,
+            secret_ref=secret_ref,
+            name=secret_name,
+            expect_errors=True
+        )
+
+        self.assertEqual(409, resp.status_int)
+
+    def test_should_delete_existing_container_secret(self):
+        secret_name = 'test secret 1'
+        resp, _ = secret_helper.create_secret(
+            self.app,
+            name=secret_name
+        )
+        self.assertEqual(201, resp.status_int)
+        secret_ref = resp.json.get('secret_ref')
+
+        container_name = 'test container name'
+        container_type = 'generic'
+        secret_refs = [
+            {
+                'name': secret_name,
+                'secret_ref': secret_ref
+            }
+        ]
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type,
+            secret_refs=secret_refs
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(1, len(container.container_secrets))
+
+        resp = delete_container_secret(self.app, container_uuid, secret_ref,
+                                       secret_name)
+        self.assertEqual(204, resp.status_int)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(0, len(container.container_secrets))
+
+    def test_should_delete_container_secret_without_name(self):
+        secret_name = 'test secret 1'
+        resp, _ = secret_helper.create_secret(
+            self.app,
+            name=secret_name
+        )
+        self.assertEqual(201, resp.status_int)
+        secret_ref = resp.json.get('secret_ref')
+
+        container_name = 'test container name'
+        container_type = 'generic'
+        secret_refs = [
+            {
+                'secret_ref': secret_ref
+            }
+        ]
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type,
+            secret_refs=secret_refs
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(1, len(container.container_secrets))
+
+        resp = delete_container_secret(self.app, container_uuid, secret_ref)
+        self.assertEqual(204, resp.status_int)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(0, len(container.container_secrets))
+
+    def test_should_not_delete_container_secret_with_incorrect_name(self):
+        secret_name = 'test secret 1'
+        resp, _ = secret_helper.create_secret(
+            self.app,
+            name=secret_name
+        )
+        self.assertEqual(201, resp.status_int)
+        secret_ref = resp.json.get('secret_ref')
+
+        container_name = 'test container name'
+        container_type = 'generic'
+        secret_refs = [
+            {
+                'name': secret_name,
+                'secret_ref': secret_ref
+            }
+        ]
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type,
+            secret_refs=secret_refs
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(1, len(container.container_secrets))
+
+        incorrect_name = 'test incorrect name'
+        resp = delete_container_secret(self.app, container_uuid, secret_ref,
+                                       incorrect_name, expect_errors=True)
+        self.assertEqual(404, resp.status_int)
+
+        container = containers_repo.get(container_uuid, self.project_id)
+        self.assertEqual(1, len(container.container_secrets))
+
+    def test_should_delete_only_when_secret_exists(self):
+        secret_ref = '/secrets/bad_id'
+        container_name = 'test container name'
+        container_type = 'generic'
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        resp = delete_container_secret(self.app, container_uuid, secret_ref,
+                                       expect_errors=True)
+
+        self.assertEqual(404, resp.status_int)
+
+    def test_should_delete_only_when_secret_exists_in_container(self):
+        secret_name = 'test secret 1'
+        resp, _ = secret_helper.create_secret(
+            self.app,
+            name=secret_name
+        )
+        self.assertEqual(201, resp.status_int)
+        secret_ref = resp.json.get('secret_ref')
+
+        container_name = 'test container name'
+        container_type = 'generic'
+        resp, container_uuid = create_container(
+            self.app,
+            name=container_name,
+            container_type=container_type
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        resp = delete_container_secret(self.app, container_uuid, secret_ref,
+                                       secret_name, expect_errors=True)
+
+        self.assertEqual(404, resp.status_int)
+
+
 class WhenPerformingUnallowedOperationsOnContainers(
         utils.BarbicanAPIBaseTestCase,
         SuccessfulContainerCreateMixin):
@@ -280,6 +758,11 @@ class WhenPerformingUnallowedOperationsOnContainers(
             'secret_refs': []
         }
     ]
+
+    secret_req = {
+        'name': 'test secret name',
+        'secret_ref': 'https://localhost/v1/secrets/1-2-3-4'
+    }
 
     def test_should_not_allow_put_on_containers(self):
         resp = self.app.put_json(
@@ -319,6 +802,37 @@ class WhenPerformingUnallowedOperationsOnContainers(
         )
         self.assertEqual(405, resp.status_int)
 
+    def test_should_not_allow_get_on_container_secrets(self):
+        resp, container_uuid = create_container(
+            self.app,
+            name='test container name',
+            container_type='generic'
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        resp = self.app.get(
+            '/containers/{container_id}/secrets'.format(
+                container_id=container_uuid),
+            expect_errors=True
+        )
+        self.assertEqual(405, resp.status_int)
+
+    def test_should_not_allow_put_on_container_secrets(self):
+        resp, container_uuid = create_container(
+            self.app,
+            name='test container name',
+            container_type='generic'
+        )
+        self._assert_successful_container_create(resp, container_uuid)
+
+        resp = self.app.put_json(
+            '/containers/{container_id}/secrets'.format(
+                container_id=container_uuid),
+            self.secret_req,
+            expect_errors=True
+        )
+        self.assertEqual(405, resp.status_int)
+
 
 # ----------------------- Helper Functions ---------------------------
 def create_container(app, name=None, container_type=None, secret_refs=None,
@@ -344,3 +858,47 @@ def create_container(app, name=None, container_type=None, secret_refs=None,
         _, created_uuid = os.path.split(container_ref)
 
     return resp, created_uuid
+
+
+def create_container_secret(app, container_id=None, secret_ref=None, name=None,
+                            expect_errors=False, headers=None):
+    request = {
+        'name': name,
+        'secret_ref': secret_ref
+    }
+    cleaned_request = {key: val for key, val in request.items()
+                       if val is not None}
+
+    resp = app.post_json(
+        '/containers/{container_id}/secrets'.format(container_id=container_id),
+        cleaned_request,
+        expect_errors=expect_errors,
+        headers=headers
+    )
+
+    updated_uuid = None
+    if resp.status_int == 201:
+        container_ref = resp.json.get('container_ref', '')
+        _, updated_uuid = os.path.split(container_ref)
+
+    return resp, updated_uuid
+
+
+def delete_container_secret(app, container_id=None, secret_ref=None, name=None,
+                            expect_errors=False, headers=None):
+
+    request = {
+        'name': name,
+        'secret_ref': secret_ref
+    }
+    cleaned_request = {key: val for key, val in request.items()
+                       if val is not None}
+
+    resp = app.delete_json(
+        '/containers/{container_id}/secrets'.format(container_id=container_id),
+        cleaned_request,
+        expect_errors=expect_errors,
+        headers=headers
+    )
+
+    return resp

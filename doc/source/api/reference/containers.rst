@@ -276,3 +276,128 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 404  | Container not found or unavailable                                          |
 +------+-----------------------------------------------------------------------------+
+
+POST /v1/containers/{container_uuid}/secrets
+############################################
+
+Add a secret to an existing container.  This is only supported on generic
+containers.
+
+Request Attributes
+******************
+
++------------+--------+------------------------------------------------------------+
+| Name       | Type   | Description                                                |
++============+========+============================================================+
+| name       | string | (optional) Human readable name for identifying your secret |
+|            |        | within the container.                                      |
++------------+--------+------------------------------------------------------------+
+| secret_ref | uri    | (required) Full URI reference to an existing secret.       |
++------------+--------+------------------------------------------------------------+
+
+Request:
+********
+
+.. code-block:: javascript
+
+    POST /v1/containers/{container_uuid}/secrets
+    Headers:
+        X-Project-Id: {project_id}
+
+    Content:
+    {
+        "name": "private_key",
+        "secret_ref": "https://{barbican_host}/v1/secrets/{secret_uuid}"
+    }
+
+Response:
+*********
+
+.. code-block:: javascript
+
+    {
+        "container_ref": "https://{barbican_host}/v1/containers/{container_uuid}"
+    }
+
+Note that the requesting 'container_uuid' is the same as that provided in the
+response.
+
+
+HTTP Status Codes
+*****************
+
+In general, error codes produced by the containers POST call pertain here as
+well, especially in regards to the secret references that can be provided.
+
++------+-----------------------------------------------------------------------------+
+| Code | Description                                                                 |
++======+=============================================================================+
+| 201  | Successful update of the container                                          |
++------+-----------------------------------------------------------------------------+
+| 400  | Missing secret_ref                                                          |
++------+-----------------------------------------------------------------------------+
+| 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource |
++------+-----------------------------------------------------------------------------+
+| 403  | Forbidden.  The user has been authenticated, but is not authorized to       |
+|      | add the secret to the specified container.  This can be based on the user's |
+|      | role or the project's quota.                                                |
++------+-----------------------------------------------------------------------------+
+
+DELETE /v1/containers/{container_uuid}/secrets
+##############################################
+
+Remove a secret from a container.  This is only supported on generic
+containers.
+
+Request Attributes
+******************
+
++------------+--------+------------------------------------------------------------+
+| Name       | Type   | Description                                                |
++============+========+============================================================+
+| name       | string | (optional) Human readable name for identifying your secret |
+|            |        | within the container.                                      |
++------------+--------+------------------------------------------------------------+
+| secret_ref | uri    | (required) Full URI reference to an existing secret.       |
++------------+--------+------------------------------------------------------------+
+
+Request:
+********
+
+.. code-block:: javascript
+
+   DELETE /v1/containers/{container_uuid}/secrets
+   Headers:
+       X-Project-Id: {project_id}
+
+   Content:
+   {
+       "name": "private key",
+       "secret_ref": "https://{barbican_host}/v1/secrets/{secret_uuid}"
+   }
+
+Response:
+*********
+
+.. code-block:: javascript
+
+   204 No Content
+
+HTTP Status Codes
+*****************
+
++------+-----------------------------------------------------------------------------+
+| Code | Description                                                                 |
++======+=============================================================================+
+| 204  | Successful removal of the secret from the container.                        |
++------+-----------------------------------------------------------------------------+
+| 400  | Missing secret_ref                                                          |
++------+-----------------------------------------------------------------------------+
+| 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource |
++------+-----------------------------------------------------------------------------+
+| 403  | Forbidden.  The user has been authenticated, but is not authorized to       |
+|      | remove the secret from the specified container.  This can be based on the   |
+|      | user's role or the project's quota.                                         |
++------+-----------------------------------------------------------------------------+
+| 404  | Specified secret_ref is not found in the container.                         |
++------+-----------------------------------------------------------------------------+
