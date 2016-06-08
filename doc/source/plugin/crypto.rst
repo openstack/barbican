@@ -9,7 +9,7 @@ Barbican.
 
 Barbican supports two storage modes for secrets: a cryptographic mode (detailed
 on this page), and a :doc:`secret store mode </plugin/secret_store>`. The
-cryptograpic mode stores encrypted secrets in Barbican's data store, utilizing
+cryptographic mode stores encrypted secrets in Barbican's data store, utilizing
 a cryptographic process or appliance (such as a hardware security module (HSM))
 to perform the encryption/decryption. Barbican includes a PKCS11-based
 interface to SafeNet HSMs.
