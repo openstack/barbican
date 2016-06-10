@@ -13,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
 import datetime
 import six
 import unittest
 
+from oslo_serialization import base64
 import testtools
 
 from barbican.common import exception as excep
@@ -47,7 +47,7 @@ def get_private_key_req():
             'algorithm': 'rsa',
             'bit_length': 2048,
             'secret_type': 'private',
-            'payload': base64.b64encode(keys.get_private_key_pem())}
+            'payload': base64.encode_as_text(keys.get_private_key_pem())}
 
 
 def get_public_key_req():
@@ -57,7 +57,7 @@ def get_public_key_req():
             'algorithm': 'rsa',
             'bit_length': 2048,
             'secret_type': 'public',
-            'payload': base64.b64encode(keys.get_public_key_pem())}
+            'payload': base64.encode_as_text(keys.get_public_key_pem())}
 
 
 def get_certificate_req():
@@ -67,7 +67,7 @@ def get_certificate_req():
             'algorithm': 'rsa',
             'bit_length': 2048,
             'secret_type': 'certificate',
-            'payload': base64.b64encode(keys.get_certificate_pem())}
+            'payload': base64.encode_as_text(keys.get_certificate_pem())}
 
 
 def get_passphrase_req():
@@ -104,7 +104,7 @@ class WhenTestingValidatorsFunctions(utils.BaseTestCase):
 
     def test_secret_too_big_is_true_for_big_unicode_secrets(self):
         beer = u'\U0001F37A'
-        data = beer * (validators.CONF.max_allowed_secret_in_bytes / 4)
+        data = beer * (validators.CONF.max_allowed_secret_in_bytes // 4)
         data += u'1'
 
         is_too_big = validators.secret_too_big(data)
@@ -119,7 +119,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         super(WhenTestingSecretValidator, self).setUp()
 
         self.name = 'name'
-        self.payload = b'not-encrypted'
+        self.payload = 'not-encrypted'
         self.payload_content_type = 'text/plain'
         self.secret_algorithm = 'algo'
         self.secret_bit_length = 512
@@ -516,7 +516,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
     def test_validation_should_raise_with_unicode_payload(self):
         self.secret_req['payload_content_type'] = 'application/octet-stream'
         self.secret_req['payload_content_encoding'] = 'base64'
-        self.secret_req['payload'] = unichr(0x0080)
+        self.secret_req['payload'] = six.unichr(0x0080)
 
         exception = self.assertRaises(
             excep.InvalidObject,
@@ -1376,8 +1376,9 @@ class WhenTestingSimpleCMCOrderValidator(utils.BaseTestCase):
     def setUp(self):
         super(WhenTestingSimpleCMCOrderValidator, self).setUp()
         self.type = 'certificate'
+        request_data = base64.encode_as_text(certs.create_good_csr())
         self.meta = {'request_type': 'simple-cmc',
-                     'request_data': base64.b64encode(certs.create_good_csr()),
+                     'request_data': request_data,
                      'requestor_name': 'Barbican User',
                      'requestor_email': 'barbican_user@example.com',
                      'requestor_phone': '555-1212'}
@@ -1419,14 +1420,15 @@ class WhenTestingSimpleCMCOrderValidator(utils.BaseTestCase):
                           self.order_req)
 
     def test_should_raise_with_bad_pkcs10_data(self):
-        self.meta['request_data'] = base64.b64encode(certs.create_bad_csr())
+        request_data = base64.encode_as_text(certs.create_bad_csr())
+        self.meta['request_data'] = request_data
         self._set_order()
         self.assertRaises(excep.InvalidPKCS10Data,
                           self.validator.validate,
                           self.order_req)
 
     def test_should_raise_with_signed_wrong_key_pkcs10_data(self):
-        self.meta['request_data'] = base64.b64encode(
+        self.meta['request_data'] = base64.encode_as_text(
             certs.create_csr_signed_with_wrong_key())
         self._set_order()
         self.assertRaises(excep.InvalidPKCS10Data,
@@ -1434,7 +1436,7 @@ class WhenTestingSimpleCMCOrderValidator(utils.BaseTestCase):
                           self.order_req)
 
     def test_should_raise_with_unsigned_pkcs10_data(self):
-        self.meta['request_data'] = base64.b64encode(
+        self.meta['request_data'] = base64.encode_as_text(
             certs.create_csr_that_has_not_been_signed())
         self._set_order()
         self.assertRaises(excep.InvalidPKCS10Data,
