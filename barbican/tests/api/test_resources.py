@@ -401,7 +401,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             suppress_exception=True)
         self.assertEqual(200, resp.status_int)
 
-        self.assertEqual(data, resp.body)
+        self.assertEqual(data, resp.body.decode())
         mock_get_secret.assert_called_once_with(
             'text/plain',
             self.secret,
@@ -428,7 +428,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             suppress_exception=True)
         self.assertEqual(200, resp.status_int)
 
-        self.assertEqual(data, resp.body)
+        self.assertEqual(data, resp.body.decode())
         mock_get_secret.assert_called_once_with(
             'text/plain',
             self.secret,
@@ -457,7 +457,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             suppress_exception=True)
         self.assertEqual(200, resp.status_int)
 
-        self.assertEqual(data, resp.body)
+        self.assertEqual(data, resp.body.decode())
         mock_get_secret.assert_called_once_with(
             'text/plain',
             self.secret,
@@ -580,7 +580,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
             }
         )
 
-        self.assertEqual(data, resp.body)
+        self.assertEqual(data, resp.body.decode())
 
         mock_get_secret.assert_called_once_with(
             'application/octet-stream',
@@ -605,7 +605,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.assertEqual(204, resp.status_int)
 
         mock_store_secret.assert_called_once_with(
-            unencrypted_raw='plain text',
+            unencrypted_raw=b'plain text',
             content_type_raw='text/plain',
             content_encoding=None,
             secret_model=self.secret,
@@ -631,7 +631,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.assertEqual(204, resp.status_int)
 
         mock_store_secret.assert_called_once_with(
-            unencrypted_raw='plain text',
+            unencrypted_raw=b'plain text',
             content_type_raw='application/octet-stream',
             content_encoding=None,
             secret_model=self.secret,
