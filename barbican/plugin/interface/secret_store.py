@@ -153,8 +153,12 @@ class SecretPayloadDecodingError(exception.BarbicanHTTPException):
         )
 
 
-class SecretAcceptNotSupportedException(exception.BarbicanException):
+class SecretAcceptNotSupportedException(exception.BarbicanHTTPException):
     """Raised when requested decrypted content-type is not available."""
+
+    client_message = u._("Wrong payload content-type")
+    status_code = 406
+
     def __init__(self, accept):
         super(SecretAcceptNotSupportedException, self).__init__(
             u._("Secret Accept of '{accept}' not supported").format(
