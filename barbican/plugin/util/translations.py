@@ -14,6 +14,7 @@
 from Crypto.PublicKey import RSA
 from OpenSSL import crypto
 from oslo_serialization import base64
+import six
 
 from barbican import i18n as u  # noqa
 from barbican.plugin.interface import secret_store as s
@@ -47,8 +48,11 @@ def normalize_before_encryption(unencrypted, content_type, content_encoding,
     # Process plain-text type.
     if normalized_media_type in mime_types.PLAIN_TEXT:
         # normalize text to binary and then base64 encode it
-        unencrypted_bytes = unencrypted.encode('utf-8')
-        b64payload = base64.encode_as_bytes(unencrypted_bytes)
+        if six.PY3:
+            b64payload = base64.encode_as_bytes(unencrypted)
+        else:
+            unencrypted_bytes = unencrypted.encode('utf-8')
+            b64payload = base64.encode_as_bytes(unencrypted_bytes)
 
     # Process binary type.
     else:

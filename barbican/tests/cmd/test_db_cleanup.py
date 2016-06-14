@@ -336,7 +336,8 @@ class WhenTestingDBCleanUpCommand(utils.RepositoryTestCase):
         self.assertFalse(_entry_exists(childless_project))
 
         container.delete()
-        map(lambda child: child.delete(), project_children_list)
+        for child in project_children_list:
+            child.delete()
         clean.cleanup_all()
         clean.cleanup_unassociated_projects()
         self.assertFalse(_entry_exists(project_with_children))

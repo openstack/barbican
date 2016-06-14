@@ -1,3 +1,0 @@
-barbican.tests.api.controllers.test_containers
-barbican.tests.api.controllers.test_secrets
-barbican.tests.cmd.test_db_cleanup

@@ -34,7 +34,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
     def test_can_create_new_secret_one_step(self):
         resp, secret_uuid = create_secret(
             self.app,
-            payload=b'not-encrypted',
+            payload='not-encrypted',
             content_type='text/plain'
         )
 
@@ -63,7 +63,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
         self.assertIsNotNone(project)
 
     def test_can_create_new_secret_with_payload_just_under_max(self):
-        large_payload = b'A' * (validators.DEFAULT_MAX_SECRET_BYTES - 8)
+        large_payload = 'A' * (validators.DEFAULT_MAX_SECRET_BYTES - 8)
         resp, _ = create_secret(
             self.app,
             payload=large_payload,
@@ -73,7 +73,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(201, resp.status_int)
 
     def test_creating_new_secret_with_oversized_payload_should_fail(self):
-        oversized_payload = b'A' * (validators.DEFAULT_MAX_SECRET_BYTES + 10)
+        oversized_payload = 'A' * (validators.DEFAULT_MAX_SECRET_BYTES + 10)
         resp, _ = create_secret(
             self.app,
             payload=oversized_payload,
@@ -140,7 +140,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
         # Create a normal secret with the TransportKey
         resp, secret_uuid = create_secret(
             self.app,
-            payload=b'not-encrypted',
+            payload='not-encrypted',
             content_type='text/plain',
             transport_key_id=transport_key_id
         )
@@ -160,7 +160,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
     def test_new_secret_fails_with_invalid_transport_key_ref(self):
         resp, _ = create_secret(
             self.app,
-            payload=b'superdupersecret',
+            payload='superdupersecret',
             content_type='text/plain',
             transport_key_id="non_existing_transport_key_id",
             transport_key_needed="true",
@@ -171,7 +171,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
     def test_new_secret_w_unsupported_content_type_should_fail(self):
         resp, _ = create_secret(
             self.app,
-            payload=b'something_here',
+            payload='something_here',
             content_type='bogus_content_type',
             expect_errors=True
         )
@@ -186,7 +186,7 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
                                                       content_type=None):
         resp, _ = create_secret(
             self.app,
-            payload=b'lOtfqHaUUpe6NqLABgquYQ==',
+            payload='lOtfqHaUUpe6NqLABgquYQ==',
             content_type=content_type,
             content_encoding=encoding,
             expect_errors=True
@@ -289,7 +289,7 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
             '/secrets/{0}'.format(secret_uuid), headers=headers
         )
         self.assertEqual(200, get_resp.status_int)
-        self.assertEqual(payload, get_resp.body)
+        self.assertEqual(payload, get_resp.body.decode('utf-8'))
 
     def test_get_secret_payload_with_pecan_default_accept_header(self):
         payload = 'a very interesting string'
@@ -306,7 +306,7 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
             '/secrets/{0}/payload'.format(secret_uuid), headers=headers
         )
         self.assertEqual(200, get_resp.status_int)
-        self.assertEqual(payload, get_resp.body)
+        self.assertEqual(payload, get_resp.body.decode('utf-8'))
 
     def test_get_secret_payload_with_blank_accept_header(self):
         payload = 'a very interesting string'
@@ -323,7 +323,7 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
             '/secrets/{0}/payload'.format(secret_uuid), headers=headers
         )
         self.assertEqual(200, get_resp.status_int)
-        self.assertEqual(payload, get_resp.body)
+        self.assertEqual(payload, get_resp.body.decode('utf-8'))
 
     def test_get_secret_payload_with_no_accept_header(self):
         payload = 'a very interesting string'
@@ -340,7 +340,7 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
             '/secrets/{0}/payload'.format(secret_uuid), headers=headers
         )
         self.assertEqual(200, get_resp.status_int)
-        self.assertEqual(payload, get_resp.body)
+        self.assertEqual(payload, get_resp.body.decode('utf-8'))
 
     def test_get_secret_is_decoded_for_binary(self):
         payload = 'a123'
@@ -356,7 +356,7 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
         get_resp = self.app.get(
             '/secrets/{0}'.format(secret_uuid), headers=headers
         )
-        decoded = 'k]\xb7'
+        decoded = b'k]\xb7'
 
         self.assertEqual(decoded, get_resp.body)
 
@@ -428,7 +428,7 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
         )
 
         self.assertEqual(200, get_resp.status_int)
-        self.assertEqual(message, get_resp.body)
+        self.assertEqual(message, get_resp.body.decode('utf-8'))
 
     def test_put_binary_secret(self):
         resp, secret_uuid = create_secret(
@@ -461,7 +461,7 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
 
         self.assertEqual(201, resp.status_int)
 
-        payload = base64.b64encode('I had something for this')
+        payload = base64.b64encode(b'I had something for this')
         put_resp = self.app.put(
             '/secrets/{0}'.format(secret_uuid),
             payload,
@@ -491,7 +491,7 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
 
         self.assertEqual(201, resp.status_int)
 
-        payload = base64.b64encode('I had something for this')
+        payload = base64.b64encode(b'I had something for this')
         put_resp = self.app.put(
             '/secrets/{0}'.format(secret_uuid),
             payload,
