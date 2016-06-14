@@ -425,11 +425,12 @@ class PKCS11(object):
         # between 1 and blocksize, and that there are that many consecutive
         # bytes of that value at the end. If all of that is true, we remove
         # the found padding.
+        last_byte = ord(pt[-1:])
         if len(iv) == self.blocksize and \
            (len(pt) % self.blocksize) == 0 and \
-           1 <= ord(pt[-1]) <= self.blocksize and \
-           pt.endswith(pt[-1] * ord(pt[-1])):
-            pt = pt[:-(ord(pt[-1]))]
+           1 <= last_byte <= self.blocksize and \
+           pt.endswith(pt[-1:] * last_byte):
+            pt = pt[:-last_byte]
 
         return pt
 

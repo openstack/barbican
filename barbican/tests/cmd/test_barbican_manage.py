@@ -133,9 +133,9 @@ class TestBarbicanManage(TestBarbicanManageBase):
 
     @mock.patch('barbican.plugin.crypto.pkcs11.PKCS11')
     def test_hsm_gen_mkek(self, mock_pkcs11):
-        mock_pkcs11.return_value.get_session.return_value = long(1)
+        mock_pkcs11.return_value.get_session.return_value = 1
         mock_pkcs11.return_value.get_key_handle.return_value = None
-        mock_pkcs11.return_value.generate_key.return_value = long(0)
+        mock_pkcs11.return_value.generate_key.return_value = 0
         mock_genkey = mock_pkcs11.return_value.generate_key
         self._main_test_helper(
             ['barbican.cmd.barbican_manage', 'hsm', 'gen_mkek',
@@ -145,9 +145,9 @@ class TestBarbicanManage(TestBarbicanManageBase):
 
     @mock.patch('barbican.plugin.crypto.pkcs11.PKCS11')
     def test_hsm_gen_hmac(self, mock_pkcs11):
-        mock_pkcs11.return_value.get_session.return_value = long(1)
+        mock_pkcs11.return_value.get_session.return_value = 1
         mock_pkcs11.return_value.get_key_handle.return_value = None
-        mock_pkcs11.return_value.generate_key.return_value = long(0)
+        mock_pkcs11.return_value.generate_key.return_value = 0
         mock_genkey = mock_pkcs11.return_value.generate_key
         self._main_test_helper(
             ['barbican.cmd.barbican_manage', 'hsm', 'gen_hmac',

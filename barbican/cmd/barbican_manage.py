@@ -22,7 +22,6 @@
 from __future__ import print_function
 
 import argparse
-import six
 import sys
 
 from oslo_config import cfg
@@ -315,7 +314,7 @@ def main():
         v = getattr(CONF.category, 'action_kwarg_' + k)
         if v is None:
             continue
-        if isinstance(v, six.string_types):
+        if isinstance(v, bytes):
             v = v.decode('utf-8')
         fn_kwargs[k] = v
 

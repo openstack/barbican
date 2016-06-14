@@ -2,7 +2,4 @@ barbican.tests.api.controllers.test_containers
 barbican.tests.api.controllers.test_orders
 barbican.tests.api.controllers.test_quotas
 barbican.tests.api.controllers.test_secrets
-barbican.tests.api.test_transport_keys_resource
-barbican.tests.cmd.test_barbican_manage
 barbican.tests.cmd.test_db_cleanup
-barbican.tests.plugin.crypto.test_pkcs11
