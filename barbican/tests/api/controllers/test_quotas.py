@@ -99,7 +99,7 @@ class WhenTestingQuotas(utils.BarbicanAPIBaseTestCase):
 
     def test_should_return_bad_data_put_project_quotas(self):
         """PUT not allowed operation for /project-quotas/{project-id}"""
-        params = {'bad data'}
+        params = {'bad': 'value'}
         resp = self.app.put(
             '/project-quotas/{0}'.format(self.project_id),
             params, expect_errors=True)
