@@ -16,6 +16,7 @@ import mock
 
 from barbican.cmd import retry_scheduler
 from barbican.cmd import worker
+from barbican.tests import database_utils
 from barbican.tests.queue import test_keystone_listener
 from barbican.tests import utils
 
@@ -60,6 +61,7 @@ class WhenInvokingWorkerCommand(test_keystone_listener.UtilMixin,
 
     def setUp(self):
         super(WhenInvokingWorkerCommand, self).setUp()
+        database_utils.setup_in_memory_db()
 
     @mock.patch('barbican.queue.init')
     @mock.patch('barbican.queue.get_server')
