@@ -95,15 +95,16 @@ class KeyGenerator(object):
     def generate_mkek(self, args):
         """Process the generate MKEK with given arguments"""
         self.verify_label_does_not_exist(args.label, self.session)
-        self.pkcs11.generate_key(args.length, self.session, args.label,
+        self.pkcs11.generate_key(int(args.length), self.session, args.label,
                                  encrypt=True, wrap=True, master_key=True)
         print ("MKEK successfully generated!")
 
     def generate_hmac(self, args):
         """Process the generate HMAC with given arguments"""
         self.verify_label_does_not_exist(args.label, self.session)
-        self.pkcs11.generate_key(args.length, self.session, args.label,
-                                 sign=True, master_key=True)
+        self.pkcs11.generate_key(int(args.length), self.session,
+                                 args.label, sign=True,
+                                 master_key=True)
         print ("HMAC successfully generated!")
 
     def execute(self):
