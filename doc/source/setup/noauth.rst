@@ -1,19 +1,35 @@
-No Auth Barbican
+No Auth barbican
 ================
 
-Generally barbican can be configured to use keystone like every other OpenStack
-services for identity and access control. Sometimes it may be useful to run
-barbican without any authentication service for development purpose.
+As of OpenStack Newton, barbican will default to using Keystone like every
+other OpenStack service for identity and access control. Nonetheless, sometimes
+it may be useful to run barbican without any authentication service for
+development purposes.
 
-By default, configuration in :file:`barbican-api-paste.ini` sets barbican
-without any authentication (no auth mode), for example:
+To this end, `barbican-api-paste.ini` contains a filter pipeline
+without any authentication (no auth mode):
 
 .. code-block:: ini
 
-    # Use this pipeline for Barbican API - DEFAULT no authentication
+    # Use this pipeline for barbican API - DEFAULT no authentication
     [pipeline:barbican_api]
     pipeline = unauthenticated-context apiapp
 
+To enable this pipe line proceed as follows:
+
+1. Turn off any active instances of barbican
+
+2. Edit ``/etc/barbican/barbican-api-paste.ini``
+
+   Change the pipeline ``/v1`` value from authenticated ``barbican-api-keystone``
+   to the unauthenticated ``barbican_api``
+
+   .. code-block:: ini
+
+           [composite:main]
+           use = egg:Paste#urlmap
+           /: barbican_version
+           /v1: barbican_api
 
 With every OpenStack service integrated with keystone, its API requires access
 token to retireve certain information and validate user's information and
