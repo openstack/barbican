@@ -227,7 +227,7 @@ CATEGORIES = {
 }
 
 
-# Modifying similiar code from nova/cmd/manage.py
+# Modifying similar code from nova/cmd/manage.py
 def methods_of(obj):
     """Get all callable methods of an object that don't start with underscore
 
@@ -238,7 +238,7 @@ def methods_of(obj):
     for fn in dir(obj):
         if callable(getattr(obj, fn)) and not fn.startswith('_'):
             result.append((fn, getattr(obj, fn),
-                          getattr(obj, fn+'_description', None)))
+                          getattr(obj, fn + '_description', None)))
     return result
 
 
