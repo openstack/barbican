@@ -10,14 +10,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
+
+import fixtures
+import testtools
+
 from barbican.common import exception
 from barbican.model import models
 from barbican.model import repositories
 from barbican.plugin.interface import secret_store as ss
 from barbican.tests import database_utils
+from barbican.tests import fixture
 from barbican.tests import utils
-
-import datetime
 
 
 @utils.parameterized_test_case
@@ -55,7 +59,7 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
         super(WhenTestingSecretRepository, self).setUp()
         self.repo = repositories.SecretRepo()
 
-    def test_get_by_create_date(self):
+    def test_get_secret_list(self):
         session = self.repo.get_session()
 
         project = models.Project()
@@ -68,7 +72,7 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
 
         session.commit()
 
-        secrets, offset, limit, total = self.repo.get_by_create_date(
+        secrets, offset, limit, total = self.repo.get_secret_list(
             "my keystone id",
             session=session,
         )
@@ -103,8 +107,8 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
                                                      suppress_exception=True))
 
     @utils.parameterized_dataset(dataset_for_filter_tests)
-    def test_get_by_create_date_with_filter(self, secret_1_dict, secret_2_dict,
-                                            query_dict):
+    def test_get_secret_list_with_filter(self, secret_1_dict, secret_2_dict,
+                                         query_dict):
         session = self.repo.get_session()
 
         project = models.Project()
@@ -124,7 +128,7 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
 
         session.commit()
 
-        secrets, offset, limit, total = self.repo.get_by_create_date(
+        secrets, offset, limit, total = self.repo.get_secret_list(
             "my keystone id",
             session=session,
             **query_dict
@@ -138,7 +142,7 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
 
     def test_get_by_create_date_nothing(self):
         session = self.repo.get_session()
-        secrets, offset, limit, total = self.repo.get_by_create_date(
+        secrets, offset, limit, total = self.repo.get_secret_list(
             "my keystone id",
             bits=1024,
             session=session,
@@ -158,7 +162,7 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
 
         self.assertRaises(
             exception.NotFound,
-            self.repo.get_by_create_date,
+            self.repo.get_secret_list,
             "my keystone id",
             session=session,
             suppress_exception=False)
@@ -242,3 +246,91 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
 
         count = self.repo.get_count(project.id, session=session)
         self.assertEqual(1, count)
+
+
+class WhenTestingQueryFilters(testtools.TestCase,
+                              fixtures.TestWithFixtures):
+
+    def setUp(self):
+        super(WhenTestingQueryFilters, self).setUp()
+        self._session_fixture = self.useFixture(fixture.SessionQueryFixture())
+        self.session = self._session_fixture.Session()
+        self.query = self.session.query(models.Secret)
+        self.repo = repositories.SecretRepo()
+
+    def test_data_includes_six_secrets(self):
+        self.assertEqual(6, len(self.query.all()))
+
+    def test_sort_by_name_defaults_ascending(self):
+        query = self.repo._build_sort_filter_query(self.query, 'name')
+        secrets = query.all()
+        self.assertEqual('A', secrets[0].name)
+
+    def test_sort_by_name_desc(self):
+        query = self.repo._build_sort_filter_query(self.query, 'name:desc')
+        secrets = query.all()
+        self.assertEqual('F', secrets[0].name)
+
+    def test_sort_by_created_asc(self):
+        query = self.repo._build_sort_filter_query(self.query, 'created:asc')
+        secrets = query.all()
+        self.assertEqual('A', secrets[0].name)
+
+    def test_sort_by_updated_desc(self):
+        query = self.repo._build_sort_filter_query(self.query, 'updated:desc')
+        secrets = query.all()
+        self.assertEqual('F', secrets[0].name)
+
+    def test_filter_by_created_on_new_years(self):
+        query = self.repo._build_date_filter_query(
+            self.query, 'created_at',
+            '2016-01-01T00:00:00'
+        )
+        secrets = query.all()
+        self.assertEqual(1, len(secrets))
+        self.assertEqual('A', secrets[0].name)
+
+    def test_filter_by_created_after_march(self):
+        query = self.repo._build_date_filter_query(
+            self.query, 'created_at',
+            'gt:2016-03-01T00:00:00'
+        )
+        secrets = query.all()
+        self.assertEqual(3, len(secrets))
+
+    def test_filter_by_created_on_or_after_march(self):
+        query = self.repo._build_date_filter_query(
+            self.query, 'created_at',
+            'gte:2016-03-01T00:00:00'
+        )
+        secrets = query.all()
+        self.assertEqual(4, len(secrets))
+
+    def test_filter_by_created_before_march(self):
+        query = self.repo._build_date_filter_query(
+            self.query, 'created_at',
+            'lt:2016-03-01T00:00:00'
+        )
+        secrets = query.all()
+        self.assertEqual(2, len(secrets))
+
+    def test_filter_by_created_on_or_before_march(self):
+        query = self.repo._build_date_filter_query(
+            self.query, 'created_at',
+            'lte:2016-03-01T00:00:00'
+        )
+        secrets = query.all()
+        self.assertEqual(3, len(secrets))
+
+    def test_filter_by_created_between_march_and_may_inclusive(self):
+        query = self.repo._build_date_filter_query(
+            self.query, 'created_at',
+            'gte:2016-03-01T00:00:00,lte:2016-05-01T00:00:00'
+        )
+        secrets = query.all()
+        secret_names = [s.name for s in secrets]
+
+        self.assertEqual(3, len(secrets))
+        self.assertIn('C', secret_names)
+        self.assertIn('D', secret_names)
+        self.assertIn('E', secret_names)

@@ -18,6 +18,7 @@ import os
 import mock
 from oslo_utils import timeutils
 
+from barbican.api.controllers import secrets
 from barbican.common import validators
 from barbican.model import models
 from barbican.model import repositories
@@ -270,6 +271,16 @@ class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
         # These should never exist in this scenario
         self.assertNotIn('previous', get_resp.json)
         self.assertNotIn('next', get_resp.json)
+
+    def test_bad_date_filter_results_in_400(self):
+        params = {'expiration': 'bogus'}
+        get_resp = self.app.get('/secrets/', params, expect_errors=True)
+        self.assertEqual(400, get_resp.status_int)
+
+    def test_bad_sorting_results_in_400(self):
+        params = {'sort': 'bogus'}
+        get_resp = self.app.get('/secrets/', params, expect_errors=True)
+        self.assertEqual(400, get_resp.status_int)
 
 
 class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
@@ -714,6 +725,94 @@ class WhenPerformingUnallowedOperations(utils.BarbicanAPIBaseTestCase):
         )
 
         self.assertEqual(405, resp.status_int)
+
+
+class WhenValidatingDateFilters(utils.BarbicanAPIBaseTestCase):
+
+    def setUp(self):
+        super(WhenValidatingDateFilters, self).setUp()
+        self.controller = secrets.SecretsController()
+
+    def test_validates_plain_timestamp(self):
+        date_filter = '2016-01-01T00:00:00'
+        self.assertTrue(self.controller._is_valid_date_filter(date_filter))
+
+    def test_validates_gt_and_lt_timestamps(self):
+        date_filter = 'gt:2016-01-01T00:00:00,lt:2016-12-31T00:00:00'
+        self.assertTrue(self.controller._is_valid_date_filter(date_filter))
+
+    def test_validates_gte_and_lte_timestamps(self):
+        date_filter = 'gte:2016-01-01T00:00:00,lte:2016-12-31T00:00:00'
+        self.assertTrue(self.controller._is_valid_date_filter(date_filter))
+
+    def test_validation_fails_with_two_plain_timestamps(self):
+        date_filter = '2016-01-01T00:00:00,2016-01-02T00:00:00'
+        self.assertFalse(self.controller._is_valid_date_filter(date_filter))
+
+    def test_validation_fails_with_two_gt_timestamps(self):
+        date_filter = 'gt:2016-01-01T00:00:00,gt:2016-01-02T00:00:00'
+        self.assertFalse(self.controller._is_valid_date_filter(date_filter))
+
+    def test_validation_fails_with_two_lt_timestamps(self):
+        date_filter = 'lt:2016-01-01T00:00:00,lt:2016-01-02T00:00:00'
+        self.assertFalse(self.controller._is_valid_date_filter(date_filter))
+
+    def test_validation_fails_with_two_gte_timestamps(self):
+        date_filter = 'gte:2016-01-01T00:00:00,gte:2016-01-02T00:00:00'
+        self.assertFalse(self.controller._is_valid_date_filter(date_filter))
+
+    def test_validation_fails_with_two_lte_timestamps(self):
+        date_filter = 'lte:2016-01-01T00:00:00,lte:2016-01-02T00:00:00'
+        self.assertFalse(self.controller._is_valid_date_filter(date_filter))
+
+    def test_validation_fails_with_plain_and_gte_timestamps(self):
+        date_filter = '2016-01-01T00:00:00,gte:2016-01-02T00:00:00'
+        self.assertFalse(self.controller._is_valid_date_filter(date_filter))
+
+        date_filter = 'gte:2016-01-01T00:00:00,2016-01-02T00:00:00'
+        self.assertFalse(self.controller._is_valid_date_filter(date_filter))
+
+    def test_validation_fails_with_plain_and_lte_timestamps(self):
+        date_filter = '2016-01-01T00:00:00,lte:2016-01-02T00:00:00'
+        self.assertFalse(self.controller._is_valid_date_filter(date_filter))
+
+        date_filter = 'lte:2016-01-01T00:00:00,2016-01-02T00:00:00'
+        self.assertFalse(self.controller._is_valid_date_filter(date_filter))
+
+    def test_validation_fails_with_gt_and_gte_timestamps(self):
+        date_filter = 'gt:2016-01-01T00:00:00,gte:2016-01-02T00:00:00'
+        self.assertFalse(self.controller._is_valid_date_filter(date_filter))
+
+    def test_validation_fails_with_lt_and_lte_timestamps(self):
+        date_filter = 'lt:2016-01-01T00:00:00,lte:2016-01-02T00:00:00'
+        self.assertFalse(self.controller._is_valid_date_filter(date_filter))
+
+    def test_validation_fails_with_bogus_timestamp(self):
+        date_filter = 'bogus'
+        self.assertFalse(self.controller._is_valid_date_filter(date_filter))
+
+
+class WhenValidatingSortFilters(utils.BarbicanAPIBaseTestCase):
+
+    def setUp(self):
+        super(WhenValidatingSortFilters, self).setUp()
+        self.controller = secrets.SecretsController()
+
+    def test_validates_name_sorting(self):
+        sorting = 'name'
+        self.assertTrue(self.controller._is_valid_sorting(sorting))
+
+    def test_validation_fails_for_bogus_attribute(self):
+        sorting = 'bogus'
+        self.assertFalse(self.controller._is_valid_sorting(sorting))
+
+    def test_validation_fails_for_duplicate_keys(self):
+        sorting = 'name,name:asc'
+        self.assertFalse(self.controller._is_valid_sorting(sorting))
+
+    def test_validation_fails_for_too_many_colons(self):
+        sorting = 'name:asc:foo'
+        self.assertFalse(self.controller._is_valid_sorting(sorting))
 
 
 # ----------------------- Helper Functions ---------------------------

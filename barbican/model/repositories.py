@@ -599,17 +599,19 @@ class ProjectRepo(BaseRepo):
 class SecretRepo(BaseRepo):
     """Repository for the Secret entity."""
 
-    def get_by_create_date(self, external_project_id, offset_arg=None,
-                           limit_arg=None, name=None, alg=None, mode=None,
-                           bits=0, secret_type=None, suppress_exception=False,
-                           session=None, acl_only=None, user_id=None):
+    def get_secret_list(self, external_project_id,
+                        offset_arg=None, limit_arg=None,
+                        name=None, alg=None, mode=None,
+                        bits=0, secret_type=None, suppress_exception=False,
+                        session=None, acl_only=None, user_id=None,
+                        created=None, updated=None, expiration=None,
+                        sort=None):
         """Returns a list of secrets
 
-        The returned secrets are ordered by the date they were created at
-        and paged based on the offset and limit fields. The external_project_id
-        is external-to-Barbican value assigned to the project by Keystone.
+        The list is scoped to secrets that are associated with the
+        external_project_id (e.g. Keystone Project ID), and filtered
+        using any provided filters.
         """
-
         offset, limit = clean_paging_values(offset_arg, limit_arg)
 
         session = self.get_session(session)
@@ -631,6 +633,19 @@ class SecretRepo(BaseRepo):
             query = query.filter(models.Secret.bit_length == bits)
         if secret_type:
             query = query.filter(models.Secret.secret_type == secret_type)
+        if created:
+            query = self._build_date_filter_query(query, 'created_at', created)
+        if updated:
+            query = self._build_date_filter_query(query, 'updated_at', updated)
+        if expiration:
+            query = self._build_date_filter_query(
+                query, 'expiration', expiration
+            )
+        else:
+            query = query.filter(or_(models.Secret.expiration.is_(None),
+                                     models.Secret.expiration > utcnow))
+        if sort:
+            query = self._build_sort_filter_query(query, sort)
 
         if acl_only and acl_only.lower() == 'true' and user_id:
             query = query.join(models.SecretACL)
@@ -695,6 +710,63 @@ class SecretRepo(BaseRepo):
         query = query.filter(expiration_filter)
 
         return query
+
+    def _build_date_filter_query(self, query, attribute, date_filters):
+        """Parses date_filters to apply each filter to the given query
+
+        :param query: query object to apply filters to
+        :param attribute: name of the model attribute to be filtered
+        :param date_filters: comma separated string of date filters to apply
+        """
+        parse = timeutils.parse_isotime
+        for filter in date_filters.split(','):
+            if filter.startswith('lte:'):
+                isotime = filter[4:]
+                query = query.filter(or_(
+                    getattr(models.Secret, attribute) < parse(isotime),
+                    getattr(models.Secret, attribute) == parse(isotime))
+                )
+            elif filter.startswith('lt:'):
+                isotime = filter[3:]
+                query = query.filter(
+                    getattr(models.Secret, attribute) < parse(isotime)
+                )
+            elif filter.startswith('gte:'):
+                isotime = filter[4:]
+                query = query.filter(or_(
+                    getattr(models.Secret, attribute) > parse(isotime),
+                    getattr(models.Secret, attribute) == parse(isotime))
+                )
+            elif filter.startswith('gt:'):
+                isotime = filter[3:]
+                query = query.filter(
+                    getattr(models.Secret, attribute) > parse(isotime)
+                )
+            else:
+                query = query.filter(
+                    getattr(models.Secret, attribute) == parse(filter)
+                )
+        return query
+
+    def _build_sort_filter_query(self, query, sort_filters):
+        """Parses sort_filters to order the query"""
+        key_to_column_map = {
+            'created': 'created_at',
+            'updated': 'updated_at'
+        }
+        ordering = list()
+        for sort in sort_filters.split(','):
+            if ':' in sort:
+                key, direction = sort.split(':')
+            else:
+                key, direction = sort, 'asc'
+            ordering.append(
+                getattr(
+                    getattr(models.Secret, key_to_column_map.get(key, key)),
+                    direction
+                )()
+            )
+        return query.order_by(*ordering)
 
     def get_secret_by_id(self, entity_id, suppress_exception=False,
                          session=None):
