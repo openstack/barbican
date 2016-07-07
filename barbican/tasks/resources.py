@@ -91,11 +91,11 @@ class BaseTask(object):
         # Retrieve the target entity (such as an models.Order instance).
         try:
             entity = self.retrieve_entity(*args, **kwargs)
-        except Exception as e:
+        except Exception:
             # Serious error!
             LOG.exception(u._LE("Could not retrieve information needed to "
                                 "process task '%s'."), name)
-            raise e
+            raise
 
         # Process the target entity.
         try:
@@ -119,10 +119,10 @@ class BaseTask(object):
         # Handle successful conclusion of processing.
         try:
             self.handle_success(entity, result, *args, **kwargs)
-        except Exception as e:
+        except Exception:
             LOG.exception(u._LE("Could not process after successfully "
                                 "executing task '%s'."), name)
-            raise e
+            raise
 
         return result
 
