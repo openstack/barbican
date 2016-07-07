@@ -19,6 +19,7 @@ An implementation of the SecretStore that uses the KMIP backend.
 
 import base64
 import os
+import ssl
 import stat
 
 from cryptography.hazmat.backends import default_backend
@@ -232,6 +233,15 @@ class KMIPSecretStore(ss.SecretStoreBase):
                     credential_value))
 
         config = conf.kmip_plugin
+
+        # Use TLSv1_2, if present
+        tlsv12 = getattr(ssl, "PROTOCOL_TLSv1_2", None)
+        if tlsv12:
+            config.ssl_version = 'PROTOCOL_TLSv1_2'
+            LOG.info(u._LI('Going to use TLS1.2...'))
+        else:
+            LOG.warning(u._LW('TLSv1_2 is not present on the System'))
+
         self.client = client.ProxyKmipClient(
             hostname=config.host,
             port=config.port,

@@ -14,6 +14,7 @@
 # limitations under the License.
 import base64
 import socket
+import ssl
 import stat
 
 import mock
@@ -182,6 +183,13 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         CONF.kmip_plugin.pkcs1_only = True
         secret_store = kss.KMIPSecretStore(CONF)
         self.assertTrue(secret_store.pkcs1_only)
+
+    def test_enable_tlsv12_config_option(self):
+        ssl.PROTOCOL_TLSv1_2 = 5
+        CONF = kss.CONF
+        secret_store = kss.KMIPSecretStore(CONF)
+        self.assertTrue(secret_store)
+        self.assertEqual(CONF.kmip_plugin.ssl_version, 'PROTOCOL_TLSv1_2')
 
     # --------------- TEST GENERATE_SUPPORTS ---------------------------------
 
