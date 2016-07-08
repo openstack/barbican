@@ -17,33 +17,79 @@ secret.
 Parameters
 **********
 
-+----------+---------+----------------------------------------------------------------+
-| Name     | Type    | Description                                                    |
-+==========+=========+================================================================+
-| offset   | integer | The starting index within the total list of the secrets that   |
-|          |         | you would like to retrieve.                                    |
-+----------+---------+----------------------------------------------------------------+
-| limit    | integer | The maximum number of records to return (up to 100). The       |
-|          |         | default limit is 10.                                           |
-+----------+---------+----------------------------------------------------------------+
-| name     | string  | Selects all secrets with name equal to this value.             |
-+----------+---------+----------------------------------------------------------------+
-| bits     | integer | Selects all secrets with bit_length equal to this value.       |
-+----------+---------+----------------------------------------------------------------+
-| alg      | string  | Selects all secrets with algorithm equal to this value.        |
-+----------+---------+----------------------------------------------------------------+
-| mode     | string  | Selects all secrets with mode equal to this value.             |
-+----------+---------+----------------------------------------------------------------+
-| acl_only | boolean | Selects all secrets with an ACL that contains the user.        |
-|          |         | Project scope is ignored.                                      |
-+----------+---------+----------------------------------------------------------------+
++-------------+---------+-----------------------------------------------------------------+
+| Name        | Type    | Description                                                     |
++=============+=========+=================================================================+
+| offset      | integer | The starting index within the total list of the secrets that    |
+|             |         | you would like to retrieve.                                     |
++-------------+---------+-----------------------------------------------------------------+
+| limit       | integer | The maximum number of records to return (up to 100). The        |
+|             |         | default limit is 10.                                            |
++-------------+---------+-----------------------------------------------------------------+
+| name        | string  | Selects all secrets with name similar to this value.            |
++-------------+---------+-----------------------------------------------------------------+
+| alg         | string  | Selects all secrets with algorithm similar to this value.       |
++-------------+---------+-----------------------------------------------------------------+
+| mode        | string  | Selects all secrets with mode similar to this value.            |
++-------------+---------+-----------------------------------------------------------------+
+| bits        | integer | Selects all secrets with bit_length equal to this value.        |
++-------------+---------+-----------------------------------------------------------------+
+| secret_type | string  | Selects all secrets with secret_type equal to this value.       |
++-------------+---------+-----------------------------------------------------------------+
+| acl_only    | boolean | Selects all secrets with an ACL that contains the user.         |
+|             |         | Project scope is ignored.                                       |
++-------------+---------+-----------------------------------------------------------------+
+| created     | string  | Date filter to select all secrets with `created` matching the   |
+|             |         | specified criteria.  See Date Filters below for more detail.    |
++-------------+---------+-----------------------------------------------------------------+
+| updated     | string  | Date filter to select all secrets with `updated` matching the   |
+|             |         | specified criteria. See Date Filters below for more detail.     |
++-------------+---------+-----------------------------------------------------------------+
+| expiration  | string  | Date filter to select all secrets with `expiration` matching    |
+|             |         | the specified criteria. See Date Filters below for more detail. |
++-------------+---------+-----------------------------------------------------------------+
+| sort        | string  | Determines the sorted order of the returned list.  See Sorting  |
+|             |         | below for more detail.                                          |
++-------------+---------+-----------------------------------------------------------------+
+
+Date Filters:
+*************
+
+The values for the ``created``, ``updated``, and ``expiration`` parameters are
+comma-separated lists of time stamps in ISO 8601 format.  The time stamps can
+be prefixed with any of these comparison operators: ``gt:`` (greater-than),
+``gte:`` (greater-than-or-equal), ``lt:`` (less-than), ``lte:`` (less-than-or-equal).
+
+For example, to get a list of secrets that will expire in January of 2020:
+
+.. code-block:: none
+
+    GET /v1/secrets?expiration=gte:2020-01-01T00:00:00,lt:2020-02-01T00:00:00
+
+Sorting:
+********
+
+The value of the ``sort`` parameter is a comma-separated list of sort keys.
+Supported sort keys include ``created``, ``expiration``, ``mode``, ``name``,
+``secret_type``, ``status``, and ``updated``.
+
+Each sort key may also include a direction.  Supported directions
+are ``:asc`` for ascending and ``:desc`` for descending.  The service will
+use ``:asc`` for every key that does not include a direction.
+
+For example, to sort the list from most recently created to oldest:
+
+.. code-block:: none
+
+    GET /v1/secrets?sort=created:desc
+
 
 Request:
 ********
 
 .. code-block:: javascript
 
-   GET /v1/secrets?offset=1&limit=2
+   GET /v1/secrets?offset=1&limit=2&sort=created
    Headers:
        Accept: application/json
        X-Auth-Token: {keystone_token}
