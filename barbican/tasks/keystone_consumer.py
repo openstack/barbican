@@ -49,13 +49,13 @@ class KeystoneEventConsumer(resources.BaseTask):
             self.db_start()
             super(KeystoneEventConsumer, self).process(*args, **kwargs)
             self.db_commit()
-        except Exception as e:
+        except Exception:
             """Exceptions that reach here needs to revert the entire
             transaction.
             No need to log error message as its already done earlier.
             """
             self.db_rollback()
-            raise e
+            raise
         finally:
             self.db_clear()
 
