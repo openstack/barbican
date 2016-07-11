@@ -60,6 +60,11 @@ CONF.register_opts(cert_opts, group=cert_opt_group)
 config.parse_args(CONF)
 
 
+def list_opts():
+    yield cert_opt_group, cert_opts
+    yield cert_event_opt_group, cert_event_opts
+
+
 # Configuration for certificate eventing plugins:
 DEFAULT_EVENT_PLUGIN_NAMESPACE = 'barbican.certificate.event.plugin'
 DEFAULT_EVENT_PLUGINS = ['simple_certificate_event']

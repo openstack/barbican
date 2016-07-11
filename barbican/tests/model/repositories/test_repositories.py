@@ -272,7 +272,10 @@ class WhenTestingGetEnginePrivate(utils.BaseTestCase):
             'connection',
             pool_recycle=3600,
             convert_unicode=True,
-            echo=False
+            echo=False,
+            poolclass=sqlalchemy.pool.QueuePool,
+            pool_size=repositories.CONF.sql_pool_size,
+            max_overflow=repositories.CONF.sql_pool_max_overflow
         )
 
     @mock.patch('barbican.model.repositories._create_engine')

@@ -78,6 +78,10 @@ CONF.register_opts(p11_crypto_plugin_opts, group=p11_crypto_plugin_group)
 config.parse_args(CONF)
 
 
+def list_opts():
+    yield p11_crypto_plugin_group, p11_crypto_plugin_opts
+
+
 def json_dumps_compact(data):
     return json.dumps(data, separators=(',', ':'))
 

@@ -44,6 +44,10 @@ CONF.register_opts(simple_crypto_plugin_opts, group=simple_crypto_plugin_group)
 config.parse_args(CONF)
 
 
+def list_opts():
+    yield simple_crypto_plugin_group, simple_crypto_plugin_opts
+
+
 class SimpleCryptoPlugin(c.CryptoPluginBase):
     """Insecure implementation of the crypto plugin."""
 
