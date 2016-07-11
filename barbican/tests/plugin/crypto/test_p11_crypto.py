@@ -61,6 +61,8 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.cfg_mock.p11_crypto_plugin.pkek_cache_ttl = 900
         self.cfg_mock.p11_crypto_plugin.pkek_cache_limit = 10
         self.cfg_mock.p11_crypto_plugin.algorithm = 'CKM_AES_GCM'
+        self.cfg_mock.p11_crypto_plugin.seed_file = ''
+        self.cfg_mock.p11_crypto_plugin.seed_length = 32
 
         self.plugin = p11_crypto.P11CryptoPlugin(
             conf=self.cfg_mock, pkcs11=self.pkcs11
@@ -323,11 +325,33 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         lib.C_GetSessionInfo.return_value = pkcs11.CKR_OK
         lib.C_Login.return_value = pkcs11.CKR_OK
         lib.C_GenerateRandom.side_effect = _generate_random
+        lib.C_SeedRandom.return_value = pkcs11.CKR_OK
         ffi = pkcs11.build_ffi()
         setattr(ffi, 'dlopen', lambda x: lib)
 
         p11 = self.plugin._create_pkcs11(self.cfg_mock.p11_crypto_plugin, ffi)
         self.assertIsInstance(p11, pkcs11.PKCS11)
+
+        # test for when plugin_conf.seed_file is not None
+        self.cfg_mock.p11_crypto_plugin.seed_file = 'seed_file'
+        d = '01234567' * 4
+        mo = mock.mock_open(read_data=d)
+
+        with mock.patch(six.moves.builtins.__name__ + '.open',
+                        mo,
+                        create=True):
+            p11 = self.plugin._create_pkcs11(
+                self.cfg_mock.p11_crypto_plugin, ffi)
+
+        self.assertIsInstance(p11, pkcs11.PKCS11)
+        mo.assert_called_once_with('seed_file', 'rb')
+        calls = [mock.call('seed_file', 'rb'),
+                 mock.call().__enter__(),
+                 mock.call().read(32),
+                 mock.call().__exit__(None, None, None)]
+        self.assertEqual(mo.mock_calls, calls)
+        lib.C_SeedRandom.assert_called_once_with(mock.ANY, mock.ANY, 32)
+        self.cfg_mock.p11_crypto_plugin.seed_file = ''
 
     def test_call_pkcs11_with_token_error(self):
         self.plugin._encrypt = mock.Mock()

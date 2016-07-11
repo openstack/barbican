@@ -63,6 +63,12 @@ p11_crypto_plugin_opts = [
     cfg.StrOpt('algorithm',
                help=u._('Secret encryption algorithm'),
                default='VENDOR_SAFENET_CKM_AES_GCM'),
+    cfg.StrOpt('seed_file',
+               help=u._('File to pull entropy for seeding RNG'),
+               default=''),
+    cfg.IntOpt('seed_length',
+               help=u._('Amount of data to read from file for seed'),
+               default=32),
 ]
 CONF.register_group(p11_crypto_plugin_group)
 CONF.register_opts(p11_crypto_plugin_opts, group=p11_crypto_plugin_group)
@@ -258,13 +264,18 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
                 break
 
     def _create_pkcs11(self, plugin_conf, ffi=None):
+        seed_random_buffer = None
+        if plugin_conf.seed_file:
+            with open(plugin_conf.seed_file, 'rb') as f:
+                seed_random_buffer = f.read(plugin_conf.seed_length)
         return pkcs11.PKCS11(
             library_path=plugin_conf.library_path,
             login_passphrase=plugin_conf.login,
             rw_session=plugin_conf.rw_session,
             slot_id=plugin_conf.slot_id,
             ffi=ffi,
-            algorithm=plugin_conf.algorithm
+            algorithm=plugin_conf.algorithm,
+            seed_random_buffer=seed_random_buffer,
         )
 
     def _reinitialize_pkcs11(self):
