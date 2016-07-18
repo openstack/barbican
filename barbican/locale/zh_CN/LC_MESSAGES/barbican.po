@@ -1,0 +1,1368 @@
+# Translations template for barbican.
+# Copyright (C) 2015 ORGANIZATION
+# This file is distributed under the same license as the barbican project.
+#
+# Translators:
+# DuanXin <1145833162@qq.com>, 2015
+# OpenStack Infra <zanata@openstack.org>, 2015. #zanata
+# Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
+# Jiong Liu <liujiong@gohighsec.com>, 2016. #zanata
+msgid ""
+msgstr ""
+"Project-Id-Version: barbican 3.0.0.0b3.dev1\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2016-07-17 22:54+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2016-07-10 09:41+0000\n"
+"Last-Translator: Jiong Liu <liujiong@gohighsec.com>\n"
+"Language: zh-CN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Generated-By: Babel 2.0\n"
+"X-Generator: Zanata 3.7.3\n"
+"Language-Team: Chinese (China)\n"
+
+#, python-format
+msgid "'%(strategy)s' is not an available notifier strategy."
+msgstr "'%(strategy)s' 不是一个可用的通知策略。"
+
+msgid "'algorithm' is required field for {0} type order"
+msgstr "'algorithm'是{0}类型的order所必须的字段"
+
+msgid "'bit_length' is required field for {0} type order"
+msgstr "'bit-length'是{0}类型的order所必须的字段"
+
+msgid "'expiration' is before current time"
+msgstr "'expiration'早于当前时间"
+
+msgid "'payload' not allowed for asymmetric type order"
+msgstr "'payload'不被非对称密钥类型的order允许"
+
+msgid "'payload' not allowed for certificate type order"
+msgstr "'payload'不被证书类型的order允许"
+
+msgid "'payload' not allowed for key type order"
+msgstr "'payload'不被key类型的order允许"
+
+msgid "A Content-Type of '{content_type}' for secrets is not supported"
+msgstr "不支持秘密内容类型'{content_type}'"
+
+msgid "A master key with that label already exists"
+msgstr "带有那个标签的主密钥已经存在"
+
+msgid "A new project preferred CA must be set before this one can be deleted."
+msgstr "在删除项目首选CA之前必须先设置一个新的首选CA。"
+
+msgid "Add CA to project"
+msgstr "将CA添加到项目"
+
+msgid "Address of the KMIP server"
+msgstr "KMIP服务器的地址"
+
+msgid ""
+"Allow unauthenticated users to access the API with read-only privileges. "
+"This only applies when using ContextMiddleware."
+msgstr ""
+"当使用上下文中间件ContextMiddleware的时候将允许未授权的用户拥有API接口的只读"
+"权限"
+
+msgid "An object with the same identifier already exists."
+msgstr "具有同一标识的对象已存在。"
+
+msgid "An object with the specified identifier was not found."
+msgstr "找不到具有指定标识的对象。"
+
+msgid "An unknown exception occurred"
+msgstr "发生未知异常"
+
+msgid ""
+"An unsupported algorithm {algorithm} was passed to the "
+"'generate_symmetric_key' method"
+msgstr "一个不支持的算法{algorithm}被传到'generate_symmetric_key'方法"
+
+msgid "Apparent RNG self-test failure."
+msgstr "明显的RNG自我测试失败。"
+
+#, python-format
+msgid "Attribute '%(property)s' is read-only."
+msgstr "属性“%(property)s”是只读的。"
+
+#, python-format
+msgid "Attribute '%(property)s' is reserved."
+msgstr "属性“%(property)s”已保留。"
+
+#, python-format
+msgid "Auth service at URL %(url)s not found."
+msgstr "找不到 URL %(url)s 处的授权服务。"
+
+msgid "Authorization failed."
+msgstr "授权失败。"
+
+msgid "Bad Container Reference {ref}"
+msgstr "错误的容器引用{ref}"
+
+msgid "Bad format"
+msgstr "错误的格式"
+
+msgid "Bad key file permissions found, expected 400 for path: {file_path}"
+msgstr "发现错误的密钥文件权限，路径：{file_path}期望400"
+
+msgid "CA Cert Chain retrieval"
+msgstr "检索CA签发链"
+
+msgid "CA Signing Cert retrieval"
+msgstr "检索CA签发证书"
+
+msgid "CA creation"
+msgstr "创建CA"
+
+msgid "CA deletion"
+msgstr "删除CA"
+
+msgid "CA projects retrieval"
+msgstr "检索CA项目"
+
+#, python-format
+msgid "CA specified by ca_id %(ca_id)s not defined for project: %(project_id)s"
+msgstr "指定的CA %(ca_id)s 未在项目：%(project_id)s中定义"
+
+msgid "Cannot generate a fullname for a null instance"
+msgstr "不能为空实例生成全名"
+
+msgid "Cannot modify order type."
+msgstr "不能修改order类型。"
+
+msgid "Cannot set CA as a preferred CA as it is not a project CA."
+msgstr "不能设置CA为首选CA，因为其不是项目CA。"
+
+msgid "Certificate Authorities retrieval"
+msgstr "检索CA"
+
+msgid "Certificate Authorities retrieval (limited)"
+msgstr "检索CA（受限）"
+
+msgid "Certificate Authority retrieval"
+msgstr "检索CA"
+
+msgid "Certificate event plugin \"{name}\" not found."
+msgstr "证书事件插件“{name}”未发现。"
+
+msgid "Certificate event plugin not found."
+msgstr "证书事件插件未发现。"
+
+msgid "Certificate not found for cert_id: {cert_id}"
+msgstr "未找到cert_id为{cert_id}的证书"
+
+msgid "Certificate plugin \"{name}\" not found."
+msgstr "证书插件“{name}”未发现"
+
+msgid "Certificate plugin not found for \"{ca_id}\"."
+msgstr "未发现CA:“{ca_id}”的证书插件。"
+
+msgid "Certificate plugin not found or configured."
+msgstr "证书插件未发现，或未配置。"
+
+msgid "Certificate status of {status} not supported"
+msgstr "证书状态{status}不支持"
+
+msgid "Check Certificate Order Status"
+msgstr "检查证书order状态"
+
+msgid ""
+"Configuration for store failed. Adding images to this store is disabled."
+msgstr "配置存储失败。无法向这个存储添加镜像。"
+
+msgid ""
+"Conflict. A secret with that name and ID is already stored in this "
+"container. The same secret can exist in a container as long as the name is "
+"unique."
+msgstr ""
+"冲突。具有相同名字和ID的秘密在该容器中已经存在。只有秘密的名字独一无二，秘密"
+"才能存储在容器中。"
+
+msgid "Conflict. Key in request is already in the secret metadata"
+msgstr "冲突。请求中的Key已经存在于秘密元数据中"
+
+#, python-format
+msgid "Connect error/bad request to Auth service at URL %(url)s."
+msgstr "发生连接错误，或者对 URL %(url)s 处的授权服务的请求不正确。"
+
+#, python-format
+msgid ""
+"Container %(container_id)s does not exist for stored key certificate "
+"generation."
+msgstr "用于生成stored key certificate的容器%(container_id)s不存在。"
+
+#, python-format
+msgid ""
+"Container %(container_id)s does not reference a private key needed for "
+"stored key certificate generation."
+msgstr "用于生成stored key certificate的私钥未被容器%(container_id)s所引用。"
+
+msgid "Container Not Found"
+msgstr "未发现容器"
+
+msgid "Container Secret creation"
+msgstr "创建容器秘密"
+
+msgid "Container Secret deletion"
+msgstr "删除容器的秘密"
+
+msgid "Container Wrong Type"
+msgstr "错误的容器类型"
+
+msgid "Container creation"
+msgstr "创建容器"
+
+msgid "Container deletion"
+msgstr "删除容器"
+
+msgid "Container retrieval"
+msgstr "检索容器"
+
+msgid "ContainerACL(s) Update"
+msgstr "更新容器访问控制列表"
+
+msgid "ContainerACL(s) deletion"
+msgstr "删除容器访问控制列表"
+
+msgid "ContainerACL(s) retrieval"
+msgstr "检索容器访问控制列表"
+
+msgid "ContainerConsumer creation"
+msgstr "创建容器内的用户"
+
+msgid "ContainerConsumer deletion"
+msgstr "删除容器内的用户"
+
+msgid "ContainerConsumer retrieval"
+msgstr "检索容器内的用户"
+
+msgid "ContainerConsumers(s) retrieval"
+msgstr "检索容器的消费者"
+
+msgid "Containers(s) retrieval"
+msgstr "检索容器"
+
+msgid "Content-Type of '{content_type}' is not supported for PUT."
+msgstr "内容类型'{content_type}'不支持更新"
+
+msgid "Could not find key labeled {0}"
+msgstr "无法找到标签为{0}的密钥"
+
+msgid "Could not find {entity_name}"
+msgstr "未找到{entity_name}"
+
+msgid "Could not generate private key"
+msgstr "无法生成私钥"
+
+msgid "Creation not allowed because a quota has been reached"
+msgstr "不允许创建因为已达到配额"
+
+msgid "Crypto plugin not found."
+msgstr "密码插件未发现。"
+
+msgid ""
+"DSA keys should not have a passphrase in the database, for being used during "
+"retrieval."
+msgstr "DSA密钥不应在数据库中有密码，因为在检索过程被使用了。"
+
+msgid "Data supplied was not valid."
+msgstr "提供的数据无效。"
+
+msgid ""
+"Define the number of max threads to be used for notification server "
+"processing functionality."
+msgstr "定义通知服务器处理功能所使用的最大线程数量。"
+
+msgid "Deleting images from this store is not supported."
+msgstr "不支持从该存储中删除镜像。"
+
+msgid "Directory in which to store certs/keys for subcas"
+msgstr "为子CA存储证书/密钥的目录"
+
+#, python-format
+msgid "Dogtag plugin does not support %s request type"
+msgstr "Dogtag插件不支持%s类型的请求"
+
+msgid "Domain of Symantec API"
+msgstr "Symantec API的域名"
+
+#, python-format
+msgid ""
+"Driver %(driver_name)s could not be configured correctly. Reason: %(reason)s"
+msgstr "未能正确配置驱动程序 %(driver_name)s。原因：%(reason)s"
+
+msgid "Duplicate reference names are not allowed"
+msgstr "不允许重复的引用名称"
+
+msgid "Duplicate secret ids are not allowed"
+msgstr "不允许重复的secret id"
+
+msgid "Encoding type must be 'base64' for text-based payloads."
+msgstr "基本文本的负载编码方式必须是'base64'。"
+
+msgid ""
+"Encryption using session key is not supported when retrieving a "
+"{secret_type} key."
+msgstr "当检索一个{secret_type}类型的密钥时，不支持使用会话密钥进行加密。"
+
+msgid "Entity '{entity_name}' already exists"
+msgstr "Entity '{entity_name}'已经存在"
+
+msgid "Entity ID {entity_id} not found"
+msgstr "未找到Entity ID：{entity_id}"
+
+msgid ""
+"Error configuring registry database with supplied sql_connection. Got error: "
+"{error}"
+msgstr "使用提供的sql_connection配置注册数据库出错。捕获错误：{error}"
+
+#, python-format
+msgid "Error deleting project entities for project_id=%s"
+msgstr "为id为%s的项目删除实体出错"
+
+msgid "Error while attempting to decode payload."
+msgstr "试图解码负载时出错。"
+
+msgid "Errors in creating subordinate CA: %(name)"
+msgstr "创建子CA：%(name)时出错"
+
+msgid ""
+"Errors returned by CA when attempting to create subordinate CA: %(reason)"
+msgstr "当试图创建子CA时出错，原因：%(reason)"
+
+msgid ""
+"Errors returned by CA when attempting to delete subordinate CA: %(reason)"
+msgstr "当试图删除子CA时出错，原因：%(reason)"
+
+msgid "Exception thrown by enroll_cert: {message}"
+msgstr "enroll_cert抛出异常：{message}"
+
+msgid "Extension namespace to search for eventing plugins."
+msgstr "用于搜索事件插件的扩展命名空间"
+
+msgid "Extension namespace to search for plugins."
+msgstr "用于搜索插件的扩展命名空间"
+
+msgid "Extensions are not yet supported.  Specify a valid profile instead."
+msgstr "暂不支持扩展。请指定一个有效的信息。"
+
+msgid "Failed to bind kek metadata for plugin: {name}"
+msgstr "为插件：{name}绑定kek元数据失败"
+
+msgid "Failed to validate JSON information: "
+msgstr "验证json信息失败："
+
+msgid "Feature not implemented for '{0}' order type"
+msgstr "'{0}' order类型未实现的特性"
+
+msgid "Feature not implemented for PKCS11"
+msgstr "特性未被PKCS11实现"
+
+#, python-format
+msgid ""
+"Feature not implemented for value set on field '%(field)s' on schema "
+"'%(schema)s': %(reason)s"
+msgstr "模式'%(schema)s'的'%(field)s'字段所设置的值的特性为实现：%(reason)s"
+
+msgid "File path to concatenated \"certification authority\" certificates"
+msgstr "串联“certification authority”证书的文件路径"
+
+msgid "File path to local client certificate"
+msgstr "本地客户端证书的文件路径"
+
+msgid "File path to local client certificate keyfile"
+msgstr "本地客户端证书密钥文件的路径"
+
+msgid "Flag for Read/Write Sessions"
+msgstr "读/写会话的标志"
+
+msgid "Full CMC Requests are not yet supported."
+msgstr "Full CMC请求暂不支持。"
+
+msgid "General exception"
+msgstr "常规异常"
+
+msgid "HMAC label (used in the HSM)"
+msgstr "HMAC标签（用于HSM）"
+
+msgid "HSM Slot ID"
+msgstr "HSM插槽ID"
+
+msgid "HSM returned response code: {code}"
+msgstr "HSM返回响应码：{code}"
+
+msgid "Hostname for the Dogtag instance"
+msgstr "Dogtag实例的主机名称"
+
+msgid "If 'payload' is supplied, 'payload_content_type' must also be supplied."
+msgstr "如果提供了'payload'，那么也必须提供'payload_content_type'。"
+
+msgid "If 'payload' specified, must be non empty"
+msgstr "如果指定了'payload'，'payload'就不能为空"
+
+#, python-format
+msgid "Image %(image_id)s is protected and cannot be deleted."
+msgstr "映像 %(image_id)s 受保护，无法删除。"
+
+#, python-format
+msgid ""
+"Incorrect auth strategy, expected \"%(expected)s\" but received "
+"\"%(received)s\""
+msgstr "授权策略不正确，期望的是“%(expected)s”，但接收到的是“%(received)s”"
+
+#, python-format
+msgid "Invalid CA_ID: %(ca_id)s"
+msgstr "无效的CA ID: %(ca_id)s"
+
+msgid "Invalid CMC Data"
+msgstr "无效的CMC数据"
+
+msgid "Invalid Certificate Request Type"
+msgstr "无效的证书请求类型"
+
+msgid "Invalid Key. Key must be URL safe."
+msgstr "无效的key。key必须是URL安全的。"
+
+msgid "Invalid Metadata. Keys and Values must be Strings."
+msgstr "无效的元数据。键值对必须是字符串。"
+
+#, python-format
+msgid "Invalid PKCS10 Data: %(reason)s"
+msgstr "无效的PKCS10数据：%(reason)s"
+
+#, python-format
+msgid "Invalid Parent CA: %(parent_ca_ref)s"
+msgstr "无效的父CA：%(parent_ca_ref)s"
+
+msgid "Invalid algorithm passed in"
+msgstr "传入的算法无效"
+
+#, python-format
+msgid "Invalid container: %(reason)s"
+msgstr "无效的容器：%(reason)s"
+
+#, python-format
+msgid "Invalid content encoding %(content_encoding)s"
+msgstr "无效的内容编码%(content_encoding)s"
+
+#, python-format
+msgid "Invalid content type %(content_type)s"
+msgstr "内容类型 %(content_type)s 无效"
+
+msgid "Invalid date for 'expiration'"
+msgstr "无效的'expiration'数据"
+
+msgid "Invalid extensions data."
+msgstr "无效的扩展数据。"
+
+msgid "Invalid operation requested - Reason: {reason}"
+msgstr "无效的操作请求。原因：{reason}"
+
+msgid "Invalid payload for payload_content_encoding"
+msgstr "payload_content_encoding对应的payload无效"
+
+msgid "Invalid request_status returned by CA"
+msgstr "CA返回了无效的请求状态"
+
+msgid "Invalid request_status {status} for request_id {request_id}"
+msgstr "请求:{request_id}的无效的请求状态{status}"
+
+msgid "Invalid status '{status}' for {entity_name}."
+msgstr "无效的{entity_name}状态'{status}'"
+
+#, python-format
+msgid "Invalid subject DN: %(subject_dn)s"
+msgstr "无效的subject DN:%(subject_dn)s"
+
+msgid "KEK not yet created."
+msgstr "KEK还未被创建。"
+
+msgid "KMIP plugin action not support."
+msgstr "不支持KMIP插件行为"
+
+msgid ""
+"KMIP plugin does not currently support protecting the private key with a "
+"passphrase"
+msgstr "KMIP插件当前不支持使用密码保护私钥"
+
+msgid "Key encryption key to be used by Simple Crypto Plugin"
+msgstr "被简单密码插件所使用的KEK"
+
+msgid ""
+"Keystone notification queue topic name. This name needs to match one of "
+"values mentioned in Keystone deployment's 'notification_topics' "
+"configuration e.g.    notification_topics=notifications,     "
+"barbican_notificationsMultiple servers may listen on a topic and messages "
+"will be dispatched to one of the servers in a round-robin fashion. That's "
+"why Barbican service should have its own dedicated notification queue so "
+"that it receives all of Keystone notifications."
+msgstr ""
+"keystone通知队列话题名称。这个名称需要同部署keystone时配置"
+"的'notification_topics'其中之一匹配，例如notification_topics=notifications，"
+"barbican_notificationsMultiple服务会监听一个话题并且消息会通过轮询机制被分配"
+"到其中一个服务。那就是为什么barbican服务需要有自己专用的通知队列才能够接收到"
+"所有来自keystone的通知。"
+
+msgid "List of automatically approved enrollment profiles"
+msgstr "自动通过的注册信息列表"
+
+msgid "List of certificate plugins to load."
+msgstr "待加载的证书插件列表。"
+
+msgid "List of crypto plugins to load."
+msgstr "待加载的密码插件列表。"
+
+msgid "List of secret store plugins to load."
+msgstr "待加载的证书存储插件列表"
+
+msgid "Malformed JSON"
+msgstr "有缺陷的 JSON"
+
+msgid "Master KEK label (used in the HSM)"
+msgstr "Master KEK标签（用于HSM）"
+
+msgid "Master KEK length in bytes."
+msgstr "Master KEK字节长度"
+
+#, python-format
+msgid "Maximum redirects (%(redirects)s) was exceeded."
+msgstr "已超过最大重定向次数 (%(redirects)s)。"
+
+msgid "Missing X-Project-Id"
+msgstr "缺少 X-Project-Id"
+
+msgid "Missing required argument."
+msgstr "缺少必须的参数"
+
+#, python-format
+msgid "Missing required credential: %(required)s"
+msgstr "缺少必需凭证：%(required)s"
+
+#, python-format
+msgid "Missing required metadata field for %(required)s"
+msgstr "%(required)s缺少所需的元数据"
+
+msgid "Modify request: unable to cancel: {message}"
+msgstr "修改请求：无法取消：{message}"
+
+msgid "More than one key found for label"
+msgstr "找到不止一个该标签对应的key"
+
+#, python-format
+msgid ""
+"Multiple 'image' service matches for region %(region)s. This generally means "
+"that a region is required and you have not supplied one."
+msgstr ""
+"对于区域 %(region)s，存在多个“映像”服务匹配项。这通常意味着需要区域并且尚未提"
+"供一个区域。"
+
+msgid "Must be a positive integer that is a multiple of 8"
+msgstr "必须是8的整数倍的正整数"
+
+msgid "Must supply Non-None {0} argument for CertificateAuthority entry."
+msgstr "必须为CertificateAuthority入口提供非空的{0}参数"
+
+msgid ""
+"Must supply non-None {0} argument for CertificateAuthorityMetadatum entry."
+msgstr "必须为CertificateAuthorityMetadatum入口提供非空的{0}参数"
+
+msgid "Must supply non-None {0} argument for ContainerACL entry."
+msgstr "必须为ContainerACL入口提供非空的{0}参数"
+
+msgid "Must supply non-None {0} argument for ContainerACLUser entry."
+msgstr "必须为ContainerACLUser入口提供非空的{0}参数"
+
+msgid "Must supply non-None {0} argument for OrderBarbicanMetadatum entry."
+msgstr "必须为OrderBarbicanMetadatum入口提供非空的{0}参数"
+
+msgid "Must supply non-None {0} argument for OrderPluginMetadatum entry."
+msgstr "必须为OrderPluginMetadatum 入口提供非空的{0}参数"
+
+msgid ""
+"Must supply non-None {0} argument for PreferredCertificateAuthority entry."
+msgstr "必须为PreferredCertificateAuthority入口提供非空的{0}参数"
+
+msgid ""
+"Must supply non-None {0} argument for ProjectCertificateAuthority entry."
+msgstr "必须为ProjectCertificateAuthority入口提供非空的{0}参数"
+
+msgid "Must supply non-None {0} argument for ProjectQuotas entry."
+msgstr "必须为ProjectQuotas入口提供非空的{0}参数"
+
+msgid "Must supply non-None {0} argument for SecretACL entry."
+msgstr "必须为SecretACL入口提供非空的{0}参数"
+
+msgid "Must supply non-None {0} argument for SecretACLUser entry."
+msgstr "必须为SecretACLUser入口提供非空的{0}参数"
+
+msgid "Must supply non-None {0} argument for SecretStoreMetadatum entry."
+msgstr "必须为SecretStoreMetadatum入口提供非空的{0}参数。"
+
+msgid "Must supply non-None {0} argument for SecretUserMetadatum entry."
+msgstr "必须为SecretUserMetadatum入口提供非空的{0}参数。"
+
+msgid "Must supply non-None {0} argument for TransportKey entry."
+msgstr "必须为TransportKey入口提供非空的{0}参数"
+
+msgid "Must supply non-None {entity_name}."
+msgstr "必须提供非空的{entity_name}"
+
+msgid "Must supply {entity_name} with id=None (i.e. new entity)."
+msgstr "必须提供id为None的{entity_name}（i.e. new entity）。"
+
+msgid "No SQL connection configured"
+msgstr "没有配置SQL连接"
+
+msgid "No container found with container-ID {id}"
+msgstr "未发现container-ID为{id}的容器"
+
+msgid "No data supplied to process."
+msgstr "没有提供数据供处理。"
+
+msgid "No entities of type {entity_name} found"
+msgstr "未发现类型{entity_name}的实体"
+
+msgid "No global preferred CA defined"
+msgstr "没有定义全局首选CA"
+
+msgid "No key handle was found"
+msgstr "未发现密钥操作"
+
+msgid "No plugin was found that could support your request"
+msgstr "没有找到可以支持你的请求的插件"
+
+msgid "No preferred CA defined for this project"
+msgstr "该项目未设置首选CA"
+
+msgid "No profile_id specified"
+msgstr "未指定profile_id"
+
+msgid "No request found for request_id {request_id} for order {order_id}"
+msgstr "未找到order:{order_id}的request_id为{request_id}的请求"
+
+msgid "No request returned in enrollment_results"
+msgstr "注册结果未返回请求"
+
+msgid "No request_data specified"
+msgstr "未指定请求数据"
+
+msgid "No secret found with secret-ID {id}"
+msgstr "未发现secret-ID为{id}的秘密"
+
+msgid "No secret information found"
+msgstr "未发现秘密的信息"
+
+msgid "No secret information provided to encrypt."
+msgstr "未提供用于加密的秘密信息。"
+
+msgid "No secret store plugins have been configured"
+msgstr "为配置秘密存储插件"
+
+#, python-format
+msgid ""
+"No support for value set on field '%(field)s' on schema '%(schema)s': "
+"%(reason)s"
+msgstr "模式'%(schema)s'的'%(field)s'字段所设置的值不支持：%(reason)s"
+
+#, python-format
+msgid "No token was found in slot %(slot_id)s"
+msgstr "未找到插槽%(slot_id)s的口令"
+
+msgid "No {entity_name} found with keystone-ID {id}"
+msgstr "未发现keystone-ID为{id}的{entity_name}"
+
+msgid "No {entity} found with ID {id}"
+msgstr "未找到ID为{id}的{entity}"
+
+msgid "Not Found. CA attribute not found."
+msgstr "未找到。CA属性未找到。"
+
+msgid "Not Found. CA not found."
+msgstr "未找到。未找到CA。"
+
+msgid "Not Found. CA not in project."
+msgstr "未找到。CA不在项目中。"
+
+msgid "Not Found. Sorry but your consumer is in another castle."
+msgstr "没有找到。对不起，您的用户名是在另一个城堡。"
+
+msgid "Not Found. Sorry but your container is in another castle."
+msgstr "没有找到。对不起，您的容器在另一个城堡。"
+
+msgid "Not Found. Sorry but your order is in another castle."
+msgstr "未发现。抱歉你的order在另一个城堡。"
+
+msgid "Not Found. Sorry but your project quotas are in another castle."
+msgstr "未发现。抱歉你的项目配额在另一个城堡。"
+
+msgid "Not Found. Sorry but your secret has no payload."
+msgstr "未发现。抱歉你的秘密没有负载。"
+
+msgid "Not Found. Sorry but your secret is in another castle"
+msgstr "未发现。抱歉你的秘密在另一个城堡"
+
+msgid "Not Found. Sorry but your secret is in another castle."
+msgstr "未发现。抱歉你的秘密在另一个城堡。"
+
+msgid "Not Found. Sorry but your secret metadata is in another castle."
+msgstr "未发现。抱歉你的秘密元数据在另一个城堡。"
+
+msgid "Not Found. Transport Key not found."
+msgstr "未发现。传输密钥未发现。"
+
+msgid "Number of asynchronous worker processes"
+msgstr "异步任务处理者的数量"
+
+msgid "Only 'generic' containers can be modified."
+msgstr "只有通用的容器能够被修改"
+
+msgid "Only PENDING orders can be updated. Order is in the{0} state."
+msgstr "只有PENGDING状态的order能被更新。当前order是{0}状态。"
+
+msgid "Only subordinate CAs can be deleted."
+msgstr "只有子CA才能被删除。"
+
+msgid "Only support PKCS#1 encoding of asymmetric keys"
+msgstr "只支持非对称密钥的PKCS#1编码"
+
+msgid "Operation is not supported."
+msgstr "操作不支持。"
+
+msgid "Operation not supported by Dogtag Plugin"
+msgstr "Dogtag插件不支持的操作"
+
+msgid "Order creation"
+msgstr "创建order"
+
+msgid "Order deletion"
+msgstr "删除order"
+
+msgid "Order retrieval"
+msgstr "检索order"
+
+msgid "Order type \"{order_type}\" not implemented."
+msgstr "order类型“{order_type}”未实现。"
+
+msgid "Order type \"{order_type}\" not supported."
+msgstr "order类型“{order_type}”不支持"
+
+msgid "Order update"
+msgstr "更新order"
+
+msgid "Order update is not supported."
+msgstr "不支持命令更新。"
+
+msgid "Order(s) retrieval"
+msgstr "检索order(s)"
+
+msgid "Passphrase encryption is not supported for DSA algorithm"
+msgstr "DSA算法不支持密码加密。"
+
+msgid ""
+"Passphrase encryption is not supported for symmetric key generating "
+"algorithms."
+msgstr "对称密钥生成算法不支持密码加密。"
+
+msgid "Passphrase not supported for DSA key"
+msgstr "DSA密钥不支持的密码"
+
+msgid "Password for authenticating with KMIP server"
+msgstr "KMIP服务器的认证密码"
+
+msgid "Password for the NSS certificate databases"
+msgstr "NSS证书数据库的密码"
+
+msgid "Password to login to PKCS11 session"
+msgstr "登录到PKCS11会话的密码"
+
+msgid "Path to CA certicate chain file"
+msgstr "CA证书链文件的路径"
+
+msgid "Path to CA certicate file"
+msgstr "CA证书文件的路径"
+
+msgid "Path to CA certificate key file"
+msgstr "CA证书密钥文件的路径"
+
+msgid "Path to CA chain pkcs7 file"
+msgstr "CA链pkcs7文件的路径"
+
+msgid "Path to PEM file for authentication"
+msgstr "认证所需的PEM文件的路径"
+
+msgid "Path to the NSS certificate database"
+msgstr "NSS证书数据库的路径"
+
+msgid "Path to vendor PKCS11 library"
+msgstr "提供PKCS11库的路径"
+
+msgid "Permission to write image storage media denied."
+msgstr "不允许对镜像存储媒介写操作。"
+
+msgid ""
+"Please change the preferred CA to a different project CA before removing it."
+msgstr "删除CA之前请先将首选CA设置为项目的其他CA。"
+
+msgid "Plugin does not support generation of subordinate CAs"
+msgstr "插件不支持生成子CA"
+
+msgid "Port for the Dogtag instance"
+msgstr "Dogtag实例的端口"
+
+msgid "Port for the KMIP server"
+msgstr "KMIP服务器的端口"
+
+msgid "Problem decoding payload"
+msgstr "解码负载时出错"
+
+msgid "Problem seen during certificate processing - Reason: {reason}"
+msgstr "证书处理似乎有问题。原因：{reason}"
+
+msgid "Problem seen during crypto processing - Reason: {reason}"
+msgstr "加密处理似乎出现问题。原因：{reason}"
+
+msgid "Problem with data in certificate request - Reason: {reason}"
+msgstr "证书请求中的数据有问题。原因：{reason}"
+
+msgid "Process TypeOrder"
+msgstr "处理TypeOrder"
+
+msgid "Process TypeOrder failure seen - please contact site administrator."
+msgstr "处理order失败。请联系站点管理员。"
+
+msgid "Profile for simple CMC requests"
+msgstr "simple-CMC请求的信息"
+
+msgid "Project KEK Cache Item Limit"
+msgstr "项目KEK缓存条目限制"
+
+msgid "Project KEK Cache Time To Live, in seconds"
+msgstr "项目KEK生存期缓存时间，以秒为单位"
+
+msgid "Project KEK length in bytes."
+msgstr "项目KEK字节长度"
+
+msgid "Project Quotas"
+msgstr "项目配额"
+
+msgid "Project cleanup via Keystone notifications"
+msgstr "通过keystone通知项目清理"
+
+#, python-format
+msgid "Provided Transport key %(transport_key_id)s could not be found"
+msgstr "无法找到所提供的传输key %(transport_key_id)s"
+
+msgid "Provided field value is not supported"
+msgstr "不支持所提供的字段值"
+
+#, python-format
+msgid "Provided header feature is unsupported: %(feature)s"
+msgstr "提供的头功能不受支持：%(feature)s"
+
+msgid "Provided information too large to process"
+msgstr "提供的信息量太大无法处理"
+
+msgid ""
+"Provided object does not match schema '{schema}': {reason}. Invalid "
+"property: '{property}'"
+msgstr "提供的对象与模式'{schema}'不匹配：{reason}。无效的属性：'{property}'"
+
+msgid "Provided transport key was not found."
+msgstr "无法找到所提供的传输key。"
+
+msgid "Queue namespace"
+msgstr "队列命名空间"
+
+msgid "Queue topic name"
+msgstr "队列话题名称"
+
+#, python-format
+msgid ""
+"Quota reached for project %(external_project_id)s. Only %(quota)s "
+"%(resource_type)s are allowed."
+msgstr ""
+"项目%(external_project_id)s的配额已经达到。只有%(quota)s %(resource_type)s被"
+"允许。"
+
+msgid "Quotas"
+msgstr "配额"
+
+msgid "Read Error"
+msgstr "读取错误"
+
+msgid "Received invalid HTTP redirect."
+msgstr "接收到无效 HTTP 重定向。"
+
+#, python-format
+msgid "Redirecting to %(uri)s for authorization."
+msgstr "对于授权，正在重定向至 %(uri)s。"
+
+#, python-format
+msgid "Registry was not configured correctly on API server. Reason: %(reason)s"
+msgstr "API 服务器上未正确配置注册表。原因：%(reason)s"
+
+msgid "Remove CA from project"
+msgstr "将CA从项目中移除"
+
+msgid ""
+"Request {request_id} reports status_complete, but no cert_id has been "
+"returned"
+msgstr "请求{request_id}报告了status_complete状态，但是未返回cert_id。"
+
+msgid "Requested algorithm is not supported"
+msgstr "请求的算法不支持"
+
+msgid "Response from Keystone does not contain a Barbican endpoint."
+msgstr "keystone的响应不包含barbican的endpoint。"
+
+msgid "Retrieve global preferred CA"
+msgstr "检索全局首选CA"
+
+msgid "Retrieve project preferred CA"
+msgstr "检索项目首选CA"
+
+msgid "Role used to identify an authenticated user as administrator."
+msgstr "一种角色，用来确定该已认证用户是管理员。"
+
+msgid "SSL version, maps to the module ssl's constants"
+msgstr "SSL版本，映射到模块ssl的常量"
+
+msgid "Seconds (float) to wait before starting retry scheduler"
+msgstr "在开始重新调度之前需要等待数秒"
+
+msgid "Seconds (float) to wait between periodic schedule events"
+msgstr "周期性调度事件之间等待数秒"
+
+msgid "Secret '{secret_name}' with reference '{secret_ref}' doesn't exist."
+msgstr "秘密：'{secret_name}'及其URL：'{secret_ref}'不存在"
+
+msgid "Secret Accept of '{accept}' not supported"
+msgstr "不支持的Secret Accept '{accept}'"
+
+msgid "Secret Content-Encoding of '{content_encoding}' not supported"
+msgstr "不支持的秘密的内容编码'{content_encoding}'"
+
+msgid "Secret algorithm of '{algorithm}' not supported"
+msgstr "秘密的算法'{algorithm}'不支持"
+
+msgid "Secret already has data, cannot modify it."
+msgstr "秘密已经有数据，不能修改。"
+
+msgid "Secret creation"
+msgstr "创建秘密"
+
+msgid "Secret deletion"
+msgstr "删除秘密"
+
+msgid "Secret encryption algorithm"
+msgstr "秘密加密算法"
+
+msgid "Secret metadata creation"
+msgstr "创建秘密元数据"
+
+msgid "Secret metadata expected but not received."
+msgstr "预期到机密的元数据，但没有收到。"
+
+msgid "Secret metadata retrieval"
+msgstr "检索秘密元数据"
+
+msgid "Secret metadatum creation"
+msgstr "创建秘密元数据"
+
+msgid "Secret metadatum removal"
+msgstr "移除秘密元数据"
+
+msgid "Secret metadatum retrieval"
+msgstr "检索秘密元数据"
+
+msgid "Secret metadatum update"
+msgstr "更新秘密元数据"
+
+msgid "Secret object type {object_type} is not supported"
+msgstr "秘密对象类型{object_type}不支持"
+
+msgid "Secret payload retrieval"
+msgstr "检索秘密负载"
+
+msgid "Secret provided doesn't exist."
+msgstr "提供的秘密不存在"
+
+msgid "Secret provided for '{secret_name}' doesn't exist."
+msgstr "为 '{机密名}'提供的机密不存在。"
+
+msgid "Secret provided is not in the container"
+msgstr "提供的秘密不在这个容器中"
+
+msgid "Secret retrieval"
+msgstr "检索秘密"
+
+msgid "Secret store plugin \"{name}\" not found."
+msgstr "秘密存储插件“{name}”未发现"
+
+msgid "Secret store plugin not found for requested operation."
+msgstr "未找到请求的操作的秘密存储插件。"
+
+msgid "Secret store plugin not found."
+msgstr "秘密存储插件未发现。"
+
+msgid "Secret store supported plugin not found."
+msgstr "秘密存储支持的插件未发现。"
+
+msgid "Secret type can not be converted to DER"
+msgstr "无法将秘密的类型转换为DER"
+
+msgid "Secret type can not be converted to PEM"
+msgstr "无法将秘密的类型转换为PEM"
+
+msgid "Secret update"
+msgstr "更新秘密"
+
+msgid "Secret(s) retrieval"
+msgstr "检索秘密"
+
+msgid "SecretACL(s) Update"
+msgstr "更新秘密访问控制列表"
+
+msgid "SecretACL(s) deletion"
+msgstr "删除秘密访问控制列表"
+
+msgid "SecretACL(s) retrieval"
+msgstr "检索秘密访问控制列表"
+
+msgid "Secret_ref does not match the configured hostname, please try again"
+msgstr "Secret_ref与配置的hostname不匹配，请重试"
+
+msgid ""
+"Secrets of type {secret_type} should not have a passphrase in the database, "
+"for being used during retrieval."
+msgstr "{secret_type}类型的秘密不应在数据库中有密码，因为在检索过程被使用了。"
+
+msgid "Server name for RPC task processing server"
+msgstr "RPC任务服务器的名称"
+
+#, python-format
+msgid "Server worker creation failed: %(reason)s."
+msgstr "服务器工作程序创建失败：%(reason)s。"
+
+msgid "Set global preferred CA"
+msgstr "设置全局首选CA"
+
+msgid "Set preferred project CA"
+msgstr "设置项目首选CA"
+
+msgid "Signing key incorrect"
+msgstr "密钥签发错误"
+
+msgid "Sort key supplied was not valid."
+msgstr "提供的排序键无效。"
+
+msgid "Status: {status}, Reason: {reason}, Message: {message}"
+msgstr "状态：{status}，原因：{reason}，消息：{message}"
+
+#, python-format
+msgid ""
+"Store %(store_name)s could not be configured correctly. Reason: %(reason)s"
+msgstr "%(store_name)s存储无法被正确配置。原因：%(reason)s"
+
+msgid "Subordinate CA is not owned by this project"
+msgstr "该项目没有子CA"
+
+msgid "Symantec password for authentication"
+msgstr "认证的Symantec密码"
+
+msgid "Symantec username for authentication"
+msgstr "认证的Symantec用户名"
+
+msgid "System"
+msgstr "系统"
+
+msgid ""
+"Text-based binary secret payloads must specify a content-encoding of 'base64'"
+msgstr "基于文本的二进制秘密负载必须指定内容编码为'base64'"
+
+msgid "The Store URI was malformed."
+msgstr "存储器 URI 的格式不正确。"
+
+msgid "The ca_id provided in the request is invalid"
+msgstr "请求中所提供的ca_id无效"
+
+msgid "The ca_id provided in the request is not defined for this project"
+msgstr "请求中提供的ca_id在这个项目中没有定义"
+
+msgid ""
+"The default exchange under which topics are scoped. May be overridden by an "
+"exchange name specified in the transport_url option."
+msgstr ""
+"话题被限定在默认的交换名称下。可能会被transport_url参数中指定的交换名称覆盖。"
+
+msgid ""
+"The image cannot be deleted because it is in use through the backend store "
+"outside of Barbican."
+msgstr "该镜像无法被删除因为其正被barbican之外的存储后端所使用。"
+
+msgid ""
+"The minimum required reference name is 'certificate' for Certificate type"
+msgstr "证书类型所需要的最少的引用名称是'certificate'"
+
+msgid ""
+"The minimum required reference names are 'public_key' and'private_key' for "
+"RSA type"
+msgstr "RSA类型最少需要的引用名称是'public_key'和'private_key'"
+
+msgid "The provided image is too large."
+msgstr "提供的映像太大。"
+
+msgid "The request returned 500 Internal Server Error."
+msgstr "该请求返回了“500 内部服务器错误”。"
+
+msgid ""
+"The request returned 503 Service Unavilable. This generally occurs on "
+"service overload or other transient outage."
+msgstr ""
+"该请求返回了“503服务不可用”。这通常发生于服务超负荷或其他瞬时停止运行。"
+
+#, python-format
+msgid ""
+"The request returned a 302 Multiple Choices. This generally means that you "
+"have not included a version indicator in a request URI.\n"
+"\n"
+"The body of response returned:\n"
+"%(body)s"
+msgstr ""
+"该请求返回了“302 多选项”。这通常意味着您尚未将版本指示器包括在请求 URI 中。\n"
+"\n"
+"返回了响应的主体：\n"
+"%(body)s"
+
+msgid ""
+"The request returned a 413 Request Entity Too Large. This generally means "
+"that rate limiting or a quota threshold was breached."
+msgstr "该请求返回了“413请求实体过大”。这通常意味着违背了速度限制或配额阈值。"
+
+#, python-format
+msgid ""
+"The request returned an unexpected status: %(status)s.\n"
+"\n"
+"The response body:\n"
+"%(body)s"
+msgstr ""
+"该请求返回了意外状态：%(status)s。\n"
+"\n"
+"响应主体：\n"
+"%(body)s"
+
+msgid ""
+"The requested Store Plugin {plugin_name} is not currently available. This is "
+"probably a server misconfiguration."
+msgstr "请求的存储插件{plugin_name}目前不可用。这可能是服务器配置错误。"
+
+msgid "The version you requested wasn't found"
+msgstr "未发现你请求的版本"
+
+msgid "There is not enough disk space on the image storage media."
+msgstr "该镜像存储媒介没有足够的硬盘空间。"
+
+msgid "There was an error configuring the client."
+msgstr "配置客户机时出错。"
+
+msgid "There was an error connecting to a server"
+msgstr "连接至服务器时出错"
+
+msgid "There was an error migrating the database."
+msgstr "数据库迁移时有一个错误。"
+
+msgid "There was an error with the PKCS#11 library."
+msgstr "PKCS#11库有一个错误。"
+
+msgid "Time in days for CA entries to expire"
+msgstr "CA条目失效的天数"
+
+msgid "Transport Key Creation"
+msgstr "创建传输密钥"
+
+msgid "Transport Key deletion"
+msgstr "删除传输密钥"
+
+msgid "Transport Key retrieval"
+msgstr "检索传输密钥"
+
+msgid "Transport Key(s) retrieval"
+msgstr "检索传输密钥"
+
+msgid ""
+"Transport key wrapped session key has been provided to wrap secrets for "
+"retrieval, but the transport key id has not been provided."
+msgstr ""
+"已经提供了包含会话密钥的传输密钥用于加密待检索的秘密，但是未提供传输密钥的"
+"id。"
+
+msgid "Tried to register crypto plugin with null or empty name."
+msgstr "尝试使用空的名字注册密码插件。"
+
+msgid "True enables keystone notification listener  functionality."
+msgstr "True使能keystone-notification-listener功能。"
+
+msgid "True enables queuing, False invokes workers synchronously"
+msgstr "True使能队列，False引用同步workers"
+
+msgid ""
+"True enables requeue feature in case of notification processing error. "
+"Enable this only when underlying transport supports this feature."
+msgstr ""
+"通知处理出错时True使能重新排队特性。只有当基础传输支持这个特性时才可以使能"
+"它。"
+
+msgid "Unable to decode request data."
+msgstr "无法解码请求数据。"
+
+msgid "Unable to filter using the specified range."
+msgstr "无法使用指定的范围进行过滤。"
+
+#, python-format
+msgid "Unable to load schema: %(reason)s"
+msgstr "无法装入模式：%(reason)s"
+
+msgid "Unencrypted data must be a byte type, but was {unencrypted_type}"
+msgstr "未加密的数据必须是字节类型，但却是{unencrypted_type}"
+
+msgid "Unexpected content type: {type}. Expected content types are: {expected}"
+msgstr "意外的主体类型：{type}。期望的类型是：{expected}"
+
+msgid "Unknown"
+msgstr "未知"
+
+msgid "Unknown attribute type provided."
+msgstr "提供的属性类型未知"
+
+#, python-format
+msgid "Unknown scheme '%(scheme)s' found in URI"
+msgstr "URI中发现了未知的scheme '%(scheme)s'"
+
+msgid "Unset global preferred CA"
+msgstr "取消设置全局首选CA"
+
+msgid "Update Order"
+msgstr "更新order"
+
+msgid "Update Order failure seen - please contact site administrator."
+msgstr "更新order失败。请联系站点管理员。"
+
+msgid "Updates are not supported for order type {0}."
+msgstr "不支持order类型{0}的更新"
+
+msgid "Username for authenticating with KMIP server"
+msgstr "KMIP服务器的认证用户名"
+
+msgid "Version of tasks invoked via notifications"
+msgstr "通过通知引用的任务的版本"
+
+msgid "Version of tasks invoked via queue"
+msgstr "通过队列引用的任务的版本"
+
+msgid "Version retrieval"
+msgstr "检索版本"
+
+msgid "Working directory for Dogtag plugin"
+msgstr "Dogtag插件的工作目录"
+
+msgid "Wrong payload content-type"
+msgstr "错误的负载内容类型"
+
+msgid "You are not authenticated."
+msgstr "您未经认证。"
+
+msgid "You are not authorized to complete this action."
+msgstr "您无权完成此操作。"
+
+msgid "content-encoding of '{content_encoding}' not supported"
+msgstr "不支持的内容编码'{content_encoding}'"
+
+msgid "content-type of '{content_type}' not supported"
+msgstr "不支持内容类型'{content_type}'"
+
+msgid "failure seen - please contact site administrator."
+msgstr "错误。请联系站点管理员。"
+
+msgid "key_label must be set for master_keys"
+msgstr "必须为主密钥设置密钥标签"
+
+msgid "library_path is required"
+msgstr "需要library_path"
+
+msgid "no request found for this order"
+msgstr "未找到这个order的请求"
+
+msgid "nss_password is required"
+msgstr "需要nss_password"
+
+msgid ""
+"only 'private_key', 'certificate' , 'private_key_passphrase',  or "
+"'intermediates' reference names are allowed for Certificate type"
+msgstr ""
+"证书类型允许的引用名称只"
+"有'private_key'，'certificate'，'private_key_passphrase'或者'internediates'"
+
+msgid ""
+"only 'private_key', 'public_key' and 'private_key_passphrase' reference "
+"names are allowed for RSA type"
+msgstr ""
+"RSA类型允许的引用名称只"
+"有'private_key'，'public_key'和'private_key_passphrase'"
+
+msgid "password is required"
+msgstr "需要密码"
+
+msgid "payload must be provided when payload_content_type is specified"
+msgstr "当指定了'payload_content_type'，就必须提供'payload'"
+
+msgid "payload_content_encoding is not one of {supported}"
+msgstr "payload_content_encoding不在{supported}当中"
+
+msgid "payload_content_type is not one of {supported}"
+msgstr "payload_content_type不在{supported}当中"
+
+msgid "payload_content_type {supplied} is not one of {supported}"
+msgstr "payload_content_type：{supplied}不在{supported}当中"
+
+msgid "pem_path is required"
+msgstr "需要pem_path"
+
+msgid "plugin_name must be provided"
+msgstr "必须提供plugin_name"
+
+msgid "request_id {req_id} returns COMPLETE but no cert returned"
+msgstr "请求{req_id}返回了完成状态，但是没有证书被返回"
+
+msgid "transport_key must be provided"
+msgstr "必须提供transport_key"
+
+msgid "url is required"
+msgstr "需要url"
+
+msgid "username is required"
+msgstr "需要用户名"
+
+msgid "{entity_name} is missing query build method for get project entities."
+msgstr "{entity_name}缺少用于获取项目实体的查询构建方法。"
+
+msgid "{entity_name} status is required."
+msgstr "{entity_name}状态是必须的。"
+
+msgid ""
+"{operation} attempt not allowed - please review your user/project privileges"
+msgstr "{operation}尝试不允许 - 请检查您的用户或者项目权限"
+
+msgid "{operation} failure seen - please contact site administrator."
+msgstr "{operation}失败 - 请联系网站管理员。"
+
+msgid "{operation} issue seen - {reason}."
+msgstr "{operation}出现问题 - {reason}。"
+
+msgid "{request} not found for {operation} for order_id {order_id}"
+msgstr "未找到order_id为{order_id}的{operation}操作的{request}请求"
+
+msgid "{schema_name}' within '{parent_schema_name}"
+msgstr "带有'{parent_schema_name}'的'{schema_name}'"

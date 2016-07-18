@@ -1,0 +1,133 @@
+# Jiong Liu <liujiong@gohighsec.com>, 2016. #zanata
+msgid ""
+msgstr ""
+"Project-Id-Version: Barbican Release Notes 3.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-07-17 22:53+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2016-07-12 01:44+0000\n"
+"Last-Translator: Jiong Liu <liujiong@gohighsec.com>\n"
+"Language-Team: Chinese (China)\n"
+"Language: zh-CN\n"
+"X-Generator: Zanata 3.7.3\n"
+"Plural-Forms: nplurals=1; plural=0\n"
+
+msgid "1.0.0-7"
+msgstr "1.0.0-7"
+
+msgid "2.0.0"
+msgstr "2.0.0"
+
+msgid "Barbican Release Notes"
+msgstr "Barbican发布说明"
+
+msgid "Contents:"
+msgstr "内容"
+
+msgid "Critical Issues"
+msgstr "严重的问题"
+
+msgid "Current Series Release Notes"
+msgstr "当前版本发布说明"
+
+msgid "Deprecation Notes"
+msgstr "弃用说明"
+
+msgid ""
+"If you are upgrading from previous version of barbican that uses the PKCS#11 "
+"Cryptographic Plugin driver, you will need to run the migration script"
+msgstr ""
+"如果你从先前使用PKCS#11密码插件作为驱动的barbican升级，你就必须执行迁移脚本。"
+
+msgid "Known Issues"
+msgstr "已知的问题"
+
+msgid "Liberty Series Release Notes"
+msgstr "Liberty版本发布说明"
+
+msgid "Mitaka Series Release Notes"
+msgstr "Mitaka版本发布说明"
+
+msgid "New Features"
+msgstr "新特性"
+
+msgid "Other Notes"
+msgstr "其他说明"
+
+msgid "Start using reno to manage release notes."
+msgstr "开始使用reno管理发布说明。"
+
+msgid ""
+"The 'barbican-db-manage' script is deprecated.  Use the new 'barbican-"
+"manage' utility instead."
+msgstr ""
+"'barbican-db-manage'脚本已被弃用，使用新的通用的'barbican-manage'进行替代。"
+
+msgid ""
+"The 'barbican-manage' tool can be used to manage database schema changes as "
+"well as provision and rotate keys in the HSM backend."
+msgstr ""
+"'barbican-manage'工具能用来管理数据库条目的改变以及在HSM后端提供和循环密钥。"
+
+msgid ""
+"The 'pkcs11-kek-rewrap' script is deprecated.  Use the new 'barbican-manage' "
+"utility instead."
+msgstr ""
+"'pkcs11-kek-rewrap'脚本已被弃用，使用新的通用的'barbican-manage'进行替代。"
+
+msgid ""
+"The 'pkcs11-key-generation' script is deprecated.  Use the new 'barbican-"
+"manage' utility instead."
+msgstr ""
+"'pkcs11-key-generation'脚本已被弃用，使用新的通用的'barbican-manage'进行替"
+"代。"
+
+msgid ""
+"The Metadata API requires an update to the Database Schema. Existing "
+"deployments that are being upgraded to Mitaka should use the 'barbican-"
+"manage' utility to update the schema."
+msgstr ""
+"元数据API需要更新数据库条目。现有的升级到Mitaka版本的部署应该使用通用"
+"的'barbican-manage'升级数据库条目。"
+
+msgid ""
+"The Mitaka release includes a new API to add arbitrary user-defined metadata "
+"to Secrets."
+msgstr "Mitaka版本包含一个给秘密添加任意用户定义的元数据的API。"
+
+msgid ""
+"The service will encounter errors if you attempt to run this new release "
+"using data stored by a previous version of the PKCS#11 Cryptographic Plugin "
+"that has not yet been migrated for this release.  The logged errors will "
+"look like"
+msgstr ""
+"如果你尝试使用还未移植的先前版本的PKCS#11密码插件存储的数据运行新版本，服务会"
+"出错。错误日志看起来像"
+
+msgid ""
+"This release includes a new command line utility 'barbican-manage' that "
+"consolidates and supersedes the separate HSM and database management scripts."
+msgstr "这个版本包括一个增强和替换单独的HSM和数据库管理脚本的通用命令行。"
+
+msgid ""
+"This release includes significant improvements to the performance of the "
+"PKCS#11 Cryptographic Plugin driver.  These changes will require a data "
+"migration of any existing data stored by previous versions of the PKCS#11 "
+"backend."
+msgstr ""
+"这个版本包含对于PKCS#11密码插件驱动的重要改进。这些改进需要移植以前版本的"
+"PKCS#11后端存储的数据。"
+
+msgid "Upgrade Notes"
+msgstr "升级说明"
+
+msgid ""
+"``'P11CryptoPluginException: HSM returned response code: 0xc0L "
+"CKR_SIGNATURE_INVALID'``"
+msgstr ""
+"``'P11CryptoPluginException: HSM返回响应码：0xc0L CKR_SIGNATURE_INVALID'``"
+
+msgid "``python barbican/cmd/pkcs11_migrate_kek_signatures.py``"
+msgstr "``python barbican/cmd/pkcs11_migrate_kek_signatures.py``"
