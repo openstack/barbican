@@ -155,7 +155,8 @@ def create_connection(conf, subsystem_path):
     return connection
 
 crypto = _setup_nss_db_services(CONF)
-crypto.initialize()
+if crypto:
+    crypto.initialize()
 
 
 class DogtagPluginAlgorithmException(exception.BarbicanException):
