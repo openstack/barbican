@@ -39,11 +39,11 @@ snakeoil_ca_plugin_group = cfg.OptGroup(name='snakeoil_ca_plugin',
 
 snakeoil_ca_plugin_opts = [
     cfg.StrOpt('ca_cert_path',
-               help=u._('Path to CA certicate file')),
+               help=u._('Path to CA certificate file')),
     cfg.StrOpt('ca_cert_key_path',
                help=u._('Path to CA certificate key file')),
     cfg.StrOpt('ca_cert_chain_path',
-               help=u._('Path to CA certicate chain file')),
+               help=u._('Path to CA certificate chain file')),
     cfg.StrOpt('ca_cert_pkcs7_path',
                help=u._('Path to CA chain pkcs7 file')),
     cfg.StrOpt('subca_cert_key_directory',
