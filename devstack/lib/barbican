@@ -187,7 +187,7 @@ function start_barbican {
     sleep 10
 
     # Start the retry scheduler server up.
-    run_process barbican-retry "$BARBICAN_BIN_DIR/barbican-retry --config-file=$BARBICAN_CONF_DIR/barbican-api.conf"
+    run_process barbican-retry "$BARBICAN_BIN_DIR/barbican-retry --config-file=$BARBICAN_CONF_DIR/barbican.conf"
 }
 
 # stop_barbican - Stop running processes
