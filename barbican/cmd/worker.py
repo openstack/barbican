@@ -39,6 +39,7 @@ if os.path.exists(os.path.join(possible_topdir, 'barbican', '__init__.py')):
 from barbican.common import config
 from barbican import queue
 from barbican.queue import server
+from barbican import version
 
 from oslo_log import log
 from oslo_service import service
@@ -52,6 +53,8 @@ def fail(returncode, e):
 def main():
     try:
         CONF = config.CONF
+        CONF(sys.argv[1:], project='barbican',
+             version=version.version_info.version_string)
 
         # Import and configure logging.
         log.setup(CONF, 'barbican')

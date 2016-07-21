@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import mock
+import sys
 
 from barbican.cmd import retry_scheduler
 from barbican.cmd import worker
@@ -26,6 +27,7 @@ class WhenInvokingRetryServiceCommand(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenInvokingRetryServiceCommand, self).setUp()
+        sys.argv = ['barbican-retry']
 
     @mock.patch('barbican.common.config')
     @mock.patch('barbican.queue.init')
@@ -62,6 +64,7 @@ class WhenInvokingWorkerCommand(test_keystone_listener.UtilMixin,
     def setUp(self):
         super(WhenInvokingWorkerCommand, self).setUp()
         database_utils.setup_in_memory_db()
+        sys.argv = ['barbican-worker']
 
     @mock.patch('barbican.queue.init')
     @mock.patch('barbican.queue.get_server')
