@@ -639,5 +639,118 @@ class WhenCreatingNewProjectQuotas(utils.BaseTestCase):
         self.assertEqual(106,
                          project_quotas.to_dict_fields()['cas'])
 
+
+class WhenCreatingNewSecretStores(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenCreatingNewSecretStores, self).setUp()
+
+    def test_new_secret_stores_for_all_input(self):
+        name = "db backend"
+        store_plugin = 'store_crypto'
+        crypto_plugin = 'simple_crypto'
+        ss = models.SecretStores(name, store_plugin, crypto_plugin,
+                                 global_default=True)
+
+        self.assertEqual(store_plugin, ss.store_plugin)
+        self.assertEqual(crypto_plugin, ss.crypto_plugin)
+        self.assertEqual(name, ss.name)
+        self.assertEqual(True, ss.global_default)
+        self.assertEqual(models.States.ACTIVE, ss.status)
+
+    def test_new_secret_stores_required_input_only(self):
+        store_plugin = 'store_crypto'
+        name = "db backend"
+        ss = models.SecretStores(name, store_plugin)
+
+        self.assertEqual(store_plugin, ss.store_plugin)
+        self.assertEqual(name, ss.name)
+        self.assertIsNone(ss.crypto_plugin)
+        self.assertIsNone(ss.global_default)  # False default is not used
+        self.assertEqual(models.States.ACTIVE, ss.status)
+
+    def test_should_throw_exception_missing_store_plugin(self):
+        name = "db backend"
+        self.assertRaises(exception.MissingArgumentError,
+                          models.SecretStores, name, None)
+        self.assertRaises(exception.MissingArgumentError,
+                          models.SecretStores, name, "")
+
+    def test_should_throw_exception_missing_name(self):
+        store_plugin = 'store_crypto'
+        self.assertRaises(exception.MissingArgumentError,
+                          models.SecretStores, None, store_plugin)
+        self.assertRaises(exception.MissingArgumentError,
+                          models.SecretStores, "", store_plugin)
+
+    def test_secret_stores_check_to_dict_fields(self):
+        name = "pkcs11 backend"
+        store_plugin = 'store_crypto'
+        crypto_plugin = 'p11_crypto'
+        ss = models.SecretStores(name, store_plugin, crypto_plugin,
+                                 global_default=True)
+        self.assertEqual(store_plugin,
+                         ss.to_dict_fields()['store_plugin'])
+        self.assertEqual(crypto_plugin,
+                         ss.to_dict_fields()['crypto_plugin'])
+        self.assertEqual(True,
+                         ss.to_dict_fields()['global_default'])
+        self.assertEqual(models.States.ACTIVE,
+                         ss.to_dict_fields()['status'])
+        self.assertEqual(name, ss.to_dict_fields()['name'])
+
+        # check with required input only
+        ss = models.SecretStores(name, store_plugin)
+        self.assertEqual(store_plugin,
+                         ss.to_dict_fields()['store_plugin'])
+        self.assertIsNone(ss.to_dict_fields()['crypto_plugin'])
+        self.assertIsNone(ss.to_dict_fields()['global_default'])
+        self.assertEqual(models.States.ACTIVE,
+                         ss.to_dict_fields()['status'])
+        self.assertEqual(name, ss.to_dict_fields()['name'])
+
+
+class WhenCreatingNewProjectSecretStore(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenCreatingNewProjectSecretStore, self).setUp()
+
+    def test_new_project_secret_store(self):
+
+        project_id = 'proj_123456'
+        name = "db backend"
+        store_plugin = 'store_crypto'
+        crypto_plugin = 'simple_crypto'
+        ss = models.SecretStores(name, store_plugin, crypto_plugin,
+                                 global_default=True)
+        ss.id = "ss_123456"
+
+        project_ss = models.ProjectSecretStore(project_id, ss.id)
+        self.assertEqual(project_id, project_ss.project_id)
+        self.assertEqual(ss.id, project_ss.secret_store_id)
+        self.assertEqual(models.States.ACTIVE, project_ss.status)
+
+    def test_should_throw_exception_missing_project_id(self):
+        self.assertRaises(exception.MissingArgumentError,
+                          models.ProjectSecretStore, None, "ss_123456")
+        self.assertRaises(exception.MissingArgumentError,
+                          models.ProjectSecretStore, "", "ss_123456")
+
+    def test_should_throw_exception_missing_secret_store_id(self):
+        self.assertRaises(exception.MissingArgumentError,
+                          models.ProjectSecretStore, "proj_123456", None)
+        self.assertRaises(exception.MissingArgumentError,
+                          models.ProjectSecretStore, "proj_123456", "")
+
+    def test_project_secret_store_check_to_dict_fields(self):
+        project_id = 'proj_123456'
+        secret_store_id = 'ss_7689012'
+        project_ss = models.ProjectSecretStore(project_id, secret_store_id)
+        self.assertEqual(project_id,
+                         project_ss.to_dict_fields()['project_id'])
+        self.assertEqual(secret_store_id,
+                         project_ss.to_dict_fields()['secret_store_id'])
+        self.assertEqual(models.States.ACTIVE,
+                         project_ss.to_dict_fields()['status'])
+
+
 if __name__ == '__main__':
     unittest.main()

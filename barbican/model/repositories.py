@@ -68,6 +68,8 @@ _SECRET_META_REPOSITORY = None
 _SECRET_USER_META_REPOSITORY = None
 _SECRET_REPOSITORY = None
 _TRANSPORT_KEY_REPOSITORY = None
+_SECRET_STORES_REPOSITORY = None
+_PROJECT_SECRET_STORE_REPOSITORY = None
 
 
 CONF = config.CONF
@@ -2189,6 +2191,153 @@ class ProjectQuotasRepo(BaseRepo):
         entity.delete(session=session)
 
 
+class SecretStoresRepo(BaseRepo):
+    """Repository for the SecretStores entity.
+
+    SecretStores entries are not soft delete. So there is no
+    need to have deleted=False filter in queries.
+    """
+
+    def get_all(self, session=None):
+        """Get list of available secret stores.
+
+        Status value is not used while getting complete list as
+        we will just maintain ACTIVE ones. No other state is used and
+        needed here.
+        :param session: SQLAlchemy session object.
+        :return: None
+        """
+        session = self.get_session(session)
+        query = session.query(models.SecretStores)
+        query.order_by(models.SecretStores.created_at.asc())
+        return query.all()
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "SecretStores"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.SecretStores).filter_by(
+            id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
+class ProjectSecretStoreRepo(BaseRepo):
+    """Repository for the ProjectSecretStore entity.
+
+    ProjectSecretStore entries are not soft delete. So there is no
+    need to have deleted=False filter in queries.
+    """
+
+    def get_secret_store_for_project(self, project_id, external_project_id,
+                                     suppress_exception=False, session=None):
+        """Returns preferred secret store for a project if set.
+
+        :param project_id: ID of project whose preferred secret store is set
+        :param external_project_id: external ID of project whose preferred
+               secret store is set
+        :param suppress_exception: when True, NotFound is not raised
+        :param session: SQLAlchemy session object.
+
+        Will return preferred secret store by external project id if provided
+        otherwise uses barbican project identifier to lookup.
+
+        Throws exception in case no preferred secret store is defined and
+        supporess_exception=False. If suppress_exception is True, then returns
+        None for no preferred secret store for a project found.
+        """
+        session = self.get_session(session)
+        if external_project_id is None:
+            query = session.query(models.ProjectSecretStore).filter_by(
+                project_id=project_id)
+        else:
+            query = session.query(models.ProjectSecretStore)
+            query = query.join(models.Project,
+                               models.ProjectSecretStore.project)
+            query = query.filter(models.Project.external_id ==
+                                 external_project_id)
+        try:
+            entity = query.one()
+        except sa_orm.exc.NoResultFound:
+            LOG.info(u._LE("No preferred secret store found for project = %s"),
+                     project_id)
+            entity = None
+            if not suppress_exception:
+                _raise_entity_not_found(self._do_entity_name(), project_id)
+        return entity
+
+    def create_or_update_for_project(self, project_id, secret_store_id,
+                                     session=None):
+        """Create or update preferred secret store for a project.
+
+        :param project_id: ID of project whose preferred secret store is set
+        :param secret_store_id: ID of secret store
+        :param session: SQLAlchemy session object.
+        :return: None
+
+        If preferred secret store is not set for given project, then create
+        new preferred secret store setting for that project. If secret store
+        setting for project is already there, then it updates with given secret
+        store id.
+        """
+        session = self.get_session(session)
+        try:
+            entity = self.get_secret_store_for_project(project_id, None,
+                                                       session=session)
+        except exception.NotFound:
+            entity = self.create_from(
+                models.ProjectSecretStore(project_id, secret_store_id),
+                session=session)
+        else:
+            entity.secret_store_id = secret_store_id
+            entity.save(session)
+        return entity
+
+    def get_count_by_secret_store(self, secret_store_id, session=None):
+        """Gets count of projects mapped to a given secret store.
+
+        :param secret_store_id: id of secret stores entity
+        :param session: existing db session reference. If None, gets session.
+        :return: an number 0 or greater
+
+        This method is supposed to provide count of projects which are
+        currently set to use input secret store as their preferred store. This
+        is used when existing secret store configuration is removed and
+        validation is done to make sure that there are no projects using it as
+        preferred secret store.
+        """
+        session = self.get_session(session)
+        query = session.query(models.ProjectSecretStore).filter_by(
+            secret_store_id=secret_store_id)
+        return query.count()
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "ProjectSecretStore"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.ProjectSecretStore).filter_by(
+            id=entity_id)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+    def _build_get_project_entities_query(self, project_id, session):
+        """Builds query for getting preferred secret stores list for a project.
+
+        :param project_id: id of barbican project entity
+        :param session: existing db session reference.
+        """
+        return session.query(models.ProjectSecretStore).filter_by(
+            project_id=project_id)
+
+
 def get_ca_repository():
     """Returns a singleton Secret repository instance."""
     global _CA_REPOSITORY
@@ -2314,6 +2463,19 @@ def get_transport_key_repository():
     """Returns a singleton Transport Key repository instance."""
     global _TRANSPORT_KEY_REPOSITORY
     return _get_repository(_TRANSPORT_KEY_REPOSITORY, TransportKeyRepo)
+
+
+def get_secret_stores_repository():
+    """Returns a singleton Secret Stores repository instance."""
+    global _SECRET_STORES_REPOSITORY
+    return _get_repository(_SECRET_STORES_REPOSITORY, SecretStoresRepo)
+
+
+def get_project_secret_store_repository():
+    """Returns a singleton Project Secret Store repository instance."""
+    global _PROJECT_SECRET_STORE_REPOSITORY
+    return _get_repository(_PROJECT_SECRET_STORE_REPOSITORY,
+                           ProjectSecretStoreRepo)
 
 
 def _get_repository(global_ref, repo_class):
