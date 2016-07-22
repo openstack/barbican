@@ -170,7 +170,7 @@ class HSMCommands(object):
         self.pkcs11.generate_key(int(length), self.session, str(label),
                                  encrypt=True, wrap=True, master_key=True)
         self.pkcs11.return_session(self.session)
-        print ("MKEK successfully generated!")
+        print("MKEK successfully generated!")
 
     gen_hmac_description = "Generates a new HMAC key"
 
@@ -193,7 +193,7 @@ class HSMCommands(object):
         self.pkcs11.generate_key(int(length), self.session, str(label),
                                  sign=True, master_key=True)
         self.pkcs11.return_session(self.session)
-        print ("HMAC successfully generated!")
+        print("HMAC successfully generated!")
 
     rewrap_pkek_description = "Re-wrap project MKEKs"
 
@@ -214,7 +214,7 @@ class HSMCommands(object):
     def _verify_label_does_not_exist(self, label, session):
         key_handle = self.pkcs11.get_key_handle(label, session)
         if key_handle:
-            print (
+            print(
                 "The label {label} already exists! "
                 "Please try again.".format(label=label)
             )
