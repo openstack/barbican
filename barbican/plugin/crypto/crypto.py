@@ -16,10 +16,7 @@ import abc
 import six
 
 from barbican.common import exception
-from barbican.common import utils
 from barbican import i18n as u
-
-LOG = utils.getLogger(__name__)
 
 
 class CryptoPluginNotFound(exception.BarbicanException):
