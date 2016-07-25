@@ -41,7 +41,7 @@ An operation specific ACL definition has following attribute:
   * `project-access`: Flag to mark a secret or a container private for an operation. Pass `false` to
     mark private.
 
-To acommplish above mentioned behavior for a secret/container resource, having ACL data populated
+To accomplish above mentioned behavior for a secret/container resource, having ACL data populated
 alone is not sufficient.
 
 Following ACL rules are defined and used as `OR` in resource access policy:
