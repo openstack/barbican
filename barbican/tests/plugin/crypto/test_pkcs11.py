@@ -107,7 +107,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         return pkcs11.CKR_OK
 
     def _encrypt(self, session, pt, pt_len, ct, ct_len):
-        self.ffi.buffer(ct)[:] = pt[::-1] + b'0' * self.pkcs11.gcmtagsize
+        self.ffi.buffer(ct)[:] = pt[::-1] + b'0' * (self.pkcs11.gcmtagsize * 2)
         return pkcs11.CKR_OK
 
     def _decrypt(self, session, ct, ct_len, pt, pt_len):
@@ -231,7 +231,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertEqual(ct['ct'][:len(pt)], pt[::-1])
         self.assertGreater(len(ct['iv']), 0)
 
-        self.assertEqual(self.lib.C_GenerateRandom.call_count, 2)
+        self.assertEqual(self.lib.C_GenerateRandom.call_count, 1)
         self.assertEqual(self.lib.C_EncryptInit.call_count, 1)
         self.assertEqual(self.lib.C_Encrypt.call_count, 1)
 
