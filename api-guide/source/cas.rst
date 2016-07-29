@@ -7,7 +7,7 @@ public and private) to issue, renew and revoke certificates.  In PKI parlance,
 barbican acts as a Registration Authority for these CAs.
 
 This interaction is done through certificate plugins, which in turn, can talk
-to one of more CAs.  Details about the CA each plugin communicates with are
+to one or more CAs.  Details about the CA each plugin communicates with are
 updated by the plugins.  This includes details like the CA name, description,
 signing cert and PKCS#7 certificate chain.
 
@@ -31,7 +31,7 @@ reference the
 Listing CAs
 ###########
 
-To see the list of CA's that are currently configured, you can query the cas
+To see the list of CAs that are currently configured, you can query the cas
 resource:
 
 .. code-block:: bash
