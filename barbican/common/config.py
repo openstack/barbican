@@ -264,3 +264,20 @@ def set_middleware_defaults():
 CONF = new_config()
 LOG = logging.getLogger(__name__)
 parse_args(CONF)
+
+# Adding global scope dict for all different configs created in various
+# modules. In barbican, each plugin module creates its own *new* config
+# instance so its error prone to share/access config values across modules
+# as these module imports introduce a cyclic dependency. To avoid this, each
+# plugin can set this dict after its own config instance is created and parsed.
+_CONFIGS = {}
+
+
+def set_module_config(name, module_conf):
+    """Each plugin can set its own conf instance with its group name."""
+    _CONFIGS[name] = module_conf
+
+
+def get_module_config(name):
+    """Get handle to plugin specific config instance by its group name."""
+    return _CONFIGS[name]

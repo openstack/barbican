@@ -69,6 +69,9 @@ p11_crypto_plugin_opts = [
     cfg.IntOpt('seed_length',
                help=u._('Amount of data to read from file for seed'),
                default=32),
+    cfg.StrOpt('plugin_name',
+               help=u._('User friendly plugin name'),
+               default='PKCS11 HSM'),
 ]
 CONF.register_group(p11_crypto_plugin_group)
 CONF.register_opts(p11_crypto_plugin_opts, group=p11_crypto_plugin_group)
@@ -103,6 +106,9 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         self.algorithm = plugin_conf.algorithm
 
         self._configure_object_cache()
+
+    def get_plugin_name(self):
+        return self.conf.p11_crypto_plugin.plugin_name
 
     def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
         return self._call_pkcs11(self._encrypt, encrypt_dto, kek_meta_dto,

@@ -16,7 +16,11 @@
 import mock
 
 from barbican.common import utils as common_utils
+from barbican.plugin.crypto import crypto
+from barbican.plugin.crypto import manager as cm
+from barbican.plugin.crypto import p11_crypto
 from barbican.plugin.interface import secret_store as str
+from barbican.plugin import store_crypto
 from barbican.tests import utils
 
 
@@ -26,6 +30,9 @@ class TestSecretStore(str.SecretStoreBase):
     def __init__(self, supported_alg_list):
         super(TestSecretStore, self).__init__()
         self.alg_list = supported_alg_list
+
+    def get_plugin_name(self):
+        raise NotImplementedError  # pragma: no cover
 
     def generate_symmetric_key(self, key_spec):
         raise NotImplementedError  # pragma: no cover
@@ -58,6 +65,9 @@ class TestSecretStoreWithTransportKey(str.SecretStoreBase):
     def __init__(self, supported_alg_list):
         super(TestSecretStoreWithTransportKey, self).__init__()
         self.alg_list = supported_alg_list
+
+    def get_plugin_name(self):
+        raise NotImplementedError  # pragma: no cover
 
     def generate_symmetric_key(self, key_spec):
         raise NotImplementedError  # pragma: no cover
@@ -243,3 +253,38 @@ class WhenTestingSecretStorePluginManager(utils.BaseTestCase):
                          self.manager.get_plugin_store(
                              key_spec=keySpec,
                              transport_key_needed=True))
+
+
+class TestSecretStorePluginManagerMultipleBackend(
+        utils.MultipleBackendsTestCase):
+
+    def test_plugin_created_as_per_mulitple_backend_conf(self):
+        """Check plugins are created as per multiple backend conf
+
+        """
+
+        store_plugin_names = ['store_crypto', 'kmip_plugin', 'store_crypto']
+        crypto_plugin_names = ['p11_crypto', '', 'simple_crypto']
+
+        self.init_via_conf_file(store_plugin_names,
+                                crypto_plugin_names, enabled=True)
+
+        with mock.patch('barbican.plugin.crypto.p11_crypto.P11CryptoPlugin.'
+                        '_create_pkcs11') as m_pkcs11, \
+                mock.patch('kmip.pie.client.ProxyKmipClient') as m_kmip:
+
+            manager = str.SecretStorePluginManager()
+
+            # check pkcs11 and kmip plugin instantiation call is invoked
+            m_pkcs11.called_once_with(mock.ANY, mock.ANY)
+            m_kmip.called_once_with(mock.ANY)
+            # check store crypto adapter is matched as its defined first.
+            keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
+            plugin_found = manager.get_plugin_store(keySpec)
+            self.assertIsInstance(plugin_found,
+                                  store_crypto.StoreCryptoAdapterPlugin)
+
+            # check pkcs11 crypto is matched as its defined first.
+            crypto_plugin = cm.get_manager().get_plugin_store_generate(
+                crypto.PluginSupportTypes.ENCRYPT_DECRYPT)
+            self.assertIsInstance(crypto_plugin, p11_crypto.P11CryptoPlugin)

@@ -36,6 +36,13 @@ CONF = config.CONF
 # Current API version
 API_VERSION = 'v1'
 
+# Added here to remove cyclic dependency.
+# In barbican.model.models module SecretType.OPAQUE was imported from
+# barbican.plugin.interface.secret_store which introduces a cyclic dependency
+# if `secret_store` plugin needs to use db model classes. So moving shared
+# value to another common python module which is already imported in both.
+SECRET_TYPE_OPAQUE = "opaque"
+
 
 def _do_allow_certain_content_types(func, content_types_list=[]):
     # Allows you to bypass pecan's content-type restrictions
@@ -176,3 +183,8 @@ def get_class_for(module_name, class_name):
 
 def generate_uuid():
     return str(uuid.uuid4())
+
+
+def is_multiple_backends_enabled():
+    secretstore_conf = config.get_module_config('secretstore')
+    return secretstore_conf.secretstore.enable_multiple_secret_stores

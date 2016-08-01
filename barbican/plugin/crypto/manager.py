@@ -20,6 +20,7 @@ from barbican.common import utils
 from barbican import i18n as u
 from barbican.plugin.crypto import crypto
 from barbican.plugin.interface import secret_store
+from barbican.plugin.util import multiple_backends
 from barbican.plugin.util import utils as plugin_utils
 
 
@@ -47,6 +48,8 @@ CONF.register_group(crypto_opt_group)
 CONF.register_opts(crypto_opts, group=crypto_opt_group)
 config.parse_args(CONF)
 
+config.set_module_config("crypto", CONF)
+
 
 class _CryptoPluginManager(named.NamedExtensionManager):
     def __init__(self, conf=CONF, invoke_args=(), invoke_kwargs={}):
@@ -57,12 +60,16 @@ class _CryptoPluginManager(named.NamedExtensionManager):
         initializing a new instance of this class use the PLUGIN_MANAGER
         at the module level.
         """
+        crypto_conf = config.get_module_config('crypto')
+        plugin_names = self._get_internal_plugin_names(crypto_conf)
+
         super(_CryptoPluginManager, self).__init__(
-            conf.crypto.namespace,
-            conf.crypto.enabled_crypto_plugins,
+            crypto_conf.crypto.namespace,
+            plugin_names,
             invoke_on_load=False,  # Defer creating plugins to utility below.
             invoke_args=invoke_args,
-            invoke_kwds=invoke_kwargs
+            invoke_kwds=invoke_kwargs,
+            name_order=True  # extensions sorted as per order of plugin names
         )
 
         plugin_utils.instantiate_plugins(
@@ -110,6 +117,22 @@ class _CryptoPluginManager(named.NamedExtensionManager):
             raise secret_store.SecretStorePluginNotFound()
 
         return decrypting_plugin
+
+    def _get_internal_plugin_names(self, crypto_conf):
+        """Gets plugin names used for loading via stevedore.
+
+        When multiple secret store support is enabled, then crypto plugin names
+        are read via updated configuration structure. If not enabled, then it
+        reads MultiStr property in 'crypto' config section.
+        """
+
+        if utils.is_multiple_backends_enabled():
+            parsed_stores = multiple_backends.read_multiple_backends_config()
+            plugin_names = [store.crypto_plugin for store in parsed_stores
+                            if store.crypto_plugin]
+        else:
+            plugin_names = crypto_conf.crypto.enabled_crypto_plugins
+        return plugin_names
 
 
 def get_manager():

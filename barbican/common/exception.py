@@ -530,3 +530,36 @@ class P11CryptoKeyHandleException(PKCS11Exception):
 
 class P11CryptoTokenException(PKCS11Exception):
     message = u._("No token was found in slot %(slot_id)s")
+
+
+class MultipleSecretStoreLookupFailed(BarbicanException):
+    """Raised when a plugin lookup suffix is missing during config read."""
+    def __init__(self):
+        msg = u._("Plugin lookup property 'stores_lookup_suffix' is not "
+                  "defined in service configuration")
+        super(MultipleSecretStoreLookupFailed, self).__init__(msg)
+
+
+class MultipleStoreIncorrectGlobalDefault(BarbicanException):
+    """Raised when a plugin lookup is missing or failed during config read."""
+    def __init__(self, occurence):
+        msg = None
+        if occurence > 1:
+            msg = u._("There are {count} plugins with global default as "
+                      "True in service configuration. Only one plugin can have"
+                      " this as True").format(count=occurence)
+        else:
+            msg = u._("There is no plugin defined with global default as True."
+                      " One of plugin must be identified as global default")
+
+        super(MultipleStoreIncorrectGlobalDefault, self).__init__(msg)
+
+
+class MultipleStorePluginValueMissing(BarbicanException):
+    """Raised when a store plugin value is missing in service configuration."""
+    def __init__(self, section_name):
+        super(MultipleStorePluginValueMissing, self).__init__(
+            u._("In section '{0}', secret_store_plugin value is missing"
+                ).format(section_name)
+        )
+        self.section_name = section_name

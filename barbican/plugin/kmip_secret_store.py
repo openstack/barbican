@@ -77,7 +77,10 @@ kmip_opts = [
     cfg.BoolOpt('pkcs1_only',
                 default=False,
                 help=u._('Only support PKCS#1 encoding of asymmetric keys'),
-                )
+                ),
+    cfg.StrOpt('plugin_name',
+               help=u._('User friendly plugin name'),
+               default='KMIP HSM'),
 ]
 CONF.register_group(kmip_opt_group)
 CONF.register_opts(kmip_opts, group=kmip_opt_group)
@@ -217,6 +220,8 @@ class KMIPSecretStore(ss.SecretStoreBase):
             enums.CryptographicAlgorithm.RSA: ss.KeyAlgorithm.RSA
         }
 
+        self.plugin_name = conf.kmip_plugin.plugin_name
+
         if conf.kmip_plugin.keyfile is not None:
             self._validate_keyfile_permissions(conf.kmip_plugin.keyfile)
 
@@ -251,6 +256,9 @@ class KMIPSecretStore(ss.SecretStoreBase):
             ssl_version=config.ssl_version,
             username=config.username,
             password=config.password)
+
+    def get_plugin_name(self):
+        return self.plugin_name
 
     def generate_symmetric_key(self, key_spec):
         """Generate a symmetric key.

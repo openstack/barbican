@@ -31,7 +31,6 @@ from sqlalchemy import types as sql_types
 from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
-from barbican.plugin.interface import secret_store
 
 LOG = utils.getLogger(__name__)
 BASE = declarative.declarative_base()
@@ -277,7 +276,7 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
 
     name = sa.Column(sa.String(255))
     secret_type = sa.Column(sa.String(255),
-                            server_default=secret_store.SecretType.OPAQUE)
+                            server_default=utils.SECRET_TYPE_OPAQUE)
     expiration = sa.Column(sa.DateTime, default=None)
     algorithm = sa.Column(sa.String(255))
     bit_length = sa.Column(sa.Integer)
@@ -317,7 +316,7 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
             self.name = parsed_request.get('name')
             self.secret_type = parsed_request.get(
                 'secret_type',
-                secret_store.SecretType.OPAQUE)
+                utils.SECRET_TYPE_OPAQUE)
             expiration = self._iso_to_datetime(parsed_request.get
                                                ('expiration'))
             self.expiration = expiration

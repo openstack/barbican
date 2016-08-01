@@ -34,7 +34,10 @@ simple_crypto_plugin_opts = [
     cfg.StrOpt('kek',
                default='dGhpcnR5X3R3b19ieXRlX2tleWJsYWhibGFoYmxhaGg=',
                help=u._('Key encryption key to be used by Simple Crypto '
-                        'Plugin'), secret=True)
+                        'Plugin'), secret=True),
+    cfg.StrOpt('plugin_name',
+               help=u._('User friendly plugin name'),
+               default='Software Only Crypto'),
 ]
 CONF.register_group(simple_crypto_plugin_group)
 CONF.register_opts(simple_crypto_plugin_opts, group=simple_crypto_plugin_group)
@@ -46,10 +49,14 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
 
     def __init__(self, conf=CONF):
         self.master_kek = conf.simple_crypto_plugin.kek
+        self.plugin_name = conf.simple_crypto_plugin.plugin_name
         LOG.warning(u._LW("This plugin is NOT meant for a production "
                           "environment. This is meant just for development "
                           "and testing purposes. Please use another plugin "
                           "for production."))
+
+    def get_plugin_name(self):
+        return self.plugin_name
 
     def _get_kek(self, kek_meta_dto):
         if not kek_meta_dto.plugin_meta:

@@ -241,6 +241,18 @@ class CryptoPluginBase(object):
     """
 
     @abc.abstractmethod
+    def get_plugin_name(self):
+        """Gets user friendly plugin name.
+
+        This plugin name is expected to be read from config file.
+        There will be a default defined for plugin name which can be customized
+        in specific deployment if needed.
+
+        This name needs to be unique across a deployment.
+        """
+        raise NotImplementedError  # pragma: no cover
+
+    @abc.abstractmethod
     def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
         """Encryption handler function
 

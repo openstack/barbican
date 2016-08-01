@@ -74,7 +74,10 @@ dogtag_plugin_opts = [
                default=cm.CA_INFO_DEFAULT_EXPIRATION_DAYS,
                help=u._('Time in days for CA entries to expire')),
     cfg.StrOpt('plugin_working_dir',
-               help=u._('Working directory for Dogtag plugin'))
+               help=u._('Working directory for Dogtag plugin')),
+    cfg.StrOpt('plugin_name',
+               help=u._('User friendly plugin name'),
+               default='Dogtag KRA'),
 ]
 
 CONF.register_group(dogtag_plugin_group)
@@ -203,8 +206,12 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         self.keyclient = kraclient.keys
 
         self.keyclient.set_transport_cert(KRA_TRANSPORT_NICK)
+        self.plugin_name = conf.dogtag_plugin.plugin_name
 
         LOG.debug(u._("completed DogtagKRAPlugin init"))
+
+    def get_plugin_name(self):
+        return self.plugin_name
 
     def store_secret(self, secret_dto):
         """Store a secret in the KRA

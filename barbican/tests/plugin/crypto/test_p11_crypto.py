@@ -64,6 +64,9 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.cfg_mock.p11_crypto_plugin.seed_file = ''
         self.cfg_mock.p11_crypto_plugin.seed_length = 32
 
+        self.plugin_name = 'Test PKCS11 plugin'
+        self.cfg_mock.p11_crypto_plugin.plugin_name = self.plugin_name
+
         self.plugin = p11_crypto.P11CryptoPlugin(
             conf=self.cfg_mock, pkcs11=self.pkcs11
         )
@@ -382,3 +385,6 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.assertEqual(self.pkcs11.finalize.call_count, 1)
         self.assertEqual(self.plugin._create_pkcs11.call_count, 1)
         self.assertEqual(self.plugin._configure_object_cache.call_count, 1)
+
+    def test_get_plugin_name(self):
+        self.assertEqual(self.plugin_name, self.plugin.get_plugin_name())

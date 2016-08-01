@@ -22,7 +22,10 @@ import types
 import uuid
 
 import mock
+from oslo_config import cfg
 import oslotest.base as oslotest
+from oslotest import createfile
+
 import six
 from six.moves.urllib import parse
 import webtest
@@ -30,7 +33,14 @@ import webtest
 from OpenSSL import crypto
 
 from barbican.api import app
+from barbican.common import config
 import barbican.context
+from barbican.model import repositories
+from barbican.plugin.crypto import manager as cm
+from barbican.plugin.crypto import p11_crypto
+
+from barbican.plugin.interface import secret_store
+from barbican.plugin import kmip_secret_store as kss
 from barbican.tests import database_utils
 
 
@@ -398,6 +408,142 @@ def parameterized_dataset(build_data):
         func.__dict__['build_data'] = build_data
         return func
     return decorator
+
+
+def setup_oslo_config_conf(testcase, content, conf_instance=None):
+
+    conf_file_fixture = testcase.useFixture(
+        createfile.CreateFileWithContent('barbican', content))
+    if conf_instance is None:
+        conf_instance = cfg.CONF
+    conf_instance([], project="barbican",
+                  default_config_files=[conf_file_fixture.path])
+
+    testcase.addCleanup(conf_instance.reset)
+
+
+def setup_multiple_secret_store_plugins_conf(testcase, store_plugin_names,
+                                             crypto_plugin_names,
+                                             global_default_index,
+                                             conf_instance=None,
+                                             multiple_support_enabled=None):
+    """Sets multiple secret store support conf as oslo conf file.
+
+    Generating file based conf based on input store and crypto plugin names
+    provided as list. Index specified in argument is used to mark that specific
+    secret store as global_default = True.
+
+    Input lists are
+    'store_plugins': ['store_crypto', 'kmip_plugin', 'store_crypto'],
+    'crypto_plugins': ['simple_crypto', '', 'p11_crypto'],
+
+    Sample output conf file generated is
+
+    [secretstore]
+    enable_multiple_secret_stores = True
+    stores_lookup_suffix = plugin_0, plugin_1, plugin_2
+
+    [secretstore:plugin_0]
+    secret_store_plugin = store_crypto
+    crypto_plugin = simple_crypto
+    global_default = True
+
+    [secretstore:plugin_1]
+    secret_store_plugin = kmip_plugin
+
+    [secretstore:plugin_2]
+    secret_store_plugin = store_crypto
+    crypto_plugin = p11_crypto
+
+    """
+
+    def _get_conf_line(name, value, section=None):
+        out_line = "\n[{0}]\n".format(section) if section else ""
+        out_line += "{0} = {1}\n".format(name, value) if name else ""
+        return out_line
+
+    if multiple_support_enabled is None:
+        multiple_support_enabled = True
+
+    conf_content = ""
+
+    if store_plugin_names is not None:
+
+        if len(store_plugin_names) < len(crypto_plugin_names):
+            max_count = len(crypto_plugin_names)
+        else:
+            max_count = len(store_plugin_names)
+
+        lookup_names = ['plugin_{0}'.format(indx) for indx in range(max_count)]
+        section_names = ['secretstore:{0}'.format(lname) for lname in
+                         lookup_names]
+        lookup_str = ", ".join(lookup_names)
+
+        conf_content = _get_conf_line('enable_multiple_secret_stores',
+                                      multiple_support_enabled,
+                                      section='secretstore')
+        conf_content += _get_conf_line('stores_lookup_suffix',
+                                       lookup_str, section=None)
+
+        for indx, section_name in enumerate(section_names):
+            if indx < len(store_plugin_names):
+                store_plugin = store_plugin_names[indx]
+                conf_content += _get_conf_line('secret_store_plugin',
+                                               store_plugin,
+                                               section=section_name)
+            else:
+                conf_content += _get_conf_line(None, None,
+                                               section=section_name)
+            if indx < len(crypto_plugin_names):
+                crypto_plugin = crypto_plugin_names[indx]
+                conf_content += _get_conf_line('crypto_plugin', crypto_plugin,
+                                               section=None)
+            if indx == global_default_index:
+                conf_content += _get_conf_line('global_default', 'True',
+                                               section=None)
+
+    setup_oslo_config_conf(testcase, conf_content, conf_instance)
+
+
+class MultipleBackendsTestCase(database_utils.RepositoryTestCase):
+
+    def setUp(self):
+        super(MultipleBackendsTestCase, self).setUp()
+
+    def _mock_plugin_settings(self):
+
+        kmip_conf = kss.CONF
+        kmip_conf.kmip_plugin.username = "sample_username"
+        kmip_conf.kmip_plugin.password = "sample_password"
+        kmip_conf.kmip_plugin.keyfile = None
+        kmip_conf.kmip_plugin.pkcs1_only = False
+
+        pkcs11_conf = p11_crypto.CONF
+        pkcs11_conf.p11_crypto_plugin.library_path = "/tmp"  # any dummy path
+
+    def init_via_conf_file(self, store_plugin_names, crypto_plugin_names,
+                           enabled=True, global_default_index=0):
+        secretstore_conf = config.get_module_config('secretstore')
+
+        setup_multiple_secret_store_plugins_conf(
+            self, store_plugin_names=store_plugin_names,
+            crypto_plugin_names=crypto_plugin_names,
+            global_default_index=global_default_index,
+            conf_instance=secretstore_conf,
+            multiple_support_enabled=enabled)
+
+        # clear globals if already set in previous tests
+        secret_store._SECRET_STORE = None  # clear secret store manager
+        cm._PLUGIN_MANAGER = None  # clear crypto manager
+        self._mock_plugin_settings()
+
+    def _get_secret_store_entry(self, store_plugin, crypto_plugin):
+        all_ss = repositories.get_secret_stores_repository().get_all()
+        for ss in all_ss:
+            if (ss.store_plugin == store_plugin and
+                    ss.crypto_plugin == crypto_plugin):
+                return ss
+        return None
 
 
 def create_timestamp_w_tz_and_offset(timezone=None, days=0, hours=0, minutes=0,

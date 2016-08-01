@@ -920,3 +920,9 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
             CONF.kmip_plugin.keyfile = '/some/path'
             kss.KMIPSecretStore(CONF)
             self.assertEqual(1, len(m.mock_calls))
+
+    def test_get_plugin_name(self):
+        CONF = kss.CONF
+        CONF.kmip_plugin.plugin_name = "Test KMIP Plugin"
+        secret_store = kss.KMIPSecretStore(CONF)
+        self.assertEqual("Test KMIP Plugin", secret_store.get_plugin_name())

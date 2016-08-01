@@ -52,9 +52,10 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
         # create nss db for test only
         self.nss_dir = tempfile.mkdtemp()
 
+        self.plugin_name = "Test Dogtag KRA plugin"
         self.cfg_mock = mock.MagicMock(name='config mock')
         self.cfg_mock.dogtag_plugin = mock.MagicMock(
-            nss_db_path=self.nss_dir)
+            nss_db_path=self.nss_dir, plugin_name=self.plugin_name)
         self.plugin = dogtag_import.DogtagKRAPlugin(self.cfg_mock)
         self.plugin.keyclient = self.keyclient_mock
 
@@ -62,6 +63,9 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
         super(WhenTestingDogtagKRAPlugin, self).tearDown()
         self.patcher.stop()
         os.rmdir(self.nss_dir)
+
+    def test_get_plugin_name(self):
+        self.assertEqual(self.plugin_name, self.plugin.get_plugin_name())
 
     def test_generate_symmetric_key(self):
         key_spec = sstore.KeySpec(sstore.KeyAlgorithm.AES, 128)

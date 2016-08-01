@@ -356,3 +356,6 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
                                   response_dto.kek_meta_extended,
                                   mock.MagicMock())
         self.assertEqual(16, len(key))
+
+    def test_get_plugin_name(self):
+        self.assertIsNotNone(self.plugin.get_plugin_name())
