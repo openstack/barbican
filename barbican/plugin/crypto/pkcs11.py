@@ -317,13 +317,15 @@ def build_ffi():
     CK_RV C_Verify(CK_SESSION_HANDLE, CK_BYTE_PTR, CK_ULONG, CK_BYTE_PTR,
                    CK_ULONG);
     CK_RV C_GenerateRandom(CK_SESSION_HANDLE, CK_BYTE_PTR, CK_ULONG);
+    CK_RV C_SeedRandom(CK_SESSION_HANDLE, CK_BYTE_PTR, CK_ULONG);
     """))
     return ffi
 
 
 class PKCS11(object):
     def __init__(self, library_path, login_passphrase, rw_session, slot_id,
-                 ffi=None, algorithm='CKM_AES_GCM'):
+                 ffi=None, algorithm='CKM_AES_GCM',
+                 seed_random_buffer=None):
         self.ffi = ffi or build_ffi()
         self.lib = self.ffi.dlopen(library_path)
         rv = self.lib.C_Initialize(self.ffi.NULL)
@@ -342,6 +344,8 @@ class PKCS11(object):
 
         # Validate configuration and RNG
         session = self.get_session()
+        if seed_random_buffer is not None:
+            self._seed_random(session, seed_random_buffer)
         self._rng_self_test(session)
         self.return_session(session)
 
@@ -570,6 +574,12 @@ class PKCS11(object):
 
             raise exception.P11CryptoPluginException(u._(
                 "HSM returned response code: {code}").format(code=hex_code))
+
+    def _seed_random(self, session, seed_random_buffer):
+        """Call the C_SeedRandom() function with the seed_random data"""
+        buf = self.ffi.new("CK_BYTE[]", seed_random_buffer.encode())
+        rv = self.lib.C_SeedRandom(session, buf, len(seed_random_buffer))
+        self._check_error(rv)
 
     def _generate_random(self, length, session):
         buf = self.ffi.new("CK_BYTE[{0}]".format(length))

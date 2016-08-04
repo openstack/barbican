@@ -39,6 +39,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.lib.C_FindObjectsFinal.return_value = pkcs11.CKR_OK
         self.lib.C_GenerateKey.side_effect = self._generate_key
         self.lib.C_GenerateRandom.side_effect = self._generate_random
+        self.lib.C_SeedRandom.return_value = pkcs11.CKR_OK
         self.lib.C_EncryptInit.return_value = pkcs11.CKR_OK
         self.lib.C_Encrypt.side_effect = self._encrypt
         self.lib.C_DecryptInit.return_value = pkcs11.CKR_OK
@@ -154,6 +155,13 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertEqual(self.lib.C_OpenSession.call_count, 2)
         self.assertEqual(self.lib.C_GetSessionInfo.call_count, 2)
         self.assertEqual(self.lib.C_Login.call_count, 0)
+
+    def test_seed_random(self):
+        rd = "random-data"
+        session = 'session'
+        self.pkcs11._seed_random(session, rd)
+        self.lib.C_SeedRandom.assert_called_once_with(
+            session, mock.ANY, len(rd))
 
     def test_generate_random(self):
         r = self.pkcs11.generate_random(32, mock.MagicMock())
