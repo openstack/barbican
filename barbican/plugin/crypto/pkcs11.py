@@ -391,20 +391,20 @@ class PKCS11(object):
         return key
 
     def encrypt(self, key, pt_data, session):
-        iv = self._generate_random(self.noncesize, session)
-        ck_mechanism = self._build_gcm_mechanism(iv)
+        ck_mechanism = self._build_gcm_mechanism()
         rv = self.lib.C_EncryptInit(session, ck_mechanism.mech, key)
         self._check_error(rv)
 
         pt_len = len(pt_data)
-        ct_len = self.ffi.new("CK_ULONG *", pt_len + self.gcmtagsize)
+        ct_len = self.ffi.new("CK_ULONG *", pt_len + self.gcmtagsize * 2)
         ct = self.ffi.new("CK_BYTE[{0}]".format(ct_len[0]))
         rv = self.lib.C_Encrypt(session, pt_data, pt_len, ct, ct_len)
         self._check_error(rv)
 
+        # HSM-generated IVs are appended to the end of the ciphertext
         return {
-            "iv": self.ffi.buffer(iv)[:],
-            "ct": self.ffi.buffer(ct, ct_len[0])[:]
+            "iv": self.ffi.buffer(ct, ct_len[0])[-self.gcmtagsize:],
+            "ct": self.ffi.buffer(ct, ct_len[0])[:-self.gcmtagsize]
         }
 
     def decrypt(self, key, iv, ct_data, session):
@@ -644,14 +644,17 @@ class PKCS11(object):
             raise exception.P11CryptoPluginException(
                 u._("Apparent RNG self-test failure."))
 
-    def _build_gcm_mechanism(self, iv):
-        iv_len = len(iv)
+    def _build_gcm_mechanism(self, iv=None):
         mech = self.ffi.new("CK_MECHANISM *")
         mech.mechanism = self.algorithm
         gcm = self.ffi.new("CK_AES_GCM_PARAMS *")
-        gcm.pIv = iv
-        gcm.ulIvLen = iv_len
-        gcm.ulIvBits = iv_len * 8
+
+        if iv:
+            iv_len = len(iv)
+            gcm.pIv = iv
+            gcm.ulIvLen = iv_len
+            gcm.ulIvBits = iv_len * 8
+
         gcm.ulTagBits = self.gcmtagsize * 8
         mech.parameter = gcm
         mech.parameter_len = 48
