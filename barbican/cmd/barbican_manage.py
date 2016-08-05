@@ -227,7 +227,7 @@ CATEGORIES = {
 }
 
 
-# Modifying similiar code from nova/cmd/manage.py
+# Modifying similar code from nova/cmd/manage.py
 def methods_of(obj):
     """Get all callable methods of an object that don't start with underscore
 
