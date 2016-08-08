@@ -89,8 +89,8 @@ class ContainerConsumersController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('ContainerConsumers(s) retrieval'))
     @controllers.enforce_rbac('consumers:get')
     def on_get(self, external_project_id, **kw):
-        LOG.debug('Start consumers on_get '
-                  'for container-ID %s:', self.container_id)
+        LOG.debug(u._('Start consumers on_get '
+                      'for container-ID %s:'), self.container_id)
 
         try:
             self.container_repo.get(self.container_id, external_project_id)

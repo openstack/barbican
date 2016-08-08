@@ -195,7 +195,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
 
     def __init__(self, conf=CONF):
         """Constructor - create the keyclient."""
-        LOG.debug("starting DogtagKRAPlugin init")
+        LOG.debug(u._("starting DogtagKRAPlugin init"))
         connection = create_connection(conf, 'kra')
 
         # create kraclient
@@ -204,7 +204,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
 
         self.keyclient.set_transport_cert(KRA_TRANSPORT_NICK)
 
-        LOG.debug("completed DogtagKRAPlugin init")
+        LOG.debug(u._("completed DogtagKRAPlugin init"))
 
     def store_secret(self, secret_dto):
         """Store a secret in the KRA

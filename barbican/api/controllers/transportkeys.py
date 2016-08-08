@@ -49,7 +49,7 @@ class TransportKeyController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Transport Key retrieval'))
     @controllers.enforce_rbac('transport_key:get')
     def on_get(self, external_project_id):
-        LOG.debug("== Getting transport key for %s", external_project_id)
+        LOG.debug(u._("== Getting transport key for %s"), external_project_id)
         transport_key = self.repo.get(entity_id=self.transport_key_id)
         if not transport_key:
             _transport_key_not_found()
@@ -61,7 +61,7 @@ class TransportKeyController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Transport Key deletion'))
     @controllers.enforce_rbac('transport_key:delete')
     def on_delete(self, external_project_id, **kwargs):
-        LOG.debug("== Deleting transport key ===")
+        LOG.debug(u._("== Deleting transport key ==="))
         try:
             self.repo.delete_entity_by_id(
                 entity_id=self.transport_key_id,
@@ -146,7 +146,7 @@ class TransportKeysController(controllers.ACLMixin):
         self.repo.create_from(new_key)
 
         url = hrefs.convert_transport_key_to_href(new_key.id)
-        LOG.debug('URI to transport key is %s', url)
+        LOG.debug(u._('URI to transport key is %s'), url)
 
         pecan.response.status = 201
         pecan.response.headers['Location'] = url

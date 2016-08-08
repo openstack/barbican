@@ -90,7 +90,7 @@ def hard_reset():
 def setup_database_engine_and_factory():
     global sa_logger, _SESSION_FACTORY, _ENGINE
 
-    LOG.info('Setting up database engine and session factory')
+    LOG.info(u._LI('Setting up database engine and session factory'))
     if CONF.debug:
         sa_logger = logging.getLogger('sqlalchemy.engine')
         sa_logger.setLevel(logging.DEBUG)
@@ -214,8 +214,8 @@ def is_db_connection_error(args):
 
 
 def _create_engine(connection, **engine_args):
-    LOG.debug('Sql connection: please check "sql_connection" property in '
-              'barbican configuration file; Args: %s', engine_args)
+    LOG.debug(u._('Sql connection: please check "sql_connection" property in '
+                  'barbican configuration file; Args: %s'), engine_args)
 
     engine = sqlalchemy.create_engine(connection, **engine_args)
 
@@ -295,9 +295,9 @@ def clean_paging_values(offset_arg=0, limit_arg=CONF.default_limit_paging):
     except ValueError:
         limit = CONF.default_limit_paging
 
-    LOG.debug("Clean paging values limit=%s, offset=%s",
-              limit, offset
-              )
+    LOG.debug(u._("Clean paging values limit=%(limit)s, offset=%(offset)s") %
+              {'limit': limit,
+               'offset': offset})
 
     return offset, limit
 

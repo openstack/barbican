@@ -52,8 +52,8 @@ class SecretMetadataController(controllers.ACLMixin):
     def on_get(self, external_project_id, **kwargs):
         """Handles retrieval of existing secret metadata requests."""
 
-        LOG.debug('Start secret metadata on_get '
-                  'for secret-ID %s:', self.secret.id)
+        LOG.debug(u._('Start secret metadata on_get '
+                      'for secret-ID %s:'), self.secret.id)
 
         resp = self.user_meta_repo.get_metadata_for_secret(self.secret.id)
         pecan.response.status = 200
@@ -67,13 +67,13 @@ class SecretMetadataController(controllers.ACLMixin):
     def on_put(self, external_project_id, **kwargs):
         """Handles creation/update of secret metadata."""
         data = api.load_body(pecan.request, validator=self.metadata_validator)
-        LOG.debug('Start secret metadata on_put...%s', data)
+        LOG.debug(u._('Start secret metadata on_put...%s'), data)
 
         self.user_meta_repo.create_replace_user_metadata(self.secret.id,
                                                          data)
 
         url = hrefs.convert_user_meta_to_href(self.secret.id)
-        LOG.debug('URI to secret metadata is %s', url)
+        LOG.debug(u._('URI to secret metadata is %s'), url)
 
         pecan.response.status = 201
         return {'metadata_ref': url}
@@ -95,12 +95,12 @@ class SecretMetadataController(controllers.ACLMixin):
             pecan.abort(409, u._('Conflict. Key in request is already in the '
                                  'secret metadata'))
 
-        LOG.debug('Start secret metadatum on_post...%s', metadata)
+        LOG.debug(u._('Start secret metadatum on_post...%s'), metadata)
         self.user_meta_repo.create_replace_user_metadatum(self.secret.id,
                                                           key, value)
 
         url = hrefs.convert_user_meta_to_href(self.secret.id)
-        LOG.debug('URI to secret metadata is %s', url)
+        LOG.debug(u._('URI to secret metadata is %s'), url)
 
         pecan.response.status = 201
         return {'metadata_ref': url + "/%s {key: %s, value:%s}" % (key,
@@ -126,8 +126,8 @@ class SecretMetadatumController(controllers.ACLMixin):
     def on_get(self, external_project_id, remainder, **kwargs):
         """Handles retrieval of existing secret metadatum."""
 
-        LOG.debug('Start secret metadatum on_get '
-                  'for secret-ID %s:', self.secret.id)
+        LOG.debug(u._('Start secret metadatum on_get '
+                      'for secret-ID %s:'), self.secret.id)
 
         metadata = self.user_meta_repo.get_metadata_for_secret(self.secret.id)
         if remainder in metadata:
@@ -157,7 +157,7 @@ class SecretMetadatumController(controllers.ACLMixin):
             'request url.'
             pecan.abort(409, msg)
         else:
-            LOG.debug('Start secret metadatum on_put...%s', metadata)
+            LOG.debug(u._('Start secret metadatum on_put...%s'), metadata)
 
             self.user_meta_repo.create_replace_user_metadatum(self.secret.id,
                                                               key, value)
