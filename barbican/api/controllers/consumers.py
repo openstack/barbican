@@ -39,6 +39,11 @@ def _consumer_ownership_mismatch():
                          'can delete it.'))
 
 
+def _invalid_consumer_id():
+    """Throw exception indicating consumer id is invalid."""
+    pecan.abort(404, u._('Not Found. Provided consumer id is invalid.'))
+
+
 class ContainerConsumerController(controllers.ACLMixin):
     """Handles Consumer entity retrieval and deletion requests."""
 
@@ -85,6 +90,8 @@ class ContainerConsumersController(controllers.ACLMixin):
 
     @pecan.expose()
     def _lookup(self, consumer_id, *remainder):
+        if not utils.validate_id_is_uuid(consumer_id):
+            _invalid_consumer_id()()
         return ContainerConsumerController(consumer_id), remainder
 
     @pecan.expose(generic=True)

@@ -290,7 +290,7 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
     def _init(self):
         self.external_project_id = 'keystoneid1234'
         self.transport_key = SAMPLE_TRANSPORT_KEY
-        self.tkey_id = "id1"
+        self.tkey_id = utils.generate_test_valid_uuid()
 
         self.tkey = create_transport_key(
             id_ref=self.tkey_id,
@@ -308,7 +308,15 @@ class WhenGettingOrDeletingTransKeyUsingTransportKeyResource(FunctionalTest):
     def test_should_throw_exception_for_get_when_trans_key_not_found(self):
         self.repo.get.return_value = None
         resp = self.app.get(
-            '/transport_keys/{0}/'.format(self.tkey.id),
+            '/transport_keys/{0}/'.format(utils.generate_test_valid_uuid()),
+            expect_errors=True
+        )
+        self.assertEqual(404, resp.status_int)
+
+    def test_should_throw_exception_for_get_when_trans_key_invalid(self):
+
+        resp = self.app.get(
+            '/transport_keys/{0}/'.format("invalid_key_id"),
             expect_errors=True
         )
         self.assertEqual(404, resp.status_int)

@@ -372,8 +372,18 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(decoded, get_resp.body)
 
     def test_returns_404_on_get_when_not_found(self):
+        """Test with valid uuid which is not present in DB."""
         get_resp = self.app.get(
-            '/secrets/98c876d9-aaac-44e4-8ea8-441932962b05',
+            '/secrets/{0}'.format(utils.generate_test_valid_uuid()),
+            headers={'Accept': 'application/json'},
+            expect_errors=True
+        )
+        self.assertEqual(404, get_resp.status_int)
+
+    def test_returns_404_on_get_invalid_secret_id(self):
+        """Test where uuid provided is not valid."""
+        get_resp = self.app.get(
+            '/secrets/98c876d9-aaac-44e4-8ea8-invalid-id',
             headers={'Accept': 'application/json'},
             expect_errors=True
         )

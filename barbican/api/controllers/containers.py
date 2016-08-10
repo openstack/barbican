@@ -37,6 +37,11 @@ def container_not_found():
                          'another castle.'))
 
 
+def invalid_container_id():
+    """Throw exception indicating container id is invalid."""
+    pecan.abort(404, u._('Not Found. Provided container id is invalid.'))
+
+
 class ContainerController(controllers.ACLMixin):
     """Handles Container entity retrieval and deletion requests."""
 
@@ -117,6 +122,8 @@ class ContainersController(controllers.ACLMixin):
 
     @pecan.expose()
     def _lookup(self, container_id, *remainder):
+        if not utils.validate_id_is_uuid(container_id):
+            invalid_container_id()
         container = self.container_repo.get_container_by_id(
             entity_id=container_id, suppress_exception=True)
         if not container:

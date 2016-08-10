@@ -227,7 +227,7 @@ class BaseSecretsResource(FunctionalTest):
 
         # Set up mocked secret
         self.secret = models.Secret()
-        self.secret.id = utils.generate_test_uuid(tail_value=1)
+        self.secret.id = utils.generate_test_valid_uuid()
 
         # Set up mocked secret repo
         self.secret_repo = mock.MagicMock()
@@ -289,7 +289,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.external_project_id = 'keystone1234'
         self.name = 'name1234'
 
-        secret_id = utils.generate_test_uuid(tail_value=1)
+        secret_id = utils.generate_test_valid_uuid()
         datum_id = "iddatum1"
         kek_id = "idkek1"
 
@@ -780,7 +780,7 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
 
         # Set up mocked container
         self.container = create_container(
-            id_ref='id1',
+            id_ref=utils.generate_test_valid_uuid(),
             project_id=self.project_internal_id,
             external_project_id=self.external_project_id)
 
@@ -866,17 +866,17 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
 
         # Set up mocked container
         self.container = create_container(
-            id_ref='id1',
+            id_ref=utils.generate_test_valid_uuid(),
             project_id=self.project_internal_id,
             external_project_id=self.external_project_id)
 
         # Set up mocked consumers
-        self.consumer = create_consumer(self.container.id,
-                                        self.project_internal_id,
-                                        id_ref='id2')
-        self.consumer2 = create_consumer(self.container.id,
-                                         self.project_internal_id,
-                                         id_ref='id3')
+        self.consumer = create_consumer(
+            self.container.id, self.project_internal_id,
+            id_ref=utils.generate_test_valid_uuid())
+        self.consumer2 = create_consumer(
+            self.container.id, self.project_internal_id,
+            id_ref=utils.generate_test_valid_uuid())
 
         self.consumer_ref = {
             'name': self.consumer.name,
@@ -1073,17 +1073,17 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
 
         # Set up mocked container
         self.container = create_container(
-            id_ref='id1',
+            id_ref=utils.generate_test_valid_uuid(),
             project_id=self.project_internal_id,
             external_project_id=self.external_project_id)
 
         # Set up mocked container consumers
-        self.consumer = create_consumer(self.container.id,
-                                        self.project_internal_id,
-                                        id_ref='id2')
-        self.consumer2 = create_consumer(self.container.id,
-                                         self.project_internal_id,
-                                         id_ref='id3')
+        self.consumer = create_consumer(
+            self.container.id, self.project_internal_id,
+            id_ref=utils.generate_test_valid_uuid())
+        self.consumer2 = create_consumer(
+            self.container.id, self.project_internal_id,
+            id_ref=utils.generate_test_valid_uuid())
 
         self.consumer_ref = {
             'name': self.consumer.name,
@@ -1178,7 +1178,7 @@ class WhenOwnershipMismatch(FunctionalTest):
 
         # Set up mocked container
         self.container = create_container(
-            id_ref='id1',
+            id_ref=utils.generate_test_valid_uuid(),
             project_id=self.project_internal_id,
             external_project_id='differentProjectId')
 

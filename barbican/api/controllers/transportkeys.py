@@ -33,6 +33,11 @@ def _transport_key_not_found():
     pecan.abort(404, u._('Not Found. Transport Key not found.'))
 
 
+def _invalid_transport_key_id():
+    """Throw exception indicating transport key id is invalid."""
+    pecan.abort(404, u._('Not Found. Provided transport key id is invalid.'))
+
+
 class TransportKeyController(controllers.ACLMixin):
     """Handles transport key retrieval requests."""
 
@@ -83,6 +88,8 @@ class TransportKeysController(controllers.ACLMixin):
 
     @pecan.expose()
     def _lookup(self, transport_key_id, *remainder):
+        if not utils.validate_id_is_uuid(transport_key_id):
+            _invalid_transport_key_id()
         return TransportKeyController(transport_key_id, self.repo), remainder
 
     @pecan.expose(generic=True)

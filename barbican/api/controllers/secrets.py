@@ -40,6 +40,11 @@ def _secret_not_found():
                          'another castle.'))
 
 
+def _invalid_secret_id():
+    """Throw exception indicating secret id is invalid."""
+    pecan.abort(404, u._('Not Found. Provided secret id is invalid.'))
+
+
 def _secret_payload_not_found():
     """Throw exception indicating secret's payload is not found."""
     pecan.abort(404, u._('Not Found. Sorry but your secret has no payload.'))
@@ -319,6 +324,8 @@ class SecretsController(controllers.ACLMixin):
         # check, the execution only gets here if authentication of the user was
         # previously successful.
 
+        if not utils.validate_id_is_uuid(secret_id):
+            _invalid_secret_id()()
         secret = self.secret_repo.get_secret_by_id(
             entity_id=secret_id, suppress_exception=True)
         if not secret:

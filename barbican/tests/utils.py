@@ -78,7 +78,7 @@ class BarbicanAPIBaseTestCase(oslotest.BaseTestCase):
         database_utils.setup_in_memory_db()
 
         # Generic project id to perform actions under
-        self.project_id = str(uuid.uuid4())
+        self.project_id = generate_test_valid_uuid()
 
         # Build the test app
         wsgi_app = app.build_wsgi_app(
@@ -638,6 +638,11 @@ def generate_test_uuid(tail_value=0):
     """Returns a blank uuid with the given value added to the end segment."""
     return '00000000-0000-0000-0000-{value:0>{pad}}'.format(value=tail_value,
                                                             pad=12)
+
+
+def generate_test_valid_uuid():
+    """Returns a valid uuid value, similar to uuid generated in barbican"""
+    return str(uuid.uuid4())
 
 
 def get_symmetric_key():

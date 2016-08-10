@@ -259,6 +259,12 @@ class WhenGettingOrDeletingContainerUsingContainerResource(
                           container_uuid, self.project_id)
 
     def test_should_throw_exception_for_get_when_container_not_found(self):
+        resp = self.app.get(
+            '/containers/{0}/'.format(utils.generate_test_valid_uuid()),
+            expect_errors=True)
+        self.assertEqual(404, resp.status_int)
+
+    def test_should_throw_exception_for_get_when_invalid_container_id(self):
         resp = self.app.get('/containers/bad_id/', expect_errors=True)
         self.assertEqual(404, resp.status_int)
 
