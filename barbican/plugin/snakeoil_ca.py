@@ -212,12 +212,12 @@ class SnakeoilCA(object):
 
     def ensure_exists(self):
         if not self.exists:
-            LOG.debug('Keypair not found, creating new cert/key')
+            LOG.debug(u._('Keypair not found, creating new cert/key'))
             self.cert, self.key, self.chain, self.pkcs7 = (
                 self.create_keypair())
 
     def create_keypair(self):
-        LOG.debug('Generating Snakeoil CA')
+        LOG.debug(u._('Generating Snakeoil CA'))
         key = crypto.PKey()
         key.generate_key(crypto.TYPE_RSA, self.key_size)
 
@@ -241,7 +241,7 @@ class SnakeoilCA(object):
 
         cert.sign(self.signing_key, 'sha256')
 
-        LOG.debug('Snakeoil CA cert/key generated')
+        LOG.debug(u._('Snakeoil CA cert/key generated'))
 
         chain = b''
         if self.parent_chain_path:

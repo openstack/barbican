@@ -274,7 +274,7 @@ class ContainersSecretsController(controllers.ACLMixin):
         self.container_secret_repo.save(new_container_secret)
 
         url = hrefs.convert_container_to_href(self.container.id)
-        LOG.debug('URI to container is %s', url)
+        LOG.debug(u._('URI to container is %s'), url)
 
         pecan.response.status = 201
         pecan.response.headers['Location'] = url

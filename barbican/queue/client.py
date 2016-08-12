@@ -17,6 +17,7 @@
 Client-side (i.e. API side) classes and logic.
 """
 from barbican.common import utils
+from barbican import i18n as u
 from barbican import queue
 from barbican.queue import server
 
@@ -92,9 +93,10 @@ class _DirectTaskInvokerClient(object):
         try:
             getattr(self._tasks, method_name)(context, **kwargs)
         except Exception:
-            LOG.exception(">>>>> Task exception seen for synchronous task "
-                          "invocation, so handling exception to mimic "
-                          "asynchronous behavior.")
+            LOG.exception(
+                u._(">>>>> Task exception seen for synchronous task "
+                    "invocation, so handling exception to mimic "
+                    "asynchronous behavior."))
 
     def call(self, context, method_name, **kwargs):
         raise ValueError("No support for call() client methods.")

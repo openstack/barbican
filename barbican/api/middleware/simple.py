@@ -21,6 +21,7 @@ purposes only.
 from barbican.api import middleware
 from barbican.common import config
 from barbican.common import utils
+from barbican import i18n as u
 
 LOG = utils.getLogger(__name__)
 CONF = config.CONF
@@ -33,5 +34,5 @@ class SimpleFilter(middleware.Middleware):
 
     def process_request(self, req):
         """Just announce we have been called."""
-        LOG.debug("Calling SimpleFilter")
+        LOG.debug(u._("Calling SimpleFilter"))
         return None

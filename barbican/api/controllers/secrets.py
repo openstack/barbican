@@ -337,8 +337,8 @@ class SecretsController(controllers.ACLMixin):
         def secret_fields(field):
             return putil.mime_types.augment_fields_with_content_types(field)
 
-        LOG.debug('Start secrets on_get '
-                  'for project-ID %s:', external_project_id)
+        LOG.debug(u._('Start secrets on_get '
+                      'for project-ID %s:'), external_project_id)
 
         name = kw.get('name', '')
         if name:
@@ -406,7 +406,8 @@ class SecretsController(controllers.ACLMixin):
     @controllers.enforce_rbac('secrets:post')
     @controllers.enforce_content_types(['application/json'])
     def on_post(self, external_project_id, **kwargs):
-        LOG.debug('Start on_post for project-ID %s:...', external_project_id)
+        LOG.debug(u._('Start on_post for project-ID %s:...'),
+                  external_project_id)
 
         data = api.load_body(pecan.request, validator=self.validator)
         project = res.get_or_create_project(external_project_id)
@@ -432,7 +433,7 @@ class SecretsController(controllers.ACLMixin):
             transport_key_id=data.get('transport_key_id'))
 
         url = hrefs.convert_secret_to_href(new_secret.id)
-        LOG.debug('URI to secret is %s', url)
+        LOG.debug(u._('URI to secret is %s'), url)
 
         pecan.response.status = 201
         pecan.response.headers['Location'] = url

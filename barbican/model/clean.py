@@ -14,6 +14,7 @@
 # limitations under the License.
 
 from barbican.common import config
+from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repo
 from oslo_log import log
@@ -35,7 +36,7 @@ def cleanup_unassociated_projects():
     This looks for projects that have no children entries on the dependent
     tables and removes them.
     """
-    LOG.debug("Cleaning up unassociated projects")
+    LOG.debug(u._("Cleaning up unassociated projects"))
     session = repo.get_session()
     project_children_tables = [models.Order,
                                models.KEKDatum,
@@ -47,7 +48,7 @@ def cleanup_unassociated_projects():
                                models.ProjectCertificateAuthority,
                                models.ProjectQuotas]
     children_names = map(lambda child: child.__name__, project_children_tables)
-    LOG.debug("Children tables for Project table being checked: %s",
+    LOG.debug(u._("Children tables for Project table being checked: %s"),
               str(children_names))
     sub_query = session.query(models.Project.id)
     for model in project_children_tables:
@@ -59,8 +60,10 @@ def cleanup_unassociated_projects():
     query = session.query(models.Project)
     query = query.filter(models.Project.id.in_(sub_query))
     delete_count = query.delete(synchronize_session='fetch')
-    LOG.info("Cleaned up %s entries for %s", str(delete_count),
-             models.Project.__name__)
+    LOG.info(u._LI("Cleaned up %(delete_count)s entries for "
+                   "%(project_name)s") %
+             {'delete_count': str(delete_count),
+              'project_name': models.Project.__name__})
     return delete_count
 
 
@@ -79,9 +82,10 @@ def cleanup_parent_with_no_child(parent_model, child_model,
     :param threshold_date: soft deletions older than this date will be removed
     :returns: total number of entries removed from database
     """
-    LOG.debug("Cleaning soft deletes for %s without a child in %s",
-              parent_model.__name__,
-              child_model.__name__)
+    LOG.debug(u._("Cleaning soft deletes for %(parent_name)s without "
+                  "a child in %(child_name)s") %
+              {'parent_name': parent_model.__name__,
+               'child_name': child_model.__name__})
     session = repo.get_session()
     sub_query = session.query(parent_model.id)
     sub_query = sub_query.outerjoin(child_model)
@@ -94,8 +98,11 @@ def cleanup_parent_with_no_child(parent_model, child_model,
     if threshold_date:
         query = query.filter(parent_model.deleted_at <= threshold_date)
     delete_count = query.delete(synchronize_session='fetch')
-    LOG.info("Cleaned up %s entries for %s with no children in %s",
-             delete_count, parent_model.__name__, child_model.__name__)
+    LOG.info(u._LI("Cleaned up %(delete_count)s entries for %(parent_name)s "
+                   "with no children in %(child_name)s") %
+             {'delete_count': delete_count,
+              'parent_name': parent_model.__name__,
+              'child_name': child_model.__name__})
     return delete_count
 
 
@@ -106,15 +113,16 @@ def cleanup_softdeletes(model, threshold_date=None):
     :param threshold_date: soft deletions older than this date will be removed
     :returns: total number of entries removed from the database
     """
-    LOG.debug("Cleaning soft deletes: %s", model.__name__)
+    LOG.debug(u._("Cleaning soft deletes: %s"), model.__name__)
     session = repo.get_session()
     query = session.query(model)
     query = query.filter_by(deleted=True)
     if threshold_date:
         query = query.filter(model.deleted_at <= threshold_date)
     delete_count = query.delete()
-    LOG.info("Cleaned up %s entries for %s", delete_count,
-             model.__name__)
+    LOG.info(u._LI("Cleaned up %(delete_count)s entries for %(model_name)s") %
+             {'delete_count': delete_count,
+              'model_name': model.__name__})
     return delete_count
 
 
@@ -127,8 +135,8 @@ def cleanup_all(threshold_date=None):
     :param threshold_date: soft deletions older than this date will be removed
     :returns: total number of entries removed from the database
     """
-    LOG.debug("Cleaning up soft deletions where deletion date"
-              " is older than %s", str(threshold_date))
+    LOG.debug(u._("Cleaning up soft deletions where deletion date"
+                  " is older than %s"), str(threshold_date))
     total = 0
     total += cleanup_softdeletes(models.TransportKey,
                                  threshold_date=threshold_date)
@@ -164,7 +172,7 @@ def cleanup_all(threshold_date=None):
     # TODO(edtubill) Clean up projects that were soft deleted by
     # the keystone listener
 
-    LOG.info("Cleaned up %s soft deleted entries", total)
+    LOG.info(u._LI("Cleaned up %s soft deleted entries"), total)
     return total
 
 
@@ -239,7 +247,7 @@ def _soft_delete_expired_secret_children(threshold_date):
                        models.EncryptedDatum,
                        models.ContainerSecret]
     children_names = map(lambda child: child.__name__, secret_children)
-    LOG.debug("Children tables for Secret table being checked: %s",
+    LOG.debug(u._("Children tables for Secret table being checked: %s"),
               str(children_names))
     session = repo.get_session()
     update_count = 0
@@ -280,16 +288,18 @@ def soft_delete_expired_secrets(threshold_date):
     """
     # Note: sqllite does not support multiple table updates so
     # several db updates are used instead
-    LOG.debug('Soft deleting expired secrets older than: %s',
+    LOG.debug(u._('Soft deleting expired secrets older than: %s'),
               str(threshold_date))
     update_count = _soft_delete_expired_secrets(threshold_date)
 
     children_count, acl_total = _soft_delete_expired_secret_children(
         threshold_date)
     update_count += children_count
-    LOG.info("Soft deleted %s entries due to secret expiration"
-             " and %s secret acl entries were removed from the database",
-             update_count, acl_total)
+    LOG.info(u._LI("Soft deleted %(update_count)s entries due to secret "
+                   "expiration and %(acl_total)s secret acl entries "
+                   "wereremoved from the database") %
+             {'update_count': update_count,
+              'acl_total': acl_total})
     return update_count + acl_total
 
 
@@ -314,7 +324,7 @@ def clean_command(sql_url, min_num_days, do_clean_unassociated_projects,
     if log_file:
         CONF.set_override('log_file', log_file)
 
-    LOG.info("Cleaning up soft deletions in the barbican database")
+    LOG.info(u._LI("Cleaning up soft deletions in the barbican database"))
     log.setup(CONF, 'barbican')
 
     cleanup_total = 0
@@ -343,7 +353,7 @@ def clean_command(sql_url, min_num_days, do_clean_unassociated_projects,
         repo.commit()
 
     except Exception as ex:
-        LOG.exception('Failed to clean up soft deletions in database.')
+        LOG.exception(u._LE('Failed to clean up soft deletions in database.'))
         repo.rollback()
         cleanup_total = 0  # rollback happened, no entries affected
         raise ex
@@ -362,6 +372,6 @@ def clean_command(sql_url, min_num_days, do_clean_unassociated_projects,
 
         log.setup(CONF, 'barbican')  # reset the overrides
 
-        LOG.info("Cleaning of database affected %s entries",
+        LOG.info(u._LI("Cleaning of database affected %s entries"),
                  cleanup_total)
-        LOG.info('DB clean up finished in %s seconds', elapsed_time)
+        LOG.info(u._LI('DB clean up finished in %s seconds'), elapsed_time)

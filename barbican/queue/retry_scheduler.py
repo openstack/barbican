@@ -74,11 +74,11 @@ class PeriodicServer(service.Service):
         self.order_retry_repo = repositories.get_order_retry_tasks_repository()
 
     def start(self):
-        LOG.info("Starting the PeriodicServer")
+        LOG.info(u._LI("Starting the PeriodicServer"))
         super(PeriodicServer, self).start()
 
     def stop(self, graceful=True):
-        LOG.info("Halting the PeriodicServer")
+        LOG.info(u._LI("Halting the PeriodicServer"))
         super(PeriodicServer, self).stop(graceful=graceful)
 
     @periodic_task.periodic_task

@@ -37,6 +37,7 @@ if os.path.exists(os.path.join(possible_topdir, 'barbican', '__init__.py')):
 
 
 from barbican.common import config
+from barbican import i18n as u
 from barbican import queue
 from barbican.queue import server
 
@@ -56,7 +57,7 @@ def main():
         # Import and configure logging.
         log.setup(CONF, 'barbican')
         LOG = log.getLogger(__name__)
-        LOG.debug("Booting up Barbican worker node...")
+        LOG.debug(u._("Booting up Barbican worker node..."))
 
         # Queuing initialization
         queue.init(CONF)

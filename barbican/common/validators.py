@@ -279,7 +279,7 @@ class NewSecretValidator(ValidatorBase):
                 expiration_tz = timeutils.parse_isotime(expiration_raw.strip())
                 expiration = timeutils.normalize_time(expiration_tz)
             except ValueError:
-                LOG.exception("Problem parsing expiration date")
+                LOG.exception(u._("Problem parsing expiration date"))
                 raise exception.InvalidObject(
                     schema=schema_name,
                     reason=u._("Invalid date for 'expiration'"),
@@ -336,7 +336,7 @@ class NewSecretValidator(ValidatorBase):
             try:
                 base64.b64decode(payload)
             except Exception:
-                LOG.exception("Problem parsing payload")
+                LOG.exception(u._("Problem parsing payload"))
                 raise exception.InvalidObject(
                     schema=schema_name,
                     reason=u._("Invalid payload for payload_content_encoding"),
@@ -689,7 +689,7 @@ class TypeOrderValidator(ValidatorBase, CACommonHelpersMixin):
                 expiration_tz = timeutils.parse_isotime(expiration_raw)
                 expiration = timeutils.normalize_time(expiration_tz)
             except ValueError:
-                LOG.exception("Problem parsing expiration date")
+                LOG.exception(u._("Problem parsing expiration date"))
                 raise exception.InvalidObject(schema=schema_name,
                                               reason=u._("Invalid date "
                                                          "for 'expiration'"),

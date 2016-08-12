@@ -22,6 +22,7 @@ import sys
 sys.path.insert(0, os.getcwd())
 
 from barbican.common import config
+from barbican import i18n as u
 from barbican.model import clean
 from barbican.model.migration import commands
 from oslo_log import log
@@ -136,7 +137,7 @@ class DatabaseManager(object):
 
     def upgrade(self, args):
         """Process the 'upgrade' Alembic command."""
-        LOG.debug("Performing database schema migration...")
+        LOG.debug(u._("Performing database schema migration..."))
         commands.upgrade(to_version=args.version, sql_url=args.dburl)
 
     def history(self, args):
@@ -175,7 +176,8 @@ def main():
         dm.execute()
     except Exception as ex:
         if not _exception_is_successfull_exit(ex):
-            LOG.exception('Problem seen trying to run barbican db manage')
+            LOG.exception(u._LE('Problem seen trying to run'
+                                ' barbican db manage'))
             sys.stderr.write("ERROR: {0}\n".format(ex))
             sys.exit(1)
 
