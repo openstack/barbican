@@ -364,7 +364,7 @@ class NewSecretMetadataValidator(ValidatorBase):
             "$schema": "http://json-schema.org/draft-03/schema",
             "properties": {
                 "metadata": {"type": "object", "required": True},
-                }
+            }
         }
 
     def validate(self, json_data, parent_schema=None):

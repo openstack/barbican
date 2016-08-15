@@ -164,7 +164,7 @@ class DatabaseManager(object):
         args.func(args)
 
 
-def _exception_is_successfull_exit(thrown_exception):
+def _exception_is_successful_exit(thrown_exception):
     return (isinstance(thrown_exception, SystemExit) and
             (thrown_exception.code is None or thrown_exception.code == 0))
 
@@ -175,7 +175,7 @@ def main():
         dm = DatabaseManager(CONF)
         dm.execute()
     except Exception as ex:
-        if not _exception_is_successfull_exit(ex):
+        if not _exception_is_successful_exit(ex):
             LOG.exception(u._LE('Problem seen trying to run'
                                 ' barbican db manage'))
             sys.stderr.write("ERROR: {0}\n".format(ex))

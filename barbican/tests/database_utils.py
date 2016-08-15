@@ -213,12 +213,12 @@ def create_certificate_authority(project=None, parsed_ca_in=None,
 
 
 def create_preferred_cert_authority(cert_authority, session=None):
-    prefered_cert_authority = models.PreferredCertificateAuthority(
+    preferred_cert_authority = models.PreferredCertificateAuthority(
         ca_id=cert_authority.id,
         project_id=cert_authority.project_id)
     preferred_ca_repo = repositories.get_preferred_ca_repository()
-    preferred_ca_repo.create_from(prefered_cert_authority, session=session)
-    return prefered_cert_authority
+    preferred_ca_repo.create_from(preferred_cert_authority, session=session)
+    return preferred_cert_authority
 
 
 def create_project_cert_authority(certificate_authority=None, session=None):
