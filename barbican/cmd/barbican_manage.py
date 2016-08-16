@@ -183,7 +183,7 @@ class HSMCommands(object):
     @args('--passphrase', metavar='<passphrase>', default=None, required=True,
           help='Password to login to PKCS11 session')
     @args('--label', '-L', metavar='<label>', default='primarymkek',
-          help='The label of the Matser HMAC Key')
+          help='The label of the Master HMAC Key')
     @args('--length', '-l', metavar='<length>', default=32,
           help='The length of the Master HMAC Key (default is 32)')
     def gen_hmac(self, passphrase, libpath=None, slotid=None, label=None,
