@@ -105,12 +105,12 @@ Response Attributes
 +-----------+---------+----------------------------------------------------------------+
 | total     | integer | The total number of consumers available to the user.           |
 +-----------+---------+----------------------------------------------------------------+
-| next      | string  | A HATEOAS url to retrieve the next set of consumers based on   |
+| next      | string  | A HATEOAS URL to retrieve the next set of consumers based on   |
 |           |         | the offset and limit parameters. This attribute is only        |
 |           |         | available when the total number of consumers is greater than   |
 |           |         | offset and limit parameter combined.                           |
 +-----------+---------+----------------------------------------------------------------+
-| previous  | string  | A HATEOAS url to retrieve the previous set of consumers based  |
+| previous  | string  | A HATEOAS URL to retrieve the previous set of consumers based  |
 |           |         | on the offset and limit parameters. This attribute is only     |
 |           |         | available when the request offset is greater than 0.           |
 +-----------+---------+----------------------------------------------------------------+
@@ -145,7 +145,7 @@ Attributes
 +============================+=========+==============================================+============+
 | name                       | string  | The name of the consumer set by the user.    | None       |
 +----------------------------+---------+----------------------------------------------+------------+
-| url                        | string  | The url for the user or service using the    | None       |
+| url                        | string  | The URL for the user or service using the    | None       |
 |                            |         | container.                                   |            |
 +----------------------------+---------+----------------------------------------------+------------+
 
@@ -227,7 +227,7 @@ Attributes
 +============================+=========+==============================================+============+
 | name                       | string  | The name of the consumer set by the user.    | None       |
 +----------------------------+---------+----------------------------------------------+------------+
-| URL                        | string  | The url for the user or service using the    | None       |
+| URL                        | string  | The URL for the user or service using the    | None       |
 |                            |         | container.                                   |            |
 +----------------------------+---------+----------------------------------------------+------------+
 

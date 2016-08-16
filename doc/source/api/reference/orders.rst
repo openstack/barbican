@@ -103,12 +103,12 @@ Response Attributes
 +----------+---------+--------------------------------------------------------------+
 | total    | integer | The total number of orders available to the user.            |
 +----------+---------+--------------------------------------------------------------+
-| next     | string  | A HATEOS url to retrieve the next set of objects based on    |
+| next     | string  | A HATEOS URL to retrieve the next set of objects based on    |
 |          |         | the offset and limit parameters. This attribute is only      |
 |          |         | available when the total number of objects is greater than   |
 |          |         | offset and limit parameter combined.                         |
 +----------+---------+--------------------------------------------------------------+
-| previous | string  | A HATEOS url to retrieve the previous set of objects based   |
+| previous | string  | A HATEOS URL to retrieve the previous set of objects based   |
 |          |         | on the offset and limit parameters. This attribute is only   |
 |          |         | available when the request offset is greater than 0.         |
 +----------+---------+--------------------------------------------------------------+

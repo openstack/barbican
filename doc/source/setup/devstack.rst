@@ -110,7 +110,7 @@ Installation
 
 4. Add the Barbican plugin to the local.conf file and verify the minimum
    services required are included. You can pull down a specific branch by
-   appending the name to the end of the git url. If you leave the space empty
+   appending the name to the end of the git URL. If you leave the space empty
    like below, then origin/master will be pulled.
 
     .. code-block:: ini
