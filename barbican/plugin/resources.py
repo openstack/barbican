@@ -20,14 +20,15 @@ from barbican.plugin import store_crypto
 from barbican.plugin.util import translations as tr
 
 
-def _get_transport_key_model(key_spec, transport_key_needed):
+def _get_transport_key_model(key_spec, transport_key_needed, project_id):
     key_model = None
     if transport_key_needed:
         # get_plugin_store() will throw an exception if no suitable
         # plugin with transport key is found
         plugin_manager = secret_store.get_manager()
         store_plugin = plugin_manager.get_plugin_store(
-            key_spec=key_spec, transport_key_needed=True)
+            key_spec=key_spec, transport_key_needed=True,
+            project_id=project_id)
         plugin_name = utils.generate_fullname_for(store_plugin)
 
         key_repo = repos.get_transport_key_repository()
@@ -80,7 +81,8 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
     #   leave. A subsequent call to this method should provide both the Secret
     #   entity created here *and* the secret data to store into it.
     if not unencrypted_raw:
-        key_model = _get_transport_key_model(key_spec, transport_key_needed)
+        key_model = _get_transport_key_model(key_spec, transport_key_needed,
+                                             project_id=project_model.id)
 
         _save_secret_in_repo(secret_model, project_model)
         return secret_model, key_model
@@ -94,7 +96,8 @@ def store_secret(unencrypted_raw, content_type_raw, content_encoding,
 
     plugin_manager = secret_store.get_manager()
     store_plugin = plugin_manager.get_plugin_store(key_spec=key_spec,
-                                                   plugin_name=plugin_name)
+                                                   plugin_name=plugin_name,
+                                                   project_id=project_model.id)
 
     secret_dto = secret_store.SecretDTO(type=secret_model.secret_type,
                                         secret=unencrypted,
@@ -166,7 +169,8 @@ def generate_secret(spec, content_type, project_model):
                                     mode=spec.get('mode'))
 
     plugin_manager = secret_store.get_manager()
-    generate_plugin = plugin_manager.get_plugin_generate(key_spec)
+    generate_plugin = plugin_manager.get_plugin_generate(
+        key_spec, project_id=project_model.id)
 
     # Create secret model to eventually save metadata to.
     secret_model = models.Secret(spec)
@@ -192,7 +196,8 @@ def generate_asymmetric_secret(spec, content_type, project_model):
                                     passphrase=spec.get('passphrase'))
 
     plugin_manager = secret_store.get_manager()
-    generate_plugin = plugin_manager.get_plugin_generate(key_spec)
+    generate_plugin = plugin_manager.get_plugin_generate(
+        key_spec, project_id=project_model.id)
 
     # Create secret models to eventually save metadata to.
     private_secret_model = models.Secret(spec)

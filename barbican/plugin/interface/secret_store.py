@@ -533,12 +533,13 @@ class SecretStorePluginManager(named.NamedExtensionManager):
             name_order=True  # extensions sorted as per order of plugin names
         )
 
-        plugin_utils.instantiate_plugins(
-            self, invoke_args, invoke_kwargs)
+        plugin_utils.instantiate_plugins(self, invoke_args, invoke_kwargs)
+
+        multiple_backends.sync_secret_stores(self)
 
     @_enforce_extensions_configured
     def get_plugin_store(self, key_spec, plugin_name=None,
-                         transport_key_needed=False):
+                         transport_key_needed=False, project_id=None):
         """Gets a secret store plugin.
 
         :param: plugin_name: set to plugin_name to get specific plugin
@@ -547,7 +548,8 @@ class SecretStorePluginManager(named.NamedExtensionManager):
         key is required.
         :returns: SecretStoreBase plugin implementation
         """
-        active_plugins = plugin_utils.get_active_plugins(self)
+        active_plugins = multiple_backends.get_applicable_store_plugins(
+            self, project_id=project_id, existing_plugin_name=plugin_name)
 
         if plugin_name is not None:
             for plugin in active_plugins:
@@ -590,7 +592,7 @@ class SecretStorePluginManager(named.NamedExtensionManager):
         raise StorePluginNotAvailableOrMisconfigured(plugin_name)
 
     @_enforce_extensions_configured
-    def get_plugin_generate(self, key_spec):
+    def get_plugin_generate(self, key_spec, project_id=None):
         """Gets a secret generate plugin.
 
         :param key_spec: KeySpec that contains details on the type of key to
@@ -598,7 +600,10 @@ class SecretStorePluginManager(named.NamedExtensionManager):
         :returns: SecretStoreBase plugin implementation
         """
 
-        for plugin in plugin_utils.get_active_plugins(self):
+        active_plugins = multiple_backends.get_applicable_store_plugins(
+            self, project_id=project_id, existing_plugin_name=None)
+
+        for plugin in active_plugins:
             if plugin.generate_supports(key_spec):
                 return plugin
         raise SecretStoreSupportedPluginNotFound()
@@ -610,10 +615,12 @@ class SecretStorePluginManager(named.NamedExtensionManager):
         names are read via updated configuration structure. If not enabled,
         then it reads MultiStr property in 'secretstore' config section.
         """
-
+        # to cache default global secret store value on first use
+        self.global_default_store_dict = None
         if utils.is_multiple_backends_enabled():
-            parsed_stores = multiple_backends.read_multiple_backends_config()
-            plugin_names = [store.store_plugin for store in parsed_stores
+            self.parsed_stores = multiple_backends.\
+                read_multiple_backends_config()
+            plugin_names = [store.store_plugin for store in self.parsed_stores
                             if store.store_plugin]
         else:
             plugin_names = secretstore_conf.secretstore.\

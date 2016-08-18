@@ -106,6 +106,9 @@ class BaseTestCase(oslotest.BaseTestCase):
 
     def tearDown(self):
         super(BaseTestCase, self).tearDown()
+        ss_conf = config.get_module_config('secretstore')
+        ss_conf.clear_override("enable_multiple_secret_stores",
+                               group='secretstore')
 
 
 class MockModelRepositoryMixin(object):

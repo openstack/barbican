@@ -532,6 +532,30 @@ class P11CryptoTokenException(PKCS11Exception):
     message = u._("No token was found in slot %(slot_id)s")
 
 
+class MultipleStorePreferredPluginMissing(BarbicanException):
+    """Raised when a preferred plugin is missing in service configuration."""
+    def __init__(self, store_name):
+        super(MultipleStorePreferredPluginMissing, self).__init__(
+            u._("Preferred Secret Store plugin '{store_name}' is not "
+                "currently set in service configuration. This is probably a "
+                "server misconfiguration.").format(
+                store_name=store_name)
+        )
+        self.store_name = store_name
+
+
+class MultipleStorePluginStillInUse(BarbicanException):
+    """Raised when a used plugin is missing in service configuration."""
+    def __init__(self, store_name):
+        super(MultipleStorePluginStillInUse, self).__init__(
+            u._("Secret Store plugin '{store_name}' is still in use and can "
+                "not be removed. Its missing in service configuration. This is"
+                " probably a server misconfiguration.").format(
+                store_name=store_name)
+        )
+        self.store_name = store_name
+
+
 class MultipleSecretStoreLookupFailed(BarbicanException):
     """Raised when a plugin lookup suffix is missing during config read."""
     def __init__(self):
@@ -541,7 +565,7 @@ class MultipleSecretStoreLookupFailed(BarbicanException):
 
 
 class MultipleStoreIncorrectGlobalDefault(BarbicanException):
-    """Raised when a plugin lookup is missing or failed during config read."""
+    """Raised when a global default for only one plugin is not set to True."""
     def __init__(self, occurence):
         msg = None
         if occurence > 1:

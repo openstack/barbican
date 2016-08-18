@@ -76,14 +76,15 @@ class _CryptoPluginManager(named.NamedExtensionManager):
             self, invoke_args, invoke_kwargs)
 
     def get_plugin_store_generate(self, type_needed, algorithm=None,
-                                  bit_length=None, mode=None):
+                                  bit_length=None, mode=None, project_id=None):
         """Gets a secret store or generate plugin that supports provided type.
 
         :param type_needed: PluginSupportTypes that contains details on the
         type of plugin required
         :returns: CryptoPluginBase plugin implementation
         """
-        active_plugins = plugin_utils.get_active_plugins(self)
+        active_plugins = multiple_backends.get_applicable_crypto_plugins(
+            self, project_id=project_id, existing_plugin_name=None)
 
         if not active_plugins:
             raise crypto.CryptoPluginNotFound()
@@ -125,7 +126,8 @@ class _CryptoPluginManager(named.NamedExtensionManager):
         are read via updated configuration structure. If not enabled, then it
         reads MultiStr property in 'crypto' config section.
         """
-
+        # to cache default global secret store value on first use
+        self.global_default_store_dict = None
         if utils.is_multiple_backends_enabled():
             parsed_stores = multiple_backends.read_multiple_backends_config()
             plugin_names = [store.crypto_plugin for store in parsed_stores

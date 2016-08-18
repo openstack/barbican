@@ -74,7 +74,8 @@ class StoreCryptoAdapterPlugin(object):
 
         # Find HSM-style 'crypto' plugin.
         encrypting_plugin = manager.get_manager().get_plugin_store_generate(
-            crypto.PluginSupportTypes.ENCRYPT_DECRYPT
+            crypto.PluginSupportTypes.ENCRYPT_DECRYPT,
+            project_id=context.project_model.id
         )
 
         # Find or create a key encryption key metadata.
@@ -163,7 +164,8 @@ class StoreCryptoAdapterPlugin(object):
             plugin_type,
             key_spec.alg,
             key_spec.bit_length,
-            key_spec.mode)
+            key_spec.mode,
+            project_id=context.project_model.id)
 
         # Find or create a key encryption key metadata.
         kek_datum_model, kek_meta_dto = _find_or_create_kek_objects(
@@ -197,7 +199,8 @@ class StoreCryptoAdapterPlugin(object):
             raise sstore.SecretAlgorithmNotSupportedException(key_spec.alg)
 
         generating_plugin = manager.get_manager().get_plugin_store_generate(
-            plugin_type, key_spec.alg, key_spec.bit_length, None)
+            plugin_type, key_spec.alg, key_spec.bit_length,
+            project_id=context.project_model.id)
 
         # Find or create a key encryption key metadata.
         kek_datum_model, kek_meta_dto = _find_or_create_kek_objects(
