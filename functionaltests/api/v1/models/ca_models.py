@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from functionaltests.api.v1.models.base_models import BaseModel
+from functionaltests.api.v1.models import base_models
 
 
-class CAModel(BaseModel):
+class CAModel(base_models.BaseModel):
 
     def __init__(self, expiration=None, ca_id=None, ca_ref=None,
                  status=None, updated=None, created=None, plugin_name=None,

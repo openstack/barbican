@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from functionaltests.api.v1.models.base_models import BaseModel
+from functionaltests.api.v1.models import base_models
 
 
-class QuotasModel(BaseModel):
+class QuotasModel(base_models.BaseModel):
 
     def __init__(self, secrets=None, orders=None, containers=None,
                  consumers=None, cas=None):
@@ -29,7 +29,7 @@ class QuotasModel(BaseModel):
         self.cas = cas
 
 
-class QuotasResponseModel(BaseModel):
+class QuotasResponseModel(base_models.BaseModel):
 
     def __init__(self, quotas=None):
         super(QuotasResponseModel, self).__init__()
@@ -41,7 +41,7 @@ class QuotasResponseModel(BaseModel):
         return cls(quotas=quotas)
 
 
-class ProjectQuotaRequestModel(BaseModel):
+class ProjectQuotaRequestModel(base_models.BaseModel):
 
     def __init__(self, project_quotas=None):
         super(ProjectQuotaRequestModel, self).__init__()
@@ -53,14 +53,14 @@ class ProjectQuotaRequestModel(BaseModel):
         return cls(project_quotas=project_quotas)
 
 
-class ProjectQuotaOneModel(BaseModel):
+class ProjectQuotaOneModel(base_models.BaseModel):
 
     def __init__(self, project_quotas=None):
         super(ProjectQuotaOneModel, self).__init__()
         self.project_quotas = QuotasModel(**project_quotas)
 
 
-class ProjectQuotaListItemModel(BaseModel):
+class ProjectQuotaListItemModel(base_models.BaseModel):
 
     def __init__(self, project_id=None, project_quotas=None):
         super(ProjectQuotaListItemModel, self).__init__()
@@ -68,7 +68,7 @@ class ProjectQuotaListItemModel(BaseModel):
         self.project_quotas = QuotasModel(**project_quotas)
 
 
-class ProjectQuotaListModel(BaseModel):
+class ProjectQuotaListModel(base_models.BaseModel):
 
     def __init__(self, project_quotas=None):
         super(ProjectQuotaListModel, self).__init__()
