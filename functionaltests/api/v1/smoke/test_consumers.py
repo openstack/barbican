@@ -98,6 +98,7 @@ class ConsumersTestCase(base.TestCase):
     def tearDown(self):
         self.secret_behaviors.delete_all_created_secrets()
         self.container_behaviors.delete_all_created_containers()
+        self.consumer_behaviors.delete_all_created_consumers()
         super(ConsumersTestCase, self).tearDown()
 
     @testcase.attr('positive')

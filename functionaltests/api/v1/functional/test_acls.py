@@ -169,6 +169,7 @@ class AclTestCase(base.TestCase):
         self.acl_behaviors.delete_all_created_acls()
         self.secret_behaviors.delete_all_created_secrets()
         self.container_behaviors.delete_all_created_containers()
+        self.consumer_behaviors.delete_all_created_consumers()
         super(AclTestCase, self).tearDown()
 
     @utils.parameterized_dataset(test_data_read_secret_rbac_only)

@@ -74,6 +74,7 @@ class ConsumersBaseTestCase(base.TestCase):
     def tearDown(self):
         self.secret_behaviors.delete_all_created_secrets()
         self.container_behaviors.delete_all_created_containers()
+        self.consumer_behaviors.delete_all_created_consumers()
         super(ConsumersBaseTestCase, self).tearDown()
 
     def _create_a_secret(self):
