@@ -153,12 +153,12 @@ Response Attributes
 +----------+---------+--------------------------------------------------------------+
 | total    | integer | The total number of secrets available to the user.           |
 +----------+---------+--------------------------------------------------------------+
-| next     | string  | A HATEOAS url to retrieve the next set of secrets based on   |
+| next     | string  | A HATEOAS URL to retrieve the next set of secrets based on   |
 |          |         | the offset and limit parameters. This attribute is only      |
 |          |         | available when the total number of secrets is greater than   |
 |          |         | offset and limit parameter combined.                         |
 +----------+---------+--------------------------------------------------------------+
-| previous | string  | A HATEOAS url to retrieve the previous set of secrets based  |
+| previous | string  | A HATEOAS URL to retrieve the previous set of secrets based  |
 |          |         | on the offset and limit parameters. This attribute is only   |
 |          |         | available when the request offset is greater than 0.         |
 +----------+---------+--------------------------------------------------------------+
