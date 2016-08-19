@@ -19,6 +19,7 @@ from barbican.api.controllers import containers
 from barbican.api.controllers import orders
 from barbican.api.controllers import quotas
 from barbican.api.controllers import secrets
+from barbican.api.controllers import secretstores
 from barbican.api.controllers import transportkeys
 from barbican.common import config
 from barbican.common import utils
@@ -97,6 +98,7 @@ class V1Controller(BaseVersionController):
         self.cas = cas.CertificateAuthoritiesController()
         self.quotas = quotas.QuotasController()
         setattr(self, 'project-quotas', quotas.ProjectsQuotasController())
+        setattr(self, 'secret-stores', secretstores.SecretStoresController())
 
     @pecan.expose(generic=True)
     def index(self):

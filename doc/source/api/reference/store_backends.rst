@@ -43,7 +43,7 @@ Request/Response:
           Content-Type: application/json
 
          {
-            "secret-stores":[
+            "secret_stores":[
                {
                   "status": "ACTIVE",
                   "updated": "2016-08-22T23:46:45.114283",
@@ -85,7 +85,7 @@ Response Attributes
 +---------------+--------+---------------------------------------------+
 | Name          | Type   | Description                                 |
 +===============+========+=============================================+
-| secret-stores | list   | A list of secret store references           |
+| secret_stores | list   | A list of secret store references           |
 +---------------+--------+---------------------------------------------+
 | name          | string | store and crypto plugin name delimited by + |
 |               |        | (plus) sign.                                |

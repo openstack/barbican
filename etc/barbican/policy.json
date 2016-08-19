@@ -80,5 +80,11 @@
     "secret_meta:get": "rule:all_but_audit",
     "secret_meta:post": "rule:admin_or_creator",
     "secret_meta:put": "rule:admin_or_creator",
-    "secret_meta:delete": "rule:admin_or_creator"
+    "secret_meta:delete": "rule:admin_or_creator",
+    "secretstores:get": "rule:admin",
+    "secretstores:get_global_default": "rule:admin",
+    "secretstores:get_preferred": "rule:admin",
+    "secretstore_preferred:post": "rule:admin",
+    "secretstore_preferred:delete": "rule:admin",
+    "secretstore:get": "rule:admin"
 }

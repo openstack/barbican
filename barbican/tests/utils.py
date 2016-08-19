@@ -302,6 +302,32 @@ class MockModelRepositoryMixin(object):
             mock_repo_obj=mock_preferred_ca_repo,
             patcher_obj=self.mock_preferred_ca_repo_patcher)
 
+    def setup_secret_stores_repository_mock(
+            self, mock_secret_stores_repo=mock.MagicMock()):
+        """Mocks the project repository factory function
+
+        :param mock_secret_stores_repo: The pre-configured mock secret stores
+                                     repo to be returned.
+        """
+        self.mock_secret_stores_repo_patcher = None
+        self._setup_repository_mock(
+            repo_factory='get_secret_stores_repository',
+            mock_repo_obj=mock_secret_stores_repo,
+            patcher_obj=self.mock_secret_stores_repo_patcher)
+
+    def setup_project_secret_store_repository_mock(
+            self, mock_project_secret_store_repo=mock.MagicMock()):
+        """Mocks the project repository factory function
+
+        :param mock_project_secret_store_repo: The pre-configured mock project
+                                     secret store repo to be returned.
+        """
+        self.mock_proj_secret_store_repo_patcher = None
+        self._setup_repository_mock(
+            repo_factory='get_project_secret_store_repository',
+            mock_repo_obj=mock_project_secret_store_repo,
+            patcher_obj=self.mock_proj_secret_store_repo_patcher)
+
     def setup_project_ca_repository_mock(
             self, mock_project_ca_repo=mock.MagicMock()):
         """Mocks the project repository factory function

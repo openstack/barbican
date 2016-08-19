@@ -27,6 +27,7 @@ from barbican.api.controllers import consumers
 from barbican.api.controllers import containers
 from barbican.api.controllers import orders
 from barbican.api.controllers import secrets
+from barbican.api.controllers import secretstores
 from barbican.api.controllers import versions
 from barbican.common import config
 from barbican import context
@@ -99,6 +100,18 @@ class ConsumersResource(TestableResource):
 
 class ConsumerResource(TestableResource):
     controller_cls = consumers.ContainerConsumerController
+
+
+class SecretStoresResource(TestableResource):
+    controller_cls = secretstores.SecretStoresController
+
+
+class SecretStoreResource(TestableResource):
+    controller_cls = secretstores.SecretStoreController
+
+
+class PreferredSecretStoreResource(TestableResource):
+    controller_cls = secretstores.PreferredSecretStoreController
 
 
 class BaseTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
@@ -1115,3 +1128,151 @@ class WhenTestingConsumerResource(BaseTestCase):
 
     def _invoke_on_get(self):
         self.resource.on_get(self.req, self.resp)
+
+
+class WhenTestingSecretStoresResource(BaseTestCase):
+    """RBAC tests for the barbican.api.resources.SecretStoresResource class."""
+    def setUp(self):
+        super(WhenTestingSecretStoresResource, self).setUp()
+
+        self.external_project_id = '12345project'
+
+        self.moc_enable_patcher = mock.patch(
+            'barbican.common.utils.is_multiple_backends_enabled')
+        enable_check_method = self.moc_enable_patcher.start()
+        enable_check_method.return_value = True
+        self.addCleanup(self.moc_enable_patcher.stop)
+
+        # Force an error on GET calls that pass RBAC, as we are not testing
+        #   such flows in this test module.
+        self.project_repo = mock.MagicMock()
+        fail_method = mock.MagicMock(return_value=None,
+                                     side_effect=self._generate_get_error())
+        self.project_repo.find_by_external_project_id = fail_method
+        self.setup_project_repository_mock(self.project_repo)
+
+        self.resource = SecretStoresResource()
+
+    def test_rules_should_be_loaded(self):
+        self.assertIsNotNone(self.policy_enforcer.rules)
+
+    def test_should_pass_get_all_secret_stores(self):
+        self._assert_pass_rbac(['admin'],
+                               self._invoke_on_get)
+
+    def test_should_raise_get_all_secret_stores(self):
+        self._assert_fail_rbac([None, 'creator', 'observer', 'audit'],
+                               self._invoke_on_get)
+
+    def test_should_pass_get_global_default(self):
+        self._assert_pass_rbac(['admin'],
+                               self._invoke_get_global_default)
+
+    def test_should_raise_get_global_default(self):
+        self._assert_fail_rbac([None, 'creator', 'observer', 'audit'],
+                               self._invoke_get_global_default)
+
+    def test_should_pass_get_preferred(self):
+        self._assert_pass_rbac(['admin'],
+                               self._invoke_get_preferred)
+
+    def test_should_raise_get_preferred(self):
+        self._assert_fail_rbac([None, 'creator', 'observer', 'audit'],
+                               self._invoke_get_preferred)
+
+    def _invoke_on_get(self):
+        self.resource.on_get(self.req, self.resp)
+
+    def _invoke_get_global_default(self):
+        with mock.patch('pecan.request', self.req):
+            with mock.patch('pecan.response', self.resp):
+                return self.resource.controller.get_global_default()
+
+    def _invoke_get_preferred(self):
+        with mock.patch('pecan.request', self.req):
+            with mock.patch('pecan.response', self.resp):
+                return self.resource.controller.get_preferred()
+
+
+class WhenTestingSecretStoreResource(BaseTestCase):
+    """RBAC tests for the barbican.api.resources.SecretStoreResource class."""
+    def setUp(self):
+        super(WhenTestingSecretStoreResource, self).setUp()
+
+        self.external_project_id = '12345project'
+        self.store_id = '123456SecretStoreId'
+
+        self.moc_enable_patcher = mock.patch(
+            'barbican.common.utils.is_multiple_backends_enabled')
+        enable_check_method = self.moc_enable_patcher.start()
+        enable_check_method.return_value = True
+        self.addCleanup(self.moc_enable_patcher.stop)
+
+        # Force an error on GET calls that pass RBAC, as we are not testing
+        #   such flows in this test module.
+
+        self.project_repo = mock.MagicMock()
+        fail_method = mock.MagicMock(return_value=None,
+                                     side_effect=self._generate_get_error())
+
+        self.project_repo.find_by_external_project_id = fail_method
+        self.setup_project_repository_mock(self.project_repo)
+
+        secret_store_res = mock.MagicMock()
+        secret_store_res.to_dict_fields = mock.MagicMock(side_effect=IOError)
+        secret_store_res.id = self.store_id
+
+        self.resource = SecretStoreResource(secret_store_res)
+
+    def test_rules_should_be_loaded(self):
+        self.assertIsNotNone(self.policy_enforcer.rules)
+
+    def test_should_pass_get_a_secret_store(self):
+        self._assert_pass_rbac(['admin'],
+                               self._invoke_on_get)
+
+    def test_should_raise_get_a_secret_store(self):
+        self._assert_fail_rbac([None, 'creator', 'observer', 'audit'],
+                               self._invoke_on_get)
+
+    def _invoke_on_get(self):
+        self.resource.on_get(self.req, self.resp)
+
+
+class WhenTestingPreferredSecretStoreResource(BaseTestCase):
+    """RBAC tests for barbican.api.resources.PreferredSecretStoreResource"""
+    def setUp(self):
+        super(WhenTestingPreferredSecretStoreResource, self).setUp()
+
+        self.external_project_id = '12345project'
+        self.store_id = '123456SecretStoreId'
+
+        self.moc_enable_patcher = mock.patch(
+            'barbican.common.utils.is_multiple_backends_enabled')
+        enable_check_method = self.moc_enable_patcher.start()
+        enable_check_method.return_value = True
+        self.addCleanup(self.moc_enable_patcher.stop)
+
+        # Force an error on POST/DELETE calls that pass RBAC, as we are not
+        # testing such flows in this test module.
+        self.project_repo = mock.MagicMock()
+        fail_method = mock.MagicMock(return_value=None,
+                                     side_effect=self._generate_get_error())
+        self.project_repo.find_by_external_project_id = fail_method
+        self.setup_project_repository_mock(self.project_repo)
+
+        self.resource = PreferredSecretStoreResource(mock.MagicMock())
+
+    def test_rules_should_be_loaded(self):
+        self.assertIsNotNone(self.policy_enforcer.rules)
+
+    def test_should_pass_set_preferred_secret_store(self):
+        self._assert_pass_rbac(['admin'],
+                               self._invoke_on_post)
+
+    def test_should_raise_set_preferred_secret_store(self):
+        self._assert_fail_rbac([None, 'creator', 'observer', 'audit'],
+                               self._invoke_on_post)
+
+    def _invoke_on_post(self):
+        self.resource.on_post(self.req, self.resp)
