@@ -27,7 +27,14 @@ from barbican.tests import keys
 from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import secret_behaviors
+from functionaltests.api.v1.behaviors import secretstores_behaviors
 from functionaltests.api.v1.models import secret_models
+from functionaltests.common import config
+
+
+CONF = config.get_config()
+admin_a = CONF.rbac_users.admin_a
+admin_b = CONF.rbac_users.admin_b
 
 
 def get_pem_content(pem):
@@ -1440,3 +1447,120 @@ class SecretsUnauthedTestCase(base.TestCase):
             use_auth=False
         )
         self.assertEqual(401, resp.status_code)
+
+
+@utils.parameterized_test_case
+class SecretsMultipleBackendTestCase(base.TestCase):
+
+    def setUp(self):
+        super(SecretsMultipleBackendTestCase, self).setUp()
+        self.behaviors = secret_behaviors.SecretBehaviors(self.client)
+        self.ss_behaviors = secretstores_behaviors.SecretStoresBehaviors(
+            self.client)
+        self.default_secret_create_data = get_default_data()
+        if base.conf_multiple_backends_enabled:
+            resp, stores = self.ss_behaviors.get_all_secret_stores(
+                user_name=admin_a)
+            self.assertEqual(200, resp.status_code)
+            secret_store_ref = None
+            for store in stores['secret-stores']:
+                if not store['global_default']:
+                    secret_store_ref = store['secret_store_ref']
+                    break
+            # set preferred secret store for admin_a (project a) user
+            # and don't set preferred secret store for admin_b (project b) user
+            self.ss_behaviors.set_preferred_secret_store(secret_store_ref,
+                                                         user_name=admin_a)
+
+    def tearDown(self):
+        self.behaviors.delete_all_created_secrets()
+        if base.conf_multiple_backends_enabled:
+            self.ss_behaviors.cleanup_preferred_secret_store_entities()
+        super(SecretsMultipleBackendTestCase, self).tearDown()
+
+    @testcase.skipUnless(base.conf_multiple_backends_enabled, 'executed only '
+                         'when multiple backends support is enabled in '
+                         'barbican server side')
+    @utils.parameterized_dataset({
+        'symmetric_type_preferred_store': [
+            admin_a,
+            'symmetric',
+            base64.b64decode(get_default_payload()),
+            get_default_data()
+            ],
+        'private_type_preferred_store': [
+            admin_a,
+            'private',
+            keys.get_private_key_pem(),
+            get_private_key_req()
+            ],
+        'public_type_preferred_store': [
+            admin_a,
+            'public',
+            keys.get_public_key_pem(),
+            get_public_key_req()
+            ],
+        'certificate_type_preferred_store': [
+            admin_a,
+            'certificate',
+            keys.get_certificate_pem(),
+            get_certificate_req()
+            ],
+        'passphrase_type_preferred_store': [
+            admin_a,
+            'passphrase',
+            'mysecretpassphrase',
+            get_passphrase_req()
+            ],
+        'symmetric_type_no_preferred_store': [
+            admin_b,
+            'symmetric',
+            base64.b64decode(get_default_payload()),
+            get_default_data()
+            ],
+        'private_type_no_preferred_store': [
+            admin_b,
+            'private',
+            keys.get_private_key_pem(),
+            get_private_key_req()
+            ],
+        'public_type_no_preferred_store': [
+            admin_b,
+            'public',
+            keys.get_public_key_pem(),
+            get_public_key_req()
+            ],
+        'certificate_type_no_preferred_store': [
+            admin_b,
+            'certificate',
+            keys.get_certificate_pem(),
+            get_certificate_req()
+            ],
+        'passphrase_type_no_preferred_store': [
+            admin_b,
+            'passphrase',
+            'mysecretpassphrase',
+            get_passphrase_req()
+            ],
+    })
+    def test_secret_create_for(self, user_name, secret_type, expected, spec):
+        """Create secrets with various secret types with multiple backends."""
+        test_model = secret_models.SecretModel(**spec)
+        test_model.secret_type = secret_type
+
+        resp, secret_ref = self.behaviors.create_secret(test_model,
+                                                        user_name=user_name,
+                                                        admin=user_name)
+        self.assertEqual(201, resp.status_code)
+
+        resp = self.behaviors.get_secret_metadata(secret_ref,
+                                                  user_name=user_name)
+        secret_type_response = resp.model.secret_type
+        self.assertIsNotNone(secret_type_response)
+        self.assertEqual(secret_type, secret_type_response)
+
+        content_type = spec['payload_content_type']
+        get_resp = self.behaviors.get_secret(secret_ref,
+                                             content_type,
+                                             user_name=user_name)
+        self.assertEqual(expected, get_resp.content)

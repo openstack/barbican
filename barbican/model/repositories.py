@@ -106,6 +106,7 @@ def setup_database_engine_and_factory():
     # session instance per thread.
     session_maker = sa_orm.sessionmaker(bind=_ENGINE)
     _SESSION_FACTORY = sqlalchemy.orm.scoped_session(session_maker)
+    _initialize_secret_stores_data()
 
 
 def start():
@@ -202,6 +203,18 @@ def _get_engine(engine):
             LOG.info(u._LI('Not auto-creating barbican registry DB'))
 
     return engine
+
+
+def _initialize_secret_stores_data():
+    """Initializes secret stores data in database.
+
+    This logic is executed only when database engine and factory is built.
+    Secret store get_manager internally reads secret store plugin configuration
+    from service configuration and saves it in secret_stores table in database.
+    """
+    if utils.is_multiple_backends_enabled():
+        from barbican.plugin.interface import secret_store
+        secret_store.get_manager()
 
 
 def is_db_connection_error(args):

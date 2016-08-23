@@ -31,6 +31,8 @@ from functionaltests.common import config
 CONF = config.get_config()
 
 conf_host_href_used = CONF.keymanager.server_host_href_set
+conf_multiple_backends_enabled = CONF.keymanager.\
+    server_multiple_backends_enabled
 
 
 class TestCase(oslotest.BaseTestCase):
