@@ -150,7 +150,7 @@ class RBACAclsTestCase(base.TestCase):
         if expected_return == 200:
             self.assertIn('reader1', resp.model.read['users'])
         else:
-            self.assertTrue(resp.model is None)
+            self.assertIsNone(resp.model)
 
     @utils.parameterized_dataset(test_data_update_secret_acl)
     def test_update_secret_acl(self, user, expected_return):
@@ -164,11 +164,11 @@ class RBACAclsTestCase(base.TestCase):
         get_resp = self.acl_behaviors.get_acl(secret_ref + '/acl',
                                               user_name=admin_a)
         if expected_return == 200:
-            self.assertTrue(model.acl_ref is not None)
+            self.assertIsNotNone(model.acl_ref)
             # verify update happened
             self.assertIn('reader2', get_resp.model.read['users'])
         else:
-            self.assertTrue(model is None)
+            self.assertIsNone(model)
             # verify no update happened
             self.assertIn('reader1', get_resp.model.read['users'])
 
@@ -207,7 +207,7 @@ class RBACAclsTestCase(base.TestCase):
         if expected_return == 200:
             self.assertIn('reader1', resp.model.read['users'])
         else:
-            self.assertTrue(resp.model is None)
+            self.assertIsNone(resp.model)
 
     @utils.parameterized_dataset(test_data_update_container_acl)
     def test_update_container_acl(self, user, expected_return):
@@ -221,11 +221,11 @@ class RBACAclsTestCase(base.TestCase):
         get_resp = self.acl_behaviors.get_acl(container_ref + '/acl',
                                               user_name=admin_a)
         if expected_return == 200:
-            self.assertTrue(model.acl_ref is not None)
+            self.assertIsNotNone(model.acl_ref)
             # verify update happened
             self.assertIn('reader2', get_resp.model.read['users'])
         else:
-            self.assertTrue(model is None)
+            self.assertIsNone(model)
             # verify no update happened
             self.assertIn('reader1', get_resp.model.read['users'])
 
