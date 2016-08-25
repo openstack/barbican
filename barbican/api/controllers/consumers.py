@@ -33,6 +33,12 @@ def _consumer_not_found():
                          'another castle.'))
 
 
+def _consumer_ownership_mismatch():
+    """Throw exception indicating the user does not own this consumer."""
+    pecan.abort(403, u._('Not Allowed. Sorry, only the creator of a consumer '
+                         'can delete it.'))
+
+
 class ContainerConsumerController(controllers.ACLMixin):
     """Handles Consumer entity retrieval and deletion requests."""
 
@@ -51,7 +57,6 @@ class ContainerConsumerController(controllers.ACLMixin):
     def on_get(self, external_project_id):
         consumer = self.consumer_repo.get(
             entity_id=self.consumer_id,
-            external_project_id=external_project_id,
             suppress_exception=True)
         if not consumer:
             _consumer_not_found()
@@ -92,11 +97,6 @@ class ContainerConsumersController(controllers.ACLMixin):
         LOG.debug(u._('Start consumers on_get '
                       'for container-ID %s:'), self.container_id)
 
-        try:
-            self.container_repo.get(self.container_id, external_project_id)
-        except exception.NotFound:
-            controllers.containers.container_not_found()
-
         result = self.consumer_repo.get_by_container_id(
             self.container_id,
             offset_arg=kw.get('offset', 0),
@@ -136,18 +136,13 @@ class ContainerConsumersController(controllers.ACLMixin):
         data = api.load_body(pecan.request, validator=self.validator)
         LOG.debug('Start on_post...%s', data)
 
-        try:
-            container = self.container_repo.get(self.container_id,
-                                                external_project_id)
-        except exception.NotFound:
-            controllers.containers.container_not_found()
+        container = self._get_container(self.container_id)
 
         self.quota_enforcer.enforce(project)
 
         new_consumer = models.ContainerConsumerMetadatum(self.container_id,
                                                          project.id,
                                                          data)
-        new_consumer.project_id = project.id
         self.consumer_repo.create_or_update_from(new_consumer, container)
 
         url = hrefs.convert_consumer_to_href(new_consumer.container_id)
@@ -156,8 +151,7 @@ class ContainerConsumersController(controllers.ACLMixin):
         LOG.info(u._LI('Created a consumer for project: %s'),
                  external_project_id)
 
-        return self._return_container_data(self.container_id,
-                                           external_project_id)
+        return self._return_container_data(self.container_id)
 
     @index.when(method='DELETE', template='json')
     @controllers.handle_exceptions(u._('ContainerConsumer deletion'))
@@ -176,6 +170,13 @@ class ContainerConsumersController(controllers.ACLMixin):
             _consumer_not_found()
         LOG.debug("Found consumer: %s", consumer)
 
+        container = self._get_container(self.container_id)
+        owner_of_consumer = consumer.project_id == external_project_id
+        owner_of_container = container.project.external_id \
+            == external_project_id
+        if not owner_of_consumer and not owner_of_container:
+            _consumer_ownership_mismatch()
+
         try:
             self.consumer_repo.delete_entity_by_id(consumer.id,
                                                    external_project_id)
@@ -183,21 +184,22 @@ class ContainerConsumersController(controllers.ACLMixin):
             LOG.exception(u._LE('Problem deleting consumer'))
             _consumer_not_found()
 
-        ret_data = self._return_container_data(
-            self.container_id,
-            external_project_id
-        )
+        ret_data = self._return_container_data(self.container_id)
         LOG.info(u._LI('Deleted a consumer for project: %s'),
                  external_project_id)
         return ret_data
 
-    def _return_container_data(self, container_id, external_project_id):
-        try:
-            container = self.container_repo.get(container_id,
-                                                external_project_id)
-            dict_fields = container.to_dict_fields()
-        except Exception:
+    def _get_container(self, container_id):
+        container = self.container_repo.get_container_by_id(
+            container_id, suppress_exception=True)
+        if not container:
             controllers.containers.container_not_found()
+        return container
+
+    def _return_container_data(self, container_id):
+        container = self._get_container(container_id)
+
+        dict_fields = container.to_dict_fields()
 
         for secret_ref in dict_fields['secret_refs']:
             hrefs.convert_to_hrefs(secret_ref)

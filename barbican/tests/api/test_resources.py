@@ -786,7 +786,6 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
 
         # Set up mocked container repo
         self.container_repo = mock.MagicMock()
-        self.container_repo.get.return_value = self.container
         self.container_repo.get_container_by_id.return_value = self.container
         self.setup_container_repository_mock(self.container_repo)
 
@@ -824,21 +823,11 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
         )
         self.assertEqual(415, resp.status_int)
 
-    def test_should_404_consumer_bad_container_id(self):
-        self.container_repo.get.side_effect = excep.NotFound()
+    def test_should_404_when_container_ref_doesnt_exist(self):
+        self.container_repo.get_container_by_id.return_value = None
         resp = self.app.post_json(
             '/containers/{0}/consumers/'.format('bad_id'),
             self.consumer_ref, expect_errors=True
-        )
-        self.container_repo.get.side_effect = None
-        self.assertEqual(404, resp.status_int)
-
-    def test_should_raise_exception_when_container_ref_doesnt_exist(self):
-        self.container_repo.get.return_value = None
-        resp = self.app.post_json(
-            '/containers/{0}/consumers/'.format(self.container.id),
-            self.consumer_ref,
-            expect_errors=True
         )
         self.assertEqual(404, resp.status_int)
 
@@ -896,7 +885,6 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
 
         # Set up mocked container repo
         self.container_repo = mock.MagicMock()
-        self.container_repo.get.return_value = self.container
         self.container_repo.get_container_by_id.return_value = self.container
         self.setup_container_repository_mock(self.container_repo)
 
@@ -928,12 +916,11 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         self.assertEqual(self.consumer.name, resp.json['consumers'][0]['name'])
         self.assertEqual(self.consumer.URL, resp.json['consumers'][0]['URL'])
 
-    def test_should_404_with_bad_container_id(self):
-        self.container_repo.get.side_effect = excep.NotFound()
+    def test_should_404_when_container_ref_doesnt_exist(self):
+        self.container_repo.get_container_by_id.return_value = None
         resp = self.app.get('/containers/{0}/consumers/'.format(
             'bad_id'
         ), expect_errors=True)
-        self.container_repo.get.side_effect = None
         self.assertEqual(404, resp.status_int)
 
     def test_should_get_consumer_by_id(self):
@@ -1105,7 +1092,7 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
 
         # Set up container repo
         self.container_repo = mock.MagicMock()
-        self.container_repo.get.return_value = self.container
+        self.container_repo.get_container_by_id.return_value = self.container
         self.setup_container_repository_mock(self.container_repo)
 
         # Set up container consumer repo
@@ -1156,3 +1143,75 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
             expect_errors=True
         )
         self.assertEqual(405, resp.status_int)
+
+
+class WhenOwnershipMismatch(FunctionalTest):
+
+    def setUp(self):
+        super(
+            WhenOwnershipMismatch, self
+        ).setUp()
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
+
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            containers = controllers.containers.ContainersController()
+        return RootController()
+
+    def _init(self):
+        self.external_project_id = 'keystoneid1234'
+        self.project_internal_id = 'projectid1234'
+
+        # Set up mocked project
+        self.project = models.Project()
+        self.project.id = self.project_internal_id
+        self.project.external_id = self.external_project_id
+
+        # Set up mocked project repo
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
+        self.setup_project_repository_mock(self.project_repo)
+
+        # Set up mocked container
+        self.container = create_container(
+            id_ref='id1',
+            project_id=self.project_internal_id,
+            external_project_id='differentProjectId')
+
+        # Set up mocked consumers
+        self.consumer = create_consumer(self.container.id,
+                                        self.project_internal_id,
+                                        id_ref='id2')
+        self.consumer2 = create_consumer(self.container.id,
+                                         self.project_internal_id,
+                                         id_ref='id3')
+
+        self.consumer_ref = {
+            'name': self.consumer.name,
+            'URL': self.consumer.URL
+        }
+
+        # Set up mocked container repo
+        self.container_repo = mock.MagicMock()
+        self.container_repo.get.return_value = self.container
+        self.container_repo.get_container_by_id.return_value = self.container
+        self.setup_container_repository_mock(self.container_repo)
+
+        # Set up mocked container consumer repo
+        self.consumer_repo = mock.MagicMock()
+        self.consumer_repo.get_by_values.return_value = self.consumer
+        self.consumer_repo.delete_entity_by_id.return_value = None
+        self.setup_container_consumer_repository_mock(self.consumer_repo)
+
+        # Set up mocked secret repo
+        self.setup_secret_repository_mock()
+
+    def test_consumer_check_ownership_mismatch(self):
+        resp = self.app.delete_json(
+            '/containers/{0}/consumers/'.format(self.container.id),
+            self.consumer_ref, expect_errors=True)
+        self.assertEqual(403, resp.status_int)
