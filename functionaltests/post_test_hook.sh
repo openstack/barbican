@@ -15,6 +15,9 @@
 # This script is executed inside post_test_hook function in devstack gate.
 
 # Install packages from test-requirements.txt
+
+set -ex
+
 sudo pip install -r /opt/stack/new/barbican/test-requirements.txt
 
 cd /opt/stack/new/barbican/functionaltests
