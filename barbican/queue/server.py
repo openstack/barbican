@@ -28,7 +28,6 @@ except ImportError:
 
 from oslo_service import service
 
-from barbican.common import config
 from barbican.common import utils
 from barbican import i18n as u
 from barbican.model import models
@@ -41,8 +40,6 @@ if newrelic_loaded:
     newrelic.agent.initialize('/etc/newrelic/newrelic.ini')
 
 LOG = utils.getLogger(__name__)
-
-CONF = config.CONF
 
 
 # Maps the common/shared RetryTasks (returned from lower-level business logic
