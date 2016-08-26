@@ -22,10 +22,7 @@ from oslo_messaging.notify import listener
 
 from barbican.common import config
 from barbican.common import exception
-from barbican.common import utils
 
-
-LOG = utils.getLogger(__name__)
 
 # Constant at one place if this needs to be changed later
 KS_NOTIFICATIONS_GRP_NAME = config.KS_NOTIFICATIONS_GRP_NAME
