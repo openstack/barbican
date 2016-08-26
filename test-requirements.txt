@@ -11,15 +11,15 @@ testtools>=1.4.0 # MIT
 fixtures>=3.0.0 # Apache-2.0/BSD
 requests>=2.10.0 # Apache-2.0
 WebTest>=2.0 # MIT
-python-keystoneclient!=1.8.0,!=2.1.0,>=1.7.0 # Apache-2.0
+python-keystoneclient!=2.1.0,>=2.0.0 # Apache-2.0
 tempest>=12.1.0 # Apache-2.0
 python-subunit>=0.0.18 # Apache-2.0/BSD
 
 # Bandit build requirements
-bandit>=1.0.1 # Apache-2.0
+bandit>=1.1.0 # Apache-2.0
 
 # Documentation build requirements
 sphinx!=1.3b1,<1.3,>=1.2.1 # BSD
 oslosphinx!=3.4.0,>=2.5.0 # Apache-2.0
 reno>=1.8.0 # Apache2
-openstackdocstheme>=1.4.0 # Apache-2.0
+openstackdocstheme>=1.5.0 # Apache-2.0
