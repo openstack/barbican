@@ -15,7 +15,7 @@
 
 
 def get_private_key_pem():
-    """Returns a private key in PCKS#8 format
+    """Returns a private key in PKCS#8 format
 
     This key was created by issuing the following openssl commands:
 
