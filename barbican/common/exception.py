@@ -279,7 +279,7 @@ class LimitExceeded(BarbicanHTTPException):
 
 
 class ServiceUnavailable(BarbicanException):
-    message = u._("The request returned 503 Service Unavilable. This "
+    message = u._("The request returned 503 Service Unavailable. This "
                   "generally occurs on service overload or other transient "
                   "outage.")
 

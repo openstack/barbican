@@ -297,7 +297,7 @@ def soft_delete_expired_secrets(threshold_date):
     update_count += children_count
     LOG.info(u._LI("Soft deleted %(update_count)s entries due to secret "
                    "expiration and %(acl_total)s secret acl entries "
-                   "wereremoved from the database") %
+                   "were removed from the database") %
              {'update_count': update_count,
               'acl_total': acl_total})
     return update_count + acl_total
