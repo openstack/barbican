@@ -54,7 +54,7 @@ host_opts = [
 ]
 
 db_opts = [
-    cfg.StrOpt('sql_connection'),
+    cfg.StrOpt('sql_connection', secret=True),
     cfg.IntOpt('sql_idle_timeout', default=3600),
     cfg.IntOpt('sql_max_retries', default=60),
     cfg.IntOpt('sql_retry_interval', default=1),
