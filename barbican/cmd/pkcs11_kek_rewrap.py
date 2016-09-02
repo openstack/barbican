@@ -79,16 +79,18 @@ class KekRewrap(object):
             kek_data = iv + wrapped_key
             self.pkcs11.verify_hmac(kek_mkhk, hmac, kek_data, session)
             # Unwrap KEK
-            kek = self.pkcs11.unwrap_key(kek_mkek, iv, wrapped_key, session)
+            current_kek = self.pkcs11.unwrap_key(kek_mkek, iv, wrapped_key,
+                                                 session)
 
             # Wrap KEK with new master keys
-            new_kek = self.pkcs11.wrap_key(self.new_mkek, kek, session)
+            new_kek = self.pkcs11.wrap_key(self.new_mkek, current_kek,
+                                           session)
             # Compute HMAC for rewrapped KEK
             new_kek_data = new_kek['iv'] + new_kek['wrapped_key']
             new_hmac = self.pkcs11.compute_hmac(self.new_mkhk, new_kek_data,
                                                 session)
             # Destroy unwrapped KEK
-            self.pkcs11.destroy_object(kek, session)
+            self.pkcs11.destroy_object(current_kek, session)
 
             # Build updated meta dict
             updated_meta = meta_dict.copy()
