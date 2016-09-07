@@ -9,13 +9,13 @@
 # Jiong Liu <liujiong@gohighsec.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 3.0.0.0b3.dev18\n"
+"Project-Id-Version: barbican 3.0.0.0b4.dev3\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-08-05 03:25+0000\n"
+"POT-Creation-Date: 2016-09-07 03:23+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-07-26 09:43+0000\n"
+"PO-Revision-Date: 2016-09-01 01:38+0000\n"
 "Last-Translator: Jiong Liu <liujiong@gohighsec.com>\n"
 "Language: zh-CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
@@ -778,12 +778,6 @@ msgstr "NSS证书数据库的密码"
 msgid "Password to login to PKCS11 session"
 msgstr "登录到PKCS11会话的密码"
 
-msgid "Path to CA certicate chain file"
-msgstr "CA证书链文件的路径"
-
-msgid "Path to CA certicate file"
-msgstr "CA证书文件的路径"
-
 msgid "Path to CA certificate key file"
 msgstr "CA证书密钥文件的路径"
 
@@ -1368,4 +1362,4 @@ msgid "{request} not found for {operation} for order_id {order_id}"
 msgstr "未找到order_id为{order_id}的{operation}操作的{request}请求"
 
 msgid "{schema_name}' within '{parent_schema_name}"
-msgstr "带有'{parent_schema_name}'的'{schema_name}'"
+msgstr "带有{parent_schema_name}的{schema_name}'"
