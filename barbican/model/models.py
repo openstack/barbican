@@ -1379,3 +1379,102 @@ class ProjectQuotas(BASE, ModelBase):
         if self.cas:
             ret['cas'] = self.cas
         return ret
+
+
+class SecretStores(BASE, ModelBase):
+    """List of secret stores defined via service configuration.
+
+    This class provides a list of secret stores entities with their respective
+    secret store plugin and crypto plugin names.
+
+    SecretStores deletes are NOT soft-deletes.
+    """
+
+    __tablename__ = 'secret_stores'
+
+    store_plugin = sa.Column(sa.String(255), nullable=False)
+    crypto_plugin = sa.Column(sa.String(255), nullable=True)
+    global_default = sa.Column(sa.Boolean, nullable=False, default=False)
+    name = sa.Column(sa.String(255), nullable=False)
+
+    __table_args__ = (sa.UniqueConstraint(
+        'store_plugin', 'crypto_plugin',
+        name='_secret_stores_plugin_names_uc'),
+        sa.UniqueConstraint('name', name='_secret_stores_name_uc'),)
+
+    def __init__(self, name, store_plugin, crypto_plugin=None,
+                 global_default=None):
+        """Creates secret store entity."""
+        super(SecretStores, self).__init__()
+
+        msg = u._("Must supply non-Blank {0} argument for SecretStores entry.")
+
+        if not name:
+            raise exception.MissingArgumentError(msg.format("name"))
+        if not store_plugin:
+            raise exception.MissingArgumentError(msg.format("store_plugin"))
+
+        self.store_plugin = store_plugin
+        self.name = name
+        self.crypto_plugin = crypto_plugin
+        if global_default is not None:
+            self.global_default = global_default
+
+        self.status = States.ACTIVE
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {'secret_store_id': self.id,
+                'store_plugin': self.store_plugin,
+                'crypto_plugin': self.crypto_plugin,
+                'global_default': self.global_default,
+                'name': self.name}
+
+
+class ProjectSecretStore(BASE, ModelBase):
+    """Stores secret store to be used for new project secrets.
+
+    This class maintains secret store and project mapping so that new project
+    secret entries uses it as plugin backend.
+
+    ProjectSecretStores deletes are NOT soft-deletes.
+    """
+
+    __tablename__ = 'project_secret_store'
+
+    secret_store_id = sa.Column(sa.String(36),
+                                sa.ForeignKey('secret_stores.id'),
+                                index=True,
+                                nullable=False)
+    project_id = sa.Column(sa.String(36),
+                           sa.ForeignKey('projects.id'),
+                           index=True,
+                           nullable=False)
+
+    secret_store = orm.relationship("SecretStores", backref="project_store")
+    project = orm.relationship('Project',
+                               backref=orm.backref('preferred_secret_store'))
+
+    __table_args__ = (sa.UniqueConstraint(
+        'project_id', name='_project_secret_store_project_uc'),)
+
+    def __init__(self, project_id, secret_store_id):
+        """Creates project secret store mapping entity."""
+        super(ProjectSecretStore, self).__init__()
+
+        msg = u._("Must supply non-None {0} argument for ProjectSecretStore "
+                  " entry.")
+
+        if not project_id:
+            raise exception.MissingArgumentError(msg.format("project_id"))
+        self.project_id = project_id
+        if not secret_store_id:
+            raise exception.MissingArgumentError(msg.format("secret_store_id"))
+        self.secret_store_id = secret_store_id
+
+        self.status = States.ACTIVE
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {'secret_store_id': self.secret_store_id,
+                'project_id': self.project_id}
