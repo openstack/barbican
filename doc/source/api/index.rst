@@ -17,6 +17,7 @@ API Reference
     ./reference/secrets
     ./reference/secret_types
     ./reference/secret_metadata
+    ./reference/store_backends.rst
     ./reference/containers
     ./reference/acls
     ./reference/certificates

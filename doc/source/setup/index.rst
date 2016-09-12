@@ -11,3 +11,4 @@ Setting up Barbican
    troubleshooting
    noauth
    audit
+   plugin_backends
