@@ -155,6 +155,9 @@ class CertificatesTestCase(base.TestCase):
 
     def tearDown(self):
         self.behaviors.delete_all_created_orders()
+        self.ca_behaviors.delete_all_created_cas()
+        self.container_behaviors.delete_all_created_containers()
+        self.secret_behaviors.delete_all_created_secrets()
         super(CertificatesTestCase, self).tearDown()
 
     def wait_for_order(

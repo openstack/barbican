@@ -112,6 +112,8 @@ class CATestCommon(base.TestCase):
     def tearDown(self):
         self.order_behaviors.delete_all_created_orders()
         self.ca_behaviors.delete_all_created_cas()
+        self.container_behaviors.delete_all_created_containers()
+        self.secret_behaviors.delete_all_created_secrets()
         super(CATestCommon, self).tearDown()
 
     def send_test_order(self, ca_ref=None, user_name=None,

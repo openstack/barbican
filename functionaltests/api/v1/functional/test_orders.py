@@ -89,6 +89,8 @@ class OrdersTestCase(base.TestCase):
 
     def tearDown(self):
         self.behaviors.delete_all_created_orders()
+        self.container_behaviors.delete_all_created_containers()
+        self.secret_behaviors.delete_all_created_secrets()
         super(OrdersTestCase, self).tearDown()
 
     def wait_for_order(self, order_resp, order_ref):
@@ -654,6 +656,8 @@ class OrdersUnauthedTestCase(base.TestCase):
 
     def tearDown(self):
         self.behaviors.delete_all_created_orders()
+        self.container_behaviors.delete_all_created_containers()
+        self.secret_behaviors.delete_all_created_secrets()
         super(OrdersUnauthedTestCase, self).tearDown()
 
     @testcase.attr('negative', 'security')
