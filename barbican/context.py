@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import inspect
 import oslo_context
 from oslo_policy import policy
 
@@ -29,23 +28,12 @@ class RequestContext(oslo_context.context.RequestContext):
     accesses the system, as well as additional request information.
     """
 
-    def __init__(self, roles=None, policy_enforcer=None, project=None,
-                 **kwargs):
+    def __init__(self, policy_enforcer=None, project=None, **kwargs):
         # prefer usage of 'project' instead of 'tenant'
         if project:
             kwargs['tenant'] = project
         self.project = project
         self.policy_enforcer = policy_enforcer or policy.Enforcer(CONF)
-
-        # NOTE(edtubill): oslo_context 2.2.0 now has a roles attribute in
-        # the RequestContext. This will make sure of backwards compatibility
-        # with past oslo_context versions.
-        argspec = inspect.getargspec(super(RequestContext, self).__init__)
-        if 'roles' in argspec.args:
-            kwargs['roles'] = roles
-        else:
-            self.roles = roles or []
-
         super(RequestContext, self).__init__(**kwargs)
 
     def to_dict(self):
