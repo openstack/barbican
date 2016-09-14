@@ -1,0 +1,17 @@
+---
+prelude: >
+    Now within a single deployment, multiple secret store plugin backends can
+    be configured and used. With this change, a project adminstrator can
+    pre-define a preferred plugin backend for storing their secrets. New APIs
+    are added to manage this project level secret store preference.
+features:
+  - New feature to support multiple secret store plugin backends. This feature
+    is not enabled by default. To use this feature, the relevant feature flag
+    needs to be enabled and supporting configuration needs to be added in the
+    service configuration. Once enabled, a project adminstrator will be able
+    to specify one of the available secret store backends as a preferred
+    secret store for their project secrets. This secret store preference
+    applies only to new secrets (key material) created or stored within that
+    project. Existing secrets are not impacted. See http://docs.openstack.org/developer/barbican/setup/plugin_backends.html
+    for instructions on how to setup Barbican multiple backends, and the API
+    documentation for further details.
