@@ -13,10 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from functionaltests.api.v1.models.base_models import BaseModel
+from functionaltests.api.v1.models import base_models
 
 
-class ConsumerModel(BaseModel):
+class ConsumerModel(base_models.BaseModel):
 
     def __init__(self, name=None, URL=None, created=None, updated=None,
                  status=None):

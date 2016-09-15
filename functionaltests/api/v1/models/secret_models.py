@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from functionaltests.api.v1.models.base_models import BaseModel
+from functionaltests.api.v1.models import base_models
 
 
-class SecretModel(BaseModel):
+class SecretModel(base_models.BaseModel):
 
     def __init__(self, name=None, expiration=None, algorithm=None,
                  secret_ref=None, bit_length=None, mode=None, secret_type=None,

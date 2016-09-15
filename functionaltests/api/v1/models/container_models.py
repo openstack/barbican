@@ -13,17 +13,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from functionaltests.api.v1.models.base_models import BaseModel
+from functionaltests.api.v1.models import base_models
 
 
-class SecretRefModel(BaseModel):
+class SecretRefModel(base_models.BaseModel):
 
     def __init__(self, name=None, secret_ref=None):
         self.name = name
         self.secret_ref = secret_ref
 
 
-class ContainerModel(BaseModel):
+class ContainerModel(base_models.BaseModel):
 
     def __init__(self, name=None, type=None, secret_refs=[],
                  container_ref=None, consumers=None, status=None,
