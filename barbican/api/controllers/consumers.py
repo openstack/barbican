@@ -78,6 +78,7 @@ class ContainerConsumersController(controllers.ACLMixin):
         self.container_id = container_id
         self.consumer_repo = repo.get_container_consumer_repository()
         self.container_repo = repo.get_container_repository()
+        self.project_repo = repo.get_project_repository()
         self.validator = validators.ContainerConsumerValidator()
         self.quota_enforcer = quota.QuotaEnforcer('consumers',
                                                   self.consumer_repo)
@@ -160,6 +161,11 @@ class ContainerConsumersController(controllers.ACLMixin):
     def on_delete(self, external_project_id, **kwargs):
         data = api.load_body(pecan.request, validator=self.validator)
         LOG.debug('Start on_delete...%s', data)
+        project = self.project_repo.find_by_external_project_id(
+            external_project_id, suppress_exception=True)
+        if not project:
+            _consumer_not_found()
+
         consumer = self.consumer_repo.get_by_values(
             self.container_id,
             data["name"],
@@ -171,7 +177,7 @@ class ContainerConsumersController(controllers.ACLMixin):
         LOG.debug("Found consumer: %s", consumer)
 
         container = self._get_container(self.container_id)
-        owner_of_consumer = consumer.project_id == external_project_id
+        owner_of_consumer = consumer.project_id == project.id
         owner_of_container = container.project.external_id \
             == external_project_id
         if not owner_of_consumer and not owner_of_container:
