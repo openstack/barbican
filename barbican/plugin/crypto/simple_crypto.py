@@ -120,11 +120,11 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         - DSA, with passphrase (not supported)
 
         Note: PyCrypto is not capable of serializing DSA
-        keys and DER formated keys. Such keys will be
+        keys and DER formatted keys. Such keys will be
         serialized to Base64 PEM to store in DB.
 
         TODO (atiwari/reaperhulk): PyCrypto is not capable to serialize
-        DSA keys and DER formated keys, later we need to pick better
+        DSA keys and DER formatted keys, later we need to pick better
         crypto lib.
         """
         if(generate_dto.algorithm is None or generate_dto
