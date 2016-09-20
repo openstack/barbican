@@ -9,13 +9,13 @@
 # Jiong Liu <liujiong@gohighsec.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 3.0.0.0b4.dev3\n"
+"Project-Id-Version: barbican 3.0.0.0rc2.dev1\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-09-07 03:23+0000\n"
+"POT-Creation-Date: 2016-09-16 18:23+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-09-01 01:38+0000\n"
+"PO-Revision-Date: 2016-09-17 01:29+0000\n"
 "Last-Translator: Jiong Liu <liujiong@gohighsec.com>\n"
 "Language: zh-CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
@@ -677,6 +677,9 @@ msgstr "未发现keystone-ID为{id}的{entity_name}"
 msgid "No {entity} found with ID {id}"
 msgstr "未找到ID为{id}的{entity}"
 
+msgid "Not Allowed. Sorry, only the creator of a consumer can delete it."
+msgstr "不被允许。对不起，只有消费者的创建者才能删除它。"
+
 msgid "Not Found. CA attribute not found."
 msgstr "未找到。CA属性未找到。"
 
@@ -685,6 +688,16 @@ msgstr "未找到。未找到CA。"
 
 msgid "Not Found. CA not in project."
 msgstr "未找到。CA不在项目中。"
+
+msgid ""
+"Not Found. Multiple backends support is not enabled in service configuration."
+msgstr "未发现。服务配置未启动多后端支持。"
+
+msgid "Not Found. No preferred secret store defined for this project."
+msgstr "未发现。该项目没有定义首选秘密存储。"
+
+msgid "Not Found. Secret store not found."
+msgstr "未发现。未发现秘密存储。"
 
 msgid "Not Found. Sorry but your consumer is in another castle."
 msgstr "没有找到。对不起，您的用户名是在另一个城堡。"
@@ -793,6 +806,9 @@ msgstr "NSS证书数据库的路径"
 msgid "Path to vendor PKCS11 library"
 msgstr "提供PKCS11库的路径"
 
+msgid "Performing database schema migration..."
+msgstr "执行数据库条目迁移"
+
 msgid "Permission to write image storage media denied."
 msgstr "不允许对镜像存储媒介写操作。"
 
@@ -900,6 +916,9 @@ msgstr "API 服务器上未正确配置注册表。原因：%(reason)s"
 
 msgid "Remove CA from project"
 msgstr "将CA从项目中移除"
+
+msgid "Removing preferred secret store"
+msgstr "移除首选秘密存储"
 
 msgid ""
 "Request {request_id} reports status_complete, but no cert_id has been "
@@ -1047,6 +1066,9 @@ msgstr "设置全局首选CA"
 msgid "Set preferred project CA"
 msgstr "设置项目首选CA"
 
+msgid "Setting preferred secret store"
+msgstr "设置首选秘密存储"
+
 msgid "Signing key incorrect"
 msgstr "密钥签发错误"
 
@@ -1111,12 +1133,6 @@ msgstr "提供的映像太大。"
 
 msgid "The request returned 500 Internal Server Error."
 msgstr "该请求返回了“500 内部服务器错误”。"
-
-msgid ""
-"The request returned 503 Service Unavilable. This generally occurs on "
-"service overload or other transient outage."
-msgstr ""
-"该请求返回了“503服务不可用”。这通常发生于服务超负荷或其他瞬时停止运行。"
 
 #, python-format
 msgid ""
@@ -1211,6 +1227,22 @@ msgstr ""
 
 msgid "URI provided invalid query string parameters."
 msgstr "URI包含了无效的字符串请求参数。"
+
+#, python-format
+msgid "URI to container is %s"
+msgstr "容器的URI是%s"
+
+#, python-format
+msgid "URI to secret is %s"
+msgstr "秘密的URI是%s"
+
+#, python-format
+msgid "URI to secret metadata is %s"
+msgstr "秘密元数据的URI是%s"
+
+#, python-format
+msgid "URI to sub-CA is %s"
+msgstr "子CA的URI是%s"
 
 msgid "Unable to decode request data."
 msgstr "无法解码请求数据。"
