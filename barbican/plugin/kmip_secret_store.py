@@ -574,7 +574,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
 
         Key files are extremely sensitive, they should be owned by the user
         who they relate to. They should be readable only (to avoid accidental
-        changes). They should not be readable or writeable by any other user.
+        changes). They should not be readable or writable by any other user.
 
         :raises: KMIPSecretStoreError
         """
