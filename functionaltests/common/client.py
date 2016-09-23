@@ -38,75 +38,47 @@ class BarbicanClient(object):
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
-        self.region = CONF.identity.region
-        self._default_user_name = CONF.identity.username
-        self._auth = {}
-        self._auth[CONF.identity.username] = auth.FunctionalTestAuth(
-            endpoint=CONF.identity.uri,
-            version=CONF.identity.version,
-            username=CONF.identity.username,
-            password=CONF.identity.password,
-            project_name=CONF.identity.project_name)
-        self._auth[CONF.identity.service_admin] = auth.FunctionalTestAuth(
-            endpoint=CONF.identity.uri,
-            version=CONF.identity.version,
-            username=CONF.identity.service_admin,
-            password=CONF.identity.service_admin_password,
-            project_name=CONF.identity.service_admin_project)
-        self._auth[CONF.rbac_users.admin_a] = auth.FunctionalTestAuth(
-            endpoint=CONF.identity.uri,
-            version=CONF.identity.version,
-            username=CONF.rbac_users.admin_a,
-            password=CONF.rbac_users.admin_a_password,
-            project_name=CONF.rbac_users.project_a)
-        self._auth[CONF.rbac_users.creator_a] = auth.FunctionalTestAuth(
-            endpoint=CONF.identity.uri,
-            version=CONF.identity.version,
-            username=CONF.rbac_users.creator_a,
-            password=CONF.rbac_users.creator_a_password,
-            project_name=CONF.rbac_users.project_a)
-        self._auth[CONF.rbac_users.creator_a_2] = auth.FunctionalTestAuth(
-            endpoint=CONF.identity.uri,
-            version=CONF.identity.version,
-            username=CONF.rbac_users.creator_a_2,
-            password=CONF.rbac_users.creator_a_2_password,
-            project_name=CONF.rbac_users.project_a)
-        self._auth[CONF.rbac_users.observer_a] = auth.FunctionalTestAuth(
-            endpoint=CONF.identity.uri,
-            version=CONF.identity.version,
-            username=CONF.rbac_users.observer_a,
-            password=CONF.rbac_users.observer_a_password,
-            project_name=CONF.rbac_users.project_a)
-        self._auth[CONF.rbac_users.auditor_a] = auth.FunctionalTestAuth(
-            endpoint=CONF.identity.uri,
-            version=CONF.identity.version,
-            username=CONF.rbac_users.auditor_a,
-            password=CONF.rbac_users.auditor_a_password,
-            project_name=CONF.rbac_users.project_a)
-        self._auth[CONF.rbac_users.admin_b] = auth.FunctionalTestAuth(
-            endpoint=CONF.identity.uri,
-            version=CONF.identity.version,
-            username=CONF.rbac_users.admin_b,
-            password=CONF.rbac_users.admin_b_password,
-            project_name=CONF.rbac_users.project_b)
-        self._auth[CONF.rbac_users.creator_b] = auth.FunctionalTestAuth(
-            endpoint=CONF.identity.uri,
-            version=CONF.identity.version,
-            username=CONF.rbac_users.creator_b,
-            password=CONF.rbac_users.creator_b_password,
-            project_name=CONF.rbac_users.project_b)
-        self._auth[CONF.rbac_users.observer_b] = auth.FunctionalTestAuth(
-            endpoint=CONF.identity.uri,
-            version=CONF.identity.version,
-            username=CONF.rbac_users.observer_b,
-            password=CONF.rbac_users.observer_b_password,
-            project_name=CONF.rbac_users.project_b)
-        self._auth[CONF.rbac_users.auditor_b] = auth.FunctionalTestAuth(
-            endpoint=CONF.identity.uri,
-            version=CONF.identity.version,
-            username=CONF.rbac_users.auditor_b,
-            password=CONF.rbac_users.auditor_b_password,
-            project_name=CONF.rbac_users.project_b)
+        identity = CONF.identity
+        self.region = identity.region
+        self._default_user_name = identity.username
+        self._auth = dict()
+
+        self._auth[identity.username] = auth.FunctionalTestAuth(
+            endpoint=identity.uri,
+            version=identity.version,
+            username=identity.username,
+            password=identity.password,
+            project_name=identity.project_name,
+            project_domain=identity.domain_name)
+
+        self._auth[identity.service_admin] = auth.FunctionalTestAuth(
+            endpoint=identity.uri,
+            version=identity.version,
+            username=identity.service_admin,
+            password=identity.service_admin_password,
+            project_name=identity.service_admin_project,
+            project_domain=identity.service_admin_domain)
+
+        rbac = CONF.rbac_users
+
+        for user in ['admin_a', 'creator_a', 'creator_a_2',
+                     'observer_a', 'auditor_a']:
+            self._auth[getattr(rbac, user)] = auth.FunctionalTestAuth(
+                endpoint=identity.uri,
+                version=identity.version,
+                username=getattr(rbac, user),
+                password=getattr(rbac, user + '_password'),
+                project_name=rbac.project_a,
+                project_domain=rbac.project_domain)
+
+        for user in ['admin_b', 'creator_b', 'observer_b', 'auditor_b']:
+            self._auth[getattr(rbac, user)] = auth.FunctionalTestAuth(
+                endpoint=identity.uri,
+                version=identity.version,
+                username=getattr(rbac, user),
+                password=getattr(rbac, user + '_password'),
+                project_name=rbac.project_b,
+                project_domain=rbac.project_domain)
 
     def get_all_functional_test_user_names(self):
         retval = []
