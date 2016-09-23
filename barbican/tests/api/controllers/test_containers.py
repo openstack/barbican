@@ -306,6 +306,34 @@ class WhenAddingOrRemovingContainerSecretsUsingContainersSecretsResource(
         container = containers_repo.get(container_uuid, self.project_id)
         self.assertEqual(1, len(container.container_secrets))
 
+    def test_should_add_container_secret_with_trailing_slash(self):
+        resp, container_id = create_container(
+            self.app,
+            name='test conatiner name',
+            container_type='generic',
+        )
+        self._assert_successful_container_create(resp, container_id)
+
+        secret_name = 'test secret 1'
+        resp, _ = secret_helper.create_secret(
+            self.app,
+            name=secret_name
+        )
+        self.assertEqual(201, resp.status_int)
+        request = {
+            'name': secret_name,
+            'secret_ref': resp.json.get('secret_ref')
+        }
+        resp = self.app.post_json(
+            '/containers/{container_id}/secrets/'.format(
+                container_id=container_id
+            ),
+            request,
+            expect_errors=False,
+            headers=None
+        )
+        self.assertEqual(201, resp.status_int)
+
     def test_should_add_container_secret_without_name(self):
         container_name = 'test container name'
         container_type = 'generic'
