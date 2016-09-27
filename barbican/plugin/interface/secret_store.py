@@ -50,7 +50,6 @@ store_opts = [
                          ' backend support. Default is False')
                 ),
     cfg.ListOpt('stores_lookup_suffix',
-                default=None,
                 help=u._('List of suffix to use for looking up plugins which '
                          'are supported with multiple backend support.')
                 )

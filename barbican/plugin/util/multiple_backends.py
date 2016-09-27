@@ -51,12 +51,10 @@ def read_multiple_backends_config():
                 name=group_name, title='Plugins needed for this backend')
             store_opts = [
                 cfg.StrOpt('secret_store_plugin',
-                           default=None,
                            help=u._('Internal name used to identify'
                                     'secretstore_plugin')
                            ),
                 cfg.StrOpt('crypto_plugin',
-                           default=None,
                            help=u._('Internal name used to identify '
                                     'crypto_plugin.')
                            ),
