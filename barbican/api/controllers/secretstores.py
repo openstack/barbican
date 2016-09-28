@@ -31,7 +31,7 @@ def _secret_store_not_found():
 
 
 def _preferred_secret_store_not_found():
-    """Throw exception indicating secret store not found."""
+    """Throw exception indicating preferred secret store not found."""
     pecan.abort(404, u._('Not Found. No preferred secret store defined for '
                          'this project.'))
 
@@ -87,8 +87,8 @@ class PreferredSecretStoreController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Setting preferred secret store'))
     @controllers.enforce_rbac('secretstore_preferred:post')
     def on_post(self, external_project_id, **kwargs):
-        LOG.debug(u._('Start: Set project preferred secret-store for store '),
-                  'id %s', self.secret_store.id)
+        LOG.debug(u._('Start: Set project preferred secret-store for store '
+                      'id %s'), self.secret_store.id)
 
         project = res.get_or_create_project(external_project_id)
 
