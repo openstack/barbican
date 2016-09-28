@@ -196,7 +196,7 @@ class CertificatesTestCase(base.TestCase):
         test_model.secret_refs = [pub_key_ref, priv_key_ref]
         resp, container_ref = self.container_behaviors.create_container(
             test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         return container_ref
 
@@ -212,7 +212,7 @@ class CertificatesTestCase(base.TestCase):
             'secret_ref': secret_ref
         }]
         resp, container_ref = self.container_behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         return container_ref
 
     def get_dogtag_ca_id(self):
@@ -484,7 +484,7 @@ class CertificatesTestCase(base.TestCase):
         test_model = order_models.OrderModel(**self.simple_cmc_data)
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 400)
+        self.assertEqual(400, create_resp.status_code)
         self.assertIsNone(order_ref)
         self.confirm_error_message(
             create_resp,
@@ -498,7 +498,7 @@ class CertificatesTestCase(base.TestCase):
             certutil.create_good_csr())
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 400)
+        self.assertEqual(400, create_resp.status_code)
         self.assertIsNone(order_ref)
         self.confirm_error_message(
             create_resp,
@@ -729,7 +729,7 @@ class CertificatesTestCase(base.TestCase):
             certutil.create_good_csr())
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
         order_resp = self.wait_for_order(order_ref)

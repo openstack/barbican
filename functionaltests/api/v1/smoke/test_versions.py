@@ -35,7 +35,7 @@ class VersionDiscoveryTestCase(base.TestCase):
         resp = self.client.get(url_without_version, use_auth=use_auth)
         body = resp.json()
 
-        self.assertEqual(resp.status_code, 300)
+        self.assertEqual(300, resp.status_code)
         versions_response = body['versions']['values']
         v1_info = versions_response[0]
 
@@ -43,5 +43,5 @@ class VersionDiscoveryTestCase(base.TestCase):
         # might start using decimal numbers in the future. So when that happens
         # this test will still be valid.
         self.assertIn('v1', v1_info['id'])
-        self.assertEqual(len(v1_info['media-types']), 1)
-        self.assertEqual(v1_info['media-types'][0]['base'], 'application/json')
+        self.assertEqual(1, len(v1_info['media-types']))
+        self.assertEqual('application/json', v1_info['media-types'][0]['base'])

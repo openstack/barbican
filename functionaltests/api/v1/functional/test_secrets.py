@@ -156,7 +156,7 @@ class SecretsTestCase(base.TestCase):
         test_model.payload_content_type = 'application/octet-stream'
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @testcase.attr('positive')
     def test_secret_create_then_check_content_types(self):
@@ -165,10 +165,10 @@ class SecretsTestCase(base.TestCase):
             **self.default_secret_create_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         resp = self.behaviors.get_secret_metadata(secret_ref)
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         content_types = resp.model.content_types
         self.assertIsNotNone(content_types)
         self.assertIn('default', content_types)
@@ -182,7 +182,7 @@ class SecretsTestCase(base.TestCase):
             **self.default_secret_create_all_none_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
     @testcase.attr('negative')
     def test_secret_get_secret_doesnt_exist(self):
@@ -191,7 +191,7 @@ class SecretsTestCase(base.TestCase):
         Should return a 404.
         """
         resp = self.behaviors.get_secret_metadata('not_a_uuid')
-        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(404, resp.status_code)
 
     @testcase.attr('negative')
     def test_secret_get_secret_payload_doesnt_exist(self):
@@ -203,10 +203,10 @@ class SecretsTestCase(base.TestCase):
             **self.default_secret_create_all_none_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         resp = self.behaviors.get_secret(secret_ref, 'text/plain')
-        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(404, resp.status_code)
 
     @testcase.attr('positive')
     def test_secret_get_payload_no_accept_header(self):
@@ -218,13 +218,13 @@ class SecretsTestCase(base.TestCase):
             **self.default_secret_create_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         get_resp = self.behaviors.get_secret(
             secret_ref,
             payload_content_type='',
             omit_headers=['Accept'])
-        self.assertEqual(get_resp.status_code, 200)
+        self.assertEqual(200, get_resp.status_code)
         self.assertIn(test_model.payload,
                       binascii.b2a_base64(get_resp.content))
 
@@ -235,7 +235,7 @@ class SecretsTestCase(base.TestCase):
         Should return a 404.
         """
         resp = self.behaviors.delete_secret('not_a_uuid', expected_fail=True)
-        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(404, resp.status_code)
 
     @testcase.attr('negative')
     def test_secret_get_invalid_mime_type(self):
@@ -246,7 +246,7 @@ class SecretsTestCase(base.TestCase):
         resp, secret_ref = self.behaviors.create_secret(test_model)
         resp = self.behaviors.get_secret(secret_ref,
                                          payload_content_type="i/m")
-        self.assertEqual(resp.status_code, 406)
+        self.assertEqual(406, resp.status_code)
 
     @testcase.attr('negative')
     def test_secret_create_with_expiration_passed(self):
@@ -259,7 +259,7 @@ class SecretsTestCase(base.TestCase):
         test_model.expiration = '2000-01-10T14:58:52.546795'
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @testcase.attr('negative')
     def test_secret_create_with_empty_strings(self):
@@ -271,7 +271,7 @@ class SecretsTestCase(base.TestCase):
             **self.default_secret_create_emptystrings_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @testcase.attr('negative')
     def test_secret_create_with_invalid_content_type(self):
@@ -285,7 +285,7 @@ class SecretsTestCase(base.TestCase):
         headers = {"Content-Type": "crypto/boom"}
 
         resp, secret_ref = self.behaviors.create_secret(test_model, headers)
-        self.assertEqual(resp.status_code, 415)
+        self.assertEqual(415, resp.status_code)
 
     @testcase.attr('negative')
     def test_secret_create_with_oversized_payload(self):
@@ -299,7 +299,7 @@ class SecretsTestCase(base.TestCase):
         test_model.payload = str(self.oversized_payload)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 413)
+        self.assertEqual(413, resp.status_code)
 
     @testcase.attr('negative')
     def test_secret_put_when_payload_doesnt_exist(self):
@@ -313,7 +313,7 @@ class SecretsTestCase(base.TestCase):
             payload_content_encoding='base64',
             payload='testing putting to non-existent secret')
 
-        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(404, resp.status_code)
 
     @testcase.attr('negative')
     def test_secret_put_when_payload_already_exists(self):
@@ -325,14 +325,14 @@ class SecretsTestCase(base.TestCase):
             **self.default_secret_create_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         resp = self.behaviors.update_secret_payload(
             secret_ref=secret_ref,
             payload_content_type='application/octet-stream',
             payload_content_encoding='base64',
             payload='testing putting data in secret that already has data')
-        self.assertEqual(resp.status_code, 409)
+        self.assertEqual(409, resp.status_code)
 
     @testcase.attr('negative')
     def test_secret_put_two_phase_empty_payload(self):
@@ -344,14 +344,14 @@ class SecretsTestCase(base.TestCase):
             **self.default_secret_create_two_phase_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         put_resp = self.behaviors.update_secret_payload(
             secret_ref=secret_ref,
             payload_content_type='application/octet-stream',
             payload_content_encoding='base64',
             payload='')
-        self.assertEqual(put_resp.status_code, 400)
+        self.assertEqual(400, put_resp.status_code)
 
     @testcase.attr('negative')
     def test_secret_put_two_phase_invalid_content_type(self):
@@ -364,14 +364,14 @@ class SecretsTestCase(base.TestCase):
             **self.default_secret_create_two_phase_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         put_resp = self.behaviors.update_secret_payload(
             secret_ref=secret_ref,
             payload_content_type='crypto/boom',
             payload_content_encoding='base64',
             payload='invalid content type')
-        self.assertEqual(put_resp.status_code, 415)
+        self.assertEqual(415, put_resp.status_code)
 
     @testcase.attr('negative')
     def test_secret_put_two_phase_no_payload(self):
@@ -383,14 +383,14 @@ class SecretsTestCase(base.TestCase):
             **self.default_secret_create_two_phase_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         put_resp = self.behaviors.update_secret_payload(
             secret_ref=secret_ref,
             payload_content_type='application/octet-stream',
             payload_content_encoding='base64',
             payload=None)
-        self.assertEqual(put_resp.status_code, 400)
+        self.assertEqual(400, put_resp.status_code)
 
     @testcase.attr('negative')
     def test_secret_put_two_phase_w_oversized_binary_data_not_utf8(self):
@@ -408,14 +408,14 @@ class SecretsTestCase(base.TestCase):
             **self.default_secret_create_two_phase_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         put_resp = self.behaviors.update_secret_payload(
             secret_ref=secret_ref,
             payload_content_type='application/octet-stream',
             payload_content_encoding='base64',
             payload=str(oversized_payload))
-        self.assertEqual(put_resp.status_code, 413)
+        self.assertEqual(413, put_resp.status_code)
 
     @testcase.attr('negative')
     def test_secret_put_two_phase_oversized_payload(self):
@@ -430,14 +430,14 @@ class SecretsTestCase(base.TestCase):
             **self.default_secret_create_two_phase_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         put_resp = self.behaviors.update_secret_payload(
             secret_ref=secret_ref,
             payload_content_type='application/octet-stream',
             payload_content_encoding='base64',
             payload=oversized_payload)
-        self.assertEqual(put_resp.status_code, 413)
+        self.assertEqual(413, put_resp.status_code)
 
     @testcase.attr('positive')
     def test_secret_put_two_phase_valid_binary_data_not_utf8(self):
@@ -452,14 +452,14 @@ class SecretsTestCase(base.TestCase):
             **self.default_secret_create_two_phase_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         put_resp = self.behaviors.update_secret_payload(
             secret_ref=secret_ref,
             payload_content_type='application/octet-stream',
             payload_content_encoding='base64',
             payload=str(data))
-        self.assertEqual(put_resp.status_code, 204)
+        self.assertEqual(204, put_resp.status_code)
 
     @testcase.attr('positive')
     def test_secret_put_two_phase_high_range_unicode_character(self):
@@ -473,14 +473,14 @@ class SecretsTestCase(base.TestCase):
             **self.default_secret_create_two_phase_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         put_resp = self.behaviors.update_secret_payload(
             secret_ref=secret_ref,
             payload_content_type='application/octet-stream',
             payload_content_encoding='base64',
             payload=data)
-        self.assertEqual(put_resp.status_code, 204)
+        self.assertEqual(204, put_resp.status_code)
 
     @testcase.attr('positive')
     def test_secret_get_nones_payload_with_a_octet_stream(self):
@@ -492,13 +492,13 @@ class SecretsTestCase(base.TestCase):
         test_model.payload = base64.b64encode('abcdef')
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         get_resp = self.behaviors.get_secret(
             secret_ref,
             payload_content_type=test_model.payload_content_type,
             payload_content_encoding=test_model.payload_content_encoding)
-        self.assertEqual(get_resp.status_code, 200)
+        self.assertEqual(200, get_resp.status_code)
         self.assertIn(test_model.payload,
                       binascii.b2a_base64(get_resp.content))
 
@@ -512,7 +512,7 @@ class SecretsTestCase(base.TestCase):
         resp, secret_ref = self.behaviors.create_secret(test_model)
 
         # first, ensure that the return code is 400
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
         resp_dict = json.loads(resp.content)
 
@@ -540,18 +540,18 @@ class SecretsTestCase(base.TestCase):
         test_model.expiration = timestamp
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         # now get the secret - will be still valid
         get_resp = self.behaviors.get_secret_metadata(secret_ref)
-        self.assertEqual(get_resp.status_code, 200)
+        self.assertEqual(200, get_resp.status_code)
 
         # now wait 10 seconds
         time.sleep(10)
 
         # now get the secret - should be invalid (expired)
         resp = self.behaviors.get_secret_metadata(secret_ref)
-        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(404, resp.status_code)
 
     @utils.parameterized_dataset({
         'alphanumeric': ['1f34ds'],
@@ -569,7 +569,7 @@ class SecretsTestCase(base.TestCase):
         test_model.name = name
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
     @utils.parameterized_dataset({
         'int': [400]
@@ -585,7 +585,7 @@ class SecretsTestCase(base.TestCase):
         test_model.name = name
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @testcase.attr('positive', 'non-standard-algorithm')
     @testtools.skipIf(utils.is_kmip_enabled(),
@@ -598,7 +598,7 @@ class SecretsTestCase(base.TestCase):
         test_model.algorithm = algorithm
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
     @utils.parameterized_dataset({
         'int': [400]
@@ -611,7 +611,7 @@ class SecretsTestCase(base.TestCase):
         test_model.algorithm = algorithm
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @testtools.skipIf(utils.is_kmip_enabled(),
                       "KMIP does not support non-standard bit lengths")
@@ -631,7 +631,7 @@ class SecretsTestCase(base.TestCase):
         test_model.bit_length = bit_length
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
     @utils.parameterized_dataset({
         '128': [128],
@@ -653,7 +653,7 @@ class SecretsTestCase(base.TestCase):
         test_model.payload = secret64
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
     @utils.parameterized_dataset({
         'str_type': ['not-an-int'],
@@ -671,7 +671,7 @@ class SecretsTestCase(base.TestCase):
         test_model.bit_length = bit_length
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @utils.parameterized_dataset({
         'cbc': ['cbc'],
@@ -685,7 +685,7 @@ class SecretsTestCase(base.TestCase):
         test_model.mode = mode
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
     @utils.parameterized_dataset({
         'zero': [0],
@@ -700,7 +700,7 @@ class SecretsTestCase(base.TestCase):
         test_model.mode = mode
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @utils.parameterized_dataset({
         'text_content_type_none_encoding': {
@@ -729,13 +729,13 @@ class SecretsTestCase(base.TestCase):
         test_model.payload_content_encoding = payload_content_encoding
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         get_resp = self.behaviors.get_secret(
             secret_ref,
             payload_content_type=payload_content_type,
             payload_content_encoding=payload_content_encoding)
-        self.assertEqual(get_resp.status_code, 200)
+        self.assertEqual(200, get_resp.status_code)
 
         if payload_content_encoding == 'base64':
             self.assertIn(test_model.payload,
@@ -770,13 +770,13 @@ class SecretsTestCase(base.TestCase):
         test_model.payload_content_encoding = payload_content_encoding
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         get_resp = self.behaviors.get_secret_based_on_content_type(
             secret_ref,
             payload_content_type=payload_content_type,
             payload_content_encoding=payload_content_encoding)
-        self.assertEqual(get_resp.status_code, 200)
+        self.assertEqual(200, get_resp.status_code)
 
         if payload_content_encoding == 'base64':
             self.assertIn(test_model.payload,
@@ -863,7 +863,7 @@ class SecretsTestCase(base.TestCase):
         test_model.payload_content_encoding = payload_content_encoding
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @utils.parameterized_dataset({
         'max_payload_string': [base.TestCase.max_sized_payload]
@@ -877,7 +877,7 @@ class SecretsTestCase(base.TestCase):
         test_model.override_values(**overrides)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
     @utils.parameterized_dataset({
         'empty': [''],
@@ -898,7 +898,7 @@ class SecretsTestCase(base.TestCase):
         test_model.override_values(**overrides)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @utils.parameterized_dataset({
         'negative_five_long_expire': {
@@ -928,7 +928,7 @@ class SecretsTestCase(base.TestCase):
         test_model.expiration = timestamp
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
     @utils.parameterized_dataset({
         'malformed_timezone': {
@@ -946,7 +946,7 @@ class SecretsTestCase(base.TestCase):
         test_model.expiration = timestamp
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @testcase.skipIf(not base.conf_host_href_used, 'response href using '
                      'wsgi request instead of CONF.host_href')
@@ -963,7 +963,7 @@ class SecretsTestCase(base.TestCase):
         resp, secret_ref = self.behaviors.create_secret(
             test_model, extra_headers=changed_host_header)
 
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         # get Location field from result and assert that it is NOT the
         # malicious one.
@@ -987,7 +987,7 @@ class SecretsTestCase(base.TestCase):
         # deleting that secret during cleanup step
         resp, secret_ref = self.behaviors.create_secret(
             test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         resp = self.behaviors.get_secret_metadata(
             secret_ref, extra_headers=changed_host_header)
@@ -1058,7 +1058,7 @@ class SecretsTestCase(base.TestCase):
         headers = {"Content-Type": http_content_type}
 
         resp, secret_ref = self.behaviors.create_secret(test_model, headers)
-        self.assertEqual(resp.status_code, 415)
+        self.assertEqual(415, resp.status_code)
 
     @utils.parameterized_dataset({
         'invalid_http_content_type_characaters_latin': {
@@ -1085,7 +1085,7 @@ class SecretsTestCase(base.TestCase):
         test_model.payload_content_type = payload_content_type
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
 
 class SecretsPagingTestCase(base.PagingTestCase):

@@ -80,7 +80,7 @@ class ConsumersBaseTestCase(base.TestCase):
     def _create_a_secret(self):
         secret_model = secret_models.SecretModel(**create_secret_data)
         resp, secret_ref = self.secret_behaviors.create_secret(secret_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertIsNotNone(secret_ref)
         return secret_ref
 
@@ -108,7 +108,7 @@ class ConsumersBaseTestCase(base.TestCase):
         resp, container_ref = self.container_behaviors.create_container(
             container_model
         )
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertIsNotNone(container_ref)
 
         return container_ref
@@ -128,13 +128,13 @@ class ConsumersCertContainerTestCase(ConsumersBaseTestCase):
         resp, consumer_data = self.consumer_behaviors.create_consumer(
             self.consumer_test_model, container_ref)
 
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         self.assertIsNotNone(consumer_data)
         return consumer_data
 
     def _get_decrypted_secrets_from_container(self, container_href):
         get_resp = self.container_behaviors.get_container(container_href)
-        self.assertEqual(get_resp.status_code, 200)
+        self.assertEqual(200, get_resp.status_code)
 
         private_key_ref = get_resp.model.secret_refs[0].secret_ref
         tls_cert_ref = get_resp.model.secret_refs[1].secret_ref
@@ -186,7 +186,7 @@ class ConsumersCertContainerTestCase(ConsumersBaseTestCase):
 
         resp, container_ref = self.container_behaviors.create_container(
             test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertIsNotNone(container_ref)
         return container_ref
 
@@ -194,7 +194,7 @@ class ConsumersCertContainerTestCase(ConsumersBaseTestCase):
         resp, consumer_data = self.consumer_behaviors.delete_consumer(
             self.consumer_test_model, container_ref
         )
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         self.assertIsNotNone(consumer_data)
         self.assertNotIn(self.consumer_test_model.name, consumer_data)
         self.assertNotIn(self.consumer_test_model.URL, consumer_data)

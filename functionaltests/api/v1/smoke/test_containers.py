@@ -111,14 +111,14 @@ class ContainersTestCase(base.TestCase):
     def _create_a_secret(self):
         secret_model = secret_models.SecretModel(**create_secret_defaults_data)
         resp, secret_ref = self.secret_behaviors.create_secret(secret_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertIsNotNone(secret_ref)
 
         return secret_ref
 
     def _get_a_secret(self, secret_id):
         resp = self.client.get('secrets/{0}'.format(secret_id))
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         return resp.json()
 
     @testcase.attr('positive')
@@ -129,7 +129,7 @@ class ContainersTestCase(base.TestCase):
 
         resp, container_ref = self.behaviors.create_container(
             test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertGreater(len(container_ref), 0)
 
     @testcase.attr('positive')
@@ -139,7 +139,7 @@ class ContainersTestCase(base.TestCase):
             **create_container_defaults_data)
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertGreater(len(container_ref), 0)
 
     @testcase.attr('positive')
@@ -149,7 +149,7 @@ class ContainersTestCase(base.TestCase):
             **create_container_rsa_data)
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertGreater(len(container_ref), 0)
 
     @utils.parameterized_dataset({
@@ -172,19 +172,19 @@ class ContainersTestCase(base.TestCase):
             secret_refs.append(secret_ref['secret_ref'])
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertGreater(len(container_ref), 0)
 
         get_resp = self.behaviors.get_container(container_ref)
 
         # Verify the response data
-        self.assertEqual(get_resp.status_code, 200)
-        self.assertEqual(get_resp.model.name, test_model.name)
-        self.assertEqual(get_resp.model.container_ref, container_ref)
-        self.assertEqual(get_resp.model.type, test_model.type)
+        self.assertEqual(200, get_resp.status_code)
+        self.assertEqual(test_model.name, get_resp.model.name)
+        self.assertEqual(container_ref, get_resp.model.container_ref)
+        self.assertEqual(test_model.type, get_resp.model.type)
 
         # Verify the secret refs in the response
-        self.assertEqual(len(get_resp.model.secret_refs), 3)
+        self.assertEqual(3, len(get_resp.model.secret_refs))
         self.assertIn(get_resp.model.secret_refs[0].secret_ref, secret_refs)
         self.assertIn(get_resp.model.secret_refs[1].secret_ref, secret_refs)
         self.assertIn(get_resp.model.secret_refs[2].secret_ref, secret_refs)
@@ -199,20 +199,20 @@ class ContainersTestCase(base.TestCase):
             secret_refs.append(secret_ref['secret_ref'])
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertGreater(len(container_ref), 0)
 
         get_resp = self.behaviors.get_container(
             container_ref)
 
         # Verify the response data
-        self.assertEqual(get_resp.status_code, 200)
-        self.assertEqual(get_resp.model.name, "rsacontainer")
-        self.assertEqual(get_resp.model.container_ref, container_ref)
-        self.assertEqual(get_resp.model.type, "rsa")
+        self.assertEqual(200, get_resp.status_code)
+        self.assertEqual("rsacontainer", get_resp.model.name)
+        self.assertEqual(container_ref, get_resp.model.container_ref)
+        self.assertEqual("rsa", get_resp.model.type)
 
         # Verify the secret refs in the response
-        self.assertEqual(len(get_resp.model.secret_refs), 3)
+        self.assertEqual(3, len(get_resp.model.secret_refs))
         self.assertIn(get_resp.model.secret_refs[0].secret_ref, secret_refs)
         self.assertIn(get_resp.model.secret_refs[1].secret_ref, secret_refs)
         self.assertIn(get_resp.model.secret_refs[2].secret_ref, secret_refs)
@@ -226,7 +226,7 @@ class ContainersTestCase(base.TestCase):
             **create_container_defaults_data)
         for i in range(11):
             resp, container_ref = self.behaviors.create_container(test_model)
-            self.assertEqual(resp.status_code, 201)
+            self.assertEqual(201, resp.status_code)
             self.assertGreater(len(container_ref), 0)
 
         resp, containers, next_ref, prev_ref = self.behaviors.get_containers(
@@ -234,8 +234,8 @@ class ContainersTestCase(base.TestCase):
             offset=offset
         )
 
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(len(containers), limit)
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(limit, len(containers))
         self.assertIsNone(prev_ref)
         self.assertIsNotNone(next_ref)
 
@@ -245,9 +245,9 @@ class ContainersTestCase(base.TestCase):
             **create_container_defaults_data)
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertGreater(len(container_ref), 0)
 
         del_resp = self.behaviors.delete_container(container_ref)
-        self.assertEqual(del_resp.status_code, 204)
-        self.assertEqual(len(del_resp.content), 0)
+        self.assertEqual(204, del_resp.status_code)
+        self.assertEqual(0, len(del_resp.content))

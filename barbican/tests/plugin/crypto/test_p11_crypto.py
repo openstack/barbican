@@ -82,14 +82,14 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         dto = plugin_import.KEKMetaDTO(kek_datum)
         dto = self.plugin.bind_kek_metadata(dto)
 
-        self.assertEqual(dto.algorithm, 'AES')
-        self.assertEqual(dto.bit_length, 256)
-        self.assertEqual(dto.mode, 'CBC')
+        self.assertEqual('AES', dto.algorithm)
+        self.assertEqual(256, dto.bit_length)
+        self.assertEqual('CBC', dto.mode)
 
-        self.assertEqual(self.pkcs11.get_key_handle.call_count, 2)
-        self.assertEqual(self.pkcs11.generate_key.call_count, 1)
-        self.assertEqual(self.pkcs11.wrap_key.call_count, 1)
-        self.assertEqual(self.pkcs11.compute_hmac.call_count, 1)
+        self.assertEqual(2, self.pkcs11.get_key_handle.call_count)
+        self.assertEqual(1, self.pkcs11.generate_key.call_count)
+        self.assertEqual(1, self.pkcs11.wrap_key.call_count)
+        self.assertEqual(1, self.pkcs11.compute_hmac.call_count)
 
     def test_bind_kek_metadata_with_existing_key(self):
         kek_datum = models.KEKDatum()
@@ -97,9 +97,9 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         dto.plugin_meta = '{}'
         dto = self.plugin.bind_kek_metadata(dto)
 
-        self.assertEqual(self.pkcs11.generate_key.call_count, 0)
-        self.assertEqual(self.pkcs11.wrap_key.call_count, 0)
-        self.assertEqual(self.pkcs11.compute_hmac.call_count, 0)
+        self.assertEqual(0, self.pkcs11.generate_key.call_count)
+        self.assertEqual(0, self.pkcs11.wrap_key.call_count)
+        self.assertEqual(0, self.pkcs11.compute_hmac.call_count)
 
     def test_encrypt(self):
         payload = b'test payload'
@@ -115,15 +115,15 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
                                            kek_meta,
                                            mock.MagicMock())
 
-        self.assertEqual(response_dto.cypher_text, b'0')
+        self.assertEqual(b'0', response_dto.cypher_text)
         self.assertIn('iv', response_dto.kek_meta_extended)
 
-        self.assertEqual(self.pkcs11.get_key_handle.call_count, 2)
-        self.assertEqual(self.pkcs11.get_session.call_count, 2)
-        self.assertEqual(self.pkcs11.verify_hmac.call_count, 1)
-        self.assertEqual(self.pkcs11.unwrap_key.call_count, 1)
-        self.assertEqual(self.pkcs11.encrypt.call_count, 1)
-        self.assertEqual(self.pkcs11.return_session.call_count, 1)
+        self.assertEqual(2, self.pkcs11.get_key_handle.call_count)
+        self.assertEqual(2, self.pkcs11.get_session.call_count)
+        self.assertEqual(1, self.pkcs11.verify_hmac.call_count)
+        self.assertEqual(1, self.pkcs11.unwrap_key.call_count)
+        self.assertEqual(1, self.pkcs11.encrypt.call_count)
+        self.assertEqual(1, self.pkcs11.return_session.call_count)
 
     def test_encrypt_bad_session(self):
         self.pkcs11.get_session.return_value = mock.DEFAULT
@@ -145,12 +145,12 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
                           kek_meta,
                           mock.MagicMock())
 
-        self.assertEqual(self.pkcs11.get_key_handle.call_count, 2)
-        self.assertEqual(self.pkcs11.get_session.call_count, 2)
-        self.assertEqual(self.pkcs11.verify_hmac.call_count, 1)
-        self.assertEqual(self.pkcs11.unwrap_key.call_count, 1)
-        self.assertEqual(self.pkcs11.encrypt.call_count, 0)
-        self.assertEqual(self.pkcs11.return_session.call_count, 0)
+        self.assertEqual(2, self.pkcs11.get_key_handle.call_count)
+        self.assertEqual(2, self.pkcs11.get_session.call_count)
+        self.assertEqual(1, self.pkcs11.verify_hmac.call_count)
+        self.assertEqual(1, self.pkcs11.unwrap_key.call_count)
+        self.assertEqual(0, self.pkcs11.encrypt.call_count)
+        self.assertEqual(0, self.pkcs11.return_session.call_count)
 
     def test_decrypt(self):
         ct = b'ctct'
@@ -168,14 +168,14 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
                                  kek_meta_extended,
                                  mock.MagicMock())
 
-        self.assertEqual(pt, b'0')
+        self.assertEqual(b'0', pt)
 
-        self.assertEqual(self.pkcs11.get_key_handle.call_count, 2)
-        self.assertEqual(self.pkcs11.get_session.call_count, 2)
-        self.assertEqual(self.pkcs11.verify_hmac.call_count, 1)
-        self.assertEqual(self.pkcs11.unwrap_key.call_count, 1)
-        self.assertEqual(self.pkcs11.decrypt.call_count, 1)
-        self.assertEqual(self.pkcs11.return_session.call_count, 1)
+        self.assertEqual(2, self.pkcs11.get_key_handle.call_count)
+        self.assertEqual(2, self.pkcs11.get_session.call_count)
+        self.assertEqual(1, self.pkcs11.verify_hmac.call_count)
+        self.assertEqual(1, self.pkcs11.unwrap_key.call_count)
+        self.assertEqual(1, self.pkcs11.decrypt.call_count)
+        self.assertEqual(1, self.pkcs11.return_session.call_count)
 
     def test_decrypt_bad_session(self):
         self.pkcs11.get_session.return_value = mock.DEFAULT
@@ -199,12 +199,12 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
                           kek_meta_extended,
                           mock.MagicMock())
 
-        self.assertEqual(self.pkcs11.get_key_handle.call_count, 2)
-        self.assertEqual(self.pkcs11.get_session.call_count, 2)
-        self.assertEqual(self.pkcs11.verify_hmac.call_count, 1)
-        self.assertEqual(self.pkcs11.unwrap_key.call_count, 1)
-        self.assertEqual(self.pkcs11.decrypt.call_count, 0)
-        self.assertEqual(self.pkcs11.return_session.call_count, 0)
+        self.assertEqual(2, self.pkcs11.get_key_handle.call_count)
+        self.assertEqual(2, self.pkcs11.get_session.call_count)
+        self.assertEqual(1, self.pkcs11.verify_hmac.call_count)
+        self.assertEqual(1, self.pkcs11.unwrap_key.call_count)
+        self.assertEqual(0, self.pkcs11.decrypt.call_count)
+        self.assertEqual(0, self.pkcs11.return_session.call_count)
 
     def test_generate_symmetric(self):
         secret = models.Secret()
@@ -225,16 +225,16 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
                                                       kek_meta,
                                                       mock.MagicMock())
 
-        self.assertEqual(response_dto.cypher_text, b'0')
+        self.assertEqual(b'0', response_dto.cypher_text)
         self.assertIn('iv', response_dto.kek_meta_extended)
 
-        self.assertEqual(self.pkcs11.get_key_handle.call_count, 2)
-        self.assertEqual(self.pkcs11.get_session.call_count, 2)
-        self.assertEqual(self.pkcs11.generate_random.call_count, 1)
-        self.assertEqual(self.pkcs11.verify_hmac.call_count, 1)
-        self.assertEqual(self.pkcs11.unwrap_key.call_count, 1)
-        self.assertEqual(self.pkcs11.encrypt.call_count, 1)
-        self.assertEqual(self.pkcs11.return_session.call_count, 1)
+        self.assertEqual(2, self.pkcs11.get_key_handle.call_count)
+        self.assertEqual(2, self.pkcs11.get_session.call_count)
+        self.assertEqual(1, self.pkcs11.generate_random.call_count)
+        self.assertEqual(1, self.pkcs11.verify_hmac.call_count)
+        self.assertEqual(1, self.pkcs11.unwrap_key.call_count)
+        self.assertEqual(1, self.pkcs11.encrypt.call_count)
+        self.assertEqual(1, self.pkcs11.return_session.call_count)
 
     def test_generate_asymmetric_raises_error(self):
         self.assertRaises(NotImplementedError,
@@ -283,39 +283,39 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.pkcs11.get_key_handle.return_value = None
 
         mkek = self.plugin._generate_mkek(256, 'mkek_label_2')
-        self.assertEqual(mkek, 3)
+        self.assertEqual(3, mkek)
 
-        self.assertEqual(self.pkcs11.get_key_handle.call_count, 3)
-        self.assertEqual(self.pkcs11.generate_key.call_count, 1)
+        self.assertEqual(3, self.pkcs11.get_key_handle.call_count)
+        self.assertEqual(1, self.pkcs11.generate_key.call_count)
 
     def test_cached_generate_mkek(self):
         self.assertRaises(ex.P11CryptoPluginKeyException,
                           self.plugin._generate_mkek, 256, 'mkek_label')
-        self.assertEqual(self.pkcs11.get_key_handle.call_count, 2)
+        self.assertEqual(2, self.pkcs11.get_key_handle.call_count)
 
     def test_existing_generate_mkek(self):
         self.assertRaises(ex.P11CryptoPluginKeyException,
                           self.plugin._generate_mkek, 256, 'mkek2_label')
-        self.assertEqual(self.pkcs11.get_key_handle.call_count, 3)
+        self.assertEqual(3, self.pkcs11.get_key_handle.call_count)
 
     def test_generate_mkhk(self):
         self.pkcs11.get_key_handle.return_value = None
 
         mkhk = self.plugin._generate_mkhk(256, 'mkhk_label_2')
-        self.assertEqual(mkhk, 3)
+        self.assertEqual(3, mkhk)
 
-        self.assertEqual(self.pkcs11.get_key_handle.call_count, 3)
-        self.assertEqual(self.pkcs11.generate_key.call_count, 1)
+        self.assertEqual(3, self.pkcs11.get_key_handle.call_count)
+        self.assertEqual(1, self.pkcs11.generate_key.call_count)
 
     def test_cached_generate_mkhk(self):
         self.assertRaises(ex.P11CryptoPluginKeyException,
                           self.plugin._generate_mkhk, 256, 'hmac_label')
-        self.assertEqual(self.pkcs11.get_key_handle.call_count, 2)
+        self.assertEqual(2, self.pkcs11.get_key_handle.call_count)
 
     def test_existing_generate_mkhk(self):
         self.assertRaises(ex.P11CryptoPluginKeyException,
                           self.plugin._generate_mkhk, 256, 'mkhk2_label')
-        self.assertEqual(self.pkcs11.get_key_handle.call_count, 3)
+        self.assertEqual(3, self.pkcs11.get_key_handle.call_count)
 
     def test_create_pkcs11(self):
         def _generate_random(session, buf, length):
@@ -368,10 +368,10 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.plugin.encrypt(mock.MagicMock(), mock.MagicMock(),
                             mock.MagicMock())
 
-        self.assertEqual(self.pkcs11.get_key_handle.call_count, 2)
-        self.assertEqual(self.pkcs11.get_session.call_count, 1)
-        self.assertEqual(self.pkcs11.return_session.call_count, 0)
-        self.assertEqual(self.plugin._encrypt.call_count, 2)
+        self.assertEqual(2, self.pkcs11.get_key_handle.call_count)
+        self.assertEqual(1, self.pkcs11.get_session.call_count)
+        self.assertEqual(0, self.pkcs11.return_session.call_count)
+        self.assertEqual(2, self.plugin._encrypt.call_count)
 
     def test_reinitialize_pkcs11(self):
         pkcs11 = self.pkcs11
@@ -382,9 +382,9 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
 
         self.plugin._reinitialize_pkcs11()
 
-        self.assertEqual(self.pkcs11.finalize.call_count, 1)
-        self.assertEqual(self.plugin._create_pkcs11.call_count, 1)
-        self.assertEqual(self.plugin._configure_object_cache.call_count, 1)
+        self.assertEqual(1, self.pkcs11.finalize.call_count)
+        self.assertEqual(1, self.plugin._create_pkcs11.call_count)
+        self.assertEqual(1, self.plugin._configure_object_cache.call_count)
 
     def test_get_plugin_name(self):
         self.assertEqual(self.plugin_name, self.plugin.get_plugin_name())

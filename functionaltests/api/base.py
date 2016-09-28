@@ -128,7 +128,7 @@ class PagingTestCase(TestCase):
         detect duplicates across multiple calls)
         """
         self.assertIsNotNone(resources)
-        self.assertEqual(len(resources), expected_size)
+        self.assertEqual(expected_size, len(resources))
         self.assertEqual(next_ref_should_be_none, next_ref is None)
         self.assertEqual(prev_ref_should_be_none, prev_ref is None)
 
@@ -139,7 +139,7 @@ class PagingTestCase(TestCase):
         if len(self._all_fetched_resources):
             duplicates = [entity for entity in resources if entity in
                           self._all_fetched_resources]
-            self.assertEqual(len(duplicates), 0)
+            self.assertEqual(0, len(duplicates))
 
         # add to our running list of resource refs
         self._all_fetched_resources.extend(resources)

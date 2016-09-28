@@ -253,7 +253,7 @@ class QuotaEnforcementTestCase(base.TestCase):
             if resp.status_code == 202:
                 order_resp = self.order_behaviors.get_order(
                     order_ref, user_name=admin_b)
-                self.assertEqual(order_resp.status_code, 200)
+                self.assertEqual(200, order_resp.status_code)
                 self.order_secrets.append(order_resp.model.secret_ref)
 
     def get_default_consumer_data(self):

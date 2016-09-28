@@ -142,19 +142,19 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.lib.C_GetSessionInfo.side_effect = self._get_session_public
         sess = self.pkcs11.get_session()
 
-        self.assertEqual(sess, 1)
+        self.assertEqual(1, sess)
 
-        self.assertEqual(self.lib.C_OpenSession.call_count, 2)
-        self.assertEqual(self.lib.C_GetSessionInfo.call_count, 2)
-        self.assertEqual(self.lib.C_Login.call_count, 1)
-        self.assertEqual(self.lib.C_CloseSession.call_count, 1)
+        self.assertEqual(2, self.lib.C_OpenSession.call_count)
+        self.assertEqual(2, self.lib.C_GetSessionInfo.call_count)
+        self.assertEqual(1, self.lib.C_Login.call_count)
+        self.assertEqual(1, self.lib.C_CloseSession.call_count)
 
     def test_user_get_session(self):
         self.pkcs11.get_session()
 
-        self.assertEqual(self.lib.C_OpenSession.call_count, 2)
-        self.assertEqual(self.lib.C_GetSessionInfo.call_count, 2)
-        self.assertEqual(self.lib.C_Login.call_count, 0)
+        self.assertEqual(2, self.lib.C_OpenSession.call_count)
+        self.assertEqual(2, self.lib.C_GetSessionInfo.call_count)
+        self.assertEqual(0, self.lib.C_Login.call_count)
 
     def test_seed_random(self):
         rd = "random-data"
@@ -166,9 +166,9 @@ class WhenTestingPKCS11(utils.BaseTestCase):
     def test_generate_random(self):
         r = self.pkcs11.generate_random(32, mock.MagicMock())
 
-        self.assertEqual(r, b'0' * 32)
+        self.assertEqual(b'0' * 32, r)
 
-        self.assertEqual(self.lib.C_GenerateRandom.call_count, 2)
+        self.assertEqual(2, self.lib.C_GenerateRandom.call_count)
 
     def test_rng_self_test_fail(self):
         def _bad_generate_random(session, buf, length):
@@ -181,11 +181,11 @@ class WhenTestingPKCS11(utils.BaseTestCase):
     def test_get_key_handle_one_key(self):
         key = self.pkcs11.get_key_handle('foo', mock.MagicMock())
 
-        self.assertEqual(key, 2)
+        self.assertEqual(2, key)
 
-        self.assertEqual(self.lib.C_FindObjectsInit.call_count, 1)
-        self.assertEqual(self.lib.C_FindObjects.call_count, 1)
-        self.assertEqual(self.lib.C_FindObjectsFinal.call_count, 1)
+        self.assertEqual(1, self.lib.C_FindObjectsInit.call_count)
+        self.assertEqual(1, self.lib.C_FindObjects.call_count)
+        self.assertEqual(1, self.lib.C_FindObjectsFinal.call_count)
 
     def test_get_key_handle_no_keys(self):
         self.lib.C_FindObjects.side_effect = self._find_objects_zero
@@ -193,9 +193,9 @@ class WhenTestingPKCS11(utils.BaseTestCase):
 
         self.assertIsNone(key)
 
-        self.assertEqual(self.lib.C_FindObjectsInit.call_count, 1)
-        self.assertEqual(self.lib.C_FindObjects.call_count, 1)
-        self.assertEqual(self.lib.C_FindObjectsFinal.call_count, 1)
+        self.assertEqual(1, self.lib.C_FindObjectsInit.call_count)
+        self.assertEqual(1, self.lib.C_FindObjects.call_count)
+        self.assertEqual(1, self.lib.C_FindObjectsFinal.call_count)
 
     def test_get_key_handle_multiple_keys(self):
         self.lib.C_FindObjects.side_effect = self._find_objects_two
@@ -203,24 +203,24 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertRaises(exception.P11CryptoPluginKeyException,
                           self.pkcs11.get_key_handle, 'foo', mock.MagicMock())
 
-        self.assertEqual(self.lib.C_FindObjectsInit.call_count, 1)
-        self.assertEqual(self.lib.C_FindObjects.call_count, 1)
-        self.assertEqual(self.lib.C_FindObjectsFinal.call_count, 1)
+        self.assertEqual(1, self.lib.C_FindObjectsInit.call_count)
+        self.assertEqual(1, self.lib.C_FindObjects.call_count)
+        self.assertEqual(1, self.lib.C_FindObjectsFinal.call_count)
 
     def test_generate_session_key(self):
         key = self.pkcs11.generate_key(16, mock.MagicMock(), encrypt=True)
 
-        self.assertEqual(key, 3)
+        self.assertEqual(3, key)
 
-        self.assertEqual(self.lib.C_GenerateKey.call_count, 1)
+        self.assertEqual(1, self.lib.C_GenerateKey.call_count)
 
     def test_generate_master_key(self):
         key = self.pkcs11.generate_key(16, mock.MagicMock(), key_label='key',
                                        encrypt=True, master_key=True)
 
-        self.assertEqual(key, 3)
+        self.assertEqual(3, key)
 
-        self.assertEqual(self.lib.C_GenerateKey.call_count, 1)
+        self.assertEqual(1, self.lib.C_GenerateKey.call_count)
 
     def test_generate_key_no_flags(self):
         self.assertRaises(exception.P11CryptoPluginException,
@@ -239,9 +239,9 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertEqual(ct['ct'][:len(pt)], pt[::-1])
         self.assertGreater(len(ct['iv']), 0)
 
-        self.assertEqual(self.lib.C_GenerateRandom.call_count, 1)
-        self.assertEqual(self.lib.C_EncryptInit.call_count, 1)
-        self.assertEqual(self.lib.C_Encrypt.call_count, 1)
+        self.assertEqual(1, self.lib.C_GenerateRandom.call_count)
+        self.assertEqual(1, self.lib.C_EncryptInit.call_count)
+        self.assertEqual(1, self.lib.C_Encrypt.call_count)
 
     def test_decrypt(self):
         ct = b'FEDCBA9876543210' + b'0' * self.pkcs11.gcmtagsize
@@ -251,8 +251,8 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         pt_len = len(ct) - self.pkcs11.gcmtagsize
         self.assertEqual(pt[:pt_len], ct[:-self.pkcs11.gcmtagsize][::-1])
 
-        self.assertEqual(self.lib.C_DecryptInit.call_count, 1)
-        self.assertEqual(self.lib.C_Decrypt.call_count, 1)
+        self.assertEqual(1, self.lib.C_DecryptInit.call_count)
+        self.assertEqual(1, self.lib.C_Decrypt.call_count)
 
     def test_decrypt_with_pad(self):
         ct = b'\x03\x03\x03CBA9876543210' + b'0' * self.pkcs11.gcmtagsize
@@ -262,8 +262,8 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         pt_len = len(ct) - self.pkcs11.gcmtagsize - 3
         self.assertEqual(pt[:pt_len], ct[3:-self.pkcs11.gcmtagsize][::-1])
 
-        self.assertEqual(self.lib.C_DecryptInit.call_count, 1)
-        self.assertEqual(self.lib.C_Decrypt.call_count, 1)
+        self.assertEqual(1, self.lib.C_DecryptInit.call_count)
+        self.assertEqual(1, self.lib.C_Decrypt.call_count)
 
     def test_decrypt_with_pad_new_iv(self):
         ct = b'\x03\x03\x03CBA9876543210' + b'0' * self.pkcs11.gcmtagsize
@@ -273,8 +273,8 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         pt_len = len(ct) - self.pkcs11.gcmtagsize
         self.assertEqual(pt[:pt_len], ct[:-self.pkcs11.gcmtagsize][::-1])
 
-        self.assertEqual(self.lib.C_DecryptInit.call_count, 1)
-        self.assertEqual(self.lib.C_Decrypt.call_count, 1)
+        self.assertEqual(1, self.lib.C_DecryptInit.call_count)
+        self.assertEqual(1, self.lib.C_Decrypt.call_count)
 
     def test_decrypt_with_pad_wrong_size(self):
         ct = b'\x03\x03\x03CBA987654321' + b'0' * self.pkcs11.gcmtagsize
@@ -284,8 +284,8 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         pt_len = len(ct) - self.pkcs11.gcmtagsize
         self.assertEqual(pt[:pt_len], ct[:-self.pkcs11.gcmtagsize][::-1])
 
-        self.assertEqual(self.lib.C_DecryptInit.call_count, 1)
-        self.assertEqual(self.lib.C_Decrypt.call_count, 1)
+        self.assertEqual(1, self.lib.C_DecryptInit.call_count)
+        self.assertEqual(1, self.lib.C_Decrypt.call_count)
 
     def test_decrypt_with_pad_wrong_length(self):
         ct = b'\x03EDCBA9876543210' + b'0' * self.pkcs11.gcmtagsize
@@ -295,8 +295,8 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         pt_len = len(ct) - self.pkcs11.gcmtagsize
         self.assertEqual(pt[:pt_len], ct[:-self.pkcs11.gcmtagsize][::-1])
 
-        self.assertEqual(self.lib.C_DecryptInit.call_count, 1)
-        self.assertEqual(self.lib.C_Decrypt.call_count, 1)
+        self.assertEqual(1, self.lib.C_DecryptInit.call_count)
+        self.assertEqual(1, self.lib.C_Decrypt.call_count)
 
     def test_decrypt_with_too_large_pad(self):
         ct = b'\x11EDCBA9876543210' + b'0' * self.pkcs11.gcmtagsize
@@ -306,43 +306,43 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         pt_len = len(ct) - self.pkcs11.gcmtagsize
         self.assertEqual(pt[:pt_len], ct[:-self.pkcs11.gcmtagsize][::-1])
 
-        self.assertEqual(self.lib.C_DecryptInit.call_count, 1)
-        self.assertEqual(self.lib.C_Decrypt.call_count, 1)
+        self.assertEqual(1, self.lib.C_DecryptInit.call_count)
+        self.assertEqual(1, self.lib.C_Decrypt.call_count)
 
     def test_wrap_key(self):
         wkek = self.pkcs11.wrap_key(mock.Mock(), mock.Mock(), mock.Mock())
         self.assertGreater(len(wkek['iv']), 0)
-        self.assertEqual(wkek['wrapped_key'], b'0' * 16)
+        self.assertEqual(b'0' * 16, wkek['wrapped_key'])
 
-        self.assertEqual(self.lib.C_GenerateRandom.call_count, 2)
-        self.assertEqual(self.lib.C_WrapKey.call_count, 2)
+        self.assertEqual(2, self.lib.C_GenerateRandom.call_count)
+        self.assertEqual(2, self.lib.C_WrapKey.call_count)
 
     def test_unwrap_key(self):
         kek = self.pkcs11.unwrap_key(mock.Mock(), b'0' * 16,
                                      b'0' * 16, mock.Mock())
-        self.assertEqual(kek, 1)
+        self.assertEqual(1, kek)
 
         self.assertEqual(self.lib.C_UnwrapKey.call_count, 1)
 
     def test_compute_hmac(self):
         buf = self.pkcs11.compute_hmac(mock.MagicMock(), mock.MagicMock(),
                                        mock.MagicMock())
-        self.assertEqual(len(buf), 32)
+        self.assertEqual(32, len(buf))
 
-        self.assertEqual(self.lib.C_SignInit.call_count, 1)
-        self.assertEqual(self.lib.C_Sign.call_count, 1)
+        self.assertEqual(1, self.lib.C_SignInit.call_count)
+        self.assertEqual(1, self.lib.C_Sign.call_count)
 
     def test_verify_hmac(self):
         self.pkcs11.verify_hmac(mock.MagicMock(), mock.MagicMock(),
                                 mock.MagicMock(), mock.MagicMock())
 
-        self.assertEqual(self.lib.C_VerifyInit.call_count, 1)
-        self.assertEqual(self.lib.C_Verify.call_count, 1)
+        self.assertEqual(1, self.lib.C_VerifyInit.call_count)
+        self.assertEqual(1, self.lib.C_Verify.call_count)
 
     def test_destroy_object(self):
         self.pkcs11.destroy_object(mock.MagicMock(), mock.MagicMock())
 
-        self.assertEqual(self.lib.C_DestroyObject.call_count, 1)
+        self.assertEqual(1, self.lib.C_DestroyObject.call_count)
 
     def test_invalid_build_attributes(self):
         self.assertRaises(TypeError, self.pkcs11._build_attributes,
@@ -351,7 +351,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
     def test_finalize(self):
         self.pkcs11.finalize()
 
-        self.assertEqual(self.lib.C_Finalize.call_count, 1)
+        self.assertEqual(1, self.lib.C_Finalize.call_count)
 
     def test_check_error(self):
         self.assertIsNone(self.pkcs11._check_error(pkcs11.CKR_OK))

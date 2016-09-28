@@ -502,7 +502,7 @@ class CertificateAuthoritiesTestCase(CATestCommon):
 
         container_resp = self.container_behaviors.get_container(
             order_resp.model.container_ref)
-        self.assertEqual(container_resp.status_code, 200)
+        self.assertEqual(200, container_resp.status_code)
 
         secret_dict = {}
         for secret in container_resp.model.secret_refs:
@@ -551,7 +551,7 @@ class ListingCAsTestCase(CATestCommon):
         are specifically loaded.
         """
         (resp, cas, total, next_ref, prev_ref) = self.ca_behaviors.get_cas()
-        self.assertEqual(total, 2)
+        self.assertEqual(2, total)
 
     @depends_on_ca_plugins('dogtag')
     def test_list_dogtag_cas(self):
@@ -569,7 +569,7 @@ class ProjectCATestCase(CATestCommon):
     def test_addition_of_project_ca_affects_getting_ca_list(self):
         # Getting list of CAs should get the total configured CAs
         (resp, cas, initial_total, _, __) = self.ca_behaviors.get_cas()
-        self.assertEqual(initial_total, 2)
+        self.assertEqual(2, initial_total)
 
         # Set project CA
         ca_ref = self.get_snakeoil_root_ca_ref()
