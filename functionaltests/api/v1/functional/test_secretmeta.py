@@ -72,12 +72,12 @@ class SecretMetadataTestCase(base.TestCase):
             **self.default_secret_create_all_none_data)
 
         resp, secret_ref = self.secret_behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         meta_resp, metadata_ref = self.behaviors.create_or_update_metadata(
             secret_ref, self.valid_metadata)
 
-        self.assertEqual(meta_resp.status_code, 201)
+        self.assertEqual(201, meta_resp.status_code)
         self.assertEqual(secret_ref + '/metadata', metadata_ref)
 
     @testcase.attr('negative')
@@ -87,7 +87,7 @@ class SecretMetadataTestCase(base.TestCase):
         meta_resp, metadata_ref = self.behaviors.create_or_update_metadata(
             secret_ref, self.invalid_metadata)
 
-        self.assertEqual(meta_resp.status_code, 404)
+        self.assertEqual(404, meta_resp.status_code)
 
     @testcase.attr('positive')
     def test_secret_metadata_get(self):
@@ -95,16 +95,16 @@ class SecretMetadataTestCase(base.TestCase):
             **self.default_secret_create_all_none_data)
 
         resp, secret_ref = self.secret_behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         meta_resp, metadata_ref = self.behaviors.create_or_update_metadata(
             secret_ref, self.valid_metadata)
 
-        self.assertEqual(meta_resp.status_code, 201)
+        self.assertEqual(201, meta_resp.status_code)
         self.assertEqual(secret_ref + '/metadata', metadata_ref)
 
         get_resp = self.behaviors.get_metadata(secret_ref)
-        self.assertEqual(get_resp.status_code, 200)
+        self.assertEqual(200, get_resp.status_code)
         self.assertEqual(get_resp.content, json.dumps(self.valid_metadata))
 
     @testcase.attr('negative')
@@ -112,7 +112,7 @@ class SecretMetadataTestCase(base.TestCase):
         secret_ref = 'http://localhost:9311/secrets/%s' % uuid.uuid4().hex
 
         get_resp = self.behaviors.get_metadata(secret_ref)
-        self.assertEqual(get_resp.status_code, 404)
+        self.assertEqual(404, get_resp.status_code)
 
     @testcase.attr('positive')
     def test_secret_metadatum_create(self):
@@ -120,12 +120,12 @@ class SecretMetadataTestCase(base.TestCase):
             **self.default_secret_create_all_none_data)
 
         resp, secret_ref = self.secret_behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         meta_resp, metadata_ref = self.behaviors.create_metadatum(
             secret_ref, self.valid_metadatum)
 
-        self.assertEqual(meta_resp.status_code, 201)
+        self.assertEqual(201, meta_resp.status_code)
 
     @testcase.attr('positive')
     def test_secret_metadatum_update(self):
@@ -133,12 +133,12 @@ class SecretMetadataTestCase(base.TestCase):
             **self.default_secret_create_all_none_data)
 
         resp, secret_ref = self.secret_behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         meta_resp, metadata_ref = self.behaviors.create_metadatum(
             secret_ref, self.valid_metadatum)
 
-        self.assertEqual(meta_resp.status_code, 201)
+        self.assertEqual(201, meta_resp.status_code)
 
         updated_meta = {
             'key': self.valid_metadatum_key,
@@ -148,7 +148,7 @@ class SecretMetadataTestCase(base.TestCase):
         put_resp = self.behaviors.update_metadatum(
             secret_ref, self.valid_metadatum_key, updated_meta)
 
-        self.assertEqual(put_resp.status_code, 200)
+        self.assertEqual(200, put_resp.status_code)
 
     @testcase.attr('positive')
     def test_secret_metadatum_get(self):
@@ -156,16 +156,16 @@ class SecretMetadataTestCase(base.TestCase):
             **self.default_secret_create_all_none_data)
 
         resp, secret_ref = self.secret_behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         meta_resp, metadata_ref = self.behaviors.create_metadatum(
             secret_ref, self.valid_metadatum)
 
-        self.assertEqual(meta_resp.status_code, 201)
+        self.assertEqual(201, meta_resp.status_code)
 
         get_resp = self.behaviors.get_metadatum(secret_ref,
                                                 self.valid_metadatum_key)
-        self.assertEqual(get_resp.status_code, 200)
+        self.assertEqual(200, get_resp.status_code)
         self.assertEqual(get_resp.content, json.dumps(self.valid_metadatum,
                                                       sort_keys=True))
 
@@ -175,16 +175,16 @@ class SecretMetadataTestCase(base.TestCase):
             **self.default_secret_create_all_none_data)
 
         resp, secret_ref = self.secret_behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         meta_resp, metadata_ref = self.behaviors.create_metadatum(
             secret_ref, self.valid_metadatum)
 
-        self.assertEqual(meta_resp.status_code, 201)
+        self.assertEqual(201, meta_resp.status_code)
 
         get_resp = self.behaviors.get_metadatum(secret_ref,
                                                 'other_key')
-        self.assertEqual(get_resp.status_code, 404)
+        self.assertEqual(404, get_resp.status_code)
 
     @testcase.attr('positive')
     def test_secret_metadatum_delete(self):
@@ -192,16 +192,16 @@ class SecretMetadataTestCase(base.TestCase):
             **self.default_secret_create_all_none_data)
 
         resp, secret_ref = self.secret_behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         meta_resp, metadata_ref = self.behaviors.create_metadatum(
             secret_ref, self.valid_metadatum)
 
-        self.assertEqual(meta_resp.status_code, 201)
+        self.assertEqual(201, meta_resp.status_code)
 
         get_resp = self.behaviors.get_metadatum(secret_ref,
                                                 self.valid_metadatum_key)
-        self.assertEqual(get_resp.status_code, 200)
+        self.assertEqual(200, get_resp.status_code)
         delete_resp = self.behaviors.delete_metadatum(secret_ref,
                                                       self.valid_metadatum_key)
-        self.assertEqual(delete_resp.status_code, 204)
+        self.assertEqual(204, delete_resp.status_code)

@@ -60,7 +60,7 @@ class ConsumersTestCase(base.TestCase):
     def _create_a_secret(self):
         secret_model = secret_models.SecretModel(**create_secret_data)
         resp, secret_ref = self.secret_behaviors.create_secret(secret_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertIsNotNone(secret_ref)
 
         return secret_ref
@@ -91,7 +91,7 @@ class ConsumersTestCase(base.TestCase):
         resp, container_ref = self.container_behaviors.create_container(
             container_model
         )
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertIsNotNone(container_ref)
         self.container_ref = container_ref
 
@@ -112,7 +112,7 @@ class ConsumersTestCase(base.TestCase):
         resp, consumer_data = self.consumer_behaviors.create_consumer(
             test_model, self.container_ref)
 
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         self.assertIsNotNone(consumer_data)
 
     @testcase.attr('positive')
@@ -123,7 +123,7 @@ class ConsumersTestCase(base.TestCase):
         resp, consumer_data = self.consumer_behaviors.create_consumer(
             test_model, self.container_ref)
 
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         self.assertIsNotNone(consumer_data)
 
         # Create second consumer
@@ -133,14 +133,14 @@ class ConsumersTestCase(base.TestCase):
         resp, consumer_data = self.consumer_behaviors.create_consumer(
             test_model, self.container_ref)
 
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         self.assertIsNotNone(consumer_data)
 
         # Get list of consumers
         resp, consumers, nref, pref = self.consumer_behaviors.get_consumers(
             self.container_ref
         )
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         self.assertIn("consumername", consumers[0].name)
         self.assertIn("consumername2", consumers[1].name)
 
@@ -155,14 +155,14 @@ class ConsumersTestCase(base.TestCase):
         resp, consumer_data = self.consumer_behaviors.create_consumer(
             test_model, self.container_ref)
 
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         self.assertIsNotNone(consumer_data)
 
         # Delete the consumer
         resp, consumer_data = self.consumer_behaviors.delete_consumer(
             test_model, self.container_ref
         )
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         self.assertIsNotNone(consumer_data)
         self.assertNotIn(test_model.name, consumer_data)
         self.assertNotIn(test_model.URL, consumer_data)
@@ -174,14 +174,14 @@ class ConsumersTestCase(base.TestCase):
         resp, consumer_data = self.consumer_behaviors.create_consumer(
             test_model, self.container_ref)
 
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         self.assertIsNotNone(consumer_data)
 
         # Delete the consumer
         resp, consumer_data = self.consumer_behaviors.delete_consumer(
             test_model, self.container_ref
         )
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         self.assertIsNotNone(consumer_data)
         self.assertNotIn(test_model.name, consumer_data)
         self.assertNotIn(test_model.URL, consumer_data)
@@ -191,7 +191,7 @@ class ConsumersTestCase(base.TestCase):
         resp, consumer_data = self.consumer_behaviors.create_consumer(
             test_model, self.container_ref)
 
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         self.assertIsNotNone(consumer_data)
 
     @testcase.attr('positive')
@@ -202,7 +202,7 @@ class ConsumersTestCase(base.TestCase):
         resp, consumer_data = self.consumer_behaviors.create_consumer(
             test_model, self.container_ref)
 
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         self.assertIsNotNone(consumer_data)
 
         # Register the consumer again, without deleting it first
@@ -212,7 +212,7 @@ class ConsumersTestCase(base.TestCase):
 
         count = consumer_data.count(self.consumer_data)
 
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         self.assertIsNotNone(consumer_data)
         self.assertIn(self.consumer_data, consumer_data)
         self.assertEqual(1, count)
@@ -232,7 +232,7 @@ class ConsumersTestCase(base.TestCase):
         resp, consumer_data = self.consumer_behaviors.create_consumer(
             test_model, self.container_ref, extra_headers=changed_host_header)
 
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(200, resp.status_code)
         self.assertIsNotNone(consumer_data)
 
         # get Location field from result and assert that it is NOT the

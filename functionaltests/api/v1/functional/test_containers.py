@@ -120,7 +120,7 @@ class BaseContainerTestCase(base.TestCase):
 
         secret_model = secret_models.SecretModel(**secret_defaults_data)
         resp, secret_ref = self.secret_behaviors.create_secret(secret_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertIsNotNone(secret_ref)
 
         return secret_ref
@@ -136,7 +136,7 @@ class GenericContainersTestCase(BaseContainerTestCase):
         test_model.name = None
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
     @utils.parameterized_dataset({'0': [0], '1': [1], '50': [50]})
     @testcase.attr('positive')
@@ -151,7 +151,7 @@ class GenericContainersTestCase(BaseContainerTestCase):
             })
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
     @utils.parameterized_dataset(accepted_str_values)
     @testcase.attr('positive')
@@ -161,7 +161,7 @@ class GenericContainersTestCase(BaseContainerTestCase):
         test_model.name = name
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
     @utils.parameterized_dataset(accepted_str_values)
     @testcase.attr('positive')
@@ -174,10 +174,10 @@ class GenericContainersTestCase(BaseContainerTestCase):
         }]
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         get_resp = self.behaviors.get_container(container_ref)
-        self.assertEqual(get_resp.status_code, 200)
+        self.assertEqual(200, get_resp.status_code)
         self.assertEqual(get_resp.model.secret_refs[0].name, name)
 
     @testcase.attr('negative')
@@ -187,7 +187,7 @@ class GenericContainersTestCase(BaseContainerTestCase):
         test_model.type = 'bad_type'
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @testcase.attr('negative')
     def test_create_defaults_duplicate_secret_refs(self):
@@ -198,19 +198,19 @@ class GenericContainersTestCase(BaseContainerTestCase):
         test_model.secret_refs[2]['secret_ref'] = self.secret_ref_1
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @testcase.attr('negative')
     def test_get_non_existent_container(self):
         """A get on a container that does not exist should return a 404."""
         resp = self.behaviors.get_container("not_a_ref")
-        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(404, resp.status_code)
 
     @testcase.attr('negative')
     def test_delete_non_existent_container(self):
         """A delete on a container that does not exist should return a 404."""
         resp = self.behaviors.delete_container("not_a_ref", expected_fail=True)
-        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(404, resp.status_code)
 
     @testcase.skipIf(not base.conf_host_href_used, 'response href using '
                      'wsgi request instead of CONF.host_href')
@@ -226,7 +226,7 @@ class GenericContainersTestCase(BaseContainerTestCase):
         resp, container_ref = self.behaviors.create_container(
             test_model, extra_headers=changed_host_header)
 
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         # get Location field from result and assert that it is NOT the
         # malicious one.
@@ -248,7 +248,7 @@ class GenericContainersTestCase(BaseContainerTestCase):
         # container_href in response contains that host in url. That url is
         # used in deleting that container during cleanup step.
         resp, container_href = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         resp = self.behaviors.get_container(container_href,
                                             extra_headers=changed_host_header)
@@ -271,7 +271,7 @@ class RSAContainersTestCase(BaseContainerTestCase):
         test_model.secret_refs = [pub_key_ref, priv_key_ref]
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
     @utils.parameterized_dataset(accepted_str_values)
     @testcase.attr('positive')
@@ -281,7 +281,7 @@ class RSAContainersTestCase(BaseContainerTestCase):
         test_model.name = name
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
     @testcase.attr('negative')
     def test_create_rsa_invalid_key_names(self):
@@ -303,7 +303,7 @@ class RSAContainersTestCase(BaseContainerTestCase):
         ]
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @testcase.attr('negative')
     def test_create_rsa_no_public_key(self):
@@ -315,7 +315,7 @@ class RSAContainersTestCase(BaseContainerTestCase):
         test_model.secret_refs[0]['name'] = 'secret_1'
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @testcase.attr('negative')
     def test_create_rsa_no_private_key(self):
@@ -327,7 +327,7 @@ class RSAContainersTestCase(BaseContainerTestCase):
         test_model.secret_refs[1]['name'] = 'secret_1'
 
         resp, container_ref = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
 
     @testcase.skipIf(not base.conf_host_href_used, 'response href using '
                      'wsgi request instead of CONF.host_href')
@@ -343,7 +343,7 @@ class RSAContainersTestCase(BaseContainerTestCase):
         resp, container_ref = self.behaviors.create_container(
             test_model, extra_headers=changed_host_header)
 
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         # get Location field from result and assert that it is NOT the
         # malicious one.
@@ -365,7 +365,7 @@ class RSAContainersTestCase(BaseContainerTestCase):
         # container_href in response contains that host in url. That url is
         # used in deleting that container during cleanup step.
         resp, container_href = self.behaviors.create_container(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         resp = self.behaviors.get_container(container_href,
                                             extra_headers=changed_host_header)
@@ -400,7 +400,7 @@ class ContainersPagingTestCase(base.PagingTestCase):
 
         secret_model = secret_models.SecretModel(**secret_defaults_data)
         resp, secret_ref = self.secret_behaviors.create_secret(secret_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertIsNotNone(secret_ref)
 
         return secret_ref

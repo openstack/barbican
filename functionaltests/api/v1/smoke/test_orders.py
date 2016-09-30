@@ -83,7 +83,7 @@ class OrdersTestCase(base.TestCase):
         create_resp, order_ref = self.behaviors.create_order(test_model)
 
         # verify that the order was created successfully
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
     @testcase.attr('positive')
@@ -98,26 +98,26 @@ class OrdersTestCase(base.TestCase):
         create_resp, order_ref = self.behaviors.create_order(test_model)
 
         # verify that the order was created successfully
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
         # given the order href, retrieve the order
         order_resp = self.behaviors.get_order(order_ref)
 
         # verify that the get was successful
-        self.assertEqual(order_resp.status_code, 200)
+        self.assertEqual(200, order_resp.status_code)
         self.assertTrue(order_resp.model.status == "ACTIVE" or
                         order_resp.model.status == "PENDING")
 
         # verify the metadata
-        self.assertEqual(order_resp.model.meta.get('name'),
-                         test_model.meta.get('name'))
-        self.assertEqual(order_resp.model.meta.get('mode'),
-                         test_model.meta.get('mode'))
-        self.assertEqual(order_resp.model.meta.get('algorithm'),
-                         test_model.meta.get('algorithm'))
-        self.assertEqual(order_resp.model.meta.get('bit_length'),
-                         test_model.meta.get('bit_length'))
+        self.assertEqual(test_model.meta.get('name'),
+                         order_resp.model.meta.get('name'))
+        self.assertEqual(test_model.meta.get('mode'),
+                         order_resp.model.meta.get('mode'))
+        self.assertEqual(test_model.meta.get('algorithm'),
+                         order_resp.model.meta.get('algorithm'))
+        self.assertEqual(test_model.meta.get('bit_length'),
+                         order_resp.model.meta.get('bit_length'))
 
     @testcase.attr('positive')
     def test_order_get(self):
@@ -129,16 +129,16 @@ class OrdersTestCase(base.TestCase):
         # create an order
         test_model = order_models.OrderModel(**self.create_default_data)
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
         # get the order
         order_resp = self.behaviors.get_order(order_ref)
 
         # verify the order
-        self.assertEqual(order_resp.status_code, 200)
+        self.assertEqual(200, order_resp.status_code)
         self.assertIsNotNone(order_resp.model.order_ref)
-        self.assertEqual(order_resp.model.type, 'key')
+        self.assertEqual('key', order_resp.model.type)
         self.assertTrue(order_resp.model.status == "ACTIVE" or
                         order_resp.model.status == "PENDING")
 
@@ -149,14 +149,14 @@ class OrdersTestCase(base.TestCase):
         # create an order
         test_model = order_models.OrderModel(**self.create_default_data)
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
         # delete the order
         delete_resp = self.behaviors.delete_order(order_ref)
 
         # verify the delete
-        self.assertEqual(delete_resp.status_code, 204)
+        self.assertEqual(204, delete_resp.status_code)
 
     @testcase.attr('positive')
     def test_orders_get(self):
@@ -166,7 +166,7 @@ class OrdersTestCase(base.TestCase):
         test_model = order_models.OrderModel(**self.create_default_data)
         for i in range(0, 11):
             create_resp, order_ref = self.behaviors.create_order(test_model)
-            self.assertEqual(create_resp.status_code, 202)
+            self.assertEqual(202, create_resp.status_code)
             self.assertIsNotNone(order_ref)
 
         # get a list of orders
@@ -176,7 +176,7 @@ class OrdersTestCase(base.TestCase):
             limit=limit, offset=offset)
 
         # verify that the get for the list was successful
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(len(orders_list), limit)
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(limit, len(orders_list))
         self.assertIsNotNone(next_ref)
         self.assertIsNone(prev_ref)

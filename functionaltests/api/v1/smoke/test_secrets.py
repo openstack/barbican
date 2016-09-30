@@ -97,11 +97,11 @@ class SecretsTestCase(base.TestCase):
         test_model.expiration = None
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         resp = self.behaviors.get_secret_metadata(secret_ref)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.model.status, "ACTIVE")
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual("ACTIVE", resp.model.status)
         self.assertGreater(resp.model.secret_ref, 0)
 
     @utils.parameterized_dataset({
@@ -119,15 +119,15 @@ class SecretsTestCase(base.TestCase):
         test_model.name = name
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         resp = self.behaviors.get_secret_metadata(secret_ref)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.model.status, "ACTIVE")
-        self.assertEqual(resp.model.name, test_model.name)
-        self.assertEqual(resp.model.mode, test_model.mode)
-        self.assertEqual(resp.model.algorithm, test_model.algorithm)
-        self.assertEqual(resp.model.bit_length, test_model.bit_length)
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual("ACTIVE", resp.model.status)
+        self.assertEqual(test_model.name, resp.model.name)
+        self.assertEqual(test_model.mode, resp.model.mode)
+        self.assertEqual(test_model.algorithm, resp.model.algorithm)
+        self.assertEqual(test_model.bit_length, resp.model.bit_length)
 
     @testcase.attr('positive')
     def test_secret_create(self):
@@ -139,7 +139,7 @@ class SecretsTestCase(base.TestCase):
         test_model = secret_models.SecretModel(**self.create_default_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
         self.assertIsNotNone(secret_ref)
 
     @testcase.attr('positive')
@@ -148,10 +148,10 @@ class SecretsTestCase(base.TestCase):
         test_model = secret_models.SecretModel(**self.create_default_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         del_resp = self.behaviors.delete_secret(secret_ref)
-        self.assertEqual(del_resp.status_code, 204)
+        self.assertEqual(204, del_resp.status_code)
 
     @testcase.attr('positive')
     def test_secret_delete_minimal_secret_w_no_metadata(self):
@@ -159,10 +159,10 @@ class SecretsTestCase(base.TestCase):
         test_model = secret_models.SecretModel(**self.create_all_none_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         del_resp = self.behaviors.delete_secret(secret_ref)
-        self.assertEqual(del_resp.status_code, 204)
+        self.assertEqual(204, del_resp.status_code)
 
     @testcase.attr('positive')
     def test_secret_get(self):
@@ -170,11 +170,11 @@ class SecretsTestCase(base.TestCase):
         test_model = secret_models.SecretModel(**self.create_default_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         get_resp = self.behaviors.get_secret(secret_ref,
                                              test_model.payload_content_type)
-        self.assertEqual(get_resp.status_code, 200)
+        self.assertEqual(200, get_resp.status_code)
         self.assertIn(test_model.payload,
                       binascii.b2a_base64(get_resp.content))
 
@@ -186,7 +186,7 @@ class SecretsTestCase(base.TestCase):
         test_model = secret_models.SecretModel(**self.create_two_phase_data)
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(201, resp.status_code)
 
         # Update
         payload = "gF6+lLoF3ohA9aPRpt+6bQ=="
@@ -197,13 +197,13 @@ class SecretsTestCase(base.TestCase):
             secret_ref, payload=payload,
             payload_content_type=payload_content_type,
             payload_content_encoding=payload_content_encoding)
-        self.assertEqual(update_resp.status_code, 204)
+        self.assertEqual(204, update_resp.status_code)
 
         # Get/Check Updated
         sec_resp = self.behaviors.get_secret(
             secret_ref=secret_ref,
             payload_content_type=payload_content_type)
-        self.assertEqual(sec_resp.status_code, 200)
+        self.assertEqual(200, sec_resp.status_code)
         self.assertIn('gF6+lLoF3ohA9aPRpt+6bQ==',
                       binascii.b2a_base64(sec_resp.content))
 
@@ -223,7 +223,7 @@ class SecretsTestCase(base.TestCase):
         resp, secrets_list, next_ref, prev_ref = self.behaviors.get_secrets(
             limit=limit, offset=offset)
 
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(len(secrets_list), limit)
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(limit, len(secrets_list))
         self.assertIsNone(prev_ref)
         self.assertIsNotNone(next_ref)

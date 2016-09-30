@@ -109,7 +109,7 @@ class OrdersTestCase(base.TestCase):
         test_model.name = None
         create_resp, order_ref = self.behaviors.create_order(test_model)
 
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
     @testcase.attr('positive')
@@ -120,7 +120,7 @@ class OrdersTestCase(base.TestCase):
         test_model.name = ""
         create_resp, order_ref = self.behaviors.create_order(test_model)
 
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
     @testcase.attr('positive')
@@ -137,14 +137,14 @@ class OrdersTestCase(base.TestCase):
         create_resp, order_ref = self.behaviors.create_order(test_model)
 
         # verify that the order was created successfully
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
         # given the order href, retrieve the order
         order_resp = self.behaviors.get_order(order_ref)
 
         # verify that the get was successful
-        self.assertEqual(order_resp.status_code, 200)
+        self.assertEqual(200, order_resp.status_code)
         self.assertTrue(order_resp.model.status == "ACTIVE" or
                         order_resp.model.status == "PENDING")
 
@@ -156,7 +156,7 @@ class OrdersTestCase(base.TestCase):
         # in the newly created order.
         secret_resp = self.secret_behaviors.get_secret_metadata(
             order_resp.model.secret_ref)
-        self.assertEqual(secret_resp.status_code, 200)
+        self.assertEqual(200, secret_resp.status_code)
         self.assertEqual(secret_resp.model.name, test_model.meta['name'])
 
     @testcase.attr('negative')
@@ -169,10 +169,10 @@ class OrdersTestCase(base.TestCase):
         test_model = order_models.OrderModel(**self.create_default_data)
 
         resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(resp.status_code, 202)
+        self.assertEqual(202, resp.status_code)
 
         order_resp = self.behaviors.get_order(order_ref)
-        self.assertEqual(order_resp.status_code, 200)
+        self.assertEqual(200, order_resp.status_code)
 
         # PENDING orders may take a moment to be processed by the workers
         # when running tests with queue enabled
@@ -182,7 +182,7 @@ class OrdersTestCase(base.TestCase):
 
         secret_resp = self.secret_behaviors.get_secret(
             secret_ref, payload_content_type="text/plain")
-        self.assertEqual(secret_resp.status_code, 406)
+        self.assertEqual(406, secret_resp.status_code)
 
     @testcase.attr('positive')
     def test_order_and_secret_metadata_same(self):
@@ -195,10 +195,10 @@ class OrdersTestCase(base.TestCase):
         test_model = order_models.OrderModel(**self.create_default_data)
 
         resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(resp.status_code, 202)
+        self.assertEqual(202, resp.status_code)
 
         order_resp = self.behaviors.get_order(order_ref)
-        self.assertEqual(order_resp.status_code, 200)
+        self.assertEqual(200, order_resp.status_code)
 
         # PENDING orders may take a moment to be processed by the workers
         # when running tests with queue enabled
@@ -232,7 +232,7 @@ class OrdersTestCase(base.TestCase):
         order_resp = self.behaviors.get_order("a ref that does not exist")
 
         # verify that the order get failed
-        self.assertEqual(order_resp.status_code, 404)
+        self.assertEqual(404, order_resp.status_code)
 
     @testcase.attr('negative')
     def test_order_create_w_invalid_content_type(self):
@@ -243,7 +243,7 @@ class OrdersTestCase(base.TestCase):
         create_resp, order_ref = self.behaviors.create_order(
             test_model, extra_headers=extra_headers)
 
-        self.assertEqual(create_resp.status_code, 415)
+        self.assertEqual(415, create_resp.status_code)
         self.assertIsNone(order_ref)
 
     @testcase.attr('negative')
@@ -253,7 +253,7 @@ class OrdersTestCase(base.TestCase):
         test_model = order_models.OrderModel(**self.create_all_none_data)
         create_resp, order_ref = self.behaviors.create_order(test_model)
 
-        self.assertEqual(create_resp.status_code, 400)
+        self.assertEqual(400, create_resp.status_code)
         self.assertIsNone(order_ref)
 
     @testcase.attr('negative')
@@ -269,7 +269,7 @@ class OrdersTestCase(base.TestCase):
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
 
-        self.assertEqual(create_resp.status_code, 400)
+        self.assertEqual(400, create_resp.status_code)
         self.assertIsNone(order_ref)
 
     @testcase.attr('negative')
@@ -283,7 +283,7 @@ class OrdersTestCase(base.TestCase):
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
 
-        self.assertEqual(create_resp.status_code, 400)
+        self.assertEqual(400, create_resp.status_code)
         self.assertIsNone(order_ref)
 
     @testcase.attr('negative')
@@ -297,7 +297,7 @@ class OrdersTestCase(base.TestCase):
         # Make sure we actually get a message back
         error_msg = json.loads(resp.content).get('title')
 
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(400, resp.status_code)
         self.assertIsNotNone(error_msg)
         self.assertNotEqual(error_msg, 'None')
 
@@ -318,7 +318,7 @@ class OrdersTestCase(base.TestCase):
         test_model.meta['bit_length'] = bit_length
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
     @utils.parameterized_dataset({
@@ -341,7 +341,7 @@ class OrdersTestCase(base.TestCase):
         test_model.meta['bit_length'] = bit_length
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 400)
+        self.assertEqual(400, create_resp.status_code)
 
     @utils.parameterized_dataset({
         'array': [['array']],
@@ -357,7 +357,7 @@ class OrdersTestCase(base.TestCase):
         test_model.meta['payload'] = payload
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 400)
+        self.assertEqual(400, create_resp.status_code)
 
     @utils.parameterized_dataset({
         'alphanumeric': ['1f34ds'],
@@ -373,7 +373,7 @@ class OrdersTestCase(base.TestCase):
         test_model.meta['name'] = name
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
     @utils.parameterized_dataset({
@@ -386,7 +386,7 @@ class OrdersTestCase(base.TestCase):
         test_model.meta['name'] = name
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 400)
+        self.assertEqual(400, create_resp.status_code)
 
     @utils.parameterized_dataset({
         'cbc': ['cbc']
@@ -398,7 +398,7 @@ class OrdersTestCase(base.TestCase):
         test_model.meta['mode'] = mode
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
     @utils.parameterized_dataset({
@@ -411,7 +411,7 @@ class OrdersTestCase(base.TestCase):
         test_model.meta['mode'] = mode
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 400)
+        self.assertEqual(400, create_resp.status_code)
 
     @utils.parameterized_dataset({
         'aes': ['aes']
@@ -423,7 +423,7 @@ class OrdersTestCase(base.TestCase):
         test_model.meta['algorithm'] = algorithm
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
     @utils.parameterized_dataset({
@@ -436,7 +436,7 @@ class OrdersTestCase(base.TestCase):
         test_model.meta['algorithm'] = algorithm
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 400)
+        self.assertEqual(400, create_resp.status_code)
 
     @utils.parameterized_dataset({
         'empty': [''],
@@ -450,7 +450,7 @@ class OrdersTestCase(base.TestCase):
         test_model.meta['payload_content_type'] = pct
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
     @utils.parameterized_dataset({
@@ -467,7 +467,7 @@ class OrdersTestCase(base.TestCase):
         test_model.meta['payload_content_type'] = pct
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 400)
+        self.assertEqual(400, create_resp.status_code)
 
     @utils.parameterized_dataset({
         'negative_five_long_expire': {
@@ -494,7 +494,7 @@ class OrdersTestCase(base.TestCase):
         test_model.meta['expiration'] = timestamp
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
     @utils.parameterized_dataset({
@@ -510,7 +510,7 @@ class OrdersTestCase(base.TestCase):
         test_model.meta['expiration'] = timestamp
 
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 400)
+        self.assertEqual(400, create_resp.status_code)
 
     @testcase.skipIf(not base.conf_host_href_used, 'response href using '
                      'wsgi request instead of CONF.host_href')
@@ -526,7 +526,7 @@ class OrdersTestCase(base.TestCase):
         resp, order_ref = self.behaviors.create_order(
             test_model, extra_headers=changed_host_header)
 
-        self.assertEqual(resp.status_code, 202)
+        self.assertEqual(202, resp.status_code)
 
         # get Location field from result and assert that it is NOT the
         # malicious one.
@@ -548,7 +548,7 @@ class OrdersTestCase(base.TestCase):
         # order_ref in response contains that host in url. That url is
         # used in deleting that order during cleanup step.
         resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(resp.status_code, 202)
+        self.assertEqual(202, resp.status_code)
 
         order_resp = self.behaviors.get_order(
             order_ref, extra_headers=changed_host_header)
@@ -561,14 +561,14 @@ class OrdersTestCase(base.TestCase):
         """Tests functionality of a generated asymmetric key pair."""
         test_model = order_models.OrderModel(**self.asymmetric_data)
         create_resp, order_ref = self.behaviors.create_order(test_model)
-        self.assertEqual(create_resp.status_code, 202)
+        self.assertEqual(202, create_resp.status_code)
 
         order_resp = self.behaviors.get_order(order_ref)
-        self.assertEqual(order_resp.status_code, 200)
+        self.assertEqual(200, order_resp.status_code)
 
         container_resp = self.container_behaviors.get_container(
             order_resp.model.container_ref)
-        self.assertEqual(container_resp.status_code, 200)
+        self.assertEqual(200, container_resp.status_code)
 
         secret_dict = {}
         for secret in container_resp.model.secret_refs:
