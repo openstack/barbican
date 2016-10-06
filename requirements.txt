@@ -28,5 +28,5 @@ ldap3>=1.0.2 # LGPLv3
 keystonemiddleware!=4.5.0,>=4.2.0 # Apache-2.0
 six>=1.9.0 # MIT
 SQLAlchemy<1.1.0,>=1.0.10 # MIT
-stevedore>=1.16.0 # Apache-2.0
+stevedore>=1.17.1 # Apache-2.0
 WebOb>=1.2.3 # MIT
