@@ -129,7 +129,7 @@ class ContainersController(controllers.ACLMixin):
         if not container:
             container_not_found()
 
-        if len(remainder) == 1 and remainder[0] == 'secrets':
+        if len(remainder) > 0 and remainder[0] == 'secrets':
             return ContainersSecretsController(container), ()
 
         return ContainerController(container), remainder
