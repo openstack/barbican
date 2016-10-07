@@ -35,6 +35,7 @@ def setup_config(config_file=''):
         cfg.StrOpt('region', default='RegionOne'),
         cfg.StrOpt('service_admin', default='service-admin'),
         cfg.StrOpt('service_admin_project', default='service'),
+        cfg.StrOpt('service_admin_domain', default='Default'),
         cfg.StrOpt('service_admin_password', default='secretservice',
                    secret=True)]
     TEST_CONF.register_group(identity_group)
@@ -44,6 +45,7 @@ def setup_config(config_file=''):
     rbac_users_options = [
         cfg.StrOpt('project_a', default='project_a'),
         cfg.StrOpt('project_b', default='project_b'),
+        cfg.StrOpt('project_domain', default='Default'),
         cfg.StrOpt('admin_a', default='project_a_admin'),
         cfg.StrOpt('admin_a_password', default='barbican', secret=True),
         cfg.StrOpt('creator_a', default='project_a_creator'),

@@ -22,12 +22,14 @@ STORED_AUTHENTICATION = None
 
 class FunctionalTestAuth(auth.AuthBase):
 
-    def __init__(self, endpoint, version, username, password, project_name):
+    def __init__(self, endpoint, version, username, password,
+                 project_name, project_domain):
         self.endpoint = endpoint
         self.version = version
         self.username = username
         self.password = password
         self.project_name = project_name
+        self.project_domain = project_domain
 
         self._client = None
 
@@ -64,7 +66,9 @@ class FunctionalTestAuth(auth.AuthBase):
             self._client = v3_client.Client(
                 username=self.username,
                 password=self.password,
+                user_domain_name=self.project_domain,
                 project_name=self.project_name,
+                project_domain_name=self.project_domain,
                 auth_url=self.endpoint
             )
             return self._client.auth_token, self._client.project_id
