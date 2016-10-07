@@ -231,12 +231,12 @@ class ContainerSecret(BASE, SoftDeleteMixIn, ModelBase):
         'Container',
         backref=orm.backref('container_secrets', lazy=False,
                             primaryjoin="and_(ContainerSecret.container_id == "
-                            "Container.id, ContainerSecret.deleted!=1)"))
+                            "Container.id, ContainerSecret.deleted!=True)"))
     secrets = orm.relationship(
         'Secret',
         backref=orm.backref('container_secrets',
                             primaryjoin="and_(ContainerSecret.secret_id == "
-                            "Secret.id, ContainerSecret.deleted!=1)"))
+                            "Secret.id, ContainerSecret.deleted!=True)"))
 
     __table_args__ = (sa.UniqueConstraint('container_id', 'secret_id', 'name',
                                           name='_container_secret_name_uc'),)
