@@ -18,7 +18,7 @@ import six
 
 from barbican.common import exception as ex
 from barbican.model import models
-from barbican.plugin.crypto import crypto as plugin_import
+from barbican.plugin.crypto import base as plugin_import
 from barbican.plugin.crypto import p11_crypto
 from barbican.plugin.crypto import pkcs11
 from barbican.tests import utils

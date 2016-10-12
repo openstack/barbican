@@ -22,7 +22,7 @@ import six
 from barbican.common import config
 from barbican.common import utils
 from barbican import i18n as u
-from barbican.plugin.crypto import crypto as c
+from barbican.plugin.crypto import base as c
 
 
 CONF = config.new_config()

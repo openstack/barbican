@@ -19,7 +19,7 @@ import testtools
 
 from barbican.common import utils
 from barbican.model import models
-from barbican.plugin.crypto import crypto
+from barbican.plugin.crypto import base
 from barbican.plugin.interface import secret_store
 from barbican.plugin import store_crypto
 from barbican.tests import keys
@@ -81,11 +81,11 @@ class TestSecretStoreBase(testtools.TestCase,
             secret_store.KeySpec(),
             self.content_type
         )
-        self.response_dto = crypto.ResponseDTO(
+        self.response_dto = base.ResponseDTO(
             self.cypher_text, kek_meta_extended=self.kek_meta_extended)
-        self.private_key_dto = crypto.ResponseDTO(self.cypher_text)
-        self.public_key_dto = crypto.ResponseDTO(self.cypher_text)
-        self.passphrase_dto = crypto.ResponseDTO(self.cypher_text)
+        self.private_key_dto = base.ResponseDTO(self.cypher_text)
+        self.public_key_dto = base.ResponseDTO(self.cypher_text)
+        self.passphrase_dto = base.ResponseDTO(self.cypher_text)
 
         self.kek_meta_project_model = models.KEKDatum()
         self.kek_meta_project_model.plugin_name = 'plugin-name'
@@ -184,7 +184,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         self.assertEqual(1, encrypt_mock.call_count)
         args, kwargs = encrypt_mock.call_args
         test_encrypt_dto, test_kek_meta_dto, test_project_id = tuple(args)
-        self.assertIsInstance(test_encrypt_dto, crypto.EncryptDTO)
+        self.assertIsInstance(test_encrypt_dto, base.EncryptDTO)
         self.assertEqual(b'secret', test_encrypt_dto.unencrypted)
         self.assertEqual(self.kek_meta_dto, test_kek_meta_dto)
         self.assertEqual(self.project_id, test_project_id)
@@ -214,7 +214,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         self.assertEqual(1, encrypt_mock.call_count)
         args, kwargs = encrypt_mock.call_args
         test_encrypt_dto, test_kek_meta_dto, test_project_id = tuple(args)
-        self.assertIsInstance(test_encrypt_dto, crypto.EncryptDTO)
+        self.assertIsInstance(test_encrypt_dto, base.EncryptDTO)
         self.assertEqual(raw_content, test_encrypt_dto.unencrypted)
         self.assertEqual(self.kek_meta_dto, test_kek_meta_dto)
         self.assertEqual(self.project_id, test_project_id)
@@ -254,12 +254,12 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
             test_project_id
         ) = tuple(args)
 
-        self.assertIsInstance(test_decrypt, crypto.DecryptDTO)
+        self.assertIsInstance(test_decrypt, base.DecryptDTO)
         self.assertEqual(
             base64.b64decode(self.encrypted_datum_model.cypher_text),
             test_decrypt.encrypted)
 
-        self.assertIsInstance(test_kek_meta, crypto.KEKMetaDTO)
+        self.assertIsInstance(test_kek_meta, base.KEKMetaDTO)
         self.assertEqual(
             self.kek_meta_project_model.plugin_name, test_kek_meta.plugin_name)
 
@@ -303,7 +303,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
 
     def test_generate_symmetric_key(self):
         """test symmetric secret generation."""
-        generation_type = crypto.PluginSupportTypes.SYMMETRIC_KEY_GENERATION
+        generation_type = base.PluginSupportTypes.SYMMETRIC_KEY_GENERATION
         self._config_determine_generation_type_private_method(
             generation_type)
 
@@ -390,7 +390,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         )
 
     def test_should_raise_algorithm_not_supported_generate_symmetric_key(self):
-        generation_type = crypto.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION
+        generation_type = base.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION
         self._config_determine_generation_type_private_method(
             generation_type)
 
@@ -402,7 +402,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         )
 
     def test_should_raise_algo_not_supported_generate_asymmetric_key(self):
-        generation_type = crypto.PluginSupportTypes.SYMMETRIC_KEY_GENERATION
+        generation_type = base.PluginSupportTypes.SYMMETRIC_KEY_GENERATION
         self._config_determine_generation_type_private_method(
             generation_type)
 
@@ -417,7 +417,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         """test asymmetric secret generation with passphrase parameter."""
         self.spec_rsa.passphrase = passphrase
 
-        generation_type = crypto.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION
+        generation_type = base.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION
         self._config_determine_generation_type_private_method(
             generation_type)
 
@@ -455,7 +455,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         self.assertEqual(1, generate_mock.call_count)
         args, kwargs = generate_mock.call_args
         test_generate_dto, test_kek_meta_dto, test_project_id = tuple(args)
-        self.assertIsInstance(test_generate_dto, crypto.GenerateDTO)
+        self.assertIsInstance(test_generate_dto, base.GenerateDTO)
         self.assertEqual(alg, test_generate_dto.algorithm)
         self.assertEqual(bit_length, test_generate_dto.bit_length)
         self.assertEqual(self.kek_meta_dto, test_kek_meta_dto)
@@ -528,25 +528,25 @@ class WhenTestingStoreCryptoDetermineGenerationType(testtools.TestCase):
     """Tests store_crypto.py's _determine_generation_type() function."""
 
     def test_symmetric_algorithms(self):
-        for algorithm in crypto.PluginSupportTypes.SYMMETRIC_ALGORITHMS:
+        for algorithm in base.PluginSupportTypes.SYMMETRIC_ALGORITHMS:
             self.assertEqual(
-                crypto.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+                base.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
                 store_crypto._determine_generation_type(algorithm))
 
         # Case doesn't matter.
         self.assertEqual(
-            crypto.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
+            base.PluginSupportTypes.SYMMETRIC_KEY_GENERATION,
             store_crypto._determine_generation_type('AeS'))
 
     def test_asymmetric_algorithms(self):
-        for algorithm in crypto.PluginSupportTypes.ASYMMETRIC_ALGORITHMS:
+        for algorithm in base.PluginSupportTypes.ASYMMETRIC_ALGORITHMS:
             self.assertEqual(
-                crypto.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                base.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
                 store_crypto._determine_generation_type(algorithm))
 
         # Case doesn't matter.
         self.assertEqual(
-            crypto.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+            base.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
             store_crypto._determine_generation_type('RsA'))
 
     def test_should_raise_not_supported_no_algorithm(self):
@@ -581,7 +581,7 @@ class WhenTestingStoreCryptoFindOrCreateKekObjects(TestSecretStoreBase):
 
         # Verify returns.
         self.assertEqual(self.kek_meta_project_model, kek_model)
-        self.assertIsInstance(kek_meta_dto, crypto.KEKMetaDTO)
+        self.assertIsInstance(kek_meta_dto, base.KEKMetaDTO)
 
         # Verify the KEK repository interactions.
         self._verify_kek_repository_interactions(plugin_inst)
@@ -619,7 +619,7 @@ class WhenTestingStoreCryptoFindOrCreateKekObjects(TestSecretStoreBase):
         plugin_inst.bind_kek_metadata.return_value = None
 
         self.assertRaises(
-            crypto.CryptoKEKBindingException,
+            base.CryptoKEKBindingException,
             store_crypto._find_or_create_kek_objects,
             plugin_inst,
             self.project_model)
@@ -714,7 +714,7 @@ class WhenTestingStoreCryptoIndicateBindCompleted(TestSecretStoreBase):
     """Tests store_crypto.py's _indicate_bind_completed() function."""
 
     def test_bind_operation(self):
-        kek_meta_dto = crypto.KEKMetaDTO(self.kek_meta_project_model)
+        kek_meta_dto = base.KEKMetaDTO(self.kek_meta_project_model)
         self.kek_meta_project_model.bind_completed = False
 
         store_crypto._indicate_bind_completed(
