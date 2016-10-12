@@ -17,7 +17,7 @@ Install and configure components
 
       # apt-get update
 
-      # apt-get install
+      # apt-get install barbican-api barbican-keystone-listener barbican-worker
 
 .. include:: common_configure.rst
 
