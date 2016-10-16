@@ -77,7 +77,7 @@
 
    .. code-block:: console
 
-      $ su -s /bin/sh -c "barbican-manage db_sync" barbican
+      $ su -s /bin/sh -c "barbican-manage db upgrade" barbican
 
    .. note::
 
