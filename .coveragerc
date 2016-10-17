@@ -1,7 +1,7 @@
 [run]
 branch = True
-omit = etc/*,setup.py,*egg*,.tox/*,barbican/tests/*,*barbican/openstack/*,
-       functionaltests/*,contrib/*,
+omit = etc/*,setup.py,*egg*,.tox/*,barbican/tests/*,
+       functionaltests/*,
        barbican/model/migration/alembic_migrations/versions/*,
        barbican/plugin/dogtag.py, barbican/plugin/symantec.py
 
