@@ -326,7 +326,7 @@ HTTP Status Codes
 |      | resource.                                                                   |
 +------+-----------------------------------------------------------------------------+
 | 403  | Forbidden. The user has been authenticated, but is not authorized to        |
-|      | delete secret metdata. This can be based on the user's role.                |
+|      | delete secret metadata. This can be based on the user's role.               |
 +------+-----------------------------------------------------------------------------+
 | 404  | Not Found                                                                   |
 +------+-----------------------------------------------------------------------------+
