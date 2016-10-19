@@ -21,15 +21,11 @@ from barbican.api.controllers import quotas
 from barbican.api.controllers import secrets
 from barbican.api.controllers import secretstores
 from barbican.api.controllers import transportkeys
-from barbican.common import config
 from barbican.common import utils
 from barbican import i18n as u
 from barbican import version
 
 LOG = utils.getLogger(__name__)
-
-
-CONF = config.CONF
 
 
 MIME_TYPE_JSON = 'application/json'

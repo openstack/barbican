@@ -19,12 +19,10 @@ purposes only.
 """
 
 from barbican.api import middleware
-from barbican.common import config
 from barbican.common import utils
 from barbican import i18n as u
 
 LOG = utils.getLogger(__name__)
-CONF = config.CONF
 
 
 class SimpleFilter(middleware.Middleware):
