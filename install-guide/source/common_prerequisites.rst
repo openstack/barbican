@@ -80,8 +80,8 @@ you must create a database, service credentials, and API endpoints.
    .. code-block:: console
 
       $ openstack endpoint create --region RegionOne \
-        key-manager public http://controller:9311/v1/%\(tenant_id\)s
+        key-manager public http://controller:9311
       $ openstack endpoint create --region RegionOne \
-        key-manager internal http://controller:9311/v1/%\(tenant_id\)s
+        key-manager internal http://controller:9311
       $ openstack endpoint create --region RegionOne \
-        key-manager admin http://controller:9311/v1/%\(tenant_id\)s
+        key-manager admin http://controller:9311
