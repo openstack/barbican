@@ -82,6 +82,7 @@ class ProjectQuotasController(controllers.ACLMixin):
     @index.when(method='PUT', template='json')
     @controllers.handle_exceptions(u._('Project Quotas'))
     @controllers.enforce_rbac('project_quotas:put')
+    @controllers.enforce_content_types(['application/json'])
     def on_put(self, external_project_id, **kwargs):
         LOG.debug('=== ProjectQuotasController PUT ===')
         if not pecan.request.body:
