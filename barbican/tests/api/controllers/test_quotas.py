@@ -85,7 +85,9 @@ class WhenTestingQuotas(utils.BarbicanAPIBaseTestCase):
     def test_should_put_project_quotas(self):
         request = {'project_quotas': {}}
         resp = self.app.put_json(
-            '/project-quotas/{0}'.format(self.project_id), request)
+            '/project-quotas/{0}'.format(self.project_id),
+            request,
+            headers={'Content-Type': 'application/json'})
         self.assertEqual(204, resp.status_int)
 
     def test_should_return_bad_value_put_project_quotas(self):
@@ -97,12 +99,23 @@ class WhenTestingQuotas(utils.BarbicanAPIBaseTestCase):
             expect_errors=True)
         self.assertEqual(400, resp.status_int)
 
+    def test_should_return_bad_type_put_project_quotas(self):
+        request = {'project_quotas': {}}
+        resp = self.app.put_json(
+            '/project-quotas/{0}'.format(self.project_id),
+            request,
+            headers={'Content-Type': 'application/foo'},
+            expect_errors=True)
+        self.assertEqual(415, resp.status_int)
+
     def test_should_return_bad_data_put_project_quotas(self):
         """PUT not allowed operation for /project-quotas/{project-id}"""
         params = {'bad': 'value'}
         resp = self.app.put(
             '/project-quotas/{0}'.format(self.project_id),
-            params, expect_errors=True)
+            params,
+            headers={'Content-Type': 'application/json'},
+            expect_errors=True)
         self.assertEqual(400, resp.status_int)
 
     def test_should_return_no_payload_for_put_project_quotas(self):
@@ -110,7 +123,9 @@ class WhenTestingQuotas(utils.BarbicanAPIBaseTestCase):
         params = {}
         resp = self.app.put(
             '/project-quotas/{0}'.format(self.project_id),
-            params, expect_errors=True)
+            params,
+            headers={'Content-Type': 'application/json'},
+            expect_errors=True)
         self.assertEqual(400, resp.status_int)
 
     def test_should_delete_specific_project_quotas(self):
