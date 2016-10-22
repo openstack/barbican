@@ -173,7 +173,7 @@ restrictions are enforced on the contents name attribute.
 **RSA**
 
 This type of container is designed to hold references to only three different
-secrets. These secrets are enforced by the their accompanied names: public_key,
+secrets. These secrets are enforced by their accompanied names: public_key,
 private_key, and private_key_passphrase.
 
 **Certificate**
