@@ -534,7 +534,7 @@ class RSATestCase(base.TestCase):
                              secret_dict['private_key_passphrase'])
             private_pem = keys.get_encrypted_private_key_pem()
         else:
-            self.assertFalse('private_key_passphrase' in secret_dict)
+            self.assertNotIn('private_key_passphrase', secret_dict)
             private_pem = keys.get_private_key_pem()
         self.assertEqual(private_pem, secret_dict['private_key'])
         public_pem = keys.get_public_key_pem()
@@ -550,7 +550,7 @@ class RSATestCase(base.TestCase):
                 secret_dict['private_key'],
                 secret_dict['private_key_passphrase'])
         else:
-            self.assertFalse('private_key_passphrase' in secret_dict)
+            self.assertNotIn('private_key_passphrase', secret_dict)
             crypto.load_privatekey(
                 crypto.FILETYPE_PEM,
                 secret_dict['private_key'])

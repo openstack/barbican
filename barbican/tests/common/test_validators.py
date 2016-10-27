@@ -212,7 +212,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         result = self.validator.validate(self.secret_req)
 
         self.assertIn('expiration', result)
-        self.assertTrue(not result['expiration'])
+        self.assertFalse(result['expiration'])
 
     def test_should_raise_numeric_name(self):
         self.secret_req['name'] = 123

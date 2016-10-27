@@ -49,7 +49,7 @@ class CaTestCase(BaseTestCase):
         ca = snakeoil_ca.SnakeoilCA(cert_path=None, key_path=None,
                                     key_size=512, subject_dn=subject_dn)
         subject = ca.cert.get_subject()
-        self.assertNotEqual(ca.key, None)
+        self.assertIsNotNone(ca.key)
         self.assertEqual("Test ST", subject.ST)
         self.assertEqual("Test L", subject.L)
         self.assertEqual("Test O", subject.O)
