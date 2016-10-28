@@ -1,0 +1,7 @@
+# See openstack-infra/project-config:jenkins/data/bindep-fallback.txt
+# This is used by bindep: sudo [apt-get | yum] install $(bindep -b)
+
+mozilla-nss-devel [platform:rpm]
+nss-devel [platform:rpm]
+
+gettext [test]
