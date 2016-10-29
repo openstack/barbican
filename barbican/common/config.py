@@ -138,19 +138,19 @@ quota_opt_group = cfg.OptGroup(name='quotas',
 quota_opts = [
     cfg.IntOpt('quota_secrets',
                default=-1,
-               help='Number of secrets allowed per project'),
+               help=u._('Number of secrets allowed per project')),
     cfg.IntOpt('quota_orders',
                default=-1,
-               help='Number of orders allowed per project'),
+               help=u._('Number of orders allowed per project')),
     cfg.IntOpt('quota_containers',
                default=-1,
-               help='Number of containers allowed per project'),
+               help=u._('Number of containers allowed per project')),
     cfg.IntOpt('quota_consumers',
                default=-1,
-               help='Number of consumers allowed per project'),
+               help=u._('Number of consumers allowed per project')),
     cfg.IntOpt('quota_cas',
                default=-1,
-               help='Number of CAs allowed per project')
+               help=u._('Number of CAs allowed per project'))
 ]
 
 # Flag to indicate barbican configuration is already parsed once or not
@@ -222,10 +222,12 @@ def setup_remote_pydev_debug():
                             stdoutToServer=True,
                             stderrToServer=True)
         except Exception:
-            LOG.exception('Unable to join debugger, please '
-                          'make sure that the debugger processes is '
-                          'listening on debug-host \'%s\' debug-port \'%s\'.',
-                          CONF.pydev_debug_host, CONF.pydev_debug_port)
+            LOG.exception(u._LE('Unable to join debugger, please '
+                                'make sure that the debugger processes is '
+                                'listening on debug-host \'%(debug-host)s\' '
+                                'debug-port \'%(debug-port)s\'.'),
+                          {'debug-host': CONF.pydev_debug_host,
+                           'debug-port': CONF.pydev_debug_port})
             raise
 
 
