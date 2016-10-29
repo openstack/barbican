@@ -1,0 +1,12 @@
+---
+prelude: >
+    This release adds http_proxy_to_wsgi middleware to the pipeline.
+features:
+  - The 'http_proxy_to_wsgi' middleware can be used to help barbican
+    respond with the correct URL refs when it's put behind a TLS
+    proxy (such as HAProxy). This middleware is disabled by default,
+    but can be enabled via a configuration option in the oslo_middleware
+    group.
+upgrade:
+  - The barbican-api-paste.ini configuration file for the paste pipeline
+    was updated to add the http_proxy_to_wsgi middleware.
