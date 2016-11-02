@@ -37,7 +37,6 @@ if os.path.exists(os.path.join(possible_topdir, 'barbican', '__init__.py')):
 
 
 from barbican.common import config
-from barbican import i18n as u
 from barbican import queue
 from barbican.queue import retry_scheduler
 
@@ -57,7 +56,7 @@ def main():
         # Import and configure logging.
         log.setup(CONF, 'barbican-retry-scheduler')
         LOG = log.getLogger(__name__)
-        LOG.debug(u._("Booting up Barbican worker retry/scheduler node..."))
+        LOG.debug("Booting up Barbican worker retry/scheduler node...")
 
         # Queuing initialization (as a client only).
         queue.init(CONF, is_server_side=False)

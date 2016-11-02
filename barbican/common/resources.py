@@ -17,7 +17,6 @@
 Shared business logic.
 """
 from barbican.common import utils
-from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories
 
@@ -43,7 +42,7 @@ def get_or_create_project(project_id):
     project = project_repo.find_by_external_project_id(project_id,
                                                        suppress_exception=True)
     if not project:
-        LOG.debug(u._('Creating project for %s'), project_id)
+        LOG.debug('Creating project for %s', project_id)
         project = models.Project()
         project.external_id = project_id
         project.status = models.States.ACTIVE

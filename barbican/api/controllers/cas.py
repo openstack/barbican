@@ -439,8 +439,8 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Retrieve project preferred CA'))
     @controllers.enforce_rbac('certificate_authorities:get_preferred_ca')
     def preferred(self, external_project_id, **kw):
-        LOG.debug(u._('Start certificate_authorities get'
-                      ' project preferred CA'))
+        LOG.debug('Start certificate_authorities get'
+                  ' project preferred CA')
 
         project = res.get_or_create_project(external_project_id)
 
@@ -458,7 +458,7 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
     @controllers.enforce_rbac('certificate_authorities:post')
     @controllers.enforce_content_types(['application/json'])
     def on_post(self, external_project_id, **kwargs):
-        LOG.debug(u._('Start on_post for project-ID %s:...'),
+        LOG.debug('Start on_post for project-ID %s:...',
                   external_project_id)
 
         data = api.load_body(pecan.request, validator=self.validator)
@@ -480,7 +480,7 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
         )
 
         url = hrefs.convert_certificate_authority_to_href(new_ca.id)
-        LOG.debug(u._('URI to sub-CA is %s'), url)
+        LOG.debug('URI to sub-CA is %s', url)
 
         pecan.response.status = 201
         pecan.response.headers['Location'] = url

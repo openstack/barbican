@@ -20,7 +20,6 @@ from barbican.common import exception as excep
 from barbican.common import hrefs
 from barbican.common import resources as res
 import barbican.common.utils as utils
-from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repos
 from barbican.plugin.interface import certificate_manager as cert
@@ -355,7 +354,7 @@ def _add_private_key_to_generated_cert_container(container_id, order_model,
 def modify_certificate_request(order_model, updated_meta):
     """Update the order with CA."""
     # TODO(chellygel): Add the modify certificate request logic.
-    LOG.debug(u._('in modify_certificate_request'))
+    LOG.debug('in modify_certificate_request')
     raise NotImplementedError  # pragma: no cover
 
 

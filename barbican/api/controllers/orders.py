@@ -161,8 +161,8 @@ class OrdersController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Order(s) retrieval'))
     @controllers.enforce_rbac('orders:get')
     def on_get(self, external_project_id, **kw):
-        LOG.debug(u._('Start orders on_get '
-                      'for project-ID %s:'), external_project_id)
+        LOG.debug('Start orders on_get '
+                  'for project-ID %s:', external_project_id)
 
         result = self.order_repo.get_by_create_date(
             external_project_id, offset_arg=kw.get('offset', 0),
@@ -205,8 +205,8 @@ class OrdersController(controllers.ACLMixin):
         order_meta = body.get('meta')
         request_type = order_meta.get('request_type')
 
-        LOG.debug(u._('Processing order type %(order_type)s,'
-                      ' request type %(request_type)s') %
+        LOG.debug('Processing order type %(order_type)s,'
+                  ' request type %(request_type)s' %
                   {'order_type': order_type,
                    'request_type': request_type})
 

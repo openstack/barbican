@@ -229,8 +229,8 @@ def is_db_connection_error(args):
 
 
 def _create_engine(connection, **engine_args):
-    LOG.debug(u._('Sql connection: please check "sql_connection" property in '
-                  'barbican configuration file; Args: %s'), engine_args)
+    LOG.debug('Sql connection: please check "sql_connection" property in '
+              'barbican configuration file; Args: %s', engine_args)
 
     engine = sqlalchemy.create_engine(connection, **engine_args)
 
@@ -310,7 +310,7 @@ def clean_paging_values(offset_arg=0, limit_arg=CONF.default_limit_paging):
     except ValueError:
         limit = CONF.default_limit_paging
 
-    LOG.debug(u._("Clean paging values limit=%(limit)s, offset=%(offset)s") %
+    LOG.debug("Clean paging values limit=%(limit)s, offset=%(offset)s" %
               {'limit': limit,
                'offset': offset})
 

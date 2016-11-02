@@ -20,7 +20,6 @@ import oslo_messaging
 from oslo_service import service
 
 from barbican.common import utils
-from barbican import i18n as u
 from barbican import queue
 from barbican.tasks import keystone_consumer
 
@@ -70,10 +69,10 @@ class NotificationTask(object):
 
         """
 
-        LOG.debug(u._("Input keystone event publisher_id = %s"), publisher_id)
-        LOG.debug(u._("Input keystone event payload = %s"), payload)
-        LOG.debug(u._("Input keystone event type = %s"), event_type)
-        LOG.debug(u._("Input keystone event metadata = %s"), metadata)
+        LOG.debug("Input keystone event publisher_id = %s", publisher_id)
+        LOG.debug("Input keystone event payload = %s", payload)
+        LOG.debug("Input keystone event type = %s", event_type)
+        LOG.debug("Input keystone event metadata = %s", metadata)
         project_id = self._parse_payload_for_project_id(payload)
         resource_type, operation_type = self._parse_event_type(event_type)
         LOG.debug('Keystone Event: resource type={0}, operation type={1}, '

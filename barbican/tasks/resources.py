@@ -241,7 +241,7 @@ class BeginTypeOrder(BaseTask):
 
     def __init__(self):
         super(BeginTypeOrder, self).__init__()
-        LOG.debug(u._('Creating BeginTypeOrder task processor'))
+        LOG.debug('Creating BeginTypeOrder task processor')
         self.project_repo = rep.get_project_repository()
         self.helper = _OrderTaskHelper()
 
@@ -286,7 +286,7 @@ class BeginTypeOrder(BaseTask):
                 project
             )
             order.secret_id = new_secret.id
-            LOG.debug(u._("...done creating keys order's secret."))
+            LOG.debug("...done creating keys order's secret.")
         elif order_type == models.OrderType.ASYMMETRIC:
             # Create asymmetric Secret
             new_container = plugin.generate_asymmetric_secret(
@@ -295,14 +295,14 @@ class BeginTypeOrder(BaseTask):
                               'application/octet-stream'),
                 project)
             order.container_id = new_container.id
-            LOG.debug(u._("...done creating asymmetric order's secret."))
+            LOG.debug("...done creating asymmetric order's secret.")
         elif order_type == models.OrderType.CERTIFICATE:
             # Request a certificate
             new_container = cert.issue_certificate_request(
                 order, project, result_follow_on)
             if new_container:
                 order.container_id = new_container.id
-            LOG.debug(u._("...done requesting a certificate."))
+            LOG.debug("...done requesting a certificate.")
         else:
             raise NotImplementedError(
                 u._('Order type "{order_type}" not implemented.').format(
@@ -327,7 +327,7 @@ class UpdateOrder(BaseTask):
 
     def __init__(self):
         super(UpdateOrder, self).__init__()
-        LOG.debug(u._('Creating UpdateOrder task processor'))
+        LOG.debug('Creating UpdateOrder task processor')
         self.helper = _OrderTaskHelper()
 
     def retrieve_entity(self, *args, **kwargs):
@@ -349,13 +349,13 @@ class UpdateOrder(BaseTask):
         if order_type == models.OrderType.CERTIFICATE:
             # Update a certificate request
             cert.modify_certificate_request(order, updated_meta)
-            LOG.debug(u._("...done updating a certificate order."))
+            LOG.debug("...done updating a certificate order.")
         else:
             raise NotImplementedError(
                 u._('Order type "{order_type}" not implemented.').format(
                     order_type=order_type))
 
-        LOG.debug(u._("...done updating order."))
+        LOG.debug("...done updating order.")
 
     def handle_error(self, order, status, message, exception,
                      *args, **kwargs):
@@ -374,7 +374,7 @@ class CheckCertificateStatusOrder(BaseTask):
         return u._('Check Certificate Order Status')
 
     def __init__(self):
-        LOG.debug(u._('Creating CheckCertificateStatusOrder task processor'))
+        LOG.debug('Creating CheckCertificateStatusOrder task processor')
         self.project_repo = rep.get_project_repository()
         self.helper = _OrderTaskHelper()
 
@@ -410,7 +410,7 @@ class CheckCertificateStatusOrder(BaseTask):
             order, project, result_follow_on)
         if new_container:
             order.container_id = new_container.id
-        LOG.debug(u._("...done checking status of a certificate order."))
+        LOG.debug("...done checking status of a certificate order.")
 
         return result_follow_on
 

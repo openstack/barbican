@@ -56,7 +56,7 @@ class PreferredSecretStoreController(controllers.ACLMixin):
     """Handles preferred secret store set/removal requests."""
 
     def __init__(self, secret_store):
-        LOG.debug(u._('=== Creating PreferredSecretStoreController ==='))
+        LOG.debug('=== Creating PreferredSecretStoreController ===')
         self.secret_store = secret_store
         self.proj_store_repo = repo.get_project_secret_store_repository()
 
@@ -68,8 +68,8 @@ class PreferredSecretStoreController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Removing preferred secret store'))
     @controllers.enforce_rbac('secretstore_preferred:delete')
     def on_delete(self, external_project_id, **kw):
-        LOG.debug(u._('Start: Remove project preferred secret-store for store'
-                      ' id %s'), self.secret_store.id)
+        LOG.debug('Start: Remove project preferred secret-store for store'
+                  ' id %s', self.secret_store.id)
 
         project = res.get_or_create_project(external_project_id)
 
@@ -87,8 +87,8 @@ class PreferredSecretStoreController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Setting preferred secret store'))
     @controllers.enforce_rbac('secretstore_preferred:post')
     def on_post(self, external_project_id, **kwargs):
-        LOG.debug(u._('Start: Set project preferred secret-store for store '
-                      'id %s'), self.secret_store.id)
+        LOG.debug('Start: Set project preferred secret-store for store '
+                  'id %s', self.secret_store.id)
 
         project = res.get_or_create_project(external_project_id)
 
@@ -102,7 +102,7 @@ class SecretStoreController(controllers.ACLMixin):
     """Handles secret store retrieval requests."""
 
     def __init__(self, secret_store):
-        LOG.debug(u._('=== Creating SecretStoreController ==='))
+        LOG.debug('=== Creating SecretStoreController ===')
         self.secret_store = secret_store
 
     @pecan.expose()
@@ -160,8 +160,8 @@ class SecretStoresController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('List available secret stores'))
     @controllers.enforce_rbac('secretstores:get')
     def on_get(self, external_project_id, **kw):
-        LOG.debug(u._('Start SecretStoresController on_get: listing secret '
-                      'stores'))
+        LOG.debug('Start SecretStoresController on_get: listing secret '
+                  'stores')
         if not utils.is_multiple_backends_enabled():
             _multiple_backends_not_enabled()
 
@@ -182,7 +182,7 @@ class SecretStoresController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Retrieve global default secret store'))
     @controllers.enforce_rbac('secretstores:get_global_default')
     def get_global_default(self, external_project_id, **kw):
-        LOG.debug(u._('Start secret-stores get global default secret store'))
+        LOG.debug('Start secret-stores get global default secret store')
 
         if not utils.is_multiple_backends_enabled():
             _multiple_backends_not_enabled()
@@ -197,7 +197,7 @@ class SecretStoresController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Retrieve project preferred store'))
     @controllers.enforce_rbac('secretstores:get_preferred')
     def get_preferred(self, external_project_id, **kw):
-        LOG.debug(u._('Start secret-stores get preferred secret store'))
+        LOG.debug('Start secret-stores get preferred secret store')
 
         if not utils.is_multiple_backends_enabled():
             _multiple_backends_not_enabled()
