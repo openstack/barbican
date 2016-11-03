@@ -2,6 +2,11 @@
 Certificates API - User Guide
 ******************************
 
+.. warning::
+
+   DEPRECATION WARNING: The Certificates API has been deprecated and will
+   be removed in the P release.
+
 Barbican will be used to manage the lifecycle of x509 certificates covering
 operations such as initial certificate issuance, certificate re-issuance,
 certificate renewal and certificate revocation.  At present, only the issuance of

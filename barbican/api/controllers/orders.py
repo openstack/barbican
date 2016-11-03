@@ -10,6 +10,7 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
+from oslo_log import versionutils
 import pecan
 
 from barbican import api
@@ -25,6 +26,9 @@ from barbican.model import repositories as repo
 from barbican.queue import client as async_client
 
 LOG = utils.getLogger(__name__)
+
+_DEPRECATION_MSG = u._LW('%s has been deprecated in the Newton release. It '
+                         'will be removed in the Pike release.')
 
 
 def _order_not_found():
@@ -211,6 +215,8 @@ class OrdersController(controllers.ACLMixin):
                    'request_type': request_type})
 
         if order_type == models.OrderType.CERTIFICATE:
+            msg = _DEPRECATION_MSG % "Certificate Order Resource"
+            versionutils.report_deprecated_feature(LOG, msg)
             validators.validate_ca_id(project.id, body.get('meta'))
             if request_type == 'stored-key':
                 container_ref = order_meta.get('container_ref')

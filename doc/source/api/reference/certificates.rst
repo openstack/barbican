@@ -2,6 +2,11 @@
 Certificates API - Reference
 ****************************
 
+.. warning::
+
+   DEPRECATION WARNING: The Certificates API has been deprecated and will
+   be removed in the P release.
+
 .. _reference_post_certificate_orders:
 
 POST /v1/orders
@@ -149,4 +154,3 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 415  | Unsupported media type                                                      |
 +------+-----------------------------------------------------------------------------+
-
