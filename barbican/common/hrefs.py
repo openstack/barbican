@@ -57,7 +57,7 @@ def convert_certificate_authority_to_href(ca_id):
 
 
 def convert_secret_stores_to_href(secret_store_id):
-    """Convert the ca ID to a HATEOAS-style href."""
+    """Convert the secret-store ID to a HATEOAS-style href."""
     return convert_resource_id_to_href('secret-stores', secret_store_id)
 
 
