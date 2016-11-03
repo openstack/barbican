@@ -30,6 +30,9 @@ if is_service_enabled barbican; then
         fi
         configure_barbicanclient
 
+        # Configure Cinder, Nova and Glance to use Barbican
+        configure_core_services
+
         if is_service_enabled key; then
             create_barbican_accounts
         fi
@@ -52,3 +55,17 @@ if is_service_enabled barbican; then
     fi
 fi
 
+# Set the correct config options in Nova, Cinder and Glance
+function configure_core_services {
+    if is_service_enabled n-cpu; then
+        iniset $NOVA_CONF key_manager api_class 'castellan.key_manager.barbican_key_manager.BarbicanKeyManager'
+    fi
+
+    if is_service_enabled c-vol; then
+        iniset $CINDER_CONF key_manager api_class 'castellan.key_manager.barbican_key_manager.BarbicanKeyManager'
+    fi
+
+    if is_service_enabled g-api; then
+        iniset $GLANCE_API_CONF key_manager api_class 'castellan.key_manager.barbican_key_manager.BarbicanKeyManager'
+    fi
+}
