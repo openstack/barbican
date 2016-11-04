@@ -32,7 +32,6 @@ from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
 
-LOG = utils.getLogger(__name__)
 BASE = declarative.declarative_base()
 ERROR_REASON_LENGTH = 255
 SUB_STATUS_LENGTH = 36
