@@ -233,35 +233,33 @@ def setup_remote_pydev_debug():
 
 def set_middleware_defaults():
     """Update default configuration options for oslo.middleware."""
-    # CORS Defaults
-    # TODO(krotscheck): Update with https://review.openstack.org/#/c/285368/
-    cfg.set_defaults(cors.CORS_OPTS,
-                     allow_headers=['X-Auth-Token',
-                                    'X-Openstack-Request-Id',
-                                    'X-Project-Id',
-                                    'X-Identity-Status',
-                                    'X-User-Id',
-                                    'X-Storage-Token',
-                                    'X-Domain-Id',
-                                    'X-User-Domain-Id',
-                                    'X-Project-Domain-Id',
-                                    'X-Roles'],
-                     expose_headers=['X-Auth-Token',
-                                     'X-Openstack-Request-Id',
-                                     'X-Project-Id',
-                                     'X-Identity-Status',
-                                     'X-User-Id',
-                                     'X-Storage-Token',
-                                     'X-Domain-Id',
-                                     'X-User-Domain-Id',
-                                     'X-Project-Domain-Id',
-                                     'X-Roles'],
-                     allow_methods=['GET',
-                                    'PUT',
-                                    'POST',
-                                    'DELETE',
-                                    'PATCH']
-                     )
+    cors.set_defaults(
+        allow_headers=['X-Auth-Token',
+                       'X-Openstack-Request-Id',
+                       'X-Project-Id',
+                       'X-Identity-Status',
+                       'X-User-Id',
+                       'X-Storage-Token',
+                       'X-Domain-Id',
+                       'X-User-Domain-Id',
+                       'X-Project-Domain-Id',
+                       'X-Roles'],
+        expose_headers=['X-Auth-Token',
+                        'X-Openstack-Request-Id',
+                        'X-Project-Id',
+                        'X-Identity-Status',
+                        'X-User-Id',
+                        'X-Storage-Token',
+                        'X-Domain-Id',
+                        'X-User-Domain-Id',
+                        'X-Project-Domain-Id',
+                        'X-Roles'],
+        allow_methods=['GET',
+                       'PUT',
+                       'POST',
+                       'DELETE',
+                       'PATCH']
+    )
 
 CONF = new_config()
 LOG = logging.getLogger(__name__)
