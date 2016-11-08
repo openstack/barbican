@@ -2,6 +2,11 @@
 Certificates Authorities API - Reference
 ****************************************
 
+.. warning::
+
+   DEPRECATION WARNING: The Certificates Authorities API has been deprecated
+   and will be removed in the P release.
+
 Barbican provides an API to interact with certificate authorities (CAs).  For
 an introduction to CAs and how Barbican manages them, see the
 `Certificate Authorities User's Guide <http://developer.openstack.org/api-guide/key-manager/cas.html>`__.

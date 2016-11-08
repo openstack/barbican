@@ -1,6 +1,11 @@
 Setting up Certificate Plugins
 ==============================
 
+.. warning::
+
+   DEPRECATION WARNING: The Certificates Plugin has been deprecated and will
+   be removed in the P release.
+
 Using the SnakeOil CA plugin
 ----------------------------
 

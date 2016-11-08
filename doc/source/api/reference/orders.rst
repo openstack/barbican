@@ -2,6 +2,11 @@
 Orders API - Reference
 **********************
 
+.. warning::
+
+  DEPRECATION WARNING: The Certificates Order resource has been deprecated
+  and will be removed in the P release.
+
 .. _get_orders:
 
 GET /v1/orders

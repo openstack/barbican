@@ -12,6 +12,7 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
+from oslo_log import versionutils
 import pecan
 from six.moves.urllib import parse
 
@@ -29,6 +30,9 @@ from barbican.model import repositories as repo
 from barbican.tasks import certificate_resources as cert_resources
 
 LOG = utils.getLogger(__name__)
+
+_DEPRECATION_MSG = u._LW('%s has been deprecated in the Newton release. It '
+                         'will be removed in the Pike release.')
 
 
 def _certificate_authority_not_found():
@@ -67,6 +71,8 @@ class CertificateAuthorityController(controllers.ACLMixin):
 
     def __init__(self, ca):
         LOG.debug('=== Creating CertificateAuthorityController ===')
+        msg = _DEPRECATION_MSG % "Certificate Authorities API"
+        versionutils.report_deprecated_feature(LOG, msg)
         self.ca = ca
         self.ca_repo = repo.get_ca_repository()
         self.project_ca_repo = repo.get_project_ca_repository()
@@ -256,6 +262,8 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
 
     def __init__(self):
         LOG.debug('Creating CertificateAuthoritiesController')
+        msg = _DEPRECATION_MSG % "Certificate Authorities API"
+        versionutils.report_deprecated_feature(LOG, msg)
         self.ca_repo = repo.get_ca_repository()
         self.project_ca_repo = repo.get_project_ca_repository()
         self.preferred_ca_repo = repo.get_preferred_ca_repository()

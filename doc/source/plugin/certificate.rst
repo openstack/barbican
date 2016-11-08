@@ -4,6 +4,11 @@
 Certificate Plugin Development
 ==============================
 
+.. warning::
+
+   DEPRECATION WARNING: The Certificates Plugin has been deprecated and will
+   be removed in the P release.
+
 This guide describes how to develop a custom certificate plugin for use by
 Barbican.
 
@@ -21,8 +26,6 @@ plugins:
 
 3. A DigiCert plugin able to interact with the DigiCert CA service, with a
    similar interactions as with Symantec.
-
-
 
 
 ``certificate_manager`` Module
