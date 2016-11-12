@@ -78,7 +78,7 @@ class CaTestCase(BaseTestCase):
         self.assertEqual(
             ca.chain,
             crypto.dump_certificate(crypto.FILETYPE_PEM, ca.cert))
-        self.assertNotEqual(None, ca.key)
+        self.assertIsNotNone(ca.key)
         self.assertEqual("Test ST", subject.ST)
         self.assertEqual("Test L", subject.L)
         self.assertEqual("Test O", subject.O)

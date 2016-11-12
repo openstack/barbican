@@ -169,7 +169,7 @@ class SecretStoresTestCase(base.TestCase):
         self.assertEqual(expected_return, resp.status_code)
         if expected_return == 200:
             self._validate_secret_store_fields(json_data)
-            self.assertEqual(True, json_data['global_default'])
+            self.assertTrue(json_data['global_default'])
 
     @testcase.skipIf(base.conf_multiple_backends_enabled, 'executed only when '
                      'multiple backends support is NOT enabled in barbican '

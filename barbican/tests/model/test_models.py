@@ -654,7 +654,7 @@ class WhenCreatingNewSecretStores(utils.BaseTestCase):
         self.assertEqual(store_plugin, ss.store_plugin)
         self.assertEqual(crypto_plugin, ss.crypto_plugin)
         self.assertEqual(name, ss.name)
-        self.assertEqual(True, ss.global_default)
+        self.assertTrue(ss.global_default)
         self.assertEqual(models.States.ACTIVE, ss.status)
 
     def test_new_secret_stores_required_input_only(self):
@@ -692,8 +692,7 @@ class WhenCreatingNewSecretStores(utils.BaseTestCase):
                          ss.to_dict_fields()['store_plugin'])
         self.assertEqual(crypto_plugin,
                          ss.to_dict_fields()['crypto_plugin'])
-        self.assertEqual(True,
-                         ss.to_dict_fields()['global_default'])
+        self.assertTrue(ss.to_dict_fields()['global_default'])
         self.assertEqual(models.States.ACTIVE,
                          ss.to_dict_fields()['status'])
         self.assertEqual(name, ss.to_dict_fields()['name'])
