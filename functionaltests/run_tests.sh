@@ -32,7 +32,7 @@ coverage combine
 coverage report -m
 
 # run the tests in parallel
-SKIP=^\(\?\!\.\*\(ProjectQuotasPagingTestCase\|QuotaEnforcementTestCase\|ListingCAsTestCase\|ProjectCATestCase\|GlobalPreferredCATestCase\|CertificateAuthoritiesTestCase\)\)
+SKIP=^\(\?\!\.\*\(ProjectQuotasPagingTestCase\|QuotaEnforcementTestCase\|ListingCAsTestCase\|ProjectCATestCase\|GlobalPreferredCATestCase\|CertificateAuthoritiesTestCase\|ListingSecretsTestCase\)\)
 testr init
 testr run $SKIP --parallel --subunit | subunit-trace --no-failure-debug -f
 retval=$(($retval || $?))

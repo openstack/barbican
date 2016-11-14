@@ -379,6 +379,7 @@ class SecretsController(controllers.ACLMixin):
             alg=kw.get('alg'),
             mode=kw.get('mode'),
             bits=bits,
+            secret_type=kw.get('secret_type'),
             suppress_exception=True,
             acl_only=kw.get('acl_only'),
             user_id=user_id,

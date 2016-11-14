@@ -131,24 +131,35 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
             response_model_type=secret_models.SecretModel,
             use_auth=use_auth, user_name=user_name)
 
-    def get_secrets(self, limit=10, offset=0, filter=None,
-                    extra_headers=None, omit_headers=None, use_auth=True,
-                    user_name=None):
+    def get_secrets(self, limit=10, offset=0, extra_headers=None,
+                    omit_headers=None, use_auth=True, user_name=None,
+                    name=None, alg=None, mode=None, bits=None,
+                    secret_type=None):
         """Handles getting a list of secrets.
 
         :param limit: limits number of returned secrets
         :param offset: represents how many records to skip before retrieving
                        the list
-        :param filter: optional filter to limit the returned secrets to
-                        those whose name matches the filter.
         :param extra_headers: Optional HTTP headers to add to the request
         :param omit_headers: headers to delete before making the request
         :param use_auth: Boolean for whether to send authentication headers
         :param user_name: The user name used to list the secrets
+        :param alg: Optional algorithm for filtering secrets
+        :param mode: Optional mode for filtering secrets
+        :param bits: Optional bit length for filtering secrets
+        :param secret_type: Optional secret type for filtering secrets
         """
         params = {'limit': limit, 'offset': offset}
-        if filter:
-            params['name'] = filter
+        if name:
+            params['name'] = name
+        if alg:
+            params['alg'] = alg
+        if mode:
+            params['mode'] = mode
+        if bits:
+            params['bits'] = bits
+        if secret_type:
+            params['secret_type'] = secret_type
         resp = self.client.get('secrets', params=params,
                                extra_headers=extra_headers,
                                omit_headers=omit_headers,
