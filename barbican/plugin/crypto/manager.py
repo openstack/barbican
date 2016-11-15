@@ -19,7 +19,6 @@ from barbican.common import config
 from barbican.common import utils
 from barbican import i18n as u
 from barbican.plugin.crypto import base
-from barbican.plugin.interface import secret_store
 from barbican.plugin.util import multiple_backends
 from barbican.plugin.util import utils as plugin_utils
 
@@ -94,7 +93,14 @@ class _CryptoPluginManager(named.NamedExtensionManager):
                     type_needed, algorithm, bit_length, mode):
                 break
         else:
-            raise secret_store.SecretStorePluginNotFound()
+            operation = (u._("store or generate a secret of type {secret_type}"
+                             " with algorithm {algorithm}, bit length "
+                             "{bit_length}, and mode {mode}")
+                         .format(secret_type=type_needed,
+                                 algorithm=algorithm,
+                                 bit_length=bit_length,
+                                 mode=mode))
+            raise base.CryptoPluginUnsupportedOperation(operation=operation)
 
         return generating_plugin
 
@@ -115,7 +121,9 @@ class _CryptoPluginManager(named.NamedExtensionManager):
             if plugin_name == plugin_name_for_store:
                 break
         else:
-            raise secret_store.SecretStorePluginNotFound()
+            operation = (u._("retrieve a secret from plugin: {plugin}")
+                         .format(plugin=plugin_name_for_store))
+            raise base.CryptoPluginUnsupportedOperation(operation=operation)
 
         return decrypting_plugin
 

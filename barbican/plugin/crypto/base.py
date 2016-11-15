@@ -42,6 +42,16 @@ class CryptoPrivateKeyFailureException(exception.BarbicanException):
         )
 
 
+class CryptoPluginUnsupportedOperation(exception.BarbicanException):
+    """Raised when no crypto plugins support the operation."""
+    def __init__(self, operation):
+        message = (
+            u._('Could not find an enabled crypto plugin backend '
+                'that supports the requested operation: {operation}')
+            .format(operation=operation))
+        super(CryptoPluginUnsupportedOperation, self).__init__(message)
+
+
 # TODO(john-wood-w) Need to harmonize these lower-level constants with the
 #  higher level constants in secret_store.py.
 class PluginSupportTypes(object):

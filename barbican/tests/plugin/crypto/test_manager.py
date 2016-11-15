@@ -17,7 +17,6 @@ import threading
 from barbican.common import utils as common_utils
 from barbican.plugin.crypto import base
 from barbican.plugin.crypto import manager as cm
-from barbican.plugin.interface import secret_store
 from barbican.tests import utils
 
 
@@ -73,7 +72,7 @@ class WhenTestingManager(utils.BaseTestCase):
     def test_raises_error_with_wrong_plugin_type(self):
         self.plugin_returned.supports.return_value = False
         self.assertRaises(
-            secret_store.SecretStorePluginNotFound,
+            base.CryptoPluginUnsupportedOperation,
             self.manager.get_plugin_store_generate,
             self.plugin_type)
 
@@ -91,7 +90,7 @@ class WhenTestingManager(utils.BaseTestCase):
 
     def test_raises_error_with_wrong_plugin_name(self):
         self.assertRaises(
-            secret_store.SecretStorePluginNotFound,
+            base.CryptoPluginUnsupportedOperation,
             self.manager.get_plugin_retrieve,
             'other-name')
 
