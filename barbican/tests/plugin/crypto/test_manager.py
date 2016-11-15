@@ -15,7 +15,7 @@ import mock
 import threading
 
 from barbican.common import utils as common_utils
-from barbican.plugin.crypto import crypto
+from barbican.plugin.crypto import base
 from barbican.plugin.crypto import manager as cm
 from barbican.plugin.interface import secret_store
 from barbican.tests import utils
@@ -37,7 +37,7 @@ class WhenTestingManager(utils.BaseTestCase):
         super(WhenTestingManager, self).setUp()
 
         self.plugin_returned = mock.MagicMock()
-        self.plugin_type = crypto.PluginSupportTypes.ENCRYPT_DECRYPT
+        self.plugin_type = base.PluginSupportTypes.ENCRYPT_DECRYPT
         self.plugin_returned.supports.return_value = True
         self.plugin_name = common_utils.generate_fullname_for(
             self.plugin_returned)
@@ -80,7 +80,7 @@ class WhenTestingManager(utils.BaseTestCase):
     def test_raises_error_with_no_active_store_generate_plugin(self):
         self.manager.extensions = []
         self.assertRaises(
-            crypto.CryptoPluginNotFound,
+            base.CryptoPluginNotFound,
             self.manager.get_plugin_store_generate,
             self.plugin_type)
 
@@ -98,7 +98,7 @@ class WhenTestingManager(utils.BaseTestCase):
     def test_raises_error_with_no_active_plugin_name(self):
         self.manager.extensions = []
         self.assertRaises(
-            crypto.CryptoPluginNotFound,
+            base.CryptoPluginNotFound,
             self.manager.get_plugin_retrieve,
             self.plugin_name)
 

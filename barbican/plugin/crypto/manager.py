@@ -18,7 +18,7 @@ import threading
 from barbican.common import config
 from barbican.common import utils
 from barbican import i18n as u
-from barbican.plugin.crypto import crypto
+from barbican.plugin.crypto import base
 from barbican.plugin.interface import secret_store
 from barbican.plugin.util import multiple_backends
 from barbican.plugin.util import utils as plugin_utils
@@ -87,7 +87,7 @@ class _CryptoPluginManager(named.NamedExtensionManager):
             self, project_id=project_id, existing_plugin_name=None)
 
         if not active_plugins:
-            raise crypto.CryptoPluginNotFound()
+            raise base.CryptoPluginNotFound()
 
         for generating_plugin in active_plugins:
             if generating_plugin.supports(
@@ -108,7 +108,7 @@ class _CryptoPluginManager(named.NamedExtensionManager):
         active_plugins = plugin_utils.get_active_plugins(self)
 
         if not active_plugins:
-            raise crypto.CryptoPluginNotFound()
+            raise base.CryptoPluginNotFound()
 
         for decrypting_plugin in active_plugins:
             plugin_name = utils.generate_fullname_for(decrypting_plugin)

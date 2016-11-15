@@ -16,7 +16,7 @@
 import mock
 
 from barbican.common import utils as common_utils
-from barbican.plugin.crypto import crypto
+from barbican.plugin.crypto import base
 from barbican.plugin.crypto import manager as cm
 from barbican.plugin.crypto import p11_crypto
 from barbican.plugin.interface import secret_store as str
@@ -285,7 +285,7 @@ class TestSecretStorePluginManagerMultipleBackend(
 
             # check pkcs11 crypto is matched as its defined first.
             crypto_plugin = cm.get_manager().get_plugin_store_generate(
-                crypto.PluginSupportTypes.ENCRYPT_DECRYPT)
+                base.PluginSupportTypes.ENCRYPT_DECRYPT)
             self.assertIsInstance(crypto_plugin, p11_crypto.P11CryptoPlugin)
 
     def test_plugin_created_kmip_default_mulitple_backend_conf(self):

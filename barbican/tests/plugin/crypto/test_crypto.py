@@ -23,7 +23,7 @@ import mock
 import six
 
 from barbican.model import models
-from barbican.plugin.crypto import crypto as plugin
+from barbican.plugin.crypto import base as plugin
 from barbican.plugin.crypto import simple_crypto as simple
 from barbican.tests import utils
 

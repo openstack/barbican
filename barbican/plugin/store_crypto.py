@@ -17,7 +17,7 @@ from barbican.common import config
 from barbican.common import utils
 from barbican.model import models
 from barbican.model import repositories
-from barbican.plugin.crypto import crypto
+from barbican.plugin.crypto import base
 from barbican.plugin.crypto import manager
 from barbican.plugin.interface import secret_store as sstore
 
@@ -74,7 +74,7 @@ class StoreCryptoAdapterPlugin(object):
 
         # Find HSM-style 'crypto' plugin.
         encrypting_plugin = manager.get_manager().get_plugin_store_generate(
-            crypto.PluginSupportTypes.ENCRYPT_DECRYPT,
+            base.PluginSupportTypes.ENCRYPT_DECRYPT,
             project_id=context.project_model.id
         )
 
@@ -85,7 +85,7 @@ class StoreCryptoAdapterPlugin(object):
         # Secrets are base64 encoded before being passed to the secret stores.
         secret_bytes = base64.b64decode(secret_dto.secret)
 
-        encrypt_dto = crypto.EncryptDTO(secret_bytes)
+        encrypt_dto = base.EncryptDTO(secret_bytes)
 
         # Enhance the context with content_type, This is needed to build
         # datum_model to store
@@ -123,11 +123,11 @@ class StoreCryptoAdapterPlugin(object):
             datum_model.kek_meta_project.plugin_name)
 
         # wrap the KEKDatum instance in our DTO
-        kek_meta_dto = crypto.KEKMetaDTO(datum_model.kek_meta_project)
+        kek_meta_dto = base.KEKMetaDTO(datum_model.kek_meta_project)
 
         # Convert from text-based storage format to binary.
         encrypted = base64.b64decode(datum_model.cypher_text)
-        decrypt_dto = crypto.DecryptDTO(encrypted)
+        decrypt_dto = base.DecryptDTO(encrypted)
 
         # Decrypt the secret.
         secret = decrypting_plugin.decrypt(decrypt_dto,
@@ -158,7 +158,7 @@ class StoreCryptoAdapterPlugin(object):
 
         # Find HSM-style 'crypto' plugin.
         plugin_type = _determine_generation_type(key_spec.alg)
-        if crypto.PluginSupportTypes.SYMMETRIC_KEY_GENERATION != plugin_type:
+        if base.PluginSupportTypes.SYMMETRIC_KEY_GENERATION != plugin_type:
             raise sstore.SecretAlgorithmNotSupportedException(key_spec.alg)
         generating_plugin = manager.get_manager().get_plugin_store_generate(
             plugin_type,
@@ -172,9 +172,9 @@ class StoreCryptoAdapterPlugin(object):
             generating_plugin, context.project_model)
 
         # Create an encrypted datum instance and add the created cypher text.
-        generate_dto = crypto.GenerateDTO(key_spec.alg,
-                                          key_spec.bit_length,
-                                          key_spec.mode, None)
+        generate_dto = base.GenerateDTO(key_spec.alg,
+                                        key_spec.bit_length,
+                                        key_spec.mode, None)
         # Create the encrypted meta.
         response_dto = generating_plugin.generate_symmetric(
             generate_dto, kek_meta_dto, context.project_model.external_id)
@@ -195,7 +195,7 @@ class StoreCryptoAdapterPlugin(object):
         """
 
         plugin_type = _determine_generation_type(key_spec.alg)
-        if crypto.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION != plugin_type:
+        if base.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION != plugin_type:
             raise sstore.SecretAlgorithmNotSupportedException(key_spec.alg)
 
         generating_plugin = manager.get_manager().get_plugin_store_generate(
@@ -206,9 +206,9 @@ class StoreCryptoAdapterPlugin(object):
         kek_datum_model, kek_meta_dto = _find_or_create_kek_objects(
             generating_plugin, context.project_model)
 
-        generate_dto = crypto.GenerateDTO(key_spec.alg,
-                                          key_spec.bit_length,
-                                          None, key_spec.passphrase)
+        generate_dto = base.GenerateDTO(key_spec.alg,
+                                        key_spec.bit_length,
+                                        None, key_spec.passphrase)
 
         # Create the encrypted meta.
         private_key_dto, public_key_dto, passwd_dto = (
@@ -264,12 +264,12 @@ def _determine_generation_type(algorithm):
     if not algorithm:
         raise sstore.SecretAlgorithmNotSupportedException(algorithm)
 
-    symmetric_algs = crypto.PluginSupportTypes.SYMMETRIC_ALGORITHMS
-    asymmetric_algs = crypto.PluginSupportTypes.ASYMMETRIC_ALGORITHMS
+    symmetric_algs = base.PluginSupportTypes.SYMMETRIC_ALGORITHMS
+    asymmetric_algs = base.PluginSupportTypes.ASYMMETRIC_ALGORITHMS
     if algorithm.lower() in symmetric_algs:
-        return crypto.PluginSupportTypes.SYMMETRIC_KEY_GENERATION
+        return base.PluginSupportTypes.SYMMETRIC_KEY_GENERATION
     elif algorithm.lower() in asymmetric_algs:
-        return crypto.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION
+        return base.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION
     else:
         raise sstore.SecretAlgorithmNotSupportedException(algorithm)
 
@@ -285,14 +285,14 @@ def _find_or_create_kek_objects(plugin_inst, project_model):
     # Bind to the plugin's key management.
     # TODO(jwood): Does this need to be in a critical section? Should the
     # bind operation just be declared idempotent in the plugin contract?
-    kek_meta_dto = crypto.KEKMetaDTO(kek_datum_model)
+    kek_meta_dto = base.KEKMetaDTO(kek_datum_model)
     if not kek_datum_model.bind_completed:
         kek_meta_dto = plugin_inst.bind_kek_metadata(kek_meta_dto)
 
         # By contract, enforce that plugins return a
         # (typically modified) DTO.
         if kek_meta_dto is None:
-            raise crypto.CryptoKEKBindingException(full_plugin_name)
+            raise base.CryptoKEKBindingException(full_plugin_name)
 
         _indicate_bind_completed(kek_meta_dto, kek_datum_model)
         kek_repo.save(kek_datum_model)

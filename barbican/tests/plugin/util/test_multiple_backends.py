@@ -21,7 +21,7 @@ from barbican.common import config
 from barbican.common import exception
 from barbican.model import models
 from barbican.model import repositories
-from barbican.plugin.crypto import crypto
+from barbican.plugin.crypto import base
 from barbican.plugin.crypto import manager as cm
 from barbican.plugin.crypto import p11_crypto
 from barbican.plugin.crypto import simple_crypto
@@ -485,7 +485,7 @@ class TestPluginsGenerateStoreAPIMultipleBackend(
 
         if dataset['default_crypto_class']:
             crypto_plugin = cm.get_manager().get_plugin_store_generate(
-                crypto.PluginSupportTypes.ENCRYPT_DECRYPT)
+                base.PluginSupportTypes.ENCRYPT_DECRYPT)
             self.assertIsInstance(crypto_plugin,
                                   dataset['default_crypto_class'])
 
@@ -499,9 +499,9 @@ class TestPluginsGenerateStoreAPIMultipleBackend(
             self.assertEqual(global_secret_store.name,
                              plugin_found.get_plugin_name())
             # error raised for no crypto plugin
-            self.assertRaises(crypto.CryptoPluginNotFound,
+            self.assertRaises(base.CryptoPluginNotFound,
                               cm.get_manager().get_plugin_store_generate,
-                              crypto.PluginSupportTypes.ENCRYPT_DECRYPT)
+                              base.PluginSupportTypes.ENCRYPT_DECRYPT)
 
     @test_utils.parameterized_dataset(backend_dataset)
     def test_project_preferred_default_plugin(self, dataset):
@@ -543,7 +543,7 @@ class TestPluginsGenerateStoreAPIMultipleBackend(
         self.assertIsInstance(plugin_found,
                               store_crypto.StoreCryptoAdapterPlugin)
         crypto_plugin = cm.get_manager().get_plugin_store_generate(
-            crypto.PluginSupportTypes.ENCRYPT_DECRYPT, project_id=project1.id)
+            base.PluginSupportTypes.ENCRYPT_DECRYPT, project_id=project1.id)
         self.assertIsInstance(crypto_plugin, p11_crypto.P11CryptoPlugin)
 
         # For project2, verify store plugin instance is kmip specific
@@ -553,8 +553,8 @@ class TestPluginsGenerateStoreAPIMultipleBackend(
         self.assertIsInstance(plugin_found, kss.KMIPSecretStore)
 
         self.assertRaises(
-            crypto.CryptoPluginNotFound, cm_manager.get_plugin_store_generate,
-            crypto.PluginSupportTypes.ENCRYPT_DECRYPT, project_id=project2.id)
+            base.CryptoPluginNotFound, cm_manager.get_plugin_store_generate,
+            base.PluginSupportTypes.ENCRYPT_DECRYPT, project_id=project2.id)
 
         # For project3, verify store and crypto plugin instance used are db
         # backend specific
@@ -563,7 +563,7 @@ class TestPluginsGenerateStoreAPIMultipleBackend(
         self.assertIsInstance(plugin_found,
                               store_crypto.StoreCryptoAdapterPlugin)
         crypto_plugin = cm.get_manager().get_plugin_store_generate(
-            crypto.PluginSupportTypes.ENCRYPT_DECRYPT, project_id=project3.id)
+            base.PluginSupportTypes.ENCRYPT_DECRYPT, project_id=project3.id)
         self.assertIsInstance(crypto_plugin, simple_crypto.SimpleCryptoPlugin)
 
         # Make sure for project with no preferred setting, uses global default
