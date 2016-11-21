@@ -1,3 +1,16 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 """Fixing composite primary keys and adding indexes to foreign key
 
 Revision ID: 1c0f328bfce0
@@ -21,36 +34,64 @@ def _drop_constraint(ctx, name, table):
 
 
 def upgrade():
-    op.create_index(op.f('ix_certificate_authority_metadata_ca_id'), 'certificate_authority_metadata', ['ca_id'], unique=False)
-    op.create_index(op.f('ix_certificate_authority_metadata_key'), 'certificate_authority_metadata', ['key'], unique=False)
-    op.create_index(op.f('ix_container_consumer_metadata_container_id'), 'container_consumer_metadata', ['container_id'], unique=False)
-    op.create_index(op.f('ix_container_secret_container_id'), 'container_secret', ['container_id'], unique=False)
-    op.create_index(op.f('ix_container_secret_secret_id'), 'container_secret', ['secret_id'], unique=False)
-    op.create_index(op.f('ix_containers_project_id'), 'containers', ['project_id'], unique=False)
-    op.create_index(op.f('ix_encrypted_data_kek_id'), 'encrypted_data', ['kek_id'], unique=False)
-    op.create_index(op.f('ix_encrypted_data_secret_id'), 'encrypted_data', ['secret_id'], unique=False)
-    op.create_index(op.f('ix_kek_data_project_id'), 'kek_data', ['project_id'], unique=False)
-    op.create_index(op.f('ix_order_barbican_metadata_order_id'), 'order_barbican_metadata', ['order_id'], unique=False)
-    op.create_index(op.f('ix_order_plugin_metadata_order_id'), 'order_plugin_metadata', ['order_id'], unique=False)
-    op.create_index(op.f('ix_order_retry_tasks_order_id'), 'order_retry_tasks', ['order_id'], unique=False)
-    op.create_index(op.f('ix_orders_container_id'), 'orders', ['container_id'], unique=False)
-    op.create_index(op.f('ix_orders_project_id'), 'orders', ['project_id'], unique=False)
-    op.create_index(op.f('ix_orders_secret_id'), 'orders', ['secret_id'], unique=False)
+    op.create_index(op.f('ix_certificate_authority_metadata_ca_id'),
+                    'certificate_authority_metadata', ['ca_id'], unique=False)
+    op.create_index(op.f('ix_certificate_authority_metadata_key'),
+                    'certificate_authority_metadata', ['key'], unique=False)
+    op.create_index(op.f('ix_container_consumer_metadata_container_id'),
+                    'container_consumer_metadata', ['container_id'],
+                    unique=False)
+    op.create_index(op.f('ix_container_secret_container_id'),
+                    'container_secret', ['container_id'], unique=False)
+    op.create_index(op.f('ix_container_secret_secret_id'),
+                    'container_secret', ['secret_id'], unique=False)
+    op.create_index(op.f('ix_containers_project_id'),
+                    'containers', ['project_id'], unique=False)
+    op.create_index(op.f('ix_encrypted_data_kek_id'),
+                    'encrypted_data', ['kek_id'], unique=False)
+    op.create_index(op.f('ix_encrypted_data_secret_id'),
+                    'encrypted_data', ['secret_id'], unique=False)
+    op.create_index(op.f('ix_kek_data_project_id'),
+                    'kek_data', ['project_id'], unique=False)
+    op.create_index(op.f('ix_order_barbican_metadata_order_id'),
+                    'order_barbican_metadata', ['order_id'], unique=False)
+    op.create_index(op.f('ix_order_plugin_metadata_order_id'),
+                    'order_plugin_metadata', ['order_id'], unique=False)
+    op.create_index(op.f('ix_order_retry_tasks_order_id'),
+                    'order_retry_tasks', ['order_id'], unique=False)
+    op.create_index(op.f('ix_orders_container_id'),
+                    'orders', ['container_id'], unique=False)
+    op.create_index(op.f('ix_orders_project_id'),
+                    'orders', ['project_id'], unique=False)
+    op.create_index(op.f('ix_orders_secret_id'),
+                    'orders', ['secret_id'], unique=False)
 
     ctx = op.get_context()
-    _drop_constraint(ctx, 'preferred_certificate_authorities_ibfk_1', 'preferred_certificate_authorities')
+    _drop_constraint(ctx, 'preferred_certificate_authorities_ibfk_1',
+                     'preferred_certificate_authorities')
 
     op.alter_column('preferred_certificate_authorities', 'ca_id',
-               existing_type=sa.VARCHAR(length=36),
-               nullable=False)
+                    existing_type=sa.VARCHAR(length=36),
+                    nullable=False)
 
-    op.create_foreign_key('preferred_certificate_authorities_fk', 'preferred_certificate_authorities',
+    op.create_foreign_key('preferred_certificate_authorities_fk',
+                          'preferred_certificate_authorities',
                           'certificate_authorities', ['ca_id'], ['id'])
 
-    op.create_index(op.f('ix_preferred_certificate_authorities_ca_id'), 'preferred_certificate_authorities', ['ca_id'], unique=False)
-    op.create_index(op.f('ix_preferred_certificate_authorities_project_id'), 'preferred_certificate_authorities', ['project_id'], unique=True)
-    op.create_index(op.f('ix_project_certificate_authorities_ca_id'), 'project_certificate_authorities', ['ca_id'], unique=False)
-    op.create_index(op.f('ix_project_certificate_authorities_project_id'), 'project_certificate_authorities', ['project_id'], unique=False)
-    op.create_index(op.f('ix_project_secret_project_id'), 'project_secret', ['project_id'], unique=False)
-    op.create_index(op.f('ix_project_secret_secret_id'), 'project_secret', ['secret_id'], unique=False)
-    op.create_index(op.f('ix_secret_store_metadata_secret_id'), 'secret_store_metadata', ['secret_id'], unique=False)
+    op.create_index(op.f('ix_preferred_certificate_authorities_ca_id'),
+                    'preferred_certificate_authorities', ['ca_id'],
+                    unique=False)
+    op.create_index(op.f('ix_preferred_certificate_authorities_project_id'),
+                    'preferred_certificate_authorities', ['project_id'],
+                    unique=True)
+    op.create_index(op.f('ix_project_certificate_authorities_ca_id'),
+                    'project_certificate_authorities', ['ca_id'], unique=False)
+    op.create_index(op.f('ix_project_certificate_authorities_project_id'),
+                    'project_certificate_authorities', ['project_id'],
+                    unique=False)
+    op.create_index(op.f('ix_project_secret_project_id'),
+                    'project_secret', ['project_id'], unique=False)
+    op.create_index(op.f('ix_project_secret_secret_id'),
+                    'project_secret', ['secret_id'], unique=False)
+    op.create_index(op.f('ix_secret_store_metadata_secret_id'),
+                    'secret_store_metadata', ['secret_id'], unique=False)

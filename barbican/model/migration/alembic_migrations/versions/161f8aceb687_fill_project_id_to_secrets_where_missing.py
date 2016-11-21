@@ -1,3 +1,16 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 """fill project_id to secrets where missing
 
 Revision ID: 161f8aceb687
@@ -44,7 +57,7 @@ def upgrade():
     op.execute(secrets.update().
                values({'project_id': project_secret.c.project_id}).
                where(secrets.c.id == project_secret.c.secret_id).
-               where(secrets.c.project_id == None)
+               where(secrets.c.project_id == None)  # noqa
                )
 
     # Need to drop foreign key constraint before mysql will allow changes
@@ -58,5 +71,3 @@ def upgrade():
     # Create foreign key constraint again
     _create_constraint(ctx, 'secrets_project_fk', 'secrets', 'projects',
                        ['project_id'], ['id'])
-
-
