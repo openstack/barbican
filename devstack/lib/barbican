@@ -352,23 +352,21 @@ function create_barbican_accounts {
     #
     # Setup Barbican Endpoint
     #
-    if [[ "$KEYSTONE_CATALOG_BACKEND" = 'sql' ]]; then
-        BARBICAN_SERVICE=$(openstack service create \
-            --name barbican \
-            --description "Barbican Service" \
-            'key-manager' \
-            | grep " id " | get_field 2)
-        openstack endpoint create \
-            --os-identity-api-version 3 \
-            --region RegionOne \
-            $BARBICAN_SERVICE \
-            public "http://$SERVICE_HOST:9311"
-        openstack endpoint create \
-            --os-identity-api-version 3 \
-            --region RegionOne \
-            $BARBICAN_SERVICE \
-            internal "http://$SERVICE_HOST:9311"
-    fi
+    BARBICAN_SERVICE=$(openstack service create \
+        --name barbican \
+        --description "Barbican Service" \
+        'key-manager' \
+        | grep " id " | get_field 2)
+    openstack endpoint create \
+        --os-identity-api-version 3 \
+        --region RegionOne \
+        $BARBICAN_SERVICE \
+        public "http://$SERVICE_HOST:9311"
+    openstack endpoint create \
+        --os-identity-api-version 3 \
+        --region RegionOne \
+        $BARBICAN_SERVICE \
+        internal "http://$SERVICE_HOST:9311"
 
 }
 
