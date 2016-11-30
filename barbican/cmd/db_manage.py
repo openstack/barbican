@@ -137,7 +137,7 @@ class DatabaseManager(object):
 
     def upgrade(self, args):
         """Process the 'upgrade' Alembic command."""
-        LOG.debug(u._("Performing database schema migration..."))
+        LOG.debug("Performing database schema migration...")
         commands.upgrade(to_version=args.version, sql_url=args.dburl)
 
     def history(self, args):

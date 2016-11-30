@@ -36,7 +36,7 @@ def cleanup_unassociated_projects():
     This looks for projects that have no children entries on the dependent
     tables and removes them.
     """
-    LOG.debug(u._("Cleaning up unassociated projects"))
+    LOG.debug("Cleaning up unassociated projects")
     session = repo.get_session()
     project_children_tables = [models.Order,
                                models.KEKDatum,
@@ -48,7 +48,7 @@ def cleanup_unassociated_projects():
                                models.ProjectCertificateAuthority,
                                models.ProjectQuotas]
     children_names = map(lambda child: child.__name__, project_children_tables)
-    LOG.debug(u._("Children tables for Project table being checked: %s"),
+    LOG.debug("Children tables for Project table being checked: %s",
               str(children_names))
     sub_query = session.query(models.Project.id)
     for model in project_children_tables:
@@ -82,8 +82,8 @@ def cleanup_parent_with_no_child(parent_model, child_model,
     :param threshold_date: soft deletions older than this date will be removed
     :returns: total number of entries removed from database
     """
-    LOG.debug(u._("Cleaning soft deletes for %(parent_name)s without "
-                  "a child in %(child_name)s") %
+    LOG.debug("Cleaning soft deletes for %(parent_name)s without "
+              "a child in %(child_name)s" %
               {'parent_name': parent_model.__name__,
                'child_name': child_model.__name__})
     session = repo.get_session()
@@ -113,7 +113,7 @@ def cleanup_softdeletes(model, threshold_date=None):
     :param threshold_date: soft deletions older than this date will be removed
     :returns: total number of entries removed from the database
     """
-    LOG.debug(u._("Cleaning soft deletes: %s"), model.__name__)
+    LOG.debug("Cleaning soft deletes: %s", model.__name__)
     session = repo.get_session()
     query = session.query(model)
     query = query.filter_by(deleted=True)
@@ -135,8 +135,8 @@ def cleanup_all(threshold_date=None):
     :param threshold_date: soft deletions older than this date will be removed
     :returns: total number of entries removed from the database
     """
-    LOG.debug(u._("Cleaning up soft deletions where deletion date"
-                  " is older than %s"), str(threshold_date))
+    LOG.debug("Cleaning up soft deletions where deletion date"
+              " is older than %s", str(threshold_date))
     total = 0
     total += cleanup_softdeletes(models.TransportKey,
                                  threshold_date=threshold_date)
@@ -247,7 +247,7 @@ def _soft_delete_expired_secret_children(threshold_date):
                        models.EncryptedDatum,
                        models.ContainerSecret]
     children_names = map(lambda child: child.__name__, secret_children)
-    LOG.debug(u._("Children tables for Secret table being checked: %s"),
+    LOG.debug("Children tables for Secret table being checked: %s",
               str(children_names))
     session = repo.get_session()
     update_count = 0
@@ -288,7 +288,7 @@ def soft_delete_expired_secrets(threshold_date):
     """
     # Note: sqllite does not support multiple table updates so
     # several db updates are used instead
-    LOG.debug(u._('Soft deleting expired secrets older than: %s'),
+    LOG.debug('Soft deleting expired secrets older than: %s',
               str(threshold_date))
     update_count = _soft_delete_expired_secrets(threshold_date)
 

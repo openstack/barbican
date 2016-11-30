@@ -37,7 +37,7 @@ class KeystoneEventConsumer(resources.BaseTask):
 
     def __init__(self, db_start=rep.start, db_commit=rep.commit,
                  db_rollback=rep.rollback, db_clear=rep.clear):
-        LOG.debug(u._('Creating KeystoneEventConsumer task processor'))
+        LOG.debug('Creating KeystoneEventConsumer task processor')
 
         self.db_start = db_start
         self.db_commit = db_commit

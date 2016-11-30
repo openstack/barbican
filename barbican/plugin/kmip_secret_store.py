@@ -203,7 +203,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         }
         self.pkcs1_only = conf.kmip_plugin.pkcs1_only
         if self.pkcs1_only:
-            LOG.debug(u._("KMIP secret store only supports PKCS#1"))
+            LOG.debug("KMIP secret store only supports PKCS#1")
             del self.valid_alg_dict[ss.KeyAlgorithm.DSA]
         self.kmip_barbican_alg_map = {
             enums.CryptographicAlgorithm.AES: ss.KeyAlgorithm.AES,
@@ -270,7 +270,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :returns: dictionary holding key_id returned by server
         :raises: SecretGeneralException, SecretAlgorithmNotSupportedException
         """
-        LOG.debug(u._("Starting symmetric key generation with KMIP plugin"))
+        LOG.debug("Starting symmetric key generation with KMIP plugin")
         if not self.generate_supports(key_spec):
             raise ss.SecretAlgorithmNotSupportedException(
                 key_spec.alg)
@@ -284,11 +284,11 @@ class KMIPSecretStore(ss.SecretStoreBase):
         algorithm = self._get_kmip_algorithm(key_spec.alg.lower())
         try:
             with self.client:
-                LOG.debug(u._("Opened connection to KMIP client for secret "
-                              "generation"))
+                LOG.debug("Opened connection to KMIP client for secret "
+                          "generation")
                 uuid = self.client.create(algorithm, key_spec.bit_length)
-                LOG.debug(u._("SUCCESS: Symmetric key generated with "
-                              "uuid: %s"), uuid)
+                LOG.debug("SUCCESS: Symmetric key generated with "
+                          "uuid: %s", uuid)
                 return {KMIPSecretStore.KEY_UUID: uuid}
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
@@ -306,7 +306,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :raises: SecretGeneralException, SecretAlgorithmNotSupportedException
                  KMIPSecretStoreActionNotSupported
         """
-        LOG.debug(u._("Starting asymmetric key generation with KMIP plugin"))
+        LOG.debug("Starting asymmetric key generation with KMIP plugin")
         if not self.generate_supports(key_spec):
             raise ss.SecretAlgorithmNotSupportedException(
                 key_spec.alg)
@@ -324,13 +324,13 @@ class KMIPSecretStore(ss.SecretStoreBase):
 
         try:
             with self.client:
-                LOG.debug(u._("Opened connection to KMIP client for "
-                              "asymmetric secret generation"))
+                LOG.debug("Opened connection to KMIP client for "
+                          "asymmetric secret generation")
                 public_uuid, private_uuid = self.client.create_key_pair(
                     algorithm, length)
-                LOG.debug(u._("SUCCESS: Asymmetric key pair generated with "
-                              "public key uuid: %(public_uuid)s and "
-                              "private key uuid: %(private_uuid)s") %
+                LOG.debug("SUCCESS: Asymmetric key pair generated with "
+                          "public key uuid: %(public_uuid)s and "
+                          "private key uuid: %(private_uuid)s" %
                           {'public_uuid': public_uuid,
                            'private_uuid': private_uuid})
                 private_key_metadata = {KMIPSecretStore.KEY_UUID: private_uuid}
@@ -352,7 +352,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :returns: Dictionary holding the key_uuid assigned by KMIP
         :raises: SecretGeneralException, SecretAlgorithmNotSupportedException
         """
-        LOG.debug(u._("Starting secret storage with KMIP plugin"))
+        LOG.debug("Starting secret storage with KMIP plugin")
         if not self.store_secret_supports(secret_dto.key_spec):
             raise ss.SecretAlgorithmNotSupportedException(
                 secret_dto.key_spec.alg)
@@ -369,9 +369,9 @@ class KMIPSecretStore(ss.SecretStoreBase):
 
         try:
             with self.client:
-                LOG.debug(u._("Opened connection to KMIP client"))
+                LOG.debug("Opened connection to KMIP client")
                 uuid = self.client.register(secret)
-                LOG.debug(u._("SUCCESS: Key stored with uuid: %s"), uuid)
+                LOG.debug("SUCCESS: Key stored with uuid: %s", uuid)
                 return {KMIPSecretStore.KEY_UUID: uuid}
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
@@ -386,12 +386,12 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :returns: SecretDTO of the retrieved Secret
         :raises: SecretGeneralException
         """
-        LOG.debug(u._("Starting secret retrieval with KMIP plugin"))
+        LOG.debug("Starting secret retrieval with KMIP plugin")
         uuid = str(secret_metadata[KMIPSecretStore.KEY_UUID])
         try:
             with self.client:
-                LOG.debug(u._("Opened connection to KMIP client for secret "
-                              "retrieval"))
+                LOG.debug("Opened connection to KMIP client for secret "
+                          "retrieval")
                 managed_object = self.client.get(uuid)
                 return self._get_barbican_secret(managed_object, secret_type)
         except Exception as e:
@@ -427,11 +427,11 @@ class KMIPSecretStore(ss.SecretStoreBase):
         {'key_uuid': <uuid of key>}
         :raises: SecretGeneralException
         """
-        LOG.debug(u._("Starting secret deletion with KMIP plugin"))
+        LOG.debug("Starting secret deletion with KMIP plugin")
         uuid = str(secret_metadata[KMIPSecretStore.KEY_UUID])
         try:
             with self.client:
-                LOG.debug(u._("Opened connection to KMIP client"))
+                LOG.debug("Opened connection to KMIP client")
                 self.client.destroy(uuid)
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
