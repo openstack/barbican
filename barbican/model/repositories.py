@@ -1434,9 +1434,9 @@ class ContainerConsumerRepo(BaseRepo):
             session.rollback()  # We know consumer already exists.
 
             # This operation is idempotent, so log this and move on
-            LOG.debug("Consumer %s already exists for container %s,"
-                      " continuing...", (new_consumer.name, new_consumer.URL),
-                      new_consumer.container_id)
+            LOG.debug("Consumer %s with URL %s already exists for "
+                      "container %s, continuing...", new_consumer.name,
+                      new_consumer.URL, new_consumer.container_id)
             # Get the existing entry and reuse it by clearing the deleted flags
             existing_consumer = self.get_by_values(
                 new_consumer.container_id, new_consumer.name, new_consumer.URL,
@@ -1716,7 +1716,7 @@ class CertificateAuthorityMetadatumRepo(BaseRepo):
         except sa_orm.exc.NoResultFound:
             metadata = dict()
 
-        return dict((m.key, m.value) for m in metadata)
+        return {(m.key, m.value) for m in metadata}
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""

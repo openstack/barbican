@@ -68,7 +68,7 @@ class WhenReadingMultipleBackendsConfig(test_utils.MultipleBackendsTestCase):
         self.assertEqual(False, stores[0].global_default)
         self.assertEqual('ss_p2', stores[1].store_plugin)
         self.assertEqual('cr_p2', stores[1].crypto_plugin)
-        self.assertEqual(True, stores[1].global_default)
+        self.assertTrue(stores[1].global_default)
         self.assertEqual('ss_p3', stores[2].store_plugin)
         self.assertEqual('cr_p3', stores[2].crypto_plugin)
         self.assertEqual(False, stores[2].global_default)

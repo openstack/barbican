@@ -115,7 +115,7 @@ class WhenTestingSecretStores(utils.BarbicanAPIBaseTestCase,
                             expect_errors=False)
         self.assertEqual(200, resp.status_int)
         resp_data = resp.json
-        self.assertEqual(True, resp_data['global_default'])
+        self.assertTrue(resp_data['global_default'])
         self.assertIn('kmip', resp_data['name'].lower())
         self.assertIsNotNone(resp_data['secret_store_ref'])
         self.assertIsNotNone(resp_data['secret_store_plugin'])

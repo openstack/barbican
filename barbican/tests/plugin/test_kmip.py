@@ -447,12 +447,8 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         proxy = self.secret_store.client.proxy
         register_call_args, _ = proxy.register.call_args
         actual_secret = register_call_args[2]
-        self.assertEqual(
-            None,
-            actual_secret.key_block.cryptographic_length)
-        self.assertEqual(
-            None,
-            actual_secret.key_block.cryptographic_algorithm)
+        self.assertIsNone(actual_secret.key_block.cryptographic_length)
+        self.assertIsNone(actual_secret.key_block.cryptographic_algorithm)
         self.assertEqual(
             passphrase,
             actual_secret.key_block.key_value.key_material.value)

@@ -53,7 +53,7 @@ class WhenTestingSecretStoresRepo(database_utils.RepositoryTestCase):
         self.assertIsNotNone(s_stores)
         self.assertEqual(self.def_store_plugin, s_stores.store_plugin)
         self.assertEqual(self.def_crypto_plugin, s_stores.crypto_plugin)
-        self.assertEqual(True, s_stores.global_default)
+        self.assertTrue(s_stores.global_default)
         self.assertEqual(models.States.ACTIVE, s_stores.status)
 
     def test_should_raise_notfound_exception_get_by_entity_id(self):

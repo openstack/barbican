@@ -415,9 +415,8 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         try:
             self.validator.validate(self.secret_req)
         except excep.InvalidObject as e:
-            self.assertNotEqual(str(e), 'None')
+            self.assertIsNotNone(e)
             self.assertIsNotNone(e.message)
-            self.assertNotEqual(e.message, 'None')
         else:
             self.fail('No validation exception was raised')
 

@@ -292,7 +292,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 return {KMIPSecretStore.KEY_UUID: uuid}
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
-            raise ss.SecretGeneralException(str(e))
+            raise ss.SecretGeneralException(e)
 
     def generate_asymmetric_key(self, key_spec):
         """Generate an asymmetric key pair.
@@ -341,7 +341,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                                                    passphrase_metadata)
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
-            raise ss.SecretGeneralException(str(e))
+            raise ss.SecretGeneralException(e)
 
     def store_secret(self, secret_dto):
         """Stores a secret
@@ -375,7 +375,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 return {KMIPSecretStore.KEY_UUID: uuid}
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
-            raise ss.SecretGeneralException(str(e))
+            raise ss.SecretGeneralException(e)
 
     def get_secret(self, secret_type, secret_metadata):
         """Gets a secret
@@ -396,7 +396,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 return self._get_barbican_secret(managed_object, secret_type)
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
-            raise ss.SecretGeneralException(str(e))
+            raise ss.SecretGeneralException(e)
 
     def generate_supports(self, key_spec):
         """Key generation supported?
@@ -435,7 +435,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 self.client.destroy(uuid)
         except Exception as e:
             LOG.exception(u._LE("Error opening or writing to client"))
-            raise ss.SecretGeneralException(str(e))
+            raise ss.SecretGeneralException(e)
 
     def store_secret_supports(self, key_spec):
         """Key storage supported?
