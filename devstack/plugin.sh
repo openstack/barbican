@@ -1,3 +1,13 @@
+# Configure the needed tempest options
+function configure_barbican_tempest() {
+    iniset $TEMPEST_CONFIG service_available barbican True
+}
+
+function install_barbicantempest {
+    git_clone_by_name "barbican-tempest-plugin"
+    setup_dev_lib "barbican-tempest-plugin"
+}
+
 # check for service enabled
 if is_service_enabled barbican; then
     if [[ "$1" == "source" || "`type -t install_barbican`" != 'function' ]]; then
@@ -9,6 +19,9 @@ if is_service_enabled barbican; then
         echo_summary "Installing Barbican"
         install_barbican
         install_barbicanclient
+        if is_service_enabled tempest; then
+            install_barbicantempest
+        fi
         if is_service_enabled barbican-pykmip; then
             echo_summary "Installing PyKMIP"
             install_pykmip
@@ -39,6 +52,10 @@ if is_service_enabled barbican; then
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
         echo_summary "Initializing Barbican"
         init_barbican
+        if is_service_enabled tempest; then
+            echo_summary "Configuring Tempest options for Barbican"
+            configure_barbican_tempest
+        fi
         start_barbican
         if is_service_enabled pykmip-server; then
             echo_summary "Starting PyKMIP server"
