@@ -1,3 +1,16 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 """Added CA related tables
 
 Revision ID: 2d21598e7e70
@@ -48,7 +61,8 @@ def upgrade():
             sa.Column('status', sa.String(length=20), nullable=False),
             sa.Column('project_id', sa.String(length=36), nullable=False),
             sa.Column('ca_id', sa.String(length=36), nullable=False),
-            sa.ForeignKeyConstraint(['ca_id'], ['certificate_authorities.id'],),
+            sa.ForeignKeyConstraint(['ca_id'],
+                                    ['certificate_authorities.id'],),
             sa.ForeignKeyConstraint(['project_id'], ['projects.id'],),
             sa.PrimaryKeyConstraint('id', 'project_id', 'ca_id'),
             sa.UniqueConstraint('project_id',
@@ -71,7 +85,8 @@ def upgrade():
             sa.Column('key', sa.String(length=255), nullable=False),
             sa.Column('value', sa.String(length=255), nullable=False),
             sa.Column('ca_id', sa.String(length=36), nullable=False),
-            sa.ForeignKeyConstraint(['ca_id'], ['certificate_authorities.id'],),
+            sa.ForeignKeyConstraint(['ca_id'],
+                                    ['certificate_authorities.id'],),
             sa.PrimaryKeyConstraint('id', 'key', 'ca_id'),
             sa.UniqueConstraint('ca_id',
                                 'key',
@@ -93,7 +108,8 @@ def upgrade():
             sa.Column('status', sa.String(length=20), nullable=False),
             sa.Column('project_id', sa.String(length=36), nullable=False),
             sa.Column('ca_id', sa.String(length=36), nullable=True),
-            sa.ForeignKeyConstraint(['ca_id'], ['certificate_authorities.id'],),
+            sa.ForeignKeyConstraint(['ca_id'],
+                                    ['certificate_authorities.id'],),
             sa.ForeignKeyConstraint(['project_id'], ['projects.id'],),
             sa.PrimaryKeyConstraint('id', 'project_id'),
             sa.UniqueConstraint('project_id')
