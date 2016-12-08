@@ -22,6 +22,7 @@ import time
 
 from testtools import testcase
 
+from barbican.plugin.interface import secret_store as ss
 from barbican.plugin.util import translations
 from barbican.tests import keys
 from barbican.tests import utils
@@ -1088,6 +1089,52 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(400, resp.status_code)
 
 
+@utils.parameterized_test_case
+class ListingSecretsTestCase(SecretsTestCase):
+
+    @utils.parameterized_dataset({
+        'query_by_name': {
+            'secret_1_dict': dict(name="name1"),
+            'secret_2_dict': dict(name="name2"),
+            'query_dict': dict(name="name1")
+        },
+        'query_by_algorithm': {
+            'secret_1_dict': dict(algorithm="algorithm1"),
+            'secret_2_dict': dict(algorithm="algorithm2"),
+            'query_dict': dict(alg="algorithm1")
+        },
+        'query_by_mode': {
+            'secret_1_dict': dict(mode="mode1"),
+            'secret_2_dict': dict(mode="mode2"),
+            'query_dict': dict(mode="mode1")
+        },
+        'query_by_bit_length': {
+            'secret_1_dict': dict(bit_length=1024),
+            'secret_2_dict': dict(bit_length=2048),
+            'query_dict': dict(bits=1024)
+        },
+        'query_by_secret_type': {
+            'secret_1_dict': dict(secret_type=ss.SecretType.SYMMETRIC),
+            'secret_2_dict': dict(secret_type=ss.SecretType.OPAQUE),
+            'query_dict': dict(secret_type=ss.SecretType.SYMMETRIC)
+        },
+    })
+    @testcase.attr('positive')
+    def test_secret_list_with_filter(self, secret_1_dict, secret_2_dict,
+                                     query_dict):
+        secret_1 = secret_models.SecretModel(**secret_1_dict)
+        secret_2 = secret_models.SecretModel(**secret_2_dict)
+
+        self.behaviors.create_secret(secret_1)
+        self.behaviors.create_secret(secret_2)
+
+        resp, secrets_list, next_ref, prev_ref = self.behaviors.get_secrets(
+            **query_dict)
+
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(1, len(secrets_list))
+
+
 class SecretsPagingTestCase(base.PagingTestCase):
 
     def setUp(self):
@@ -1111,7 +1158,7 @@ class SecretsPagingTestCase(base.PagingTestCase):
 
     def get_resources(self, limit=10, offset=0, filter=None):
         return self.behaviors.get_secrets(limit=limit, offset=offset,
-                                          filter=filter)
+                                          name=filter)
 
     def set_filter_field(self, unique_str, model):
         '''Set the name field which we use in the get_resources '''
