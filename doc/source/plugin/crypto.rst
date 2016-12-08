@@ -1,4 +1,4 @@
-.. module:: barbican.plugin.crypto.crypto
+.. module:: barbican.plugin.crypto.base
 
 ================================
 Cryptographic Plugin Development
@@ -67,7 +67,7 @@ described in :ref:`plugin-secret-store-crypto-adapter-label`.
 **For secret storage actions**, Barbican core calls the following methods:
 
 1. ``supports()`` - Asks the plugin if it can support the
-   ``barbican.plugin.crypto.crypto.PluginSupportTypes.ENCRYPT_DECRYPT``
+   ``barbican.plugin.crypto.base.PluginSupportTypes.ENCRYPT_DECRYPT``
    operation type.
 
 2. ``bind_kek_metadata()`` - Allows a plugin to bind an internal key encryption
@@ -91,7 +91,7 @@ as the project-ID KEK used to encrypt the secret.
 **For symmetric key generation**, Barbican core calls the following methods:
 
 1. ``supports()`` - Asks the plugin if it can support the
-   ``barbican.plugin.crypto.crypto.PluginSupportTypes.SYMMETRIC_KEY_GENERATION``
+   ``barbican.plugin.crypto.base.PluginSupportTypes.SYMMETRIC_KEY_GENERATION``
    operation type.
 
 2. ``bind_kek_metadata()`` - Same comments as for secret storage above.
@@ -103,7 +103,7 @@ as the project-ID KEK used to encrypt the secret.
 **For asymmetric key generation**, Barbican core calls the following methods:
 
 1. ``supports()`` - Asks the plugin if it can support the
-   ``barbican.plugin.crypto.crypto.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION``
+   ``barbican.plugin.crypto.base.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION``
    operation type.
 
 2. ``bind_kek_metadata()`` - Same comments as for secret storage above.
