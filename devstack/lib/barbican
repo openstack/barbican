@@ -101,14 +101,17 @@ function configure_barbican {
     # Copy functional test config
     cp $BARBICAN_DIR/etc/barbican/barbican-functional.conf $BARBICAN_CONF_DIR
 
-    # Do not set to DEBUG
-    iniset $BARBICAN_CONF DEFAULT debug False
+    # Enable DEBUG
+    iniset $BARBICAN_CONF DEFAULT debug True
 
     # Set the host_href
     iniset $BARBICAN_CONF DEFAULT host_href "$BARBICAN_HOST_HREF"
 
     # Set the log file location
     iniset $BARBICAN_CONF DEFAULT log_file "$BARBICAN_API_LOG_DIR/barbican.log"
+
+    # Enable logging to stderr to have log also in the screen window
+    iniset $BARBICAN_CONF DEFAULT use_stderr True
 
     # Format logging
     if [ "$LOG_COLOR" == "True" ] && [ "$SYSLOG" == "False" ]; then
