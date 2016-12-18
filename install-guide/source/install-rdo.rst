@@ -30,17 +30,6 @@ Finalize installation
       <VirtualHost [::1]:9311>
           ServerName controller
 
-          ## Vhost docroot
-          DocumentRoot "/var/www/cgi-bin/barbican"
-
-          ## Directories, there should at least be a declaration for /var/www/cgi-bin/barbican
-
-          <Directory "/var/www/cgi-bin/barbican">
-              Options Indexes FollowSymLinks MultiViews
-              AllowOverride None
-              Require all granted
-          </Directory>
-
           ## Logging
           ErrorLog "/var/log/httpd/barbican_wsgi_main_error_ssl.log"
           LogLevel debug
@@ -50,7 +39,7 @@ Finalize installation
           WSGIApplicationGroup %{GLOBAL}
           WSGIDaemonProcess barbican-api display-name=barbican-api group=barbican processes=2 threads=8 user=barbican
           WSGIProcessGroup barbican-api
-          WSGIScriptAlias / "/var/www/cgi-bin/barbican/main"
+          WSGIScriptAlias / "/usr/lib/python2.7/site-packages/barbican/api/app.wsgi"
           WSGIPassAuthorization On
       </VirtualHost>
 
