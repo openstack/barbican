@@ -185,7 +185,7 @@ class WhenTestingSecretStorePluginManager(utils.BaseTestCase):
         self.manager.extensions = [plugin_mock]
         keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
         self.assertRaises(
-            str.SecretStoreSupportedPluginNotFound,
+            str.SecretGenerateSupportedPluginNotFound,
             self.manager.get_plugin_generate,
             keySpec,
         )
