@@ -31,4 +31,8 @@ BARBICAN_HOST_HREF=${BARBICAN_HOST_HREF:-http://${SERVICE_HOST}:9311}
 # Tell Tempest this project is present
 TEMPEST_SERVICES+=,barbican
 
+GITREPO["barbican-tempest-plugin"]=${BARBICANTEMPEST_REPO:-${GIT_BASE}/openstack/barbican-tempest-plugin.git}
+GITBRANCH["barbican-tempest-plugin"]=${BARBICANTEMPEST_BRANCH:-master}
+GITDIR["barbican-tempest-plugin"]=$DEST/barbican-tempest-plugin
+
 enable_service barbican
