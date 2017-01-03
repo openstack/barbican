@@ -141,15 +141,7 @@ function configure_barbican {
     iniset $BARBICAN_PASTE_CONF 'pipeline:barbican_api' pipeline 'barbican-api-keystone'
 
     # Set the keystone parameters
-    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' auth_plugin password
-    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' auth_url $KEYSTONE_AUTH_URI_V3
-    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' username barbican
-    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' password $SERVICE_PASSWORD
-    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' user_domain_id default
-    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' project_name $SERVICE_PROJECT_NAME
-    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' project_domain_id default
-    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' auth_uri $KEYSTONE_SERVICE_URI_V3
-    iniset $BARBICAN_PASTE_CONF 'filter:authtoken' signing_dir $BARBICAN_AUTH_CACHE_DIR
+    configure_auth_token_middleware $BARBICAN_CONF barbican $BARBICAN_AUTH_CACHE_DIR
 }
 
 # init_barbican - Initialize etc.
