@@ -49,6 +49,13 @@ class WhenCreatingContainersUsingContainersResource(
         self.assertEqual(container_name, container.name)
         self.assertEqual(container_type, container.type)
 
+    def test_created_container_has_id(self):
+        resp, id_from_ref = create_container(
+            self.app,
+            container_type='generic'
+        )
+        self.assertEqual(id_from_ref, resp.json.get('id'))
+
     def test_should_add_new_populated_container(self):
         secret_name = 'test secret 1'
         resp, _ = secret_helper.create_secret(
@@ -241,6 +248,15 @@ class WhenGettingOrDeletingContainerUsingContainerResource(
         self.assertEqual(200, resp.status_int)
         self.assertEqual(container_name, resp.json.get('name', ''))
         self.assertEqual(container_type, resp.json.get('type', ''))
+
+    def test_container_has_id(self):
+        create_resp, container_id = create_container(
+            self.app,
+            container_type='generic'
+        )
+        get_resp = self.app.get('/containers/{0}'.format(container_id))
+
+        self.assertEqual(container_id, get_resp.json.get('id'))
 
     def test_should_delete_container(self):
         resp, container_uuid = create_container(

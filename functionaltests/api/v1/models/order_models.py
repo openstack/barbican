@@ -18,10 +18,10 @@ from functionaltests.api.v1.models.base_models import BaseModel
 
 class OrderModel(BaseModel):
 
-    def __init__(self, type=None, name=None, status=None, secret_ref=None,
-                 expiration=None, updated=None, created=None, meta=None,
-                 payload_content_type=None, order_ref=None, container_ref=None,
-                 error_status_code=None, error_reason=None,
+    def __init__(self, id=None, type=None, name=None, status=None,
+                 secret_ref=None, expiration=None, updated=None, created=None,
+                 meta=None, payload_content_type=None, order_ref=None,
+                 container_ref=None, error_status_code=None, error_reason=None,
                  sub_status=None, sub_status_message=None, creator_id=None):
         super(OrderModel, self).__init__()
         self.type = type

@@ -79,9 +79,11 @@ class V1Controller(BaseVersionController):
 
     version_string = 'v1'
 
-    # NOTE(jaosorior): We might start using decimals in the future, meanwhile
-    # this is the same as the version string.
-    version_id = 'v1'
+    # This is the Major.Minor version
+    # 1.1 - Mitaka
+    # 1.2 - Newton
+    # 1.3 - Ocata
+    version_id = 'v1.3'
 
     last_updated = '2015-04-28T00:00:00Z'
 

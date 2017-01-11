@@ -63,6 +63,7 @@ This should return a reference (URI) for the secret that was created:
 .. code-block:: json
 
    {
+     "id": "48d24158-b4b4-45b8-9669-d9f0ef793c23",
      "secret_ref": "http://localhost:9311/v1/secrets/48d24158-b4b4-45b8-9669-d9f0ef793c23"
    }
 
@@ -79,6 +80,7 @@ The metadata will list the available content-types for the symmetric secret:
 .. code-block:: json
 
     {
+        "id": "48d24158-b4b4-45b8-9669-d9f0ef793c23",
         "algorithm": "AES",
         "bit_length": 256,
         "content_types": {
@@ -157,6 +159,7 @@ This should return a reference (URI) for the secret that was created:
    200 OK
 
    {
+     "id": "cd20d134-c229-417a-a753-86432ad13bad",
      "secret_ref": "http://localhost:9311/v1/secrets/cd20d134-c229-417a-a753-86432ad13bad"
    }
 
@@ -190,6 +193,7 @@ listed there:
 .. code-block:: json
 
     {
+        "id": "cd20d134-c229-417a-a753-86432ad13bad",
         "algorithm": "RSA",
         "bit_length": null,
         "content_types": {
@@ -254,5 +258,6 @@ This should return a reference (URI) for the secret that was created.
    200 OK
 
    {
+     "id": "d553f0ac-c79d-43b4-b165-32594b612ad4",
      "secret_ref": "http://localhost:9311/v1/secrets/d553f0ac-c79d-43b4-b165-32594b612ad4"
    }

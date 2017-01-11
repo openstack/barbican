@@ -105,6 +105,7 @@ Response:
         "previous": "http://{barbican_host}:9311/v1/secrets?limit=2&offset=0",
         "secrets": [
             {
+                "id": "{uuid}",
                 "algorithm": null,
                 "bit_length": null,
                 "content_types": {
@@ -121,6 +122,7 @@ Response:
                 "updated": "2015-04-07T03:37:19.808337"
             },
             {
+                "id": "{uuid}",
                 "algorithm": null,
                 "bit_length": null,
                 "content_types": {
@@ -192,6 +194,10 @@ Attributes
 +----------------------------+---------+-----------------------------------------------------+------------+
 | Attribute Name             | Type    | Description                                         | Default    |
 +============================+=========+=====================================================+============+
+| secret_type                | string  | (optional) Used to indicate the type of             | ``opaque`` |
+|                            |         | secret being stored.  For more information          |            |
+|                            |         | see :doc:`Secret Types <../reference/secret_types>` |            |
++----------------------------+---------+-----------------------------------------------------+------------+
 | name                       | string  | (optional) The name of the secret set by the        | None       |
 |                            |         | user.                                               |            |
 +----------------------------+---------+-----------------------------------------------------+------------+
@@ -224,10 +230,6 @@ Attributes
 |                            |         | to include it in the JSON request.                  |            |
 |                            |         | Currently only ``base64`` is supported.             |            |
 +----------------------------+---------+-----------------------------------------------------+------------+
-| secret_type                | string  | (optional) Used to indicate the type of             | ``opaque`` |
-|                            |         | secret being stored.  For more information          |            |
-|                            |         | see :doc:`Secret Types <../reference/secret_types>` |            |
-+----------------------------+---------+-----------------------------------------------------+------------+
 
 Request:
 ********
@@ -248,7 +250,8 @@ Request:
         "mode": "cbc",
         "payload": "YmVlcg==",
         "payload_content_type": "application/octet-stream",
-        "payload_content_encoding": "base64"
+        "payload_content_encoding": "base64",
+        "secret_type": "symmetric"
     }
 
 Response:
@@ -259,9 +262,20 @@ Response:
     201 Created
 
     {
+        "id": "{secret_uuid}",
         "secret_ref": "https://{barbican_host}/v1/secrets/{secret_uuid}"
     }
 
+Response Attributes
+*******************
+
++------------+---------+--------------------------------------------------------------+
+| Name       | Type    | Description                                                  |
++============+=========+==============================================================+
+| id         | uuid    | Unique identifier for the created secret.  New in v1.3       |
++------------+---------+--------------------------------------------------------------+
+| secret_ref | uri     | Location URI for the created secret.                         |
++------------+---------+--------------------------------------------------------------+
 
 HTTP Status Codes
 *****************
@@ -306,6 +320,7 @@ Response:
     200 OK
 
     {
+        "id": "{secret_uuid}",
         "status": "ACTIVE",
         "created": "2015-03-23T20:46:51.650515",
         "updated": "2015-03-23T20:46:51.654116",
