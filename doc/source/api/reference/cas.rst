@@ -831,7 +831,7 @@ HTTP Status Codes
 
 GET /v1/cas/global-preferred
 ############################
-A service administrator can can request a reference to the CA that has been assigned
+A service administrator can request a reference to the CA that has been assigned
 to be the global preferred CA.
 
 .. _get_cas_global_preferred_request_response:

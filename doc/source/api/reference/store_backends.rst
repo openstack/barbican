@@ -351,7 +351,7 @@ HTTP Status Codes
 GET /v1/secret-stores/global-default
 ####################################
 
-A project or service administrator can can request a reference to the secret
+A project or service administrator can request a reference to the secret
 store that is used as default secret store backend for the deployment.
 
 .. _get_secret_stores_global_default_request_response:
