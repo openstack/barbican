@@ -1,13 +1,13 @@
 2. Edit the ``/etc/barbican/barbican.conf`` file and complete the following
    actions:
 
-   * In the ``[database]`` section, configure database access:
+   * In the ``[DEFAULT]`` section, configure database access:
 
      .. code-block:: none
 
-        [database]
+        [DEFAULT]
         ...
-        connection = mysql+pymysql://barbican:BARBICAN_DBPASS@controller/barbican
+        sql_connection = mysql+pymysql://barbican:BARBICAN_DBPASS@controller/barbican
 
      Replace ``BARBICAN_DBPASS`` with the password you chose for the
      Key Manager service database.
