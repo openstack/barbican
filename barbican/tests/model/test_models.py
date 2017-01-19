@@ -36,7 +36,7 @@ class WhenCreatingNewSecret(utils.BaseTestCase):
         self.parsed_order = {'secret': self.parsed_secret}
 
     def test_new_secret_is_created_from_dict(self):
-        date_time = datetime.datetime.now().isoformat()
+        date_time = datetime.datetime.utcnow().isoformat()
         self.parsed_secret['expiration'] = date_time
         secret = models.Secret(self.parsed_secret)
         self.assertEqual(self.parsed_secret['name'], secret.name)
@@ -57,7 +57,7 @@ class WhenCreatingNewSecret(utils.BaseTestCase):
 
     def test_new_secret_is_created_with_default_secret_type(self):
         secret_spec = dict(self.parsed_secret)
-        date_time = datetime.datetime.now().isoformat()
+        date_time = datetime.datetime.utcnow().isoformat()
         secret_spec['expiration'] = date_time
         del secret_spec['secret_type']
         secret = models.Secret(secret_spec)
