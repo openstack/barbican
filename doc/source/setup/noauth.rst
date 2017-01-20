@@ -33,7 +33,7 @@ To enable this pipe line proceed as follows:
 
 With every OpenStack service integrated with keystone, its API requires access
 token to retireve certain information and validate user's information and
-prviledges. If you are running barbican in no auth mode, you have to specify
+privileges. If you are running barbican in no auth mode, you have to specify
 project_id instead of an access token which was retrieved from the token
 instead. In case of API, replace ``'X-Auth-Token: $TOKEN'`` with
 ``'X-Project-Id: {project_id}'`` for every API request in :doc:`../api/index`.

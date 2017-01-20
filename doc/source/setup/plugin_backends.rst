@@ -91,7 +91,7 @@ Multiple backend can be useful in following type of usage scenarios.
 * HSM devices generally have limited storage capacity so a deployment will
   have to watch its stored keys size proactively to remain under the limit
   constraint. This is more applicable in KMIP backend than with PKCS11 backend
-  because of plugin's different storage apporach. This aspect can also result
+  because of plugin's different storage approach. This aspect can also result
   from above use case scenario where deployment is storing non-sensitive (from
   dev/test environment) encryption keys in HSM.
 * Barbican running as IaaS service or platform component where some class of
