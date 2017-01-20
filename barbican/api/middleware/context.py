@@ -62,8 +62,6 @@ class ContextMiddleware(BaseContextMiddleware):
 
         if req.headers.get('X-Identity-Status') == 'Confirmed':
             req.context = self._get_authenticated_context(req)
-            LOG.debug("==== Inserted barbican auth "
-                      "request context: %s ====", req.context.to_dict())
         elif CONF.allow_anonymous_access:
             req.context = self._get_anonymous_context()
             LOG.debug("==== Inserted barbican unauth "
