@@ -130,7 +130,7 @@ This should provide a response as follows:
 
 .. code-block:: bash
 
-    my-secret here
+    my-secret-here
 
 This is the plain text data we provided upon initial creation of the secret.
 
