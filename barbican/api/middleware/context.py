@@ -12,8 +12,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import uuid
-
 import webob.exc
 
 from barbican.api import middleware as mw
@@ -30,7 +28,7 @@ class BaseContextMiddleware(mw.Middleware):
     def process_request(self, req):
         request_id = req.headers.get('x-openstack-request-id')
         if not request_id:
-            request_id = b'req-' + str(uuid.uuid4()).encode('ascii')
+            request_id = b'req-' + utils.generate_uuid().encode('ascii')
         setattr(req, 'request_id', request_id)
 
     def process_response(self, resp):
