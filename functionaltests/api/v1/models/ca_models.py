@@ -19,12 +19,13 @@ from functionaltests.api.v1.models import base_models
 
 class CAModel(base_models.BaseModel):
 
-    def __init__(self, expiration=None, ca_id=None, ca_ref=None,
+    def __init__(self, id=None, expiration=None, ca_id=None, ca_ref=None,
                  status=None, updated=None, created=None, plugin_name=None,
                  plugin_ca_id=None, meta=None, parent_ca_ref=None,
                  subject_dn=None, name=None, description=None):
         super(CAModel, self).__init__()
 
+        self.id = id
         self.expiration = expiration
         self.ca_id = ca_id
         self.ca_ref = ca_ref

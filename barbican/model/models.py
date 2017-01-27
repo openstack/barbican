@@ -174,6 +174,7 @@ class ModelBase(object):
             updated_at = self.updated_at
 
         dict_fields = {
+            'id': self.id,
             'created': created_at,
             'updated': updated_at,
             'status': self.status

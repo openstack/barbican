@@ -32,6 +32,7 @@ in the same container reference:
 .. code-block:: json
 
     {
+        "id": "{uuid}",
         "type": "generic",
         "status": "ACTIVE",
         "name": "Test Environment User Passwords",
@@ -71,6 +72,7 @@ certificates:
 .. code-block:: json
 
     {
+        "id": "{uuid}",
         "type": "certificate",
         "status": "ACTIVE",
         "name": "Example.com Certificates",
@@ -119,6 +121,7 @@ key pass phrases.
 .. code-block:: json
 
     {
+        "id": "{uuid}",
         "type": "rsa",
         "status": "ACTIVE",
         "name": "John Smith RSA",
@@ -180,7 +183,10 @@ This should provide a response as follows:
 
 .. code-block:: bash
 
-    {"container_ref": "http://localhost:9311/v1/containers/0fecaec4-7cd7-4e70-a760-cc7eaf5c3afb"}
+    {
+        "id": "0fecaec4-7cd7-4e70-a760-cc7eaf5c3afb",
+        "container_ref": "http://localhost:9311/v1/containers/0fecaec4-7cd7-4e70-a760-cc7eaf5c3afb"
+    }
 
 This is our container reference. We will need this in order to retrieve the container.
 Jump ahead to :ref:`How To Retrieve a Container <retrieve_container>` to make sure our
@@ -226,7 +232,10 @@ This should provide a response as follows:
 
 .. code-block:: bash
 
-    {"container_ref": "http://localhost:9311/v1/containers/0fecaec4-7cd7-4e70-a760-cc7eaf5c3afb"}
+    {
+        "id": "0fecaec4-7cd7-4e70-a760-cc7eaf5c3afb",
+        "container_ref": "http://localhost:9311/v1/containers/0fecaec4-7cd7-4e70-a760-cc7eaf5c3afb"
+    }
 
 This is our container reference. We will need this in order to retrieve the container.
 Jump ahead to :ref:`How To Retrieve a Container <retrieve_container>` to make sure our
@@ -268,7 +277,10 @@ This should provide a response as follows:
 
 .. code-block:: bash
 
-    {"container_ref": "http://localhost:9311/v1/containers/0fecaec4-7cd7-4e70-a760-cc7eaf5c3afb"}
+    {
+        "id": "0fecaec4-7cd7-4e70-a760-cc7eaf5c3afb",
+        "container_ref": "http://localhost:9311/v1/containers/0fecaec4-7cd7-4e70-a760-cc7eaf5c3afb"
+    }
 
 This is our container reference. We will need this in order to retrieve the container.
 Jump ahead to :ref:`How To Retrieve a Container <retrieve_container>` to make sure our
@@ -290,6 +302,7 @@ This should provide a response as follows:
 .. code-block:: bash
 
     {
+        "id": "49d3c5e9-80bb-47ec-8787-968bb500d76e",
         "status": "ACTIVE",
         "updated": "2015-03-31T21:21:34.126042",
         "name": "container name",

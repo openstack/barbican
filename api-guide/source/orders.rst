@@ -30,8 +30,8 @@ Creating an Order
 #################
 
 When you want barbican to generate a secret you need to create an order.
-For an order to be processed correctly the parameters mode,
-bit_length, and algorithm must be valid. Otherwise the order will fail and
+For an order to be processed correctly, all the parameters in the "meta"
+object must be valid. Otherwise the order will fail and
 the secret will not be generated. The example below shows a valid order for
 generating a symmetric key. You can find a more detailed explanation about
 the parameters in the
@@ -45,13 +45,16 @@ documentation.
     "bit_length": 256, "mode": "cbc", "payload_content_type": "application/octet-stream"}
     }' http://localhost:9311/v1/orders
 
-You should receive an order reference after placing your order with barbican.
+You should receive an order ID after placing your order with barbican.
 
 .. code-block:: bash
 
-    {"order_ref": "http://localhost:9311/v1/orders/3a5c6748-44de-4c1c-9e54-085c3f79e942"}
+    {
+      "id": "3a5c6748-44de-4c1c-9e54-085c3f79e942",
+      "order_ref": "http://localhost:9311/v1/orders/3a5c6748-44de-4c1c-9e54-085c3f79e942"
+    }
 
-The order reference is used to retrieve the metadata for the order you placed
+The order ID is used to retrieve the metadata for the order you placed
 which can then be used to retrieve your secret.
 
 .. _retrieve_order:
@@ -72,6 +75,7 @@ The typical response is below:
 .. code-block:: json
 
     {
+        "id": "3a5c6748-44de-4c1c-9e54-085c3f79e942",
         "created": "2015-10-15T18:15:10",
         "creator_id": "40540f978fbd45c1af18910e3e02b63f",
         "meta": {
@@ -115,6 +119,7 @@ It is also possible to retrieve all orders for a project.
     {
         "orders": [
             {
+                "id": "3a5c6748-44de-4c1c-9e54-085c3f79e942",
                 "created": "2015-10-15T18:15:10",
                 "creator_id": "40540f978fbd45c1af18910e3e02b63f",
                 "meta": {
@@ -134,6 +139,7 @@ It is also possible to retrieve all orders for a project.
                 "updated": "2015-10-15T18:15:10"
             },
             {
+                "id": "d99ced51-ea7a-4c14-8e11-0dda0f49c5be",
                 "created": "2015-10-15T18:51:35",
                 "creator_id": "40540f978fbd45c1af18910e3e02b63f",
                 "meta": {

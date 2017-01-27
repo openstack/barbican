@@ -78,7 +78,6 @@ class WhenTestingSecretStores(utils.BarbicanAPIBaseTestCase,
         for i, secret_data in enumerate(secret_stores_data):
             self.assertEqual(i == g_index, secret_data['global_default'])
             self.assertIsNotNone(secret_data['secret_store_ref'])
-            self.assertIsNone(secret_data.get('id'))
             self.assertIsNone(secret_data.get('secret_store_id'))
             self.assertIsNotNone(secret_data['name'])
             self.assertIsNotNone(secret_data['secret_store_plugin'])

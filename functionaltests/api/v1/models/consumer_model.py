@@ -18,9 +18,10 @@ from functionaltests.api.v1.models import base_models
 
 class ConsumerModel(base_models.BaseModel):
 
-    def __init__(self, name=None, URL=None, created=None, updated=None,
-                 status=None):
+    def __init__(self, id=None, name=None, URL=None, created=None,
+                 updated=None, status=None):
         super(ConsumerModel, self).__init__()
+        self.id = id
         self.name = name
         self.URL = URL
         self.created = created

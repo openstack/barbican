@@ -42,6 +42,15 @@ class WhenTestingSecretsResource(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(201, resp.status_int)
         self.assertIsNotNone(secret_uuid)
 
+    def test_created_secret_has_id(self):
+        resp, id_from_ref = create_secret(
+            self.app,
+            payload='some-secret',
+            content_type='text/plain'
+        )
+
+        self.assertEqual(id_from_ref, resp.json.get('id'))
+
     def test_can_create_new_secret_without_payload(self):
         resp, secret_uuid = create_secret(self.app, name='test')
         self.assertEqual(201, resp.status_int)
@@ -284,6 +293,18 @@ class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
 
 
 class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
+
+    def test_get_secret_has_id(self):
+        resp, secret_id = create_secret(
+            self.app,
+            payload='secret-here',
+            content_type='text/plain'
+        )
+        get_resp = self.app.get(
+            '/secrets/{0}'.format(secret_id),
+            headers={'Accept': 'application/json'})
+
+        self.assertEqual(secret_id, get_resp.json.get('id'))
 
     def test_get_secret_as_plain(self):
         payload = 'this message will self destruct in 10 seconds'

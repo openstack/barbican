@@ -222,7 +222,7 @@ class ContainersController(controllers.ACLMixin):
         LOG.info(u._LI('Created a container for project: %s'),
                  external_project_id)
 
-        return {'container_ref': url}
+        return {'id': new_container.id, 'container_ref': url}
 
 
 class ContainersSecretsController(controllers.ACLMixin):
@@ -288,7 +288,7 @@ class ContainersSecretsController(controllers.ACLMixin):
         LOG.info(u._LI('Created a container secret for project: %s'),
                  external_project_id)
 
-        return {'container_ref': url}
+        return {'id': self.container.id, 'container_ref': url}
 
     @index.when(method='DELETE')
     @utils.allow_all_content_types

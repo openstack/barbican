@@ -57,6 +57,14 @@ class WhenCreatingOrdersUsingOrdersResource(utils.BarbicanAPIBaseTestCase):
 
         self.assertIsInstance(order, models.Order)
 
+    def test_created_order_has_id(self):
+        resp, id_from_ref = create_order(
+            self.app,
+            order_type='key',
+            meta=generic_key_meta
+        )
+        self.assertEqual(id_from_ref, resp.json.get('id'))
+
     def test_order_creation_should_allow_unknown_algorithm(self):
         meta = {
             'bit_length': 128,
@@ -175,6 +183,15 @@ class WhenGettingOrDeletingOrders(utils.BarbicanAPIBaseTestCase):
         # Retrieve the order
         get_resp = self.app.get('/orders/{0}/'.format(order_uuid))
         self.assertEqual(200, get_resp.status_int)
+
+    def test_order_has_id(self):
+        create_resp, order_id = create_order(
+            self.app,
+            order_type='key',
+            meta=generic_key_meta
+        )
+        get_resp = self.app.get('/orders/{0}'.format(order_id))
+        self.assertEqual(order_id, get_resp.json.get('id'))
 
     def test_can_delete_order(self):
         # Make sure we have a order to retrieve
