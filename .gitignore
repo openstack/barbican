@@ -65,5 +65,8 @@ ChangeLog
 # Mac OS
 .DS_Store
 
+# Rope
+.ropeproject
+
 # Files created by releasenotes build
 releasenotes/build
