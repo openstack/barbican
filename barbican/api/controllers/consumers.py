@@ -104,11 +104,10 @@ class ContainerConsumersController(controllers.ACLMixin):
     def on_get(self, external_project_id, **kw):
         LOG.debug('Start consumers on_get '
                   'for container-ID %s:', self.container_id)
-
         result = self.consumer_repo.get_by_container_id(
             self.container_id,
             offset_arg=kw.get('offset', 0),
-            limit_arg=kw.get('limit', None),
+            limit_arg=kw.get('limit'),
             suppress_exception=True
         )
 
@@ -121,8 +120,11 @@ class ContainerConsumersController(controllers.ACLMixin):
                 hrefs.convert_to_hrefs(c.to_dict_fields())
                 for c in consumers
             ]
+            consumer_path = "containers/{container_id}/consumers".format(
+                container_id=self.container_id)
+
             resp_ctrs_overall = hrefs.add_nav_hrefs(
-                'consumers',
+                consumer_path,
                 offset,
                 limit,
                 total,
