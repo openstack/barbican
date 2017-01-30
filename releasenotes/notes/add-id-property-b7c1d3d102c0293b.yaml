@@ -1,6 +1,0 @@
----
-features:
-  - |
-    This release adds an "id" property to all entities returned by the API.
-    The value of the new "id" property is the unique UUID found at the end of
-    the entity reference URI.

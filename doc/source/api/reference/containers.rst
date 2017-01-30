@@ -63,7 +63,6 @@ Response:
     {
         "containers": [
             {
-                "id": "{uuid}",
                 "consumers": [],
                 "container_ref": "https://{barbican_host}/v1/containers/{uuid}",
                 "created": "2015-03-26T21:10:45.417835",
@@ -105,8 +104,6 @@ Response Attributes
 +-------------+--------+---------------------------------------------------------+
 | Name        | Type   | Description                                             |
 +=============+========+=========================================================+
-| id          | string | The unique identifier for the container. New in v1.3    |
-+-------------+--------+---------------------------------------------------------+
 | name        | string | (optional) Human readable name for the container        |
 +-------------+--------+---------------------------------------------------------+
 | type        | string | Type of container. Options: generic, rsa, certificate   |
@@ -129,7 +126,6 @@ Response:
 .. code-block:: javascript
 
     {
-        "id": "{uuid}",
         "type": "generic",
         "status": "ACTIVE",
         "name": "container name",
@@ -227,7 +223,6 @@ Response:
 .. code-block:: javascript
 
     {
-        "id": "{container_uuid}",
         "container_ref": "https://{barbican_host}/v1/containers/{container_uuid}"
     }
 
@@ -321,7 +316,6 @@ Response:
 .. code-block:: javascript
 
     {
-        "id": "{container_uuid}",
         "container_ref": "https://{barbican_host}/v1/containers/{container_uuid}"
     }
 

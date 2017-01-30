@@ -61,10 +61,7 @@ This should provide a response as follows:
 
 .. code-block:: bash
 
-    {
-      "id": "2a549393-0710-444b-8aa5-84cf0f85ea79",
-      "secret_ref": "http://localhost:9311/v1/secrets/2a549393-0710-444b-8aa5-84cf0f85ea79"
-    }
+    {"secret_ref": "http://localhost:9311/v1/secrets/2a549393-0710-444b-8aa5-84cf0f85ea79"}
 
 This is our secret reference. We will need this in order to retrieve the secret in the following steps.
 Jump ahead to :ref:`How to Retrieve a Secret <retrieve_secret>` to make sure our secret is
@@ -88,10 +85,7 @@ This should provide a response as follows:
 
 .. code-block:: bash
 
-    {
-      "id": "2a549393-0710-444b-8aa5-84cf0f85ea79",
-      "secret_ref": "http://localhost:9311/v1/secrets/2a549393-0710-444b-8aa5-84cf0f85ea79"
-    }
+    {"secret_ref": "http://localhost:9311/v1/secrets/2a549393-0710-444b-8aa5-84cf0f85ea79"}
 
 Now that we have a secret reference available, we can update the secret data.
 

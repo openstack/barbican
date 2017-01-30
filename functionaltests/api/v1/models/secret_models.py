@@ -19,14 +19,13 @@ from functionaltests.api.v1.models import base_models
 
 class SecretModel(base_models.BaseModel):
 
-    def __init__(self, id=None, name=None, expiration=None, algorithm=None,
+    def __init__(self, name=None, expiration=None, algorithm=None,
                  secret_ref=None, bit_length=None, mode=None, secret_type=None,
                  payload_content_type=None, payload=None, content_types=None,
                  payload_content_encoding=None, status=None, updated=None,
                  created=None, creator_id=None, metadata=None):
         super(SecretModel, self).__init__()
 
-        self.id = id
         self.name = name
         self.expiration = expiration
         self.algorithm = algorithm

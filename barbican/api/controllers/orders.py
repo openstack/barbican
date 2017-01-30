@@ -254,4 +254,4 @@ class OrdersController(controllers.ACLMixin):
         pecan.response.status = 202
         pecan.response.headers['Location'] = url
 
-        return {'id': order_id, 'order_ref': url}
+        return {'order_ref': url}

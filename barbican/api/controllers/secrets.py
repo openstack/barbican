@@ -451,7 +451,6 @@ class SecretsController(controllers.ACLMixin):
         if transport_key_model is not None:
             tkey_url = hrefs.convert_transport_key_to_href(
                 transport_key_model.id)
-            return {'id': new_secret.id, 'secret_ref': url,
-                    'transport_key_ref': tkey_url}
+            return {'secret_ref': url, 'transport_key_ref': tkey_url}
         else:
-            return {'id': new_secret.id, 'secret_ref': url}
+            return {'secret_ref': url}
