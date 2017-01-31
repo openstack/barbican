@@ -425,7 +425,6 @@ function install_389_directory_server {
     # Make sure that 127.0.0.1 resolves to localhost.localdomain (fqdn)
     sudo sed -i 's/127.0.0.1[ \t]*localhost localhost.localdomain/127.0.0.1\tlocalhost.localdomain localhost/' /etc/hosts
 
-    install_package 389-ds-base
     sudo mkdir -p /etc/389-ds
 
     # Instead of spawning a sub-shell to cat this whole chunk into the desired
@@ -452,7 +451,6 @@ EOF
 }
 
 function install_dogtag_ca {
-    install_package pki-ca
     sudo mkdir -p /etc/dogtag
 
     cat > .tmp.ca.cfg <<EOF
@@ -498,7 +496,6 @@ function wait_for_ca {
 }
 
 function install_dogtag_kra {
-    install_package pki-kra
     sudo mkdir -p /etc/dogtag
 
     # Even though we are using localhost.localdomain, the server certificate by
@@ -540,7 +537,7 @@ EOF
 }
 
 function install_dogtag_plugin_dependencies {
-    install_package nss-devel
+    install_package nss-devel 389-ds-base pki-ca pki-kra
 }
 
 function install_dogtag_components {
