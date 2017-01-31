@@ -5,3 +5,8 @@ mozilla-nss-devel [platform:rpm]
 nss-devel [platform:rpm]
 
 gettext [test]
+
+# Required for the Dogtag plugin
+389-ds-base [platform:rpm]
+pki-ca [platform:rpm]
+pki-kra [platform:rpm]
