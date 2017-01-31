@@ -22,10 +22,11 @@ fi
 
 echo "Successfully contacted the Barbican API"
 
-# run the tests sequentially
+# run the tests in parallel
+SKIP=^\(\?\!\.\*\(ProjectQuotasPagingTestCase\|QuotaEnforcementTestCase\|ListingCAsTestCase\|ProjectCATestCase\|GlobalPreferredCATestCase\|CertificateAuthoritiesTestCase\|ListingSecretsTestCase\)\)
 testr init
-testr run --subunit | subunit-trace --no-failure-debug -f
-retval=$?
+testr run $SKIP --parallel --subunit | subunit-trace --no-failure-debug -f
+retval=$(($retval || $?))
 testr slowest
 
 coverage combine
