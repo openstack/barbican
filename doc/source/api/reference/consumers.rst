@@ -72,7 +72,7 @@ Request:
 
 .. code-block:: javascript
 
-    GET {container_ref}/consumers?limit=1&offset=1
+    GET {container_ref}/consumers?limit=1\&offset=1
     Headers:
         X-Auth-Token: <token>
 
@@ -80,7 +80,7 @@ Request:
 
     {
         "total": 3,
-        "next": "http://localhost:9311/v1/consumers?limit=1&offset=2",
+        "next": "http://localhost:9311/v1/containers/{container_ref}/consumers?limit=1&offset=2",
         "consumers": [
             {
                 "status": "ACTIVE",
@@ -90,7 +90,7 @@ Request:
                 "created": "2015-10-15T21:17:08.092408"
             }
         ],
-        "previous": "http://localhost:9311/v1/consumers?limit=1&offset=0"
+        "previous": "http://localhost:9311/v1/containers/{container_ref}/consumers?limit=1&offset=0"
     }
 
 .. _consumer_response_attributes:
@@ -124,11 +124,13 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | Code | Description                                                                 |
 +======+=============================================================================+
-| 200  | Successful Request                                                          |
+| 200  | OK.                                                                         |
 +------+-----------------------------------------------------------------------------+
-| 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource |
+| 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource.|
 +------+-----------------------------------------------------------------------------+
-
+| 403  | Forbidden.  The user has been authenticated, but is not authorized to       |
+|      | delete a consumer. This can be based on the user's role.                    |
++------+-----------------------------------------------------------------------------+
 
 .. _post_consumers:
 
@@ -157,6 +159,7 @@ Request:
     POST {container_ref}/consumers
     Headers:
         X-Auth-Token: <token>
+        Content-Type: application/json
 
     Content:
     {
@@ -200,13 +203,13 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | Code | Description                                                                 |
 +======+=============================================================================+
-| 200  | OK                                                                          |
+| 200  | OK.                                                                         |
 +------+-----------------------------------------------------------------------------+
-| 400  | Bad Request                                                                 |
+| 400  | Bad Request.                                                                |
 +------+-----------------------------------------------------------------------------+
-| 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource |
+| 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource.|
 +------+-----------------------------------------------------------------------------+
-| 403  | Forbidden.  The user has been authenticated, but is not authorized to       |
+| 403  | Forbidden. The user has been authenticated, but is not authorized to        |
 |      | create a consumer. This can be based on the user's role or the              |
 |      | project's quota.                                                            |
 +------+-----------------------------------------------------------------------------+
@@ -236,9 +239,10 @@ Request:
 
 .. code-block:: javascript
 
-    POST {container_ref}/consumers
+    DELETE {container_ref}/consumers
     Headers:
         X-Auth-Token: <token>
+        Content-Type: application/json
 
     Content:
     {
@@ -278,9 +282,14 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | Code | Description                                                                 |
 +======+=============================================================================+
-| 200  | OK                                                                          |
+| 200  | OK.                                                                         |
 +------+-----------------------------------------------------------------------------+
-| 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource |
+| 400  | Bad Request.                                                                |
 +------+-----------------------------------------------------------------------------+
-| 404  | Not Found                                                                   |
+| 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource.|
++------+-----------------------------------------------------------------------------+
+| 403  | Forbidden.  The user has been authenticated, but is not authorized to       |
+|      | delete a consumer. This can be based on the user's role.                    |
++------+-----------------------------------------------------------------------------+
+| 404  | Consumer Not Found.                                                         |
 +------+-----------------------------------------------------------------------------+

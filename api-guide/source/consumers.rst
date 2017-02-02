@@ -104,7 +104,7 @@ This will return the following response:
 
     {
         "total": 3,
-        "next": "http://localhost:9311/v1/consumers?limit=1&offset=2",
+        "next": "http://localhost:9311/v1/containers/74bbd3fd-9ba8-42ee-b87e-2eecf10e47b9/consumers?limit=1&offset=2",
         "consumers": [
             {
                 "status": "ACTIVE",
@@ -114,7 +114,7 @@ This will return the following response:
                 "created": "2015-10-15T21:17:08.092408"
             }
         ],
-        "previous": "http://localhost:9311/v1/consumers?limit=1&offset=0"
+        "previous": "http://localhost:9311/v1/containers/74bbd3fd-9ba8-42ee-b87e-2eecf10e47b9/consumers?limit=1&offset=0"
     }
 
 .. _delete_consumer:
