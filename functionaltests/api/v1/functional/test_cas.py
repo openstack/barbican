@@ -22,13 +22,6 @@ import time
 
 from OpenSSL import crypto
 
-dogtag_subcas_enabled = True
-try:
-    import pki.authority    # noqa
-    import pki.feature      # noqa
-except ImportError:
-    dogtag_subcas_enabled = False
-
 from barbican.common import hrefs
 from barbican.plugin.interface import certificate_manager as cert_interface
 from barbican.tests import certificate_utils as certutil
@@ -42,6 +35,8 @@ from functionaltests.api.v1.models import order_models
 from functionaltests.common import config
 
 CONF = config.get_config()
+
+dogtag_subcas_enabled = False
 
 admin_a = CONF.rbac_users.admin_a
 admin_b = CONF.rbac_users.admin_b
@@ -206,7 +201,8 @@ class CertificateAuthoritiesTestCase(CATestCommon):
     def test_create_snakeoil_subca(self):
         self._create_and_verify_subca(self.get_snakeoil_root_ca_ref())
 
-    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @testtools.skipIf(not dogtag_subcas_enabled,
+                      "dogtag subcas are deprecated")
     @depends_on_ca_plugins('dogtag')
     def test_create_dogtag_subca(self):
         self._create_and_verify_subca(self.get_dogtag_root_ca_ref())
@@ -229,7 +225,8 @@ class CertificateAuthoritiesTestCase(CATestCommon):
     def test_create_subca_of_snakeoil_subca(self):
         self._create_subca_of_subca(self.get_snakeoil_root_ca_ref())
 
-    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @testtools.skipIf(not dogtag_subcas_enabled,
+                      "dogtag subcas are deprecated")
     @depends_on_ca_plugins('dogtag')
     def test_create_subca_of_dogtag_subca(self):
         self._create_subca_of_subca(self.get_dogtag_root_ca_ref())
@@ -259,7 +256,8 @@ class CertificateAuthoritiesTestCase(CATestCommon):
         self._fail_to_create_subca_of_not_owned_subca(
             self.get_snakeoil_root_ca_ref())
 
-    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @testtools.skipIf(not dogtag_subcas_enabled,
+                      "dogtag subcas are deprecated")
     @depends_on_ca_plugins('dogtag')
     def test_fail_to_create_subca_of_dogtag_not_owned_subca(self):
         self._fail_to_create_subca_of_not_owned_subca(
@@ -298,7 +296,8 @@ class CertificateAuthoritiesTestCase(CATestCommon):
         self._create_subca_with_missing_subjectdn(
             self.get_snakeoil_root_ca_ref())
 
-    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @testtools.skipIf(not dogtag_subcas_enabled,
+                      "dogtag subcas are deprecated")
     @depends_on_ca_plugins('dogtag')
     def test_create_dogtag_subca_with_missing_subjectdn(self):
         self._create_subca_with_missing_subjectdn(
@@ -315,7 +314,8 @@ class CertificateAuthoritiesTestCase(CATestCommon):
         self._create_subca_and_send_cert_order(
             self.get_snakeoil_root_ca_ref())
 
-    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @testtools.skipIf(not dogtag_subcas_enabled,
+                      "dogtag subcas are deprecated")
     @depends_on_ca_plugins('dogtag')
     def test_create_dogtag_subca_and_send_cert_order(self):
         self._create_subca_and_send_cert_order(
@@ -364,7 +364,8 @@ class CertificateAuthoritiesTestCase(CATestCommon):
             self.get_snakeoil_root_ca_ref()
         )
 
-    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @testtools.skipIf(not dogtag_subcas_enabled,
+                      "dogtag subcas are deprecated")
     @depends_on_ca_plugins('dogtag')
     def test_try_and_fail_to_add_to_proj_dogtag_subca_that_is_not_mine(self):
         self._try_and_fail_to_add_to_proj_subca_that_is_not_mine(
@@ -388,7 +389,8 @@ class CertificateAuthoritiesTestCase(CATestCommon):
             self.get_snakeoil_root_ca_ref()
         )
 
-    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @testtools.skipIf(not dogtag_subcas_enabled,
+                      "dogtag subcas are deprecated")
     @depends_on_ca_plugins('dogtag')
     def test_create_and_delete_dogtag_subca(self):
         self._create_and_delete_subca(
@@ -445,7 +447,8 @@ class CertificateAuthoritiesTestCase(CATestCommon):
             self.get_snakeoil_root_ca_ref()
         )
 
-    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @testtools.skipIf(not dogtag_subcas_enabled,
+                      "dogtag subcas are deprecated")
     @depends_on_ca_plugins('dogtag')
     def test_create_dogtag_subca_and_get_cacert(self):
         self._create_subca_and_get_cacert(
@@ -469,7 +472,8 @@ class CertificateAuthoritiesTestCase(CATestCommon):
             self.get_snakeoil_root_ca_ref()
         )
 
-    @testtools.skipIf(not dogtag_subcas_enabled, "dogtag subcas not enabled")
+    @testtools.skipIf(not dogtag_subcas_enabled,
+                      "dogtag subcas are deprecated")
     @depends_on_ca_plugins('dogtag')
     def test_try_and_fail_to_use_dogtag_subca_that_is_not_mine(self):
         self._try_and_fail_to_use_subca_that_is_not_mine(
