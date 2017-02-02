@@ -35,6 +35,11 @@ class WhenTestingConsumersResource(utils.BarbicanAPIBaseTestCase):
             "name": "consumer_b"
         }
 
+        self.consumer_c = {
+            "URL": "http://test_c",
+            "name": "consumer_c"
+        }
+
     def test_can_create_new_consumer(self):
         resp, container_uuid = create_container(
             self.app,
@@ -77,6 +82,14 @@ class WhenTestingConsumersResource(utils.BarbicanAPIBaseTestCase):
         )
         self.assertEqual(200, consumer_resp.status_int)
 
+        consumer_resp, consumers = create_consumer(
+            self.app,
+            container_id=container_uuid,
+            name=self.consumer_c["name"],
+            url=self.consumer_c["URL"]
+        )
+        self.assertEqual(200, consumer_resp.status_int)
+
         consumer_get_resp = self.app.get(
             '/containers/{container_id}/consumers/'.format(
                 container_id=container_uuid))
@@ -90,6 +103,64 @@ class WhenTestingConsumersResource(utils.BarbicanAPIBaseTestCase):
                       consumer_get_resp.json["consumers"][1]["name"])
         self.assertIn(consumers[1]["URL"],
                       consumer_get_resp.json["consumers"][1]["URL"])
+        self.assertIn(consumers[2]["name"],
+                      consumer_get_resp.json["consumers"][2]["name"])
+        self.assertIn(consumers[2]["URL"],
+                      consumer_get_resp.json["consumers"][2]["URL"])
+
+    def test_can_get_consumers_with_limit_and_offset(self):
+        resp, container_uuid = create_container(
+            self.app,
+            name=self.container_name,
+            container_type=self.container_type
+        )
+        self.assertEqual(201, resp.status_int)
+
+        consumer_resp, consumers = create_consumer(
+            self.app,
+            container_id=container_uuid,
+            name=self.consumer_a["name"],
+            url=self.consumer_a["URL"]
+        )
+        self.assertEqual(200, consumer_resp.status_int)
+
+        consumer_resp, consumers = create_consumer(
+            self.app,
+            container_id=container_uuid,
+            name=self.consumer_b["name"],
+            url=self.consumer_b["URL"]
+        )
+        self.assertEqual(200, consumer_resp.status_int)
+
+        consumer_resp, consumers = create_consumer(
+            self.app,
+            container_id=container_uuid,
+            name=self.consumer_c["name"],
+            url=self.consumer_c["URL"]
+        )
+        self.assertEqual(200, consumer_resp.status_int)
+
+        consumer_get_resp = self.app.get(
+            '/containers/{container_id}/consumers/?limit=1&offset=1'.format(
+                container_id=container_uuid))
+        self.assertEqual(200, consumer_get_resp.status_int)
+
+        container_url = resp.json["container_ref"]
+
+        prev_cons = u"{container_url}/consumers?limit=1&offset=0".format(
+            container_url=container_url)
+        self.assertEqual(prev_cons, consumer_get_resp.json["previous"])
+
+        next_cons = u"{container_url}/consumers?limit=1&offset=2".format(
+            container_url=container_url)
+        self.assertEqual(next_cons, consumer_get_resp.json["next"])
+
+        self.assertEqual(self.consumer_b["name"],
+                         consumer_get_resp.json["consumers"][0]["name"])
+        self.assertEqual(self.consumer_b["URL"],
+                         consumer_get_resp.json["consumers"][0]["URL"])
+
+        self.assertEqual(3, consumer_get_resp.json["total"])
 
     def test_can_delete_consumer(self):
         resp, container_uuid = create_container(
