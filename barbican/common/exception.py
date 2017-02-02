@@ -495,20 +495,20 @@ class CannotDeletePreferredCA(BarbicanHTTPException):
 
 class BadSubCACreationRequest(BarbicanHTTPException):
     message = u._("Errors returned by CA when attempting to "
-                  "create subordinate CA: %(reason)")
+                  "create subordinate CA: %(reason)s")
     client_message = message
     status_code = 400
 
 
 class SubCACreationErrors(BarbicanHTTPException):
     message = u._("Errors returned by CA when attempting to create "
-                  "subordinate CA: %(reason)")
+                  "subordinate CA: %(reason)s")
     client_message = message
 
 
 class SubCADeletionErrors(BarbicanHTTPException):
     message = u._("Errors returned by CA when attempting to delete "
-                  "subordinate CA: %(reason)")
+                  "subordinate CA: %(reason)s")
     client_message = message
 
 
