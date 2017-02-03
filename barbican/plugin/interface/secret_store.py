@@ -77,14 +77,32 @@ class SecretStorePluginNotFound(exception.BarbicanHTTPException):
 
 
 class SecretStoreSupportedPluginNotFound(exception.BarbicanHTTPException):
-    """Raised if no plugins are found that support the requested operation."""
+    """Raised when no secret store supported plugin is found."""
 
     client_message = u._("Secret store supported plugin not found.")
     status_code = 400
 
-    def __init__(self, plugin_name=None):
-        message = u._("Secret store plugin not found for requested operation.")
+    def __init__(self, key_spec):
+        message = u._("Could not find a secret store plugin for storing "
+                      "secret with algorithm '{alg}' and bit-length "
+                      "'{len}'.").format(alg=key_spec.alg,
+                                         len=key_spec.bit_length)
         super(SecretStoreSupportedPluginNotFound, self).__init__(
+            message)
+
+
+class SecretGenerateSupportedPluginNotFound(exception.BarbicanHTTPException):
+    """Raised when no secret generate supported plugin is found."""
+
+    client_message = u._("Secret generate supported plugin not found.")
+    status_code = 400
+
+    def __init__(self, key_spec):
+        message = u._("Could not find a secret store plugin for generating "
+                      "secret with algorithm '{alg}' and bit-length "
+                      "'{len}'.").format(alg=key_spec.alg,
+                                         len=key_spec.bit_length)
+        super(SecretGenerateSupportedPluginNotFound, self).__init__(
             message)
 
 
@@ -567,7 +585,7 @@ class SecretStorePluginManager(named.NamedExtensionManager):
                         plugin.store_secret_supports(key_spec)):
                     return plugin
 
-        raise SecretStoreSupportedPluginNotFound()
+        raise SecretStoreSupportedPluginNotFound(key_spec)
 
     @_enforce_extensions_configured
     def get_plugin_retrieve_delete(self, plugin_name):
@@ -605,7 +623,7 @@ class SecretStorePluginManager(named.NamedExtensionManager):
         for plugin in active_plugins:
             if plugin.generate_supports(key_spec):
                 return plugin
-        raise SecretStoreSupportedPluginNotFound()
+        raise SecretGenerateSupportedPluginNotFound(key_spec)
 
     def _get_internal_plugin_names(self, secretstore_conf):
         """Gets plugin names used for loading via stevedore.
