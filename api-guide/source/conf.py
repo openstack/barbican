@@ -78,7 +78,7 @@ release = '2.1.0'
 #   bug_tag: Tag for categorizing the bug. Must be set manually.
 #   bug_project: Launchpad project to file bugs against.
 # These variables are passed to the logabug code via html_context.
-giturl = (u"http://git.openstack.org/cgit/openstack/barbican/tree/"
+giturl = (u"https://git.openstack.org/cgit/openstack/barbican/tree/"
           "api-guide/source")
 git_cmd = ["/usr/bin/git", "rev-parse", "HEAD"]
 gitsha = subprocess.Popen(
