@@ -1,0 +1,8 @@
+---
+features:
+  - Maintain the policy rules in code and add an oslo.policy CLI script
+    in tox to generate policy sample file.
+
+    The script can be called like
+    "oslopolicy-sample-generator --config-file=etc/oslo-config-generator/policy.conf"
+    and will generate a policy.yaml.sample file with the effective policy.
