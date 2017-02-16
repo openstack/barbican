@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from oslo_log import log as logging
-
 from barbican.common import config
 from barbican.common import exception
 from barbican.common import hrefs
@@ -22,7 +20,6 @@ from barbican.common import resources as res
 from barbican.model import repositories as repo
 
 
-LOG = logging.getLogger(__name__)
 # All negative values will be treated as unlimited
 UNLIMITED_VALUE = -1
 DISABLED_VALUE = 0
