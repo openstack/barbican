@@ -203,8 +203,7 @@ class WhenTestingIfContentTypeAndEncodingSupported(utils.BaseTestCase):
     @utils.parameterized_dataset({
         'plaintext_none': ['text/plain', None],
         'octectstream_base64': ['application/octet-stream', 'base64'],
-        'pkcs8_base64': ['application/pkcs8', 'base64'],
-        'pkix_base64': ['application/pkix-cert', 'base64'],
+        'pkcs8_base64': ['application/pkcs8', 'base64']
     })
     def test_content_type_encoding_supported(self, content_type, encoding):
         self.assertTrue(mime_types.is_content_type_with_encoding_supported(
@@ -215,7 +214,6 @@ class WhenTestingIfContentTypeAndEncodingSupported(utils.BaseTestCase):
         'plaintext_none': ['text/plain', 'base64'],
         'octectstream_no_encoding': ['application/octet-stream', None],
         'pkcs8_no_encoding': ['application/pkcs8', None],
-        'pkix_no_encoding': ['application/pkix-cert', None],
         'unknown_with_valid_encoding': ['application/uknown-content-type',
                                         'base64']
     })

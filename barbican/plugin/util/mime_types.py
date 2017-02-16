@@ -29,8 +29,7 @@ PLAIN_TEXT = ['text/plain',
               'text/plain; charset=utf-8']
 PLAIN_TEXT_CHARSETS = ['utf-8']
 BINARY = ['application/octet-stream',
-          'application/pkcs8',
-          'application/pkix-cert']
+          'application/pkcs8']
 SUPPORTED = PLAIN_TEXT + BINARY
 
 # Normalizes client types to internal types.
@@ -39,7 +38,6 @@ INTERNAL_CTYPES = {'text/plain': 'text/plain',
                    'text/plain; charset=utf-8': 'text/plain',
                    'application/octet-stream': 'application/octet-stream',
                    'application/pkcs8': 'application/pkcs8',
-                   'application/pkix-cert': 'application/pkix-cert',
                    'application/aes': 'application/aes'}
 
 # Maps mime-types used to specify secret data formats to the types that can
@@ -49,12 +47,10 @@ INTERNAL_CTYPES = {'text/plain': 'text/plain',
 CTYPES_PLAIN = {'default': 'text/plain'}
 CTYPES_BINARY = {'default': 'application/octet-stream'}
 CTYPES_PKCS8 = {'default': 'application/pkcs8'}
-CTYPES_PKIX_CERT = {'default': 'application/pkix-cert'}
 CTYPES_AES = {'default': 'application/aes'}
 CTYPES_MAPPINGS = {'text/plain': CTYPES_PLAIN,
                    'application/octet-stream': CTYPES_BINARY,
                    'application/pkcs8': CTYPES_PKCS8,
-                   'application/pkix-cert': CTYPES_PKIX_CERT,
                    'application/aes': CTYPES_AES}
 
 # Supported encodings
@@ -64,7 +60,6 @@ ENCODINGS = ['base64']
 CTYPES_TO_ENCODINGS = {'text/plain': None,
                        'application/octet-stream': ['base64', 'binary'],
                        'application/pkcs8': ['base64', 'binary'],
-                       'application/pkix-cert': ['base64', 'binary'],
                        'application/aes': None}
 
 

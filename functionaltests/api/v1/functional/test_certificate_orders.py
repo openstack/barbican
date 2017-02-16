@@ -258,7 +258,7 @@ class CertificatesTestCase(base.TestCase):
     def verify_valid_cert(self, secret_ref):
         secret_resp = self.secret_behaviors.get_secret(
             secret_ref,
-            "application/pkix-cert")
+            "application/octet-stream")
         self.assertIsNotNone(secret_resp)
         self.assertIsNotNone(secret_resp.content)
         cert = secret_resp.content
@@ -267,7 +267,7 @@ class CertificatesTestCase(base.TestCase):
     def verify_valid_intermediates(self, secret_ref):
         secret_resp = self.secret_behaviors.get_secret(
             secret_ref,
-            "application/pkix-cert")
+            "application/octet-stream")
         self.assertIsNotNone(secret_resp)
         self.assertIsNotNone(secret_resp.content)
         cert_chain = secret_resp.content
