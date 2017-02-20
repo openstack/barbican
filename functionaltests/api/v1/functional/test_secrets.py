@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 from oslo_serialization import base64 as oslo_base64
 from oslo_serialization import jsonutils
 import six
@@ -1137,6 +1138,102 @@ class ListingSecretsTestCase(base.TestCase):
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual(1, len(secrets_list))
+
+    @utils.parameterized_dataset({
+        'created': {
+            'date_type': 'created',
+        },
+        'updated': {
+            'date_type': 'updated',
+        },
+        'expiration': {
+            'date_type': 'expiration',
+        },
+    })
+    @testcase.attr('positive')
+    def test_secret_list_with_date_filter(self, date_type):
+        expiration_1 = str(
+            datetime.datetime.utcnow() + datetime.timedelta(days=3))
+        expiration_2 = str(
+            datetime.datetime.utcnow() + datetime.timedelta(days=5))
+
+        two_phase_model = secret_models.SecretModel(expiration=expiration_1)
+        resp, secret_ref_1 = self.behaviors.create_secret(two_phase_model)
+        # Assert that the secret metadata was created successfully
+        self.assertEqual(201, resp.status_code)
+        payload = "gF6+lLoF3ohA9aPRpt+6bQ=="
+        payload_content_type = "application/octet-stream"
+        payload_content_encoding = "base64"
+        update_resp = self.behaviors.update_secret_payload(
+            secret_ref_1, payload=payload,
+            payload_content_type=payload_content_type,
+            payload_content_encoding=payload_content_encoding)
+        # Assert that the secret payload was uploaded successfully
+        self.assertEqual(204, update_resp.status_code)
+
+        time.sleep(1)
+        model = secret_models.SecretModel(expiration=expiration_2)
+        resp, secret_ref_2 = self.behaviors.create_secret(model)
+
+        resp_1 = self.behaviors.get_secret_metadata(secret_ref_1)
+        resp_2 = self.behaviors.get_secret_metadata(secret_ref_2)
+
+        time_to_search_1 = getattr(resp_1.model, date_type)
+        time_to_search_2 = getattr(resp_2.model, date_type)
+
+        # Search for secrets with secret 1's time
+        query_dict = {date_type: time_to_search_1}
+
+        resp, secrets_list, next_ref, prev_ref = self.behaviors.get_secrets(
+            **query_dict)
+
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(1, len(secrets_list))
+        self.assertEqual(secret_ref_1, secrets_list[0].secret_ref)
+
+        # Search for secrets with time < secret 2, i.e. secret 1
+        query_dict = {date_type: 'lt:' + time_to_search_2}
+
+        resp, secrets_list, next_ref, prev_ref = self.behaviors.get_secrets(
+            **query_dict)
+
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(1, len(secrets_list))
+        self.assertEqual(secret_ref_1, secrets_list[0].secret_ref)
+
+        # Search for secrets with time <= secret 2, i.e. both secrets
+        query_dict = {date_type: 'lte:' + time_to_search_2,
+                      'sort': date_type + ':asc'}
+
+        resp, secrets_list, next_ref, prev_ref = self.behaviors.get_secrets(
+            **query_dict)
+
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(2, len(secrets_list))
+        self.assertEqual(secret_ref_1, secrets_list[0].secret_ref)
+        self.assertEqual(secret_ref_2, secrets_list[1].secret_ref)
+
+        # Search for secrets with time > secret 1, i.e. secret 2
+        query_dict = {date_type: 'gt:' + time_to_search_1}
+
+        resp, secrets_list, next_ref, prev_ref = self.behaviors.get_secrets(
+            **query_dict)
+
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(1, len(secrets_list))
+        self.assertEqual(secret_ref_2, secrets_list[0].secret_ref)
+
+        # Search for secrets with time >= secret 1, i.e. both secrets
+        query_dict = {date_type: 'gte:' + time_to_search_1,
+                      'sort': date_type + ':asc'}
+
+        resp, secrets_list, next_ref, prev_ref = self.behaviors.get_secrets(
+            **query_dict)
+
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(2, len(secrets_list))
+        self.assertEqual(secret_ref_1, secrets_list[0].secret_ref)
+        self.assertEqual(secret_ref_2, secrets_list[1].secret_ref)
 
 
 class SecretsPagingTestCase(base.PagingTestCase):

@@ -133,7 +133,8 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
     def get_secrets(self, limit=10, offset=0, extra_headers=None,
                     omit_headers=None, use_auth=True, user_name=None,
                     name=None, alg=None, mode=None, bits=None,
-                    secret_type=None):
+                    secret_type=None, created=None, updated=None,
+                    expiration=None, sort=None):
         """Handles getting a list of secrets.
 
         :param limit: limits number of returned secrets
@@ -143,10 +144,15 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
         :param omit_headers: headers to delete before making the request
         :param use_auth: Boolean for whether to send authentication headers
         :param user_name: The user name used to list the secrets
+        :param name: Optional name for filtering secrets
         :param alg: Optional algorithm for filtering secrets
         :param mode: Optional mode for filtering secrets
         :param bits: Optional bit length for filtering secrets
         :param secret_type: Optional secret type for filtering secrets
+        :param created: Optional created date for filtering secrets
+        :param updated: Optional updated date for filtering secrets
+        :param expiration: Optional expiration date for filtering secrets
+        :param sort: Optional sort value for filtering secrets
         """
         params = {'limit': limit, 'offset': offset}
         if name:
@@ -159,6 +165,14 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
             params['bits'] = bits
         if secret_type:
             params['secret_type'] = secret_type
+        if created:
+            params['created'] = created
+        if updated:
+            params['updated'] = updated
+        if expiration:
+            params['expiration'] = expiration
+        if sort:
+            params['sort'] = sort
         resp = self.client.get('secrets', params=params,
                                extra_headers=extra_headers,
                                omit_headers=omit_headers,
