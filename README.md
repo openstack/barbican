@@ -47,9 +47,8 @@ ecosystem.  The other systems are:
 
 ## Getting Started
 
-Please visit our [Getting Started wiki page
-](https://github.com/cloudkeep/barbican/wiki/Barbican-Getting-Started-Guide)
-for details.
+Please visit our [Users, Developers and Operators documentation
+](https://docs.openstack.org/developer/barbican/) for details.
 
 ## Why Should You Use Barbican?
 
@@ -96,5 +95,5 @@ CAs).
 5. Improve security through sane defaults and centralized management of
    [policies for all
    secrets](https://github.com/cloudkeep/barbican/wiki/Policies).
-6. Provide an out of band communication mechanism to notify and protect sensitive 
+6. Provide an out of band communication mechanism to notify and protect sensitive
    assets.
