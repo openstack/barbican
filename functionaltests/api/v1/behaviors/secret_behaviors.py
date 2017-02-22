@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from barbican.tests import utils
 from functionaltests.api.v1.behaviors import base_behaviors
 from functionaltests.api.v1.models import secret_models
 
@@ -204,21 +203,3 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
         entities = list(self.created_entities)
         for (secret_ref, admin) in entities:
             self.delete_secret(secret_ref, user_name=admin)
-
-    def delete_all_secrets_for_user(self, user_name):
-        '''Delete all of the secrets for the specified user'''
-        response, secrets, next_ref, prev_ref = self.get_secrets(
-            user_name=user_name)
-        secret_refs_to_delete = []
-        while len(secrets) > 0:
-            for secret in secrets:
-                secret_refs_to_delete.append(secret.secret_ref)
-            if next_ref:
-                limit, offset = utils.get_limit_and_offset_from_ref(next_ref)
-                response, secrets, next_ref, prev = self.get_secrets(
-                    limit=limit, offset=offset, user_name=user_name)
-            else:
-                break
-
-        for secret_ref in secret_refs_to_delete:
-            self.delete_secret(secret_ref=secret_ref, user_name=user_name)
