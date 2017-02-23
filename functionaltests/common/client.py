@@ -18,7 +18,7 @@ import os
 
 import requests
 from six.moves import urllib
-from tempest.lib.common.utils import misc as misc_utils
+from tempest.lib.common.utils import test_utils
 
 from functionaltests.common import auth
 from functionaltests.common import config
@@ -120,7 +120,7 @@ class BarbicanClient(object):
                 'Response: {response_body}').format(**format_kwargs)
 
     def log_request(self, request_kwargs, response, user_name):
-        test_name = misc_utils.find_test_caller()
+        test_name = test_utils.find_test_caller()
         str_request = self.stringify_request(request_kwargs, response)
         if user_name is None:
             user_info = ''
