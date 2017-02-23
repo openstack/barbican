@@ -18,8 +18,10 @@
 
 set -ex
 
+plugin=$1
+
 sudo pip install -r /opt/stack/new/barbican/test-requirements.txt
 
 cd /opt/stack/new/barbican/functionaltests
 echo 'Running Functional Tests'
-sudo ./run_tests.sh
+sudo ./run_tests.sh $plugin
