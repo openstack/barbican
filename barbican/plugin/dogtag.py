@@ -21,7 +21,6 @@ import uuid
 
 from Crypto.PublicKey import RSA
 from Crypto.Util import asn1
-from oslo_config import cfg
 import pki
 
 subcas_available = True
@@ -39,50 +38,20 @@ import pki.kra
 import pki.profile
 from requests import exceptions as request_exceptions
 
-from barbican.common import config
 from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
+
+# we want to keep the dogtag config options separated. That way we
+# do not need to import every dogtag requirement to generate the
+# sample config
+import barbican.plugin.dogtag_config_opts  # noqa
 import barbican.plugin.interface.certificate_manager as cm
 import barbican.plugin.interface.secret_store as sstore
 
-CONF = config.new_config()
+# reuse the conf object to not call config.new_config() twice
+CONF = barbican.plugin.dogtag_config_opts.CONF
 LOG = utils.getLogger(__name__)
-
-dogtag_plugin_group = cfg.OptGroup(name='dogtag_plugin',
-                                   title="Dogtag Plugin Options")
-dogtag_plugin_opts = [
-    cfg.StrOpt('pem_path',
-               help=u._('Path to PEM file for authentication')),
-    cfg.StrOpt('dogtag_host',
-               default="localhost",
-               help=u._('Hostname for the Dogtag instance')),
-    cfg.StrOpt('dogtag_port',
-               default="8443",
-               help=u._('Port for the Dogtag instance')),
-    cfg.StrOpt('nss_db_path',
-               help=u._('Path to the NSS certificate database')),
-    cfg.StrOpt('nss_password',
-               help=u._('Password for the NSS certificate databases'),
-               secret=True),
-    cfg.StrOpt('simple_cmc_profile',
-               help=u._('Profile for simple CMC requests')),
-    cfg.StrOpt('auto_approved_profiles',
-               default="caServerCert",
-               help=u._('List of automatically approved enrollment profiles')),
-    cfg.StrOpt('ca_expiration_time',
-               default=cm.CA_INFO_DEFAULT_EXPIRATION_DAYS,
-               help=u._('Time in days for CA entries to expire')),
-    cfg.StrOpt('plugin_working_dir',
-               help=u._('Working directory for Dogtag plugin')),
-    cfg.StrOpt('plugin_name',
-               help=u._('User friendly plugin name'),
-               default='Dogtag KRA'),
-]
-
-CONF.register_group(dogtag_plugin_group)
-CONF.register_opts(dogtag_plugin_opts, group=dogtag_plugin_group)
-config.parse_args(CONF)
 
 CERT_HEADER = "-----BEGIN CERTIFICATE-----"
 CERT_FOOTER = "-----END CERTIFICATE-----"
