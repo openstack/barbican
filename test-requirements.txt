@@ -3,7 +3,7 @@
 # process, which may cause wedges in the gate later.
 
 # hacking should appear first in case something else depends on pep8
-hacking<0.13,>=0.12.0 # Apache-2.0
+hacking>=0.12.0,!=0.13.0,<0.14  # Apache-2.0
 
 coverage>=4.0 # Apache-2.0
 ddt>=1.0.1 # MIT
