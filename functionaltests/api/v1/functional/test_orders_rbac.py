@@ -100,7 +100,7 @@ class RBACOrdersTestCase(base.TestCase):
     def test_rbac_create_order(self, user, admin, expected_return):
         """Test RBAC for order creation
 
-        Issue an order creation and verify that that the correct
+        Issue an order creation and verify that the correct
         http return code comes back for the specified user.
 
         :param user: the user who will attempt to do the create
@@ -118,7 +118,7 @@ class RBACOrdersTestCase(base.TestCase):
     def test_rbac_get_order(self, user, admin, expected_return):
         """Test RBAC for order get metadata
 
-        Issue an order get and verify that that the correct
+        Issue an order get and verify that the correct
         http return code comes back for the specified user.
 
         The initial order will be created with the admin user to ensure
@@ -139,7 +139,7 @@ class RBACOrdersTestCase(base.TestCase):
     def test_rbac_get_list_of_orders(self, user, admin, expected_return):
         """Test RBAC for get order list
 
-        Issue an get order list and verify that that the correct
+        Issue a get order list and verify that the correct
         http return code comes back for the specified user.
 
         Some initial orders will be stored with the admin user to ensure
@@ -163,7 +163,7 @@ class RBACOrdersTestCase(base.TestCase):
     def test_rbac_delete_order(self, user, admin, expected_return):
         """Test RBAC for order delete
 
-        Issue an order delete and verify that that the correct
+        Issue an order delete and verify that the correct
         http return code comes back for the specified user.
 
         The initial order will be stored with the admin user to ensure

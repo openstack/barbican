@@ -106,7 +106,7 @@ class RBACQuotasTestCase(base.TestCase):
     def test_rbac_get_quotas(self, user, admin, expected_return):
         """Test RBAC for get quotas
 
-        Issue a get quotas and verify that that the correct
+        Issue a get quotas and verify that the correct
         http return code comes back for the specified user.
 
         :param user: the user who will attempt to do the get
@@ -120,7 +120,7 @@ class RBACQuotasTestCase(base.TestCase):
     def test_rbac_get_project_quotas(self, user, admin, expected_return):
         """Test RBAC for get project quotas
 
-        Issue a get quotas and verify that that the correct
+        Issue a get quotas and verify that the correct
         http return code comes back for the specified user.
 
         :param user: the user who will attempt to do the get
@@ -134,7 +134,7 @@ class RBACQuotasTestCase(base.TestCase):
     def test_rbac_set_project_quotas(self, user, admin, expected_return):
         """Test RBAC for set project quotas
 
-        Issue a set project quotas and verify that that the correct
+        Issue a set project quotas and verify that the correct
         http return code comes back for the specified user.
 
         :param user: the user who will attempt to do the set
@@ -153,7 +153,7 @@ class RBACQuotasTestCase(base.TestCase):
     def test_rbac_delete_project_quotas(self, user, admin, expected_return):
         """Test RBAC for delete project quotas
 
-        Issue a set project quotas and verify that that the correct
+        Issue a set project quotas and verify that the correct
         http return code comes back for the specified user.
 
         :param user: the user who will attempt to do the delete

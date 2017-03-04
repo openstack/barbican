@@ -162,7 +162,7 @@ class RBACSecretsTestCase(base.TestCase):
     def test_rbac_store_secret(self, user, admin, expected_return):
         """Test RBAC for secret store
 
-        Issue a secret creation and verify that that the correct
+        Issue a secret creation and verify that the correct
         http return code comes back for the specified user.
 
         :param user: the user who will attempt to do the store
@@ -179,7 +179,7 @@ class RBACSecretsTestCase(base.TestCase):
     def test_rbac_update_secret(self, user, admin, expected_return):
         """Test RBAC for secret update
 
-        Issue a secret update and verify that that the correct
+        Issue a secret update and verify that the correct
         http return code comes back for the specified user.
 
         The initial secret will be stored with the admin user to ensure
@@ -203,7 +203,7 @@ class RBACSecretsTestCase(base.TestCase):
     def test_rbac_get_secret_metadata(self, user, admin, expected_return):
         """Test RBAC for secret get metadata
 
-        Issue a secret get metadata and verify that that the correct
+        Issue a secret get metadata and verify that the correct
         http return code comes back for the specified user.
 
         The initial secret will be stored with the admin user to ensure
@@ -225,7 +225,7 @@ class RBACSecretsTestCase(base.TestCase):
     def test_rbac_get_decrypted_secret(self, user, admin, expected_return):
         """Test RBAC for secret get decrypted secret
 
-        Issue a secret get decrypted data and verify that that the correct
+        Issue a secret get decrypted data and verify that the correct
         http return code comes back for the specified user.
 
         The initial secret will be stored with the admin user to ensure
@@ -250,7 +250,7 @@ class RBACSecretsTestCase(base.TestCase):
     def test_rbac_get_list_of_secrets(self, user, admin, expected_return):
         """Test RBAC for get secret list
 
-        Issue a get secret list and verify that that the correct
+        Issue a get secret list and verify that the correct
         http return code comes back for the specified user.
 
         Some initial secrets will be stored with the admin user to ensure
@@ -274,7 +274,7 @@ class RBACSecretsTestCase(base.TestCase):
     def test_rbac_delete_secret(self, user, admin, expected_return):
         """Test RBAC for secret delete
 
-        Issue a secret delete and verify that that the correct
+        Issue a secret delete and verify that the correct
         http return code comes back for the specified user.
 
         The initial secret will be stored with the admin user to ensure
