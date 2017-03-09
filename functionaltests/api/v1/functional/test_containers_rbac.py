@@ -128,7 +128,7 @@ class RBACContainersTestCase(base.TestCase):
     def test_rbac_store_container(self, user, admin, expected_return):
         """Test RBAC for container store
 
-        Issue a container store and verify that that the correct
+        Issue a container store and verify that the correct
         http return code comes back for the specified user.
 
         :param user: the user who will attempt to do the store
@@ -152,7 +152,7 @@ class RBACContainersTestCase(base.TestCase):
     def test_rbac_update_container(self, user, admin, expected_return):
         """Test RBAC for container update
 
-        Issue a container update and verify that that the correct
+        Issue a container update and verify that the correct
         http return code comes back for the specified user.
 
         The initial container will be stored with the admin user to ensure
@@ -174,7 +174,7 @@ class RBACContainersTestCase(base.TestCase):
     def test_rbac_get_container(self, user, admin, expected_return):
         """Test RBAC for container get
 
-        Issue a container get and verify that that the correct
+        Issue a container get and verify that the correct
         http return code comes back for the specified user.
 
         The initial container will be stored with the admin user to ensure
@@ -196,7 +196,7 @@ class RBACContainersTestCase(base.TestCase):
     def test_rbac_delete_container(self, user, admin, expected_return):
         """Test RBAC for container delete
 
-        Issue a container delete and verify that that the correct
+        Issue a container delete and verify that the correct
         http return code comes back for the specified user.
 
         The initial container will be stored with the admin user to ensure
