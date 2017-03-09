@@ -25,7 +25,7 @@ Installing system dependencies
     sudo apt-get install -y git python-tox
 
     # Install dependency build requirements
-    sudo apt-get install -y libffi-dev libssl-dev python-dev
+    sudo apt-get install -y libffi-dev libssl-dev python-dev gcc
 
 **Fedora 23:**
 
