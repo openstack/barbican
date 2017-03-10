@@ -15,13 +15,13 @@ you must create a database, service credentials, and API endpoints.
 
    * Create the ``barbican`` database:
 
-     .. code-block:: mysql
+     .. code-block:: console
 
         CREATE DATABASE barbican;
 
    * Grant proper access to the ``barbican`` database:
 
-     .. code-block:: mysql
+     .. code-block:: console
 
         GRANT ALL PRIVILEGES ON barbican.* TO 'barbican'@'localhost' \
           IDENTIFIED BY 'BARBICAN_DBPASS';
@@ -32,7 +32,7 @@ you must create a database, service credentials, and API endpoints.
 
    * Exit the database access client.
 
-     .. code-block:: mysql
+     .. code-block:: console
 
         exit;
 
