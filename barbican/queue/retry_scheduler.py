@@ -48,9 +48,9 @@ class PeriodicServer(service.Service):
     """Server to process retry and scheduled tasks.
 
     This server is an Oslo periodic-task service (see
-    http://docs.openstack.org/developer/oslo-incubator/api/openstack.common
-    .periodic_task.html). On a periodic basis, this server checks for tasks
-    that need to be retried, and then sends them up to the RPC queue for later
+    https://docs.openstack.org/developer/oslo.service/api/periodic_task.html).
+    On a periodic basis, this server checks for tasks that need to be
+    retried, and then sends them up to the RPC queue for later
     processing by a worker node.
     """
     def __init__(self, queue_resource=None):
