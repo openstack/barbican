@@ -26,7 +26,7 @@ from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import container_models
 from functionaltests.api.v1.models import secret_models
 from functionaltests.common import config
-from sqlalchemy import create_engine
+from oslo_db.sqlalchemy import session
 
 # Import and configure logging.
 BCONF = barbican_config.CONF
@@ -46,7 +46,7 @@ class DBManageTestCase(base.TestCase):
 
         time.sleep(5)
         # Setup session for tests to query DB
-        engine = create_engine(db_url)
+        engine = session.create_engine(db_url)
         self.conn = engine.connect()
 
     def tearDown(self):

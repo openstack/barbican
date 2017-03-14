@@ -26,6 +26,8 @@ import sys
 import time
 import uuid
 
+from oslo_db import exception as db_exc
+from oslo_db.sqlalchemy import session
 from oslo_utils import timeutils
 import sqlalchemy
 from sqlalchemy import func as sa_func
@@ -170,14 +172,9 @@ def _get_engine(engine):
     # connection_dict = sqlalchemy.engine.url.make_url(_CONNECTION)
 
         engine_args = {
-            'pool_recycle': CONF.sql_idle_timeout,
-            'echo': False,
-            'convert_unicode': True}
-        if CONF.sql_pool_class:
-            engine_args['poolclass'] = utils.get_class_for(
-                'sqlalchemy.pool', CONF.sql_pool_class)
+            'idle_timeout': CONF.sql_idle_timeout}
         if CONF.sql_pool_size:
-            engine_args['pool_size'] = CONF.sql_pool_size
+            engine_args['max_pool_size'] = CONF.sql_pool_size
         if CONF.sql_pool_max_overflow:
             engine_args['max_overflow'] = CONF.sql_pool_max_overflow
 
@@ -233,7 +230,7 @@ def _create_engine(connection, **engine_args):
     LOG.debug('Sql connection: please check "sql_connection" property in '
               'barbican configuration file; Args: %s', engine_args)
 
-    engine = sqlalchemy.create_engine(connection, **engine_args)
+    engine = session.create_engine(connection, **engine_args)
 
     # TODO(jfwood): if 'mysql' in connection_dict.drivername:
     # TODO(jfwood): sqlalchemy.event.listen(_ENGINE, 'checkout',
@@ -408,9 +405,9 @@ class BaseRepo(object):
         try:
             LOG.debug("Saving entity...")
             entity.save(session=session)
-        except sqlalchemy.exc.IntegrityError as e:
+        except db_exc.DBDuplicateEntry as e:
             LOG.exception(u._LE('Problem saving entity for create'))
-            error_msg = re.sub('[()]', '', str(e.orig.args))
+            error_msg = re.sub('[()]', '', str(e.args))
             raise exception.ConstraintCheck(error=error_msg)
 
         LOG.debug('Elapsed repo '
@@ -1432,7 +1429,7 @@ class ContainerConsumerRepo(BaseRepo):
             container.updated_at = timeutils.utcnow()
             container.consumers.append(new_consumer)
             container.save(session=session)
-        except sqlalchemy.exc.IntegrityError:
+        except db_exc.DBDuplicateEntry:
             session.rollback()  # We know consumer already exists.
 
             # This operation is idempotent, so log this and move on

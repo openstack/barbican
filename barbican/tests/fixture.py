@@ -11,6 +11,7 @@
 #  under the License.
 
 import fixtures
+from oslo_db.sqlalchemy import session
 from oslo_utils import timeutils
 import sqlalchemy as sa
 
@@ -25,7 +26,7 @@ class SessionQueryFixture(fixtures.Fixture):
     """
 
     def _setUp(self):
-        self._engine = sa.create_engine('sqlite:///:memory:')
+        self._engine = session.create_engine('sqlite:///:memory:')
         self.Session = sa.orm.sessionmaker(bind=self._engine)
         self.external_id = 'EXTERNAL_ID'
         models.BASE.metadata.create_all(self._engine)
