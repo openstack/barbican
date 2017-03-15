@@ -1,0 +1,8 @@
+register_project_for_upgrade barbican
+register_db_to_save barbican
+
+devstack_localrc base enable_plugin barbican https://git.openstack.org/openstack/barbican
+devstack_localrc target enable_plugin barbican https://git.openstack.org/openstack/barbican
+
+devstack_localrc base enable_service barbican-svc barbican-retry
+devstack_localrc target enable_service barbican-svc barbican-retry
