@@ -62,7 +62,7 @@ def get_public_key_req():
 
 def get_certificate_req():
     return {'name': 'mycertificate',
-            'payload_content_type': 'application/pkix-cert',
+            'payload_content_type': 'application/octet-stream',
             'payload_content_encoding': 'base64',
             'algorithm': 'rsa',
             'bit_length': 2048,

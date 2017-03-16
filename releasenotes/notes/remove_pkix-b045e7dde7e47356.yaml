@@ -1,0 +1,5 @@
+---
+deprecations:
+ - |
+    Removed application/pkix media type because Barbican will not be using
+    media types for format conversion.

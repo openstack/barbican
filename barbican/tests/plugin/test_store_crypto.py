@@ -50,7 +50,7 @@ def get_certificate_dto():
                                   base64.b64encode(
                                       keys.get_certificate_pem()),
                                   spec,
-                                  'application/pkix-cert')
+                                  'application/octet-stream')
 
 
 class TestSecretStoreBase(testtools.TestCase,

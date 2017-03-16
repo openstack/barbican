@@ -546,7 +546,7 @@ def _save_barbican_metadata(order_model, barbican_meta):
 def _save_secrets(result, project_model, request_type, order_model):
     cert_secret_model, transport_key_model = plugin.store_secret(
         unencrypted_raw=result.certificate,
-        content_type_raw='application/pkix-cert',
+        content_type_raw='application/octet-stream',
         content_encoding='base64',
         secret_model=models.Secret(),
         project_model=project_model)
@@ -555,7 +555,7 @@ def _save_secrets(result, project_model, request_type, order_model):
     if result.intermediates:
         intermediates_secret_model, transport_key_model = plugin.store_secret(
             unencrypted_raw=result.intermediates,
-            content_type_raw='application/pkix-cert',
+            content_type_raw='application/octet-stream',
             content_encoding='base64',
             secret_model=models.Secret(),
             project_model=project_model
