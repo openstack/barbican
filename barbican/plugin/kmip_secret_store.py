@@ -239,13 +239,9 @@ class KMIPSecretStore(ss.SecretStoreBase):
 
         config = conf.kmip_plugin
 
-        # Use TLSv1_2, if present
-        tlsv12 = getattr(ssl, "PROTOCOL_TLSv1_2", None)
-        if tlsv12:
-            config.ssl_version = 'PROTOCOL_TLSv1_2'
-            LOG.info(u._LI('Going to use TLS1.2...'))
-        else:
-            LOG.warning(u._LW('TLSv1_2 is not present on the System'))
+        if not getattr(ssl, config.ssl_version, None):
+            LOG.error(u._LE("The configured SSL version (%s) is not available"
+                            " on the system."), config.ssl_version)
 
         self.client = client.ProxyKmipClient(
             hostname=config.host,

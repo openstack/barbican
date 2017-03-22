@@ -376,6 +376,7 @@ function install_pykmip {
     if is_service_enabled pykmip-server; then
         [ ! -d ${PYKMIP_CONF_DIR} ] && sudo mkdir -p ${PYKMIP_CONF_DIR}
         sudo chown ${USER} ${PYKMIP_CONF_DIR}
+
         [ ! -d ${PYKMIP_LOG_DIR} ] && sudo mkdir -p ${PYKMIP_LOG_DIR}
         sudo chown ${USER} ${PYKMIP_LOG_DIR}
 
@@ -397,7 +398,7 @@ port=5696
 certificate_path=${PYKMIP_SERVER_CERT}
 key_path=${PYKMIP_SERVER_KEY}
 ca_path=${PYKMIP_CA_PATH}
-auth_suite=Basic
+auth_suite=TLS1.2
 EOF
        fi
    fi
@@ -415,7 +416,7 @@ function configure_pykmip {
 
 # start_pykmip - start the PyKMIP server
 function start_pykmip {
-    run_process pykmip-server "pykmip-server -f \'${PYKMIP_CONF}\' -l \'${PYKMIP_LOG_DIR}/pykmip-devstack.log\'"
+    run_process pykmip-server "pykmip-server -f ${PYKMIP_CONF} -l ${PYKMIP_LOG_DIR}/pykmip-devstack.log"
 }
 
 # Dogtag functions

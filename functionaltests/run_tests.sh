@@ -22,6 +22,12 @@ fi
 
 echo "Successfully contacted the Barbican API"
 
+plugin=$1
+
+if [[ "$plugin" == "kmip" ]]; then
+    export KMIP_PLUGIN_ENABLED=1
+fi
+
 # run the tests sequentially
 testr init
 testr run --subunit | subunit-trace --no-failure-debug -f
