@@ -239,7 +239,7 @@ class ConsumersCertContainerTestCase(ConsumersBaseTestCase):
 
 class ConsumersAuthedTestCase(ConsumersBaseTestCase):
 
-    @testcase.attr('negative', 'security')
+    @testcase.attr('security')
     def test_consumer_create_authed(self):
         """Create a consumer as an authenticated user
 
@@ -343,3 +343,83 @@ class ConsumersUnauthedTestCase(ConsumersBaseTestCase):
         )
 
         self.assertEqual(401, resp.status_code)
+
+
+class ConsumersValidationTestCase(ConsumersBaseTestCase):
+
+    def test_consumer_create_pass(self):
+        """Create a valid consumer
+
+        Should return 200
+        """
+        data = {
+            "name": "consumername",
+            "URL": "consumerURL"
+        }
+        model = consumer_model.ConsumerModel(**data)
+        resp, consumer_dat = self.consumer_behaviors.create_consumer(
+            model, self.generic_container_ref, use_auth=True
+        )
+        self.assertEqual(200, resp.status_code)
+
+    @testcase.attr('negative')
+    def test_consumer_create_fail_no_name(self):
+        """Attempt to create invalid consumer (Missing name)
+
+        Should return 400
+        """
+        data = {
+            "URL": "consumerURL"
+        }
+        model = consumer_model.ConsumerModel(**data)
+        resp, consumer_dat = self.consumer_behaviors.create_consumer(
+            model, self.generic_container_ref, use_auth=True
+        )
+        self.assertEqual(400, resp.status_code)
+
+    @testcase.attr('negative')
+    def test_consumer_create_fail_no_url(self):
+        """Attempt to create invalid consumer (Missing URL)
+
+        Should return 400
+        """
+        data = {
+            "name": "consumername"
+        }
+        model = consumer_model.ConsumerModel(**data)
+        resp, consumer_dat = self.consumer_behaviors.create_consumer(
+            model, self.generic_container_ref, use_auth=True
+        )
+        self.assertEqual(400, resp.status_code)
+
+    @testcase.attr('negative')
+    def test_consumer_create_fail_empty_name(self):
+        """Attempt to create invalid consumer (Empty name)
+
+        Should return 400
+        """
+        data = {
+            "name": "",
+            "URL": "consumerURL"
+        }
+        model = consumer_model.ConsumerModel(**data)
+        resp, consumer_dat = self.consumer_behaviors.create_consumer(
+            model, self.generic_container_ref, use_auth=True
+        )
+        self.assertEqual(400, resp.status_code)
+
+    @testcase.attr('negative')
+    def test_consumer_create_fail_empty_url(self):
+        """Attempt to create invalid consumer (Empty URL)
+
+        Should return 400
+        """
+        data = {
+            "name": "consumername",
+            "URL": ""
+        }
+        model = consumer_model.ConsumerModel(**data)
+        resp, consumer_dat = self.consumer_behaviors.create_consumer(
+            model, self.generic_container_ref, use_auth=True
+        )
+        self.assertEqual(400, resp.status_code)

@@ -263,6 +263,72 @@ class WhenTestingConsumersResource(utils.BarbicanAPIBaseTestCase):
 
         self.assertEqual(404, consumer_del_resp.status_int)
 
+    def test_fail_create_no_name(self):
+        resp, container_uuid = create_container(
+            self.app,
+            name=self.container_name,
+            container_type=self.container_type
+        )
+        self.assertEqual(201, resp.status_int)
+
+        consumer_resp, consumer = create_consumer(
+            self.app,
+            container_id=container_uuid,
+            url="http://theurl",
+            expect_errors=True
+        )
+        self.assertEqual(400, consumer_resp.status_int)
+
+    def test_fail_create_no_url(self):
+        resp, container_uuid = create_container(
+            self.app,
+            name=self.container_name,
+            container_type=self.container_type
+        )
+        self.assertEqual(201, resp.status_int)
+
+        consumer_resp, consumer = create_consumer(
+            self.app,
+            container_id=container_uuid,
+            name="thename",
+            expect_errors=True
+        )
+        self.assertEqual(400, consumer_resp.status_int)
+
+    def test_fail_create_empty_name(self):
+        resp, container_uuid = create_container(
+            self.app,
+            name=self.container_name,
+            container_type=self.container_type
+        )
+        self.assertEqual(201, resp.status_int)
+
+        consumer_resp, consumer = create_consumer(
+            self.app,
+            container_id=container_uuid,
+            name="",
+            url="http://theurl",
+            expect_errors=True
+        )
+        self.assertEqual(400, consumer_resp.status_int)
+
+    def test_fail_create_empty_url(self):
+        resp, container_uuid = create_container(
+            self.app,
+            name=self.container_name,
+            container_type=self.container_type
+        )
+        self.assertEqual(201, resp.status_int)
+
+        consumer_resp, consumer = create_consumer(
+            self.app,
+            container_id=container_uuid,
+            name="thename",
+            url="",
+            expect_errors=True
+        )
+        self.assertEqual(400, consumer_resp.status_int)
+
 
 # ----------------------- Helper Functions ---------------------------
 def create_container(app, name=None, container_type=None, expect_errors=False,
