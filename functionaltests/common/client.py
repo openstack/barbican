@@ -202,7 +202,7 @@ class BarbicanClient(object):
         :param item_list: the json returned from a barbican GET request for
          a list of objects
         :param model_type: The model used in the creation of the list of models
-        :return A list of models and the refs for next and previous lists.
+        :return: A list of models and the refs for next and previous lists.
         """
 
         models, next_ref, prev_ref = [], None, None
