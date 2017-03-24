@@ -105,7 +105,7 @@ class SecretMetadataTestCase(base.TestCase):
 
         get_resp = self.behaviors.get_metadata(secret_ref)
         self.assertEqual(200, get_resp.status_code)
-        self.assertEqual(get_resp.content, json.dumps(self.valid_metadata))
+        self.assertEqual(json.loads(get_resp.content), self.valid_metadata)
 
     @testcase.attr('negative')
     def test_secret_metadata_get_no_secret(self):
@@ -166,8 +166,7 @@ class SecretMetadataTestCase(base.TestCase):
         get_resp = self.behaviors.get_metadatum(secret_ref,
                                                 self.valid_metadatum_key)
         self.assertEqual(200, get_resp.status_code)
-        self.assertEqual(get_resp.content, json.dumps(self.valid_metadatum,
-                                                      sort_keys=True))
+        self.assertEqual(json.loads(get_resp.content), self.valid_metadatum)
 
     @testcase.attr('negative')
     def test_secret_metadatum_get_wrong_key(self):
