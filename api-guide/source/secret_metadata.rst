@@ -14,7 +14,7 @@ To create/update the secret metadata for a specific secret, we will need to know
 the secret reference of the secret we wish to add user metadata to. Any metadata
 that was previously set will be deleted and replaced with this metadata.
 For more information on creating/updating secret metadata, you can view the
-`PUT /v1/secrets/{uuid}/metadata <http://docs.openstack.org/developer/barbican/api/reference/secret_metadata.html#put-secret-metadata>`
+`PUT /v1/secrets/{uuid}/metadata <http://docs.openstack.org/developer/barbican/api/reference/secret_metadata.html#put-secret-metadata>`__
 section.
 
 .. code-block:: bash
