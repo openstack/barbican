@@ -762,8 +762,8 @@ class ContainerConsumerValidator(ValidatorBase):
         self.schema = {
             "type": "object",
             "properties": {
-                "URL": {"type": "string"},
-                "name": {"type": "string", "maxLength": 255}
+                "URL": {"type": "string", "minLength": 1},
+                "name": {"type": "string", "maxLength": 255, "minLength": 1}
             },
             "required": ["name", "URL"]
         }
