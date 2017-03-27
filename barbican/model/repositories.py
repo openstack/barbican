@@ -21,6 +21,7 @@ quite intense for sqlalchemy, and maybe could be simplified.
 """
 
 import logging
+import re
 import sys
 import time
 import uuid
@@ -407,9 +408,10 @@ class BaseRepo(object):
         try:
             LOG.debug("Saving entity...")
             entity.save(session=session)
-        except sqlalchemy.exc.IntegrityError:
+        except sqlalchemy.exc.IntegrityError as e:
             LOG.exception(u._LE('Problem saving entity for create'))
-            _raise_entity_already_exists(self._do_entity_name())
+            error_msg = re.sub('[()]', '', str(e.orig.args))
+            raise exception.ConstraintCheck(error=error_msg)
 
         LOG.debug('Elapsed repo '
                   'create secret:%s', (time.time() - start))  # DEBUG
@@ -2512,9 +2514,3 @@ def _raise_no_entities_found(entity_name):
     raise exception.NotFound(
         u._("No entities of type {entity_name} found").format(
             entity_name=entity_name))
-
-
-def _raise_entity_already_exists(entity_name):
-    raise exception.Duplicate(
-        u._("Entity '{entity_name}' "
-            "already exists").format(entity_name=entity_name))

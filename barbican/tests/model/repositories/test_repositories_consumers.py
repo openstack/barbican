@@ -55,7 +55,7 @@ class WhenTestingContainerConsumerRepository(utils.RepositoryTestCase):
             container.id, project.external_id, session=session)
         self.assertEqual(1, len(container2.consumers))
 
-    def test_should_raise_duplicate_create_same_composite_key_no_id(self):
+    def test_should_raise_constraint_create_same_composite_key_no_id(self):
         session = self.repo.get_session()
 
         project = models.Project()
@@ -82,12 +82,13 @@ class WhenTestingContainerConsumerRepository(utils.RepositoryTestCase):
             container.id, project.id, {'name': 'name', 'URL': 'www.foo.com'})
 
         exception_result = self.assertRaises(
-            exception.Duplicate,
+            exception.ConstraintCheck,
             self.repo.create_from,
             consumer2,
             session=session)
         self.assertEqual(
-            "Entity 'ContainerConsumer' already exists",
+            u"A defined SQL constraint check failed: 'UNIQUE constraint "
+            "failed: container_consumer_metadata.data_hash',",
             exception_result.message)
 
     def test_should_raise_no_result_found_get_container_id(self):

@@ -441,7 +441,7 @@ class WhenTestingPreferredCARepo(database_utils.RepositoryTestCase):
             session=session,
             suppress_exception=False)
 
-    def test_should_raise_duplicate_entries(self):
+    def test_should_raise_constraint_check(self):
         session = self.ca_repo.get_session()
 
         ca = self._add_ca(self.parsed_ca, session)
@@ -449,7 +449,7 @@ class WhenTestingPreferredCARepo(database_utils.RepositoryTestCase):
         project = self._add_project("project_1", session)
         self._add_preferred_ca(project.id, ca.id, session)
         self.assertRaises(
-            exception.Duplicate,
+            exception.ConstraintCheck,
             self._add_preferred_ca,
             project.id,
             ca2.id,

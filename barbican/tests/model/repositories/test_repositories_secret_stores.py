@@ -137,24 +137,24 @@ class WhenTestingSecretStoresRepo(database_utils.RepositoryTestCase):
         self.assertEqual("middle_name", all_stores[3].name)
         self.assertEqual(False, all_stores[3].global_default)
 
-    def test_should_raise_duplicate_for_same_plugin_names(self):
+    def test_should_raise_constraint_for_same_plugin_names(self):
         """Check for store and crypto plugin name combination uniqueness"""
 
         name = 'second_name'
         store_plugin = 'second_store'
         crypto_plugin = 'second_crypto'
         self._create_secret_store(name, store_plugin, crypto_plugin, False)
-        self.assertRaises(exception.Duplicate, self._create_secret_store,
+        self.assertRaises(exception.ConstraintCheck, self._create_secret_store,
                           "thrid_name", store_plugin, crypto_plugin, False)
 
-    def test_should_raise_duplicate_for_same_names(self):
+    def test_should_raise_constraint_for_same_names(self):
         """Check for secret store 'name' uniqueness"""
 
         name = 'Db backend'
         store_plugin = 'second_store'
         crypto_plugin = 'second_crypto'
         self._create_secret_store(name, store_plugin, crypto_plugin, False)
-        self.assertRaises(exception.Duplicate, self._create_secret_store,
+        self.assertRaises(exception.ConstraintCheck, self._create_secret_store,
                           name, "another_store", "another_crypto", False)
 
     def test_do_entity_name(self):
@@ -169,8 +169,8 @@ class WhenTestingSecretStoresRepo(database_utils.RepositoryTestCase):
         try:
             self._create_secret_store(name, store_plugin, crypto_plugin, False)
             self.assertFail()
-        except exception.Duplicate as ex:
-            self.assertIn("SecretStores", ex.message)
+        except exception.ConstraintCheck as ex:
+            self.assertIn("UNIQUE constraint", ex.message)
 
 
 class WhenTestingProjectSecretStoreRepo(database_utils.RepositoryTestCase):
@@ -264,7 +264,7 @@ class WhenTestingProjectSecretStoreRepo(database_utils.RepositoryTestCase):
 
         self.assertIsNone(proj_s_store)
 
-    def test_should_raise_duplicate_for_same_project_id(self):
+    def test_should_raise_constraint_for_same_project_id(self):
         """Check preferred secret store is set only once for project"""
 
         project1 = self._create_project()
@@ -284,7 +284,8 @@ class WhenTestingProjectSecretStoreRepo(database_utils.RepositoryTestCase):
         s_store2 = self._create_secret_store(name, store_plugin,
                                              crypto_plugin, False)
 
-        self.assertRaises(exception.Duplicate, self._create_project_store,
+        self.assertRaises(exception.ConstraintCheck,
+                          self._create_project_store,
                           project1.id, s_store2.id)
 
     def test_do_entity_name(self):
@@ -311,8 +312,8 @@ class WhenTestingProjectSecretStoreRepo(database_utils.RepositoryTestCase):
                                                  crypto_plugin, False)
             self._create_project_store(project1.id, s_store2.id)
             self.assertFail()
-        except exception.Duplicate as ex:
-            self.assertIn("ProjectSecretStore", ex.message)
+        except exception.ConstraintCheck as ex:
+            self.assertIn("UNIQUE constraint", ex.message)
 
     def test_get_secret_store_for_project(self):
         project1 = self._create_project()
