@@ -85,7 +85,7 @@ class CABehaviors(base_behaviors.BaseBehaviors):
         :param user_name: The user name used to create the subCA
         :param admin: The user with permissions to delete the subCA
         :return: A tuple containing the response from the create
-        and the href to the newly created subCA
+         and the href to the newly created subCA
         """
 
         resp = self.client.post('cas', request_model=model,
@@ -113,7 +113,7 @@ class CABehaviors(base_behaviors.BaseBehaviors):
         :param expected_fail: If test is expected to fail the deletion
         :param use_auth: Boolean for whether to send authentication headers
         :param user_name: The user name used to delete the entity
-        :return A request response object
+        :return: A request response object
         """
         resp = self.client.delete(ca_ref, extra_headers=extra_headers,
                                   use_auth=use_auth, user_name=user_name)

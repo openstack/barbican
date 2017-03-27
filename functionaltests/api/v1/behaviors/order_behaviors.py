@@ -80,7 +80,7 @@ class OrderBehaviors(base_behaviors.BaseBehaviors):
         :param extra_headers: Optional HTTP headers to add to the request
         :param user_name: the user used to do the get
         :param use_auth: Boolean to determine whether auth headers are sent
-        :return the response, a list of orders and the next/pref hrefs
+        :return: the response, a list of orders and the next/pref hrefs
         """
         params = {'limit': limit, 'offset': offset}
 
@@ -116,7 +116,7 @@ class OrderBehaviors(base_behaviors.BaseBehaviors):
                               list for housekeeping.
         :param user_name: the user used to do the delete
         :param use_auth: Boolean to determine whether auth headers are sent
-        :return A request response object
+        :return: A request response object
         """
         resp = self.client.delete(order_ref, extra_headers=extra_headers,
                                   user_name=user_name, use_auth=use_auth)

@@ -584,7 +584,7 @@ def create_timestamp_w_tz_and_offset(timezone=None, days=0, hours=0, minutes=0,
     :param hours: The offset in hours
     :param minutes: The offset in minutes
 
-    :return a timestamp
+    :return: a timestamp
     """
     if timezone is None:
         timezone = time.strftime("%z")

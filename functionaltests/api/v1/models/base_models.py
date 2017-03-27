@@ -32,7 +32,7 @@ class BaseModel(object):
     def obj_to_json(self):
         """Convert this object to a JSON string.
 
-        :return A string of JSON containing the fields in this object
+        :return: A string of JSON containing the fields in this object
         """
 
         return json.dumps(self.obj_to_dict())
@@ -43,7 +43,7 @@ class BaseModel(object):
         If there are  fields that are not set in this object then those
         will NOT have entries in the returned dict.
 
-        :return A dict representing this model
+        :return: A dict representing this model
         """
         the_dict = self.__dict__
         retval = self._remove_empty_fields_from_dict(the_dict)
@@ -72,7 +72,7 @@ class BaseModel(object):
         """Create a model from a JSON string.
 
         :param serialized_str: the JSON string
-        :return a secret object
+        :return: a secret object
         """
         try:
             json_dict = json.loads(serialized_str)
@@ -86,6 +86,6 @@ class BaseModel(object):
         """Create an object from a dict.
 
         :param input_dict: A dict of fields.
-        :return a model object build from the passed in dict.
+        :return: a model object build from the passed in dict.
         """
         return cls(**input_dict)
