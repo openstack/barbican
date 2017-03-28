@@ -190,7 +190,10 @@ if [[ "$ENABLED_SERVICES" =~ "barbican" ]]; then
         openstack endpoint create \
             $BARBICAN_SERVICE \
             --region RegionOne \
-            --publicurl "http://$SERVICE_HOST:9311" \
-            --internalurl "http://$SERVICE_HOST:9311"
+            internal "http://$SERVICE_HOST:9311"
+        openstack endpoint create \
+            $BARBICAN_SERVICE \
+            --region RegionOne \
+            public "http://$SERVICE_HOST:9311"
     fi
 fi
