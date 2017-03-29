@@ -34,26 +34,6 @@ Guidelines for writing new hacking checks
 
 """
 
-UNDERSCORE_IMPORT_FILES = []
-
-log_translation = re.compile(
-    r"(.)*LOG\.(audit|error|info|critical|exception)\(\s*('|\")")
-log_translation_LC = re.compile(
-    r"(.)*LOG\.(critical)\(\s*(_\(|'|\")")
-log_translation_LE = re.compile(
-    r"(.)*LOG\.(error|exception)\(\s*(_\(|'|\")")
-log_translation_LI = re.compile(
-    r"(.)*LOG\.(info)\(\s*(_\(|'|\")")
-log_translation_LW = re.compile(
-    r"(.)*LOG\.(warning|warn)\(\s*(_\(|'|\")")
-translated_log = re.compile(
-    r"(.)*LOG\.(audit|error|info|warn|warning|critical|exception)"
-    "\(\s*_\(\s*('|\")")
-string_translation = re.compile(r"[^_]*_\(\s*('|\")")
-underscore_import_check = re.compile(r"(.)*import _$")
-underscore_import_check_multi = re.compile(r"(.)*import (.)*_, (.)*")
-# We need this for cases where they have created their own _ function.
-custom_underscore_check = re.compile(r"(.)*_\s*=\s*(.)*")
 oslo_namespace_imports = re.compile(r"from[\s]*oslo[.](.*)")
 dict_constructor_with_list_copy_re = re.compile(r".*\bdict\((\[)?(\(|\[)")
 assert_no_xrange_re = re.compile(r"\s*xrange\s*\(")
@@ -107,23 +87,6 @@ class BaseASTChecker(ast.NodeVisitor):
                 if call_node.func.id in names:
                     return True
         return False
-
-
-def no_translate_debug_logs(logical_line, filename):
-    """Check for 'LOG.debug(u._('
-
-    As per our translation policy,
-    https://wiki.openstack.org/wiki/LoggingStandards#Log_Translation
-    we shouldn't translate debug level logs.
-
-    * This check assumes that 'LOG' is a logger.
-    * Use filename so we can start enforcing this in specific folders instead
-      of needing to do so all at once.
-
-    B313
-    """
-    if logical_line.startswith("LOG.debug(u._("):
-        yield(0, "B313 Don't translate debug level logs")
 
 
 class CheckLoggingFormatArgs(BaseASTChecker):
@@ -191,30 +154,6 @@ class CheckLoggingFormatArgs(BaseASTChecker):
         return super(CheckLoggingFormatArgs, self).generic_visit(node)
 
 
-def validate_log_translations(logical_line, physical_line, filename):
-    # Translations are not required in the test directories.
-    if ("barbican/tests" in filename or "functional" in filename):
-        return
-    if pep8.noqa(physical_line):
-        return
-    msg = "B316: LOG.critical messages require translations `_LC()`!"
-    if log_translation_LC.match(logical_line):
-        yield (0, msg)
-    msg = ("B316: LOG.error and LOG.exception messages require translations "
-           "`_LE()`!")
-    if log_translation_LE.match(logical_line):
-        yield (0, msg)
-    msg = "B316: LOG.info messages require translations `_LI()`!"
-    if log_translation_LI.match(logical_line):
-        yield (0, msg)
-    msg = "B316: LOG.warning messages require translations `_LW()`!"
-    if log_translation_LW.match(logical_line):
-        yield (0, msg)
-    msg = "B316: Log messages require translations!"
-    if log_translation.match(logical_line):
-        yield (0, msg)
-
-
 class CheckForStrUnicodeExc(BaseASTChecker):
     """Checks for the use of str() or unicode() on an exception.
 
@@ -260,28 +199,6 @@ class CheckForStrUnicodeExc(BaseASTChecker):
                     if node.args[0].id in self.name:
                         self.add_error(node.args[0])
         super(CheckForStrUnicodeExc, self).generic_visit(node)
-
-
-class CheckForTransAdd(BaseASTChecker):
-    """Checks for the use of concatenation on a translated string.
-
-    Translations should not be concatenated with other strings, but
-    should instead include the string being added to the translated
-    string to give the translators the most information.
-    """
-
-    CHECK_DESC = ('B315 Translated messages cannot be concatenated.  '
-                  'String should be included in translated message.')
-
-    TRANS_FUNC = ['_', '_LI', '_LW', '_LE', '_LC']
-
-    def visit_BinOp(self, node):
-        if isinstance(node.op, ast.Add):
-            if self._check_call_names(node.left, self.TRANS_FUNC):
-                self.add_error(node.left)
-            elif self._check_call_names(node.right, self.TRANS_FUNC):
-                self.add_error(node.right)
-        super(CheckForTransAdd, self).generic_visit(node)
 
 
 def check_oslo_namespace_imports(logical_line, physical_line, filename):
@@ -365,11 +282,8 @@ def validate_assertIsNotNone(logical_line):
 
 
 def factory(register):
-    register(validate_log_translations)
-    register(no_translate_debug_logs)
     register(CheckForStrUnicodeExc)
     register(CheckLoggingFormatArgs)
-    register(CheckForTransAdd)
     register(check_oslo_namespace_imports)
     register(dict_constructor_with_list_copy)
     register(no_xrange)
