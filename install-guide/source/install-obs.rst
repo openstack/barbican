@@ -16,7 +16,7 @@ Install and configure components
 
    .. code-block:: console
 
-      # zypper --quiet --non-interactive install
+      # zypper install openstack-barbican-api openstack-barbican-keystone-listener openstack-barbican-worker
 
 .. include:: common_configure.rst
 
@@ -24,11 +24,15 @@ Install and configure components
 Finalize installation
 ---------------------
 
-Start the Key Manager services and configure them to start when
-the system boots:
+#. Copy the sample Apache vhost file into place:
 
 .. code-block:: console
 
-   # systemctl enable openstack-barbican-api.service
+   # cp /etc/apache2/conf.d/barbican-api.conf.sample /etc/apache2/vhosts.d/barbican-api.conf
 
-   # systemctl start openstack-barbican-api.service
+#.  Start the Apache HTTP service and configure it to start when the system boots:
+
+    .. code-block:: console
+
+        # systemctl enable apache2.service
+        # systemctl start apache2.service
