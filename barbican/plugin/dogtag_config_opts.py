@@ -56,3 +56,7 @@ dogtag_plugin_opts = [
 CONF.register_group(dogtag_plugin_group)
 CONF.register_opts(dogtag_plugin_opts, group=dogtag_plugin_group)
 config.parse_args(CONF)
+
+
+def list_opts():
+    yield dogtag_plugin_group, dogtag_plugin_opts

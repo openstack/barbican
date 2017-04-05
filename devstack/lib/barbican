@@ -94,7 +94,6 @@ function configure_barbican {
     sudo chown $USER $BARBICAN_CONF_DIR
 
     # Copy the barbican config files to the config dir
-    cp $BARBICAN_DIR/etc/barbican/barbican.conf $BARBICAN_CONF_DIR
     cp $BARBICAN_DIR/etc/barbican/barbican-api-paste.ini $BARBICAN_CONF_DIR
     cp -R $BARBICAN_DIR/etc/barbican/vassals $BARBICAN_CONF_DIR
 

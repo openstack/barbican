@@ -56,6 +56,10 @@ CONF.register_opts(snakeoil_ca_plugin_opts, group=snakeoil_ca_plugin_group)
 config.parse_args(CONF)
 
 
+def list_opts():
+    yield snakeoil_ca_plugin_group, snakeoil_ca_plugin_opts
+
+
 def set_subject_X509Name(target, dn):
     """Set target X509Name object with parsed dn.
 

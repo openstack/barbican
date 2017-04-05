@@ -86,6 +86,11 @@ CONF.register_group(kmip_opt_group)
 CONF.register_opts(kmip_opts, group=kmip_opt_group)
 config.parse_args(CONF)
 
+
+def list_opts():
+    yield kmip_opt_group, kmip_opts
+
+
 attribute_debug_msg = "Created attribute type %s with value %s"
 
 

@@ -3,6 +3,7 @@
 
 mozilla-nss-devel [platform:rpm]
 nss-devel [platform:rpm]
+libnss3-dev [platform:dpkg]
 
 gettext [test]
 

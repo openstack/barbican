@@ -50,6 +50,10 @@ config.parse_args(CONF)
 config.set_module_config("crypto", CONF)
 
 
+def list_opts():
+    yield crypto_opt_group, crypto_opts
+
+
 class _CryptoPluginManager(named.NamedExtensionManager):
     def __init__(self, conf=CONF, invoke_args=(), invoke_kwargs={}):
         """Crypto Plugin Manager

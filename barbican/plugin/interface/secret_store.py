@@ -61,6 +61,10 @@ config.parse_args(CONF)
 config.set_module_config("secretstore", CONF)
 
 
+def list_opts():
+    yield store_opt_group, store_opts
+
+
 class SecretStorePluginNotFound(exception.BarbicanHTTPException):
     """Raised when no plugins are installed."""
 

@@ -1,0 +1,4 @@
+---
+other:
+  - oslo-config-generator is now used to generate a
+    barbican.conf.sample file
