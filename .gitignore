@@ -72,3 +72,6 @@ etc/barbican/barbican.conf.sample
 
 # Files created by releasenotes build
 releasenotes/build
+
+# Files created by API build
+api-ref/build/
