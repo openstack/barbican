@@ -14,7 +14,7 @@
 # limitations under the License.
 import base64
 import copy
-import json
+from oslo_serialization import jsonutils
 import time
 
 from OpenSSL import crypto
@@ -281,7 +281,7 @@ class CertificatesTestCase(base.TestCase):
                          order_resp.model.sub_status_message)
 
     def confirm_error_message(self, resp, message):
-        resp_dict = json.loads(resp.content)
+        resp_dict = jsonutils.loads(resp.content)
         self.assertEqual(message, resp_dict['description'])
 
     @testtools.testcase.attr('positive')
@@ -426,7 +426,7 @@ class CertificatesTestCase(base.TestCase):
         create_resp, order_ref = self.behaviors.create_order(test_model)
         self.assertEqual(400, create_resp.status_code)
         self.assertIsNone(order_ref)
-        error_description = json.loads(create_resp.content)['description']
+        error_description = jsonutils.loads(create_resp.content)['description']
         self.assertIn("Invalid PKCS10 Data", error_description)
 
     @testtools.testcase.attr('negative')

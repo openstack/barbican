@@ -71,7 +71,7 @@ create_container_rsa_data = {
 accepted_str_values = {
     'alphanumeric': ['a2j3j6ll9'],
     'punctuation': ['~!@#$%^&*()_+`-={}[]|:;<>,.?'],
-    'len_255': [str(bytearray().zfill(255))],
+    'len_255': [base.TestCase.max_sized_field],
     'uuid': ['54262d9d-4bc7-4821-8df0-dc2ca8e112bb'],
     'empty': ['']
 }

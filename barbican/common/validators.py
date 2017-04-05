@@ -257,8 +257,7 @@ class NewSecretValidator(ValidatorBase):
                     mime_types.is_supported(content_type),
                     schema_name,
                     u._("payload_content_type is not one of {supported}"
-                        ).format(supplied=content_type,
-                                 supported=mime_types.SUPPORTED),
+                        ).format(supported=mime_types.SUPPORTED),
                     "payload_content_type")
 
         return json_data
@@ -316,9 +315,8 @@ class NewSecretValidator(ValidatorBase):
         self._assert_validity(
             mime_types.is_supported(content_type),
             schema_name,
-            u._("payload_content_type {supplied} is not one of {supported}"
-                ).format(supplied=content_type,
-                         supported=mime_types.SUPPORTED),
+            u._("payload_content_type is not one of {supported}"
+                ).format(supported=mime_types.SUPPORTED),
             "payload_content_type")
 
         self._assert_validity(

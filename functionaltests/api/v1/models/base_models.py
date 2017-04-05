@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import json
 import logging
+from oslo_serialization import jsonutils
 
 LOG = logging.getLogger(__name__)
 
@@ -34,8 +34,7 @@ class BaseModel(object):
 
         :return: A string of JSON containing the fields in this object
         """
-
-        return json.dumps(self.obj_to_dict())
+        return jsonutils.dump_as_bytes(self.obj_to_dict())
 
     def obj_to_dict(self):
         """Create a dict of the values for this model object.
@@ -75,7 +74,7 @@ class BaseModel(object):
         :return: a secret object
         """
         try:
-            json_dict = json.loads(serialized_str)
+            json_dict = jsonutils.loads(serialized_str)
             return cls.dict_to_obj(json_dict)
         except TypeError as e:
             LOG.error('Couldn\'t deserialize input: %s\n Because: %s',

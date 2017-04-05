@@ -12,7 +12,7 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
+from oslo_serialization import jsonutils
 from testtools import testcase
 import uuid
 
@@ -105,7 +105,8 @@ class SecretMetadataTestCase(base.TestCase):
 
         get_resp = self.behaviors.get_metadata(secret_ref)
         self.assertEqual(200, get_resp.status_code)
-        self.assertEqual(json.loads(get_resp.content), self.valid_metadata)
+        self.assertEqual(jsonutils.loads(get_resp.content),
+                         self.valid_metadata)
 
     @testcase.attr('negative')
     def test_secret_metadata_get_no_secret(self):
@@ -166,7 +167,8 @@ class SecretMetadataTestCase(base.TestCase):
         get_resp = self.behaviors.get_metadatum(secret_ref,
                                                 self.valid_metadatum_key)
         self.assertEqual(200, get_resp.status_code)
-        self.assertEqual(json.loads(get_resp.content), self.valid_metadatum)
+        self.assertEqual(jsonutils.loads(get_resp.content),
+                         self.valid_metadatum)
 
     @testcase.attr('negative')
     def test_secret_metadatum_get_wrong_key(self):

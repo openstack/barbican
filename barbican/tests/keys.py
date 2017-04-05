@@ -226,7 +226,7 @@ def get_encrypted_private_key_pem():
     of the private_encrypted.pk8 file.
     """
 
-    return """-----BEGIN ENCRYPTED PRIVATE KEY-----
+    return b"""-----BEGIN ENCRYPTED PRIVATE KEY-----
 MIIE6TAbBgkqhkiG9w0BBQMwDgQIssadeQrYhhACAggABIIEyDNw3SV2b19yy4Q/
 kTbtJ/p2X2zKDqr7GgLeAowqqhcMfvprI7G8C0XtwxkR4SjMZUXNcmOwQB2kNKtK
 ZilCz6pSx81iUj4s1fU460XkhkIeV+F7aB2PsTG1oDfPCuzKFjT6EuSE6lFUH89r
@@ -268,7 +268,7 @@ def get_passphrase_txt():
     of the passphrase.txt file.
     """
 
-    return """password"""
+    return b"""password"""
 
 
 def get_csr_pem():
@@ -283,7 +283,7 @@ def get_csr_pem():
     of the csr.pem file.
     """
 
-    return """-----BEGIN CERTIFICATE REQUEST-----
+    return b"""-----BEGIN CERTIFICATE REQUEST-----
 MIICWzCCAUMCAQAwFjEUMBIGA1UEAwwLZXhhbXBsZS5jb20wggEiMA0GCSqGSIb3
 DQEBAQUAA4IBDwAwggEKAoIBAQCza2VoDXmBUMmwjFu9F6MM5q/AZ1WjnWA2YNdN
 y237TrGN/nobDDv8FBBpUPmHNZ04H1LyxFcP8ReFrcIXpifsReu2lAWaqRPxovu5
