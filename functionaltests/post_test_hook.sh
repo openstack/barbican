@@ -24,4 +24,9 @@ sudo pip install -r /opt/stack/new/barbican/test-requirements.txt
 
 cd /opt/stack/new/barbican/functionaltests
 echo 'Running Functional Tests'
-sudo ./run_tests.sh $plugin
+
+if [ "$DEVSTACK_GATE_USE_PYTHON3" = True ]; then
+    export PYTHON=$(which python3 2>/dev/null)
+fi
+
+sudo -E ./run_tests.sh $plugin
