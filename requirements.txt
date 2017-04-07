@@ -2,7 +2,7 @@
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
 alembic>=0.8.10 # MIT
-Babel>=2.3.4 # BSD
+Babel!=2.4.0,>=2.3.4 # BSD
 cffi # MIT
 cryptography>=1.6 # BSD/Apache-2.0
 eventlet!=0.18.3,>=0.18.2 # MIT
