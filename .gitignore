@@ -68,6 +68,7 @@ ChangeLog
 # Rope
 .ropeproject
 # files created by oslo-config-generator
+etc/barbican/barbican.conf
 etc/barbican/barbican.conf.sample
 
 # Files created by releasenotes build
