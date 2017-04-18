@@ -86,9 +86,8 @@ class WhenTestingContainerConsumerRepository(utils.RepositoryTestCase):
             self.repo.create_from,
             consumer2,
             session=session)
-        self.assertEqual(
-            u"A defined SQL constraint check failed: 'UNIQUE constraint "
-            "failed: container_consumer_metadata.data_hash',",
+        self.assertIn(
+            "SQL constraint check failed",
             exception_result.message)
 
     def test_should_raise_no_result_found_get_container_id(self):

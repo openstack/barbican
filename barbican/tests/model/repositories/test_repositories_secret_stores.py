@@ -170,7 +170,7 @@ class WhenTestingSecretStoresRepo(database_utils.RepositoryTestCase):
             self._create_secret_store(name, store_plugin, crypto_plugin, False)
             self.assertFail()
         except exception.ConstraintCheck as ex:
-            self.assertIn("UNIQUE constraint", ex.message)
+            self.assertIn("SQL constraint check failed", ex.message)
 
 
 class WhenTestingProjectSecretStoreRepo(database_utils.RepositoryTestCase):
@@ -313,7 +313,7 @@ class WhenTestingProjectSecretStoreRepo(database_utils.RepositoryTestCase):
             self._create_project_store(project1.id, s_store2.id)
             self.assertFail()
         except exception.ConstraintCheck as ex:
-            self.assertIn("UNIQUE constraint", ex.message)
+            self.assertIn("SQL constraint check failed", ex.message)
 
     def test_get_secret_store_for_project(self):
         project1 = self._create_project()
