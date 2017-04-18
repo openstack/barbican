@@ -11,7 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from Crypto.PublicKey import RSA
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 from OpenSSL import crypto
 from oslo_serialization import base64
 import six
@@ -137,26 +138,54 @@ def convert_der_to_pem(der, secret_type):
 
 
 def _convert_private_pem_to_der(pem):
-    private_key = RSA.importKey(pem)
-    der = private_key.exportKey('DER', pkcs=8)
+    private_key = serialization.load_pem_private_key(
+        pem,
+        password=None,
+        backend=default_backend()
+        )
+    der = private_key.private_bytes(
+        encoding=serialization.Encoding.DER,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+        )
     return der
 
 
 def _convert_private_der_to_pem(der):
-    private_key = RSA.importKey(der)
-    pem = private_key.exportKey('PEM', pkcs=8)
+    private_key = serialization.load_der_private_key(
+        der,
+        password=None,
+        backend=default_backend()
+        )
+    pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+        )
     return pem
 
 
 def _convert_public_pem_to_der(pem):
-    pubkey = RSA.importKey(pem)
-    der = pubkey.exportKey('DER')
+    public_key = serialization.load_pem_public_key(
+        pem,
+        backend=default_backend()
+        )
+    der = public_key.public_bytes(
+        encoding=serialization.Encoding.DER,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
     return der
 
 
 def _convert_public_der_to_pem(der):
-    pubkey = RSA.importKey(der)
-    pem = pubkey.exportKey('PEM')
+    public_key = serialization.load_der_public_key(
+        der,
+        backend=default_backend()
+        )
+    pem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
     return pem
 
 

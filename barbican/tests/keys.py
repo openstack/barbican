@@ -53,7 +53,8 @@ jIeFW9U1C6OcOGvm40Lr3UKzMa5Yrtq6MW4ri7uSCwKBgQDfdqVjT4uXmGwOh1z4
 Pzv6GCoc+6GobXg4DvvCUjP9MR+2+5sX0AY/f+aVCD05/Nj0RqpAwUc03zZU5ZtL
 2uNe6XDjEugfFtlzea6+rbD6KpFS+nxPJA8YyWYRpNhpRWGWQakHedr3BtMtGs0h
 pKNAQG72HKWtSfJQMXvn2RlicA==
------END PRIVATE KEY-----"""
+-----END PRIVATE KEY-----
+"""
 
 
 def get_private_key_der():
@@ -174,7 +175,8 @@ udQQn4RlVt+cOdjmP9t8eTHjuMr8eZsj3HJ8TFUONirg68yqowZUo5gZ3KRmMdCY
 Ak/rMhZh7JfKzpKgjzxS6NuGEJ/uP6a9QGMGmQGzE5fc6C7REI+rMUnLh3EvXvJ4
 qbQ8ZbGy0IKhlWhnRNde7LQveUB+1LyE27mM3Y2cARXNUoM/Bmf9oS0rB7oyYiEH
 LwIDAQAB
------END PUBLIC KEY-----"""
+-----END PUBLIC KEY-----
+"""
 
 
 def get_public_key_der():
