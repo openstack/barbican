@@ -26,7 +26,7 @@ def setup_config(config_file=''):
 
     identity_group = cfg.OptGroup(name='identity')
     identity_options = [
-        cfg.StrOpt('uri', default='http://localhost:5000/v3'),
+        cfg.StrOpt('uri', default='http://localhost/identity/v3'),
         cfg.StrOpt('version', default='v3'),
         cfg.StrOpt('username', default='admin'),
         cfg.StrOpt('password', default='secretadmin', secret=True),
