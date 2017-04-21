@@ -108,7 +108,11 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         return pkcs11.CKR_OK
 
     def _encrypt(self, session, pt, pt_len, ct, ct_len):
-        self.ffi.buffer(ct)[:] = pt[::-1] + b'0' * (self.pkcs11.gcmtagsize * 2)
+        if self.pkcs11.generate_iv:
+            self.ffi.buffer(ct)[:] = pt[::-1] + b'0' * self.pkcs11.gcmtagsize
+        else:
+            self.ffi.buffer(ct)[:] = pt[::-1] + b'0' * (self.pkcs11.gcmtagsize
+                                                        * 2)
         return pkcs11.CKR_OK
 
     def _decrypt(self, session, ct, ct_len, pt, pt_len):
@@ -232,14 +236,27 @@ class WhenTestingPKCS11(utils.BaseTestCase):
                           mock.MagicMock(), mock.MagicMock(),
                           encrypt=True, master_key=True)
 
-    def test_encrypt(self):
+    def test_encrypt_with_no_iv_generation(self):
         pt = b'0123456789ABCDEF'
+        self.pkcs11.generate_iv = False
         ct = self.pkcs11.encrypt(mock.MagicMock(), pt, mock.MagicMock())
 
         self.assertEqual(ct['ct'][:len(pt)], pt[::-1])
         self.assertGreater(len(ct['iv']), 0)
 
         self.assertEqual(1, self.lib.C_GenerateRandom.call_count)
+        self.assertEqual(1, self.lib.C_EncryptInit.call_count)
+        self.assertEqual(1, self.lib.C_Encrypt.call_count)
+
+    def test_encrypt_with_iv_generation(self):
+        pt = b'0123456789ABCDEF'
+        self.pkcs11.generate_iv = True
+        ct = self.pkcs11.encrypt(mock.MagicMock(), pt, mock.MagicMock())
+
+        self.assertEqual(ct['ct'][:len(pt)], pt[::-1])
+        self.assertGreater(len(ct['iv']), 0)
+
+        self.assertEqual(2, self.lib.C_GenerateRandom.call_count)
         self.assertEqual(1, self.lib.C_EncryptInit.call_count)
         self.assertEqual(1, self.lib.C_Encrypt.call_count)
 
