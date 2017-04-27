@@ -144,10 +144,6 @@ class SecretsTestCase(base.TestCase):
         self.behaviors.delete_all_created_secrets()
         super(SecretsTestCase, self).tearDown()
 
-    def _cleanup_all_secrets(self):
-        for user_name in self.client.get_all_functional_test_user_names():
-            self.behaviors.delete_all_secrets_for_user(user_name=user_name)
-
     @testcase.attr('negative')
     def test_secret_create_with_only_content_type_no_payload(self):
         """Create secret with valid content type but no payload."""
@@ -1090,7 +1086,15 @@ class SecretsTestCase(base.TestCase):
 
 
 @utils.parameterized_test_case
-class ListingSecretsTestCase(SecretsTestCase):
+class ListingSecretsTestCase(base.TestCase):
+
+    def setUp(self):
+        super(ListingSecretsTestCase, self).setUp()
+        self.behaviors = secret_behaviors.SecretBehaviors(self.client)
+
+    def tearDown(self):
+        self.behaviors.delete_all_created_secrets()
+        super(ListingSecretsTestCase, self).tearDown()
 
     @utils.parameterized_dataset({
         'query_by_name': {
