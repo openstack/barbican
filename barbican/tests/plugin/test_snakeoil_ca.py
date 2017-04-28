@@ -16,7 +16,8 @@
 import base64
 import os
 
-from Crypto.Util import asn1
+from cryptography.hazmat.backends import default_backend
+from cryptography import x509
 import fixtures
 import mock
 from OpenSSL import crypto
@@ -148,13 +149,13 @@ class CertManagerTestCase(BaseTestCase):
                                          key_size=512, subject_dn=subject_dn)
 
     def verify_sig(self, encoded_cert):
-        der = asn1.DerSequence()
-        der.decode(encoded_cert)
-        der_sig = asn1.DerObject()
-        der_sig.decode(der[2])
-        sig = der_sig.payload
-        self.assertEqual(b'\x00', sig[:1])
-        crypto.verify(self.ca.cert, sig[1:], der[0], 'sha256')
+        cert = x509.load_der_x509_certificate(encoded_cert, default_backend())
+
+        crypto.verify(
+            self.ca.cert,
+            cert.signature,
+            cert.tbs_certificate_bytes,
+            'sha256')
 
     def test_gen_cert_no_file_storage(self):
         req = certificate_utils.get_valid_csr_object()
