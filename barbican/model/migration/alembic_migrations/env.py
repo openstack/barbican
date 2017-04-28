@@ -15,7 +15,7 @@
 from __future__ import with_statement
 
 from alembic import context
-from sqlalchemy import create_engine, pool
+from oslo_db.sqlalchemy import session
 
 from barbican.model import models
 
@@ -77,9 +77,8 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    engine = create_engine(
-        get_sqlalchemy_url(),
-        poolclass=pool.NullPool)
+    engine = session.create_engine(
+        get_sqlalchemy_url())
     connection = engine.connect()
     context.configure(
         connection=connection,

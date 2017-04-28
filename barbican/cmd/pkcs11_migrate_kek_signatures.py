@@ -16,7 +16,7 @@ import base64
 import json
 import traceback
 
-import sqlalchemy
+from oslo_db.sqlalchemy import session
 from sqlalchemy import orm
 from sqlalchemy.orm import scoping
 
@@ -33,7 +33,7 @@ class KekSignatureMigrator(object):
 
     def __init__(self, db_connection, library_path, login, slot_id):
         self.dry_run = False
-        self.db_engine = sqlalchemy.create_engine(db_connection)
+        self.db_engine = session.create_engine(db_connection)
         self._session_creator = scoping.scoped_session(
             orm.sessionmaker(
                 bind=self.db_engine,

@@ -17,6 +17,7 @@ from barbican.model import clean
 from barbican.model import models
 from barbican.model import repositories as repos
 from barbican.tests import database_utils as utils
+from oslo_db import exception as db_exc
 from sqlalchemy.exc import IntegrityError
 
 import datetime
@@ -434,4 +435,4 @@ class WhenTestingDBCleanUpCommand(utils.RepositoryTestCase):
         secret.deleted = True
         secret_metadatum.deleted = False
 
-        self.assertRaises(IntegrityError, clean.cleanup_all)
+        self.assertRaises(db_exc.DBReferenceError, clean.cleanup_all)
