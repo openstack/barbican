@@ -16,7 +16,9 @@ limitations under the License.
 import logging
 import os
 
+from oslo_serialization import base64
 import requests
+import six
 from six.moves import urllib
 from tempest.lib.common.utils import test_utils
 
@@ -86,6 +88,17 @@ class BarbicanClient(object):
             retval.append(username)
         return retval
 
+    def _attempt_ascii(self, text):
+        """Attempt to decode to ascii, works with py27 and py35
+
+        Throw an encode or decode exception is text can not be
+        presented in ascii.
+        """
+        if isinstance(text, six.text_type):
+            return text.encode('ascii')
+        else:
+            return text.decode('ascii')
+
     def _attempt_to_stringify_content(self, content, content_tag):
         if content is None:
             return content
@@ -93,12 +106,12 @@ class BarbicanClient(object):
             # NOTE(jaosorior): The content is decoded as ascii since the
             # logging module has problems with utf-8 strings and will end up
             # trying to decode this as ascii.
-            return content.decode('ascii')
-        except UnicodeDecodeError:
+            return self._attempt_ascii(content)
+        except (UnicodeDecodeError, UnicodeEncodeError):
             # NOTE(jaosorior): Since we are using base64 as default and this is
             # only for logging (in order to debug); Lets not put too much
             # effort in this and just use encoded string.
-            return content.encode('base64')
+            return base64.encode_as_text(content)
 
     def stringify_request(self, request_kwargs, response):
         format_kwargs = {

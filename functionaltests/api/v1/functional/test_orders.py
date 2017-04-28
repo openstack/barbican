@@ -12,7 +12,7 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
+from oslo_serialization import jsonutils
 import sys
 import time
 
@@ -295,7 +295,7 @@ class OrdersTestCase(base.TestCase):
         resp, order_ref = self.behaviors.create_order(test_model)
 
         # Make sure we actually get a message back
-        error_msg = json.loads(resp.content).get('title')
+        error_msg = jsonutils.loads(resp.content).get('title')
 
         self.assertEqual(400, resp.status_code)
         self.assertIsNotNone(error_msg)
@@ -322,7 +322,7 @@ class OrdersTestCase(base.TestCase):
         self.assertIsNotNone(order_ref)
 
     @utils.parameterized_dataset({
-        'negative_maxint': [-sys.maxint],
+        'negative_maxint': [-sys.maxsize],
         'negative_7': [-7],
         'negative_1': [-1],
         '0': [0],

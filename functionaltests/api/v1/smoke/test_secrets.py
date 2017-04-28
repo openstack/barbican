@@ -12,9 +12,9 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import binascii
 import copy
 
+from oslo_serialization import base64 as oslo_base64
 from testtools import testcase
 
 from barbican.tests import utils
@@ -28,7 +28,7 @@ default_secret_create_data = {
     "algorithm": "aes",
     "bit_length": 256,
     "mode": "cbc",
-    "payload": "gF6+lLoF3ohA9aPRpt+6bQ==",
+    "payload": b"gF6+lLoF3ohA9aPRpt+6bQ==",
     "payload_content_type": "application/octet-stream",
     "payload_content_encoding": "base64",
 }
@@ -54,7 +54,7 @@ default_secret_create_emptystrings_data = {
     "algorithm": '',
     "bit_length": '',
     "mode": '',
-    "payload": '',
+    "payload": b'',
     "payload_content_type": '',
     "payload_content_encoding": '',
 }
@@ -102,13 +102,13 @@ class SecretsTestCase(base.TestCase):
         resp = self.behaviors.get_secret_metadata(secret_ref)
         self.assertEqual(200, resp.status_code)
         self.assertEqual("ACTIVE", resp.model.status)
-        self.assertGreater(resp.model.secret_ref, 0)
+        self.assertTrue(resp.model.secret_ref)
 
     @utils.parameterized_dataset({
         'alphanumeric': ['1f34ds'],
         'punctuation': ['~!@#$%^&*()_+`-={}[]|:;<>,.?'],
         'uuid': ['54262d9d-4bc7-4821-8df0-dc2ca8e112bb'],
-        'len_255': [str(bytearray().zfill(255))],
+        'len_255': [base.TestCase.max_sized_field],
         'empty': [''],
         'null': [None]
     })
@@ -175,8 +175,8 @@ class SecretsTestCase(base.TestCase):
         get_resp = self.behaviors.get_secret(secret_ref,
                                              test_model.payload_content_type)
         self.assertEqual(200, get_resp.status_code)
-        self.assertIn(test_model.payload,
-                      binascii.b2a_base64(get_resp.content))
+        self.assertEqual(test_model.payload,
+                         oslo_base64.encode_as_bytes(get_resp.content))
 
     @testcase.attr('positive')
     def test_secret_update_two_phase(self):
@@ -189,7 +189,7 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(201, resp.status_code)
 
         # Update
-        payload = "gF6+lLoF3ohA9aPRpt+6bQ=="
+        payload = b"gF6+lLoF3ohA9aPRpt+6bQ=="
         payload_content_type = "application/octet-stream"
         payload_content_encoding = "base64"
 
@@ -204,8 +204,8 @@ class SecretsTestCase(base.TestCase):
             secret_ref=secret_ref,
             payload_content_type=payload_content_type)
         self.assertEqual(200, sec_resp.status_code)
-        self.assertIn('gF6+lLoF3ohA9aPRpt+6bQ==',
-                      binascii.b2a_base64(sec_resp.content))
+        self.assertEqual(b'gF6+lLoF3ohA9aPRpt+6bQ==',
+                         oslo_base64.encode_as_bytes(sec_resp.content))
 
     @testcase.attr('positive')
     def test_secrets_get_multiple_secrets(self):

@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
-import binascii
-import json
+from oslo_serialization import base64 as oslo_base64
+from oslo_serialization import jsonutils
+import six
 import sys
 import testtools
 import time
@@ -40,7 +40,7 @@ admin_b = CONF.rbac_users.admin_b
 
 def get_pem_content(pem):
     b64_content = translations.get_pem_components(pem)[1]
-    return base64.b64decode(b64_content)
+    return oslo_base64.decode_as_bytes(b64_content)
 
 
 def get_private_key_req():
@@ -50,7 +50,7 @@ def get_private_key_req():
             'algorithm': 'rsa',
             'bit_length': 2048,
             'secret_type': 'private',
-            'payload': base64.b64encode(keys.get_private_key_pem())}
+            'payload': oslo_base64.encode_as_bytes(keys.get_private_key_pem())}
 
 
 def get_public_key_req():
@@ -60,7 +60,7 @@ def get_public_key_req():
             'algorithm': 'rsa',
             'bit_length': 2048,
             'secret_type': 'public',
-            'payload': base64.b64encode(keys.get_public_key_pem())}
+            'payload': oslo_base64.encode_as_bytes(keys.get_public_key_pem())}
 
 
 def get_certificate_req():
@@ -70,7 +70,7 @@ def get_certificate_req():
             'algorithm': 'rsa',
             'bit_length': 2048,
             'secret_type': 'certificate',
-            'payload': base64.b64encode(keys.get_certificate_pem())}
+            'payload': oslo_base64.encode_as_bytes(keys.get_certificate_pem())}
 
 
 def get_passphrase_req():
@@ -94,7 +94,7 @@ def get_default_data():
 
 
 def get_default_payload():
-    return "AQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIAQIDBAUGBwg="
+    return b"AQIDBAUGBwgBAgMEBQYHCAECAwQFBgcIAQIDBAUGBwg="
 
 
 @utils.parameterized_test_case
@@ -222,8 +222,8 @@ class SecretsTestCase(base.TestCase):
             payload_content_type='',
             omit_headers=['Accept'])
         self.assertEqual(200, get_resp.status_code)
-        self.assertIn(test_model.payload,
-                      binascii.b2a_base64(get_resp.content))
+        self.assertEqual(test_model.payload,
+                         oslo_base64.encode_as_bytes(get_resp.content))
 
     @testcase.attr('negative')
     def test_secret_delete_doesnt_exist(self):
@@ -293,7 +293,7 @@ class SecretsTestCase(base.TestCase):
         """
         test_model = secret_models.SecretModel(
             **self.default_secret_create_data)
-        test_model.payload = str(self.oversized_payload)
+        test_model.payload = self.oversized_payload
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(413, resp.status_code)
@@ -395,11 +395,11 @@ class SecretsTestCase(base.TestCase):
 
         Launchpad bug #1315498.
         """
-        oversized_payload = bytearray().zfill(self.max_payload_size + 1)
+        oversized_payload = bytearray(self.oversized_payload)
 
         # put a value in the middle of the data that does not have a UTF-8
-        # code point.  Using // to be python3-friendly.
-        oversized_payload[self.max_payload_size // 2] = b'\xb0'
+        # code point.  Using // and 176 to be python3-friendly.
+        oversized_payload[self.max_payload_size // 2] = 176  # 0xb0
 
         test_model = secret_models.SecretModel(
             **self.default_secret_create_two_phase_data)
@@ -411,7 +411,7 @@ class SecretsTestCase(base.TestCase):
             secret_ref=secret_ref,
             payload_content_type='application/octet-stream',
             payload_content_encoding='base64',
-            payload=str(oversized_payload))
+            payload=oversized_payload)
         self.assertEqual(413, put_resp.status_code)
 
     @testcase.attr('negative')
@@ -486,7 +486,7 @@ class SecretsTestCase(base.TestCase):
             **self.default_secret_create_two_phase_data)
         test_model.payload_content_encoding = 'base64'
         test_model.payload_content_type = 'application/octet-stream'
-        test_model.payload = base64.b64encode('abcdef')
+        test_model.payload = oslo_base64.encode_as_bytes('abcdef')
 
         resp, secret_ref = self.behaviors.create_secret(test_model)
         self.assertEqual(201, resp.status_code)
@@ -496,8 +496,8 @@ class SecretsTestCase(base.TestCase):
             payload_content_type=test_model.payload_content_type,
             payload_content_encoding=test_model.payload_content_encoding)
         self.assertEqual(200, get_resp.status_code)
-        self.assertIn(test_model.payload,
-                      binascii.b2a_base64(get_resp.content))
+        self.assertEqual(test_model.payload,
+                         oslo_base64.encode_as_bytes(get_resp.content))
 
     @testcase.attr('negative')
     def test_secret_create_defaults_bad_content_type_check_message(self):
@@ -511,11 +511,11 @@ class SecretsTestCase(base.TestCase):
         # first, ensure that the return code is 400
         self.assertEqual(400, resp.status_code)
 
-        resp_dict = json.loads(resp.content)
+        resp_dict = jsonutils.loads(resp.content)
 
         self.assertIn(
             "Provided object does not match schema 'Secret': "
-            "payload_content_type plain-text is not one of ['text/plain', "
+            "payload_content_type is not one of ['text/plain', "
             "'text/plain;charset=utf-8', 'text/plain; charset=utf-8', "
             "'application/octet-stream'", resp_dict['description'])
         self.assertIn("Bad Request", resp_dict['title'])
@@ -638,11 +638,11 @@ class SecretsTestCase(base.TestCase):
     @testcase.attr('positive')
     def test_secret_create_with_valid_bit_length(self, bit_length):
         """Covers cases of creating secrets with valid bit lengths."""
-        byte_length = bit_length / 8
+        byte_length = bit_length // 8
         secret = bytearray(byte_length)
         for x in range(0, byte_length):
             secret[x] = x
-        secret64 = base64.b64encode(secret)
+        secret64 = oslo_base64.encode_as_bytes(secret)
 
         test_model = secret_models.SecretModel(
             **self.default_secret_create_data)
@@ -656,7 +656,7 @@ class SecretsTestCase(base.TestCase):
         'str_type': ['not-an-int'],
         'empty': [''],
         'blank': [' '],
-        'negative_maxint': [-sys.maxint],
+        'negative_maxint': [-sys.maxsize],
         'negative_one': [-1],
         'zero': [0]
     })
@@ -735,10 +735,10 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(200, get_resp.status_code)
 
         if payload_content_encoding == 'base64':
-            self.assertIn(test_model.payload,
-                          binascii.b2a_base64(get_resp.content))
+            self.assertEqual(test_model.payload,
+                             oslo_base64.encode_as_bytes(get_resp.content))
         else:
-            self.assertIn(test_model.payload, get_resp.content)
+            self.assertEqual(test_model.payload, get_resp.content)
 
     @utils.parameterized_dataset({
         'text_content_type_none_encoding': {
@@ -776,10 +776,10 @@ class SecretsTestCase(base.TestCase):
         self.assertEqual(200, get_resp.status_code)
 
         if payload_content_encoding == 'base64':
-            self.assertIn(test_model.payload,
-                          binascii.b2a_base64(get_resp.content))
+            self.assertEqual(test_model.payload,
+                             oslo_base64.encode_as_bytes(get_resp.content))
         else:
-            self.assertIn(test_model.payload, get_resp.content)
+            self.assertEqual(test_model.payload, get_resp.content)
 
     @utils.parameterized_dataset({
         'empty_content_type_and_encoding': {
@@ -881,8 +881,8 @@ class SecretsTestCase(base.TestCase):
         'array': [['boom']],
         'int': [123],
         'none': [None],
-        'bad_character': [unichr(0x0080)],
-        'bad_characters': [unichr(0x1111) + unichr(0xffff)]
+        'bad_character': [six.unichr(0x0080)],
+        'bad_characters': [six.unichr(0x1111) + six.unichr(0xffff)]
     })
     @testcase.attr('negative')
     def test_secret_create_defaults_invalid_payload(self, payload):
@@ -994,7 +994,7 @@ class SecretsTestCase(base.TestCase):
 
     @utils.parameterized_dataset({
         'symmetric': ['symmetric',
-                      base64.b64decode(
+                      oslo_base64.decode_as_bytes(
                           get_default_payload()),
                       get_default_data()],
         'private': ['private',
@@ -1007,7 +1007,7 @@ class SecretsTestCase(base.TestCase):
                         keys.get_certificate_pem(),
                         get_certificate_req()],
         'passphrase': ['passphrase',
-                       'mysecretpassphrase',
+                       b'mysecretpassphrase',
                        get_passphrase_req()]
     })
     @testcase.attr('positive')
@@ -1184,7 +1184,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
         stored_auth = self.client._auth[
             self.client._default_user_name].stored_auth
-        project_id = stored_auth.values()[0]['project_id']
+        project_id = list(stored_auth.values())[0]['project_id']
         self.project_id_header = {
             'X-Project-Id': project_id
         }
@@ -1536,7 +1536,7 @@ class SecretsMultipleBackendTestCase(base.TestCase):
         'symmetric_type_preferred_store': [
             admin_a,
             'symmetric',
-            base64.b64decode(get_default_payload()),
+            oslo_base64.decode_as_bytes(get_default_payload()),
             get_default_data()
             ],
         'private_type_preferred_store': [
@@ -1566,7 +1566,7 @@ class SecretsMultipleBackendTestCase(base.TestCase):
         'symmetric_type_no_preferred_store': [
             admin_b,
             'symmetric',
-            base64.b64decode(get_default_payload()),
+            oslo_base64.decode_as_bytes(get_default_payload()),
             get_default_data()
             ],
         'private_type_no_preferred_store': [
@@ -1590,7 +1590,7 @@ class SecretsMultipleBackendTestCase(base.TestCase):
         'passphrase_type_no_preferred_store': [
             admin_b,
             'passphrase',
-            'mysecretpassphrase',
+            b'mysecretpassphrase',
             get_passphrase_req()
             ],
     })

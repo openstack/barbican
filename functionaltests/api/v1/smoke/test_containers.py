@@ -27,7 +27,7 @@ create_secret_defaults_data = {
     "algorithm": "aes",
     "bit_length": 256,
     "mode": "cbc",
-    "payload": "gF6+lLoF3ohA9aPRpt+6bQ==",
+    "payload": b"gF6+lLoF3ohA9aPRpt+6bQ==",
     "payload_content_type": "application/octet-stream",
     "payload_content_encoding": "base64",
 }
@@ -155,7 +155,7 @@ class ContainersTestCase(base.TestCase):
     @utils.parameterized_dataset({
         'alphanumeric': ['a2j3j6ll9'],
         'punctuation': ['~!@#$%^&*()_+`-={}[]|:;<>,.?'],
-        'len_255': [str(bytearray().zfill(255))],
+        'len_255': [base.TestCase.max_sized_field],
         'uuid': ['54262d9d-4bc7-4821-8df0-dc2ca8e112bb'],
         'empty': ['']
     })

@@ -71,7 +71,7 @@ def create_csr_signed_with_wrong_key():
 
 def create_bad_csr():
     """Generate a CSR that will not parse."""
-    return "Bad PKCS10 Data"
+    return b"Bad PKCS10 Data"
 
 
 def create_csr_with_bad_subject_dn():
