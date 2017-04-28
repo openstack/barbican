@@ -19,6 +19,7 @@ Queue objects for Barbican
 import oslo_messaging as messaging
 from oslo_messaging.notify import dispatcher as notify_dispatcher
 from oslo_messaging.notify import listener
+from oslo_messaging.rpc import dispatcher
 
 from barbican.common import config
 from barbican.common import exception
@@ -77,11 +78,13 @@ def get_client(target=None, version_cap=None, serializer=None):
 
 
 def get_server(target, endpoints, serializer=None):
+    access_policy = dispatcher.DefaultRPCAccessPolicy
     return messaging.get_rpc_server(TRANSPORT,
                                     target,
                                     endpoints,
                                     executor='eventlet',
-                                    serializer=serializer)
+                                    serializer=serializer,
+                                    access_policy=access_policy)
 
 
 def get_notification_target():
