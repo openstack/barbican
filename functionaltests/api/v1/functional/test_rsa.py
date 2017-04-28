@@ -14,7 +14,8 @@
 # limitations under the License.
 import base64
 
-from Crypto.PublicKey import RSA
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 from OpenSSL import crypto
 import testtools
 from testtools import testcase
@@ -142,9 +143,11 @@ class RSATestCase(base.TestCase):
         pem = keys.get_private_key_pem()
         crypto.load_privatekey(crypto.FILETYPE_PEM, pem)
 
-        # prove pyCrypto can parse the original public key
-        pem = keys.get_public_key_pem()
-        RSA.importKey(pem)
+        # prove cryptography can parse the original public key
+        serialization.load_pem_public_key(
+            keys.get_public_key_pem(),
+            backend=default_backend()
+        )
 
         # prove pyOpenSSL can parse the original encrypted private key
         pem = keys.get_encrypted_private_key_pem()
@@ -554,7 +557,10 @@ class RSATestCase(base.TestCase):
             crypto.load_privatekey(
                 crypto.FILETYPE_PEM,
                 secret_dict['private_key'])
-        RSA.importKey(secret_dict['public_key'])
+        serialization.load_pem_public_key(
+            secret_dict['public_key'],
+            backend=default_backend()
+        )
 
     def order_container(self, with_passphrase=False):
         if with_passphrase:
