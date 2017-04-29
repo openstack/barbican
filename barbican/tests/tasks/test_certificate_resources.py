@@ -16,9 +16,12 @@
 import base64
 import datetime
 
-from Crypto.PublicKey import RSA
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import serialization
 import mock
 from OpenSSL import crypto
+from oslo_utils import encodeutils
 
 from barbican.common import exception as excep
 from barbican.common import hrefs
@@ -559,13 +562,28 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
         )
         passphrase = "my secret passphrase"
 
-        private_key = RSA.generate(2048, None, None, 65537)
-        public_key = private_key.publickey()
+        private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+            backend=default_backend()
+        )
 
-        private_key_pem = private_key.exportKey('PEM', passphrase, 8)
+        public_key = private_key.public_key()
+
+        private_key_pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.
+            BestAvailableEncryption(encodeutils.safe_encode(passphrase))
+        )
         self.private_key_value = base64.b64encode(private_key_pem)
-        public_key_pem = public_key.exportKey()
+
+        public_key_pem = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.PKCS1
+        )
         self.public_key_value = base64.b64encode(public_key_pem)
+
         self.passphrase_value = base64.b64encode(passphrase.encode('utf-8'))
 
         self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
@@ -582,12 +600,26 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
     def test_should_return_for_pycrypto_stored_key_without_passphrase(self):
         self.order_meta.update(self.stored_key_meta)
 
-        private_key = RSA.generate(2048, None, None, 65537)
-        public_key = private_key.publickey()
+        private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+            backend=default_backend()
+        )
 
-        self.private_key_value = base64.b64encode(
-            private_key.exportKey('PEM', None, 8))
-        self.public_key_value = base64.b64encode(public_key.exportKey())
+        public_key = private_key.public_key()
+
+        private_key_pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        self.private_key_value = base64.b64encode(private_key_pem)
+
+        public_key_pem = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.PKCS1
+        )
+        self.public_key_value = base64.b64encode(public_key_pem)
 
         self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
         self._test_should_return_waiting_for_ca(
@@ -602,11 +634,27 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
 
     def test_should_raise_for_pycrypto_stored_key_no_container(self):
         self.order_meta.update(self.stored_key_meta)
-        private_key = RSA.generate(2048, None, None, 65537)
-        public_key = private_key.publickey()
 
-        self.private_key_value = private_key.exportKey('PEM', None, 8)
-        self.public_key_value = public_key.exportKey()
+        private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+            backend=default_backend()
+        )
+
+        public_key = private_key.public_key()
+
+        private_key_pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        self.private_key_value = base64.b64encode(private_key_pem)
+
+        public_key_pem = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.PKCS1
+        )
+        self.public_key_value = base64.b64encode(public_key_pem)
 
         self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
@@ -620,13 +668,27 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
 
     def test_should_raise_for_pycrypto_stored_key_no_private_key(self):
         self.order_meta.update(self.stored_key_meta)
-        private_key = RSA.generate(2048, None, None, 65537)
-        public_key = private_key.publickey()
 
-        self.private_key_value = base64.b64encode(
-            private_key.exportKey('PEM', None, 8))
-        self.public_key_value = base64.b64encode(
-            public_key.exportKey())
+        private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+            backend=default_backend()
+        )
+
+        public_key = private_key.public_key()
+
+        private_key_pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        self.private_key_value = base64.b64encode(private_key_pem)
+
+        public_key_pem = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.PKCS1
+        )
+        self.public_key_value = base64.b64encode(public_key_pem)
 
         self.store_plugin.get_secret.side_effect = self.stored_key_side_effect
         self.result.status = cert_man.CertificateStatus.WAITING_FOR_CA
