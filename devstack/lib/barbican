@@ -186,7 +186,7 @@ function install_barbicanclient {
 # start_barbican - Start running processes, including screen
 function start_barbican {
     # Start the Barbican service up.
-    run_process barbican-svc "uwsgi --master --emperor $BARBICAN_CONF_DIR/vassals"
+    run_process barbican-svc "$BARBICAN_BIN_DIR/uwsgi --master --emperor $BARBICAN_CONF_DIR/vassals"
 
     # Pause while the barbican-svc populates the database, otherwise the retry
     # service below might try to do this at the same time, leading to race
@@ -423,7 +423,7 @@ function configure_pykmip {
 
 # start_pykmip - start the PyKMIP server
 function start_pykmip {
-    run_process pykmip-server "pykmip-server -f ${PYKMIP_CONF} -l ${PYKMIP_LOG_DIR}/pykmip-devstack.log"
+    run_process pykmip-server "$BARBICAN_BIN_DIR/pykmip-server -f ${PYKMIP_CONF} -l ${PYKMIP_LOG_DIR}/pykmip-devstack.log"
 }
 
 # Dogtag functions
