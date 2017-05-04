@@ -20,8 +20,6 @@ API Reference
     ./reference/store_backends.rst
     ./reference/containers
     ./reference/acls
-    ./reference/certificates
-    ./reference/cas
     ./reference/quotas
     ./reference/consumers
     ./reference/orders

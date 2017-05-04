@@ -197,14 +197,4 @@ server certificate for the CA.
 Testing the Setup
 *****************
 
-Once all the above is set up, you can test the CA and KRA plugins by making a
-request for a certificate using a pre-approved profile.  As the issued certs are
-stored in the secret_store, this indirectly tests the KRA plugin as well.
-
-First, follow the instructions in :ref:`finding_the_cas` to find the ca_id of
-the Dogtag CA.
-
-Second, submit a simple CMC request as detailed in :ref:`simple_cmc_order`.
-
-The request should be automatically approved, and you should be able to extract
-the certificate from the certificate container in the order.
+TODO
