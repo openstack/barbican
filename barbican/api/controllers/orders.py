@@ -10,7 +10,6 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
-from oslo_log import versionutils
 import pecan
 
 from barbican import api
@@ -47,12 +46,6 @@ def _order_update_not_supported():
     pecan.abort(405, u._("Order update is not supported."))
 
 
-def _order_update_not_supported_for_type(order_type):
-    """Throw exception that update is not supported."""
-    pecan.abort(400, u._("Updates are not supported for order type "
-                         "{0}.").format(order_type))
-
-
 def _order_cannot_be_updated_if_not_pending(order_status):
     """Throw exception that order cannot be updated if not PENDING."""
     pecan.abort(400, u._("Only PENDING orders can be updated. Order is in the"
@@ -83,41 +76,6 @@ class OrderController(controllers.ACLMixin):
     @controllers.enforce_rbac('order:get')
     def on_get(self, external_project_id):
         return hrefs.convert_to_hrefs(self.order.to_dict_fields())
-
-    @index.when(method='PUT')
-    @controllers.handle_exceptions(u._('Order update'))
-    @controllers.enforce_rbac('order:put')
-    @controllers.enforce_content_types(['application/json'])
-    def on_put(self, external_project_id, **kwargs):
-        body = api.load_body(pecan.request,
-                             validator=self.type_order_validator)
-
-        project = res.get_or_create_project(external_project_id)
-        order_type = body.get('type')
-
-        request_id = None
-        ctxt = controllers._get_barbican_context(pecan.request)
-        if ctxt and ctxt.request_id:
-            request_id = ctxt.request_id
-
-        if self.order.type != order_type:
-            order_cannot_modify_order_type()
-
-        if models.OrderType.CERTIFICATE != self.order.type:
-            _order_update_not_supported_for_type(order_type)
-
-        if models.States.PENDING != self.order.status:
-            _order_cannot_be_updated_if_not_pending(self.order.status)
-
-        updated_meta = body.get('meta')
-        validators.validate_ca_id(project.id, updated_meta)
-
-        # TODO(chellygel): Put 'meta' into a separate order association
-        # entity.
-        self.queue.update_order(order_id=self.order.id,
-                                project_id=external_project_id,
-                                updated_meta=updated_meta,
-                                request_id=request_id)
 
     @index.when(method='DELETE')
     @utils.allow_all_content_types
@@ -213,16 +171,6 @@ class OrdersController(controllers.ACLMixin):
                   ' request type %(request_type)s' %
                   {'order_type': order_type,
                    'request_type': request_type})
-
-        if order_type == models.OrderType.CERTIFICATE:
-            msg = _DEPRECATION_MSG % "Certificate Order Resource"
-            versionutils.report_deprecated_feature(LOG, msg)
-            validators.validate_ca_id(project.id, body.get('meta'))
-            if request_type == 'stored-key':
-                container_ref = order_meta.get('container_ref')
-                validators.validate_stored_key_rsa_container(
-                    external_project_id,
-                    container_ref, pecan.request)
 
         self.quota_enforcer.enforce(project)
 

@@ -46,15 +46,6 @@ class TaskClient(object):
                    project_id=project_id,
                    request_id=request_id)
 
-    def update_order(self, order_id, project_id, updated_meta, request_id):
-        """Update Order."""
-
-        self._cast('update_order',
-                   order_id=order_id,
-                   project_id=project_id,
-                   updated_meta=updated_meta,
-                   request_id=request_id)
-
     def check_certificate_status(self, order_id, project_id, request_id):
         """Check the status of a certificate order."""
         self._cast('check_certificate_status',

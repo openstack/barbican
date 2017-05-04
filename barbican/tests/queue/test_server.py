@@ -304,26 +304,6 @@ class WhenCallingTasksMethod(utils.BaseTestCase):
             'keystone1234', 'request1234')
 
     @mock.patch('barbican.queue.server.schedule_order_retry_tasks')
-    @mock.patch('barbican.tasks.resources.UpdateOrder')
-    def test_should_process_update_order(
-            self, mock_update_order, mock_schedule):
-        method = mock_update_order.return_value.process_and_suppress_exceptions
-        method.return_value = 'result'
-        updated_meta = {'foo': 1}
-
-        self.tasks.update_order(
-            None, self.order_id, self.external_project_id,
-            updated_meta, self.request_id)
-
-        mock_process = mock_update_order.return_value
-        mock_process.process_and_suppress_exceptions.assert_called_with(
-            self.order_id, self.external_project_id, updated_meta
-        )
-        mock_schedule.assert_called_with(
-            mock.ANY, 'result', None,
-            'order1234', 'keystone1234', updated_meta, 'request1234')
-
-    @mock.patch('barbican.queue.server.schedule_order_retry_tasks')
     @mock.patch('barbican.tasks.resources.CheckCertificateStatusOrder')
     def test_should_check_certificate_order(
             self, mock_check_cert, mock_schedule):
@@ -433,29 +413,6 @@ class WhenUsingTaskServer(database_utils.RepositoryTestCase):
         self.assertEqual(
             six.u(
                 'Process TypeOrder failure seen - '
-                'please contact site administrator.'),
-            order_result.error_reason)
-        self.assertEqual(
-            six.u('500'),
-            order_result.error_status_code)
-
-    def test_process_bogus_update_type_order_should_not_rollback(self):
-        order_id = self.order.id
-        self.order.type = 'bogus-type'  # Force error out of business logic.
-
-        # Invoke process, including the transactional decorator that terminates
-        # the session when it is done. Hence we must re-retrieve the order for
-        # verification afterwards.
-        self.server.update_order(
-            None, self.order.id, self.external_id, None, self.request_id)
-
-        order_repo = repositories.get_order_repository()
-        order_result = order_repo.get(order_id, self.external_id)
-
-        self.assertEqual(models.States.ERROR, order_result.status)
-        self.assertEqual(
-            six.u(
-                'Update Order failure seen - '
                 'please contact site administrator.'),
             order_result.error_reason)
         self.assertEqual(
