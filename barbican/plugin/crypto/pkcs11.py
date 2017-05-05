@@ -325,7 +325,8 @@ def build_ffi():
 class PKCS11(object):
     def __init__(self, library_path, login_passphrase, rw_session, slot_id,
                  ffi=None, algorithm='CKM_AES_GCM',
-                 seed_random_buffer=None):
+                 seed_random_buffer=None,
+                 generate_iv=None):
         self.ffi = ffi or build_ffi()
         self.lib = self.ffi.dlopen(library_path)
         rv = self.lib.C_Initialize(self.ffi.NULL)
@@ -341,6 +342,7 @@ class PKCS11(object):
         self.blocksize = 16
         self.noncesize = 12
         self.gcmtagsize = 16
+        self.generate_iv = generate_iv
 
         # Validate configuration and RNG
         session = self.get_session()
@@ -391,21 +393,33 @@ class PKCS11(object):
         return key
 
     def encrypt(self, key, pt_data, session):
-        ck_mechanism = self._build_gcm_mechanism()
+        iv = None
+        if self.generate_iv:
+            iv = self._generate_random(self.noncesize, session)
+        ck_mechanism = self._build_gcm_mechanism(iv)
         rv = self.lib.C_EncryptInit(session, ck_mechanism.mech, key)
         self._check_error(rv)
 
         pt_len = len(pt_data)
-        ct_len = self.ffi.new("CK_ULONG *", pt_len + self.gcmtagsize * 2)
+        if self.generate_iv:
+            ct_len = self.ffi.new("CK_ULONG *", pt_len + self.gcmtagsize)
+        else:
+            ct_len = self.ffi.new("CK_ULONG *", pt_len + self.gcmtagsize * 2)
         ct = self.ffi.new("CK_BYTE[{0}]".format(ct_len[0]))
         rv = self.lib.C_Encrypt(session, pt_data, pt_len, ct, ct_len)
         self._check_error(rv)
 
-        # HSM-generated IVs are appended to the end of the ciphertext
-        return {
-            "iv": self.ffi.buffer(ct, ct_len[0])[-self.gcmtagsize:],
-            "ct": self.ffi.buffer(ct, ct_len[0])[:-self.gcmtagsize]
-        }
+        if self.generate_iv:
+            return {
+                "iv": self.ffi.buffer(iv)[:],
+                "ct": self.ffi.buffer(ct, ct_len[0])[:]
+                }
+        else:
+            # HSM-generated IVs are appended to the end of the ciphertext
+            return {
+                "iv": self.ffi.buffer(ct, ct_len[0])[-self.gcmtagsize:],
+                "ct": self.ffi.buffer(ct, ct_len[0])[:-self.gcmtagsize]
+                }
 
     def decrypt(self, key, iv, ct_data, session):
         iv = self.ffi.new("CK_BYTE[{0}]".format(len(iv)), iv)
