@@ -19,6 +19,7 @@ from testtools import testcase
 from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import order_behaviors
+from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import order_models
 
 
@@ -58,6 +59,7 @@ class OrdersTestCase(base.TestCase):
     def setUp(self):
         super(OrdersTestCase, self).setUp()
         self.behaviors = order_behaviors.OrderBehaviors(self.client)
+        self.secret_behaviors = secret_behaviors.SecretBehaviors(self.client)
 
         self.create_default_data = get_default_order_create_data()
         self.create_all_none_data = get_default_order_create_all_none_data()
@@ -152,8 +154,15 @@ class OrdersTestCase(base.TestCase):
         self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
+        # get the secret ref
+        order_resp = self.behaviors.get_order(order_ref)
+        secret_ref = order_resp.model.secret_ref
+
         # delete the order
         delete_resp = self.behaviors.delete_order(order_ref)
+
+        # clean up the secret that was created
+        self.secret_behaviors.delete_secret(secret_ref)
 
         # verify the delete
         self.assertEqual(204, delete_resp.status_code)
