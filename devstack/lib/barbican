@@ -545,6 +545,9 @@ EOF
 }
 
 function install_dogtag_plugin_dependencies {
+    # Removing the pip-installed python-requests package is needed because of:
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1352554
+    sudo rm -rf /usr/lib/python2.7/site-packages/requests
     install_package nss-devel 389-ds-base pki-ca pki-kra
 }
 
