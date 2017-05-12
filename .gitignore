@@ -29,6 +29,7 @@ pip-log.txt
 cover
 .testrepository
 .coverage
+.coverage.*
 .tox
 nosetests.xml
 coverage.xml
