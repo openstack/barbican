@@ -9,7 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import uuid
+from oslo_utils import uuidutils
 
 from barbican.common import exception
 from barbican.model import models
@@ -205,7 +205,8 @@ class WhenTestingProjectSecretStoreRepo(database_utils.RepositoryTestCase):
         session = self.proj_store_repo.get_session()
 
         project = models.Project()
-        project.external_id = "keystone_project_id" + uuid.uuid4().hex
+        project.external_id = ("keystone_project_id" +
+                               uuidutils.generate_uuid(dashed=False))
         project.save(session=session)
         return project
 
@@ -359,7 +360,8 @@ class WhenTestingProjectSecretStoreRepo(database_utils.RepositoryTestCase):
         self.assertIsNone(returned_value)
 
     def test_get_project_entities(self):
-        entities = self.proj_store_repo.get_project_entities(uuid.uuid4().hex)
+        entities = self.proj_store_repo.get_project_entities(
+            uuidutils.generate_uuid(dashed=False))
         self.assertEqual([], entities)
 
     def test_create_or_update_for_project(self):

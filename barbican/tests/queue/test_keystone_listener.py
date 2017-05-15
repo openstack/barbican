@@ -12,7 +12,7 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import uuid
+from oslo_utils import uuidutils
 
 import mock
 import oslo_messaging
@@ -64,7 +64,8 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
         super(WhenUsingNotificationTask, self).setUp()
 
         self.task = keystone_listener.NotificationTask(self.conf)
-        self.payload = {'resource_info': uuid.uuid4().hex}
+        self.payload = {'resource_info': uuidutils.generate_uuid(
+            dashed=False)}
 
         self.type_index = 2
         self.payload_index = 3
@@ -101,7 +102,7 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
     def test_delete_project_event_notification_with_required_data(
             self, mock_process):
 
-        project_id = uuid.uuid4().hex
+        project_id = uuidutils.generate_uuid(dashed=False)
         self.task_args[self.type_index] = 'identity.project.deleted'
         self.task_args[self.payload_index] = {'resource_info': project_id}
         result = self.task.info(*self.task_args)
@@ -115,7 +116,7 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
     def test_delete_project_event_with_different_service_name_in_event_type(
             self, mock_process):
 
-        project_id = uuid.uuid4().hex
+        project_id = uuidutils.generate_uuid(dashed=False)
         self.task_args[self.type_index] = 'aaa.project.deleted'
         self.task_args[self.payload_index] = {'resource_info': project_id}
         result = self.task.info(*self.task_args)
@@ -130,7 +131,7 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
     def test_delete_project_event_with_event_type_in_different_case(
             self, mock_process):
 
-        project_id = uuid.uuid4().hex
+        project_id = uuidutils.generate_uuid(dashed=False)
         self.task_args[self.type_index] = 'Identity.PROJECT.DeleteD'
         self.task_args[self.payload_index] = {'resource_info': project_id}
         result = self.task.info(*self.task_args)
@@ -145,7 +146,7 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
     def test_delete_project_event_with_incomplete_event_type_format(
             self, mock_process):
 
-        project_id = uuid.uuid4().hex
+        project_id = uuidutils.generate_uuid(dashed=False)
         self.task_args[self.type_index] = 'project.deleted'
         self.task_args[self.payload_index] = {'resource_info': project_id}
         result = self.task.info(*self.task_args)
@@ -200,7 +201,7 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
                        return_value=None)
     def test_event_notification_with_missing_event_type(self, mock_process):
 
-        project_id = uuid.uuid4().hex
+        project_id = uuidutils.generate_uuid(dashed=False)
         self.task_args[self.type_index] = None
         self.task_args[self.payload_index] = {'resource_info': project_id}
         result = self.task.info(*self.task_args)
@@ -214,7 +215,7 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
                        return_value=None)
     def test_event_notification_with_blank_event_type(self, mock_process):
 
-        project_id = uuid.uuid4().hex
+        project_id = uuidutils.generate_uuid(dashed=False)
         self.task_args[self.type_index] = ''
         self.task_args[self.payload_index] = {'resource_info': project_id}
         result = self.task.info(*self.task_args)
@@ -232,7 +233,7 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
         local_task = keystone_listener.NotificationTask(self.conf)
         mock_process.side_effect = Exception('Dummy Error')
 
-        project_id = uuid.uuid4().hex
+        project_id = uuidutils.generate_uuid(dashed=False)
         self.task_args[self.type_index] = 'identity.project.deleted'
         self.task_args[self.payload_index] = {'resource_info': project_id}
         result = local_task.info(*self.task_args)
@@ -249,7 +250,7 @@ class WhenUsingNotificationTask(UtilMixin, utils.BaseTestCase):
         local_task = keystone_listener.NotificationTask(self.conf)
         mock_process.side_effect = Exception('Dummy Error')
 
-        project_id = uuid.uuid4().hex
+        project_id = uuidutils.generate_uuid(dashed=False)
         self.task_args[self.type_index] = 'identity.project.deleted'
         self.task_args[self.payload_index] = {'resource_info': project_id}
         result = local_task.info(*self.task_args)

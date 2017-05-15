@@ -19,10 +19,10 @@ import os
 from os import path
 import time
 import types
-import uuid
 
 import mock
 from oslo_config import cfg
+from oslo_utils import uuidutils
 import oslotest.base as oslotest
 from oslotest import createfile
 
@@ -642,7 +642,7 @@ def generate_test_uuid(tail_value=0):
 
 def generate_test_valid_uuid():
     """Returns a valid uuid value, similar to uuid generated in barbican"""
-    return str(uuid.uuid4())
+    return uuidutils.generate_uuid()
 
 
 def get_symmetric_key():

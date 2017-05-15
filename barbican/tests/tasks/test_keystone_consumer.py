@@ -12,7 +12,6 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import uuid
 
 import mock
 import sqlalchemy
@@ -25,6 +24,7 @@ from barbican.plugin.crypto import manager
 from barbican.plugin import resources as plugin
 from barbican.tasks import keystone_consumer as consumer
 from barbican.tests import database_utils
+from oslo_utils import uuidutils
 
 
 class InitializeDatabaseMixin(object):
@@ -38,8 +38,8 @@ class InitializeDatabaseMixin(object):
                                   group='crypto',
                                   enforce_type=True)
 
-        self.project_id1 = uuid.uuid4().hex
-        self.project_id2 = uuid.uuid4().hex
+        self.project_id1 = uuidutils.generate_uuid()
+        self.project_id2 = uuidutils.generate_uuid(dashed=False)
 
         self.project1_data = c_resources.get_or_create_project(
             self.project_id1)
@@ -51,8 +51,8 @@ class InitializeDatabaseMixin(object):
 
     def _create_secret_for_project(self, project_data):
 
-        secret_info = {"name": uuid.uuid4().hex, "algorithm": "aes",
-                       "bit_length": 256, "mode": "cbc",
+        secret_info = {"name": uuidutils.generate_uuid(dashed=False),
+                       "algorithm": "aes", "bit_length": 256, "mode": "cbc",
                        "payload_content_type": "application/octet-stream"}
         new_secret = plugin.generate_secret(
             secret_info, secret_info.get('payload_content_type'), project_data)

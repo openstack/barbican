@@ -17,7 +17,7 @@ import base64
 import copy
 import datetime
 import os
-import uuid
+from oslo_utils import uuidutils
 
 from Crypto.PublicKey import RSA
 from Crypto.Util import asn1
@@ -202,7 +202,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         the key_id
         """
         data_type = key.KeyClient.PASS_PHRASE_TYPE
-        client_key_id = uuid.uuid4().hex
+        client_key_id = uuidutils.generate_uuid(dashed=False)
         if secret_dto.transport_key is not None:
             # TODO(alee-3) send the transport key with the archival request
             # once the Dogtag Client API changes.
@@ -380,7 +380,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         usages = [key.SymKeyGenerationRequest.DECRYPT_USAGE,
                   key.SymKeyGenerationRequest.ENCRYPT_USAGE]
 
-        client_key_id = uuid.uuid4().hex
+        client_key_id = uuidutils.generate_uuid()
         algorithm = self._map_algorithm(key_spec.alg.lower())
 
         if algorithm is None:
@@ -420,7 +420,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         usages = [key.AsymKeyGenerationRequest.DECRYPT_USAGE,
                   key.AsymKeyGenerationRequest.ENCRYPT_USAGE]
 
-        client_key_id = uuid.uuid4().hex
+        client_key_id = uuidutils.generate_uuid()
         algorithm = self._map_algorithm(key_spec.alg.lower())
         passphrase = key_spec.passphrase
 
@@ -437,7 +437,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
                 )
 
             stored_passphrase_info = self.keyclient.archive_key(
-                uuid.uuid4().hex,
+                uuidutils.generate_uuid(),
                 self.keyclient.PASS_PHRASE_TYPE,
                 base64.b64encode(passphrase))
 

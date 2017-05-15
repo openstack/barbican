@@ -23,6 +23,7 @@ from barbican.model import repositories
 from barbican.tests.api.controllers import test_acls
 from barbican.tests.api import test_resources_policy as test_policy
 from barbican.tests import utils
+from oslo_utils import uuidutils
 
 
 order_repo = repositories.get_order_repository()
@@ -189,7 +190,7 @@ class WhenGettingOrDeletingOrders(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(204, delete_resp.status_int)
 
     def test_get_call_on_non_existant_order_should_give_404(self):
-        bogus_uuid = uuid.uuid4()
+        bogus_uuid = uuidutils.generate_uuid()
         resp = self.app.get(
             '/orders/{0}'.format(bogus_uuid),
             expect_errors=True
@@ -204,7 +205,7 @@ class WhenGettingOrDeletingOrders(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(404, resp.status_int)
 
     def test_delete_call_on_non_existant_order_should_give_404(self):
-        bogus_uuid = uuid.uuid4()
+        bogus_uuid = uuidutils.generate_uuid()
         resp = self.app.delete(
             '/orders/{0}'.format(bogus_uuid),
             expect_errors=True

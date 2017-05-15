@@ -24,6 +24,7 @@ import uuid
 from OpenSSL import crypto
 from oslo_config import cfg
 from oslo_utils import fnmatch
+from oslo_utils import uuidutils
 
 from barbican.common import config
 from barbican.common import utils
@@ -415,7 +416,7 @@ class SnakeoilCACertificatePlugin(cert_manager.CertificatePluginBase):
                 "Invalid parent id passed to snake oil plugin:" + parent_ca_id)
 
         # create a new ca, passing in key and issuer from the parent
-        new_ca_id = str(uuid.uuid4())
+        new_ca_id = uuidutils.generate_uuid()
         new_cert_path = os.path.join(self.subca_directory, new_ca_id + ".cert")
         new_key_path = os.path.join(self.subca_directory, new_ca_id + ".key")
         new_chain_path = os.path.join(self.subca_directory,
