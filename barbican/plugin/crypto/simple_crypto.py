@@ -12,11 +12,13 @@
 # limitations under the License.
 import os
 
-from Crypto.PublicKey import DSA
-from Crypto.PublicKey import RSA
-from Crypto.Util import asn1
 from cryptography import fernet
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import dsa
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import serialization
 from oslo_config import cfg
+from oslo_utils import encodeutils
 import six
 
 from barbican.common import config
@@ -121,36 +123,50 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         - RSA, with passphrase (supported)
         - RSA, without passphrase (supported)
         - DSA, without passphrase (supported)
-        - DSA, with passphrase (not supported)
-
-        Note: PyCrypto is not capable of serializing DSA
-        keys and DER formatted keys. Such keys will be
-        serialized to Base64 PEM to store in DB.
-
-        TODO (atiwari/reaperhulk): PyCrypto is not capable to serialize
-        DSA keys and DER formatted keys, later we need to pick better
-        crypto lib.
+        - DSA, with passphrase (supported)
         """
         if(generate_dto.algorithm is None or generate_dto
                 .algorithm.lower() == 'rsa'):
-            private_key = RSA.generate(
-                generate_dto.bit_length, None, None, 65537)
+            private_key = rsa.generate_private_key(
+                public_exponent=65537,
+                key_size=generate_dto.bit_length,
+                backend=default_backend()
+            )
         elif generate_dto.algorithm.lower() == 'dsa':
-            private_key = DSA.generate(generate_dto.bit_length, None, None)
+            private_key = dsa.generate_private_key(
+                key_size=generate_dto.bit_length,
+                backend=default_backend()
+            )
         else:
             raise c.CryptoPrivateKeyFailureException()
 
-        public_key = private_key.publickey()
+        public_key = private_key.public_key()
 
-        # Note (atiwari): key wrapping format PEM only supported
         if generate_dto.algorithm.lower() == 'rsa':
-            public_key, private_key = self._wrap_key(public_key, private_key,
-                                                     generate_dto.passphrase)
+            private_key = private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=self._get_encryption_algorithm(
+                    generate_dto.passphrase)
+            )
+
+            public_key = public_key.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            )
+
         if generate_dto.algorithm.lower() == 'dsa':
-            if generate_dto.passphrase:
-                raise ValueError(u._('Passphrase not supported for DSA key'))
-            public_key, private_key = self._serialize_dsa_key(public_key,
-                                                              private_key)
+            private_key = private_key.private_bytes(
+                encoding=serialization.Encoding.DER,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=self._get_encryption_algorithm(
+                    generate_dto.passphrase)
+            )
+            public_key = public_key.public_bytes(
+                encoding=serialization.Encoding.DER,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            )
+
         private_dto = self.encrypt(c.EncryptDTO(private_key),
                                    kek_meta_dto,
                                    project_id)
@@ -186,29 +202,23 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         else:
             return False
 
-    def _wrap_key(self, public_key, private_key,
-                  passphrase):
-        pkcs = 8
-        key_wrap_format = 'PEM'
+    def _get_encryption_algorithm(self, passphrase):
+        """Choose whether to use encryption or not based on passphrase
 
-        private_key = private_key.exportKey(key_wrap_format, passphrase, pkcs)
-        public_key = public_key.exportKey(key_wrap_format)
+        serialization.BestAvailableEncryption fails if passphrase is not
+        given or if less than one byte therefore we need to check if it is
+        valid or not
+        """
+        if passphrase:
+            # encryption requires password in bytes format
+            algorithm = serialization.BestAvailableEncryption(
+                # default encoding is utf-8
+                encodeutils.safe_encode(passphrase)
+            )
+        else:
+            algorithm = serialization.NoEncryption()
 
-        return public_key, private_key
-
-    def _serialize_dsa_key(self, public_key, private_key):
-
-        pub_seq = asn1.DerSequence()
-        pub_seq[:] = [0, public_key.p, public_key.q,
-                      public_key.g, public_key.y]
-        public_key = pub_seq.encode()
-
-        prv_seq = asn1.DerSequence()
-        prv_seq[:] = [0, private_key.p, private_key.q,
-                      private_key.g, private_key.y, private_key.x]
-        private_key = prv_seq.encode()
-
-        return public_key, private_key
+        return algorithm
 
     def _is_algorithm_supported(self, algorithm=None, bit_length=None):
         """check if algorithm and bit_length combination is supported."""

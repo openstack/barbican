@@ -15,10 +15,9 @@
 
 import os
 
-from Crypto.PublicKey import DSA
-from Crypto.PublicKey import RSA
-from Crypto.Util import asn1
 from cryptography import fernet
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 import mock
 import six
 
@@ -246,31 +245,6 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
                 "RSA", 64)
         )
 
-    def test_generate_512_bit_RSA_key(self):
-        generate_dto = plugin.GenerateDTO('rsa', 512, None, None)
-        kek_meta_dto = self._get_mocked_kek_meta_dto()
-        self.assertRaises(ValueError,
-                          self.plugin.generate_asymmetric,
-                          generate_dto,
-                          kek_meta_dto,
-                          mock.MagicMock())
-
-    def test_generate_2048_bit_DSA_key(self):
-        generate_dto = plugin.GenerateDTO('dsa', 2048, None, None)
-        kek_meta_dto = self._get_mocked_kek_meta_dto()
-        self.assertRaises(ValueError, self.plugin.generate_asymmetric,
-                          generate_dto,
-                          kek_meta_dto,
-                          mock.MagicMock())
-
-    def test_generate_1024_bit_DSA_key_with_passphrase(self):
-        generate_dto = plugin.GenerateDTO('dsa', 1024, None, 'Passphrase')
-        kek_meta_dto = self._get_mocked_kek_meta_dto()
-        self.assertRaises(ValueError, self.plugin.generate_asymmetric,
-                          generate_dto,
-                          kek_meta_dto,
-                          mock.MagicMock())
-
     def test_generate_asymmetric_1024_bit_key(self):
         generate_dto = plugin.GenerateDTO('rsa', 1024, None, None)
         kek_meta_dto = self._get_mocked_kek_meta_dto()
@@ -290,13 +264,35 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
                                          public_dto.kek_meta_extended,
                                          mock.MagicMock())
 
-        public_dto = RSA.importKey(public_dto)
-        private_dto = RSA.importKey(private_dto)
-        self.assertEqual(1023, public_dto.size())
-        self.assertEqual(1023, private_dto.size())
-        self.assertTrue(private_dto.has_private)
+        # check we can reload the private and public keys
+        private_key = serialization.load_pem_private_key(
+            data=private_dto,
+            password=None,
+            backend=default_backend()
+        )
 
-    def test_generate_1024_bit_RSA_key_in_pem(self):
+        public_key = serialization.load_pem_public_key(
+            data=public_dto,
+            backend=default_backend()
+        )
+
+        self.assertEqual(1024, private_key.key_size)
+        self.assertEqual(1024, public_key.key_size)
+
+        public_key = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.PKCS1
+        )
+
+        # get the public key from the private key we recovered to compare
+        recovered_key = private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.PKCS1
+        )
+
+        self.assertTrue(public_key == recovered_key)
+
+    def test_generate_1024_bit_RSA_key_with_passphrase(self):
         generate_dto = plugin.GenerateDTO('rsa', 1024, None, 'changeme')
         kek_meta_dto = self._get_mocked_kek_meta_dto()
 
@@ -305,14 +301,96 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
             kek_meta_dto,
             mock.MagicMock()
         )
+
         decrypt_dto = plugin.DecryptDTO(private_dto.cypher_text)
         private_dto = self.plugin.decrypt(decrypt_dto,
                                           kek_meta_dto,
                                           private_dto.kek_meta_extended,
                                           mock.MagicMock())
 
-        private_dto = RSA.importKey(private_dto, 'changeme')
-        self.assertTrue(private_dto.has_private())
+        decrypt_dto = plugin.DecryptDTO(public_dto.cypher_text)
+        public_dto = self.plugin.decrypt(decrypt_dto,
+                                         kek_meta_dto,
+                                         public_dto.kek_meta_extended,
+                                         mock.MagicMock())
+
+        # check we can reload the private and public keys
+        private_key = serialization.load_pem_private_key(
+            data=private_dto,
+            password='changeme'.encode(),
+            backend=default_backend()
+        )
+
+        public_key = serialization.load_pem_public_key(
+            data=public_dto,
+            backend=default_backend()
+        )
+
+        self.assertEqual(1024, private_key.key_size)
+        self.assertEqual(1024, public_key.key_size)
+
+        public_key = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.PKCS1
+        )
+
+        # get the public key from the private key we recovered to compare
+        recovered_key = private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.PKCS1
+        )
+
+        self.assertTrue(public_key == recovered_key)
+
+    def test_generate_1024_bit_DSA_key_with_passphrase(self):
+        generate_dto = plugin.GenerateDTO('dsa', 1024, None, 'changeme')
+        kek_meta_dto = self._get_mocked_kek_meta_dto()
+
+        private_dto, public_dto, passwd_dto = self.plugin.generate_asymmetric(
+            generate_dto,
+            kek_meta_dto,
+            mock.MagicMock()
+        )
+
+        decrypt_dto = plugin.DecryptDTO(private_dto.cypher_text)
+        private_dto = self.plugin.decrypt(decrypt_dto,
+                                          kek_meta_dto,
+                                          private_dto.kek_meta_extended,
+                                          mock.MagicMock())
+
+        decrypt_dto = plugin.DecryptDTO(public_dto.cypher_text)
+        public_dto = self.plugin.decrypt(decrypt_dto,
+                                         kek_meta_dto,
+                                         public_dto.kek_meta_extended,
+                                         mock.MagicMock())
+
+        # check we can reload the private and public keys
+        private_key = serialization.load_der_private_key(
+            data=private_dto,
+            password='changeme'.encode(),
+            backend=default_backend()
+        )
+
+        public_key = serialization.load_der_public_key(
+            data=public_dto,
+            backend=default_backend()
+        )
+
+        self.assertEqual(1024, private_key.key_size)
+        self.assertEqual(1024, public_key.key_size)
+
+        public_key = public_key.public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+
+        # get the public key from the private key we recovered to compare
+        recovered_key = private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+
+        self.assertTrue(public_key == recovered_key)
 
     def test_generate_1024_DSA_key_in_pem_and_reconstruct_key_der(self):
         generate_dto = plugin.GenerateDTO('dsa', 1024, None, None)
@@ -330,12 +408,13 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
                                           private_dto.kek_meta_extended,
                                           mock.MagicMock())
 
-        prv_seq = asn1.DerSequence()
-        prv_seq.decode(private_dto)
-        p, q, g, y, x = prv_seq[1:]
+        private_key = serialization.load_der_private_key(
+            data=private_dto,
+            password=None,
+            backend=default_backend()
+        )
 
-        private_dto = DSA.construct((y, g, p, q, x))
-        self.assertTrue(private_dto.has_private())
+        self.assertEqual(1024, private_key.key_size)
 
     def test_generate_128_bit_hmac_key(self):
         secret = models.Secret()
