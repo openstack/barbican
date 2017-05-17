@@ -52,7 +52,7 @@ class WhenTestingVersionsResource(utils.BarbicanAPIBaseTestCase):
         self.assertEqual('application/json', v1_info['media-types'][0]['base'])
 
     def test_when_host_href_is_not_set_in_conf(self):
-        cmn_utils.CONF.set_override('host_href', '', enforce_type=True)
+        cmn_utils.CONF.set_override('host_href', '')
         host_hdr = 'http://myproxy.server.com:9311'
         utils.mock_pecan_request(self, host=host_hdr)
         dummy_root = 'http://mylocalhost:9999'
@@ -66,7 +66,7 @@ class WhenTestingVersionsResource(utils.BarbicanAPIBaseTestCase):
 
     def test_when_host_href_is_set_in_conf(self):
         host_href = 'http://myapp.server.com:9311/'
-        cmn_utils.CONF.set_override('host_href', host_href, enforce_type=True)
+        cmn_utils.CONF.set_override('host_href', host_href)
         host_hdr = 'http://myproxy.server.com:9311'
         utils.mock_pecan_request(self, host=host_hdr)
         dummy_root = 'http://mylocalhost:9999'

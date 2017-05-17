@@ -33,7 +33,7 @@ class WhenTestingHostnameForRefsGetter(test_utils.BaseTestCase):
 
         self._old_host = utils.CONF.host_href
         self._old_version = utils.API_VERSION
-        utils.CONF.set_override('host_href', self.host, enforce_type=True)
+        utils.CONF.set_override('host_href', self.host)
         utils.API_VERSION = self.version
 
     def tearDown(self):
@@ -64,7 +64,7 @@ class WhenTestingHostByWsgiRequestForRefsGetter(test_utils.BaseTestCase):
 
         test_utils.mock_pecan_request(self, host=self.host)
 
-        utils.CONF.set_override('host_href', None, enforce_type=True)
+        utils.CONF.set_override('host_href', None)
         utils.API_VERSION = self.version
 
     def tearDown(self):
@@ -78,7 +78,7 @@ class WhenTestingHostByWsgiRequestForRefsGetter(test_utils.BaseTestCase):
                                               self.resource), uri)
 
     def test_blank_conf_hosthref_for_refs(self):
-        utils.CONF.set_override('host_href', '', enforce_type=True)
+        utils.CONF.set_override('host_href', '')
         uri = utils.hostname_for_refs(resource=self.resource)
         self.assertEqual("{0}/{1}/{2}".format(self.host, self.version,
                                               self.resource), uri)

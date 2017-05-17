@@ -50,14 +50,12 @@ class WhenRunningPeriodicServerRetryLogic(database_utils.RepositoryTestCase):
         retry_scheduler.CONF.set_override(
             "initial_delay_seconds",
             2 * INITIAL_DELAY_SECONDS,
-            group='retry_scheduler',
-            enforce_type=True)
+            group='retry_scheduler')
 
         retry_scheduler.CONF.set_override(
             "periodic_interval_max_seconds",
             NEXT_RETRY_SECONDS,
-            group='retry_scheduler',
-            enforce_type=True)
+            group='retry_scheduler')
 
         self.queue_client = mock.MagicMock()
 
@@ -165,8 +163,7 @@ class WhenRunningPeriodicServer(oslotest.BaseTestCase):
         retry_scheduler.CONF.set_override(
             "initial_delay_seconds",
             INITIAL_DELAY_SECONDS,
-            group='retry_scheduler',
-            enforce_type=True)
+            group='retry_scheduler')
 
         self.database_patcher = _DatabasePatcherHelper()
         self.database_patcher.start()
