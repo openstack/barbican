@@ -78,6 +78,7 @@ function destroy {
     barbican secret delete $(resource_get barbican secret_link)
     local user_id=$(resource_get barbican user_id)
     local project_id=$(resource_get barbican project_id)
+    source $TOP_DIR/openrc admin admin
     openstack user delete $user_id
     openstack project delete $project_id
 }

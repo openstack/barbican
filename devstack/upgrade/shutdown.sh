@@ -12,7 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 # shutdown barbican service
-set -o errexit
 
 source $GRENADE_DIR/grenaderc
 source $GRENADE_DIR/functions
