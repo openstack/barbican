@@ -10,8 +10,6 @@ Contents
    containers
    acls
    pkcs11keygeneration
-   certificates
-   cas
    dogtag_setup
    quotas
    consumers

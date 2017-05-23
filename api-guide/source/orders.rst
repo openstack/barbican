@@ -3,26 +3,16 @@ Orders API - User Guide
 ***********************
 
 The orders resource allows the user to request barbican to generate a secret.
-This is also very helpful for requesting the creation of certificates and
-public/private key pairs.
+This is also very helpful for requesting the creation of public/private key pairs.
 
 The orders resource supports the following types:
     * symmetric keys
     * asymmetric keys
-    * certificates
-
-.. warning::
-
-   DEPRECATION WARNING: The Certificates Order resource has been deprecated
-   and will be removed in the P release.
 
 This user guide provides high level examples of the orders resource.
 It will assume you will be using a local running development environment of barbican.
 If you need assistance with getting set up, please reference the
 `development guide <http://docs.openstack.org/developer/barbican/setup/dev.html>`__.
-
-For a more in depth explanation on how to order a certificate, reference
-the :ref:`How to Order a Certificate <order_certificate>` documentation.
 
 .. _create_order:
 

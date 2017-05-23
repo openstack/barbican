@@ -52,11 +52,10 @@ Architecture
 ============
 
 Barbican's plugin architecture enables developers to create their own
-implementations of features such as secret storage and generation, X.509
-certificate generation, and event handling. The plugin pattern used defines an
-abstract class, whose methods are invoked by Barbican logic (referred to as
-Barbican 'core' in this guide) in a particular sequence. Typically plugins do
-not interact with Barbican's data model directly, so Barbican core also handles
+implementations of features such as secret storage and generation and event handling.
+The plugin pattern used defines an abstract class, whose methods are invoked by Barbican
+logic (referred to as Barbican 'core' in this guide) in a particular sequence. Typically
+plugins do not interact with Barbican's data model directly, so Barbican core also handles
 persisting any required information on the plugin's behalf.
 
 In general, Barbican core will invoke a variation of the plugin's
@@ -72,4 +71,3 @@ Barbican, as well as configuration and deployment options.
 
    secret_store
    crypto
-   certificate
