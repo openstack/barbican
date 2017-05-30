@@ -14,12 +14,12 @@ API Reference
 .. toctree::
     :maxdepth: 1
 
-    ./reference/secrets
-    ./reference/secret_types
-    ./reference/secret_metadata
+    ./reference/secrets.rst
+    ./reference/secret_types.rst
+    ./reference/secret_metadata.rst
     ./reference/store_backends.rst
-    ./reference/containers
-    ./reference/acls
-    ./reference/quotas
-    ./reference/consumers
-    ./reference/orders
+    ./reference/containers.rst
+    ./reference/acls.rst
+    ./reference/quotas.rst
+    ./reference/consumers.rst
+    ./reference/orders.rst
