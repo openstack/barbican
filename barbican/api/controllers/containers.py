@@ -74,7 +74,7 @@ class ContainerController(controllers.ACLMixin):
         for secret_ref in dict_fields['secret_refs']:
             hrefs.convert_to_hrefs(secret_ref)
 
-        LOG.info(u._LI('Retrieved container for project: %s'),
+        LOG.info('Retrieved container for project: %s',
                  external_project_id)
         return hrefs.convert_to_hrefs(
             hrefs.convert_to_hrefs(dict_fields)
@@ -95,10 +95,10 @@ class ContainerController(controllers.ACLMixin):
                 external_project_id=external_project_id
             )
         except exception.NotFound:
-            LOG.exception(u._LE('Problem deleting container'))
+            LOG.exception('Problem deleting container')
             container_not_found()
 
-        LOG.info(u._LI('Deleted container for project: %s'),
+        LOG.info('Deleted container for project: %s',
                  external_project_id)
 
         for consumer in container_consumers[0]:
@@ -175,7 +175,7 @@ class ContainersController(controllers.ACLMixin):
             )
             resp_ctrs_overall.update({'total': total})
 
-        LOG.info(u._LI('Retrieved container list for project: %s'), project_id)
+        LOG.info('Retrieved container list for project: %s', project_id)
         return resp_ctrs_overall
 
     @index.when(method='POST', template='json')
@@ -219,7 +219,7 @@ class ContainersController(controllers.ACLMixin):
 
         pecan.response.status = 201
         pecan.response.headers['Location'] = url
-        LOG.info(u._LI('Created a container for project: %s'),
+        LOG.info('Created a container for project: %s',
                  external_project_id)
 
         return {'container_ref': url}
@@ -285,7 +285,7 @@ class ContainersSecretsController(controllers.ACLMixin):
 
         pecan.response.status = 201
         pecan.response.headers['Location'] = url
-        LOG.info(u._LI('Created a container secret for project: %s'),
+        LOG.info('Created a container secret for project: %s',
                  external_project_id)
 
         return {'container_ref': url}
@@ -325,5 +325,5 @@ class ContainersSecretsController(controllers.ACLMixin):
                 container_secret.id, external_project_id)
 
         pecan.response.status = 204
-        LOG.info(u._LI('Deleted container secret for project: %s'),
+        LOG.info('Deleted container secret for project: %s',
                  external_project_id)

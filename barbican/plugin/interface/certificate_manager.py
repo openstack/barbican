@@ -656,7 +656,7 @@ class CertificatePluginManager(named.NamedExtensionManager):
             new_ca_infos = cert_plugin.get_ca_info()
         except Exception as e:
             # The plugin gave an invalid CA, log and return
-            LOG.error(u._LE("ERROR getting CA from plugin: %s"),
+            LOG.error("ERROR getting CA from plugin: %s",
                       encodeutils.exception_to_unicode(e))
             return
 
@@ -689,7 +689,7 @@ class CertificatePluginManager(named.NamedExtensionManager):
                 self._add_ca(plugin_name, add_id, new_ca_infos[add_id])
             except Exception as e:
                 # The plugin gave an invalid CA, log and continue
-                LOG.error(u._LE("ERROR adding CA from plugin: %s"),
+                LOG.error("ERROR adding CA from plugin: %s",
                           encodeutils.exception_to_unicode(e))
 
     def _add_ca(self, plugin_name, plugin_ca_id, ca_info):

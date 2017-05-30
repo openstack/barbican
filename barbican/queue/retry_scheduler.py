@@ -24,7 +24,6 @@ from oslo_service import service
 
 from barbican.common import config
 from barbican.common import utils
-from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories
 from barbican.queue import client as async_client
@@ -74,11 +73,11 @@ class PeriodicServer(service.Service):
         self.order_retry_repo = repositories.get_order_retry_tasks_repository()
 
     def start(self):
-        LOG.info(u._LI("Starting the PeriodicServer"))
+        LOG.info("Starting the PeriodicServer")
         super(PeriodicServer, self).start()
 
     def stop(self, graceful=True):
-        LOG.info(u._LI("Halting the PeriodicServer"))
+        LOG.info("Halting the PeriodicServer")
         super(PeriodicServer, self).stop(graceful=graceful)
 
     @periodic_task.periodic_task
@@ -92,25 +91,22 @@ class PeriodicServer(service.Service):
         try:
             total_tasks_processed = self._process_retry_tasks()
         except Exception:
-            LOG.exception(
-                u._LE("Problem seen processing scheduled retry tasks")
-            )
+            LOG.exception("Problem seen processing scheduled retry tasks")
 
         # Return the next delay before this method is invoked again.
         check_again_in_seconds = _compute_next_periodic_interval()
-        LOG.info(
-            u._LI("Done processing '%(total)s' tasks, will check again in "
-                  "'%(next)s' seconds."),
-            {
-                'total': total_tasks_processed,
-                'next': check_again_in_seconds
-            }
-        )
+        LOG.info("Done processing '%(total)s' tasks, will check again in "
+                 "'%(next)s' seconds.",
+                 {
+                     'total': total_tasks_processed,
+                     'next': check_again_in_seconds
+                 }
+                 )
         return check_again_in_seconds
 
     def _process_retry_tasks(self):
         """Scan for and then re-queue tasks that are ready to retry."""
-        LOG.info(u._LI("Processing scheduled retry tasks:"))
+        LOG.info("Processing scheduled retry tasks:")
 
         # Retrieve tasks to retry.
         entities, total = self._retrieve_tasks()
@@ -160,16 +156,14 @@ class PeriodicServer(service.Service):
                 "kwargs '{2}')".format(
                     retry_task_name, retry_args, retry_kwargs))
         except Exception:
-            LOG.exception(
-                u._LE(
-                    "Problem enqueuing method '%(name)s' with args '%(args)s' "
-                    "and kwargs '%(kwargs)s'."),
-                {
-                    'name': retry_task_name,
-                    'args': retry_args,
-                    'kwargs': retry_kwargs
-                }
-            )
+            LOG.exception("Problem enqueuing method '%(name)s' with args "
+                          "'%(args)s' and kwargs '%(kwargs)s'.",
+                          {
+                              'name': retry_task_name,
+                              'args': retry_args,
+                              'kwargs': retry_kwargs
+                          }
+                          )
             repositories.rollback()
         finally:
             repositories.clear()

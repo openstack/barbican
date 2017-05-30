@@ -245,8 +245,8 @@ class KMIPSecretStore(ss.SecretStoreBase):
         config = conf.kmip_plugin
 
         if not getattr(ssl, config.ssl_version, None):
-            LOG.error(u._LE("The configured SSL version (%s) is not available"
-                            " on the system."), config.ssl_version)
+            LOG.error("The configured SSL version (%s) is not available"
+                      " on the system.", config.ssl_version)
 
         self.client = client.ProxyKmipClient(
             hostname=config.host,
@@ -292,7 +292,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                           "uuid: %s", uuid)
                 return {KMIPSecretStore.KEY_UUID: uuid}
         except Exception as e:
-            LOG.exception(u._LE("Error opening or writing to client"))
+            LOG.exception("Error opening or writing to client")
             raise ss.SecretGeneralException(e)
 
     def generate_asymmetric_key(self, key_spec):
@@ -341,7 +341,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                                                    public_key_metadata,
                                                    passphrase_metadata)
         except Exception as e:
-            LOG.exception(u._LE("Error opening or writing to client"))
+            LOG.exception("Error opening or writing to client")
             raise ss.SecretGeneralException(e)
 
     def store_secret(self, secret_dto):
@@ -375,7 +375,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 LOG.debug("SUCCESS: Key stored with uuid: %s", uuid)
                 return {KMIPSecretStore.KEY_UUID: uuid}
         except Exception as e:
-            LOG.exception(u._LE("Error opening or writing to client"))
+            LOG.exception("Error opening or writing to client")
             raise ss.SecretGeneralException(e)
 
     def get_secret(self, secret_type, secret_metadata):
@@ -396,7 +396,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 managed_object = self.client.get(uuid)
                 return self._get_barbican_secret(managed_object, secret_type)
         except Exception as e:
-            LOG.exception(u._LE("Error opening or writing to client"))
+            LOG.exception("Error opening or writing to client")
             raise ss.SecretGeneralException(e)
 
     def generate_supports(self, key_spec):
@@ -435,7 +435,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 LOG.debug("Opened connection to KMIP client")
                 self.client.destroy(uuid)
         except Exception as e:
-            LOG.exception(u._LE("Error opening or writing to client"))
+            LOG.exception("Error opening or writing to client")
             raise ss.SecretGeneralException(e)
 
     def store_secret_supports(self, key_spec):
@@ -567,7 +567,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
             reason=result.result_reason,
             message=result.result_message
         )
-        LOG.error(u._LE("ERROR from KMIP server: %s"), msg)
+        LOG.error("ERROR from KMIP server: %s", msg)
         raise ss.SecretGeneralException(msg)
 
     def _validate_keyfile_permissions(self, path):

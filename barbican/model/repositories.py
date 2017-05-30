@@ -95,7 +95,7 @@ def hard_reset():
 def setup_database_engine_and_factory():
     global sa_logger, _SESSION_FACTORY, _ENGINE
 
-    LOG.info(u._LI('Setting up database engine and session factory'))
+    LOG.info('Setting up database engine and session factory')
     if CONF.debug:
         sa_logger = logging.getLogger('sqlalchemy.engine')
         sa_logger.setLevel(logging.DEBUG)
@@ -198,7 +198,7 @@ def _get_engine(engine):
 
             _auto_generate_tables(engine, tables)
         else:
-            LOG.info(u._LI('Not auto-creating barbican registry DB'))
+            LOG.info('Not auto-creating barbican registry DB')
 
     return engine
 
@@ -245,11 +245,11 @@ def _create_engine(connection, **engine_args):
 def _auto_generate_tables(engine, tables):
     if tables and 'alembic_version' in tables:
         # Upgrade the database to the latest version.
-        LOG.info(u._LI('Updating schema to latest version'))
+        LOG.info('Updating schema to latest version')
         commands.upgrade()
     else:
         # Create database tables from our models.
-        LOG.info(u._LI('Auto-creating barbican registry DB'))
+        LOG.info('Auto-creating barbican registry DB')
         models.BASE.metadata.create_all(engine)
 
         # Sync the alembic version 'head' with current models.
@@ -267,7 +267,7 @@ def wrap_db_error(f):
 
             remaining_attempts = CONF.sql_max_retries
             while True:
-                LOG.warning(u._LW('SQL connection failed. %d attempts left.'),
+                LOG.warning('SQL connection failed. %d attempts left.',
                             remaining_attempts)
                 remaining_attempts -= 1
                 time.sleep(CONF.sql_retry_interval)
@@ -371,7 +371,7 @@ class BaseRepo(object):
             entity = query.one()
 
         except sa_orm.exc.NoResultFound:
-            LOG.exception(u._LE("Not found for %s"), entity_id)
+            LOG.exception("Not found for %s", entity_id)
             entity = None
             if not suppress_exception:
                 _raise_entity_not_found(self._do_entity_name(), entity_id)
@@ -406,7 +406,7 @@ class BaseRepo(object):
             LOG.debug("Saving entity...")
             entity.save(session=session)
         except db_exc.DBDuplicateEntry as e:
-            LOG.exception(u._LE('Problem saving entity for create'))
+            LOG.exception('Problem saving entity for create')
             error_msg = re.sub('[()]', '', str(e.args))
             raise exception.ConstraintCheck(error=error_msg)
 
@@ -558,8 +558,7 @@ class BaseRepo(object):
                 # Its a soft delete so its more like entity update
                 entity.delete(session=session)
         except sqlalchemy.exc.SQLAlchemyError:
-            LOG.exception(u._LE('Problem finding project related entity to '
-                                'delete'))
+            LOG.exception('Problem finding project related entity to delete')
             if not suppress_exception:
                 raise exception.BarbicanException(u._('Error deleting project '
                                                       'entities for '
@@ -595,7 +594,7 @@ class ProjectRepo(BaseRepo):
         except sa_orm.exc.NoResultFound:
             entity = None
             if not suppress_exception:
-                LOG.exception(u._LE("Problem getting Project %s"),
+                LOG.exception("Problem getting Project %s",
                               external_project_id)
                 raise exception.NotFound(u._(
                     "No {entity_name} found with keystone-ID {id}").format(
@@ -798,7 +797,7 @@ class SecretRepo(BaseRepo):
         except sa_orm.exc.NoResultFound:
             entity = None
             if not suppress_exception:
-                LOG.exception(u._LE("Problem getting secret %s"),
+                LOG.exception("Problem getting secret %s",
                               entity_id)
                 raise exception.NotFound(u._(
                     "No secret found with secret-ID {id}").format(
@@ -1338,8 +1337,7 @@ class ContainerRepo(BaseRepo):
         except sa_orm.exc.NoResultFound:
             entity = None
             if not suppress_exception:
-                LOG.exception(u._LE("Problem getting container %s"),
-                              entity_id)
+                LOG.exception("Problem getting container %s", entity_id)
                 raise exception.NotFound(u._(
                     "No container found with container-ID {id}").format(
                         entity_name=self._do_entity_name(),
@@ -2275,7 +2273,7 @@ class ProjectSecretStoreRepo(BaseRepo):
         try:
             entity = query.one()
         except sa_orm.exc.NoResultFound:
-            LOG.info(u._LE("No preferred secret store found for project = %s"),
+            LOG.info("No preferred secret store found for project = %s",
                      project_id)
             entity = None
             if not suppress_exception:

@@ -22,7 +22,6 @@ import sys
 sys.path.insert(0, os.getcwd())
 
 from barbican.common import config
-from barbican import i18n as u
 from barbican.model import clean
 from barbican.model.migration import commands
 from oslo_log import log
@@ -176,8 +175,7 @@ def main():
         dm.execute()
     except Exception as ex:
         if not _exception_is_successful_exit(ex):
-            LOG.exception(u._LE('Problem seen trying to run'
-                                ' barbican db manage'))
+            LOG.exception('Problem seen trying to run barbican db manage')
             sys.stderr.write("ERROR: {0}\n".format(ex))
             sys.exit(1)
 

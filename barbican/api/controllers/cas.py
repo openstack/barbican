@@ -31,8 +31,8 @@ from barbican.tasks import certificate_resources as cert_resources
 
 LOG = utils.getLogger(__name__)
 
-_DEPRECATION_MSG = u._LW('%s has been deprecated in the Newton release. It '
-                         'will be removed in the Pike release.')
+_DEPRECATION_MSG = '%s has been deprecated in the Newton release. ' \
+                   'It will be removed in the Pike release.'
 
 
 def _certificate_authority_not_found():
@@ -254,7 +254,7 @@ class CertificateAuthorityController(controllers.ACLMixin):
     @controllers.enforce_rbac('certificate_authority:delete')
     def on_delete(self, external_project_id, **kwargs):
         cert_resources.delete_subordinate_ca(external_project_id, self.ca)
-        LOG.info(u._LI('Deleted CA for project: %s'), external_project_id)
+        LOG.info('Deleted CA for project: %s', external_project_id)
 
 
 class CertificateAuthoritiesController(controllers.ACLMixin):
@@ -493,7 +493,7 @@ class CertificateAuthoritiesController(controllers.ACLMixin):
         pecan.response.status = 201
         pecan.response.headers['Location'] = url
 
-        LOG.info(u._LI('Created a sub CA for project: %s'),
+        LOG.info('Created a sub CA for project: %s',
                  external_project_id)
 
         return {'ca_ref': url}

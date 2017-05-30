@@ -51,7 +51,7 @@ def load_body(req, resp=None, validator=None):
         body = req.body_file.read(CONF.max_allowed_request_size_in_bytes)
         req.body_file.seek(0)
     except IOError:
-        LOG.exception(u._LE("Problem reading request JSON stream."))
+        LOG.exception("Problem reading request JSON stream.")
         pecan.abort(500, u._('Read Error'))
 
     try:
@@ -61,7 +61,7 @@ def load_body(req, resp=None, validator=None):
         parsed_body = json.loads(body)
         strip_whitespace(parsed_body)
     except ValueError:
-        LOG.exception(u._LE("Problem loading request JSON."))
+        LOG.exception("Problem loading request JSON.")
         pecan.abort(400, u._('Malformed JSON'))
 
     if validator:

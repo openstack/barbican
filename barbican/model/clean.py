@@ -14,7 +14,6 @@
 # limitations under the License.
 
 from barbican.common import config
-from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repo
 from oslo_log import log
@@ -60,8 +59,8 @@ def cleanup_unassociated_projects():
     query = session.query(models.Project)
     query = query.filter(models.Project.id.in_(sub_query))
     delete_count = query.delete(synchronize_session='fetch')
-    LOG.info(u._LI("Cleaned up %(delete_count)s entries for "
-                   "%(project_name)s") %
+    LOG.info("Cleaned up %(delete_count)s entries for "
+             "%(project_name)s",
              {'delete_count': str(delete_count),
               'project_name': models.Project.__name__})
     return delete_count
@@ -98,8 +97,8 @@ def cleanup_parent_with_no_child(parent_model, child_model,
     if threshold_date:
         query = query.filter(parent_model.deleted_at <= threshold_date)
     delete_count = query.delete(synchronize_session='fetch')
-    LOG.info(u._LI("Cleaned up %(delete_count)s entries for %(parent_name)s "
-                   "with no children in %(child_name)s") %
+    LOG.info("Cleaned up %(delete_count)s entries for %(parent_name)s "
+             "with no children in %(child_name)s",
              {'delete_count': delete_count,
               'parent_name': parent_model.__name__,
               'child_name': child_model.__name__})
@@ -120,7 +119,7 @@ def cleanup_softdeletes(model, threshold_date=None):
     if threshold_date:
         query = query.filter(model.deleted_at <= threshold_date)
     delete_count = query.delete()
-    LOG.info(u._LI("Cleaned up %(delete_count)s entries for %(model_name)s") %
+    LOG.info("Cleaned up %(delete_count)s entries for %(model_name)s",
              {'delete_count': delete_count,
               'model_name': model.__name__})
     return delete_count
@@ -172,7 +171,7 @@ def cleanup_all(threshold_date=None):
     # TODO(edtubill) Clean up projects that were soft deleted by
     # the keystone listener
 
-    LOG.info(u._LI("Cleaned up %s soft deleted entries"), total)
+    LOG.info("Cleaned up %s soft deleted entries", total)
     return total
 
 
@@ -295,9 +294,9 @@ def soft_delete_expired_secrets(threshold_date):
     children_count, acl_total = _soft_delete_expired_secret_children(
         threshold_date)
     update_count += children_count
-    LOG.info(u._LI("Soft deleted %(update_count)s entries due to secret "
-                   "expiration and %(acl_total)s secret acl entries "
-                   "were removed from the database") %
+    LOG.info("Soft deleted %(update_count)s entries due to secret "
+             "expiration and %(acl_total)s secret acl entries "
+             "were removed from the database",
              {'update_count': update_count,
               'acl_total': acl_total})
     return update_count + acl_total
@@ -324,7 +323,7 @@ def clean_command(sql_url, min_num_days, do_clean_unassociated_projects,
     if log_file:
         CONF.set_override('log_file', log_file)
 
-    LOG.info(u._LI("Cleaning up soft deletions in the barbican database"))
+    LOG.info("Cleaning up soft deletions in the barbican database")
     log.setup(CONF, 'barbican')
 
     cleanup_total = 0
@@ -353,7 +352,7 @@ def clean_command(sql_url, min_num_days, do_clean_unassociated_projects,
         repo.commit()
 
     except Exception as ex:
-        LOG.exception(u._LE('Failed to clean up soft deletions in database.'))
+        LOG.exception('Failed to clean up soft deletions in database.')
         repo.rollback()
         cleanup_total = 0  # rollback happened, no entries affected
         raise ex
@@ -372,6 +371,5 @@ def clean_command(sql_url, min_num_days, do_clean_unassociated_projects,
 
         log.setup(CONF, 'barbican')  # reset the overrides
 
-        LOG.info(u._LI("Cleaning of database affected %s entries"),
-                 cleanup_total)
-        LOG.info(u._LI('DB clean up finished in %s seconds'), elapsed_time)
+        LOG.info("Cleaning of database affected %s entries", cleanup_total)
+        LOG.info('DB clean up finished in %s seconds', elapsed_time)

@@ -74,7 +74,7 @@ class TransportKeyController(controllers.ACLMixin):
             # TODO(alee) response should be 204 on success
             # pecan.response.status = 204
         except exception.NotFound:
-            LOG.exception(u._LE('Problem deleting transport_key'))
+            LOG.exception('Problem deleting transport_key')
             _transport_key_not_found()
 
 

@@ -68,7 +68,7 @@ class ContainerConsumerController(controllers.ACLMixin):
 
         dict_fields = consumer.to_dict_fields()
 
-        LOG.info(u._LI('Retrieved a consumer for project: %s'),
+        LOG.info('Retrieved a consumer for project: %s',
                  external_project_id)
 
         return hrefs.convert_to_hrefs(
@@ -132,7 +132,7 @@ class ContainerConsumersController(controllers.ACLMixin):
             )
             resp_ctrs_overall.update({'total': total})
 
-        LOG.info(u._LI('Retrieved a consumer list for project: %s'),
+        LOG.info('Retrieved a consumer list for project: %s',
                  external_project_id)
         return resp_ctrs_overall
 
@@ -158,7 +158,7 @@ class ContainerConsumersController(controllers.ACLMixin):
         url = hrefs.convert_consumer_to_href(new_consumer.container_id)
         pecan.response.headers['Location'] = url
 
-        LOG.info(u._LI('Created a consumer for project: %s'),
+        LOG.info('Created a consumer for project: %s',
                  external_project_id)
 
         return self._return_container_data(self.container_id)
@@ -196,11 +196,11 @@ class ContainerConsumersController(controllers.ACLMixin):
             self.consumer_repo.delete_entity_by_id(consumer.id,
                                                    external_project_id)
         except exception.NotFound:
-            LOG.exception(u._LE('Problem deleting consumer'))
+            LOG.exception('Problem deleting consumer')
             _consumer_not_found()
 
         ret_data = self._return_container_data(self.container_id)
-        LOG.info(u._LI('Deleted a consumer for project: %s'),
+        LOG.info('Deleted a consumer for project: %s',
                  external_project_id)
         return ret_data
 

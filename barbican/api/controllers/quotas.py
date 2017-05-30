@@ -91,7 +91,7 @@ class ProjectQuotasController(controllers.ACLMixin):
                       validator=self.validator)
         self.quota_driver.set_project_quotas(self.passed_project_id,
                                              kwargs['project_quotas'])
-        LOG.info(u._LI('Put Project Quotas'))
+        LOG.info('Put Project Quotas')
         pecan.response.status = 204
 
     @index.when(method='DELETE', template='json')
@@ -103,10 +103,10 @@ class ProjectQuotasController(controllers.ACLMixin):
         try:
             self.quota_driver.delete_project_quotas(self.passed_project_id)
         except exception.NotFound:
-            LOG.info(u._LI('Delete Project Quotas - Project not found'))
+            LOG.info('Delete Project Quotas - Project not found')
             _project_quotas_not_found()
         else:
-            LOG.info(u._LI('Delete Project Quotas'))
+            LOG.info('Delete Project Quotas')
             pecan.response.status = 204
 
 

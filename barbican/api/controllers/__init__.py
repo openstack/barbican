@@ -102,7 +102,7 @@ def handle_exceptions(operation_name=u._('System')):
             try:
                 return fn(inst, *args, **kwargs)
             except exc.HTTPError:
-                LOG.exception(u._LE('Webob error seen'))
+                LOG.exception('Webob error seen')
                 raise  # Already converted to Webob exception, just reraise
             # In case PolicyNotAuthorized, we do not want to expose payload by
             # logging exception, so just LOG.error
