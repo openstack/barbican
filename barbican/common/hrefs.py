@@ -13,7 +13,7 @@ from barbican.common import utils
 
 
 def convert_resource_id_to_href(resource_slug, resource_id):
-    """Convert the resouce ID to a HATEOAS-style href with resource slug."""
+    """Convert the resource ID to a HATEOAS-style href with resource slug."""
     if resource_id:
         resource = '{slug}/{id}'.format(slug=resource_slug, id=resource_id)
     else:
@@ -125,7 +125,7 @@ def add_nav_hrefs(resources_name, offset, limit,
     :param resources_name: Name of api resource
     :param offset: Element number (ie. index) where current page starts
     :param limit: Max amount of elements listed on current page
-    :param num_elements: Total number of elements
+    :param total_elements: Total number of elements
     :returns: augmented dictionary with next and/or previous hrefs
     """
     if offset > 0:

@@ -315,7 +315,7 @@ class WhenAddingOrRemovingContainerSecretsUsingContainersSecretsResource(
     def test_should_add_container_secret_with_trailing_slash(self):
         resp, container_id = create_container(
             self.app,
-            name='test conatiner name',
+            name='test container name',
             container_type='generic',
         )
         self._assert_successful_container_create(resp, container_id)

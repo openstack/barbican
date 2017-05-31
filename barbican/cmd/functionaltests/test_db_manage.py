@@ -150,7 +150,7 @@ class DBManageTestCase(base.TestCase):
 
     @testcase.attr('positive')
     def test_active_secret_not_deleted(self):
-        """Verify that active secrest are not removed"""
+        """Verify that active secrets are not removed"""
         project_a_secrets = self._create_secret_list(user=admin_a)
         project_b_secrets = self._create_secret_list(user=admin_b)
 
@@ -228,7 +228,7 @@ class DBManageTestCase(base.TestCase):
 
     @testcase.attr('positive')
     def test_no_soft_deleted_secrets_in_db(self):
-        """Test that no soft deleted secrests are in db"""
+        """Test that no soft deleted secrets are in db"""
         os.system("python barbican/cmd/db_manage.py clean -m 0 -p -e")
 
         results = self.conn.execute("select * from secrets where deleted=1")
@@ -287,7 +287,7 @@ class DBManageTestCase(base.TestCase):
             self.assertNotIn(container_uuid, container_list)
 
     @testcase.attr('positive')
-    def test_containers_with_exipred_secrets_are_deleted(self):
+    def test_containers_with_expired_secrets_are_deleted(self):
         """Containers with expired secrets are deleted"""
         current_time = utils.create_timestamp_w_tz_and_offset(seconds=10)
 

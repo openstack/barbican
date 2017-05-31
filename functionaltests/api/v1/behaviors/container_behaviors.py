@@ -66,7 +66,7 @@ class ContainerBehaviors(base_behaviors.BaseBehaviors):
         :param limit: limits number of returned containers
         :param offset: represents how many records to skip before retrieving
             the list
-        :param name_filter: allows you to filter results based on name
+        :param filter: allows you to filter results based on name
         :param extra_headers: Extra headers used to retrieve a list of
             containers
         :param user_name: The user name used to get the list

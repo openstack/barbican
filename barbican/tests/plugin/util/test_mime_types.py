@@ -85,7 +85,7 @@ class WhenTestingAllowBinaryContent(utils.BaseTestCase):
         self.assertFalse(r)
 
     def test_not_allow_with_invalid_content_type(self):
-        r = mime_types.use_binary_content_as_is('invalid_conent_type',
+        r = mime_types.use_binary_content_as_is('invalid_content_type',
                                                 'binary')
         self.assertFalse(r)
 
@@ -214,7 +214,7 @@ class WhenTestingIfContentTypeAndEncodingSupported(utils.BaseTestCase):
         'plaintext_none': ['text/plain', 'base64'],
         'octectstream_no_encoding': ['application/octet-stream', None],
         'pkcs8_no_encoding': ['application/pkcs8', None],
-        'unknown_with_valid_encoding': ['application/uknown-content-type',
+        'unknown_with_valid_encoding': ['application/unknown-content-type',
                                         'base64']
     })
     def test_content_type_encoding_not_supported(self, content_type, encoding):
