@@ -35,10 +35,9 @@ def set_foreign_key_constraint(dbapi_connection, connection_record):
 
 def setup_in_memory_db():
     # Ensure we are using in-memory SQLite database, and creating tables.
-    repositories.CONF.set_override("sql_connection", "sqlite:///:memory:",
-                                   enforce_type=True)
-    repositories.CONF.set_override("db_auto_create", True, enforce_type=True)
-    repositories.CONF.set_override("debug", True, enforce_type=True)
+    repositories.CONF.set_override("sql_connection", "sqlite:///:memory:")
+    repositories.CONF.set_override("db_auto_create", True)
+    repositories.CONF.set_override("debug", True)
 
     # Ensure the connection is completely closed, so any previous in-memory
     # database can be removed prior to starting the next test run.

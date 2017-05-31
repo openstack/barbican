@@ -35,8 +35,7 @@ class InitializeDatabaseMixin(object):
         manager._PLUGIN_MANAGER = None
         manager.CONF.set_override('enabled_crypto_plugins',
                                   ['simple_crypto'],
-                                  group='crypto',
-                                  enforce_type=True)
+                                  group='crypto')
 
         self.project_id1 = uuid.uuid4().hex
         self.project_id2 = uuid.uuid4().hex

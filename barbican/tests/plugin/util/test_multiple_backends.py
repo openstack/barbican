@@ -130,8 +130,7 @@ class WhenReadingMultipleBackendsConfig(test_utils.MultipleBackendsTestCase):
                                 global_default_index=0)
 
         conf = config.get_module_config('secretstore')
-        conf.set_override("stores_lookup_suffix", [], group='secretstore',
-                          enforce_type=True)
+        conf.set_override("stores_lookup_suffix", [], group='secretstore')
         self.assertRaises(exception.MultipleSecretStoreLookupFailed,
                           multiple_backends.read_multiple_backends_config)
 
@@ -403,8 +402,7 @@ class TestGetApplicablePlugins(test_utils.MultipleBackendsTestCase):
         ss_manager = MockedManager(ss_plugins)
 
         ss_config.set_override("enabled_secretstore_plugins",
-                               ss_plugins, group='secretstore',
-                               enforce_type=True)
+                               ss_plugins, group='secretstore')
 
         objs = multiple_backends.get_applicable_store_plugins(ss_manager, None,
                                                               None)

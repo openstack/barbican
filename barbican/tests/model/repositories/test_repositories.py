@@ -199,10 +199,8 @@ class WhenTestingWrapDbError(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingWrapDbError, self).setUp()
-        repositories.CONF.set_override("sql_max_retries", 0,
-                                       enforce_type=True)
-        repositories.CONF.set_override("sql_retry_interval", 0,
-                                       enforce_type=True)
+        repositories.CONF.set_override("sql_max_retries", 0)
+        repositories.CONF.set_override("sql_retry_interval", 0)
 
     @mock.patch('barbican.model.repositories.is_db_connection_error')
     def test_should_raise_operational_error_is_connection_error(
@@ -224,8 +222,7 @@ class WhenTestingGetEnginePrivate(utils.BaseTestCase):
     def setUp(self):
         super(WhenTestingGetEnginePrivate, self).setUp()
 
-        repositories.CONF.set_override("sql_connection", "connection",
-                                       enforce_type=True)
+        repositories.CONF.set_override("sql_connection", "connection")
 
     @mock.patch('barbican.model.repositories._create_engine')
     def test_should_raise_value_exception_engine_create_failure(
@@ -248,8 +245,7 @@ class WhenTestingGetEnginePrivate(utils.BaseTestCase):
     def test_should_complete_with_no_alembic_create_default_configs(
             self, mock_create_engine):
 
-        repositories.CONF.set_override("db_auto_create", False,
-                                       enforce_type=True)
+        repositories.CONF.set_override("db_auto_create", False)
         engine = mock.MagicMock()
         mock_create_engine.return_value = engine
 
@@ -268,14 +264,11 @@ class WhenTestingGetEnginePrivate(utils.BaseTestCase):
     def test_should_complete_with_no_alembic_create_pool_configs(
             self, mock_create_engine):
 
-        repositories.CONF.set_override("db_auto_create", False,
-                                       enforce_type=True)
+        repositories.CONF.set_override("db_auto_create", False)
         repositories.CONF.set_override(
-            "sql_pool_class", "QueuePool", enforce_type=True)
-        repositories.CONF.set_override("sql_pool_size", 22,
-                                       enforce_type=True)
-        repositories.CONF.set_override("sql_pool_max_overflow", 11,
-                                       enforce_type=True)
+            "sql_pool_class", "QueuePool")
+        repositories.CONF.set_override("sql_pool_size", 22)
+        repositories.CONF.set_override("sql_pool_max_overflow", 11)
 
         engine = mock.MagicMock()
         mock_create_engine.return_value = engine
@@ -333,8 +326,7 @@ class WhenTestingMigrations(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingMigrations, self).setUp()
-        repositories.CONF.set_override("sql_connection", "connection",
-                                       enforce_type=True)
+        repositories.CONF.set_override("sql_connection", "connection")
         self.alembic_config = migration.init_config()
         self.alembic_config.barbican_config = cfg.CONF
 
