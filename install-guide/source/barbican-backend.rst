@@ -34,7 +34,7 @@ Crypto plugin and the PKCS#11 crypto plugin.
 Simple Crypto Plugin
 ^^^^^^^^^^^^^^^^^^^^
 
-This crypto plugin is configured by default in barbican.conf.  This plugin
+This crypto plugin is configured by default in ``/etc/barbican/barbican.conf``.  This plugin
 is completely insecure and is only suitable for development testing.
 
 .. warning::
@@ -42,10 +42,10 @@ is completely insecure and is only suitable for development testing.
    THIS PLUGIN IS NOT SUITABLE FOR PRODUCTION DEPLOYMENTS.
 
 This plugin uses single symmetric key (kek - or 'key encryption key')
-- which is stored in plain text in the ``barbican.conf`` file to encrypt
+- which is stored in plain text in the ``/etc/barbican/barbican.conf`` file to encrypt
 and decrypt all secrets.
 
-The configuration for this plugin in ``barbican.conf`` is as follows:
+The configuration for this plugin in ``/etc/barbican/barbican.conf`` is as follows:
 
     .. code-block:: ini
 
@@ -72,7 +72,7 @@ using the PKCS#11 protocol.
 Secrets are encrypted (and decrypted on retrieval) by a project specific
 Key Encryption Key (KEK), which resides in the HSM.
 
-The configuration for this plugin in ``barbican.conf`` with settings shown for
+The configuration for this plugin in ``/etc/barbican/barbican.conf`` with settings shown for
 use with a SafeNet HSM is as follows:
 
     .. code-block:: ini
@@ -115,7 +115,7 @@ secret's location for later retrieval.
 The plugin can be configured to authenticate to the KMIP device using either
 a username and password, or using a client certificate.
 
-The configuration for this plugin in ``barbican.conf`` is as follows:
+The configuration for this plugin in ``/etc/barbican/barbican.conf`` is as follows:
 
     .. code-block:: ini
 
@@ -135,7 +135,7 @@ The configuration for this plugin in ``barbican.conf`` is as follows:
 Dogtag Plugin
 -------------
 
-Dogtag is the upstream project corresponding to the Red Hat Certificate System.
+Dogtag is the upstream project corresponding to the Red Hat Certificate System,
 a robust, full-featured PKI solution that contains a Certificate Manager (CA)
 and a Key Recovery Authority (KRA) which is used to securely store secrets.
 
@@ -148,7 +148,7 @@ those deployments that do not require or cannot afford an HSM.  This is the only
 current plugin to provide this option.
 
 The KRA communicates with HSMs using PKCS#11.  For a list of certified HSMs,
-see the latest `release notes <https://access.redhat.com/documentation/en-US/Red_Hat_Certificate_System/9/html/Release_Notes/Release_Notes-Deployment_Notes.html>`_.  Dogtag and the KRA meet all the relevant Common Criteria and FIPS specifications.
+see the latest `release notes <https://access.redhat.com/documentation/en-US/Red_Hat_Certificate_System/9/html/Release_Notes/>`_.  Dogtag and the KRA meet all the relevant Common Criteria and FIPS specifications.
 
 The KRA is a component of FreeIPA.  Therefore, it is possible to configure the plugin
 with a FreeIPA server.  More detailed instructions on how to set up Barbican with FreeIPA
@@ -158,7 +158,7 @@ The plugin communicates with the KRA using a client certificate for a trusted KR
 That certificate is stored in an NSS database as well as a PEM file as seen in the
 configuration below.
 
-The configuration for this plugin in ``barbican.conf`` is as follows:
+The configuration for this plugin in ``/etc/barbican/barbican.conf`` is as follows:
 
     .. code-block:: ini
 
