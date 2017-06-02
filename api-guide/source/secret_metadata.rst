@@ -33,7 +33,7 @@ This should provide a response as follows:
 
     {"metadata_ref": "http://localhost:9311/v1/secrets/2a549393-0710-444b-8aa5-84cf0f85ea79/metadata"}
 
-.. _retreive_secret_metadata:
+.. _retrieve_secret_metadata:
 
 How to Retrieve Secret Metadata
 ###############################

@@ -373,12 +373,12 @@ class MultipleSecretStoreLookupFailed(BarbicanException):
 
 class MultipleStoreIncorrectGlobalDefault(BarbicanException):
     """Raised when a global default for only one plugin is not set to True."""
-    def __init__(self, occurence):
+    def __init__(self, occurrence):
         msg = None
-        if occurence > 1:
+        if occurrence > 1:
             msg = u._("There are {count} plugins with global default as "
                       "True in service configuration. Only one plugin can have"
-                      " this as True").format(count=occurence)
+                      " this as True").format(count=occurrence)
         else:
             msg = u._("There is no plugin defined with global default as True."
                       " One of plugin must be identified as global default")

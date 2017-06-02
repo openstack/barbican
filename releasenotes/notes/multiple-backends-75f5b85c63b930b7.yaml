@@ -1,7 +1,7 @@
 ---
 prelude: >
     Now within a single deployment, multiple secret store plugin backends can
-    be configured and used. With this change, a project adminstrator can
+    be configured and used. With this change, a project administrator can
     pre-define a preferred plugin backend for storing their secrets. New APIs
     are added to manage this project level secret store preference.
 features:
