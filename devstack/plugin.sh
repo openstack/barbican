@@ -1,6 +1,7 @@
 # Configure the needed tempest options
 function configure_barbican_tempest() {
     iniset $TEMPEST_CONFIG service_available barbican True
+    iniset $TEMPEST_CONFIG auth tempest_roles creator
 }
 
 # check for service enabled
@@ -44,14 +45,15 @@ if is_service_enabled barbican; then
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
         echo_summary "Initializing Barbican"
         init_barbican
-        if is_service_enabled tempest; then
-            echo_summary "Configuring Tempest options for Barbican"
-            configure_barbican_tempest
-        fi
         start_barbican
         if is_service_enabled pykmip-server; then
             echo_summary "Starting PyKMIP server"
             start_pykmip
+        fi
+    elif [[ "$1" == "stack" && "$2" == "test-config" ]]; then
+        if is_service_enabled tempest; then
+            echo_summary "Configuring Tempest options for Barbican"
+            configure_barbican_tempest
         fi
     fi
 
