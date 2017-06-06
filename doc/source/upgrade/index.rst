@@ -23,9 +23,9 @@ Plan to Upgrade
 
   #. Upgrade barbican database to the next release
 
-    .. code-block:: bash
+      .. code-block:: bash
 
-      barbican-db-manage upgrade
+        barbican-db-manage upgrade
 
   #. Start barbican services
 
@@ -33,7 +33,7 @@ Plan to Upgrade
 Upgrade from Newton to Ocata
 ============================
 
-- The barbican-api-paste.ini configuration file for the paste pipeline was
+The barbican-api-paste.ini configuration file for the paste pipeline was
 updated to add the http_proxy_to_wsgi middleware. It can be used to help
 barbican respond with the correct URL refs when it’s put behind a TLS proxy
 (such as HAProxy). This middleware is disabled by default, but can be enabled
@@ -45,7 +45,7 @@ See `Ocata release notes <https://docs.openstack.org/releasenotes/barbican/ocata
 Upgrade from Mitaka to Newton
 =============================
 
-- There are no extra instructions that should be noted for this upgrade.
+There are no extra instructions that should be noted for this upgrade.
 
 See `Newton release notes <https://docs.openstack.org/releasenotes/barbican/newton.html>`_.
 
@@ -53,15 +53,16 @@ See `Newton release notes <https://docs.openstack.org/releasenotes/barbican/newt
 Upgrade from Liberty to Mitaka
 ==============================
 
-- The Metadata API requires an update to the Database Schema. Existing
+The Metadata API requires an update to the Database Schema. Existing
 deployments that are being upgraded to Mitaka should use the ‘barbican-manage’
 utility to update the schema.
 
-- If you are upgrading from previous version of barbican that uses the PKCS#11
+If you are upgrading from previous version of barbican that uses the PKCS#11
 Cryptographic Plugin driver, you will need to run the migration script.
 
-        python barbican/cmd/pkcs11_migrate_kek_signatures.py
+    .. code-block:: bash
 
+      python barbican/cmd/pkcs11_migrate_kek_signatures.py
 
 See `Mitaka release notes <https://docs.openstack.org/releasenotes/barbican/mitaka.html#upgrade-notes>`_.
 
