@@ -21,9 +21,18 @@ source $BASE_DEVSTACK_DIR/functions
 source $BASE_DEVSTACK_DIR/stackrc # needed for status directory
 source $BASE_DEVSTACK_DIR/lib/tls
 source $BASE_DEVSTACK_DIR/lib/apache
+source $BASE_DEVSTACK_DIR/lib/nova
 
 BARBICAN_DEVSTACK_DIR=$(dirname "$0")/..
 source $BARBICAN_DEVSTACK_DIR/lib/barbican
 set -o xtrace
 
 stop_barbican
+
+# After shutdown barbican service, it needs to add an1 option to nova.conf
+# The option will useful for running barbican tempest test
+echo "Update nova.conf file with this option"
+echo "enable image signature verification in Nova in target version only"
+echo "[glance]"
+echo "verify_glance_signatures = True"
+iniset $NOVA_CONF glance verify_glance_signatures "True"

@@ -1,6 +1,28 @@
 register_project_for_upgrade barbican
 register_db_to_save barbican
 
+# NOTE(hieulq): devstack ocata and master use different default image (ocata-uec, master-qcow2), thus the grenade test will fail
+# We should config the same image for base and target devstack, and remove this config when devstack fixes are proposed
+DOWNLOAD_DEFAULT_IMAGES=False
+CIRROS_VERSION=$(set +o xtrace &&
+                 source $BASE_DEVSTACK_DIR/stackrc &&
+                 echo $CIRROS_VERSION)
+CIRROS_ARCH=$(set +o xtrace &&
+              source $BASE_DEVSTACK_DIR/stackrc &&
+              echo $CIRROS_ARCH)
+DEFAULT_IMAGE_FILE_NAME=cirros-${CIRROS_VERSION}-${CIRROS_ARCH}-disk.img
+devstack_localrc base DEFAULT_IMAGE_FILE_NAME=${DEFAULT_IMAGE_FILE_NAME}
+devstack_localrc base IMAGE_URLS="http://download.cirros-cloud.net/${CIRROS_VERSION}/${DEFAULT_IMAGE_FILE_NAME}"
+devstack_localrc base DOWNLOAD_DEFAULT_IMAGES=False
+devstack_localrc base SCENARIO_IMAGE_DIR="$BASE_DEVSTACK_DIR/files"
+devstack_localrc base DEFAULT_IMAGE_NAME=cirros-${CIRROS_VERSION}-${CIRROS_ARCH}-disk
+devstack_localrc target DEFAULT_IMAGE_NAME=cirros-${CIRROS_VERSION}-${CIRROS_ARCH}-disk
+
+devstack_localrc base """
+[[test-config|\$TEMPEST_CONFIG]]
+[image-feature-enabled]
+api_v1=False"""
+
 devstack_localrc base enable_plugin barbican https://git.openstack.org/openstack/barbican
 devstack_localrc target enable_plugin barbican https://git.openstack.org/openstack/barbican
 
