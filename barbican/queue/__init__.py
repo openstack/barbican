@@ -46,7 +46,7 @@ def init(conf, is_server_side=True):
     global TRANSPORT, IS_SERVER_SIDE
     exmods = get_allowed_exmods()
     IS_SERVER_SIDE = is_server_side
-    TRANSPORT = messaging.get_transport(conf, allowed_remote_exmods=exmods)
+    TRANSPORT = messaging.get_rpc_transport(conf, allowed_remote_exmods=exmods)
 
 
 def is_server_side():
