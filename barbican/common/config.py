@@ -298,10 +298,10 @@ def setup_remote_pydev_debug():
                             stdoutToServer=True,
                             stderrToServer=True)
         except Exception:
-            LOG.exception(u._LE('Unable to join debugger, please '
-                                'make sure that the debugger processes is '
-                                'listening on debug-host \'%(debug-host)s\' '
-                                'debug-port \'%(debug-port)s\'.'),
+            LOG.exception('Unable to join debugger, please '
+                          'make sure that the debugger processes is '
+                          'listening on debug-host \'%(debug-host)s\' '
+                          'debug-port \'%(debug-port)s\'.',
                           {'debug-host': CONF.pydev_debug_host,
                            'debug-port': CONF.pydev_debug_port})
             raise

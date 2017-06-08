@@ -29,7 +29,6 @@ except ImportError:
 from oslo_service import service
 
 from barbican.common import utils
-from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories
 from barbican import queue
@@ -63,13 +62,10 @@ def retryable_order(fn):
         retry_rpc_method = schedule_order_retry_tasks(
             fn, result, *args, **kwargs)
         if retry_rpc_method:
-            LOG.info(
-                u._LI("Scheduled RPC method for retry: '%s'"),
-                retry_rpc_method)
+            LOG.info("Scheduled RPC method for retry: '%s'", retry_rpc_method)
         else:
-            LOG.info(
-                u._LI("Task '%s' did not have to be retried"),
-                find_function_name(fn, if_no_name='???'))
+            LOG.info("Task '%s' did not have to be retried",
+                     find_function_name(fn, if_no_name='???'))
 
     return wrapper
 
@@ -84,15 +80,13 @@ def transactional(fn):
         if not queue.is_server_side():
             # Non-server mode directly invokes tasks.
             fn(*args, **kwargs)
-            LOG.info(u._LI("Completed worker task: '%s'"), fn_name)
+            LOG.info("Completed worker task: '%s'", fn_name)
         else:
             # Manage session/transaction.
             try:
                 fn(*args, **kwargs)
                 repositories.commit()
-                LOG.info(
-                    u._LI("Completed worker task (post-commit): '%s'"),
-                    fn_name)
+                LOG.info("Completed worker task (post-commit): '%s'", fn_name)
             except Exception:
                 """NOTE: Wrapped functions must process with care!
 
@@ -100,10 +94,9 @@ def transactional(fn):
                 including any updates made to entities such as setting error
                 codes and error messages.
                 """
-                LOG.exception(
-                    u._LE("Problem seen processing worker task: '%s'"),
-                    fn_name
-                )
+                LOG.exception("Problem seen processing worker task: '%s'",
+                              fn_name
+                              )
                 repositories.rollback()
             finally:
                 repositories.clear()
@@ -212,10 +205,8 @@ class Tasks(object):
     @retryable_order
     def process_type_order(self, context, order_id, project_id, request_id):
         """Process TypeOrder."""
-        message = u._LI(
-            "Processing type order:  "
-            "order ID is '%(order)s' and request ID is '%(request)s'"
-        )
+        message = "Processing type order: order ID is '%(order)s' and " \
+                  "request ID is '%(request)s'"
         LOG.info(message, {'order': order_id, 'request': request_id})
         return resources.BeginTypeOrder().process_and_suppress_exceptions(
             order_id, project_id)
@@ -226,10 +217,9 @@ class Tasks(object):
     def update_order(self, context, order_id, project_id,
                      updated_meta, request_id):
         """Update Order."""
-        message = u._LI(
-            "Processing update order: "
-            "order ID is '%(order)s' and request ID is '%(request)s'"
-        )
+        message = "Processing update order: order ID is '%(order)s' and " \
+                  "request ID is '%(request)s'"
+
         LOG.info(message, {'order': order_id, 'request': request_id})
         return resources.UpdateOrder().process_and_suppress_exceptions(
             order_id, project_id, updated_meta)
@@ -240,10 +230,8 @@ class Tasks(object):
     def check_certificate_status(self, context, order_id,
                                  project_id, request_id):
         """Check the status of a certificate order."""
-        message = u._LI(
-            "Processing check certificate status on order: "
-            "order ID is '%(order)s' and request ID is '%(request)s'"
-        )
+        message = "Processing check certificate status on order: " \
+                  "order ID is '%(order)s' and request ID is '%(request)s'"
 
         LOG.info(message, {'order': order_id, 'request': request_id})
         check_cert_order = resources.CheckCertificateStatusOrder()
@@ -277,11 +265,11 @@ class TaskServer(Tasks, service.Service):
                                         endpoints=[self])
 
     def start(self):
-        LOG.info(u._LI("Starting the TaskServer"))
+        LOG.info("Starting the TaskServer")
         self._server.start()
         super(TaskServer, self).start()
 
     def stop(self):
-        LOG.info(u._LI("Halting the TaskServer"))
+        LOG.info("Halting the TaskServer")
         super(TaskServer, self).stop()
         self._server.stop()

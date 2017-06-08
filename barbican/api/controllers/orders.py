@@ -27,8 +27,8 @@ from barbican.queue import client as async_client
 
 LOG = utils.getLogger(__name__)
 
-_DEPRECATION_MSG = u._LW('%s has been deprecated in the Newton release. It '
-                         'will be removed in the Pike release.')
+_DEPRECATION_MSG = '%s has been deprecated in the Newton release. ' \
+                   'It will be removed in the Pike release.'
 
 
 def _order_not_found():

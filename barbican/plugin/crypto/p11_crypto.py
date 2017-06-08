@@ -152,7 +152,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         try:
             return func(*args, **kwargs)
         except (exception.PKCS11Exception) as pe:
-            LOG.warning(u._LW("Reinitializing PKCS#11 library: %s"), pe)
+            LOG.warning("Reinitializing PKCS#11 library: %s", pe)
             self._reinitialize_pkcs11()
             return func(*args, **kwargs)
 

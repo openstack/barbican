@@ -67,10 +67,8 @@ class BaseTask(object):
         try:
             return self.process(*args, **kwargs)
         except Exception:
-            LOG.exception(
-                u._LE(
-                    "Suppressing exception while trying to "
-                    "process task '%s'."), self.get_name())
+            LOG.exception("Suppressing exception while trying to "
+                          "process task '%s'.", self.get_name())
 
     def process(self, *args, **kwargs):
         """A template method for all asynchronous tasks.
@@ -93,16 +91,15 @@ class BaseTask(object):
             entity = self.retrieve_entity(*args, **kwargs)
         except Exception:
             # Serious error!
-            LOG.exception(u._LE("Could not retrieve information needed to "
-                                "process task '%s'."), name)
+            LOG.exception("Could not retrieve information needed to "
+                          "process task '%s'.", name)
             raise
 
         # Process the target entity.
         try:
             result = self.handle_processing(entity, *args, **kwargs)
         except Exception as e_orig:
-            LOG.exception(u._LE("Could not perform processing for "
-                                "task '%s'."), name)
+            LOG.exception("Could not perform processing for task '%s'.", name)
 
             # Handle failure to process entity.
             try:
@@ -111,19 +108,17 @@ class BaseTask(object):
                 self.handle_error(entity, status, message, e_orig,
                                   *args, **kwargs)
             except Exception:
-                LOG.exception(u._LE("Problem handling an error for task '%s', "
-                                    "raising original "
-                                    "exception."), name)
+                LOG.exception("Problem handling an error for task '%s', "
+                              "raising original exception.", name)
             raise e_orig
 
         # Handle successful conclusion of processing.
         try:
             self.handle_success(entity, result, *args, **kwargs)
         except Exception:
-            LOG.exception(u._LE("Could not process after successfully "
-                                "executing task '%s'."), name)
+            LOG.exception("Could not process after successfully "
+                          "executing task '%s'.", name)
             raise
-
         return result
 
     @abc.abstractmethod

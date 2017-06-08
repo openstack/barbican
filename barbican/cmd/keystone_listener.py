@@ -40,7 +40,6 @@ if os.path.exists(os.path.join(possible_topdir, 'barbican', '__init__.py')):
 
 
 from barbican.common import config
-from barbican import i18n as u
 from barbican import queue
 from barbican.queue import keystone_listener
 from barbican import version
@@ -66,7 +65,7 @@ def main():
         log.setup(CONF, 'barbican')
 
         LOG = log.getLogger(__name__)
-        LOG.info(u._LI("Booting up Barbican Keystone listener node..."))
+        LOG.info("Booting up Barbican Keystone listener node...")
 
         # Queuing initialization
         queue.init(CONF)
@@ -77,8 +76,7 @@ def main():
                 keystone_listener.MessageServer(CONF)
             ).wait()
         else:
-            LOG.info(u._LI("Exiting as Barbican Keystone listener"
-                           " is not enabled..."))
+            LOG.info("Exiting as Barbican Keystone listener is not enabled...")
     except RuntimeError as e:
         fail(1, e)
 

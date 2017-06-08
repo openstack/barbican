@@ -17,7 +17,6 @@
 Utilities to support plugins and plugin managers.
 """
 from barbican.common import utils
-from barbican import i18n as u
 
 LOG = utils.getLogger(__name__)
 
@@ -42,10 +41,7 @@ def instantiate_plugins(extension_manager, invoke_args=(), invoke_kwargs={}):
                 plugin_instance = ext.plugin(*invoke_args, **invoke_kwargs)
             except Exception:
                 LOG.logger.disabled = False  # Ensure not suppressing logs.
-                LOG.exception(
-                    u._LE("Problem seen creating plugin: '%s'"),
-                    ext.name
-                )
+                LOG.exception("Problem seen creating plugin: '%s'", ext.name)
             else:
                 ext.obj = plugin_instance
 

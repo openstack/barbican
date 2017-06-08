@@ -69,8 +69,8 @@ def _create_nss_db_if_needed(nss_db_path, nss_password):
             nss_db_path, nss_password, over_write=True)
         return True
     else:
-        LOG.info(u._LI("The nss_db_path provided already exists, so the "
-                       "database is assumed to be already set up."))
+        LOG.info("The nss_db_path provided already exists, so the "
+                 "database is assumed to be already set up.")
         return False
 
 
@@ -87,8 +87,8 @@ def _setup_nss_db_services(conf):
     nss_db_path, nss_password = (conf.dogtag_plugin.nss_db_path,
                                  conf.dogtag_plugin.nss_password)
     if nss_db_path is None:
-        LOG.warning(u._LW("nss_db_path was not provided so the crypto "
-                          "provider functions were not initialized."))
+        LOG.warning("nss_db_path was not provided so the crypto "
+                    "provider functions were not initialized.")
         return None
     if nss_password is None:
         raise ValueError(u._("nss_password is required"))
@@ -110,8 +110,8 @@ def _import_kra_transport_cert_to_nss_db(conf, crypto):
         transport_cert = systemcert_client.get_transport_cert()
         crypto.import_cert(KRA_TRANSPORT_NICK, transport_cert, "u,u,u")
     except Exception as e:
-        LOG.error(u._LE("Error in importing transport cert."
-                        " KRA may not be enabled: %s"), e)
+        LOG.error("Error in importing transport cert."
+                  " KRA may not be enabled: %s", e)
 
 
 def create_connection(conf, subsystem_path):
@@ -640,7 +640,7 @@ def _catch_subca_deletion_exceptions(ca_related_function):
         try:
             return ca_related_function(self, *args, **kwargs)
         except pki.ResourceNotFoundException as e:
-            LOG.warning(u._LI("Sub-CA already deleted"))
+            LOG.warning("Sub-CA already deleted")
             pass
         except pki.PKIException as e:
             raise exception.SubCADeletionErrors(reason=e.message)
@@ -699,7 +699,7 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
                         "%Y-%m-%d %H:%M:%S.%f"
                     )
             except (ValueError, TypeError):
-                LOG.warning(u._LI("Invalid data read from expiration file"))
+                LOG.warning("Invalid data read from expiration file")
                 self.expiration = datetime.utcnow()
         return self._expiration
 
@@ -738,15 +738,15 @@ class DogtagCAPlugin(cm.CertificatePluginBase):
                 feature_client = feature.FeatureClient(connection)
                 authority_feature = feature_client.get_feature("authority")
                 if authority_feature.enabled:
-                    LOG.info(u._LI("Sub-CAs are enabled by Dogtag server"))
+                    LOG.info("Sub-CAs are enabled by Dogtag server")
                     return True
                 else:
-                    LOG.info(u._LI("Sub-CAs are not enabled by Dogtag server"))
+                    LOG.info("Sub-CAs are not enabled by Dogtag server")
             except (request_exceptions.HTTPError,
                     pki.ResourceNotFoundException):
-                LOG.info(u._LI("Sub-CAs are not supported by Dogtag server"))
+                LOG.info("Sub-CAs are not supported by Dogtag server")
         else:
-            LOG.info(u._LI("Sub-CAs are not supported by Dogtag client"))
+            LOG.info("Sub-CAs are not supported by Dogtag client")
         return False
 
     def _get_request_id(self, order_id, plugin_meta, operation):

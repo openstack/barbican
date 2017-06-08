@@ -31,7 +31,6 @@ from oslo_log import log
 from barbican.api.controllers import versions
 from barbican.api import hooks
 from barbican.common import config
-from barbican import i18n as u
 from barbican.model import repositories
 from barbican import queue
 
@@ -87,7 +86,7 @@ def main_app(func):
         if newrelic_loaded:
             wsgi_app = newrelic.agent.WSGIApplicationWrapper(wsgi_app)
         LOG = log.getLogger(__name__)
-        LOG.info(u._LI('Barbican app created and initialized'))
+        LOG.info('Barbican app created and initialized')
         return wsgi_app
     return _wrapper
 

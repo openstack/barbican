@@ -35,7 +35,7 @@ class BaseContextMiddleware(mw.Middleware):
 
         resp.headers['x-openstack-request-id'] = resp.request.request_id
 
-        LOG.info(u._LI('Processed request: %(status)s - %(method)s %(url)s'),
+        LOG.info('Processed request: %(status)s - %(method)s %(url)s',
                  {"status": resp.status,
                   "method": resp.request.method,
                   "url": resp.request.url})
