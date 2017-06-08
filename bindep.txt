@@ -11,3 +11,7 @@ gettext [test]
 389-ds-base [platform:rpm]
 pki-ca [platform:rpm]
 pki-kra [platform:rpm]
+
+#Required for cryptography lib
+libssl-dev [platform:dpkg]
+openssl-devel [platform:rpm]
