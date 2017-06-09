@@ -82,13 +82,10 @@ release = version_info.release_string()
 giturl = (u"https://git.openstack.org/cgit/openstack/barbican/tree/"
           "api-guide/source")
 git_cmd = ["/usr/bin/git", "rev-parse", "HEAD"]
-gitsha = subprocess.Popen(
-    git_cmd, stdout=subprocess.PIPE).communicate()[0]
-
+gitsha = subprocess.check_output(git_cmd).decode('utf-8')
 
 # source tree
-pwd = subprocess.Popen(
-    "pwd", stdout=subprocess.PIPE).communicate()[0].strip('\n')
+pwd = subprocess.check_output("pwd").decode('utf-8')
 
 # html_context allows us to pass arbitrary values into the html template
 html_context = {"pwd": pwd,
