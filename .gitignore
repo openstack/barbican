@@ -72,6 +72,9 @@ ChangeLog
 etc/barbican/barbican.conf
 etc/barbican/barbican.conf.sample
 
+# File created by oslopolicy-sample-generator
+etc/barbican/policy.yaml.sample
+
 # Files created by releasenotes build
 releasenotes/build
 
