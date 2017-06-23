@@ -144,7 +144,7 @@ function configure_barbican {
     else
         echo_summary "Barbican requires that the RabbitMQ service is enabled"
     fi
-
+    write_uwsgi_config "$BARBICAN_UWSGI_CONF" "$BARBICAN_WSGI" "/key-manager"
     ## Set up keystone
 
     # Turn on the middleware
@@ -186,7 +186,7 @@ function install_barbicanclient {
 # start_barbican - Start running processes, including screen
 function start_barbican {
     # Start the Barbican service up.
-    run_process barbican-svc "$BARBICAN_BIN_DIR/uwsgi --master --emperor $BARBICAN_CONF_DIR/vassals"
+    run_process barbican-svc "$BARBICAN_BIN_DIR/uwsgi --ini $BARBICAN_UWSGI_CONF"
 
     # Pause while the barbican-svc populates the database, otherwise the retry
     # service below might try to do this at the same time, leading to race
@@ -363,12 +363,12 @@ function create_barbican_accounts {
         --os-identity-api-version 3 \
         --region RegionOne \
         $BARBICAN_SERVICE \
-        public "http://$SERVICE_HOST:9311"
+        public "http://$SERVICE_HOST/key-manager"
     openstack endpoint create \
         --os-identity-api-version 3 \
         --region RegionOne \
         $BARBICAN_SERVICE \
-        internal "http://$SERVICE_HOST:9311"
+        internal "http://$SERVICE_HOST/key-manager"
 
 }
 
