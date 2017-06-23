@@ -16,10 +16,11 @@
 """Use this file for deploying the API under mod_wsgi.
 
 See http://pecan.readthedocs.org/en/latest/deployment.html for details.
+
+NOTE(mtreinish): This wsgi script is deprecated since the wsgi app is now
+exposed as an entrypoint via barbican-wsgi-api
 """
 
-from paste import deploy
+from barbican.api import app
 
-conf = '/etc/barbican/barbican-api-paste.ini'
-application = deploy.loadapp('config:%s' % conf)
-
+application = app.get_api_wsgi_script()
