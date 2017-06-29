@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 extensions = [
     'sphinx.ext.autodoc',
     # 'sphinx.ext.intersphinx',
-    'oslosphinx'
+    'openstackdocstheme'
 ]
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
@@ -38,6 +38,12 @@ master_doc = 'index'
 # General information about the project.
 project = u'Barbican'
 copyright = u'2014, OpenStack Foundation'
+repository_name = 'openstack/barbican'
+bug_project = 'barbican'
+bug_tag = ''
+
+# Must set this variable to include year, month, day, hours, and minutes.
+html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 add_function_parentheses = True
@@ -55,6 +61,7 @@ pygments_style = 'sphinx'
 # Sphinx are currently 'default' and 'sphinxdoc'.
 # html_theme_path = ["."]
 # html_theme = '_theme'
+html_theme = 'openstackdocs'
 # html_static_path = ['static']
 html_theme_options = {}
 
