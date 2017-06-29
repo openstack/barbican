@@ -12,3 +12,4 @@ management of secrets.
    access_control.rst
    barbican_manage.rst
    database_cleaning.rst
+   upgrade.rst
