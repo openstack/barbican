@@ -49,17 +49,6 @@
         Comment out or remove any other options in the
         ``[keystone_authtoken]`` section.
 
-#. Edit the ``/etc/barbican/barbican-api-paste.ini`` file and complete the
-   following actions:
-
-   * In the ``[pipeline:barbican_api]`` section, configure the pipeline to
-     use the Identity Service auth token.
-
-     .. code-block:: ini
-
-        [pipeline:barbican_api]
-        pipeline = cors authtoken context apiapp
-
 #. Populate the Key Manager service database:
 
    The Key Manager service database will be automatically populated
