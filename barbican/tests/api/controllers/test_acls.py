@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import uuid
+from oslo_utils import uuidutils
 
 from barbican.api.controllers import acls
 from barbican.model import repositories
@@ -209,7 +209,7 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
             read_user_ids=['u1', 'u3', 'u4'])
 
         resp = self.app.get(
-            '/secrets/{0}/acl'.format(uuid.uuid4().hex),
+            '/secrets/{0}/acl'.format(uuidutils.generate_uuid(dashed=False)),
             expect_errors=True)
         self.assertEqual(404, resp.status_int)
 
@@ -679,7 +679,7 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
             read_project_access=True)
 
         resp = self.app.get(
-            '/containers/{0}/acl'.format(uuid.uuid4().hex),
+            '/containers/{0}/acl'.format(uuidutils.generate_uuid()),
             expect_errors=True)
         self.assertEqual(404, resp.status_int)
 

@@ -15,7 +15,7 @@
 import json
 import mock
 import os
-import uuid
+from oslo_utils import uuidutils
 
 from barbican.tests import utils
 
@@ -61,7 +61,8 @@ class WhenTestingSecretMetadataResource(utils.BarbicanAPIBaseTestCase):
                                self.valid_metadata,
                                secret_resp)
 
-        get_resp = self.app.get('/secrets/%s/metadata' % uuid.uuid4().hex,
+        get_resp = self.app.get('/secrets/%s/metadata' %
+                                uuidutils.generate_uuid(dashed=False),
                                 expect_errors=True)
         self.assertEqual(404, get_resp.status_int)
 

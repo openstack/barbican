@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import uuid
+from oslo_utils import uuidutils
 
 from barbican.tests import utils
 from functionaltests.api import base
@@ -143,7 +143,7 @@ class RBACQuotasTestCase(base.TestCase):
         """
         request_model = quota_models.ProjectQuotaRequestModel(
             **get_set_project_quotas_request())
-        project_id = str(uuid.uuid4())
+        project_id = uuidutils.generate_uuid()
         resp = self.behaviors.set_project_quotas(project_id,
                                                  request_model,
                                                  user_name=user)
@@ -162,7 +162,7 @@ class RBACQuotasTestCase(base.TestCase):
         """
         request_model = quota_models.ProjectQuotaRequestModel(
             **get_set_project_quotas_request())
-        project_id = str(uuid.uuid4())
+        project_id = uuidutils.generate_uuid()
         resp = self.behaviors.set_project_quotas(project_id,
                                                  request_model,
                                                  user_name=service_admin)

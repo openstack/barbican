@@ -14,13 +14,13 @@
 # limitations under the License.
 from oslo_serialization import jsonutils
 from testtools import testcase
-import uuid
 
 from barbican.tests import utils
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.behaviors import secretmeta_behaviors
 from functionaltests.api.v1.models import secret_models
+from oslo_utils import uuidutils
 
 
 @utils.parameterized_test_case
@@ -82,7 +82,8 @@ class SecretMetadataTestCase(base.TestCase):
 
     @testcase.attr('negative')
     def test_secret_metadata_create_no_secret(self):
-        secret_ref = 'http://localhost:9311/secrets/%s' % uuid.uuid4().hex
+        secret_ref = ('http://localhost:9311/secrets/%s' %
+                      uuidutils.generate_uuid(dashed=False))
 
         meta_resp, metadata_ref = self.behaviors.create_or_update_metadata(
             secret_ref, self.invalid_metadata)
@@ -110,7 +111,8 @@ class SecretMetadataTestCase(base.TestCase):
 
     @testcase.attr('negative')
     def test_secret_metadata_get_no_secret(self):
-        secret_ref = 'http://localhost:9311/secrets/%s' % uuid.uuid4().hex
+        secret_ref = ('http://localhost:9311/secrets/%s' %
+                      uuidutils.generate_uuid(dashed=False))
 
         get_resp = self.behaviors.get_metadata(secret_ref)
         self.assertEqual(404, get_resp.status_code)

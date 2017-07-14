@@ -22,6 +22,7 @@ import mimetypes
 import uuid
 
 from oslo_log import log
+from oslo_utils import uuidutils
 import pecan
 import six
 from six.moves.urllib import parse
@@ -182,7 +183,7 @@ def get_class_for(module_name, class_name):
 
 
 def generate_uuid():
-    return str(uuid.uuid4())
+    return uuidutils.generate_uuid()
 
 
 def is_multiple_backends_enabled():

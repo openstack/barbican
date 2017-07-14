@@ -13,7 +13,7 @@
 #  under the License.
 
 import mock
-import uuid
+from oslo_utils import uuidutils
 
 from barbican.model import models
 from barbican.model import repositories as repos
@@ -27,7 +27,8 @@ class SecretStoresMixin(utils.MultipleBackendsTestCase):
         session = repos.get_project_repository().get_session()
 
         project = models.Project()
-        project.external_id = "keystone_project_id" + uuid.uuid4().hex
+        project.external_id = ("keystone_project_id" +
+                               uuidutils.generate_uuid(dashed=False))
         project.save(session=session)
         return project
 
@@ -254,7 +255,7 @@ class WhenTestingProjectSecretStore(utils.BarbicanAPIBaseTestCase,
 
         stores = self.secret_store_repo.get_all()
 
-        proj_external_id = uuid.uuid4().hex
+        proj_external_id = uuidutils.generate_uuid(dashed=False)
         # get ids as secret store are not bound to session after a rest call.
         store_ids = [store.id for store in stores]
         for store_id in store_ids:
@@ -275,7 +276,7 @@ class WhenTestingProjectSecretStore(utils.BarbicanAPIBaseTestCase,
 
         stores = self.secret_store_repo.get_all()
 
-        proj_external_id = uuid.uuid4().hex
+        proj_external_id = uuidutils.generate_uuid(dashed=False)
         # get ids as secret store are not bound to session after a rest call.
         store_ids = [store.id for store in stores]
         for store_id in store_ids:
@@ -300,7 +301,7 @@ class WhenTestingProjectSecretStore(utils.BarbicanAPIBaseTestCase,
         self._init_multiple_backends()
 
         stores = self.secret_store_repo.get_all()
-        proj_external_id = uuid.uuid4().hex
+        proj_external_id = uuidutils.generate_uuid(dashed=False)
         self.app.extra_environ = {
             'barbican.context': self._build_context(proj_external_id)
         }
@@ -314,7 +315,7 @@ class WhenTestingProjectSecretStore(utils.BarbicanAPIBaseTestCase,
         secret_stores = self.secret_store_repo.get_all()
         store_id = secret_stores[0].id
 
-        proj_external_id = uuid.uuid4().hex
+        proj_external_id = uuidutils.generate_uuid(dashed=False)
 
         self.app.extra_environ = {
             'barbican.context': self._build_context(proj_external_id)

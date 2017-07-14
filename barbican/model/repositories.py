@@ -24,11 +24,11 @@ import logging
 import re
 import sys
 import time
-import uuid
 
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import session
 from oslo_utils import timeutils
+from oslo_utils import uuidutils
 import sqlalchemy
 from sqlalchemy import func as sa_func
 from sqlalchemy import or_
@@ -979,7 +979,7 @@ class KEKDatumRepo(BaseRepo):
             kek_datum = models.KEKDatum()
 
             kek_datum.kek_label = "project-{0}-key-{1}".format(
-                project.external_id, uuid.uuid4())
+                project.external_id, uuidutils.generate_uuid())
             kek_datum.project_id = project.id
             kek_datum.plugin_name = plugin_name
             kek_datum.status = models.States.ACTIVE

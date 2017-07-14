@@ -17,7 +17,7 @@ import abc
 import fixtures
 import logging
 import os
-import uuid
+from oslo_utils import uuidutils
 
 import oslotest.base as oslotest
 import six
@@ -99,7 +99,7 @@ class PagingTestCase(TestCase):
         super(PagingTestCase, self).tearDown()
 
     def _set_filter_field(self, model):
-        filter = str(uuid.uuid4())
+        filter = uuidutils.generate_uuid()
         self.set_filter_field(filter, model)
         return filter
 

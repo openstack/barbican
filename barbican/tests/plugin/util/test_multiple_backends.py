@@ -15,7 +15,7 @@
 
 import collections
 import mock
-import uuid
+from oslo_utils import uuidutils
 
 from barbican.common import config
 from barbican.common import exception
@@ -319,7 +319,7 @@ class TestGetApplicablePlugins(test_utils.MultipleBackendsTestCase):
         cr_plugins = ['cr_p1', 'cr_p2', 'cr_p3']
         self.init_via_conf_file(ss_plugins, cr_plugins, enabled=True)
         ss_manager = MockedManager(ss_plugins)
-        project_id = uuid.uuid4().hex
+        project_id = uuidutils.generate_uuid(dashed=False)
 
         with mock.patch('barbican.model.repositories.ProjectSecretStoreRepo.'
                         'get_secret_store_for_project') as pref_func:
@@ -343,7 +343,7 @@ class TestGetApplicablePlugins(test_utils.MultipleBackendsTestCase):
         self.init_via_conf_file(ss_plugins, cr_plugins, enabled=True)
         ss_manager = MockedManager(ss_plugins)
 
-        project_id = uuid.uuid4().hex
+        project_id = uuidutils.generate_uuid(dashed=False)
 
         with mock.patch('barbican.model.repositories.ProjectSecretStoreRepo.'
                         'get_secret_store_for_project') as pref_func:
@@ -367,7 +367,7 @@ class TestGetApplicablePlugins(test_utils.MultipleBackendsTestCase):
                                 global_default_index=1)
         cr_manager = MockedManager(cr_plugins,
                                    plugin_lookup_field='crypto_plugin')
-        project_id = uuid.uuid4().hex
+        project_id = uuidutils.generate_uuid(dashed=False)
 
         with mock.patch('barbican.plugin.util.multiple_backends.'
                         'get_global_default_secret_store') as gd_func:
@@ -441,7 +441,8 @@ class TestPluginsGenerateStoreAPIMultipleBackend(
         session = repositories.get_project_repository().get_session()
 
         project = models.Project()
-        project.external_id = "keystone_project_id" + uuid.uuid4().hex
+        project.external_id = ("keystone_project_id" +
+                               uuidutils.generate_uuid(dashed=False))
         project.save(session=session)
         return project
 
