@@ -29,7 +29,7 @@ with the following command:
 
     If you do not have the appropriate Python versions available, consider
     setting up PyEnv to install multiple versions of Python. See the
-    documentation regarding :doc:`/setup/dev` for more information.
+    documentation regarding :doc:`/contributor/dev` for more information.
 
 .. note::
 
@@ -97,7 +97,7 @@ Functional Tests
 Unlike running unit tests, the functional tests require Barbican and
 Keystone services to be running in order to execute. For more
 information on :doc:`setting up a Barbican development environment
-</setup/dev>` and using :doc:`Keystone with Barbican </setup/keystone>`,
+</contributor/dev>` and using :doc:`Keystone with Barbican </configuration/keystone>`,
 see our accompanying project documentation.
 
 Once you have the appropriate services running and configured you can execute

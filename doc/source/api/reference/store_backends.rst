@@ -8,7 +8,7 @@ secret store mapping. There are two types of secret stores. One is global
 default secret store which is used for all projects. And then project
 `preferred` secret store which is used to store all *new* secrets created in
 that project. For an introduction to multiple store backends support, see
-:doc:`Using Multiple Secret Store Plugins </setup/plugin_backends>` . This
+:doc:`Using Multiple Secret Store Plugins </configuration/plugin_backends>` . This
 document will focus on the details of the Barbican `/v1/secret-stores` REST API.
 
 When multiple secret store backends support is not enabled in service

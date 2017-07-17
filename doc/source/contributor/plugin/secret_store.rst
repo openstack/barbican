@@ -8,7 +8,7 @@ This guide describes how to develop a custom secret store plugin for use by
 Barbican.
 
 Barbican supports two storage modes for secrets: a secret store mode (detailed
-on this page), and a :doc:`cryptographic mode </plugin/crypto>`. The secret
+on this page), and a :doc:`cryptographic mode </contributor/plugin/crypto>`. The secret
 store mode offloads both encryption/decryption and encrypted secret storage to
 the plugin implementation. Barbican includes plugin interfaces to a Red Hat
 Dogtag service and to a Key Management Interoperability Protocol (KMIP)
@@ -16,7 +16,7 @@ compliant security appliance.
 
 Since the secret store mode defers the storage of encrypted secrets to plugins,
 Barbican core does not need to store encrypted secrets into its data store,
-unlike the :doc:`cryptographic mode </plugin/crypto>`. To accommodate the
+unlike the :doc:`cryptographic mode </contributor/plugin/crypto>`. To accommodate the
 discrepancy between the two secret storage modes, a secret store to
 cryptographic plugin adapter has been included in Barbican core, as detailed in
 :ref:`plugin-secret-store-crypto-adapter-label` section below.
@@ -132,7 +132,7 @@ The Cryptographic Plugin Adapter
 Barbican core includes a specialized secret store plugin used to adapt to
 cryptographic plugins, called ``StoreCryptoAdapterPlugin``. This plugin
 functions as a secret store plugin, but it directs secret related operations to
-:doc:`cryptographic plugins </plugin/crypto>` for
+:doc:`cryptographic plugins </contributor/plugin/crypto>` for
 encryption/decryption/generation operations. Because cryptographic plugins do
 not store encrypted secrets, this adapter plugin provides this storage
 capability via Barbican's data store.
