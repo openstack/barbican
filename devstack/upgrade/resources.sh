@@ -57,15 +57,15 @@ function create {
 
     local secret_name=test_secret
     local secret_data=this_is_a_secret_data
-    barbican secret store -p $secret_data -n $secret_name
-    secret_link=$(barbican secret list | awk '/ test_secret / {print $2}')
+    openstack secret store -p $secret_data -n $secret_name
+    secret_link=$(openstack secret list | awk '/ test_secret / {print $2}')
     resource_save barbican secret_link $secret_link
 }
 
 function verify {
     _barbican_set_user
     secret_link=$(resource_get barbican secret_link)
-    barbican secret get $secret_link
+    openstack secret get $secret_link
 }
 
 function verify_noapi {
@@ -75,7 +75,7 @@ function verify_noapi {
 function destroy {
     _barbican_set_user
     set +o errexit
-    barbican secret delete $(resource_get barbican secret_link)
+    openstack secret delete $(resource_get barbican secret_link)
     local user_id=$(resource_get barbican user_id)
     local project_id=$(resource_get barbican project_id)
     source $TOP_DIR/openrc admin admin
