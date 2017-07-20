@@ -18,6 +18,7 @@ API application handler for Barbican
 """
 import os
 
+from paste import deploy
 import pecan
 
 try:
@@ -101,3 +102,9 @@ def create_main_app(global_config, **local_conf):
 def create_version_app(global_config, **local_conf):
     wsgi_app = pecan.make_app(versions.VersionsController())
     return wsgi_app
+
+
+def get_api_wsgi_script():
+    conf = '/etc/barbican/barbican-api-paste.ini'
+    application = deploy.loadapp('config:%s' % conf)
+    return application
