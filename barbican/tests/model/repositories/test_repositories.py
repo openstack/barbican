@@ -11,6 +11,7 @@
 # limitations under the License.
 
 import mock
+import six
 import sqlalchemy
 
 from alembic import script as alembic_script
@@ -120,7 +121,7 @@ class WhenInvokingExceptionMethods(utils.BaseTestCase):
 
         self.assertEqual(
             "No test_entity found with ID 123456",
-            exception_result.message)
+            six.text_type(exception_result))
 
     def test_should_raise_for_entity_id_not_found(self):
 
@@ -131,7 +132,7 @@ class WhenInvokingExceptionMethods(utils.BaseTestCase):
 
         self.assertEqual(
             "Entity ID 123456 not found",
-            exception_result.message)
+            six.text_type(exception_result))
 
     def test_should_raise_for_no_entities_found(self):
 
@@ -142,7 +143,7 @@ class WhenInvokingExceptionMethods(utils.BaseTestCase):
 
         self.assertEqual(
             "No entities of type test_entity found",
-            exception_result.message)
+            six.text_type(exception_result))
 
 
 class WhenTestingBaseRepository(database_utils.RepositoryTestCase):
@@ -159,7 +160,7 @@ class WhenTestingBaseRepository(database_utils.RepositoryTestCase):
 
         self.assertEqual(
             "Must supply non-None Entity.",
-            exception_result.message)
+            six.text_type(exception_result))
 
     def test_should_raise_invalid_create_from_entity_with_id(self):
         entity = models.ModelBase()
@@ -172,7 +173,7 @@ class WhenTestingBaseRepository(database_utils.RepositoryTestCase):
 
         self.assertEqual(
             "Must supply Entity with id=None (i.e. new entity).",
-            exception_result.message)
+            six.text_type(exception_result))
 
     def test_should_raise_invalid_do_validate_no_status(self):
         exception_result = self.assertRaises(
@@ -182,7 +183,7 @@ class WhenTestingBaseRepository(database_utils.RepositoryTestCase):
 
         self.assertEqual(
             "Entity status is required.",
-            exception_result.message)
+            six.text_type(exception_result))
 
     def test_should_raise_invalid_do_validate_bad_status(self):
         exception_result = self.assertRaises(
@@ -192,7 +193,7 @@ class WhenTestingBaseRepository(database_utils.RepositoryTestCase):
 
         self.assertEqual(
             "Invalid status 'BOGUS_STATUS' for Entity.",
-            exception_result.message)
+            six.text_type(exception_result))
 
 
 class WhenTestingWrapDbError(utils.BaseTestCase):
@@ -239,7 +240,7 @@ class WhenTestingGetEnginePrivate(utils.BaseTestCase):
         self.assertEqual(
             'Error configuring registry database with supplied '
             'sql_connection. Got error: Abort!',
-            exception_result.message)
+            six.text_type(exception_result))
 
     @mock.patch('barbican.model.repositories._create_engine')
     def test_should_complete_with_no_alembic_create_default_configs(

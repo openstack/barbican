@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import mock
+import six
 
 from barbican.common import utils as common_utils
 from barbican.plugin.crypto import base
@@ -157,7 +158,7 @@ class WhenTestingSecretStorePluginManager(utils.BaseTestCase):
 
         self.assertEqual(
             'Secret store plugin "{name}" not found.'.format(name=plugin_name),
-            exception_result.message)
+            six.text_type(exception_result))
 
     def test_get_generate_no_plugin_found(self):
         self.manager.extensions = []
@@ -241,7 +242,7 @@ class WhenTestingSecretStorePluginManager(utils.BaseTestCase):
             self.manager.get_plugin_retrieve_delete,
             plugin_name=plugin_name,
         )
-        self.assertIn(plugin_name, exception_result.message)
+        self.assertIn(plugin_name, six.text_type(exception_result))
 
     def test_get_store_plugin_with_tkey_and_supports_storage(self):
         plugin1 = TestSecretStore([str.KeyAlgorithm.AES])

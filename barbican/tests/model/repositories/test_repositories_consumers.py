@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import six
 
 from barbican.common import exception
 from barbican.model import models
@@ -88,7 +89,7 @@ class WhenTestingContainerConsumerRepository(utils.RepositoryTestCase):
             session=session)
         self.assertIn(
             "SQL constraint check failed",
-            exception_result.message)
+            six.text_type(exception_result))
 
     def test_should_raise_no_result_found_get_container_id(self):
         session = self.repo.get_session()
