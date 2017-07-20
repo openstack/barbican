@@ -8,7 +8,6 @@ such as Symmetric Keys, Asymmetric Keys, Certificates and raw binary data.
 .. toctree::
    :maxdepth: 2
 
-   user/index
    admin/index
    install/index
    configuration/index

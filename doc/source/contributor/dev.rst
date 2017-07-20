@@ -104,7 +104,7 @@ a keystone token in the ``X-Auth-Token`` header.  For example:
            http://localhost:9311/v1/secrets
 
 For more information on configuring Barbican with Keystone auth see the
-:doc:`Keystone Configuration </setup/keystone>` page.
+:doc:`Keystone Configuration </configuration/keystone>` page.
 
 Building the Documentation
 --------------------------

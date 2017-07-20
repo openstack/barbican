@@ -8,14 +8,14 @@ This guide describes how to develop a custom cryptographic plugin for use by
 Barbican.
 
 Barbican supports two storage modes for secrets: a cryptographic mode (detailed
-on this page), and a :doc:`secret store mode </plugin/secret_store>`. The
+on this page), and a :doc:`secret store mode </contributor/plugin/secret_store>`. The
 cryptographic mode stores encrypted secrets in Barbican's data store, utilizing
 a cryptographic process or appliance (such as a hardware security module (HSM))
 to perform the encryption/decryption. Barbican includes a PKCS11-based
 interface to SafeNet HSMs.
 
 Note that cryptographic plugins are not invoked directly from Barbican core,
-but rather via a :doc:`secret store mode </plugin/secret_store>` plugin adapter
+but rather via a :doc:`secret store mode </contributor/plugin/secret_store>` plugin adapter
 class, further described in :ref:`plugin-secret-store-crypto-adapter-label`.
 
 ``crypto`` Module
