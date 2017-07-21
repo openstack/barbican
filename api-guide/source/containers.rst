@@ -16,7 +16,7 @@ held within. These will be broken down in their respective sections.
 
 This guide will assume you will be using a local running development environment of barbican.
 If you need assistance with getting set up, please reference the
-`development guide <http://docs.openstack.org/developer/barbican/setup/dev.html>`__.
+`development guide <https://docs.openstack.org/barbican/latest/contributor/dev.html>`__.
 
 .. _generic_containers:
 

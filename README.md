@@ -17,7 +17,7 @@ Barbican is an OpenStack project developed by the [Barbican Project Team
 Johns Hopkins University, HP, Red Hat, Cisco Systems, and many more.
 
 The full documentation can be found on the [Barbican Developer Documentation
-Site](http://docs.openstack.org/developer/barbican/).
+Site](https://docs.openstack.org/barbican/latest/).
 
 If you have a technical question, you can ask it at [Ask OpenStack](
 https://ask.openstack.org/en/questions/) with the `barbican` tag, or you can
@@ -48,7 +48,7 @@ ecosystem.  The other systems are:
 ## Getting Started
 
 Please visit our [Users, Developers and Operators documentation
-](https://docs.openstack.org/developer/barbican/) for details.
+](https://docs.openstack.org/barbican/latest/) for details.
 
 ## Why Should You Use Barbican?
 

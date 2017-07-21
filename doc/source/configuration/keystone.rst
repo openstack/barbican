@@ -15,8 +15,8 @@ following ways to setup your own.
 
 .. _Simple Dockerized Keystone: https://registry.hub.docker.com/u/
                                 jmvrbanac/simple-keystone/
-.. _Installing Keystone: https://docs.openstack.org/developer/keystone/
-                         installing.html
+.. _Installing Keystone: https://docs.openstack.org/keystone/latest/
+                         install/index.html
 
 
 Hooking up Barbican to Keystone

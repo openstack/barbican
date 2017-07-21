@@ -44,9 +44,9 @@ available plugin.
 
 The API node noted in the previous section is a WSGI server. Similar to
 OpenStack projects such as
-`Glance <http://docs.openstack.org/developer/glance>`_ it utilizes paste to
+`Glance <https://docs.openstack.org/glance/latest/>`_ it utilizes paste to
 support configurable middleware such as to interface with
-`Keystone <http://docs.openstack.org/developer/keystone>`_ for authentication
+`Keystone <https://docs.openstack.org/keystone/latest/>`_ for authentication
 and authorization services. `Pecan <http://pecan.readthedocs.org/en/latest>`_
 (a lean Python web framework inspired by CherryPy, TurboGears, and Pylons) is
 utilized to map resources to REST routes. These resources contain the controller

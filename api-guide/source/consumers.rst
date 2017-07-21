@@ -4,7 +4,7 @@ Consumers API - User Guide
 
 This guide assumes you will be using a local development environment of barbican.
 If you need assistance with getting set up, please reference the
-`development guide <http://docs.openstack.org/developer/barbican/setup/dev.html>`__.
+`development guide <https://docs.openstack.org/barbican/latest/contributor/dev.html>`__.
 
 
 What is a Consumer?

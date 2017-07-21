@@ -80,4 +80,4 @@ Barbican PKCS11/HSM
     key labels in /etc/barbican.conf and restart barbican server before
     executing this command.
 
-.. _Database Migration: http://docs.openstack.org/developer/barbican/contribute/database_migrations.html
+.. _Database Migration: https://docs.openstack.org/barbican/latest/contributor/database_migrations.html
