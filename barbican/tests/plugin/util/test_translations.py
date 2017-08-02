@@ -259,9 +259,6 @@ class WhenDenormalizingAfterDecryption(utils.BaseTestCase):
 
 
 class WhenConvertingKeyFormats(utils.BaseTestCase):
-    def setUp(self):
-        super(WhenConvertingKeyFormats, self).setUp()
-
     def test_passes_convert_private_pem_to_der(self):
         pem = keys.get_private_key_pem()
         expected_der = keys.get_private_key_der()
