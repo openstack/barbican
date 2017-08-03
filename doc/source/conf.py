@@ -42,6 +42,10 @@ repository_name = 'openstack/barbican'
 bug_project = 'barbican'
 bug_tag = ''
 
+# Add any paths that contain "extra" files, such as .htaccess or
+# robots.txt.
+html_extra_path = ['_extra']
+
 # Must set this variable to include year, month, day, hours, and minutes.
 html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
