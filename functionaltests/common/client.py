@@ -199,8 +199,6 @@ class BarbicanClient(object):
             base_url = endpoint['key-manager'][0].get('publicURL')
         else:
             base_url = endpoint['key-manager'][0].get('url')
-        # Handle urls that aren't just an address
-        base_url = self._get_url_w_trailing_slash(base_url)
 
         # Make sure we handle the edge cases around Keystone providing
         # endpoints with or without versions
