@@ -17,10 +17,6 @@ PYKMIP_LOG_DIR=${PYKMIP_LOG_DIR:-/var/log/pykmip}
 # Support potential entry-points console scripts
 BARBICAN_BIN_DIR=$(get_python_exec_prefix)
 
-# WSGI variables
-BARBICAN_WSGI=$BARBICAN_BIN_DIR/barbican-wsgi-api
-BARBICAN_UWSGI_CONF=$BARBICAN_CONF_DIR/barbican-uwsgi.ini
-
 # Set Barbican repository
 BARBICAN_REPO=${BARBICAN_REPO:-${GIT_BASE}/openstack/barbican.git}
 BARBICAN_BRANCH=${BARBICAN_BRANCH:-master}
@@ -30,7 +26,7 @@ BARBICANCLIENT_REPO=${BARBICANCLIENT_REPO:-${GIT_BASE}/openstack/python-barbican
 BARBICANCLIENT_BRANCH=${BARBICANCLIENT_BRANCH:-master}
 
 # Set host href
-BARBICAN_HOST_HREF=${BARBICAN_HOST_HREF:-http://${SERVICE_HOST}/key-manager}
+BARBICAN_HOST_HREF=${BARBICAN_HOST_HREF:-http://${SERVICE_HOST}:9311}
 
 # Tell Tempest this project is present
 TEMPEST_SERVICES+=,barbican
