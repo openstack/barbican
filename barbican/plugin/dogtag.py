@@ -118,10 +118,11 @@ def create_connection(conf, subsystem_path):
     pem_path = conf.dogtag_plugin.pem_path
     if pem_path is None:
         raise ValueError(u._("pem_path is required"))
+    # port is string type in PKIConnection
     connection = pki.client.PKIConnection(
         'https',
         conf.dogtag_plugin.dogtag_host,
-        conf.dogtag_plugin.dogtag_port,
+        str(conf.dogtag_plugin.dogtag_port),
         subsystem_path)
     connection.set_authentication_cert(pem_path)
     return connection

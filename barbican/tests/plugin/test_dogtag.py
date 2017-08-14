@@ -286,7 +286,7 @@ class WhenTestingDogtagCAPlugin(utils.BaseTestCase):
         CONF.dogtag_plugin.ca_host_aid_path = self.host_ca_path
         CONF.dogtag_plugin.auto_approved_profiles = [self.approved_profile_id]
         CONF.dogtag_plugin.dogtag_host = "localhost"
-        CONF.dogtag_plugin.dogtag_port = "8443"
+        CONF.dogtag_plugin.dogtag_port = 8443
         CONF.dogtag_plugin.simple_cmc_profile = "caOtherCert"
         self.cfg = CONF
 
