@@ -27,7 +27,9 @@ Finalize installation
 
    .. code-block:: apache
 
-      <VirtualHost [::1]:9311>
+      Listen 9311
+
+      <VirtualHost *:9311>
           ServerName controller
 
           ## Logging
