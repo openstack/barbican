@@ -6,26 +6,22 @@
 # DuanXin <1145833162@qq.com>, 2015
 # OpenStack Infra <zanata@openstack.org>, 2015. #zanata
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
-# Jiong Liu <liujiong@gohighsec.com>, 2016. #zanata
+# Jeremy Liu <liujiong@gohighsec.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 3.0.0.0rc2.dev1\n"
+"Project-Id-Version: barbican 5.0.0.0rc2.dev1\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-09-16 18:23+0000\n"
+"POT-Creation-Date: 2017-08-11 03:08+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2016-09-17 01:29+0000\n"
-"Last-Translator: Jiong Liu <liujiong@gohighsec.com>\n"
+"Last-Translator: Jeremy Liu <liujiong@gohighsec.com>\n"
 "Language: zh-CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.0\n"
-"X-Generator: Zanata 3.7.3\n"
+"X-Generator: Zanata 3.9.6\n"
 "Language-Team: Chinese (China)\n"
-
-#, python-format
-msgid "'%(strategy)s' is not an available notifier strategy."
-msgstr "'%(strategy)s' 不是一个可用的通知策略。"
 
 msgid "'algorithm' is required field for {0} type order"
 msgstr "'algorithm'是{0}类型的order所必须的字段"
@@ -67,9 +63,6 @@ msgstr ""
 "当使用上下文中间件ContextMiddleware的时候将允许未授权的用户拥有API接口的只读"
 "权限"
 
-msgid "An object with the same identifier already exists."
-msgstr "具有同一标识的对象已存在。"
-
 msgid "An object with the specified identifier was not found."
 msgstr "找不到具有指定标识的对象。"
 
@@ -83,21 +76,6 @@ msgstr "一个不支持的算法{algorithm}被传到'generate_symmetric_key'方�
 
 msgid "Apparent RNG self-test failure."
 msgstr "明显的RNG自我测试失败。"
-
-#, python-format
-msgid "Attribute '%(property)s' is read-only."
-msgstr "属性“%(property)s”是只读的。"
-
-#, python-format
-msgid "Attribute '%(property)s' is reserved."
-msgstr "属性“%(property)s”已保留。"
-
-#, python-format
-msgid "Auth service at URL %(url)s not found."
-msgstr "找不到 URL %(url)s 处的授权服务。"
-
-msgid "Authorization failed."
-msgstr "授权失败。"
 
 msgid "Bad Container Reference {ref}"
 msgstr "错误的容器引用{ref}"
@@ -170,10 +148,6 @@ msgid "Check Certificate Order Status"
 msgstr "检查证书order状态"
 
 msgid ""
-"Configuration for store failed. Adding images to this store is disabled."
-msgstr "配置存储失败。无法向这个存储添加镜像。"
-
-msgid ""
 "Conflict. A secret with that name and ID is already stored in this "
 "container. The same secret can exist in a container as long as the name is "
 "unique."
@@ -183,10 +157,6 @@ msgstr ""
 
 msgid "Conflict. Key in request is already in the secret metadata"
 msgstr "冲突。请求中的Key已经存在于秘密元数据中"
-
-#, python-format
-msgid "Connect error/bad request to Auth service at URL %(url)s."
-msgstr "发生连接错误，或者对 URL %(url)s 处的授权服务的请求不正确。"
 
 #, python-format
 msgid ""
@@ -276,9 +246,6 @@ msgid ""
 "processing functionality."
 msgstr "定义通知服务器处理功能所使用的最大线程数量。"
 
-msgid "Deleting images from this store is not supported."
-msgstr "不支持从该存储中删除镜像。"
-
 msgid "Directory in which to store certs/keys for subcas"
 msgstr "为子CA存储证书/密钥的目录"
 
@@ -288,11 +255,6 @@ msgstr "Dogtag插件不支持%s类型的请求"
 
 msgid "Domain of Symantec API"
 msgstr "Symantec API的域名"
-
-#, python-format
-msgid ""
-"Driver %(driver_name)s could not be configured correctly. Reason: %(reason)s"
-msgstr "未能正确配置驱动程序 %(driver_name)s。原因：%(reason)s"
 
 msgid "Duplicate reference names are not allowed"
 msgstr "不允许重复的引用名称"
@@ -307,9 +269,6 @@ msgid ""
 "Encryption using session key is not supported when retrieving a "
 "{secret_type} key."
 msgstr "当检索一个{secret_type}类型的密钥时，不支持使用会话密钥进行加密。"
-
-msgid "Entity '{entity_name}' already exists"
-msgstr "Entity '{entity_name}'已经存在"
 
 msgid "Entity ID {entity_id} not found"
 msgstr "未找到Entity ID：{entity_id}"
@@ -328,14 +287,6 @@ msgstr "试图解码负载时出错。"
 
 msgid "Errors in creating subordinate CA: %(name)"
 msgstr "创建子CA：%(name)时出错"
-
-msgid ""
-"Errors returned by CA when attempting to create subordinate CA: %(reason)"
-msgstr "当试图创建子CA时出错，原因：%(reason)"
-
-msgid ""
-"Errors returned by CA when attempting to delete subordinate CA: %(reason)"
-msgstr "当试图删除子CA时出错，原因：%(reason)"
 
 msgid "Exception thrown by enroll_cert: {message}"
 msgstr "enroll_cert抛出异常：{message}"
@@ -404,16 +355,6 @@ msgid "If 'payload' specified, must be non empty"
 msgstr "如果指定了'payload'，'payload'就不能为空"
 
 #, python-format
-msgid "Image %(image_id)s is protected and cannot be deleted."
-msgstr "映像 %(image_id)s 受保护，无法删除。"
-
-#, python-format
-msgid ""
-"Incorrect auth strategy, expected \"%(expected)s\" but received "
-"\"%(received)s\""
-msgstr "授权策略不正确，期望的是“%(expected)s”，但接收到的是“%(received)s”"
-
-#, python-format
 msgid "Invalid CA_ID: %(ca_id)s"
 msgstr "无效的CA ID: %(ca_id)s"
 
@@ -443,14 +384,6 @@ msgstr "传入的算法无效"
 #, python-format
 msgid "Invalid container: %(reason)s"
 msgstr "无效的容器：%(reason)s"
-
-#, python-format
-msgid "Invalid content encoding %(content_encoding)s"
-msgstr "无效的内容编码%(content_encoding)s"
-
-#, python-format
-msgid "Invalid content type %(content_type)s"
-msgstr "内容类型 %(content_type)s 无效"
 
 msgid "Invalid date for 'expiration'"
 msgstr "无效的'expiration'数据"
@@ -527,19 +460,11 @@ msgstr "Master KEK标签（用于HSM）"
 msgid "Master KEK length in bytes."
 msgstr "Master KEK字节长度"
 
-#, python-format
-msgid "Maximum redirects (%(redirects)s) was exceeded."
-msgstr "已超过最大重定向次数 (%(redirects)s)。"
-
 msgid "Missing X-Project-Id"
 msgstr "缺少 X-Project-Id"
 
 msgid "Missing required argument."
 msgstr "缺少必须的参数"
-
-#, python-format
-msgid "Missing required credential: %(required)s"
-msgstr "缺少必需凭证：%(required)s"
 
 #, python-format
 msgid "Missing required metadata field for %(required)s"
@@ -550,14 +475,6 @@ msgstr "修改请求：无法取消：{message}"
 
 msgid "More than one key found for label"
 msgstr "找到不止一个该标签对应的key"
-
-#, python-format
-msgid ""
-"Multiple 'image' service matches for region %(region)s. This generally means "
-"that a region is required and you have not supplied one."
-msgstr ""
-"对于区域 %(region)s，存在多个“映像”服务匹配项。这通常意味着需要区域并且尚未提"
-"供一个区域。"
 
 msgid "Must be a positive integer that is a multiple of 8"
 msgstr "必须是8的整数倍的正整数"
@@ -779,9 +696,6 @@ msgid ""
 "algorithms."
 msgstr "对称密钥生成算法不支持密码加密。"
 
-msgid "Passphrase not supported for DSA key"
-msgstr "DSA密钥不支持的密码"
-
 msgid "Password for authenticating with KMIP server"
 msgstr "KMIP服务器的认证密码"
 
@@ -805,12 +719,6 @@ msgstr "NSS证书数据库的路径"
 
 msgid "Path to vendor PKCS11 library"
 msgstr "提供PKCS11库的路径"
-
-msgid "Performing database schema migration..."
-msgstr "执行数据库条目迁移"
-
-msgid "Permission to write image storage media denied."
-msgstr "不允许对镜像存储媒介写操作。"
 
 msgid ""
 "Please change the preferred CA to a different project CA before removing it."
@@ -868,10 +776,6 @@ msgstr "无法找到所提供的传输key %(transport_key_id)s"
 msgid "Provided field value is not supported"
 msgstr "不支持所提供的字段值"
 
-#, python-format
-msgid "Provided header feature is unsupported: %(feature)s"
-msgstr "提供的头功能不受支持：%(feature)s"
-
 msgid "Provided information too large to process"
 msgstr "提供的信息量太大无法处理"
 
@@ -903,17 +807,6 @@ msgstr "配额"
 msgid "Read Error"
 msgstr "读取错误"
 
-msgid "Received invalid HTTP redirect."
-msgstr "接收到无效 HTTP 重定向。"
-
-#, python-format
-msgid "Redirecting to %(uri)s for authorization."
-msgstr "对于授权，正在重定向至 %(uri)s。"
-
-#, python-format
-msgid "Registry was not configured correctly on API server. Reason: %(reason)s"
-msgstr "API 服务器上未正确配置注册表。原因：%(reason)s"
-
 msgid "Remove CA from project"
 msgstr "将CA从项目中移除"
 
@@ -927,9 +820,6 @@ msgstr "请求{request_id}报告了status_complete状态，但是未返回cert_i
 
 msgid "Requested algorithm is not supported"
 msgstr "请求的算法不支持"
-
-msgid "Response from Keystone does not contain a Barbican endpoint."
-msgstr "keystone的响应不包含barbican的endpoint。"
 
 msgid "Retrieve global preferred CA"
 msgstr "检索全局首选CA"
@@ -1015,9 +905,6 @@ msgstr "检索秘密"
 msgid "Secret store plugin \"{name}\" not found."
 msgstr "秘密存储插件“{name}”未发现"
 
-msgid "Secret store plugin not found for requested operation."
-msgstr "未找到请求的操作的秘密存储插件。"
-
 msgid "Secret store plugin not found."
 msgstr "秘密存储插件未发现。"
 
@@ -1056,10 +943,6 @@ msgstr "{secret_type}类型的秘密不应在数据库中有密码，因为在�
 msgid "Server name for RPC task processing server"
 msgstr "RPC任务服务器的名称"
 
-#, python-format
-msgid "Server worker creation failed: %(reason)s."
-msgstr "服务器工作程序创建失败：%(reason)s。"
-
 msgid "Set global preferred CA"
 msgstr "设置全局首选CA"
 
@@ -1072,16 +955,8 @@ msgstr "设置首选秘密存储"
 msgid "Signing key incorrect"
 msgstr "密钥签发错误"
 
-msgid "Sort key supplied was not valid."
-msgstr "提供的排序键无效。"
-
 msgid "Status: {status}, Reason: {reason}, Message: {message}"
 msgstr "状态：{status}，原因：{reason}，消息：{message}"
-
-#, python-format
-msgid ""
-"Store %(store_name)s could not be configured correctly. Reason: %(reason)s"
-msgstr "%(store_name)s存储无法被正确配置。原因：%(reason)s"
 
 msgid "Subordinate CA is not owned by this project"
 msgstr "该项目没有子CA"
@@ -1099,9 +974,6 @@ msgid ""
 "Text-based binary secret payloads must specify a content-encoding of 'base64'"
 msgstr "基于文本的二进制秘密负载必须指定内容编码为'base64'"
 
-msgid "The Store URI was malformed."
-msgstr "存储器 URI 的格式不正确。"
-
 msgid "The ca_id provided in the request is invalid"
 msgstr "请求中所提供的ca_id无效"
 
@@ -1115,11 +987,6 @@ msgstr ""
 "话题被限定在默认的交换名称下。可能会被transport_url参数中指定的交换名称覆盖。"
 
 msgid ""
-"The image cannot be deleted because it is in use through the backend store "
-"outside of Barbican."
-msgstr "该镜像无法被删除因为其正被barbican之外的存储后端所使用。"
-
-msgid ""
 "The minimum required reference name is 'certificate' for Certificate type"
 msgstr "证书类型所需要的最少的引用名称是'certificate'"
 
@@ -1128,41 +995,10 @@ msgid ""
 "RSA type"
 msgstr "RSA类型最少需要的引用名称是'public_key'和'private_key'"
 
-msgid "The provided image is too large."
-msgstr "提供的映像太大。"
-
-msgid "The request returned 500 Internal Server Error."
-msgstr "该请求返回了“500 内部服务器错误”。"
-
-#, python-format
-msgid ""
-"The request returned a 302 Multiple Choices. This generally means that you "
-"have not included a version indicator in a request URI.\n"
-"\n"
-"The body of response returned:\n"
-"%(body)s"
-msgstr ""
-"该请求返回了“302 多选项”。这通常意味着您尚未将版本指示器包括在请求 URI 中。\n"
-"\n"
-"返回了响应的主体：\n"
-"%(body)s"
-
 msgid ""
 "The request returned a 413 Request Entity Too Large. This generally means "
 "that rate limiting or a quota threshold was breached."
 msgstr "该请求返回了“413请求实体过大”。这通常意味着违背了速度限制或配额阈值。"
-
-#, python-format
-msgid ""
-"The request returned an unexpected status: %(status)s.\n"
-"\n"
-"The response body:\n"
-"%(body)s"
-msgstr ""
-"该请求返回了意外状态：%(status)s。\n"
-"\n"
-"响应主体：\n"
-"%(body)s"
 
 msgid ""
 "The requested Store Plugin {plugin_name} is not currently available. This is "
@@ -1171,18 +1007,6 @@ msgstr "请求的存储插件{plugin_name}目前不可用。这可能是服务�
 
 msgid "The version you requested wasn't found"
 msgstr "未发现你请求的版本"
-
-msgid "There is not enough disk space on the image storage media."
-msgstr "该镜像存储媒介没有足够的硬盘空间。"
-
-msgid "There was an error configuring the client."
-msgstr "配置客户机时出错。"
-
-msgid "There was an error connecting to a server"
-msgstr "连接至服务器时出错"
-
-msgid "There was an error migrating the database."
-msgstr "数据库迁移时有一个错误。"
 
 msgid "There was an error with the PKCS#11 library."
 msgstr "PKCS#11库有一个错误。"
@@ -1228,47 +1052,17 @@ msgstr ""
 msgid "URI provided invalid query string parameters."
 msgstr "URI包含了无效的字符串请求参数。"
 
-#, python-format
-msgid "URI to container is %s"
-msgstr "容器的URI是%s"
-
-#, python-format
-msgid "URI to secret is %s"
-msgstr "秘密的URI是%s"
-
-#, python-format
-msgid "URI to secret metadata is %s"
-msgstr "秘密元数据的URI是%s"
-
-#, python-format
-msgid "URI to sub-CA is %s"
-msgstr "子CA的URI是%s"
-
 msgid "Unable to decode request data."
 msgstr "无法解码请求数据。"
 
-msgid "Unable to filter using the specified range."
-msgstr "无法使用指定的范围进行过滤。"
-
-#, python-format
-msgid "Unable to load schema: %(reason)s"
-msgstr "无法装入模式：%(reason)s"
-
 msgid "Unencrypted data must be a byte type, but was {unencrypted_type}"
 msgstr "未加密的数据必须是字节类型，但却是{unencrypted_type}"
-
-msgid "Unexpected content type: {type}. Expected content types are: {expected}"
-msgstr "意外的主体类型：{type}。期望的类型是：{expected}"
 
 msgid "Unknown"
 msgstr "未知"
 
 msgid "Unknown attribute type provided."
 msgstr "提供的属性类型未知"
-
-#, python-format
-msgid "Unknown scheme '%(scheme)s' found in URI"
-msgstr "URI中发现了未知的scheme '%(scheme)s'"
 
 msgid "Unset global preferred CA"
 msgstr "取消设置全局首选CA"
@@ -1299,12 +1093,6 @@ msgstr "Dogtag插件的工作目录"
 
 msgid "Wrong payload content-type"
 msgstr "错误的负载内容类型"
-
-msgid "You are not authenticated."
-msgstr "您未经认证。"
-
-msgid "You are not authorized to complete this action."
-msgstr "您无权完成此操作。"
 
 msgid "content-encoding of '{content_encoding}' not supported"
 msgstr "不支持的内容编码'{content_encoding}'"
@@ -1352,9 +1140,6 @@ msgstr "payload_content_encoding不在{supported}当中"
 
 msgid "payload_content_type is not one of {supported}"
 msgstr "payload_content_type不在{supported}当中"
-
-msgid "payload_content_type {supplied} is not one of {supported}"
-msgstr "payload_content_type：{supplied}不在{supported}当中"
 
 msgid "pem_path is required"
 msgstr "需要pem_path"

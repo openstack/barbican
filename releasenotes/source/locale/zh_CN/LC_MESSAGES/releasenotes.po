@@ -1,21 +1,18 @@
-# Jiong Liu <liujiong@gohighsec.com>, 2016. #zanata
+# Jeremy Liu <liujiong@gohighsec.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: Barbican Release Notes 3.0.0\n"
+"Project-Id-Version: Barbican Release Notes 5.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-17 22:53+0000\n"
+"POT-Creation-Date: 2017-08-11 03:08+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2016-07-12 01:44+0000\n"
-"Last-Translator: Jiong Liu <liujiong@gohighsec.com>\n"
+"Last-Translator: Jeremy Liu <liujiong@gohighsec.com>\n"
 "Language-Team: Chinese (China)\n"
 "Language: zh-CN\n"
-"X-Generator: Zanata 3.7.3\n"
+"X-Generator: Zanata 3.9.6\n"
 "Plural-Forms: nplurals=1; plural=0\n"
-
-msgid "1.0.0-7"
-msgstr "1.0.0-7"
 
 msgid "2.0.0"
 msgstr "2.0.0"
