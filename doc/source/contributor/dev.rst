@@ -56,7 +56,7 @@ installed as well.
 
     # Create and activate a virtual environment
     virtualenv .barbicanenv
-    source .barbicanenv/bin/activate
+    . .barbicanenv/bin/activate
 
     # Install barbican in development mode
     pip install -e $PWD
