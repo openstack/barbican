@@ -8,7 +8,7 @@ features:
   - New feature to support multiple secret store plugin backends. This feature
     is not enabled by default. To use this feature, the relevant feature flag
     needs to be enabled and supporting configuration needs to be added in the
-    service configuration. Once enabled, a project adminstrator will be able
+    service configuration. Once enabled, a project administrator will be able
     to specify one of the available secret store backends as a preferred
     secret store for their project secrets. This secret store preference
     applies only to new secrets (key material) created or stored within that
