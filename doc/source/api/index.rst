@@ -6,7 +6,7 @@ User Guide
 ##########
 
 API guide docs are built to:
-http://developer.openstack.org/api-guide/key-manager/
+https://developer.openstack.org/api-guide/key-manager/
 
 API Reference
 #############

@@ -17,7 +17,7 @@ API Reference
 =============
 
 If you're trying to learn how to use barbican, you can start by reading about
-`Secrets in the Barbican API Guide <http://developer.openstack.org/api-guide/key-manager/secrets.html>`__.
+`Secrets in the Barbican API Guide <https://developer.openstack.org/api-guide/key-manager/secrets.html>`__.
 
 Once you're comfortable working with secrets you can dig into the rest of the
 API.
