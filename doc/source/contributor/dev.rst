@@ -22,20 +22,20 @@ Installing system dependencies
 .. code-block:: bash
 
     # Install development tools
-    sudo apt-get install -y git python-tox
+    sudo apt-get install git python-tox
 
     # Install dependency build requirements
-    sudo apt-get install -y libffi-dev libssl-dev python-dev gcc
+    sudo apt-get install libffi-dev libssl-dev python-dev gcc
 
 **Fedora 23:**
 
 .. code-block:: bash
 
     # Install development tools
-    sudo dnf install -y git python-tox
+    sudo dnf install git python-tox
 
     # Install dependency build requirements
-    sudo dnf install -y gcc libffi-devel openssl-devel redhat-rpm-config
+    sudo dnf install gcc libffi-devel openssl-devel redhat-rpm-config
 
 Setting up a virtual environment
 --------------------------------
