@@ -15,7 +15,7 @@ following ways to setup your own.
 
 .. _Simple Dockerized Keystone: https://registry.hub.docker.com/u/
                                 jmvrbanac/simple-keystone/
-.. _Installing Keystone: http://docs.openstack.org/developer/keystone/
+.. _Installing Keystone: https://docs.openstack.org/developer/keystone/
                          installing.html
 
 
