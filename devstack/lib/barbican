@@ -125,10 +125,6 @@ function configure_barbican {
         setup_colorized_logging $BARBICAN_CONF DEFAULT project user
     fi
 
-    # Install the policy file for the API server
-    cp $BARBICAN_DIR/etc/barbican/policy.json $BARBICAN_CONF_DIR
-    iniset $BARBICAN_CONF DEFAULT policy_file $BARBICAN_CONF_DIR/policy.json
-
     # Set the database connection url
     iniset $BARBICAN_CONF DEFAULT sql_connection `database_connection_url barbican`
 

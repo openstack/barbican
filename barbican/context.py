@@ -14,11 +14,8 @@
 #    under the License.
 
 import oslo_context
-from oslo_policy import policy
 
-from barbican.common import config
-
-CONF = config.CONF
+from barbican.common import policy
 
 
 class RequestContext(oslo_context.context.RequestContext):
@@ -33,7 +30,11 @@ class RequestContext(oslo_context.context.RequestContext):
         if project:
             kwargs['tenant'] = project
         self.project = project
-        self.policy_enforcer = policy_enforcer or policy.Enforcer(CONF)
+        if policy_enforcer:
+            self.policy_enforcer = policy_enforcer
+        else:
+            policy.init()
+            self.policy_enforcer = policy.get_enforcer()
         super(RequestContext, self).__init__(**kwargs)
 
     def to_dict(self):

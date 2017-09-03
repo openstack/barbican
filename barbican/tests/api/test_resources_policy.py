@@ -20,7 +20,6 @@ For typical-flow business logic tests of these classes, see the
 import os
 
 import mock
-from oslo_policy import policy
 from webob import exc
 
 from barbican.api.controllers import consumers
@@ -30,6 +29,7 @@ from barbican.api.controllers import secrets
 from barbican.api.controllers import secretstores
 from barbican.api.controllers import versions
 from barbican.common import config
+from barbican.common import policy
 from barbican import context
 from barbican.model import models
 from barbican.tests import utils
@@ -41,7 +41,8 @@ TEST_VAR_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
 
 CONF = config.new_config()
 
-ENFORCER = policy.Enforcer(CONF)
+policy.init()
+ENFORCER = policy.ENFORCER
 
 
 class TestableResource(object):
