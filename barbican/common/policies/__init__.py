@@ -28,8 +28,8 @@ from barbican.common.policies import versions
 
 def list_rules():
     return itertools.chain(
-        acls.list_rules(),
         base.list_rules(),
+        acls.list_rules(),
         cas.list_rules(),
         consumers.list_rules(),
         containers.list_rules(),
