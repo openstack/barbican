@@ -23,7 +23,6 @@ from barbican.common.policies import secretmeta
 from barbican.common.policies import secrets
 from barbican.common.policies import secretstores
 from barbican.common.policies import transportkeys
-from barbican.common.policies import versions
 
 
 def list_rules():
@@ -39,5 +38,4 @@ def list_rules():
         secrets.list_rules(),
         secretstores.list_rules(),
         transportkeys.list_rules(),
-        versions.list_rules(),
     )
