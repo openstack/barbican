@@ -199,7 +199,7 @@ class SecretBehaviors(base_behaviors.BaseBehaviors):
         :param expected_fail: If test is expected to fail the deletion
         :param use_auth: Boolean for whether to send authentication headers
         :param user_name: The user name used to delete the secret
-        :return A request response object
+        :return: A request response object
         """
         resp = self.client.delete(secret_ref, extra_headers=extra_headers,
                                   omit_headers=omit_headers,
