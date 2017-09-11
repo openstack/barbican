@@ -97,7 +97,7 @@ def create_container(id_ref, project_id=None, external_project_id=None):
     container.name = 'test name'
     container.type = 'rsa'
     container_secret = models.ContainerSecret()
-    container_secret.container_id = id
+    container_secret.container_id = id_ref
     container_secret.secret_id = '123'
     container.container_secrets.append(container_secret)
 
