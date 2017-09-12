@@ -5,3 +5,7 @@ mozilla-nss-devel [platform:rpm]
 nss-devel [platform:rpm]
 
 gettext [test]
+
+#Required for cryptography lib
+libssl-dev [platform:dpkg]
+openssl-devel [platform:rpm]
