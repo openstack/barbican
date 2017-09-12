@@ -17,6 +17,7 @@
 API handler for Barbican
 """
 import pkgutil
+import six
 
 from oslo_policy import policy
 from oslo_serialization import jsonutils as json
@@ -68,7 +69,7 @@ def load_body(req, resp=None, validator=None):
         try:
             parsed_body = validator.validate(parsed_body)
         except exception.BarbicanHTTPException as e:
-            LOG.exception(e.message)
+            LOG.exception(six.text_type(e))
             pecan.abort(e.status_code, e.client_message)
 
     return parsed_body

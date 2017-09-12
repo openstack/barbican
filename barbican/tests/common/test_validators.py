@@ -242,7 +242,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('bit_length', exception.invalid_property)
-        self.assertIn('bit_length', exception.message)
+        self.assertIn('bit_length', six.text_type(exception))
 
     def test_should_raise_non_integer_bit_length(self):
         self.secret_req['bit_length'] = "23"
@@ -253,7 +253,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('bit_length', exception.invalid_property)
-        self.assertIn('bit_length', exception.message)
+        self.assertIn('bit_length', six.text_type(exception))
 
     def test_should_raise_bit_length_less_than_min(self):
         self.secret_req['bit_length'] = 0
@@ -264,7 +264,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('bit_length', exception.invalid_property)
-        self.assertIn('bit_length', exception.message)
+        self.assertIn('bit_length', six.text_type(exception))
 
     def test_should_raise_bit_length_greater_than_max(self):
         self.secret_req['bit_length'] = 32768
@@ -275,7 +275,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('bit_length', exception.invalid_property)
-        self.assertIn('bit_length', exception.message)
+        self.assertIn('bit_length', six.text_type(exception))
 
     def test_should_raise_mode_length_greater_than_max(self):
         self.secret_req['mode'] = 'a' * 256
@@ -286,7 +286,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('mode', exception.invalid_property)
-        self.assertIn('mode', exception.message)
+        self.assertIn('mode',  six.text_type(exception))
 
     def test_should_raise_mode_is_non_string(self):
         self.secret_req['mode'] = 123
@@ -297,7 +297,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('mode', exception.invalid_property)
-        self.assertIn('mode', exception.message)
+        self.assertIn('mode', six.text_type(exception))
 
     def test_validation_should_raise_with_empty_payload(self):
         self.secret_req['payload'] = '   '
@@ -308,7 +308,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('payload', exception.invalid_property)
-        self.assertIn('payload', exception.message)
+        self.assertIn('payload', six.text_type(exception))
 
     def test_should_raise_already_expired(self):
         self.secret_req['expiration'] = '2004-02-28T19:14:44.180394'
@@ -319,7 +319,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('expiration', exception.invalid_property)
-        self.assertIn('expiration', exception.message)
+        self.assertIn('expiration', six.text_type(exception))
 
     def test_should_raise_expiration_nonsense(self):
         self.secret_req['expiration'] = 'nonsense'
@@ -330,7 +330,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('expiration', exception.invalid_property)
-        self.assertIn('expiration', exception.message)
+        self.assertIn('expiration', six.text_type(exception))
 
     def test_should_raise_expiration_is_non_string(self):
         self.secret_req['expiration'] = 123
@@ -341,7 +341,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('expiration', exception.invalid_property)
-        self.assertIn('expiration', exception.message)
+        self.assertIn('expiration', six.text_type(exception))
 
     def test_should_raise_expiration_greater_than_max(self):
         self.secret_req['expiration'] = 'a' * 256
@@ -352,7 +352,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('expiration', exception.invalid_property)
-        self.assertIn('expiration', exception.message)
+        self.assertIn('expiration', six.text_type(exception))
 
     def test_should_raise_algorithm_is_non_string(self):
         self.secret_req['algorithm'] = 123
@@ -363,7 +363,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('algorithm', exception.invalid_property)
-        self.assertIn('algorithm', exception.message)
+        self.assertIn('algorithm', six.text_type(exception))
 
     def test_should_raise_algorithm_greater_than_max(self):
         self.secret_req['algorithm'] = 'a' * 256
@@ -374,7 +374,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('algorithm', exception.invalid_property)
-        self.assertIn('algorithm', exception.message)
+        self.assertIn('algorithm', six.text_type(exception))
 
     def test_should_raise_all_nulls(self):
         self.secret_req = {'name': None,
@@ -416,7 +416,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.validator.validate(self.secret_req)
         except excep.InvalidObject as e:
             self.assertIsNotNone(e)
-            self.assertIsNotNone(e.message)
+            self.assertIsNotNone(six.text_type(e))
         else:
             self.fail('No validation exception was raised')
 
@@ -454,7 +454,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('payload_content_type', exception.invalid_property)
-        self.assertIn('payload_content_type', exception.message)
+        self.assertIn('payload_content_type', six.text_type(exception))
 
     def test_should_raise_with_payload_content_encoding_greater_than_max(self):
         self.secret_req['payload_content_encoding'] = 'a' * 256
@@ -465,7 +465,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         )
         self.assertEqual('payload_content_encoding',
                          exception.invalid_property)
-        self.assertIn('payload_content_encoding', exception.message)
+        self.assertIn('payload_content_encoding', six.text_type(exception))
 
     def test_should_raise_with_plain_text_and_encoding(self):
         self.secret_req['payload_content_encoding'] = 'base64'
@@ -624,7 +624,7 @@ class WhenTestingContainerValidator(utils.BaseTestCase):
             self.container_req,
         )
         self.assertEqual('name', exception.invalid_property)
-        self.assertIn('name', exception.message)
+        self.assertIn('name', six.text_type(exception))
 
     def test_should_raise_nonstring_secret_name(self):
         self.secret_refs[0]["name"] = 5
@@ -668,7 +668,7 @@ class WhenTestingContainerValidator(utils.BaseTestCase):
             self.container_req,
         )
 
-        self.assertIn('type', exception.message)
+        self.assertIn('type', six.text_type(exception))
 
     def test_should_raise_empty_type(self):
         self.container_req['type'] = ''
