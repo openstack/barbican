@@ -566,9 +566,6 @@ class ListingCAsTestCase(CATestCommon):
 
 class ProjectCATestCase(CATestCommon):
 
-    def setUp(self):
-        super(ProjectCATestCase, self).setUp()
-
     @depends_on_ca_plugins('snakeoil_ca', 'simple_certificate')
     def test_addition_of_project_ca_affects_getting_ca_list(self):
         # Getting list of CAs should get the total configured CAs

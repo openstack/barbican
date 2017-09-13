@@ -555,9 +555,6 @@ class WhenCreatingNewContainerACLUser(utils.BaseTestCase):
 
 
 class WhenCreatingNewProjectQuotas(utils.BaseTestCase):
-    def setUp(self):
-        super(WhenCreatingNewProjectQuotas, self).setUp()
-
     def test_create_new_project_quotas(self):
         project = models.Project()
         project.id = '12345'

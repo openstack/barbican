@@ -536,9 +536,6 @@ def setup_multiple_secret_store_plugins_conf(testcase, store_plugin_names,
 
 class MultipleBackendsTestCase(database_utils.RepositoryTestCase):
 
-    def setUp(self):
-        super(MultipleBackendsTestCase, self).setUp()
-
     def _mock_plugin_settings(self):
 
         kmip_conf = kss.CONF

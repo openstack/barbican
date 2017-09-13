@@ -51,9 +51,6 @@ class MockedManager(object):
 
 class WhenReadingMultipleBackendsConfig(test_utils.MultipleBackendsTestCase):
 
-    def setUp(self):
-        super(WhenReadingMultipleBackendsConfig, self).setUp()
-
     def test_successful_conf_read(self):
         ss_plugins = ['ss_p1', 'ss_p2', 'ss_p3']
         cr_plugins = ['cr_p1', 'cr_p2', 'cr_p3']

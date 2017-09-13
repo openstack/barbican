@@ -450,9 +450,6 @@ class BaseCertificateRequestsTestCase(database_utils.RepositoryTestCase):
 class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
     """Tests the 'issue_certificate_request()' function."""
 
-    def setUp(self):
-        super(WhenIssuingCertificateRequests, self).setUp()
-
     def tearDown(self):
         super(WhenIssuingCertificateRequests, self).tearDown()
 

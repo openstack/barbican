@@ -27,9 +27,6 @@ from barbican.tests import utils
 class WhenInvokingLoadBodyFunction(utils.BaseTestCase):
     """Tests the load_body function."""
 
-    def setUp(self):
-        super(WhenInvokingLoadBodyFunction, self).setUp()
-
     @mock.patch('pecan.abort')
     def test_should_abort_with_read_error(self, mock_pecan_abort):
         mock_pecan_abort.side_effect = ValueError('Abort!')

@@ -19,9 +19,6 @@ from barbican.tests import utils as test_utils
 
 class WhenTestingGetContainerID(test_utils.BaseTestCase):
 
-    def setUp(self):
-        super(WhenTestingGetContainerID, self).setUp()
-
     def test_get_container_id_passes(self):
         test_ref = 'https://localhost/v1/containers/good_container_ref'
         result = hrefs.get_container_id_from_ref(test_ref)

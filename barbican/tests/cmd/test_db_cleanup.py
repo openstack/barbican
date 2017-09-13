@@ -68,9 +68,6 @@ def _setup_entry(name, *args, **kwargs):
 
 class WhenTestingDBCleanUpCommand(utils.RepositoryTestCase):
 
-    def setUp(self):
-        super(WhenTestingDBCleanUpCommand, self).setUp()
-
     def tearDown(self):
         super(WhenTestingDBCleanUpCommand, self).tearDown()
         repos.rollback()
