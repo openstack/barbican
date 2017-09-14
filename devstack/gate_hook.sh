@@ -13,5 +13,5 @@
 # under the License.
 
 set -ex
-
+export FORCE=yes
 $BASE/new/devstack-gate/devstack-vm-gate.sh
