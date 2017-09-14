@@ -530,8 +530,8 @@ class SecretsTestCase(base.TestCase):
         a valid secret.
         """
 
-        # create a secret that expires in 5 seconds
-        timestamp = utils.create_timestamp_w_tz_and_offset(seconds=5)
+        # create a secret that expires in 15 seconds
+        timestamp = utils.create_timestamp_w_tz_and_offset(seconds=15)
 
         test_model = secret_models.SecretModel(
             **self.default_secret_create_data)
@@ -544,8 +544,8 @@ class SecretsTestCase(base.TestCase):
         get_resp = self.behaviors.get_secret_metadata(secret_ref)
         self.assertEqual(200, get_resp.status_code)
 
-        # now wait 10 seconds
-        time.sleep(10)
+        # now wait 20 seconds
+        time.sleep(20)
 
         # now get the secret - should be invalid (expired)
         resp = self.behaviors.get_secret_metadata(secret_ref)
