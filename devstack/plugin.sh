@@ -69,14 +69,14 @@ fi
 # Set the correct config options in Nova, Cinder and Glance
 function configure_core_services {
     if is_service_enabled n-cpu; then
-        iniset $NOVA_CONF key_manager api_class 'castellan.key_manager.barbican_key_manager.BarbicanKeyManager'
+        iniset $NOVA_CONF key_manager backend 'barbican'
     fi
 
     if is_service_enabled c-vol; then
-        iniset $CINDER_CONF key_manager api_class 'castellan.key_manager.barbican_key_manager.BarbicanKeyManager'
+        iniset $CINDER_CONF key_manager backend 'castellan.key_manager.barbican_key_manager.BarbicanKeyManager'
     fi
 
     if is_service_enabled g-api; then
-        iniset $GLANCE_API_CONF key_manager api_class 'castellan.key_manager.barbican_key_manager.BarbicanKeyManager'
+        iniset $GLANCE_API_CONF key_manager backend 'barbican'
     fi
 }
