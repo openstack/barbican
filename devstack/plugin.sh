@@ -73,7 +73,7 @@ function configure_core_services {
     fi
 
     if is_service_enabled c-vol; then
-        iniset $CINDER_CONF key_manager backend 'castellan.key_manager.barbican_key_manager.BarbicanKeyManager'
+        iniset $CINDER_CONF key_manager backend 'barbican'
     fi
 
     if is_service_enabled g-api; then
