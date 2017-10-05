@@ -1,0 +1,60 @@
+- hosts: all
+  name: Autoconverted job legacy-grenade-dsvm-barbican from old job gate-grenade-dsvm-barbican-ubuntu-xenial
+  tasks:
+
+    - name: Ensure legacy workspace directory
+      file:
+        path: '{{ ansible_user_dir }}/workspace'
+        state: directory
+
+    - shell:
+        cmd: |
+          set -e
+          set -x
+          cat > clonemap.yaml << EOF
+          clonemap:
+            - name: openstack-infra/devstack-gate
+              dest: devstack-gate
+          EOF
+          /usr/zuul-env/bin/zuul-cloner -m clonemap.yaml --cache-dir /opt/git \
+              git://git.openstack.org \
+              openstack-infra/devstack-gate
+        executable: /bin/bash
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'
+
+    - shell:
+        cmd: |
+          set -e
+          set -x
+          export PYTHONUNBUFFERED=true
+
+          export PROJECTS="openstack/barbican $PROJECTS"
+          export PROJECTS="openstack-dev/grenade $PROJECTS"
+          export PROJECTS="openstack/python-barbicanclient $PROJECTS"
+          export PROJECTS="openstack/barbican-tempest-plugin $PROJECTS"
+
+          export GRENADE_PLUGINRC="enable_grenade_plugin barbican https://git.openstack.org/openstack/barbican"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"export TEMPEST_PLUGINS='/opt/stack/new/barbican-tempest-plugin'"
+
+          export DEVSTACK_GATE_TEMPEST=1
+          export DEVSTACK_GATE_GRENADE=pullup
+          export DEVSTACK_GATE_TEMPEST_REGEX=barbican
+
+          export BRANCH_OVERRIDE=default
+          if [ "$BRANCH_OVERRIDE" != "default" ] ; then
+              export OVERRIDE_ZUUL_BRANCH=$BRANCH_OVERRIDE
+          fi
+          # Add configuration values for enabling security features in local.conf
+          function pre_test_hook {
+              if [ -f /opt/stack/old/barbican-tempest-plugin/tools/pre_test_hook.sh ] ; then
+                  . /opt/stack/old/barbican-tempest-plugin/tools/pre_test_hook.sh
+              fi
+          }
+          export -f pre_test_hook
+
+          cp devstack-gate/devstack-vm-gate-wrap.sh ./safe-devstack-vm-gate-wrap.sh
+          ./safe-devstack-vm-gate-wrap.sh
+        executable: /bin/bash
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'

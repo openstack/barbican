@@ -1,0 +1,72 @@
+- hosts: all
+  name: Barbican devstack tempest base
+  tasks:
+
+    - name: Ensure legacy workspace directory
+      file:
+        path: '{{ ansible_user_dir }}/workspace'
+        state: directory
+
+    - shell:
+        cmd: |
+          set -e
+          set -x
+          cat > clonemap.yaml << EOF
+          clonemap:
+            - name: openstack-infra/devstack-gate
+              dest: devstack-gate
+          EOF
+          /usr/zuul-env/bin/zuul-cloner -m clonemap.yaml --cache-dir /opt/git \
+              git://git.openstack.org \
+              openstack-infra/devstack-gate
+        executable: /bin/bash
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'
+
+    - shell:
+        cmd: |
+          set -e
+          set -x
+          export PYTHONUNBUFFERED=true
+          export DEVSTACK_GATE_TEMPEST=1
+          export DEVSTACK_GATE_TEMPEST_REGEX=barbican
+          export KEEP_LOCALRC=1
+
+          export PROJECTS="openstack/barbican $PROJECTS"
+          export PROJECTS="openstack/python-barbicanclient $PROJECTS"
+          export PROJECTS="openstack/barbican-tempest-plugin $PROJECTS"
+          export DEVSTACK_LOCAL_CONFIG="enable_plugin barbican git://git.openstack.org/openstack/barbican"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"export TEMPEST_PLUGINS='/opt/stack/new/barbican-tempest-plugin'"
+
+          export BRANCH_OVERRIDE=default
+          if [ "$BRANCH_OVERRIDE" != "default" ] ; then
+              export OVERRIDE_ZUUL_BRANCH=$BRANCH_OVERRIDE
+          fi
+          # Add configuration values for enabling security features in local.conf
+          function pre_test_hook {
+              if [ -f $BASE/new/barbican-tempest-plugin/tools/pre_test_hook.sh ] ; then
+                  . $BASE/new/barbican-tempest-plugin/tools/pre_test_hook.sh
+              fi
+          }
+          export -f pre_test_hook
+
+          if [ "{{ database }}" == "postgres" ] ; then
+              export DEVSTACK_GATE_POSTGRES=1
+          elif [ "{{ castellan_from_git }}" == "1" ] ; then
+              export DEVSTACK_PROJECT_FROM_GIT="castellan"
+          elif [ "{{ cursive }}" == "1" ] ; then
+              export DEVSTACK_PROJECT_FROM_GIT="cursive"
+          elif [ "{{ python_version }}" == "py35" ] ; then
+             export DEVSTACK_GATE_USE_PYTHON3=True
+             export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-account"
+             export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-container"
+             export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-object"
+             export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-proxy"
+          fi
+
+          cp devstack-gate/devstack-vm-gate-wrap.sh ./safe-devstack-vm-gate-wrap.sh
+
+          ./safe-devstack-vm-gate-wrap.sh
+        executable: /bin/bash
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'

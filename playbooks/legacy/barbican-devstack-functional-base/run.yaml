@@ -1,0 +1,74 @@
+- hosts: all
+  name: Barbican devstack functional base
+  tasks:
+
+    - name: Ensure legacy workspace directory
+      file:
+        path: '{{ ansible_user_dir }}/workspace'
+        state: directory
+
+    - shell:
+        cmd: |
+          set -e
+          set -x
+          cat > clonemap.yaml << EOF
+          clonemap:
+            - name: openstack-infra/devstack-gate
+              dest: devstack-gate
+          EOF
+          /usr/zuul-env/bin/zuul-cloner -m clonemap.yaml --cache-dir /opt/git \
+              git://git.openstack.org \
+              openstack-infra/devstack-gate
+        executable: /bin/bash
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'
+
+    - shell:
+        cmd: |
+          set -e
+          set -x
+          cat << 'EOF' >>"/tmp/dg-local.conf"
+          [[local|localrc]]
+          enable_plugin barbican git://git.openstack.org/openstack/barbican
+
+          EOF
+        executable: /bin/bash
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'
+
+    - shell:
+        cmd: |
+          set -e
+          set -x
+          export PYTHONUNBUFFERED=true
+          export OVERRIDE_ENABLED_SERVICES="{{ services }}"
+          export PROJECTS="openstack/barbican $PROJECTS"
+          export PROJECTS="openstack/python-barbicanclient $PROJECTS"
+          export PROJECTS="openstack/barbican-tempest-plugin $PROJECTS"
+
+          if [ "{{ python_version }}" == "py35" ] ; then
+             export DEVSTACK_GATE_USE_PYTHON3=True
+          else
+             export DEVSTACK_GATE_USE_PYTHON3=False
+          fi
+
+          function gate_hook {
+              $BASE/new/barbican/devstack/gate_hook.sh
+          }
+          export -f gate_hook
+
+          function post_test_hook {
+              cd /opt/stack/new/barbican/functionaltests
+              ./post_test_hook.sh "{{plugin}}"
+          }
+          export -f post_test_hook
+
+          if [ "{{ database }}" == "postgres" ] ; then
+              export DEVSTACK_GATE_POSTGRES=1
+          fi
+
+          cp devstack-gate/devstack-vm-gate-wrap.sh ./safe-devstack-vm-gate-wrap.sh
+          ./safe-devstack-vm-gate-wrap.sh
+        executable: /bin/bash
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'
