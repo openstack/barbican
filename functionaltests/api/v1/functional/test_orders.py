@@ -401,6 +401,16 @@ class OrdersTestCase(base.TestCase):
         self.assertEqual(202, create_resp.status_code)
         self.assertIsNotNone(order_ref)
 
+    @testcase.attr('positive')
+    def test_order_create_with_no_mode(self):
+        """Covers creating orders with no mode specified."""
+        test_model = order_models.OrderModel(**self.create_default_data)
+        del test_model.meta['mode']
+
+        create_resp, order_ref = self.behaviors.create_order(test_model)
+        self.assertEqual(202, create_resp.status_code)
+        self.assertIsNotNone(order_ref)
+
     @utils.parameterized_dataset({
         'int': [123]
     })
