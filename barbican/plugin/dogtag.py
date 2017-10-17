@@ -408,7 +408,6 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         # key encoded data.
         return {DogtagKRAPlugin.ALG: key_spec.alg,
                 DogtagKRAPlugin.BIT_LENGTH: key_spec.bit_length,
-                DogtagKRAPlugin.SECRET_MODE: key_spec.mode,
                 DogtagKRAPlugin.KEY_ID: response.get_key_id(),
                 DogtagKRAPlugin.GENERATED: True}
 
