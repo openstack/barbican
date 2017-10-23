@@ -16,6 +16,7 @@
 """
 Shared business logic.
 """
+from barbican.common import exception
 from barbican.common import utils
 from barbican.model import models
 from barbican.model import repositories
@@ -46,5 +47,12 @@ def get_or_create_project(project_id):
         project = models.Project()
         project.external_id = project_id
         project.status = models.States.ACTIVE
-        project_repo.create_from(project)
+        try:
+            project_repo.create_from(project)
+        except exception.ConstraintCheck:
+            # catch race condition for when another thread just created one
+            project = project_repo.find_by_external_project_id(
+                project_id,
+                suppress_exception=False)
+
     return project
