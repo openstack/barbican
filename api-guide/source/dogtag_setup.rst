@@ -35,7 +35,7 @@ To install the required packages:
 
 .. code-block:: bash
 
-    yum install -y pki-ca pki-kra 389-ds-base
+    yum install pki-ca pki-kra 389-ds-base
 
 Creating the Directory Server Instance for the Dogtag Internal DB
 *****************************************************************
