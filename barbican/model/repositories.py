@@ -393,6 +393,7 @@ class BaseRepo(object):
             raise exception.Invalid(msg)
 
         LOG.debug("Begin create from...")
+        session = self.get_session(session)
         start = time.time()  # DEBUG
 
         # Validate the attributes before we go any further. From my
@@ -406,6 +407,7 @@ class BaseRepo(object):
             LOG.debug("Saving entity...")
             entity.save(session=session)
         except db_exc.DBDuplicateEntry as e:
+            session.rollback()
             LOG.exception('Problem saving entity for create')
             error_msg = re.sub('[()]', '', str(e.args))
             raise exception.ConstraintCheck(error=error_msg)
