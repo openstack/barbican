@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import base64
+import ssl
 import stat
+import testtools
 
 import mock
 
@@ -97,6 +99,13 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         CONF.kmip_plugin.keyfile = None
         CONF.kmip_plugin.pkcs1_only = False
 
+        # get the latest protocol that SSL supports
+        protocol_dict = ssl.__dict__.get('_PROTOCOL_NAMES')
+        latest_protocol = protocol_dict.get(max(protocol_dict.keys()))
+        if not latest_protocol.startswith('PROTOCOL_'):
+            latest_protocol = 'PROTOCOL_' + latest_protocol
+        CONF.kmip_plugin.ssl_version = latest_protocol
+
         self.secret_store = kss.KMIPSecretStore(CONF)
         self.credential = self.secret_store.credential
         self.symmetric_type = secret_store.SecretType.SYMMETRIC
@@ -144,6 +153,8 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         secret_store = kss.KMIPSecretStore(CONF)
         self.assertTrue(secret_store.pkcs1_only)
 
+    @testtools.skipIf(not getattr(ssl, "PROTOCOL_TLSv1_2", None),
+                      "TLSv1.2 is not available on this system")
     def test_enable_tlsv12_config_option(self):
         ssl_version = "PROTOCOL_TLSv1_2"
         CONF = kss.CONF
@@ -151,6 +162,8 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         kss.KMIPSecretStore(CONF)
         self.assertEqual(ssl_version, CONF.kmip_plugin.ssl_version)
 
+    @testtools.skipIf(not getattr(ssl, "PROTOCOL_TLSv1", None),
+                      "TLSv1 is not available on this system")
     def test_enable_tlsv1_config_option(self):
         ssl_version = "PROTOCOL_TLSv1"
         CONF = kss.CONF
