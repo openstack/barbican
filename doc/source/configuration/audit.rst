@@ -61,7 +61,7 @@ Steps
        ``barbican-api-keystone-audit`` pipeline
 
        [pipeline:barbican-api-keystone-audit] pipeline =
-       keystone_authtoken context audit apiapp
+       authtoken context audit apiapp
 
 #. Edit ``barbican.conf`` to update *notification_driver* value.
 
