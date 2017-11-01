@@ -12,8 +12,8 @@
       - openstack/barbican
       - openstack/barbican-tempest-plugin
       - openstack/python-barbicanclient
-    run: playbooks/legacy/barbican-devstack-functional-base/run
-    post-run: playbooks/legacy/barbican-devstack-functional-base/post
+    run: playbooks/legacy/barbican-devstack-functional-base/run.yaml
+    post-run: playbooks/legacy/barbican-devstack-functional-base/post.yaml
     timeout: 4200
 
 - job:
@@ -29,8 +29,8 @@
       - openstack/barbican
       - openstack/barbican-tempest-plugin
       - openstack/python-barbicanclient
-    run: playbooks/legacy/barbican-devstack-base/run
-    post-run: playbooks/legacy/barbican-devstack-base/post
+    run: playbooks/legacy/barbican-devstack-base/run.yaml
+    post-run: playbooks/legacy/barbican-devstack-base/post.yaml
     timeout: 4200
 
 - job:
@@ -49,8 +49,8 @@
       - openstack/cursive
       - openstack/python-barbicanclient
       - openstack/tempest
-    run: playbooks/legacy/barbican-devstack-tempest-base/run
-    post-run: playbooks/legacy/barbican-devstack-tempest-base/post
+    run: playbooks/legacy/barbican-devstack-tempest-base/run.yaml
+    post-run: playbooks/legacy/barbican-devstack-tempest-base/post.yaml
     timeout: 4200
 
 - job:
@@ -142,14 +142,14 @@
     irrelevant-files:
       - ^(test-|)requirements.txt$
       - ^setup.cfg$
-    post-run: playbooks/legacy/grenade-devstack-barbican/post
+    run: playbooks/legacy/grenade-devstack-barbican/run.yaml
+    post-run: playbooks/legacy/grenade-devstack-barbican/post.yaml
     required-projects:
       - openstack-dev/grenade
       - openstack-infra/devstack-gate
       - openstack/barbican
       - openstack/barbican-tempest-plugin
       - openstack/python-barbicanclient
-    run: playbooks/legacy/grenade-devstack-barbican/run
     timeout: 7800
 
 - project:
