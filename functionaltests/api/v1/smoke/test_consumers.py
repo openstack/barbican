@@ -238,4 +238,4 @@ class ConsumersTestCase(base.TestCase):
         # get Location field from result and assert that it is NOT the
         # malicious one.
         regex = '.*{0}.*'.format(malicious_hostname)
-        self.assertNotRegexpMatches(resp.headers['location'], regex)
+        self.assertNotRegex(resp.headers['location'], regex)

@@ -966,7 +966,7 @@ class SecretsTestCase(base.TestCase):
         # get Location field from result and assert that it is NOT the
         # malicious one.
         regex = '.*{0}.*'.format(malicious_hostname)
-        self.assertNotRegexpMatches(resp.headers['location'], regex)
+        self.assertNotRegex(resp.headers['location'], regex)
 
     @testcase.skipIf(base.conf_host_href_used, 'response href using '
                      'CONF.host_href instead of wsgi request')
@@ -991,7 +991,7 @@ class SecretsTestCase(base.TestCase):
             secret_ref, extra_headers=changed_host_header)
         # Check returned href has provided proxy hostname
         regex = '.*{0}.*'.format(another_proxy_hostname)
-        self.assertRegexpMatches(resp.model.secret_ref, regex)
+        self.assertRegex(resp.model.secret_ref, regex)
 
     @utils.parameterized_dataset({
         'symmetric': ['symmetric',

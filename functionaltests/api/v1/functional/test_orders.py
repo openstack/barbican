@@ -531,7 +531,7 @@ class OrdersTestCase(base.TestCase):
         # get Location field from result and assert that it is NOT the
         # malicious one.
         regex = '.*{0}.*'.format(malicious_hostname)
-        self.assertNotRegexpMatches(resp.headers['location'], regex)
+        self.assertNotRegex(resp.headers['location'], regex)
 
     @testcase.skipIf(base.conf_host_href_used, 'response href using '
                      'CONF.host_href instead of wsgi request')
@@ -554,7 +554,7 @@ class OrdersTestCase(base.TestCase):
             order_ref, extra_headers=changed_host_header)
         # Assert that returned href has provided proxy hostname
         regex = '.*{0}.*'.format(another_proxy_hostname)
-        self.assertRegexpMatches(order_resp.model.order_ref, regex)
+        self.assertRegex(order_resp.model.order_ref, regex)
 
     @testcase.attr('positive')
     def test_encryption_using_generated_key(self):

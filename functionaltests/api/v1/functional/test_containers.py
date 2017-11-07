@@ -231,7 +231,7 @@ class GenericContainersTestCase(BaseContainerTestCase):
         # get Location field from result and assert that it is NOT the
         # malicious one.
         regex = '.*{0}.*'.format(malicious_hostname)
-        self.assertNotRegexpMatches(resp.headers['location'], regex)
+        self.assertNotRegex(resp.headers['location'], regex)
 
     @testcase.skipIf(base.conf_host_href_used, 'response href using '
                      'CONF.host_href instead of wsgi request')
@@ -254,7 +254,7 @@ class GenericContainersTestCase(BaseContainerTestCase):
                                             extra_headers=changed_host_header)
         # Assert that returned href has provided proxy hostname
         regex = '.*{0}.*'.format(another_proxy_hostname)
-        self.assertRegexpMatches(resp.model.container_ref, regex)
+        self.assertRegex(resp.model.container_ref, regex)
 
 
 @utils.parameterized_test_case
@@ -348,7 +348,7 @@ class RSAContainersTestCase(BaseContainerTestCase):
         # get Location field from result and assert that it is NOT the
         # malicious one.
         regex = '.*{0}.*'.format(malicious_hostname)
-        self.assertNotRegexpMatches(resp.headers['location'], regex)
+        self.assertNotRegex(resp.headers['location'], regex)
 
     @testcase.skipIf(base.conf_host_href_used, 'response href using '
                      'CONF.host_href instead of wsgi request')
@@ -371,7 +371,7 @@ class RSAContainersTestCase(BaseContainerTestCase):
                                             extra_headers=changed_host_header)
         # Assert that returned href has provided proxy hostname
         regex = '.*{0}.*'.format(another_proxy_hostname)
-        self.assertRegexpMatches(resp.model.container_ref, regex)
+        self.assertRegex(resp.model.container_ref, regex)
 
 
 class ContainersPagingTestCase(base.PagingTestCase):
