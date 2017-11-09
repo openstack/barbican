@@ -33,7 +33,7 @@ class TestUnauthenticatedContextMiddleware(oslotest.BaseTestCase):
         with mock.patch('barbican.context.RequestContext') as rc:
             self.middleware.process_request(request)
             rc.assert_called_with(
-                project='trace',
+                project_id='trace',
                 is_admin=True,
                 user=None,
                 roles=['admin'],
@@ -51,7 +51,7 @@ class TestUnauthenticatedContextMiddleware(oslotest.BaseTestCase):
         with mock.patch('barbican.context.RequestContext') as rc:
             self.middleware.process_request(request)
             rc.assert_called_with(
-                project='trace',
+                project_id='trace',
                 is_admin=False,
                 user=None,
                 roles=['something'],

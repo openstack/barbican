@@ -67,7 +67,7 @@ class BarbicanAPIBaseTestCase(oslotest.BaseTestCase):
         context = barbican.context.RequestContext(
             roles=roles,
             user=user,
-            project=project_id,
+            project_id=project_id,
             is_admin=is_admin
         )
         context.policy_enforcer = policy_enforcer

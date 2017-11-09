@@ -48,7 +48,7 @@ def _do_enforce_rbac(inst, req, action_name, ctx, **kwargs):
         credentials = {
             'roles': ctx.roles,
             'user': ctx.user,
-            'project': ctx.project
+            'project': ctx.project_id
         }
 
         # Enforce special case: secret GET decryption
@@ -79,7 +79,7 @@ def enforce_rbac(action_name='default'):
             ctx = _get_barbican_context(pecan.request)
             external_project_id = None
             if ctx:
-                external_project_id = ctx.project
+                external_project_id = ctx.project_id
 
             _do_enforce_rbac(inst, pecan.request, action_name, ctx, **kwargs)
             # insert external_project_id as the first arg to the guarded method

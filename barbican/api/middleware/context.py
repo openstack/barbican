@@ -82,32 +82,15 @@ class ContextMiddleware(BaseContextMiddleware):
         return barbican.context.RequestContext(**kwargs)
 
     def _get_authenticated_context(self, req):
-        # NOTE(bcwaldon): X-Roles is a csv string, but we need to parse
-        # it into a list to be useful
-        roles_header = req.headers.get('X-Roles', '')
-        roles = [r.strip().lower() for r in roles_header.split(',')]
+        ctx = barbican.context.RequestContext.from_environ(req.environ)
 
-        # NOTE(bcwaldon): This header is deprecated in favor of X-Auth-Token
-        # NOTE(mkbhanda): keeping this just-in-case for swift
-        deprecated_token = req.headers.get('X-Storage-Token')
+        if ctx.project_id is None:
+            LOG.debug("X_PROJECT_ID not found in request")
+            return webob.exc.HTTPUnauthorized()
 
-        kwargs = {
-            'auth_token': req.headers.get('X-Auth-Token', deprecated_token),
-            'user': req.headers.get('X-User-Id'),
-            'project': req.headers.get('X-Project-Id'),
-            'roles': roles,
-            'is_admin': CONF.admin_role.strip().lower() in roles,
-            'request_id': req.request_id
-        }
+        ctx.is_admin = CONF.admin_role.strip().lower() in ctx.roles
 
-        if req.headers.get('X-Domain-Id'):
-            kwargs['domain'] = req.headers['X-Domain-Id']
-        if req.headers.get('X-User-Domain-Id'):
-            kwargs['user_domain'] = req.headers['X-User-Domain-Id']
-        if req.headers.get('X-Project-Domain-Id'):
-            kwargs['project_domain'] = req.headers['X-Project-Domain-Id']
-
-        return barbican.context.RequestContext(**kwargs)
+        return ctx
 
 
 class UnauthenticatedContextMiddleware(BaseContextMiddleware):
@@ -140,7 +123,7 @@ class UnauthenticatedContextMiddleware(BaseContextMiddleware):
             'domain': req.headers.get('X-Domain-Id'),
             'user_domain': req.headers.get('X-User-Domain-Id'),
             'project_domain': req.headers.get('X-Project-Domain-Id'),
-            'project': project_id,
+            'project_id': project_id,
             'roles': roles,
             'is_admin': config_admin_role in roles,
             'request_id': req.request_id

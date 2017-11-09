@@ -108,7 +108,7 @@ class OrdersController(controllers.ACLMixin):
         ctx = controllers._get_barbican_context(pecan.request)
 
         order = self.order_repo.get(entity_id=order_id,
-                                    external_project_id=ctx.project,
+                                    external_project_id=ctx.project_id,
                                     suppress_exception=True)
         if not order:
             _order_not_found()
