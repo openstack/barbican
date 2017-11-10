@@ -254,7 +254,7 @@ class GenericContainersTestCase(BaseContainerTestCase):
                                             extra_headers=changed_host_header)
         # Assert that returned href has provided proxy hostname
         regex = '.*{0}.*'.format(another_proxy_hostname)
-        self.assertRegexpMatches(resp.model.container_ref, regex)
+        self.assertRegex(resp.model.container_ref, regex)
 
 
 @utils.parameterized_test_case
@@ -371,7 +371,7 @@ class RSAContainersTestCase(BaseContainerTestCase):
                                             extra_headers=changed_host_header)
         # Assert that returned href has provided proxy hostname
         regex = '.*{0}.*'.format(another_proxy_hostname)
-        self.assertRegexpMatches(resp.model.container_ref, regex)
+        self.assertRegex(resp.model.container_ref, regex)
 
 
 class ContainersPagingTestCase(base.PagingTestCase):

@@ -991,7 +991,7 @@ class SecretsTestCase(base.TestCase):
             secret_ref, extra_headers=changed_host_header)
         # Check returned href has provided proxy hostname
         regex = '.*{0}.*'.format(another_proxy_hostname)
-        self.assertRegexpMatches(resp.model.secret_ref, regex)
+        self.assertRegex(resp.model.secret_ref, regex)
 
     @utils.parameterized_dataset({
         'symmetric': ['symmetric',
