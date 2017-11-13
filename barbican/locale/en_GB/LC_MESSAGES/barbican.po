@@ -1,0 +1,1526 @@
+# OpenStack Infra <zanata@openstack.org>, 2015. #zanata
+# Andi Chandler <andi@gowling.com>, 2016. #zanata
+# Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
+# Andi Chandler <andi@gowling.com>, 2017. #zanata
+msgid ""
+msgstr ""
+"Project-Id-Version: barbican 6.0.0.0b2.dev15\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2017-11-02 04:06+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2017-11-09 09:53+0000\n"
+"Last-Translator: Andi Chandler <andi@gowling.com>\n"
+"Language-Team: English (United Kingdom)\n"
+"Language: en-GB\n"
+"X-Generator: Zanata 3.9.6\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+
+msgid ""
+"# The maximum overflow size of the pool used by SQLAlchemy. When the number "
+"of checked-out connections reaches the size set in sql_pool_size, additional "
+"connections will be returned up to this limit. It follows then that the "
+"total number of simultaneous connections the pool will allow is "
+"sql_pool_size + sql_pool_max_overflow. Can be set to -1 to indicate no "
+"overflow limit, so no limit will be placed on the total number of concurrent "
+"connections. Comment out to allow SQLAlchemy to select the default."
+msgstr ""
+"# The maximum overflow size of the pool used by SQLAlchemy. When the number "
+"of checked-out connections reaches the size set in sql_pool_size, additional "
+"connections will be returned up to this limit. It follows then that the "
+"total number of simultaneous connections the pool will allow is "
+"sql_pool_size + sql_pool_max_overflow. Can be set to -1 to indicate no "
+"overflow limit, so no limit will be placed on the total number of concurrent "
+"connections. Comment out to allow SQLAlchemy to select the default."
+
+msgid "'algorithm' is required field for {0} type order"
+msgstr "'algorithm' is required field for {0} type order"
+
+msgid "'bit_length' is required field for {0} type order"
+msgstr "'bit_length' is required field for {0} type order"
+
+msgid "'expiration' is before current time"
+msgstr "'expiration' is before current time"
+
+msgid "'payload' not allowed for asymmetric type order"
+msgstr "'payload' not allowed for asymmetric type order"
+
+msgid "'payload' not allowed for certificate type order"
+msgstr "'payload' not allowed for certificate type order"
+
+msgid "'payload' not allowed for key type order"
+msgstr "'payload' not allowed for key type order"
+
+msgid ""
+">>>>> Task exception seen for synchronous task invocation, so handling "
+"exception to mimic asynchronous behavior."
+msgstr ""
+">>>>> Task exception seen for synchronous task invocation, so handling "
+"exception to mimic asynchronous behaviour."
+
+msgid "A Content-Type of '{content_type}' for secrets is not supported"
+msgstr "A Content-Type of '{content_type}' for secrets is not supported"
+
+#, python-format
+msgid "A defined SQL constraint check failed: %(error)s"
+msgstr "A defined SQL constraint check failed: %(error)s"
+
+msgid "A master key with that label already exists"
+msgstr "A master key with that label already exists"
+
+msgid "A new project preferred CA must be set before this one can be deleted."
+msgstr "A new project preferred CA must be set before this one can be deleted."
+
+msgid ""
+"Accepts a class imported from the sqlalchemy.pool module, and handles the "
+"details of building the pool for you. If commented out, SQLAlchemy will "
+"select based on the database dialect. Other options are QueuePool (for "
+"SQLAlchemy-managed connections) and NullPool (to disabled SQLAlchemy "
+"management of connections). See http://docs.sqlalchemy.org/en/latest/core/"
+"pooling.html for more details"
+msgstr ""
+"Accepts a class imported from the sqlalchemy.pool module, and handles the "
+"details of building the pool for you. If commented out, SQLAlchemy will "
+"select based on the database dialect. Other options are QueuePool (for "
+"SQLAlchemy-managed connections) and NullPool (to disabled SQLAlchemy "
+"management of connections). See http://docs.sqlalchemy.org/en/latest/core/"
+"pooling.html for more details"
+
+msgid "Add CA to project"
+msgstr "Add CA to project"
+
+msgid "Address of the KMIP server"
+msgstr "Address of the KMIP server"
+
+msgid ""
+"Allow unauthenticated users to access the API with read-only privileges. "
+"This only applies when using ContextMiddleware."
+msgstr ""
+"Allow unauthenticated users to access the API with read-only privileges. "
+"This only applies when using ContextMiddleware."
+
+msgid "Amount of data to read from file for seed"
+msgstr "Amount of data to read from file for seed"
+
+msgid "An object with the specified identifier was not found."
+msgstr "An object with the specified identifier was not found."
+
+msgid "An unknown exception occurred"
+msgstr "An unknown exception occurred"
+
+msgid ""
+"An unsupported algorithm {algorithm} was passed to the "
+"'generate_symmetric_key' method"
+msgstr ""
+"An unsupported algorithm {algorithm} was passed to the "
+"'generate_symmetric_key' method"
+
+msgid "Apparent RNG self-test failure."
+msgstr "Apparent RNG self-test failure."
+
+msgid "Bad Container Reference {ref}"
+msgstr "Bad Container Reference {ref}"
+
+msgid "Bad format"
+msgstr "Bad format"
+
+msgid "Bad key file permissions found, expected 400 for path: {file_path}"
+msgstr "Bad key file permissions found, expected 400 for path: {file_path}"
+
+msgid "CA Cert Chain retrieval"
+msgstr "CA Cert Chain retrieval"
+
+msgid "CA Signing Cert retrieval"
+msgstr "CA Signing Cert retrieval"
+
+msgid "CA creation"
+msgstr "CA creation"
+
+msgid "CA deletion"
+msgstr "CA deletion"
+
+msgid "CA projects retrieval"
+msgstr "CA projects retrieval"
+
+#, python-format
+msgid "CA specified by ca_id %(ca_id)s not defined for project: %(project_id)s"
+msgstr ""
+"CA specified by ca_id %(ca_id)s not defined for project: %(project_id)s"
+
+msgid "Cannot generate a fullname for a null instance"
+msgstr "Cannot generate a fullname for a null instance"
+
+msgid "Cannot modify order type."
+msgstr "Cannot modify order type."
+
+msgid "Cannot set CA as a preferred CA as it is not a project CA."
+msgstr "Cannot set CA as a preferred CA as it is not a project CA."
+
+msgid "Certificate Authorities retrieval"
+msgstr "Certificate Authorities retrieval"
+
+msgid "Certificate Authorities retrieval (limited)"
+msgstr "Certificate Authorities retrieval (limited)"
+
+msgid "Certificate Authority retrieval"
+msgstr "Certificate Authority retrieval"
+
+msgid "Certificate event plugin \"{name}\" not found."
+msgstr "Certificate event plugin \"{name}\" not found."
+
+msgid "Certificate event plugin not found."
+msgstr "Certificate event plugin not found."
+
+msgid "Certificate not found for cert_id: {cert_id}"
+msgstr "Certificate not found for cert_id: {cert_id}"
+
+msgid "Certificate plugin \"{name}\" not found."
+msgstr "Certificate plugin \"{name}\" not found."
+
+msgid "Certificate plugin not found for \"{ca_id}\"."
+msgstr "Certificate plugin not found for \"{ca_id}\"."
+
+msgid "Certificate plugin not found or configured."
+msgstr "Certificate plugin not found or configured."
+
+msgid "Certificate status of {status} not supported"
+msgstr "Certificate status of {status} not supported"
+
+msgid "Check Certificate Order Status"
+msgstr "Check Certificate Order Status"
+
+msgid ""
+"Conflict. A secret with that name and ID is already stored in this "
+"container. The same secret can exist in a container as long as the name is "
+"unique."
+msgstr ""
+"Conflict. A secret with that name and ID is already stored in this "
+"container. The same secret can exist in a container as long as the name is "
+"unique."
+
+msgid "Conflict. Key in request is already in the secret metadata"
+msgstr "Conflict. Key in request is already in the secret metadata"
+
+#, python-format
+msgid ""
+"Container %(container_id)s does not exist for stored key certificate "
+"generation."
+msgstr ""
+"Container %(container_id)s does not exist for stored key certificate "
+"generation."
+
+#, python-format
+msgid ""
+"Container %(container_id)s does not reference a private key needed for "
+"stored key certificate generation."
+msgstr ""
+"Container %(container_id)s does not reference a private key needed for "
+"stored key certificate generation."
+
+msgid "Container Not Found"
+msgstr "Container Not Found"
+
+msgid "Container Secret creation"
+msgstr "Container Secret creation"
+
+msgid "Container Secret deletion"
+msgstr "Container Secret deletion"
+
+msgid "Container Wrong Type"
+msgstr "Container Wrong Type"
+
+msgid "Container creation"
+msgstr "Container creation"
+
+msgid "Container deletion"
+msgstr "Container deletion"
+
+msgid "Container retrieval"
+msgstr "Container retrieval"
+
+msgid "ContainerACL(s) Update"
+msgstr "ContainerACL(s) Update"
+
+msgid "ContainerACL(s) deletion"
+msgstr "ContainerACL(s) deletion"
+
+msgid "ContainerACL(s) retrieval"
+msgstr "ContainerACL(s) retrieval"
+
+msgid "ContainerConsumer creation"
+msgstr "ContainerConsumer creation"
+
+msgid "ContainerConsumer deletion"
+msgstr "ContainerConsumer deletion"
+
+msgid "ContainerConsumer retrieval"
+msgstr "ContainerConsumer retrieval"
+
+msgid "ContainerConsumers(s) retrieval"
+msgstr "ContainerConsumers(s) retrieval"
+
+msgid "Containers(s) retrieval"
+msgstr "Containers(s) retrieval"
+
+msgid "Content-Type of '{content_type}' is not supported for PUT."
+msgstr "Content-Type of '{content_type}' is not supported for PUT."
+
+msgid ""
+"Could not find a secret store plugin for generating secret with algorithm "
+"'{alg}' and bit-length '{len}'."
+msgstr ""
+"Could not find a secret store plugin for generating secret with algorithm "
+"'{alg}' and bit-length '{len}'."
+
+msgid ""
+"Could not find a secret store plugin for storing secret with algorithm "
+"'{alg}' and bit-length '{len}'."
+msgstr ""
+"Could not find a secret store plugin for storing secret with algorithm "
+"'{alg}' and bit-length '{len}'."
+
+msgid ""
+"Could not find an enabled crypto plugin backend that supports the requested "
+"operation: {operation}"
+msgstr ""
+"Could not find an enabled crypto plugin backend that supports the requested "
+"operation: {operation}"
+
+msgid "Could not find key labeled {0}"
+msgstr "Could not find key labelled {0}"
+
+msgid "Could not find {entity_name}"
+msgstr "Could not find {entity_name}"
+
+msgid "Could not generate private key"
+msgstr "Could not generate private key"
+
+msgid "Create the Barbican database on service startup."
+msgstr "Create the Barbican database on service startup."
+
+msgid "Creation not allowed because a quota has been reached"
+msgstr "Creation not allowed because a quota has been reached"
+
+msgid "Crypto plugin not found."
+msgstr "Crypto plugin not found."
+
+msgid ""
+"DSA keys should not have a passphrase in the database, for being used during "
+"retrieval."
+msgstr ""
+"DSA keys should not have a passphrase in the database, for being used during "
+"retrieval."
+
+msgid "Data supplied was not valid."
+msgstr "Data supplied was not valid."
+
+msgid "Default page size for the 'limit' paging URL parameter."
+msgstr "Default page size for the 'limit' paging URL parameter."
+
+msgid ""
+"Define the number of max threads to be used for notification server "
+"processing functionality."
+msgstr ""
+"Define the number of max threads to be used for notification server "
+"processing functionality."
+
+msgid "Directory in which to store certs/keys for subcas"
+msgstr "Directory in which to store certs/keys for subcas"
+
+#, python-format
+msgid "Dogtag plugin does not support %s request type"
+msgstr "Dogtag plugin does not support %s request type"
+
+msgid "Domain of Symantec API"
+msgstr "Domain of Symantec API"
+
+msgid "Duplicate reference names are not allowed"
+msgstr "Duplicate reference names are not allowed"
+
+msgid "Duplicate secret ids are not allowed"
+msgstr "Duplicate secret ids are not allowed"
+
+msgid "Encoding type must be 'base64' for text-based payloads."
+msgstr "Encoding type must be 'base64' for text-based payloads."
+
+msgid ""
+"Encryption using session key is not supported when retrieving a "
+"{secret_type} key."
+msgstr ""
+"Encryption using session key is not supported when retrieving a "
+"{secret_type} key."
+
+msgid "Entity ID {entity_id} not found"
+msgstr "Entity ID {entity_id} not found"
+
+msgid ""
+"Error configuring registry database with supplied sql_connection. Got error: "
+"{error}"
+msgstr ""
+"Error configuring registry database with supplied sql_connection. Got error: "
+"{error}"
+
+#, python-format
+msgid "Error deleting project entities for project_id=%s"
+msgstr "Error deleting project entities for project_id=%s"
+
+msgid "Error while attempting to decode payload."
+msgstr "Error while attempting to decode payload."
+
+msgid "Errors in creating subordinate CA: %(name)"
+msgstr "Errors in creating subordinate CA: %(name)"
+
+#, python-format
+msgid ""
+"Errors returned by CA when attempting to create subordinate CA: %(reason)s"
+msgstr ""
+"Errors returned by CA when attempting to create subordinate CA: %(reason)s"
+
+#, python-format
+msgid ""
+"Errors returned by CA when attempting to delete subordinate CA: %(reason)s"
+msgstr ""
+"Errors returned by CA when attempting to delete subordinate CA: %(reason)s"
+
+msgid "Exception thrown by enroll_cert: {message}"
+msgstr "Exception thrown by enroll_cert: {message}"
+
+msgid "Extension namespace to search for eventing plugins."
+msgstr "Extension namespace to search for eventing plugins."
+
+msgid "Extension namespace to search for plugins."
+msgstr "Extension namespace to search for plugins."
+
+msgid "Extensions are not yet supported.  Specify a valid profile instead."
+msgstr "Extensions are not yet supported.  Specify a valid profile instead."
+
+msgid "Failed to bind kek metadata for plugin: {name}"
+msgstr "Failed to bind KEK metadata for plugin: {name}"
+
+msgid "Failed to validate JSON information: "
+msgstr "Failed to validate JSON information: "
+
+msgid "Feature not implemented for '{0}' order type"
+msgstr "Feature not implemented for '{0}' order type"
+
+msgid "Feature not implemented for PKCS11"
+msgstr "Feature not implemented for PKCS11"
+
+#, python-format
+msgid ""
+"Feature not implemented for value set on field '%(field)s' on schema "
+"'%(schema)s': %(reason)s"
+msgstr ""
+"Feature not implemented for value set on field '%(field)s' on schema "
+"'%(schema)s': %(reason)s"
+
+msgid "File path to concatenated \"certification authority\" certificates"
+msgstr "File path to concatenated \"certification authority\" certificates"
+
+msgid "File path to local client certificate"
+msgstr "File path to local client certificate"
+
+msgid "File path to local client certificate keyfile"
+msgstr "File path to local client certificate keyfile"
+
+msgid "File to pull entropy for seeding RNG"
+msgstr "File to pull entropy for seeding RNG"
+
+msgid "Flag for Read/Write Sessions"
+msgstr "Flag for Read/Write Sessions"
+
+msgid "Flag for plugin generated iv case"
+msgstr "Flag for plugin generated iv case"
+
+msgid ""
+"Flag to enable multiple secret store plugin backend support. Default is False"
+msgstr ""
+"Flag to enable multiple secret store plugin backend support. Default is False"
+
+msgid ""
+"Flag to indicate if this plugin is global default plugin for deployment. "
+"Default is False."
+msgstr ""
+"Flag to indicate if this plugin is global default plugin for deployment. "
+"Default is False."
+
+msgid "Full CMC Requests are not yet supported."
+msgstr "Full CMC Requests are not yet supported."
+
+msgid "General exception"
+msgstr "General exception"
+
+msgid "HMAC label (used in the HSM)"
+msgstr "HMAC label (used in the HSM)"
+
+msgid "HSM Slot ID"
+msgstr "HSM Slot ID"
+
+msgid "HSM returned response code: {code}"
+msgstr "HSM returned response code: {code}"
+
+msgid ""
+"Host name, for use in HATEOAS-style references Note: Typically this would be "
+"the load balanced endpoint that clients would use to communicate back with "
+"this service. If a deployment wants to derive host from wsgi request instead "
+"then make this blank. Blank is needed to override default config value which "
+"is 'http://localhost:9311'"
+msgstr ""
+"Host name, for use in HATEOAS-style references Note: Typically this would be "
+"the load balanced endpoint that clients would use to communicate back with "
+"this service. If a deployment wants to derive host from wsgi request instead "
+"then make this blank. Blank is needed to override default config value which "
+"is 'http://localhost:9311'"
+
+msgid "Hostname for the Dogtag instance"
+msgstr "Hostname for the Dogtag instance"
+
+msgid "If 'payload' is supplied, 'payload_content_type' must also be supplied."
+msgstr ""
+"If 'payload' is supplied, 'payload_content_type' must also be supplied."
+
+msgid "If 'payload' specified, must be non empty"
+msgstr "If 'payload' specified, must be non empty"
+
+msgid "In section '{0}', secret_store_plugin value is missing"
+msgstr "In section '{0}', secret_store_plugin value is missing"
+
+msgid "Internal name used to identify crypto_plugin."
+msgstr "Internal name used to identify crypto_plugin."
+
+msgid "Internal name used to identifysecretstore_plugin"
+msgstr "Internal name used to identify secretstore_plugin"
+
+msgid "Interval between retries of opening a SQL connection."
+msgstr "Interval between retries of opening a SQL connection."
+
+#, python-format
+msgid "Invalid CA_ID: %(ca_id)s"
+msgstr "Invalid CA_ID: %(ca_id)s"
+
+msgid "Invalid CMC Data"
+msgstr "Invalid CMC Data"
+
+msgid "Invalid Certificate Request Type"
+msgstr "Invalid Certificate Request Type"
+
+msgid "Invalid Key. Key must be URL safe."
+msgstr "Invalid Key. Key must be URL safe."
+
+msgid "Invalid Metadata. Keys and Values must be Strings."
+msgstr "Invalid Metadata. Keys and Values must be Strings."
+
+#, python-format
+msgid "Invalid PKCS10 Data: %(reason)s"
+msgstr "Invalid PKCS10 Data: %(reason)s"
+
+#, python-format
+msgid "Invalid Parent CA: %(parent_ca_ref)s"
+msgstr "Invalid Parent CA: %(parent_ca_ref)s"
+
+msgid "Invalid algorithm passed in"
+msgstr "Invalid algorithm passed in"
+
+#, python-format
+msgid "Invalid container: %(reason)s"
+msgstr "Invalid container: %(reason)s"
+
+msgid "Invalid date for 'expiration'"
+msgstr "Invalid date for 'expiration'"
+
+msgid "Invalid extensions data."
+msgstr "Invalid extensions data."
+
+msgid "Invalid operation requested - Reason: {reason}"
+msgstr "Invalid operation requested - Reason: {reason}"
+
+msgid "Invalid payload for payload_content_encoding"
+msgstr "Invalid payload for payload_content_encoding"
+
+msgid "Invalid request_status returned by CA"
+msgstr "Invalid request_status returned by CA"
+
+msgid "Invalid request_status {status} for request_id {request_id}"
+msgstr "Invalid request_status {status} for request_id {request_id}"
+
+msgid "Invalid status '{status}' for {entity_name}."
+msgstr "Invalid status '{status}' for {entity_name}."
+
+#, python-format
+msgid "Invalid subject DN: %(subject_dn)s"
+msgstr "Invalid subject DN: %(subject_dn)s"
+
+msgid "KEK not yet created."
+msgstr "KEK not yet created."
+
+msgid "KMIP plugin action not support."
+msgstr "KMIP plugin action not support."
+
+msgid ""
+"KMIP plugin does not currently support protecting the private key with a "
+"passphrase"
+msgstr ""
+"KMIP plugin does not currently support protecting the private key with a "
+"passphrase"
+
+msgid "Key encryption key to be used by Simple Crypto Plugin"
+msgstr "Key encryption key to be used by Simple Crypto Plugin"
+
+msgid ""
+"Keystone notification queue topic name. This name needs to match one of "
+"values mentioned in Keystone deployment's 'notification_topics' "
+"configuration e.g.    notification_topics=notifications,     "
+"barbican_notificationsMultiple servers may listen on a topic and messages "
+"will be dispatched to one of the servers in a round-robin fashion. That's "
+"why Barbican service should have its own dedicated notification queue so "
+"that it receives all of Keystone notifications."
+msgstr ""
+"Keystone notification queue topic name. This name needs to match one of "
+"values mentioned in Keystone deployment's 'notification_topics' "
+"configuration e.g.    notification_topics=notifications,     "
+"barbican_notificationsMultiple servers may listen on a topic and messages "
+"will be dispatched to one of the servers in a round-robin fashion. That's "
+"why Barbican service should have its own dedicated notification queue so "
+"that it receives all of Keystone notifications."
+
+msgid "List available secret stores"
+msgstr "List available secret stores"
+
+msgid "List of automatically approved enrollment profiles"
+msgstr "List of automatically approved enrollment profiles"
+
+msgid "List of certificate plugins to load."
+msgstr "List of certificate plugins to load."
+
+msgid "List of crypto plugins to load."
+msgstr "List of crypto plugins to load."
+
+msgid "List of secret store plugins to load."
+msgstr "List of secret store plugins to load."
+
+msgid ""
+"List of suffix to use for looking up plugins which are supported with "
+"multiple backend support."
+msgstr ""
+"List of suffix to use for looking up plugins which are supported with "
+"multiple backend support."
+
+msgid "Malformed JSON"
+msgstr "Malformed JSON"
+
+msgid "Master KEK label (used in the HSM)"
+msgstr "Master KEK label (used in the HSM)"
+
+msgid "Master KEK length in bytes."
+msgstr "Master KEK length in bytes."
+
+msgid "Maximum allowed http request size against the barbican-api."
+msgstr "Maximum allowed HTTP request size against the Barbican-api."
+
+msgid "Maximum allowed secret size in bytes."
+msgstr "Maximum allowed secret size in bytes."
+
+msgid ""
+"Maximum number of database connection retries during startup. Set to -1 to "
+"specify an infinite retry count."
+msgstr ""
+"Maximum number of database connection retries during startup. Set to -1 to "
+"specify an infinite retry count."
+
+msgid "Maximum page size for the 'limit' paging URL parameter."
+msgstr "Maximum page size for the 'limit' paging URL parameter."
+
+msgid "Missing X-Project-Id"
+msgstr "Missing X-Project-Id"
+
+msgid "Missing required argument."
+msgstr "Missing required argument."
+
+#, python-format
+msgid "Missing required metadata field for %(required)s"
+msgstr "Missing required metadata field for %(required)s"
+
+msgid "Modify request: unable to cancel: {message}"
+msgstr "Modify request: unable to cancel: {message}"
+
+msgid "More than one key found for label"
+msgstr "More than one key found for label"
+
+msgid "Must be a positive integer that is a multiple of 8"
+msgstr "Must be a positive integer that is a multiple of 8"
+
+msgid "Must supply Non-None {0} argument for CertificateAuthority entry."
+msgstr "Must supply Non-None {0} argument for CertificateAuthority entry."
+
+msgid "Must supply non-Blank {0} argument for SecretStores entry."
+msgstr "Must supply non-Blank {0} argument for SecretStores entry."
+
+msgid ""
+"Must supply non-None {0} argument for CertificateAuthorityMetadatum entry."
+msgstr ""
+"Must supply non-None {0} argument for CertificateAuthorityMetadatum entry."
+
+msgid "Must supply non-None {0} argument for ContainerACL entry."
+msgstr "Must supply non-None {0} argument for ContainerACL entry."
+
+msgid "Must supply non-None {0} argument for ContainerACLUser entry."
+msgstr "Must supply non-None {0} argument for ContainerACLUser entry."
+
+msgid "Must supply non-None {0} argument for OrderBarbicanMetadatum entry."
+msgstr "Must supply non-None {0} argument for OrderBarbicanMetadatum entry."
+
+msgid "Must supply non-None {0} argument for OrderPluginMetadatum entry."
+msgstr "Must supply non-None {0} argument for OrderPluginMetadatum entry."
+
+msgid ""
+"Must supply non-None {0} argument for PreferredCertificateAuthority entry."
+msgstr ""
+"Must supply non-None {0} argument for PreferredCertificateAuthority entry."
+
+msgid ""
+"Must supply non-None {0} argument for ProjectCertificateAuthority entry."
+msgstr ""
+"Must supply non-None {0} argument for ProjectCertificateAuthority entry."
+
+msgid "Must supply non-None {0} argument for ProjectQuotas entry."
+msgstr "Must supply non-None {0} argument for ProjectQuotas entry."
+
+msgid "Must supply non-None {0} argument for ProjectSecretStore  entry."
+msgstr "Must supply non-None {0} argument for ProjectSecretStore  entry."
+
+msgid "Must supply non-None {0} argument for SecretACL entry."
+msgstr "Must supply non-None {0} argument for SecretACL entry."
+
+msgid "Must supply non-None {0} argument for SecretACLUser entry."
+msgstr "Must supply non-None {0} argument for SecretACLUser entry."
+
+msgid "Must supply non-None {0} argument for SecretStoreMetadatum entry."
+msgstr "Must supply non-None {0} argument for SecretStoreMetadatum entry."
+
+msgid "Must supply non-None {0} argument for SecretUserMetadatum entry."
+msgstr "Must supply non-None {0} argument for SecretUserMetadatum entry."
+
+msgid "Must supply non-None {0} argument for TransportKey entry."
+msgstr "Must supply non-None {0} argument for TransportKey entry."
+
+msgid "Must supply non-None {entity_name}."
+msgstr "Must supply non-None {entity_name}."
+
+msgid "Must supply {entity_name} with id=None (i.e. new entity)."
+msgstr "Must supply {entity_name} with id=None (i.e. new entity)."
+
+msgid "No SQL connection configured"
+msgstr "No SQL connection configured"
+
+msgid "No container found with container-ID {id}"
+msgstr "No container found with container-ID {id}"
+
+msgid "No data supplied to process."
+msgstr "No data supplied to process."
+
+msgid "No entities of type {entity_name} found"
+msgstr "No entities of type {entity_name} found"
+
+msgid "No global preferred CA defined"
+msgstr "No global preferred CA defined"
+
+msgid "No key handle was found"
+msgstr "No key handle was found"
+
+msgid "No plugin was found that could support your request"
+msgstr "No plugin was found that could support your request"
+
+msgid "No preferred CA defined for this project"
+msgstr "No preferred CA defined for this project"
+
+msgid "No profile_id specified"
+msgstr "No profile_id specified"
+
+msgid "No request found for request_id {request_id} for order {order_id}"
+msgstr "No request found for request_id {request_id} for order {order_id}"
+
+msgid "No request returned in enrollment_results"
+msgstr "No request returned in enrollment_results"
+
+msgid "No request_data specified"
+msgstr "No request_data specified"
+
+msgid "No secret found with secret-ID {id}"
+msgstr "No secret found with secret-ID {id}"
+
+msgid "No secret information found"
+msgstr "No secret information found"
+
+msgid "No secret information provided to encrypt."
+msgstr "No secret information provided to encrypt."
+
+msgid "No secret store plugins have been configured"
+msgstr "No secret store plugins have been configured"
+
+#, python-format
+msgid ""
+"No support for value set on field '%(field)s' on schema '%(schema)s': "
+"%(reason)s"
+msgstr ""
+"No support for value set on field '%(field)s' on schema '%(schema)s': "
+"%(reason)s"
+
+#, python-format
+msgid "No token was found in slot %(slot_id)s"
+msgstr "No token was found in slot %(slot_id)s"
+
+msgid "No {entity_name} found with keystone-ID {id}"
+msgstr "No {entity_name} found with keystone-ID {id}"
+
+msgid "No {entity} found with ID {id}"
+msgstr "No {entity} found with ID {id}"
+
+msgid "Not Allowed. Sorry, only the creator of a consumer can delete it."
+msgstr "Not Allowed. Sorry, only the creator of a consumer can delete it."
+
+msgid "Not Found. CA attribute not found."
+msgstr "Not Found. CA attribute not found."
+
+msgid "Not Found. CA not found."
+msgstr "Not Found. CA not found."
+
+msgid "Not Found. CA not in project."
+msgstr "Not Found. CA not in project."
+
+msgid ""
+"Not Found. Multiple backends support is not enabled in service configuration."
+msgstr ""
+"Not Found. Multiple backends support is not enabled in service configuration."
+
+msgid "Not Found. No preferred secret store defined for this project."
+msgstr "Not Found. No preferred secret store defined for this project."
+
+msgid "Not Found. Provided consumer id is invalid."
+msgstr "Not Found. Provided consumer id is invalid."
+
+msgid "Not Found. Provided container id is invalid."
+msgstr "Not Found. Provided container id is invalid."
+
+msgid "Not Found. Provided secret id is invalid."
+msgstr "Not Found. Provided secret id is invalid."
+
+msgid "Not Found. Provided transport key id is invalid."
+msgstr "Not Found. Provided transport key id is invalid."
+
+msgid "Not Found. Secret store not found."
+msgstr "Not Found. Secret store not found."
+
+msgid "Not Found. Sorry but your consumer is in another castle."
+msgstr "Not Found. Sorry but your consumer is in another castle."
+
+msgid "Not Found. Sorry but your container is in another castle."
+msgstr "Not Found. Sorry but your container is in another castle."
+
+msgid "Not Found. Sorry but your order is in another castle."
+msgstr "Not Found. Sorry but your order is in another castle."
+
+msgid "Not Found. Sorry but your project quotas are in another castle."
+msgstr "Not Found. Sorry but your project quotas are in another castle."
+
+msgid "Not Found. Sorry but your secret has no payload."
+msgstr "Not Found. Sorry but your secret has no payload."
+
+msgid "Not Found. Sorry but your secret is in another castle"
+msgstr "Not Found. Sorry but your secret is in another castle"
+
+msgid "Not Found. Sorry but your secret is in another castle."
+msgstr "Not Found. Sorry but your secret is in another castle."
+
+msgid "Not Found. Sorry but your secret metadata is in another castle."
+msgstr "Not Found. Sorry but your secret metadata is in another castle."
+
+msgid "Not Found. Transport Key not found."
+msgstr "Not Found. Transport Key not found."
+
+msgid "Number of CAs allowed per project"
+msgstr "Number of CAs allowed per project"
+
+msgid "Number of asynchronous worker processes"
+msgstr "Number of asynchronous worker processes"
+
+msgid "Number of consumers allowed per project"
+msgstr "Number of consumers allowed per project"
+
+msgid "Number of containers allowed per project"
+msgstr "Number of containers allowed per project"
+
+msgid "Number of orders allowed per project"
+msgstr "Number of orders allowed per project"
+
+msgid "Number of secrets allowed per project"
+msgstr "Number of secrets allowed per project"
+
+msgid "Only 'generic' containers can be modified."
+msgstr "Only 'generic' containers can be modified."
+
+msgid "Only PENDING orders can be updated. Order is in the{0} state."
+msgstr "Only PENDING orders can be updated. Order is in the{0} state."
+
+msgid "Only subordinate CAs can be deleted."
+msgstr "Only subordinate CAs can be deleted."
+
+msgid "Only support PKCS#1 encoding of asymmetric keys"
+msgstr "Only support PKCS#1 encoding of asymmetric keys"
+
+msgid "Operation is not supported."
+msgstr "Operation is not supported."
+
+msgid "Operation not supported by Dogtag Plugin"
+msgstr "Operation not supported by Dogtag Plugin"
+
+msgid "Order creation"
+msgstr "Order creation"
+
+msgid "Order deletion"
+msgstr "Order deletion"
+
+msgid "Order retrieval"
+msgstr "Order retrieval"
+
+msgid "Order type \"{order_type}\" not implemented."
+msgstr "Order type \"{order_type}\" not implemented."
+
+msgid "Order type \"{order_type}\" not supported."
+msgstr "Order type \"{order_type}\" not supported."
+
+msgid "Order update"
+msgstr "Order update"
+
+msgid "Order update is not supported."
+msgstr "Order update is not supported."
+
+msgid "Order(s) retrieval"
+msgstr "Order(s) retrieval"
+
+msgid "Passphrase encryption is not supported for DSA algorithm"
+msgstr "Passphrase encryption is not supported for DSA algorithm"
+
+msgid ""
+"Passphrase encryption is not supported for symmetric key generating "
+"algorithms."
+msgstr ""
+"Passphrase encryption is not supported for symmetric key generating "
+"algorithms."
+
+msgid "Password for authenticating with KMIP server"
+msgstr "Password for authenticating with KMIP server"
+
+msgid "Password for the NSS certificate databases"
+msgstr "Password for the NSS certificate databases"
+
+msgid "Password to login to PKCS11 session"
+msgstr "Password to login to PKCS11 session"
+
+msgid "Path to CA certificate chain file"
+msgstr "Path to CA certificate chain file"
+
+msgid "Path to CA certificate file"
+msgstr "Path to CA certificate file"
+
+msgid "Path to CA certificate key file"
+msgstr "Path to CA certificate key file"
+
+msgid "Path to CA chain pkcs7 file"
+msgstr "Path to CA chain pkcs7 file"
+
+msgid "Path to PEM file for authentication"
+msgstr "Path to PEM file for authentication"
+
+msgid "Path to the NSS certificate database"
+msgstr "Path to the NSS certificate database"
+
+msgid "Path to vendor PKCS11 library"
+msgstr "Path to vendor PKCS11 library"
+
+msgid ""
+"Period in seconds after which SQLAlchemy should reestablish its connection "
+"to the database. MySQL uses a default `wait_timeout` of 8 hours, after which "
+"it will drop idle connections. This can result in 'MySQL Gone Away' "
+"exceptions. If you notice this, you can lower this value to ensure that "
+"SQLAlchemy reconnects before MySQL can drop the connection."
+msgstr ""
+"Period in seconds after which SQLAlchemy should re-establish its connection "
+"to the database. MySQL uses a default `wait_timeout` of 8 hours, after which "
+"it will drop idle connections. This can result in 'MySQL Gone Away' "
+"exceptions. If you notice this, you can lower this value to ensure that "
+"SQLAlchemy reconnects before MySQL can drop the connection."
+
+msgid ""
+"Please change the preferred CA to a different project CA before removing it."
+msgstr ""
+"Please change the preferred CA to a different project CA before removing it."
+
+msgid "Plugin does not support generation of subordinate CAs"
+msgstr "Plugin does not support generation of subordinate CAs"
+
+msgid ""
+"Plugin lookup property 'stores_lookup_suffix' is not defined in service "
+"configuration"
+msgstr ""
+"Plugin lookup property 'stores_lookup_suffix' is not defined in service "
+"configuration"
+
+msgid "Port for the Dogtag instance"
+msgstr "Port for the Dogtag instance"
+
+msgid "Port for the KMIP server"
+msgstr "Port for the KMIP server"
+
+msgid ""
+"Preferred Secret Store plugin '{store_name}' is not currently set in service "
+"configuration. This is probably a server misconfiguration."
+msgstr ""
+"Preferred Secret Store plugin '{store_name}' is not currently set in service "
+"configuration. This is probably a server misconfiguration."
+
+msgid "Problem decoding payload"
+msgstr "Problem decoding payload"
+
+msgid "Problem seen during certificate processing - Reason: {reason}"
+msgstr "Problem seen during certificate processing - Reason: {reason}"
+
+msgid "Problem seen during crypto processing - Reason: {reason}"
+msgstr "Problem seen during crypto processing - Reason: {reason}"
+
+msgid "Problem with data in certificate request - Reason: {reason}"
+msgstr "Problem with data in certificate request - Reason: {reason}"
+
+msgid "Process TypeOrder"
+msgstr "Process TypeOrder"
+
+msgid "Process TypeOrder failure seen - please contact site administrator."
+msgstr "Process TypeOrder failure seen - please contact site administrator."
+
+msgid "Profile for simple CMC requests"
+msgstr "Profile for simple CMC requests"
+
+msgid "Project KEK Cache Item Limit"
+msgstr "Project KEK Cache Item Limit"
+
+msgid "Project KEK Cache Time To Live, in seconds"
+msgstr "Project KEK Cache Time To Live, in seconds"
+
+msgid "Project KEK length in bytes."
+msgstr "Project KEK length in bytes."
+
+msgid "Project Quotas"
+msgstr "Project Quotas"
+
+msgid "Project cleanup via Keystone notifications"
+msgstr "Project clean-up via Keystone notifications"
+
+#, python-format
+msgid "Provided Transport key %(transport_key_id)s could not be found"
+msgstr "Provided Transport key %(transport_key_id)s could not be found"
+
+msgid "Provided field value is not supported"
+msgstr "Provided field value is not supported"
+
+msgid "Provided information too large to process"
+msgstr "Provided information too large to process"
+
+msgid ""
+"Provided object does not match schema '{schema}': {reason}. Invalid "
+"property: '{property}'"
+msgstr ""
+"Provided object does not match schema '{schema}': {reason}. Invalid "
+"property: '{property}'"
+
+msgid "Provided transport key was not found."
+msgstr "Provided transport key was not found."
+
+msgid "Queue namespace"
+msgstr "Queue namespace"
+
+msgid "Queue topic name"
+msgstr "Queue topic name"
+
+#, python-format
+msgid ""
+"Quota reached for project %(external_project_id)s. Only %(quota)s "
+"%(resource_type)s are allowed."
+msgstr ""
+"Quota reached for project %(external_project_id)s. Only %(quota)s "
+"%(resource_type)s are allowed."
+
+msgid "Quotas"
+msgstr "Quotas"
+
+msgid "Read Error"
+msgstr "Read Error"
+
+msgid "Remove CA from project"
+msgstr "Remove CA from project"
+
+msgid "Removing preferred secret store"
+msgstr "Removing preferred secret store"
+
+msgid ""
+"Request {request_id} reports status_complete, but no cert_id has been "
+"returned"
+msgstr ""
+"Request {request_id} reports status_complete, but no cert_id has been "
+"returned"
+
+msgid "Requested algorithm is not supported"
+msgstr "Requested algorithm is not supported"
+
+msgid "Retrieve global default secret store"
+msgstr "Retrieve global default secret store"
+
+msgid "Retrieve global preferred CA"
+msgstr "Retrieve global preferred CA"
+
+msgid "Retrieve project preferred CA"
+msgstr "Retrieve project preferred CA"
+
+msgid "Retrieve project preferred store"
+msgstr "Retrieve project preferred store"
+
+msgid "Role used to identify an authenticated user as administrator."
+msgstr "Role used to identify an authenticated user as administrator."
+
+msgid ""
+"SQLAlchemy connection string for the reference implementation registry "
+"server. Any valid SQLAlchemy connection string is fine. See: http://www."
+"sqlalchemy.org/docs/05/reference/sqlalchemy/connections.html#sqlalchemy."
+"create_engine. Note: For absolute addresses, use '////' slashes after "
+"'sqlite:'."
+msgstr ""
+"SQLAlchemy connection string for the reference implementation registry "
+"server. Any valid SQLAlchemy connection string is fine. See: http://www."
+"sqlalchemy.org/docs/05/reference/sqlalchemy/connections.html#sqlalchemy."
+"create_engine. Note: For absolute addresses, use '////' slashes after "
+"'sqlite:'."
+
+msgid "SSL version, maps to the module ssl's constants"
+msgstr "SSL version, maps to the module SSL's constants"
+
+msgid "Seconds (float) to wait before starting retry scheduler"
+msgstr "Seconds (float) to wait before starting retry scheduler"
+
+msgid "Seconds (float) to wait between periodic schedule events"
+msgstr "Seconds (float) to wait between periodic schedule events"
+
+msgid "Secret '{secret_name}' with reference '{secret_ref}' doesn't exist."
+msgstr "Secret '{secret_name}' with reference '{secret_ref}' doesn't exist."
+
+msgid "Secret Accept of '{accept}' not supported"
+msgstr "Secret Accept of '{accept}' not supported"
+
+msgid "Secret Content-Encoding of '{content_encoding}' not supported"
+msgstr "Secret Content-Encoding of '{content_encoding}' not supported"
+
+msgid ""
+"Secret Store plugin '{store_name}' is still in use and can not be removed. "
+"Its missing in service configuration. This is probably a server "
+"misconfiguration."
+msgstr ""
+"Secret Store plugin '{store_name}' is still in use and can not be removed. "
+"Its missing in service configuration. This is probably a server "
+"misconfiguration."
+
+msgid "Secret algorithm of '{algorithm}' not supported"
+msgstr "Secret algorithm of '{algorithm}' not supported"
+
+msgid "Secret already has data, cannot modify it."
+msgstr "Secret already has data, cannot modify it."
+
+msgid "Secret creation"
+msgstr "Secret creation"
+
+msgid "Secret deletion"
+msgstr "Secret deletion"
+
+msgid "Secret encryption algorithm"
+msgstr "Secret encryption algorithm"
+
+msgid "Secret generate supported plugin not found."
+msgstr "Secret generate supported plugin not found."
+
+msgid "Secret metadata creation"
+msgstr "Secret metadata creation"
+
+msgid "Secret metadata expected but not received."
+msgstr "Secret metadata expected but not received."
+
+msgid "Secret metadata retrieval"
+msgstr "Secret metadata retrieval"
+
+msgid "Secret metadatum creation"
+msgstr "Secret metadatum creation"
+
+msgid "Secret metadatum removal"
+msgstr "Secret metadatum removal"
+
+msgid "Secret metadatum retrieval"
+msgstr "Secret metadatum retrieval"
+
+msgid "Secret metadatum update"
+msgstr "Secret metadatum update"
+
+msgid "Secret object type {object_type} is not supported"
+msgstr "Secret object type {object_type} is not supported"
+
+msgid "Secret payload retrieval"
+msgstr "Secret payload retrieval"
+
+msgid "Secret provided doesn't exist."
+msgstr "Secret provided doesn't exist."
+
+msgid "Secret provided for '{secret_name}' doesn't exist."
+msgstr "Secret provided for '{secret_name}' doesn't exist."
+
+msgid "Secret provided is not in the container"
+msgstr "Secret provided is not in the container"
+
+msgid "Secret retrieval"
+msgstr "Secret retrieval"
+
+msgid "Secret store plugin \"{name}\" not found."
+msgstr "Secret store plugin \"{name}\" not found."
+
+msgid "Secret store plugin not found."
+msgstr "Secret store plugin not found."
+
+msgid "Secret store retrieval"
+msgstr "Secret store retrieval"
+
+msgid "Secret store supported plugin not found."
+msgstr "Secret store supported plugin not found."
+
+msgid "Secret type can not be converted to DER"
+msgstr "Secret type can not be converted to DER"
+
+msgid "Secret type can not be converted to PEM"
+msgstr "Secret type can not be converted to PEM"
+
+msgid "Secret update"
+msgstr "Secret update"
+
+msgid "Secret(s) retrieval"
+msgstr "Secret(s) retrieval"
+
+msgid "SecretACL(s) Update"
+msgstr "SecretACL(s) Update"
+
+msgid "SecretACL(s) deletion"
+msgstr "SecretACL(s) deletion"
+
+msgid "SecretACL(s) retrieval"
+msgstr "SecretACL(s) retrieval"
+
+msgid "Secret_ref does not match the configured hostname, please try again"
+msgstr "Secret_ref does not match the configured hostname, please try again"
+
+msgid ""
+"Secrets of type {secret_type} should not have a passphrase in the database, "
+"for being used during retrieval."
+msgstr ""
+"Secrets of type {secret_type} should not have a passphrase in the database, "
+"for being used during retrieval."
+
+msgid "Server name for RPC task processing server"
+msgstr "Server name for RPC task processing server"
+
+msgid "Set global preferred CA"
+msgstr "Set global preferred CA"
+
+msgid "Set preferred project CA"
+msgstr "Set preferred project CA"
+
+msgid "Setting preferred secret store"
+msgstr "Setting preferred secret store"
+
+msgid ""
+"Show SQLAlchemy pool-related debugging output in logs (sets DEBUG log level "
+"output) if specified."
+msgstr ""
+"Show SQLAlchemy pool-related debugging output in logs (sets DEBUG log level "
+"output) if specified."
+
+msgid "Signing key incorrect"
+msgstr "Signing key incorrect"
+
+msgid ""
+"Size of pool used by SQLAlchemy. This is the largest number of connections "
+"that will be kept persistently in the pool. Can be set to 0 to indicate no "
+"size limit. To disable pooling, use a NullPool with sql_pool_class instead. "
+"Comment out to allow SQLAlchemy to select the default."
+msgstr ""
+"Size of pool used by SQLAlchemy. This is the largest number of connections "
+"that will be kept persistently in the pool. Can be set to 0 to indicate no "
+"size limit. To disable pooling, use a NullPool with sql_pool_class instead. "
+"Comment out to allow SQLAlchemy to select the default."
+
+msgid "Status: {status}, Reason: {reason}, Message: {message}"
+msgstr "Status: {status}, Reason: {reason}, Message: {message}"
+
+msgid "Subordinate CA is not owned by this project"
+msgstr "Subordinate CA is not owned by this project"
+
+msgid "Symantec password for authentication"
+msgstr "Symantec password for authentication"
+
+msgid "Symantec username for authentication"
+msgstr "Symantec username for authentication"
+
+msgid "System"
+msgstr "System"
+
+msgid ""
+"Text-based binary secret payloads must specify a content-encoding of 'base64'"
+msgstr ""
+"Text-based binary secret payloads must specify a content-encoding of 'base64'"
+
+msgid "The ca_id provided in the request is invalid"
+msgstr "The ca_id provided in the request is invalid"
+
+msgid "The ca_id provided in the request is not defined for this project"
+msgstr "The ca_id provided in the request is not defined for this project"
+
+msgid ""
+"The default exchange under which topics are scoped. May be overridden by an "
+"exchange name specified in the transport_url option."
+msgstr ""
+"The default exchange under which topics are scoped. May be overridden by an "
+"exchange name specified in the transport_url option."
+
+msgid ""
+"The minimum required reference name is 'certificate' for Certificate type"
+msgstr ""
+"The minimum required reference name is 'certificate' for Certificate type"
+
+msgid ""
+"The minimum required reference names are 'public_key' and'private_key' for "
+"RSA type"
+msgstr ""
+"The minimum required reference names are 'public_key' and'private_key' for "
+"RSA type"
+
+msgid ""
+"The request returned a 413 Request Entity Too Large. This generally means "
+"that rate limiting or a quota threshold was breached."
+msgstr ""
+"The request returned a 413 Request Entity Too Large. This generally means "
+"that rate limiting or a quota threshold was breached."
+
+msgid ""
+"The requested Store Plugin {plugin_name} is not currently available. This is "
+"probably a server misconfiguration."
+msgstr ""
+"The requested Store Plugin {plugin_name} is not currently available. This is "
+"probably a server misconfiguration."
+
+msgid "The version you requested wasn't found"
+msgstr "The version you requested wasn't found"
+
+msgid ""
+"There are {count} plugins with global default as True in service "
+"configuration. Only one plugin can have this as True"
+msgstr ""
+"There are {count} plugins with global default as True in service "
+"configuration. Only one plugin can have this as True"
+
+msgid ""
+"There is no plugin defined with global default as True. One of plugin must "
+"be identified as global default"
+msgstr ""
+"There is no plugin defined with global default as True. One of plugin must "
+"be identified as global default"
+
+msgid "There was an error with the PKCS#11 library."
+msgstr "There was an error with the PKCS#11 library."
+
+msgid "Time in days for CA entries to expire"
+msgstr "Time in days for CA entries to expire"
+
+msgid "Transport Key Creation"
+msgstr "Transport Key Creation"
+
+msgid "Transport Key deletion"
+msgstr "Transport Key deletion"
+
+msgid "Transport Key retrieval"
+msgstr "Transport Key retrieval"
+
+msgid "Transport Key(s) retrieval"
+msgstr "Transport Key(s) retrieval"
+
+msgid ""
+"Transport key wrapped session key has been provided to wrap secrets for "
+"retrieval, but the transport key id has not been provided."
+msgstr ""
+"Transport key wrapped session key has been provided to wrap secrets for "
+"retrieval, but the transport key id has not been provided."
+
+msgid "Tried to register crypto plugin with null or empty name."
+msgstr "Tried to register crypto plugin with null or empty name."
+
+msgid "True enables keystone notification listener  functionality."
+msgstr "True enables Keystone notification listener  functionality."
+
+msgid "True enables queuing, False invokes workers synchronously"
+msgstr "True enables queuing, False invokes workers synchronously"
+
+msgid ""
+"True enables requeue feature in case of notification processing error. "
+"Enable this only when underlying transport supports this feature."
+msgstr ""
+"True enables re-queue feature in case of notification processing error. "
+"Enable this only when underlying transport supports this feature."
+
+msgid "URI provided invalid query string parameters."
+msgstr "URI provided invalid query string parameters."
+
+msgid "Unable to decode request data."
+msgstr "Unable to decode request data."
+
+msgid "Unencrypted data must be a byte type, but was {unencrypted_type}"
+msgstr "Unencrypted data must be a byte type, but was {unencrypted_type}"
+
+msgid "Unexpected content type. Expected content types are: {expected}"
+msgstr "Unexpected content type. Expected content types are: {expected}"
+
+msgid "Unknown"
+msgstr "Unknown"
+
+msgid "Unknown attribute type provided."
+msgstr "Unknown attribute type provided."
+
+msgid "Unset global preferred CA"
+msgstr "Unset global preferred CA"
+
+msgid "Update Order"
+msgstr "Update Order"
+
+msgid "Update Order failure seen - please contact site administrator."
+msgstr "Update Order failure seen - please contact site administrator."
+
+msgid "Updates are not supported for order type {0}."
+msgstr "Updates are not supported for order type {0}."
+
+msgid "User friendly plugin name"
+msgstr "User friendly plugin name"
+
+msgid "Username for authenticating with KMIP server"
+msgstr "Username for authenticating with KMIP server"
+
+msgid "Version of tasks invoked via notifications"
+msgstr "Version of tasks invoked via notifications"
+
+msgid "Version of tasks invoked via queue"
+msgstr "Version of tasks invoked via queue"
+
+msgid "Version retrieval"
+msgstr "Version retrieval"
+
+msgid "Working directory for Dogtag plugin"
+msgstr "Working directory for Dogtag plugin"
+
+msgid "Wrong payload content-type"
+msgstr "Wrong payload content-type"
+
+msgid "content-encoding of '{content_encoding}' not supported"
+msgstr "content-encoding of '{content_encoding}' not supported"
+
+msgid "content-type of '{content_type}' not supported"
+msgstr "content-type of '{content_type}' not supported"
+
+msgid "failure seen - please contact site administrator."
+msgstr "failure seen - please contact site administrator."
+
+msgid "key_label must be set for master_keys"
+msgstr "key_label must be set for master_keys"
+
+msgid "library_path is required"
+msgstr "library_path is required"
+
+msgid "no request found for this order"
+msgstr "no request found for this order"
+
+msgid "nss_password is required"
+msgstr "nss_password is required"
+
+msgid ""
+"only 'private_key', 'certificate' , 'private_key_passphrase',  or "
+"'intermediates' reference names are allowed for Certificate type"
+msgstr ""
+"only 'private_key', 'certificate' , 'private_key_passphrase',  or "
+"'intermediates' reference names are allowed for Certificate type"
+
+msgid ""
+"only 'private_key', 'public_key' and 'private_key_passphrase' reference "
+"names are allowed for RSA type"
+msgstr ""
+"only 'private_key', 'public_key' and 'private_key_passphrase' reference "
+"names are allowed for RSA type"
+
+msgid "password is required"
+msgstr "password is required"
+
+msgid "payload must be provided when payload_content_type is specified"
+msgstr "payload must be provided when payload_content_type is specified"
+
+msgid "payload_content_encoding is not one of {supported}"
+msgstr "payload_content_encoding is not one of {supported}"
+
+msgid "payload_content_type is not one of {supported}"
+msgstr "payload_content_type is not one of {supported}"
+
+msgid "pem_path is required"
+msgstr "pem_path is required"
+
+msgid "plugin_name must be provided"
+msgstr "plugin_name must be provided"
+
+msgid "request_id {req_id} returns COMPLETE but no cert returned"
+msgstr "request_id {req_id} returns COMPLETE but no cert returned"
+
+msgid "retrieve a secret from plugin: {plugin}"
+msgstr "retrieve a secret from plugin: {plugin}"
+
+msgid ""
+"store or generate a secret of type {secret_type} with algorithm {algorithm}, "
+"bit length {bit_length}, and mode {mode}"
+msgstr ""
+"store or generate a secret of type {secret_type} with algorithm {algorithm}, "
+"bit length {bit_length}, and mode {mode}"
+
+msgid "transport_key must be provided"
+msgstr "transport_key must be provided"
+
+msgid "url is required"
+msgstr "URL is required"
+
+msgid "username is required"
+msgstr "username is required"
+
+msgid "{entity_name} is missing query build method for get project entities."
+msgstr "{entity_name} is missing query build method for get project entities."
+
+msgid "{entity_name} status is required."
+msgstr "{entity_name} status is required."
+
+msgid ""
+"{operation} attempt not allowed - please review your user/project privileges"
+msgstr ""
+"{operation} attempt not allowed - please review your user/project privileges"
+
+msgid "{operation} failure seen - please contact site administrator."
+msgstr "{operation} failure seen - please contact site administrator."
+
+msgid "{operation} issue seen - {reason}."
+msgstr "{operation} issue seen - {reason}."
+
+msgid "{request} not found for {operation} for order_id {order_id}"
+msgstr "{request} not found for {operation} for order_id {order_id}"
+
+msgid "{schema_name}' within '{parent_schema_name}"
+msgstr "{schema_name}' within '{parent_schema_name}"
