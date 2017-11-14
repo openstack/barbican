@@ -12,7 +12,7 @@ The orders resource supports the following types:
 This user guide provides high level examples of the orders resource.
 It will assume you will be using a local running development environment of barbican.
 If you need assistance with getting set up, please reference the
-`development guide <http://docs.openstack.org/developer/barbican/setup/dev.html>`__.
+`development guide <https://docs.openstack.org/barbican/latest/contributor/dev.html>`__.
 
 .. _create_order:
 
@@ -25,7 +25,7 @@ bit_length, and algorithm must be valid. Otherwise the order will fail and
 the secret will not be generated. The example below shows a valid order for
 generating a symmetric key. You can find a more detailed explanation about
 the parameters in the
-`Orders API <http://docs.openstack.org/developer/barbican/api/reference/orders.html>`__
+`Orders API <https://docs.openstack.org/barbican/latest/api/reference/orders.html>`__
 documentation.
 
 .. code-block:: bash
@@ -87,7 +87,7 @@ The order metadata is very useful for determining if your order was processed
 correctly. Since orders are processed asynchronously, you can use the metadata
 returned for the order to verify a successful secret creation.
 The parameters of the response are explained in more detail
-`here <http://docs.openstack.org/developer/barbican/api/reference/orders.html#get-unique-order-response-attributes>`__.
+`here <https://docs.openstack.org/barbican/latest/api/reference/orders.html#get-unique-order-response-attributes>`__.
 
 .. _retrieve_order_list:
 
@@ -146,9 +146,9 @@ It is also possible to retrieve all orders for a project.
     }
 
 You can refer to the
-`orders parameters <http://docs.openstack.org/developer/barbican/api/reference/orders.html#get-order-parameters>`__
+`orders parameters <https://docs.openstack.org/barbican/latest/api/reference/orders.html#get-order-parameters>`__
 section of the
-`Orders API <http://docs.openstack.org/developer/barbican/api/reference/orders.html>`__
+`Orders API <https://docs.openstack.org/barbican/latest/api/reference/orders.html>`__
 documentation in order to refine your search among orders.
 
 .. _delete_order:

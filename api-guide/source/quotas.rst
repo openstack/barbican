@@ -17,7 +17,7 @@ configuration for all projects in his cloud.
 
 This guide will assume you will be using a local running development environment of barbican.
 If you need assistance with getting set up, please reference the
-`development guide <http://docs.openstack.org/developer/barbican/setup/dev.html>`__.
+`development guide <https://docs.openstack.org/barbican/latest/contributor/dev.html>`__.
 
 .. _user_project_quotas_overview:
 
@@ -102,7 +102,7 @@ with the request.
 
 
 To get more details on the quota lookup API, you can reference the
-`Get Quotas <http://docs.openstack.org/developer/barbican/api/reference/quotas.html#get-quotas-request>`__
+`Get Quotas <https://docs.openstack.org/barbican/latest/api/reference/quotas.html#get-quotas-request>`__
 documentation.
 
 
@@ -134,7 +134,7 @@ To set or replace the quotas for the project with the ID 1234:
 
 
 To get more details on the project quota setting API you can reference the
-`Set Project Quotas <http://docs.openstack.org/developer/barbican/api/reference/quotas.html#put-project-quotas>`__
+`Set Project Quotas <https://docs.openstack.org/barbican/latest/api/reference/quotas.html#put-project-quotas>`__
 documentation.
 
 
@@ -206,9 +206,9 @@ The returned response contains a list with all project quota data.
 
 To get more details on project quota lookup APIs you can reference
 the
-`Get Project Quota <http://docs.openstack.org/developer/barbican/api/reference/quotas.html#get-project-quotas-uuid>`__
+`Get Project Quota <https://docs.openstack.org/barbican/latest/api/reference/quotas.html#get-project-quotas-uuid>`__
 and
-`Get Project Quota List <http://docs.openstack.org/developer/barbican/api/reference/quotas.html#get-project-quotas>`__
+`Get Project Quota List <https://docs.openstack.org/barbican/latest/api/reference/quotas.html#get-project-quotas>`__
 documentation.
 
 
@@ -236,5 +236,5 @@ There is no response content returned on successful deletion.
 
 
 To get more details on project quota delete APIs, you can reference the
-`Delete Project Quotas <http://docs.openstack.org/developer/barbican/api/reference/quotas.html#delete-project-quotas>`__
+`Delete Project Quotas <https://docs.openstack.org/barbican/latest/api/reference/quotas.html#delete-project-quotas>`__
 documentation.

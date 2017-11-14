@@ -18,7 +18,7 @@ Audit middleware creates two events per REST API interaction. First event has
 information extracted from request data and the second one has request outcome
 (response).
 
-.. _Audit middleware: https://docs.openstack.org/keystonemiddleware/latest/
+.. _Audit middleware: https://docs.openstack.org/keystonemiddleware/latest/audit.html
 .. _CADF format: http://www.dmtf.org/sites/default/files/standards/documents/DSP2038_1.0.0.pdf
 
 
@@ -39,8 +39,8 @@ used for creating events in CADF format.
 
 
 .. _keystonemiddleware: https://github.com/openstack/keystonemiddleware/blob/master/keystonemiddleware/audit.py
-.. _Enabling Middleware Link: https://docs.openstack.org/keystonemiddleware/latest/#enabling-audit-middleware
-.. _Configuring Middleware Link: https://docs.openstack.org/keystonemiddleware/latest/#configure-audit-middleware
+.. _Enabling Middleware Link: https://docs.openstack.org/keystonemiddleware/latest/audit.html#enabling-audit-middleware
+.. _Configuring Middleware Link: https://docs.openstack.org/keystonemiddleware/latest/audit.html#configure-audit-middleware
 
 
 .. note::

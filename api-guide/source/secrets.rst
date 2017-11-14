@@ -9,7 +9,7 @@ Barbican supports the storage of data for various content-types securely.
 
 This guide will assume you will be using a local running development environment of barbican.
 If you need assistance with getting set up, please reference the
-`development guide <http://docs.openstack.org/developer/barbican/setup/dev.html>`__.
+`development guide <https://docs.openstack.org/barbican/latest/contributor/dev.html>`__.
 
 
 What is a Secret?
@@ -27,11 +27,11 @@ Some examples of a secret may include:
 
 For the purpose of this user guide, we will use a simple plaintext
 secret. If you would like to learn more in detail about
-`secret parameters <http://docs.openstack.org/developer/barbican/api/reference/secrets.html#secret-parameters>`__,
-`responses <http://docs.openstack.org/developer/barbican/api/reference/secrets.html#secret_response_attributes>`__,
-and `status codes <http://docs.openstack.org/developer/barbican/api/reference/secrets.html#secret_status_codes>`__
+`secret parameters <https://docs.openstack.org/barbican/latest/api/reference/secrets.html#secret-parameters>`__,
+`responses <https://docs.openstack.org/barbican/latest/api/reference/secrets.html#secret_response_attributes>`__,
+and `status codes <https://docs.openstack.org/barbican/latest/api/reference/secrets.html#secret_status_codes>`__
 you can reference the
-`secret reference <http://docs.openstack.org/developer/barbican/api/reference/secrets.html>`__
+`secret reference <https://docs.openstack.org/barbican/latest/api/reference/secrets.html>`__
 documentation.
 
 
@@ -48,7 +48,7 @@ barbican expects the user to provide the payload to be stored within the secret
 itself. Once the secret has been created with a payload it cannot be updated. In
 this example we will provide a plain text secret. For more information on creating
 secrets you can view the
-`POST /v1/secrets <http://docs.openstack.org/developer/barbican/api/reference/secrets.html#post-secrets>`__
+`POST /v1/secrets <https://docs.openstack.org/barbican/latest/api/reference/secrets.html#post-secrets>`__
 section.
 
 .. code-block:: bash
@@ -109,7 +109,7 @@ your own in order to update the secret.
 No response will be provided. This is expected behavior! If you do receive a
 response, something went wrong and you will have to address that before
 moving forward. (For more information visit
-`PUT /v1/secrets/{uuid} <http://docs.openstack.org/developer/barbican/api/reference/secrets.html#put-secrets>`__
+`PUT /v1/secrets/{uuid} <https://docs.openstack.org/barbican/latest/api/reference/secrets.html#put-secrets>`__
 .)
 
 
@@ -148,5 +148,5 @@ the initial creation (See :ref:`How to Create a Secret <create_secret>`.)
 No response will be provided. This is expected behavior! If you do receive a
 response, something went wrong and you will have to address that before
 moving forward. (For more information visit
-`DELETE /v1/secrets/{uuid} <http://docs.openstack.org/developer/barbican/api/reference/secrets.html#delete-secrets>`__
+`DELETE /v1/secrets/{uuid} <https://docs.openstack.org/barbican/latest/api/reference/secrets.html#delete-secrets>`__
 .)
