@@ -313,7 +313,6 @@ def _store_secret_and_datum(
     datum_model.content_type = context.content_type
     datum_model.cypher_text = base64.b64encode(generated_dto.cypher_text)
     datum_model.kek_meta_extended = generated_dto.kek_meta_extended
-    datum_model.secret_id = secret_model.id
     repositories.get_encrypted_datum_repository().create_from(
         datum_model)
 
