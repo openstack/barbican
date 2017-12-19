@@ -92,7 +92,7 @@ def hard_reset():
     setup_database_engine_and_factory()
 
 
-def setup_database_engine_and_factory():
+def setup_database_engine_and_factory(initialize_secret_stores=False):
     global sa_logger, _SESSION_FACTORY, _ENGINE
 
     LOG.info('Setting up database engine and session factory')
@@ -109,7 +109,8 @@ def setup_database_engine_and_factory():
     # session instance per thread.
     session_maker = sa_orm.sessionmaker(bind=_ENGINE)
     _SESSION_FACTORY = sqlalchemy.orm.scoped_session(session_maker)
-    _initialize_secret_stores_data()
+    if initialize_secret_stores:
+        _initialize_secret_stores_data()
 
 
 def start():

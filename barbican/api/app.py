@@ -80,7 +80,9 @@ def main_app(func):
         # Initializing the database engine and session factory before the app
         # starts ensures we don't lose requests due to lazy initialization of
         # db connections.
-        repositories.setup_database_engine_and_factory()
+        repositories.setup_database_engine_and_factory(
+            initialize_secret_stores=True
+        )
 
         wsgi_app = func(global_config, **local_conf)
 
