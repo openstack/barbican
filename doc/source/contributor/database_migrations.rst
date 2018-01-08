@@ -269,15 +269,15 @@ TODO Items
    c. If a server bounce is needed, notification guidelines to the devop team
       would be spelled out here.
 
-.. _Alembic: https://alembic.readthedocs.org/en/latest/
+.. _Alembic: http://alembic.zzzcomputing.com/en/latest/
 .. _Alembic Example: https://julo.ch/blog/migrating-content-with-alembic/
-.. _Alembic Operation Reference: https://alembic.readthedocs.org/en/latest/ops.html
-.. _Alembic tutorial: https://alembic.readthedocs.org/en/latest/tutorial.html
+.. _Alembic Operation Reference: http://alembic.zzzcomputing.com/en/latest/ops.html
+.. _Alembic tutorial: http://alembic.zzzcomputing.com/en/latest/tutorial.html
 .. _Barbican DevStack: https://docs.openstack.org/barbican/latest/contributor/devstack.html
 .. _Developer Guide: https://github.com/cloudkeep/barbican/wiki/Developer-Guide
 .. _Need to alter column types in production database: http://stackoverflow.com/questions/5329255/need-to-alter-column-types-in-production-database-sql-server-2005
 .. _OpenStack and SQLAlchemy: https://wiki.openstack.org/wiki/OpenStack_and_SQLAlchemy#Migrations
-.. _What does Autogenerate Detect: http://alembic.readthedocs.org/en/latest/autogenerate.html#what-does-autogenerate-detect-and-what-does-it-not-detect
+.. _What does Autogenerate Detect: http://alembic.zzzcomputing.com/en/latest/autogenerate.html#what-does-autogenerate-detect-and-what-does-it-not-detect
 .. _SQLAlchemy's server_default: http://docs.sqlalchemy.org/en/latest/core/metadata.html?highlight=column#sqlalchemy.schema.Column.params.server_default
 .. _Backup tutorial: http://docs.openstack.org/openstack-ops/content/upgrade-icehouse-juno.html#upgrade-icehouse-juno-backup
 .. _Downgrade tutorial: http://docs.openstack.org/openstack-ops/content/ops_upgrades-roll-back.html
