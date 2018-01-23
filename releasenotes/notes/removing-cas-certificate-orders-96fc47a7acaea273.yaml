@@ -32,7 +32,7 @@ other:
   - Will Barbican still be able to store Certificates?
 
     Yes, absolutely!  The only thing we're deprecating is the plugin
-    interface that talks to Certificate Authorites and associated APIs.
+    interface that talks to Certificate Authorities and associated APIs.
     While you will not be able to use Barbican to issue a new certificate,
     you will always be able to securely store any certificates in Barbican,
     including those issued by public CAs or internal CAs.
