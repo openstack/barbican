@@ -1,0 +1,38 @@
+---
+prelude: >
+    This release notify that we will remove Certificate Orders and CAs from API.
+deprecations:
+  - Certificate Orders
+  - CAs
+other:
+  - Why are we deprecating Certificate Issuance?
+    There are a few reasons that were considered for this decision.  First,
+    there does not seem to be a lot of interest in the community to fully
+    develop the Certificate Authority integration with Barbican.  We have a
+    few outstanding blueprints that are needed to make Certificate Issuance
+    fully functional, but so far no one has committed to getting the work
+    done.  Additionally, we've had very little buy-in from public
+    Certificate Authorities.  Both Symantec and Digicert were interested in
+    integration in the past, but that interest didn't materialize into
+    robust CA plugins like we hoped it would.
+
+    Secondly, there have been new developments in the space of Certificate
+    Authorities since we started Barbican.  The most significant of these
+    was the launch of the Let's Encrypt public CA along with the definition
+    of the ACME protocol for certificate issuance.  We believe that future
+    certificate authority services would do good to implement the ACME
+    standard, which is quite different than the API the Barbican team had
+    developed.
+
+    Lastly, deprecating Certificate Issuance within Barbican will simplify
+    both the architecture and deployment of Barbican.  This will allow us to
+    focus on the features that Barbican does well -- the secure storage of
+    secret material.
+
+  - Will Barbican still be able to store Certificates?
+
+    Yes, absolutely!  The only thing we're deprecating is the plugin
+    interface that talks to Certificate Authorites and associated APIs.
+    While you will not be able to use Barbican to issue a new certificate,
+    you will always be able to securely store any certificates in Barbican,
+    including those issued by public CAs or internal CAs.

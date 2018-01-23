@@ -214,19 +214,6 @@ class Tasks(object):
     @monitored
     @transactional
     @retryable_order
-    def update_order(self, context, order_id, project_id,
-                     updated_meta, request_id):
-        """Update Order."""
-        message = "Processing update order: order ID is '%(order)s' and " \
-                  "request ID is '%(request)s'"
-
-        LOG.info(message, {'order': order_id, 'request': request_id})
-        return resources.UpdateOrder().process_and_suppress_exceptions(
-            order_id, project_id, updated_meta)
-
-    @monitored
-    @transactional
-    @retryable_order
     def check_certificate_status(self, context, order_id,
                                  project_id, request_id):
         """Check the status of a certificate order."""

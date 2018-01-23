@@ -14,7 +14,6 @@ import pecan
 from six.moves.urllib import parse
 
 from barbican.api import controllers
-from barbican.api.controllers import cas
 from barbican.api.controllers import containers
 from barbican.api.controllers import orders
 from barbican.api.controllers import quotas
@@ -93,7 +92,6 @@ class V1Controller(BaseVersionController):
         self.orders = orders.OrdersController()
         self.containers = containers.ContainersController()
         self.transport_keys = transportkeys.TransportKeysController()
-        self.cas = cas.CertificateAuthoritiesController()
         self.quotas = quotas.QuotasController()
         setattr(self, 'project-quotas', quotas.ProjectsQuotasController())
         setattr(self, 'secret-stores', secretstores.SecretStoresController())
