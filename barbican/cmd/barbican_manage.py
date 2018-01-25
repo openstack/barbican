@@ -31,6 +31,7 @@ from barbican.cmd import pkcs11_kek_rewrap as pkcs11_rewrap
 from barbican.common import config
 from barbican.model import clean
 from barbican.model.migration import commands
+from barbican.model import sync
 from barbican.plugin.crypto import pkcs11
 import barbican.version
 
@@ -142,6 +143,28 @@ class DbCommands(object):
             commands.current(verbose, sql_url=CONF.sql_connection)
         else:
             commands.current(verbose, sql_url=str(dburl))
+
+    sync_secret_stores_description = "Sync secret_stores with barbican.conf"
+
+    @args('--db-url', '-d', metavar='<db-url>', dest='dburl',
+          help='barbican database URL')
+    @args('--verbose', '-V', action='store_true', dest='verbose',
+          default=False, help='Show verbose information about the clean up.')
+    @args('--log-file', '-L', metavar='<log-file>', type=str, default=None,
+          dest='log_file',
+          help='Set log file location. '
+               'Default value for log_file can be found in barbican.conf')
+    def sync_secret_stores(self, dburl=None, verbose=None, log_file=None):
+        """Sync secret_stores table with barbican.conf"""
+        if dburl is None:
+            dburl = CONF.sql_connection
+        if log_file is None:
+            log_file = CONF.log_file
+
+        sync.sync_secret_stores(
+            sql_url=dburl,
+            verbose=verbose,
+            log_file=log_file)
 
 
 class HSMCommands(object):

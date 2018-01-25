@@ -57,6 +57,12 @@ Barbican Database
     Clean up soft deletions in the database. More documentation can be
     found here: :doc:`Database Cleaning <database_cleaning>`
 
+``barbican-manage db sync_secret_stores [--db-url] [--verbose] [--log-file]``
+
+    Synchronize the secret_store database table with the configuration
+    in barbican.conf.  This is useful when multiple secret stores are
+    enabled and new secret stores have been enabled.
+
 Barbican PKCS11/HSM
 ~~~~~~~~~~~~~~~~~~~
 

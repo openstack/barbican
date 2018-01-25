@@ -119,6 +119,31 @@ class TestBarbicanManage(TestBarbicanManageBase):
             log_file='/tmp/whatevs')
         manager.CONF.clear_override('log_file')
 
+    @mock.patch('barbican.model.sync.sync_secret_stores')
+    def test_db_sync_secret_stores_no_args(self, mock_sync_command):
+        manager.CONF.set_override('log_file', 'mock_log_file')
+        self._main_test_helper(
+            ['barbican.cmd.barbican_manage', 'db', 'sync_secret_stores'],
+            func_name=mock_sync_command,
+            sql_url='mockdburl',
+            verbose=False,
+            log_file='mock_log_file')
+        manager.CONF.clear_override('log_file')
+
+    @mock.patch('barbican.model.sync.sync_secret_stores')
+    def test_db_sync_secret_stores_with_args(self, mock_sync_command):
+        manager.CONF.set_override('log_file', 'mock_log_file')
+        self._main_test_helper(
+            ['barbican.cmd.barbican_manage', 'db', 'sync_secret_stores',
+             '--db-url', 'somewhere',
+             '--verbose',
+             '--log-file', '/tmp/whatevs'],
+            func_name=mock_sync_command,
+            sql_url='somewhere',
+            verbose=True,
+            log_file='/tmp/whatevs')
+        manager.CONF.clear_override('log_file')
+
     @mock.patch('barbican.model.migration.commands.current')
     def test_db_current(self, mock_current):
         self._main_test_helper(
