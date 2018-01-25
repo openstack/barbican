@@ -6,7 +6,7 @@
     vars:
       database: sql
       python_version: py27
-      services: "tempest,rabbit,mysql,key"
+      services: tempest,rabbit,mysql,key
     required-projects:
       - openstack-infra/devstack-gate
       - openstack/barbican
@@ -22,7 +22,7 @@
     vars:
       database: sql
       python_version: py27
-      services: "tempest,keystone"
+      services: tempest,keystone
     required-projects:
       - openstack-dev/devstack
       - openstack-infra/devstack-gate
@@ -58,14 +58,14 @@
     nodeset: legacy-fedora-26
     parent: barbican-devstack-functional-base
     vars:
-      services: "barbican-dogtag,tempest,rabbit,mysql,key"
+      services: barbican-dogtag,tempest,rabbit,mysql,key
       plugin: dogtag
 
 - job:
     name: barbican-kmip-devstack-functional
     parent: barbican-devstack-functional-base
     vars:
-      services: "barbican-pykmip,pykmip-server,tempest,rabbit,mysql,key"
+      services: barbican-pykmip,pykmip-server,tempest,rabbit,mysql,key
       plugin: kmip
 
 - job:
@@ -94,7 +94,7 @@
     nodeset: legacy-fedora-26
     parent: barbican-devstack-base
     vars:
-      services: "barbican-dogtag,tempest,keystone"
+      services: barbican-dogtag,tempest,keystone
       plugin: dogtag
 
 - job:
@@ -153,7 +153,6 @@
     timeout: 7800
 
 - project:
-    name: openstack/barbican
     check:
       jobs:
         - barbican-simple-crypto-devstack-tempest
