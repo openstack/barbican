@@ -1,5 +1,4 @@
 - project:
-    name: openstack/barbican
     check:
       jobs:
         # TripleO jobs that deploy Barbican.
