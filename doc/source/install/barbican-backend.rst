@@ -37,10 +37,6 @@ Simple Crypto Plugin
 This crypto plugin is configured by default in ``/etc/barbican/barbican.conf``.  This plugin
 is completely insecure and is only suitable for development testing.
 
-.. warning::
-
-   THIS PLUGIN IS NOT SUITABLE FOR PRODUCTION DEPLOYMENTS.
-
 This plugin uses single symmetric key (kek - or 'key encryption key')
 - which is stored in plain text in the ``/etc/barbican/barbican.conf`` file to encrypt
 and decrypt all secrets.
