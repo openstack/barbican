@@ -78,10 +78,17 @@ def get_base_url_from_request():
     """
     if not CONF.host_href and hasattr(pecan.request, 'url'):
         p_url = parse.urlsplit(pecan.request.url)
+        # Pecan does not handle X_FORWARDED_PROTO yet, so we need to
+        # handle it ourselves. see lp#1445290
+        scheme = pecan.request.environ.get('HTTP_X_FORWARDED_PROTO', 'http')
+        # Pecan does not handle url reconstruction according to
+        # https://www.python.org/dev/peps/pep-0333/#url-reconstruction
+        netloc = pecan.request.environ.get('HTTP_HOST', p_url.netloc)
+        # FIXME: implement SERVER_NAME lookup if HTTP_HOST is not set
         if p_url.path:
-            base_url = '%s://%s%s' % (p_url.scheme, p_url.netloc, p_url.path)
+            base_url = '%s://%s%s' % (scheme, netloc, p_url.path)
         else:
-            base_url = '%s://%s' % (p_url.scheme, p_url.netloc)
+            base_url = '%s://%s' % (scheme, netloc)
         return base_url
     else:  # when host_href is set or flow is not within wsgi request context
         return CONF.host_href
