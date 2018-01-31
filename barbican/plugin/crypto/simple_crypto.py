@@ -56,10 +56,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
     def __init__(self, conf=CONF):
         self.master_kek = conf.simple_crypto_plugin.kek
         self.plugin_name = conf.simple_crypto_plugin.plugin_name
-        LOG.warning("This plugin is NOT meant for a production "
-                    "environment. This is meant just for development "
-                    "and testing purposes. Please use another plugin "
-                    "for production.")
+        LOG.info("{} initialized".format(self.plugin_name))
 
     def get_plugin_name(self):
         return self.plugin_name
