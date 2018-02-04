@@ -18,7 +18,7 @@ import datetime
 import os
 import tempfile
 
-from Crypto.PublicKey import RSA
+from Crypto.PublicKey import RSA  # nosec
 import mock
 from requests import exceptions as request_exceptions
 import testtools
