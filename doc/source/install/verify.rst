@@ -9,6 +9,26 @@ Verify operation of the Key Manager (barbican) service.
 
    Perform these commands on the controller node.
 
+#. Install python-barbicanclient package:
+
+   * For openSUSE and SUSE Linux Enterprise:
+
+     .. code-block:: console
+
+        $ zypper install python-barbicanclient
+
+   * For Red Hat Enterprise Linux and CentOS:
+
+     .. code-block:: console
+
+        $ yum install python-barbicanclient
+
+   * For Ubuntu:
+
+     .. code-block:: console
+
+        $ apt-get install python-barbicanclient
+
 #. Source the ``admin`` credentials to be able to perform Barbican
    API calls:
 
