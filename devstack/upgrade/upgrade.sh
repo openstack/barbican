@@ -66,6 +66,6 @@ upgrade_project barbican $RUN_DIR $BASE_DEVSTACK_BRANCH $TARGET_DEVSTACK_BRANCH
 $BARBICAN_BIN_DIR/barbican-manage db upgrade -v head || die $LINENO "DB sync error"
 
 # Start the Barbican service up.
-run_process barbican-svc "$BARBICAN_BIN_DIR/uwsgi --master --emperor $BARBICAN_CONF_DIR/vassals"
+run_process barbican-svc "$BARBICAN_BIN_DIR/uwsgi --ini $BARBICAN_UWSGI_CONF"
 sleep 10
 run_process barbican-retry "$BARBICAN_BIN_DIR/barbican-retry --config-file=$BARBICAN_CONF_DIR/barbican.conf"
