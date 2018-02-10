@@ -9,9 +9,9 @@
 # Jeremy Liu <liujiong@gohighsec.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 5.0.0.0rc2.dev1\n"
+"Project-Id-Version: barbican VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-08-11 03:08+0000\n"
+"POT-Creation-Date: 2018-02-09 17:50+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -50,9 +50,6 @@ msgstr "带有那个标签的主密钥已经存在"
 msgid "A new project preferred CA must be set before this one can be deleted."
 msgstr "在删除项目首选CA之前必须先设置一个新的首选CA。"
 
-msgid "Add CA to project"
-msgstr "将CA添加到项目"
-
 msgid "Address of the KMIP server"
 msgstr "KMIP服务器的地址"
 
@@ -86,21 +83,6 @@ msgstr "错误的格式"
 msgid "Bad key file permissions found, expected 400 for path: {file_path}"
 msgstr "发现错误的密钥文件权限，路径：{file_path}期望400"
 
-msgid "CA Cert Chain retrieval"
-msgstr "检索CA签发链"
-
-msgid "CA Signing Cert retrieval"
-msgstr "检索CA签发证书"
-
-msgid "CA creation"
-msgstr "创建CA"
-
-msgid "CA deletion"
-msgstr "删除CA"
-
-msgid "CA projects retrieval"
-msgstr "检索CA项目"
-
 #, python-format
 msgid "CA specified by ca_id %(ca_id)s not defined for project: %(project_id)s"
 msgstr "指定的CA %(ca_id)s 未在项目：%(project_id)s中定义"
@@ -110,18 +92,6 @@ msgstr "不能为空实例生成全名"
 
 msgid "Cannot modify order type."
 msgstr "不能修改order类型。"
-
-msgid "Cannot set CA as a preferred CA as it is not a project CA."
-msgstr "不能设置CA为首选CA，因为其不是项目CA。"
-
-msgid "Certificate Authorities retrieval"
-msgstr "检索CA"
-
-msgid "Certificate Authorities retrieval (limited)"
-msgstr "检索CA（受限）"
-
-msgid "Certificate Authority retrieval"
-msgstr "检索CA"
 
 msgid "Certificate event plugin \"{name}\" not found."
 msgstr "证书事件插件“{name}”未发现。"
@@ -542,17 +512,11 @@ msgstr "没有提供数据供处理。"
 msgid "No entities of type {entity_name} found"
 msgstr "未发现类型{entity_name}的实体"
 
-msgid "No global preferred CA defined"
-msgstr "没有定义全局首选CA"
-
 msgid "No key handle was found"
 msgstr "未发现密钥操作"
 
 msgid "No plugin was found that could support your request"
 msgstr "没有找到可以支持你的请求的插件"
-
-msgid "No preferred CA defined for this project"
-msgstr "该项目未设置首选CA"
 
 msgid "No profile_id specified"
 msgstr "未指定profile_id"
@@ -596,15 +560,6 @@ msgstr "未找到ID为{id}的{entity}"
 
 msgid "Not Allowed. Sorry, only the creator of a consumer can delete it."
 msgstr "不被允许。对不起，只有消费者的创建者才能删除它。"
-
-msgid "Not Found. CA attribute not found."
-msgstr "未找到。CA属性未找到。"
-
-msgid "Not Found. CA not found."
-msgstr "未找到。未找到CA。"
-
-msgid "Not Found. CA not in project."
-msgstr "未找到。CA不在项目中。"
 
 msgid ""
 "Not Found. Multiple backends support is not enabled in service configuration."
@@ -720,10 +675,6 @@ msgstr "NSS证书数据库的路径"
 msgid "Path to vendor PKCS11 library"
 msgstr "提供PKCS11库的路径"
 
-msgid ""
-"Please change the preferred CA to a different project CA before removing it."
-msgstr "删除CA之前请先将首选CA设置为项目的其他CA。"
-
 msgid "Plugin does not support generation of subordinate CAs"
 msgstr "插件不支持生成子CA"
 
@@ -807,9 +758,6 @@ msgstr "配额"
 msgid "Read Error"
 msgstr "读取错误"
 
-msgid "Remove CA from project"
-msgstr "将CA从项目中移除"
-
 msgid "Removing preferred secret store"
 msgstr "移除首选秘密存储"
 
@@ -820,12 +768,6 @@ msgstr "请求{request_id}报告了status_complete状态，但是未返回cert_i
 
 msgid "Requested algorithm is not supported"
 msgstr "请求的算法不支持"
-
-msgid "Retrieve global preferred CA"
-msgstr "检索全局首选CA"
-
-msgid "Retrieve project preferred CA"
-msgstr "检索项目首选CA"
 
 msgid "Role used to identify an authenticated user as administrator."
 msgstr "一种角色，用来确定该已认证用户是管理员。"
@@ -943,12 +885,6 @@ msgstr "{secret_type}类型的秘密不应在数据库中有密码，因为在�
 msgid "Server name for RPC task processing server"
 msgstr "RPC任务服务器的名称"
 
-msgid "Set global preferred CA"
-msgstr "设置全局首选CA"
-
-msgid "Set preferred project CA"
-msgstr "设置项目首选CA"
-
 msgid "Setting preferred secret store"
 msgstr "设置首选秘密存储"
 
@@ -1064,17 +1000,11 @@ msgstr "未知"
 msgid "Unknown attribute type provided."
 msgstr "提供的属性类型未知"
 
-msgid "Unset global preferred CA"
-msgstr "取消设置全局首选CA"
-
 msgid "Update Order"
 msgstr "更新order"
 
 msgid "Update Order failure seen - please contact site administrator."
 msgstr "更新order失败。请联系站点管理员。"
-
-msgid "Updates are not supported for order type {0}."
-msgstr "不支持order类型{0}的更新"
 
 msgid "Username for authenticating with KMIP server"
 msgstr "KMIP服务器的认证用户名"

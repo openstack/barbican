@@ -4,9 +4,9 @@
 # Andi Chandler <andi@gowling.com>, 2017. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: barbican 6.0.0.0b2.dev15\n"
+"Project-Id-Version: barbican VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-11-02 04:06+0000\n"
+"POT-Creation-Date: 2018-02-09 17:50+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -87,9 +87,6 @@ msgstr ""
 "management of connections). See http://docs.sqlalchemy.org/en/latest/core/"
 "pooling.html for more details"
 
-msgid "Add CA to project"
-msgstr "Add CA to project"
-
 msgid "Address of the KMIP server"
 msgstr "Address of the KMIP server"
 
@@ -128,21 +125,6 @@ msgstr "Bad format"
 msgid "Bad key file permissions found, expected 400 for path: {file_path}"
 msgstr "Bad key file permissions found, expected 400 for path: {file_path}"
 
-msgid "CA Cert Chain retrieval"
-msgstr "CA Cert Chain retrieval"
-
-msgid "CA Signing Cert retrieval"
-msgstr "CA Signing Cert retrieval"
-
-msgid "CA creation"
-msgstr "CA creation"
-
-msgid "CA deletion"
-msgstr "CA deletion"
-
-msgid "CA projects retrieval"
-msgstr "CA projects retrieval"
-
 #, python-format
 msgid "CA specified by ca_id %(ca_id)s not defined for project: %(project_id)s"
 msgstr ""
@@ -153,18 +135,6 @@ msgstr "Cannot generate a fullname for a null instance"
 
 msgid "Cannot modify order type."
 msgstr "Cannot modify order type."
-
-msgid "Cannot set CA as a preferred CA as it is not a project CA."
-msgstr "Cannot set CA as a preferred CA as it is not a project CA."
-
-msgid "Certificate Authorities retrieval"
-msgstr "Certificate Authorities retrieval"
-
-msgid "Certificate Authorities retrieval (limited)"
-msgstr "Certificate Authorities retrieval (limited)"
-
-msgid "Certificate Authority retrieval"
-msgstr "Certificate Authority retrieval"
 
 msgid "Certificate event plugin \"{name}\" not found."
 msgstr "Certificate event plugin \"{name}\" not found."
@@ -722,17 +692,11 @@ msgstr "No data supplied to process."
 msgid "No entities of type {entity_name} found"
 msgstr "No entities of type {entity_name} found"
 
-msgid "No global preferred CA defined"
-msgstr "No global preferred CA defined"
-
 msgid "No key handle was found"
 msgstr "No key handle was found"
 
 msgid "No plugin was found that could support your request"
 msgstr "No plugin was found that could support your request"
-
-msgid "No preferred CA defined for this project"
-msgstr "No preferred CA defined for this project"
 
 msgid "No profile_id specified"
 msgstr "No profile_id specified"
@@ -778,15 +742,6 @@ msgstr "No {entity} found with ID {id}"
 
 msgid "Not Allowed. Sorry, only the creator of a consumer can delete it."
 msgstr "Not Allowed. Sorry, only the creator of a consumer can delete it."
-
-msgid "Not Found. CA attribute not found."
-msgstr "Not Found. CA attribute not found."
-
-msgid "Not Found. CA not found."
-msgstr "Not Found. CA not found."
-
-msgid "Not Found. CA not in project."
-msgstr "Not Found. CA not in project."
 
 msgid ""
 "Not Found. Multiple backends support is not enabled in service configuration."
@@ -951,11 +906,6 @@ msgstr ""
 "exceptions. If you notice this, you can lower this value to ensure that "
 "SQLAlchemy reconnects before MySQL can drop the connection."
 
-msgid ""
-"Please change the preferred CA to a different project CA before removing it."
-msgstr ""
-"Please change the preferred CA to a different project CA before removing it."
-
 msgid "Plugin does not support generation of subordinate CAs"
 msgstr "Plugin does not support generation of subordinate CAs"
 
@@ -1055,9 +1005,6 @@ msgstr "Quotas"
 msgid "Read Error"
 msgstr "Read Error"
 
-msgid "Remove CA from project"
-msgstr "Remove CA from project"
-
 msgid "Removing preferred secret store"
 msgstr "Removing preferred secret store"
 
@@ -1073,12 +1020,6 @@ msgstr "Requested algorithm is not supported"
 
 msgid "Retrieve global default secret store"
 msgstr "Retrieve global default secret store"
-
-msgid "Retrieve global preferred CA"
-msgstr "Retrieve global preferred CA"
-
-msgid "Retrieve project preferred CA"
-msgstr "Retrieve project preferred CA"
 
 msgid "Retrieve project preferred store"
 msgstr "Retrieve project preferred store"
@@ -1228,12 +1169,6 @@ msgstr ""
 
 msgid "Server name for RPC task processing server"
 msgstr "Server name for RPC task processing server"
-
-msgid "Set global preferred CA"
-msgstr "Set global preferred CA"
-
-msgid "Set preferred project CA"
-msgstr "Set preferred project CA"
 
 msgid "Setting preferred secret store"
 msgstr "Setting preferred secret store"
@@ -1394,17 +1329,11 @@ msgstr "Unknown"
 msgid "Unknown attribute type provided."
 msgstr "Unknown attribute type provided."
 
-msgid "Unset global preferred CA"
-msgstr "Unset global preferred CA"
-
 msgid "Update Order"
 msgstr "Update Order"
 
 msgid "Update Order failure seen - please contact site administrator."
 msgstr "Update Order failure seen - please contact site administrator."
-
-msgid "Updates are not supported for order type {0}."
-msgstr "Updates are not supported for order type {0}."
 
 msgid "User friendly plugin name"
 msgstr "User friendly plugin name"
