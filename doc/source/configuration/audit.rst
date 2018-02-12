@@ -38,7 +38,7 @@ used for creating events in CADF format.
   related mapping values are derived from taxonomy defined in pyCADF library.
 
 
-.. _keystonemiddleware: https://github.com/openstack/keystonemiddleware/blob/master/keystonemiddleware/audit.py
+.. _keystonemiddleware: https://github.com/openstack/keystonemiddleware/blob/master/keystonemiddleware/audit
 .. _Enabling Middleware Link: https://docs.openstack.org/keystonemiddleware/latest/audit.html#enabling-audit-middleware
 .. _Configuring Middleware Link: https://docs.openstack.org/keystonemiddleware/latest/audit.html#configure-audit-middleware
 
