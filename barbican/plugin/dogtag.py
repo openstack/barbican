@@ -19,8 +19,8 @@ import datetime
 import os
 from oslo_utils import uuidutils
 
-from Crypto.PublicKey import RSA
-from Crypto.Util import asn1
+from Crypto.PublicKey import RSA  # nosec
+from Crypto.Util import asn1  # nosec
 import pki
 
 subcas_available = True
