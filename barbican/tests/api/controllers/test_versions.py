@@ -79,6 +79,34 @@ class WhenTestingVersionsResource(utils.BarbicanAPIBaseTestCase):
             self.assertNotIn(dummy_root, v_info['links'][0]['href'])
             self.assertNotIn(host_hdr, v_info['links'][0]['href'])
 
+    def test_when_host_href_is_general(self):
+        host_href = 'http://myapp.server.com/key-manager'
+        cmn_utils.CONF.set_override('host_href', host_href)
+        host_hdr = 'http://myproxy.server.com:9311'
+        utils.mock_pecan_request(self, host=host_hdr)
+        dummy_root = 'http://mylocalhost:9999'
+        resp = self.app.get(dummy_root)
+
+        versions_response = resp.json['versions']['values']
+
+        for v_info in versions_response:
+            self.assertIn(host_href, v_info['links'][0]['href'])
+            self.assertNotIn(dummy_root, v_info['links'][0]['href'])
+            self.assertNotIn(host_hdr, v_info['links'][0]['href'])
+
+    def test_when_host_href_is_not_set_with_general_request_url(self):
+        cmn_utils.CONF.set_override('host_href', '')
+        host_hdr = 'http://myproxy.server.com/key-manager'
+        utils.mock_pecan_request(self, host=host_hdr)
+        dummy_root = 'http://mylocalhost:9999'
+        resp = self.app.get(dummy_root)
+
+        versions_response = resp.json['versions']['values']
+
+        for v_info in versions_response:
+            self.assertIn(host_hdr, v_info['links'][0]['href'])
+            self.assertNotIn(dummy_root, v_info['links'][0]['href'])
+
 
 class WhenTestingV1Resource(utils.BarbicanAPIBaseTestCase):
 

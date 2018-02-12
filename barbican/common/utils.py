@@ -78,7 +78,10 @@ def get_base_url_from_request():
     """
     if not CONF.host_href and hasattr(pecan.request, 'url'):
         p_url = parse.urlsplit(pecan.request.url)
-        base_url = '%s://%s' % (p_url.scheme, p_url.netloc)
+        if p_url.path:
+            base_url = '%s://%s%s' % (p_url.scheme, p_url.netloc, p_url.path)
+        else:
+            base_url = '%s://%s' % (p_url.scheme, p_url.netloc)
         return base_url
     else:  # when host_href is set or flow is not within wsgi request context
         return CONF.host_href

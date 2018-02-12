@@ -43,6 +43,8 @@ def _get_versioned_url(version):
         version += '/'
     # If host_href is not set in barbican conf, then derive it from request url
     host_part = utils.get_base_url_from_request()
+    if host_part[-1] != '/':
+        host_part += '/'
     return parse.urljoin(host_part, version)
 
 
