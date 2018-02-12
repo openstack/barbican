@@ -22,8 +22,20 @@ sys.path.insert(0, os.path.abspath('../..'))
 extensions = [
     'sphinx.ext.autodoc',
     # 'sphinx.ext.intersphinx',
-    'openstackdocstheme'
+    'openstackdocstheme',
+    'oslo_config.sphinxext',
+    'oslo_config.sphinxconfiggen',
+    'oslo_policy.sphinxext',
+    'oslo_policy.sphinxpolicygen',
 ]
+
+config_generator_config_file = [
+    ('../../etc/oslo-config-generator/barbican.conf',
+     '_static/barbican'),
+]
+
+policy_generator_config_file = '../../etc/oslo-config-generator/policy.conf'
+sample_policy_basename = '_static/barbican'
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
 # text edit cycles.
