@@ -24,6 +24,7 @@ import uuid
 from oslo_log import log
 from oslo_utils import uuidutils
 import pecan
+import re
 import six
 from six.moves.urllib import parse
 
@@ -76,8 +77,8 @@ def get_base_url_from_request():
     Some of unit tests does not have pecan context that's why using request
     attr check on pecan instance.
     """
-    if not CONF.host_href and hasattr(pecan.request, 'url'):
-        p_url = parse.urlsplit(pecan.request.url)
+    if not CONF.host_href and hasattr(pecan.request, 'application_url'):
+        p_url = parse.urlsplit(pecan.request.application_url)
         # Pecan does not handle X_FORWARDED_PROTO yet, so we need to
         # handle it ourselves. see lp#1445290
         scheme = pecan.request.environ.get('HTTP_X_FORWARDED_PROTO', 'http')
@@ -86,7 +87,9 @@ def get_base_url_from_request():
         netloc = pecan.request.environ.get('HTTP_HOST', p_url.netloc)
         # FIXME: implement SERVER_NAME lookup if HTTP_HOST is not set
         if p_url.path:
-            base_url = '%s://%s%s' % (scheme, netloc, p_url.path)
+            # Remove the version from the path to extract the base path
+            base_path = re.sub('/v[0-9\.]+$', '', p_url.path)
+            base_url = '%s://%s%s' % (scheme, netloc, base_path)
         else:
             base_url = '%s://%s' % (scheme, netloc)
         return base_url
