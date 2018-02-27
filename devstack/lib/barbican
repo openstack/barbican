@@ -109,7 +109,7 @@ function configure_barbican {
     cp $BARBICAN_DIR/etc/barbican/barbican-functional.conf $BARBICAN_CONF_DIR
 
     # Enable DEBUG
-    iniset $BARBICAN_CONF DEFAULT debug True
+    iniset $BARBICAN_CONF DEFAULT debug $ENABLE_DEBUG_LOG_LEVEL
 
     # Set the host_href
     iniset $BARBICAN_CONF DEFAULT host_href "$BARBICAN_HOST_HREF"
