@@ -24,7 +24,7 @@ from functionaltests.api.v1.models import secret_models
 
 default_secret_create_data = {
     "name": "AES key",
-    "expiration": "2018-02-28T19:14:44.180394",
+    "expiration": "2020-02-28T19:14:44.180394",
     "algorithm": "aes",
     "bit_length": 256,
     "mode": "cbc",
@@ -61,7 +61,7 @@ default_secret_create_emptystrings_data = {
 
 default_secret_create_two_phase_data = {
     "name": "AES key",
-    "expiration": "2018-02-28T19:14:44.180394",
+    "expiration": "2020-02-28T19:14:44.180394",
     "algorithm": "aes",
     "bit_length": 256,
     "mode": "cbc",
