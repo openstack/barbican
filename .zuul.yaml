@@ -1,6 +1,69 @@
+- job:
+    name: barbican-devstack-tempest-base
+    parent: legacy-dsvm-base
+    vars:
+      python_version: py27
+      database: sql
+      castellan_from_git: 0
+      cursive: 0
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/barbican
+      - openstack/barbican-tempest-plugin
+      - openstack/castellan
+      - openstack/cursive
+      - openstack/python-barbicanclient
+      - openstack/tempest
+    run: playbooks/legacy/barbican-devstack-tempest-base/run.yaml
+    post-run: playbooks/legacy/barbican-devstack-tempest-base/post.yaml
+    timeout: 4200
+
+- job:
+    name: barbican-simple-crypto-devstack-tempest
+    parent: barbican-devstack-tempest-base
+
+- job:
+    name: barbican-simple-crypto-devstack-tempest-castellan-from-git
+    parent: barbican-devstack-tempest-base
+    vars:
+      castellan_from_git: 1
+
+- job:
+    name: barbican-simple-crypto-devstack-tempest-cursive
+    parent: barbican-devstack-tempest-base
+    vars:
+      cursive: 1
+
+- job:
+    name: barbican-simple-crypto-devstack-tempest-py35
+    parent: barbican-devstack-tempest-base
+    voting: false
+    vars:
+      python_version: py35
+
+- job:
+    name: grenade-devstack-barbican
+    parent: legacy-dsvm-base
+    # Start testing with pike
+    branches: ^(?!stable/ocata).*$
+    irrelevant-files:
+      - ^(test-|)requirements.txt$
+      - ^setup.cfg$
+    run: playbooks/legacy/grenade-devstack-barbican/run.yaml
+    post-run: playbooks/legacy/grenade-devstack-barbican/post.yaml
+    required-projects:
+      - openstack-dev/grenade
+      - openstack-infra/devstack-gate
+      - openstack/barbican
+      - openstack/barbican-tempest-plugin
+      - openstack/python-barbicanclient
+    timeout: 7800
+
 - project:
     check:
       jobs:
+        - barbican-simple-crypto-devstack-tempest
+        - grenade-devstack-barbican
         # TripleO jobs that deploy Barbican.
         # Note we don't use a project-template here, so it's easier
         # to disable voting on one specific job if things go wrong.
@@ -13,3 +76,11 @@
             voting: false
         - tripleo-ci-centos-7-scenario002-multinode-oooq-container:
             voting: false
+    gate:
+      queue: barbican
+      jobs:
+        - barbican-simple-crypto-devstack-tempest
+        - grenade-devstack-barbican
+    experimental:
+      jobs:
+        - barbican-simple-crypto-devstack-tempest-py35
