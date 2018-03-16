@@ -83,7 +83,7 @@ Barbican PKCS11/HSM
     Rewrap project key encryption keys after rotating to new MKEK and/or HMAC
     key(s) in HSM. The new MKEK and HMAC key should have already been generated
     using the above commands. The user will have to configure new MKEK and HMAC
-    key labels in /etc/barbican.conf and restart barbican server before
+    key labels in /etc/barbican/barbican.conf and restart barbican server before
     executing this command.
 
 .. _Database Migration: https://docs.openstack.org/barbican/latest/contributor/database_migrations.html
