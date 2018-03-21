@@ -18,6 +18,7 @@ import copy
 import datetime
 import os
 from oslo_utils import uuidutils
+import time
 
 from Crypto.PublicKey import RSA  # nosec
 from Crypto.Util import asn1  # nosec
@@ -148,6 +149,14 @@ class DogtagPluginNotSupportedException(exception.NotSupported):
         super(DogtagPluginNotSupportedException, self).__init__(message)
 
 
+class DogtagPluginArchivalException(exception.BarbicanException):
+    message = u._("Key archival failed.  Error returned from KRA.")
+
+
+class DogtagPluginGenerationException(exception.BarbicanException):
+    message = u._("Key generation failed.  Error returned from KRA.")
+
+
 class DogtagKRAPlugin(sstore.SecretStoreBase):
     """Implementation of the secret store plugin with KRA as the backend."""
 
@@ -177,6 +186,7 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
 
         self.keyclient.set_transport_cert(KRA_TRANSPORT_NICK)
         self.plugin_name = conf.dogtag_plugin.plugin_name
+        self.retries = conf.dogtag_plugin.retries
 
         LOG.debug("completed DogtagKRAPlugin init")
 
@@ -203,25 +213,41 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         the key_id
         """
         data_type = key.KeyClient.PASS_PHRASE_TYPE
-        client_key_id = uuidutils.generate_uuid(dashed=False)
-        if secret_dto.transport_key is not None:
-            # TODO(alee-3) send the transport key with the archival request
-            # once the Dogtag Client API changes.
-            response = self.keyclient.archive_pki_options(
-                client_key_id,
-                data_type,
-                secret_dto.secret,
-                key_algorithm=None,
-                key_size=None)
-        else:
-            response = self.keyclient.archive_key(
-                client_key_id,
-                data_type,
-                secret_dto.secret,
-                key_algorithm=None,
-                key_size=None)
+        key_id = None
 
-        meta_dict = {DogtagKRAPlugin.KEY_ID: response.get_key_id()}
+        attempts = 0
+        offset_time = 1
+        while attempts <= self.retries and key_id is None:
+            client_key_id = uuidutils.generate_uuid(dashed=False)
+            if secret_dto.transport_key is not None:
+                # TODO(alee-3) send the transport key with the archival request
+                # once the Dogtag Client API changes.
+                response = self.keyclient.archive_pki_options(
+                    client_key_id,
+                    data_type,
+                    secret_dto.secret,
+                    key_algorithm=None,
+                    key_size=None)
+            else:
+                response = self.keyclient.archive_key(
+                    client_key_id,
+                    data_type,
+                    secret_dto.secret,
+                    key_algorithm=None,
+                    key_size=None)
+
+            key_id = response.get_key_id()
+
+            if key_id is None:
+                LOG.warning("key_id is None.  attempts: {}".format(attempts))
+                attempts += 1
+                time.sleep(offset_time)
+                offset_time += 1
+
+        if key_id is None:
+            raise DogtagPluginArchivalException
+
+        meta_dict = {DogtagKRAPlugin.KEY_ID: key_id}
 
         self._store_secret_attributes(meta_dict, secret_dto)
         return meta_dict
@@ -381,7 +407,6 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
         usages = [key.SymKeyGenerationRequest.DECRYPT_USAGE,
                   key.SymKeyGenerationRequest.ENCRYPT_USAGE]
 
-        client_key_id = uuidutils.generate_uuid()
         algorithm = self._map_algorithm(key_spec.alg.lower())
 
         if algorithm is None:
@@ -392,11 +417,27 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
                 u._("Passphrase encryption is not supported for symmetric"
                     " key generating algorithms."))
 
-        response = self.keyclient.generate_symmetric_key(
-            client_key_id,
-            algorithm,
-            key_spec.bit_length,
-            usages)
+        key_id = None
+        attempts = 0
+        offset_time = 1
+        while attempts <= self.retries and key_id is None:
+            client_key_id = uuidutils.generate_uuid()
+            response = self.keyclient.generate_symmetric_key(
+                client_key_id,
+                algorithm,
+                key_spec.bit_length,
+                usages)
+            key_id = response.get_key_id()
+
+            if key_id is None:
+                LOG.warning("generate_symkey: key_id is None.  attempts: {}"
+                            .format(attempts))
+                attempts += 1
+                time.sleep(offset_time)
+                offset_time += 1
+
+        if key_id is None:
+            raise DogtagPluginGenerationException
 
         # Barbican expects stored keys to be base 64 encoded.  We need to
         # add flag to the keyclient.generate_symmetric_key() call above
