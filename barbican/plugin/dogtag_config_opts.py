@@ -55,6 +55,9 @@ dogtag_plugin_opts = [
     cfg.StrOpt('plugin_name',
                help=u._('User friendly plugin name'),
                default='Dogtag KRA'),
+    cfg.IntOpt('retries',
+               help=u._('Retries when storing or generating secrets'),
+               default=3)
 ]
 
 CONF.register_group(dogtag_plugin_group)
