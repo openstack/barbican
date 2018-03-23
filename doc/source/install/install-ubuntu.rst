@@ -28,4 +28,6 @@ Restart the Key Manager services:
 
 .. code-block:: console
 
-   # service openstack-barbican-api restart
+   # service barbican-keystone-listener restart
+   # service barbican-worker restart
+   # service apache2 restart
