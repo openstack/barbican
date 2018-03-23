@@ -66,7 +66,8 @@ def main():
 
         service.launch(
             CONF,
-            retry_scheduler.PeriodicServer()
+            retry_scheduler.PeriodicServer(),
+            restart_method='mutate'
         ).wait()
     except RuntimeError as e:
         fail(1, e)
