@@ -49,6 +49,7 @@ def mock_pecan_request(test_instance, host=None):
     mock_req = patcher_obj.start()
     test_instance.addCleanup(patcher_obj.stop)
     mock_req.url = host
+    mock_req.environ = os.environ.copy()
 
 
 @contextmanager
