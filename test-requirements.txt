@@ -22,7 +22,7 @@ tempest>=17.1.0 # Apache-2.0
 bandit>=1.1.0 # Apache-2.0
 
 # Documentation build requirements
-sphinx!=1.6.6,>=1.6.2 # BSD
+sphinx!=1.6.6,!=1.6.7,>=1.6.2 # BSD
 os-api-ref>=1.4.0 # Apache-2.0
 reno>=2.5.0 # Apache-2.0
 openstackdocstheme>=1.18.1 # Apache-2.0
