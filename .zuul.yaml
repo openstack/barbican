@@ -54,8 +54,8 @@
     timeout: 4200
 
 - job:
-    name: barbican-dogtag-devstack-functional-fedora-26
-    nodeset: legacy-fedora-26
+    name: barbican-dogtag-devstack-functional-fedora-27
+    nodeset: legacy-fedora-27
     parent: barbican-devstack-functional-base
     vars:
       services: barbican-dogtag,tempest,rabbit,mysql,key
@@ -90,8 +90,8 @@
       plugin: simple-crypto
 
 - job:
-    name: barbican-dogtag-devstack-fedora-26
-    nodeset: legacy-fedora-26
+    name: barbican-dogtag-devstack-fedora-27
+    nodeset: legacy-fedora-27
     parent: barbican-devstack-base
     vars:
       services: barbican-dogtag,tempest,keystone
@@ -159,7 +159,7 @@
         - barbican-simple-crypto-devstack-functional
         - barbican-simple-crypto-devstack-functional-py35
         - barbican-simple-crypto-devstack-functional-postgres
-        - barbican-dogtag-devstack-functional-fedora-26
+        - barbican-dogtag-devstack-functional-fedora-27
         - barbican-kmip-devstack-functional
         - grenade-devstack-barbican
         # TripleO jobs that deploy Barbican.
@@ -182,7 +182,7 @@
         - barbican-simple-crypto-devstack-functional
         - barbican-simple-crypto-devstack-functional-py35
         - barbican-kmip-devstack-functional
-        - barbican-dogtag-devstack-functional-fedora-26
+        - barbican-dogtag-devstack-functional-fedora-27
         - grenade-devstack-barbican
         - openstack-tox-lower-constraints
     experimental:
