@@ -134,12 +134,6 @@ function configure_barbican {
     # Increase default request buffer size, keystone auth PKI tokens can be very long
     iniset $BARBICAN_CONF_DIR/vassals/barbican-api.ini uwsgi buffer-size 65535
 
-    # Rabbit settings
-    if is_service_enabled rabbit; then
-        iniset $BARBICAN_CONF 'secrets' broker rabbit://guest:$RABBIT_PASSWORD@$RABBIT_HOST
-    else
-        echo_summary "Barbican requires that the RabbitMQ service is enabled"
-    fi
     write_uwsgi_config "$BARBICAN_UWSGI_CONF" "$BARBICAN_WSGI" "/key-manager"
     ## Set up keystone
 
