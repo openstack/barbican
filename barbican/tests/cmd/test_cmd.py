@@ -81,5 +81,5 @@ class WhenInvokingWorkerCommand(test_keystone_listener.UtilMixin,
         self.assertEqual(1, mock_queue_init.call_count)
         self.assertEqual(1, mock_service_launch.call_count)
         # check keyword argument for number of worker matches
-        workers_kwarg = {'workers': 3}
+        workers_kwarg = {'restart_method': 'mutate', 'workers': 3}
         self.assertEqual(workers_kwarg, mock_service_launch.call_args[1])

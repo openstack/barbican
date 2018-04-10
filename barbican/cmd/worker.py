@@ -67,7 +67,8 @@ def main():
         service.launch(
             CONF,
             server.TaskServer(),
-            workers=CONF.queue.asynchronous_workers
+            workers=CONF.queue.asynchronous_workers,
+            restart_method='mutate'
         ).wait()
     except RuntimeError as e:
         fail(1, e)

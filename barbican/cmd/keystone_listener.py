@@ -73,7 +73,8 @@ def main():
         if getattr(getattr(CONF, queue.KS_NOTIFICATIONS_GRP_NAME), 'enable'):
             service.launch(
                 CONF,
-                keystone_listener.MessageServer(CONF)
+                keystone_listener.MessageServer(CONF),
+                restart_method='mutate'
             ).wait()
         else:
             LOG.info("Exiting as Barbican Keystone listener is not enabled...")
