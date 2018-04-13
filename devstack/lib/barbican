@@ -156,6 +156,7 @@ function configure_barbican {
 
     # Enable the keystone listener
     iniset $BARBICAN_CONF keystone_notifications enable True
+    iniset $BARBICAN_CONF keystone_notifications control_exchange 'keystone'
 }
 
 # init_barbican - Initialize etc.

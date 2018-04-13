@@ -168,7 +168,7 @@ ks_queue_opts = [
     cfg.BoolOpt('enable', default=False,
                 help=u._('True enables keystone notification listener '
                          ' functionality.')),
-    cfg.StrOpt('control_exchange', default='openstack',
+    cfg.StrOpt('control_exchange', default='keystone',
                help=u._('The default exchange under which topics are scoped. '
                         'May be overridden by an exchange name specified in '
                         'the transport_url option.')),
