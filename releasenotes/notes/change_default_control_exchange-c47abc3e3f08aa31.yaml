@@ -1,0 +1,4 @@
+---
+other:
+  - default value of 'control_exchange' in 'barbican.conf'
+    has been changed to 'keystone'.
