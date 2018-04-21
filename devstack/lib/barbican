@@ -3,7 +3,7 @@
 # Install and start **Barbican** service
 
 # To enable a minimal set of Barbican features, add the following to localrc:
-#   enable_service barbican-svc barbican-retry
+#   enable_service barbican-svc barbican-retry barbican-keystone-listener
 #
 # Dependencies:
 # - functions
@@ -48,6 +48,10 @@ function is_barbican-retry_enabled {
 }
 
 function is_barbican-svc_enabled {
+    [[ ,${ENABLED_SERVICES} =~ ,"barbican" ]] && return 0
+}
+
+function is_barbican-keystone-listener_enabled {
     [[ ,${ENABLED_SERVICES} =~ ,"barbican" ]] && return 0
 }
 
@@ -136,10 +140,11 @@ function configure_barbican {
 
     # Rabbit settings
     if is_service_enabled rabbit; then
-        iniset $BARBICAN_CONF 'secrets' broker rabbit://guest:$RABBIT_PASSWORD@$RABBIT_HOST
+        iniset $BARBICAN_CONF DEFAULT transport_url rabbit://$RABBIT_USERID:$RABBIT_PASSWORD@$RABBIT_HOST:5672
     else
         echo_summary "Barbican requires that the RabbitMQ service is enabled"
     fi
+
     write_uwsgi_config "$BARBICAN_UWSGI_CONF" "$BARBICAN_WSGI" "/key-manager"
     ## Set up keystone
 
@@ -148,6 +153,9 @@ function configure_barbican {
 
     # Set the keystone parameters
     configure_auth_token_middleware $BARBICAN_CONF barbican $BARBICAN_AUTH_CACHE_DIR
+
+    # Enable the keystone listener
+    iniset $BARBICAN_CONF keystone_notifications enable True
 }
 
 # init_barbican - Initialize etc.
@@ -191,6 +199,9 @@ function start_barbican {
 
     # Start the retry scheduler server up.
     run_process barbican-retry "$BARBICAN_BIN_DIR/barbican-retry --config-file=$BARBICAN_CONF_DIR/barbican.conf"
+
+    # Start the barbican-keystone-listener
+    run_process barbican-keystone-listener "$BARBICAN_BIN_DIR/barbican-keystone-listener --config-file=$BARBICAN_CONF_DIR/barbican.conf"
 }
 
 # stop_barbican - Stop running processes
@@ -205,6 +216,8 @@ function stop_barbican {
     stop_process barbican-svc
 
     stop_process barbican-retry
+
+    stop_process barbican-keystone-listener
 }
 
 function get_id {

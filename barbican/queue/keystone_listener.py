@@ -20,6 +20,7 @@ import oslo_messaging
 from oslo_service import service
 
 from barbican.common import utils
+from barbican.model import repositories
 from barbican import queue
 from barbican.tasks import keystone_consumer
 
@@ -41,6 +42,7 @@ class NotificationTask(object):
 
     def __init__(self, conf):
         self.conf = conf
+        repositories.setup_database_engine_and_factory()
 
     def info(self, ctxt, publisher_id, event_type, payload, metadata):
         """Receives notification at info level."""
