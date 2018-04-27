@@ -18,7 +18,10 @@ import datetime
 import os
 import tempfile
 
-from Crypto.PublicKey import RSA  # nosec
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import serialization
+
 import mock
 from requests import exceptions as request_exceptions
 import testtools
@@ -55,7 +58,9 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
         self.plugin_name = "Test Dogtag KRA plugin"
         self.cfg_mock = mock.MagicMock(name='config mock')
         self.cfg_mock.dogtag_plugin = mock.MagicMock(
-            nss_db_path=self.nss_dir, plugin_name=self.plugin_name)
+            nss_db_path=self.nss_dir,
+            plugin_name=self.plugin_name,
+            retries=3)
         self.plugin = dogtag_import.DogtagKRAPlugin(self.cfg_mock)
         self.plugin.keyclient = self.keyclient_mock
 
@@ -163,9 +168,16 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
         self.keyclient_mock.retrieve_key.assert_called_once_with('key1', twsk)
 
     def test_get_private_key(self):
-        test_key = RSA.generate(2048)
+        test_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+            backend=default_backend()
+        )
         key_data = dogtag_key.KeyData()
-        key_data.data = test_key.exportKey('DER')
+        key_data.data = test_key.private_bytes(
+            serialization.Encoding.DER,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption())
         self.keyclient_mock.retrieve_key.return_value = key_data
         secret_metadata = {
             dogtag_import.DogtagKRAPlugin.ALG: sstore.KeyAlgorithm.RSA,
@@ -176,13 +188,23 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
         result = self.plugin.get_secret(sstore.SecretType.PRIVATE,
                                         secret_metadata)
 
-        self.assertEqual(test_key.exportKey('PEM').encode('utf-8'),
-                         result.secret)
+        self.assertEqual(
+            test_key.private_bytes(
+                serialization.Encoding.PEM,
+                serialization.PrivateFormat.PKCS8,
+                serialization.NoEncryption()),
+            result.secret
+        )
 
     def test_get_public_key(self):
-        test_public_key = RSA.generate(2048).publickey()
+        test_public_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+            backend=default_backend()).public_key()
         key_info = dogtag_key.KeyInfo()
-        key_info.public_key = test_public_key.exportKey('DER')
+        key_info.public_key = test_public_key.public_bytes(
+            serialization.Encoding.DER,
+            serialization.PublicFormat.PKCS1)
         self.keyclient_mock.get_key_info.return_value = key_info
         secret_metadata = {
             dogtag_import.DogtagKRAPlugin.ALG: sstore.KeyAlgorithm.RSA,
@@ -193,8 +215,12 @@ class WhenTestingDogtagKRAPlugin(utils.BaseTestCase):
         result = self.plugin.get_secret(sstore.SecretType.PUBLIC,
                                         secret_metadata)
 
-        self.assertEqual(test_public_key.exportKey('PEM').encode('utf-8'),
-                         result.secret)
+        self.assertEqual(
+            test_public_key.public_bytes(
+                serialization.Encoding.PEM,
+                serialization.PublicFormat.PKCS1),
+            result.secret
+        )
 
     def test_store_passphrase_for_using_in_private_key_retrieval(self):
 

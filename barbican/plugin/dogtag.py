@@ -15,13 +15,13 @@
 
 import base64
 import copy
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 import datetime
 import os
 from oslo_utils import uuidutils
 import time
 
-from Crypto.PublicKey import RSA  # nosec
-from Crypto.Util import asn1  # nosec
 import pki
 
 subcas_available = True
@@ -316,51 +316,32 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
                 # as it is treated as an attribute of the asymmetric key pair
                 # stored in the KRA database.
 
-                if key_spec.alg is None:
-                    raise sstore.SecretAlgorithmNotSupportedException('None')
-
                 key_info = self.keyclient.get_key_info(key_id)
-                if key_spec.alg.upper() == key.KeyClient.RSA_ALGORITHM:
-                    recovered_key = (RSA.importKey(key_info.public_key)
-                                     .publickey()
-                                     .exportKey('PEM')).encode('utf-8')
-                elif key_spec.alg.upper() == key.KeyClient.DSA_ALGORITHM:
-                    pub_seq = asn1.DerSequence()
-                    pub_seq[:] = key_info.public_key
-                    recovered_key = (
-                        ("%s\n%s%s" %
-                         (DogtagKRAPlugin.DSA_PUBLIC_KEY_HEADER,
-                          pub_seq.encode().encode("base64"),
-                          DogtagKRAPlugin.DSA_PUBLIC_KEY_FOOTER)
-                         ).encode('utf-8')
-                    )
-                else:
-                    raise sstore.SecretAlgorithmNotSupportedException(
-                        key_spec.alg.upper()
-                    )
+                recovered_key = serialization.load_der_public_key(
+                    key_info.public_key,
+                    backend=default_backend()
+                ).public_bytes(
+                    serialization.Encoding.PEM,
+                    serialization.PublicFormat.PKCS1)
 
             elif secret_type == sstore.SecretType.PRIVATE:
                 key_data = self.keyclient.retrieve_key(key_id)
-                if key_spec.alg.upper() == key.KeyClient.RSA_ALGORITHM:
-                    recovered_key = (
-                        (RSA.importKey(key_data.data)
-                         .exportKey('PEM', passphrase, 8))
-                        .encode('utf-8')
-                    )
-                elif key_spec.alg.upper() == key.KeyClient.DSA_ALGORITHM:
-                    pub_seq = asn1.DerSequence()
-                    pub_seq[:] = key_data.data
-                    recovered_key = (
-                        ("%s\n%s%s" %
-                         (DogtagKRAPlugin.DSA_PRIVATE_KEY_HEADER,
-                          pub_seq.encode().encode("base64"),
-                          DogtagKRAPlugin.DSA_PRIVATE_KEY_FOOTER)
-                         ).encode('utf-8')
-                    )
+                private_key = serialization.load_der_private_key(
+                    key_data.data,
+                    password=None,
+                    backend=default_backend()
+                )
+
+                if passphrase is not None:
+                    e_alg = serialization.BestAvailableEncryption(passphrase)
                 else:
-                    raise sstore.SecretAlgorithmNotSupportedException(
-                        key_spec.alg.upper()
-                    )
+                    e_alg = serialization.NoEncryption()
+
+                recovered_key = private_key.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.PKCS8,
+                    encryption_algorithm=e_alg
+                )
         else:
             # TODO(alee-3) send transport key as well when dogtag client API
             # changes in case the transport key has changed.
