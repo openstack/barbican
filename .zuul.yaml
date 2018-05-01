@@ -55,7 +55,7 @@
 
 - job:
     name: barbican-dogtag-devstack-functional-fedora-27
-    nodeset: legacy-fedora-27
+    nodeset: devstack-single-node-fedora-27
     parent: barbican-devstack-functional-base
     vars:
       services: barbican-dogtag,tempest,rabbit,mysql,key
@@ -91,7 +91,7 @@
 
 - job:
     name: barbican-dogtag-devstack-fedora-27
-    nodeset: legacy-fedora-27
+    nodeset: devstack-single-node-fedora-27
     parent: barbican-devstack-base
     vars:
       services: barbican-dogtag,tempest,keystone
