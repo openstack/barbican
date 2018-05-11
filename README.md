@@ -1,7 +1,7 @@
 Team and repository tags
 ========================
 
-[![Team and repository tags](http://governance.openstack.org/badges/barbican.svg)](http://governance.openstack.org/reference/tags/index.html)
+[![Team and repository tags](https://governance.openstack.org/tc/badges/barbican.svg)](https://governance.openstack.org/tc/reference/tags/index.html)
 
 <!-- Change things from this point on -->
 
@@ -26,8 +26,8 @@ http://lists.openstack.org/pipermail/openstack/) at
 `openstack@lists.openstack.org` with the prefix `[barbican]` in the
 subject.
 
-To file a bug, use our bug tracker on [Launchpad](
-https://bugs.launchpad.net/barbican/).
+To file a bug, use our bug tracker on [OpenStack Storyboard](
+https://storyboard.openstack.org/#!/project/980).
 
 For development questions or discussion, hop on the [OpenStack-dev mailing list
 ](http://lists.openstack.org/pipermail/openstack-dev/)
