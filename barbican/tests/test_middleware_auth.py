@@ -35,7 +35,7 @@ expected_response = {"v1": "current", "build": "0.1.34dev"}
 
 # curl -XPOST -d '{"auth":{"passwordCredentials":{"username": "demo",
 # "password": "secret"}, "tenantName": "demo"}}'
-# -H "Content-type: application/json" http://localhost:35357/v2.0/tokens
+# -H "Content-type: application/json" http://localhost:5000/v3/tokens
 #
 # pull out the token_id from above and use in ping_barbican
 #
