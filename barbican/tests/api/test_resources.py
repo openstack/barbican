@@ -42,8 +42,8 @@ def get_barbican_env(external_project_id):
     Injects the provided external_project_id.
     """
     kwargs = {'roles': None,
-              'user': None,
-              'project': external_project_id,
+              'user_id': None,
+              'project_id': external_project_id,
               'is_admin': True}
     ctx = barbican.context.RequestContext(**kwargs)
     ctx.policy_enforcer = None

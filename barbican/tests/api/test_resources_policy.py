@@ -131,8 +131,8 @@ class BaseTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
         req.get_param.return_value = None
 
         kwargs = {
-            'user': user_id,
-            'project': project_id,
+            'user_id': user_id,
+            'project_id': project_id,
             'roles': roles or [],
             'policy_enforcer': self.policy_enforcer,
         }

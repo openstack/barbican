@@ -25,11 +25,8 @@ class RequestContext(oslo_context.context.RequestContext):
     accesses the system, as well as additional request information.
     """
 
-    def __init__(self, policy_enforcer=None, project=None, **kwargs):
+    def __init__(self, policy_enforcer=None, **kwargs):
         # prefer usage of 'project' instead of 'tenant'
-        if project:
-            kwargs['tenant'] = project
-        self.project = project
         if policy_enforcer:
             self.policy_enforcer = policy_enforcer
         else:
@@ -41,12 +38,6 @@ class RequestContext(oslo_context.context.RequestContext):
         out_dict = super(RequestContext, self).to_dict()
         out_dict['roles'] = self.roles
 
-        # NOTE(jaosorior): For now, the oslo_context library uses 'tenant'
-        # instead of project. But in case this changes, this will still issue
-        # the dict we expect, which would contain 'project'.
-        if out_dict.get('tenant'):
-            out_dict['project'] = out_dict['tenant']
-            out_dict.pop('tenant')
         return out_dict
 
     @classmethod

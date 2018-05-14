@@ -37,8 +37,8 @@ def get_barbican_env(external_project_id):
             return
 
     kwargs = {'roles': None,
-              'user': None,
-              'project': external_project_id,
+              'user_id': None,
+              'project_id': external_project_id,
               'is_admin': True,
               'policy_enforcer': NoopPolicyEnforcer()}
     barbican_env = {'barbican.context':
