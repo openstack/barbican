@@ -227,6 +227,20 @@ class SecretAlgorithmNotSupportedException(exception.BarbicanHTTPException):
         self.algorithm = algorithm
 
 
+class GeneratePassphraseNotSupportedException(exception.BarbicanHTTPException):
+    """Raised when generating keys encrypted by passphrase is not supported."""
+
+    client_message = (
+        u._("Generating keys encrypted with passphrases is not supported")
+    )
+    status_code = 400
+
+    def __init__(self):
+        super(GeneratePassphraseNotSupportedException, self).__init__(
+            self.client_message
+        )
+
+
 class SecretStorePluginsNotConfigured(exception.BarbicanException):
     """Raised when there are no secret store plugins configured."""
     def __init__(self):
