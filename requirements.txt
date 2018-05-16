@@ -22,7 +22,6 @@ Paste>=2.0.2 # MIT
 PasteDeploy>=1.5.0 # MIT
 pbr!=2.1.0,>=2.0.0 # Apache-2.0
 pecan!=1.0.2,!=1.0.3,!=1.0.4,!=1.2,>=1.0.0 # BSD
-pycrypto>=2.6 # Public Domain
 pyOpenSSL>=17.1.0 # Apache-2.0
 ldap3>=1.0.2 # LGPLv3
 keystonemiddleware>=4.17.0 # Apache-2.0
