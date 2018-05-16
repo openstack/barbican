@@ -62,6 +62,14 @@
       plugin: dogtag
 
 - job:
+    name: barbican-vault-devstack-functional
+    parent: barbican-devstack-functional-base
+    voting: false
+    vars:
+      services: barbican-vault,tempest,rabbit,mysql,key
+      plugin: vault
+
+- job:
     name: barbican-kmip-devstack-functional
     parent: barbican-devstack-functional-base
     vars:
@@ -188,3 +196,4 @@
     experimental:
       jobs:
         - barbican-simple-crypto-devstack-tempest-py35
+        - barbican-vault-devstack-functional

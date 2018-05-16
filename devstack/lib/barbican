@@ -570,5 +570,49 @@ function install_dogtag_components {
 }
 
 
+# Vault functions
+# ----------------
+
+function install_vault {
+    wget https://releases.hashicorp.com/vault/0.10.1/vault_0.10.1_linux_amd64.zip
+    unzip vault_0.10.1_linux_amd64.zip
+    sudo mv vault /usr/bin
+    install_package screen
+    screen -d -m bash -c "vault server -dev -dev-listen-address=${HOST_IP}:8200 2>&1 >vault.log"
+
+    # get the root_token_id, use tempfile for counter
+    TOKEN_ID_FILE="vault_root_token_id"
+    touch $TOKEN_ID_FILE
+
+    COUNTER=0
+
+    while [ ! -s $TOKEN_ID_FILE ] && [ "$COUNTER" -lt "20" ]
+    do
+        sleep 2
+        awk '/Root Token:/ {print $3}' vault.log > $TOKEN_ID_FILE
+        COUNTER=$[COUNTER + 1]
+    done
+
+    if [ ! -s $TOKEN_ID_FILE ]; then
+        echo "Wah! Need to throw an error code here!"
+    fi
+
+    #debug code follows:
+    export VAULT_ADDR="http://${HOST_IP}:8200"
+    vault status
+    vault kv put secret/hello foo=world
+    vault kv get secret/hello
+    vault kv delete secret/hello
+
+}
+
+function configure_vault_plugin {
+    root_token_id=`cat vault_root_token_id`
+    iniset $BARBICAN_CONF secretstore enabled_secretstore_plugins vault_plugin
+    iniset $BARBICAN_CONF vault_plugin root_token_id $root_token_id
+    iniset $BARBICAN_CONF vault_plugin vault_url "http://${HOST_IP}:8200"
+    iniset $BARBICAN_CONF vault_plugin use_ssl "false"
+}
+
 # Restore xtrace
 $XTRACE
