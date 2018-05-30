@@ -768,10 +768,10 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
         self.assertEqual(
             self.expected_username,
-            actual_credential.credential_value.username.value)
+            actual_credential.credential_value.username)
         self.assertEqual(
             self.expected_password,
-            actual_credential.credential_value.password.value)
+            actual_credential.credential_value.password)
 
     def test_credential_None(self):
         CONF = kss.CONF

@@ -234,7 +234,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 conf.kmip_plugin.password is None):
             self.credential = None
         else:
-            credential_type = credentials.CredentialType.USERNAME_AND_PASSWORD
+            credential_type = enums.CredentialType.USERNAME_AND_PASSWORD
             credential_value = {'Username': conf.kmip_plugin.username,
                                 'Password': conf.kmip_plugin.password}
             self.credential = (

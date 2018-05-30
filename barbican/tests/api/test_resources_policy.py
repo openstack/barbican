@@ -28,6 +28,7 @@ from barbican.api.controllers import orders
 from barbican.api.controllers import secrets
 from barbican.api.controllers import secretstores
 from barbican.api.controllers import versions
+from barbican.common import accept as common_accept
 from barbican.common import config
 from barbican.common import policy
 from barbican import context
@@ -139,10 +140,7 @@ class BaseTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
         req.environ = {}
         req.environ['barbican.context'] = context.RequestContext(**kwargs)
         req.content_type = content_type
-        if accept:
-            req.accept.header_value.return_value = accept
-        else:
-            req.accept = None
+        req.accept = common_accept.create_accept_header(accept)
 
         return req
 

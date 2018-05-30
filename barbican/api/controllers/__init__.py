@@ -16,6 +16,7 @@ import pecan
 from webob import exc
 
 from barbican import api
+from barbican.common import accept
 from barbican.common import utils
 from barbican import i18n as u
 
@@ -28,9 +29,13 @@ def is_json_request_accept(req):
     :param req: HTTP request
     :return: True if need to return JSON response.
     """
-    return (not req.accept
-            or req.accept.header_value == 'application/json'
-            or req.accept.header_value == '*/*')
+    return (
+        type(req.accept) is accept.NoHeaderType or
+        type(req.accept) is accept.ValidHeaderType and (
+            req.accept.header_value == 'application/json' or
+            req.accept.header_value == '*/*'
+        )
+    )
 
 
 def _get_barbican_context(req):

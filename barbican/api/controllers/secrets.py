@@ -18,6 +18,7 @@ from barbican import api
 from barbican.api import controllers
 from barbican.api.controllers import acls
 from barbican.api.controllers import secretmeta
+from barbican.common import accept
 from barbican.common import exception
 from barbican.common import hrefs
 from barbican.common import quota
@@ -159,8 +160,11 @@ class SecretController(controllers.ACLMixin):
         project = res.get_or_create_project(external_project_id)
 
         # default to application/octet-stream if there is no Accept header
-        accept_header = getattr(pecan.request.accept, 'header_value',
-                                'application/octet-stream')
+        if (type(pecan.request.accept) is accept.NoHeaderType or
+                not pecan.request.accept.header_value):
+            accept_header = 'application/octet-stream'
+        else:
+            accept_header = pecan.request.accept.header_value
         pecan.override_template('', accept_header)
 
         # check if payload exists before proceeding
