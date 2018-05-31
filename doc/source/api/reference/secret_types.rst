@@ -152,7 +152,7 @@ we will be using a metadata-only POST followed by a PUT.
 
 This should return a reference (URI) for the secret that was created:
 
-.. code-block:: json
+.. code-block:: console
 
    200 OK
 
@@ -173,7 +173,7 @@ We can use this reference to add the payload with a PUT request:
 The server should respond with a 2xx response to indicate that the PUT request
 was processed successfully:
 
-.. code-block:: json
+.. code-block:: console
 
    204 - No Content
 
@@ -249,7 +249,7 @@ we will be using a single POST request.
 
 This should return a reference (URI) for the secret that was created.
 
-.. code-block:: json
+.. code-block:: console
 
    200 OK
 

@@ -70,7 +70,7 @@ Response:
 Request:
 ********
 
-.. code-block:: javascript
+.. code-block:: console
 
     GET {container_ref}/consumers?limit=1\&offset=1
     Headers:
