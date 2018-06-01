@@ -3,7 +3,7 @@
 
    * In the ``[DEFAULT]`` section, configure database access:
 
-     .. code-block:: none
+     .. code-block:: ini
 
         [DEFAULT]
         ...
