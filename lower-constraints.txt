@@ -87,7 +87,6 @@ prettytable==0.7.2
 pyasn1==0.4.2
 pycadf==2.7.0
 pycparser==2.18
-pycrypto==2.6
 pyflakes==0.8.1
 Pygments==2.2.0
 pyinotify==0.9.6
