@@ -52,6 +52,7 @@ sa_logger = None
 # Singleton repository references, instantiated via get_xxxx_repository()
 #   functions below.  Please keep this list in alphabetical order.
 _CA_REPOSITORY = None
+_CONTAINER_ACL_USER_REPOSITORY = None
 _CONTAINER_ACL_REPOSITORY = None
 _CONTAINER_CONSUMER_REPOSITORY = None
 _CONTAINER_REPOSITORY = None
@@ -66,6 +67,7 @@ _PREFERRED_CA_REPOSITORY = None
 _PROJECT_REPOSITORY = None
 _PROJECT_CA_REPOSITORY = None
 _PROJECT_QUOTAS_REPOSITORY = None
+_SECRET_ACL_USER_REPOSITORY = None
 _SECRET_ACL_REPOSITORY = None
 _SECRET_META_REPOSITORY = None
 _SECRET_USER_META_REPOSITORY = None
@@ -1984,6 +1986,26 @@ class SecretACLRepo(BaseRepo):
             entity.delete(session=session)
 
 
+class SecretACLUserRepo(BaseRepo):
+    """Repository for the SecretACLUser entity."""
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "SecretACLUser"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+
+        query = session.query(models.SecretACLUser)
+        query = query.filter_by(id=entity_id)
+
+        return query
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
 class ContainerACLRepo(BaseRepo):
     """Repository for the ContainerACL entity.
 
@@ -2078,6 +2100,25 @@ class ContainerACLRepo(BaseRepo):
 
         for entity in container.container_acls:
             entity.delete(session=session)
+
+
+class ContainerACLUserRepo(BaseRepo):
+    """Repository for ContainerACLUser entity."""
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "ContainerACLUser"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+
+        query = session.query(models.ContainerACLUser)
+        query = query.filter_by(id=entity_id)
+
+        return query
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
 
 
 class ProjectQuotasRepo(BaseRepo):
@@ -2382,6 +2423,13 @@ def get_container_secret_repository():
     return _get_repository(_CONTAINER_SECRET_REPOSITORY, ContainerSecretRepo)
 
 
+def get_container_acl_user_repository():
+    """Returns a singleton Container-ACL-User repository instance."""
+    global _CONTAINER_ACL_USER_REPOSITORY
+    return _get_repository(_CONTAINER_ACL_USER_REPOSITORY,
+                           ContainerACLUserRepo)
+
+
 def get_encrypted_datum_repository():
     """Returns a singleton Encrypted Datum repository instance."""
     global _ENCRYPTED_DATUM_REPOSITORY
@@ -2451,6 +2499,12 @@ def get_secret_acl_repository():
     """Returns a singleton Secret ACL repository instance."""
     global _SECRET_ACL_REPOSITORY
     return _get_repository(_SECRET_ACL_REPOSITORY, SecretACLRepo)
+
+
+def get_secret_acl_user_repository():
+    """Returns a singleton Secret-ACL-User repository instance."""
+    global _SECRET_ACL_USER_REPOSITORY
+    return _get_repository(_SECRET_ACL_USER_REPOSITORY, SecretACLUserRepo)
 
 
 def get_secret_meta_repository():
