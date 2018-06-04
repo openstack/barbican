@@ -14,7 +14,6 @@ import itertools
 
 from barbican.common.policies import acls
 from barbican.common.policies import base
-from barbican.common.policies import cas
 from barbican.common.policies import consumers
 from barbican.common.policies import containers
 from barbican.common.policies import orders
@@ -29,7 +28,6 @@ def list_rules():
     return itertools.chain(
         base.list_rules(),
         acls.list_rules(),
-        cas.list_rules(),
         consumers.list_rules(),
         containers.list_rules(),
         orders.list_rules(),
