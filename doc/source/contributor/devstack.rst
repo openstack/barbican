@@ -89,7 +89,7 @@ to expose the following ports
 
 #. Barbican - ``9311``
 #. Keystone API - ``5000``
-#. Keystone Admin API - ``35357``
+#. Keystone Admin API - ``5000``
 
 Installation
 ^^^^^^^^^^^^

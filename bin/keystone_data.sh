@@ -17,7 +17,7 @@ export OS_USERNAME="nova"
 # alternately service_token and endpoint
 
 #export OS_TOKEN=orange
-#export OS_URL=http://localhost:35357/v2.0
+#export OS_URL=http://localhost:5000/v3
 # ========================================
 
 echo " OS_URL="$OS_URL
@@ -45,7 +45,7 @@ KEYSTONE_CATALOG_BACKEND='sql'
 SERVICE_PROJECT=$(openstack project show "$SERVICE_PROJECT_NAME" -f value -c id)
 ADMIN_ROLE=$(openstack role show admin -f value -c id)
 
-# Ports to avoid: 3333, 5000, 8773, 8774, 8776, 9292, 9696, 35357
+# Ports to avoid: 3333, 5000, 8773, 8774, 8776, 9292, 9696
 # Barbican
 if [[ "$ENABLED_SERVICES" =~ "barbican" ]]; then
     #

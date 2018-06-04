@@ -55,7 +55,7 @@ the get version call.
        project_name = {YOUR_KEYSTONE_PROJECT}
        project_domain_id = {YOUR_KEYSTONE_PROJECT_DOMAIN}
        www_authenticate_uri = http://{YOUR_KEYSTONE_ENDPOINT}:5000/v3
-       auth_url = http://{YOUR_KEYSTONE_ENDPOINT}:35357/v3
+       auth_url = http://{YOUR_KEYSTONE_ENDPOINT}:5000/v3
 
     Alternatively, you can shorten this to
 
@@ -77,7 +77,7 @@ the get version call.
       project_name = {YOUR_KEYSTONE_PROJECT}
       project_domain_id = {YOUR_KEYSTONE_PROJECT_DOMAIN}
       www_authenticate_uri = http://{YOUR_KEYSTONE_ENDPOINT}:5000/v3
-      auth_url = http://{YOUR_KEYSTONE_ENDPOINT}:35357/v3
+      auth_url = http://{YOUR_KEYSTONE_ENDPOINT}:5000/v3
 
 3. Start Barbican ``{barbican_home}/bin/barbican.sh start``
 
