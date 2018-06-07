@@ -23,6 +23,10 @@ if is_service_enabled barbican; then
             echo_summary "Installing Dogtag"
             install_dogtag_components
         fi
+        if is_service_enabled barbican-vault; then
+            echo_summary "Installing Vault"
+            install_vault
+        fi
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring Barbican"
         configure_barbican
@@ -33,6 +37,10 @@ if is_service_enabled barbican; then
         if is_service_enabled barbican-dogtag; then
             echo_summary "Configuring Dogtag plugin"
             configure_dogtag_plugin
+        fi
+        if is_service_enabled barbican-vault; then
+            echo_summary "Configuring Vault plugin"
+            configure_vault_plugin
         fi
         configure_barbicanclient
 
