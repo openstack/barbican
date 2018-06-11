@@ -279,7 +279,7 @@ What you might see
 .. code-block:: json
 
     {
-        title: "Malformed JSON"
+        "title": "Malformed JSON"
     }
 
 
