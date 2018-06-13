@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Port existing policy RuleDefault objects to the newer, more verbose
+    DocumentedRuleDefaults.

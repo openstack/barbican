@@ -14,14 +14,66 @@ from oslo_policy import policy
 
 
 rules = [
-    policy.RuleDefault('secret_meta:get',
-                       'rule:all_but_audit'),
-    policy.RuleDefault('secret_meta:post',
-                       'rule:admin_or_creator'),
-    policy.RuleDefault('secret_meta:put',
-                       'rule:admin_or_creator'),
-    policy.RuleDefault('secret_meta:delete',
-                       'rule:admin_or_creator'),
+    policy.DocumentedRuleDefault(
+        name='secret_meta:get',
+        check_str='rule:all_but_audit',
+        scope_types=[],
+        description='metadata/: Lists a secrets user-defined metadata. || ' +
+                    'metadata/{key}: Retrieves a secrets user-added metadata.',
+        operations=[
+            {
+                'path': '/v1/secrets/{secret-id}/metadata',
+                'method': 'GET'
+            },
+            {
+                'path': '/v1/secrets/{secret-id}/metadata/{meta-key}',
+                'method': 'GET'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='secret_meta:post',
+        check_str='rule:admin_or_creator',
+        scope_types=[],
+        description='Adds a new key/value pair to the secrets user-defined ' +
+                    'metadata.',
+        operations=[
+            {
+                'path': '/v1/secrets/{secret-id}/metadata/{meta-key}',
+                'method': 'POST'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='secret_meta:put',
+        check_str='rule:admin_or_creator',
+        scope_types=[],
+        description='metadata/: Sets the user-defined metadata for a secret ' +
+                    '|| metadata/{key}: Updates an existing key/value pair ' +
+                    'in the secrets user-defined metadata.',
+        operations=[
+            {
+                'path': '/v1/secrets/{secret-id}/metadata',
+                'method': 'PUT'
+            },
+            {
+                'path': '/v1/secrets/{secret-id}/metadata/{meta-key}',
+                'method': 'PUT'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='secret_meta:delete',
+        check_str='rule:admin_or_creator',
+        scope_types=[],
+        description='Delete secret user-defined metadata by key.',
+        operations=[
+            {
+                'path': '/v1/secrets/{secret-id}/metadata/{meta-key}',
+                'method': 'DELETE'
+            }
+        ]
+    ),
 ]
 
 

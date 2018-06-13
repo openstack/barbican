@@ -14,16 +14,66 @@ from oslo_policy import policy
 
 
 rules = [
-    policy.RuleDefault('orders:post',
-                       'rule:admin_or_creator'),
-    policy.RuleDefault('orders:get',
-                       'rule:all_but_audit'),
-    policy.RuleDefault('orders:put',
-                       'rule:admin_or_creator'),
-    policy.RuleDefault('order:get',
-                       'rule:all_users'),
-    policy.RuleDefault('order:delete',
-                       'rule:admin'),
+    policy.DocumentedRuleDefault(
+        name='orders:get',
+        check_str='rule:all_but_audit',
+        scope_types=[],
+        description='Gets list of all orders associated with a project.',
+        operations=[
+            {
+                'path': '/v1/orders',
+                'method': 'GET'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='orders:post',
+        check_str='rule:admin_or_creator',
+        scope_types=[],
+        description='Creates an order.',
+        operations=[
+            {
+                'path': '/v1/orders',
+                'method': 'POST'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='orders:put',
+        check_str='rule:admin_or_creator',
+        scope_types=[],
+        description='Unsupported method for the orders API.',
+        operations=[
+            {
+                'path': '/v1/orders',
+                'method': 'PUT'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='order:get',
+        check_str='rule:all_users',
+        scope_types=[],
+        description='Retrieves an orders metadata.',
+        operations=[
+            {
+                'path': '/v1/orders/{order-id}',
+                'method': 'GET'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='order:delete',
+        check_str='rule:admin',
+        scope_types=[],
+        description='Deletes an order.',
+        operations=[
+            {
+                'path': '/v1/orders/{order-id}',
+                'method': 'DELETE'
+            }
+        ],
+    )
 ]
 
 

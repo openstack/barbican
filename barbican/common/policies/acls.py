@@ -12,25 +12,98 @@
 
 from oslo_policy import policy
 
+# FIXME(hrybacki): Repetitive check strings: Port to simpler checks
+#                  - secret_acls:delete, secret_acls:put_patch
+#                  - container_acls:delete container_acls:put_patch
 
 rules = [
-    policy.RuleDefault('secret_acls:put_patch',
-                       'rule:secret_project_admin or '
-                       'rule:secret_project_creator'),
-    policy.RuleDefault('secret_acls:delete',
-                       'rule:secret_project_admin or '
-                       'rule:secret_project_creator'),
-    policy.RuleDefault('secret_acls:get',
-                       'rule:all_but_audit and '
-                       'rule:secret_project_match'),
-    policy.RuleDefault('container_acls:put_patch',
-                       'rule:container_project_admin or '
-                       'rule:container_project_creator'),
-    policy.RuleDefault('container_acls:delete',
-                       'rule:container_project_admin or '
-                       'rule:container_project_creator'),
-    policy.RuleDefault('container_acls:get',
-                       'rule:all_but_audit and rule:container_project_match'),
+    policy.DocumentedRuleDefault(
+        name='secret_acls:get',
+        check_str='rule:all_but_audit and rule:secret_project_match',
+        scope_types=[],
+        description='Retrieve the ACL settings for a given secret.'
+                    'If no ACL is defined for that secret, then Default ACL '
+                    'is returned.',
+        operations=[
+            {
+                'path': '/v1/secrets/{secret-id}/acl',
+                'method': 'GET'
+            },
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='secret_acls:delete',
+        check_str='rule:secret_project_admin or rule:secret_project_creator',
+        scope_types=[],
+        description='Delete the ACL settings for a given secret.',
+        operations=[
+            {
+                'path': '/v1/secrets/{secret-id}/acl',
+                'method': 'DELETE'
+            },
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='secret_acls:put_patch',
+        check_str='rule:secret_project_admin or rule:secret_project_creator',
+        scope_types=[],
+        description='Create new, replaces, or updates existing ACL for a ' +
+                    'given secret.',
+        operations=[
+            {
+                'path': '/v1/secrets/{secret-id}/acl',
+                'method': 'PUT'
+            },
+            {
+                'path': '/v1/secrets/{secret-id}/acl',
+                'method': 'PATCH'
+            },
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='container_acls:get',
+        check_str='rule:all_but_audit and rule:container_project_match',
+        scope_types=[],
+        description='Retrieve the ACL settings for a given container.',
+        operations=[
+            {
+                'path': '/v1/containers/{container-id}/acl',
+                'method': 'GET'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='container_acls:delete',
+        check_str='rule:container_project_admin or ' +
+                  'rule:container_project_creator',
+        scope_types=[],
+        description='Delete ACL for a given container. No content is returned '
+                    'in the case of successful deletion.',
+        operations=[
+            {
+                'path': '/v1/containers/{container-id}/acl',
+                'method': 'DELETE'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='container_acls:put_patch',
+        check_str='rule:container_project_admin or ' +
+                  'rule:container_project_creator',
+        scope_types=[],
+        description='Create new or replaces existing ACL for a given '
+                    'container.',
+        operations=[
+            {
+                'path': '/v1/containers/{container-id}/acl',
+                'method': 'PUT'
+            },
+            {
+                'path': '/v1/containers/{container-id}/acl',
+                'method': 'PATCH'
+            }
+        ]
+    ),
 ]
 
 

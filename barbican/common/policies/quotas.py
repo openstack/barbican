@@ -14,14 +14,60 @@ from oslo_policy import policy
 
 
 rules = [
-    policy.RuleDefault('quotas:get',
-                       'rule:all_users'),
-    policy.RuleDefault('project_quotas:get',
-                       'rule:service_admin'),
-    policy.RuleDefault('project_quotas:put',
-                       'rule:service_admin'),
-    policy.RuleDefault('project_quotas:delete',
-                       'rule:service_admin'),
+    policy.DocumentedRuleDefault(
+        name='quotas:get',
+        check_str='rule:all_users',
+        scope_types=[],
+        description='List quotas for the project the user belongs to.',
+        operations=[
+            {
+                'path': '/v1/quotas',
+                'method': 'GET'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='project_quotas:get',
+        check_str='rule:service_admin',
+        scope_types=[],
+        description='List quotas for the specified project.',
+        operations=[
+            {
+                'path': '/v1/project-quotas',
+                'method': 'GET'
+            },
+            {
+                'path': '/v1/project-quotas/{uuid}',
+                'method': 'GET'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='project_quotas:put',
+        check_str='rule:service_admin',
+        scope_types=[],
+        description='Create or update the configured project quotas for '
+                    'the project with the specified UUID.',
+        operations=[
+            {
+                'path': '/v1/project-quotas/{uuid}',
+                'method': 'PUT'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='project_quotas:delete',
+        check_str='rule:service_admin',
+        scope_types=[],
+        description='Delete the project quotas configuration for the '
+                    'project with the requested UUID.',
+        operations=[
+            {
+                'path': '/v1/quotas}',
+                'method': 'DELETE'
+            }
+        ]
+    ),
 ]
 
 

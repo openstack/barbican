@@ -14,22 +14,82 @@ from oslo_policy import policy
 
 
 rules = [
-    policy.RuleDefault('containers:post',
-                       'rule:admin_or_creator'),
-    policy.RuleDefault('containers:get',
-                       'rule:all_but_audit'),
-    policy.RuleDefault('container:get',
-                       'rule:container_non_private_read or '
-                       'rule:container_project_creator or '
-                       'rule:container_project_admin or '
-                       'rule:container_acl_read'),
-    policy.RuleDefault('container:delete',
-                       'rule:container_project_admin or '
-                       'rule:container_project_creator'),
-    policy.RuleDefault('container_secret:post',
-                       'rule:admin'),
-    policy.RuleDefault('container_secret:delete',
-                       'rule:admin'),
+    policy.DocumentedRuleDefault(
+        name='containers:post',
+        check_str='rule:admin_or_creator',
+        scope_types=[],
+        description='Creates a container.',
+        operations=[
+            {
+                'path': '/v1/containers',
+                'method': 'POST'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='containers:get',
+        check_str='rule:all_but_audit',
+        scope_types=[],
+        description='Lists a projects containers.',
+        operations=[
+            {
+                'path': '/v1/containers',
+                'method': 'GET'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='container:get',
+        check_str='rule:container_non_private_read or ' +
+                  'rule:container_project_creator or ' +
+                  'rule:container_project_admin or ' +
+                  'rule:container_acl_read',
+        scope_types=[],
+        description='Retrieves a single container.',
+        operations=[
+            {
+                'path': '/v1/containers/{container-id}',
+                'method': 'GET'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='container:delete',
+        check_str='rule:container_project_admin or ' +
+                  'rule:container_project_creator',
+        scope_types=[],
+        description='Deletes a container.',
+        operations=[
+            {
+                'path': '/v1/containers/{uuid}',
+                'method': 'DELETE'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='container_secret:post',
+        check_str='rule:admin',
+        scope_types=[],
+        description='Add a secret to an existing container.',
+        operations=[
+            {
+                'path': '/v1/containers/{container-id}/secrets',
+                'method': 'POST'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='container_secret:delete',
+        check_str='rule:admin',
+        scope_types=[],
+        description='Remove a secret from a container.',
+        operations=[
+            {
+                'path': '/v1/containers/{container-id}/secrets/{secret-id}',
+                'method': 'DELETE'
+            }
+        ]
+    ),
 ]
 
 

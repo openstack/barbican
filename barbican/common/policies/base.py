@@ -14,58 +14,81 @@ from oslo_policy import policy
 
 
 rules = [
-    policy.RuleDefault('admin',
-                       'role:admin'),
-    policy.RuleDefault('observer',
-                       'role:observer'),
-    policy.RuleDefault('creator',
-                       'role:creator'),
-    policy.RuleDefault('audit',
-                       'role:audit'),
-    policy.RuleDefault('service_admin',
-                       'role:key-manager:service-admin'),
-    policy.RuleDefault('admin_or_creator',
-                       'rule:admin or rule:creator'),
-    policy.RuleDefault('all_but_audit',
-                       'rule:admin or rule:observer or rule:creator'),
-    policy.RuleDefault('all_users',
-                       'rule:admin or rule:observer or rule:creator or '
-                       'rule:audit or rule:service_admin'),
-    policy.RuleDefault('secret_project_match',
-                       'project:%(target.secret.project_id)s'),
-    policy.RuleDefault('secret_acl_read',
-                       "'read':%(target.secret.read)s"),
-    policy.RuleDefault('secret_private_read',
-                       "'False':%(target.secret.read_project_access)s"),
-    policy.RuleDefault('secret_creator_user',
-                       "user:%(target.secret.creator_id)s"),
-    policy.RuleDefault('container_project_match',
-                       "project:%(target.container.project_id)s"),
-    policy.RuleDefault('container_acl_read',
-                       "'read':%(target.container.read)s"),
-    policy.RuleDefault('container_private_read',
-                       "'False':%(target.container.read_project_access)s"),
-    policy.RuleDefault('container_creator_user',
-                       "user:%(target.container.creator_id)s"),
-    policy.RuleDefault('secret_non_private_read',
-                       "rule:all_users and rule:secret_project_match and "
-                       "not rule:secret_private_read"),
-    policy.RuleDefault('secret_decrypt_non_private_read',
-                       "rule:all_but_audit and rule:secret_project_match and "
-                       "not rule:secret_private_read"),
-    policy.RuleDefault('container_non_private_read',
-                       "rule:all_users and rule:container_project_match and "
-                       "not rule:container_private_read"),
-    policy.RuleDefault('secret_project_admin',
-                       "rule:admin and rule:secret_project_match"),
-    policy.RuleDefault('secret_project_creator',
-                       "rule:creator and rule:secret_project_match and "
-                       "rule:secret_creator_user"),
-    policy.RuleDefault('container_project_admin',
-                       "rule:admin and rule:container_project_match"),
-    policy.RuleDefault('container_project_creator',
-                       "rule:creator and rule:container_project_match and "
-                       "rule:container_creator_user"),
+    policy.RuleDefault(
+        name='admin',
+        check_str='role:admin'),
+    policy.RuleDefault(
+        name='observer',
+        check_str='role:observer'),
+    policy.RuleDefault(
+        name='creator',
+        check_str='role:creator'),
+    policy.RuleDefault(
+        name='audit',
+        check_str='role:audit'),
+    policy.RuleDefault(
+        name='service_admin',
+        check_str='role:key-manager:service-admin'),
+    policy.RuleDefault(
+        name='admin_or_creator',
+        check_str='rule:admin or rule:creator'),
+    policy.RuleDefault(
+        name='all_but_audit',
+        check_str='rule:admin or rule:observer or rule:creator'),
+    policy.RuleDefault(
+        name='all_users',
+        check_str='rule:admin or rule:observer or rule:creator or ' +
+                  'rule:audit or rule:service_admin'),
+    policy.RuleDefault(
+        name='secret_project_match',
+        check_str='project:%(target.secret.project_id)s'),
+    policy.RuleDefault(
+        name='secret_acl_read',
+        check_str="'read':%(target.secret.read)s"),
+    policy.RuleDefault(
+        name='secret_private_read',
+        check_str="'False':%(target.secret.read_project_access)s"),
+    policy.RuleDefault(
+        name='secret_creator_user',
+        check_str="user:%(target.secret.creator_id)s"),
+    policy.RuleDefault(
+        name='container_project_match',
+        check_str="project:%(target.container.project_id)s"),
+    policy.RuleDefault(
+        name='container_acl_read',
+        check_str="'read':%(target.container.read)s"),
+    policy.RuleDefault(
+        name='container_private_read',
+        check_str="'False':%(target.container.read_project_access)s"),
+    policy.RuleDefault(
+        name='container_creator_user',
+        check_str="user:%(target.container.creator_id)s"),
+    policy.RuleDefault(
+        name='secret_non_private_read',
+        check_str="rule:all_users and rule:secret_project_match and not " +
+                  "rule:secret_private_read"),
+    policy.RuleDefault(
+        name='secret_decrypt_non_private_read',
+        check_str="rule:all_but_audit and rule:secret_project_match and not " +
+                  "rule:secret_private_read"),
+    policy.RuleDefault(
+        name='container_non_private_read',
+        check_str="rule:all_users and rule:container_project_match and not " +
+                  "rule:container_private_read"),
+    policy.RuleDefault(
+        name='secret_project_admin',
+        check_str="rule:admin and rule:secret_project_match"),
+    policy.RuleDefault(
+        name='secret_project_creator',
+        check_str="rule:creator and rule:secret_project_match and " +
+                  "rule:secret_creator_user"),
+    policy.RuleDefault(
+        name='container_project_admin',
+        check_str="rule:admin and rule:container_project_match"),
+    policy.RuleDefault(
+        name='container_project_creator',
+        check_str="rule:creator and rule:container_project_match and " +
+                  "rule:container_creator_user"),
 ]
 
 

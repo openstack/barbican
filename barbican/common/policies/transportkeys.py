@@ -14,14 +14,55 @@ from oslo_policy import policy
 
 
 rules = [
-    policy.RuleDefault('transport_key:get',
-                       'rule:all_users'),
-    policy.RuleDefault('transport_key:delete',
-                       'rule:admin'),
-    policy.RuleDefault('transport_keys:get',
-                       'rule:all_users'),
-    policy.RuleDefault('transport_keys:post',
-                       'rule:admin'),
+    policy.DocumentedRuleDefault(
+        name='transport_key:get',
+        check_str='rule:all_users',
+        scope_types=[],
+        description='Get a specific transport key.',
+        operations=[
+            {
+                'path': '/v1/transport_keys/{key-id}}',
+                'method': 'GET'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='transport_key:delete',
+        check_str='rule:admin',
+        scope_types=[],
+        description='Delete a specific transport key.',
+        operations=[
+            {
+                'path': '/v1/transport_keys/{key-id}',
+                'method': 'DELETE'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='transport_keys:get',
+        check_str='rule:all_users',
+        scope_types=[],
+        description='Get a list of all transport keys.',
+        operations=[
+            {
+                'path': '/v1/transport_keys',
+                'method': 'GET'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name='transport_keys:post',
+        check_str='rule:admin',
+        scope_types=[],
+        description='Create a new transport key.',
+        operations=[
+            {
+                'path': '/v1/transport_keys',
+                'method': 'POST'
+            }
+        ]
+    ),
+
 ]
 
 
