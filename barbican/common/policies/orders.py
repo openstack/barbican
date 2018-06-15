@@ -18,10 +18,10 @@ rules = [
                        'rule:admin_or_creator'),
     policy.RuleDefault('orders:get',
                        'rule:all_but_audit'),
+    policy.RuleDefault('orders:put',
+                       'rule:admin_or_creator'),
     policy.RuleDefault('order:get',
                        'rule:all_users'),
-    policy.RuleDefault('order:put',
-                       'rule:admin_or_creator'),
     policy.RuleDefault('order:delete',
                        'rule:admin'),
 ]
