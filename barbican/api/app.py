@@ -74,21 +74,28 @@ def main_app(func):
 
         # Configure oslo logging and configuration services.
         log.setup(CONF, 'barbican')
+        LOG = log.getLogger(__name__)
 
         config.setup_remote_pydev_debug()
 
         # Initializing the database engine and session factory before the app
         # starts ensures we don't lose requests due to lazy initialization of
         # db connections.
-        repositories.setup_database_engine_and_factory(
-            initialize_secret_stores=True
-        )
+        try:
+            repositories.setup_database_engine_and_factory(
+                initialize_secret_stores=True
+            )
+            repositories.commit()
+        except Exception:
+            LOG.exception('Failed to sync secret_stores table.')
+            repositories.rollback()
+            raise
 
         wsgi_app = func(global_config, **local_conf)
 
         if newrelic_loaded:
             wsgi_app = newrelic.agent.WSGIApplicationWrapper(wsgi_app)
-        LOG = log.getLogger(__name__)
+
         LOG.info('Barbican app created and initialized')
         return wsgi_app
     return _wrapper
