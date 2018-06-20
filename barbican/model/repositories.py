@@ -442,7 +442,7 @@ class BaseRepo(object):
             raise exception.NotFound('DB Entity with id {0} not '
                                      'found'.format(entity_id))
         self._update_values(entity, values)
-        entity.save(session)
+        entity.save()
 
     def save(self, entity):
         """Saves the state of the entity."""
