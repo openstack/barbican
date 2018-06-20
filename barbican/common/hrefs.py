@@ -162,6 +162,27 @@ def get_secret_id_from_ref(secret_ref):
     return secret_id
 
 
+def get_secrets_id_from_refs(secret_refs):
+    """Parse a secret reference and return the list of secret ID
+
+    :param secret_refs: a list of HTTP reference of secret
+    :return: a string containing the ID of the secret
+    """
+    if secret_refs is None:
+        return None
+    secret_ids = []
+    for secret_ref in secret_refs:
+        secret_id = secret_ref.get('secret_ref')
+        if secret_id.endswith('/'):
+            secret_id = secret_id.rsplit('/', 2)[1]
+        elif '/' in secret_id:
+            secret_id = secret_id.rsplit('/', 1)[1]
+        else:
+            secret_id = secret_id
+        secret_ids.append(secret_id)
+    return secret_ids
+
+
 def get_ca_id_from_ref(ca_ref):
     """Parse a ca_ref and return the CA ID
 
