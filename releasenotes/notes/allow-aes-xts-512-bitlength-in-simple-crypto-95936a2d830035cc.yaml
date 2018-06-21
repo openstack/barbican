@@ -1,0 +1,9 @@
+---
+fixes:
+  - |
+    By default barbican checks only the algorithm and the bit_length when
+    creating a new secret. The xts-mode cuts the key in half for aes, so for
+    using aes-256 with xts, you have to use a 512 bit key, but barbican allows
+    only a maximum of 256 bit. A check for the mode within the
+    _is_algorithm_supported method of the class SimpleCryptoPlugin was added
+    to allow 512 bit keys for aes-xts in this plugin.
