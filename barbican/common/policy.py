@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
-
 from oslo_policy import policy
 
 from barbican.common import config
@@ -22,11 +20,6 @@ from barbican.common import policies
 
 CONF = config.CONF
 ENFORCER = None
-# oslo_policy will read the policy configuration file again when the file
-# is changed in runtime so the old policy rules will be saved to
-# saved_file_rules and used to compare with new rules to determine the
-# rules whether were updated.
-saved_file_rules = []
 
 
 def reset():
@@ -44,22 +37,6 @@ def init():
         ENFORCER = policy.Enforcer(CONF)
         register_rules(ENFORCER)
         ENFORCER.load_rules()
-
-    # Only the rules which are loaded from file may be changed.
-    current_file_rules = ENFORCER.file_rules
-    current_file_rules = _serialize_rules(current_file_rules)
-
-    # Checks whether the rules are updated in the runtime
-    if saved_file_rules != current_file_rules:
-        saved_file_rules = copy.deepcopy(current_file_rules)
-
-
-def _serialize_rules(rules):
-    """Serialize all the Rule object as string."""
-
-    result = [(rule_name, str(rule))
-              for rule_name, rule in rules.items()]
-    return sorted(result, key=lambda rule: rule[0])
 
 
 def register_rules(enforcer):
