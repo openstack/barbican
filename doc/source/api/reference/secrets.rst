@@ -62,7 +62,7 @@ be prefixed with any of these comparison operators: ``gt:`` (greater-than),
 
 For example, to get a list of secrets that will expire in January of 2020:
 
-.. code-block:: none
+.. code-block:: ini
 
     GET /v1/secrets?expiration=gte:2020-01-01T00:00:00,lt:2020-02-01T00:00:00
 
@@ -79,7 +79,7 @@ use ``:asc`` for every key that does not include a direction.
 
 For example, to sort the list from most recently created to oldest:
 
-.. code-block:: none
+.. code-block:: ini
 
     GET /v1/secrets?sort=created:desc
 

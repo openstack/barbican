@@ -48,7 +48,7 @@ project quotas are enforced for that project.  Default quotas are specified
 in the barbican configuration file (barbican.conf).  The defaults provided
 in the standard configuration file are as follows.
 
-.. code-block:: none
+.. code-block:: ini
 
     # default number of secrets allowed per project
     quota_secrets = -1

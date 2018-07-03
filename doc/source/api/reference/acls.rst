@@ -195,7 +195,6 @@ list of provided users from an ACL definition, pass empty list [] for `users`.
 Returns an ACL reference in success case.
 
 .. note::
-    
     PATCH API support will be changing in near future.
 
 Attributes
@@ -493,7 +492,6 @@ list of provided users from an ACL definition, pass empty list [] for `users`.
 Returns an ACL reference in success case.
 
 .. note::
-    
     PATCH API support will be changing in near future.
 
 Attributes

@@ -47,7 +47,7 @@ Request:
 Response:
 *********
 
-.. code-block:: none
+.. code-block:: bash
 
     200 Success
 
@@ -181,7 +181,7 @@ Request:
 Response:
 *********
 
-.. code-block:: none
+.. code-block:: bash
 
     202 Created
 

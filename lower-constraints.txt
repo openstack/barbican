@@ -24,6 +24,7 @@ docutils==0.14
 dogpile.cache==0.6.5
 dogtag-pki==10.3.5.1
 dulwich==0.19.0
+doc8==0.6.0
 enum-compat==0.0.2
 enum34==1.1.6
 eventlet==0.18.2
