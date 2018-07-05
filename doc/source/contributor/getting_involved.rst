@@ -41,12 +41,24 @@ email subject line. To participate on the mailing list\:
 
 Launchpad
 -----------
-Like other OpenStack related projects, we utilize Launchpad for our bug
-and release tracking.
 
-* `Barbican Launchpad Project`_
+Most of the tools used for OpenStack require a launchpad.net ID for
+authentication.
 
-.. _`Barbican Launchpad Project`: https://launchpad.net/barbican
+.. _`https://launchpad.net`: https://launchpad.net
+
+
+Storyboard
+------------
+
+The barbican project moved from Launchpad to `StoryBoard
+<https://storyboard.openstack.org/>`_ for work and task tracking.
+This provides an aggregate view called a "Project Group"
+and individual "Projects". A good starting place is the
+`project group <https://storyboard.openstack.org/#!/project_group/81>`_
+representing the whole of the barbican community, as opposed to
+the `barbican project <https://storyboard.openstack.org/#!/project/980>`_
+storyboard which represents barbican as a repository.
 
 
 Source Repository
