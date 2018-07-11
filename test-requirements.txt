@@ -9,9 +9,8 @@ coverage!=4.4,>=4.0 # Apache-2.0
 ddt>=1.0.1 # MIT
 mock>=2.0.0 # BSD
 oslotest>=3.2.0 # Apache-2.0
-os-testr>=1.0.0 # Apache-2.0
-pykmip==0.7.0 # Apache 2.0 License
-testrepository>=0.0.18 # Apache-2.0/BSD
+pykmip>=0.7.0 # Apache 2.0 License
+stestr>=2.0.0 # Apache-2.0
 testtools>=2.2.0 # MIT
 fixtures>=3.0.0 # Apache-2.0/BSD
 requests>=2.14.2 # Apache-2.0
