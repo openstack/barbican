@@ -574,8 +574,8 @@ function install_dogtag_components {
 # ----------------
 
 function install_vault {
-    wget https://releases.hashicorp.com/vault/0.10.1/vault_0.10.1_linux_amd64.zip
-    unzip vault_0.10.1_linux_amd64.zip
+    wget https://releases.hashicorp.com/vault/0.10.3/vault_0.10.3_linux_amd64.zip
+    unzip vault_0.10.3_linux_amd64.zip
     sudo mv vault /usr/bin
     install_package screen
     screen -d -m bash -c "vault server -dev -dev-listen-address=${HOST_IP}:8200 2>&1 >vault.log"
