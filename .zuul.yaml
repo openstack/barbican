@@ -159,8 +159,9 @@
         - barbican-simple-crypto-devstack-functional-py35
         - barbican-simple-crypto-devstack-functional-postgres
         - barbican-dogtag-devstack-functional-fedora-latest
-        - barbican-kmip-devstack-functional
-        #TODO(gagehugo): Fix the issue and make this voting again
+        - barbican-kmip-devstack-functional:
+            voting: false
+        # TODO(gagehugo): Fix the issue and make this voting again
         - grenade-devstack-barbican:
             voting: false
         # TripleO jobs that deploy Barbican.
@@ -182,10 +183,10 @@
         - barbican-simple-crypto-devstack-tempest
         - barbican-simple-crypto-devstack-functional
         - barbican-simple-crypto-devstack-functional-py35
-        - barbican-kmip-devstack-functional
         - barbican-dogtag-devstack-functional-fedora-latest
-        #TODO(gagehugo): Fix the issue and enable this
-        #- grenade-devstack-barbican
+        # TODO(gagehugo, dmendiza): Fix the issues and enable these
+        # - grenade-devstack-barbican
+        # - barbican-kmip-devstack-functional
     experimental:
       jobs:
         - barbican-simple-crypto-devstack-tempest-py35
