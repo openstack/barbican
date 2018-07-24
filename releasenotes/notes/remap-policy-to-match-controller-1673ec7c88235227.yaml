@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Remap the `order:put` to `orders:put` to align with language in the orders
+    controller.
+upgrade:
+  - |
+    (For deployments overriding default policies) After upgrading, please review
+    Barbican policy files and ensure that you port any rules tied to `order:put`
+    are remapped to `orders:put`.
