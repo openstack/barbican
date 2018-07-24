@@ -13,7 +13,6 @@
 #    under the License.
 
 from barbican.objects import base
-from barbican.objects import certificate_authority
 from barbican.objects import container
 from barbican.objects import container_acl
 from barbican.objects import container_consumer_meta
@@ -36,7 +35,6 @@ from barbican.objects import transport_key
 
 States = base.States
 BarbicanObject = base.BarbicanObject
-CertificateAuthority = certificate_authority.CertificateAuthority
 Container = container.Container
 ContainerACL = container_acl.ContainerACL
 ContainerConsumerMetadatum = container_consumer_meta.ContainerConsumerMetadatum
@@ -60,7 +58,6 @@ SecretStoreMetadatum = secret_store_metadatum.SecretStoreMetadatum
 __all__ = (
     States,
     BarbicanObject,
-    CertificateAuthority,
     Container,
     ContainerACL,
     ContainerConsumerMetadatum,
