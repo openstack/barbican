@@ -68,7 +68,7 @@ class Container(base.BarbicanObject, base.BarbicanPersistentObject,
                     self.container_secrets.append(container_secret)
 
     def _get_db_entity(self, data=None):
-        return self.db_model(parsed_request=data)
+        return self.db_model(parsed_request=data, check_exc=False)
 
     def _attach_container_secret(self, container_secrets, container_id,
                                  session):

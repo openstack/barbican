@@ -65,7 +65,7 @@ class BarbicanObject(object_base.VersionedObject):
         setattr(self, name_attr, value_attr)
 
     def _get_db_entity(self):
-        return self.db_model()
+        return self.db_model(check_exc=False)
 
     def _get_changed_persistent_fields(self):
         change_fields = self.obj_get_changes()
@@ -174,7 +174,7 @@ class BarbicanObject(object_base.VersionedObject):
 
     @classmethod
     def get_session(cls, session=None):
-        return cls.db_repo.get_session(session)
+        return session or repos.get_session()
 
     @classmethod
     def delete_entity_by_id(cls, entity_id, external_project_id,

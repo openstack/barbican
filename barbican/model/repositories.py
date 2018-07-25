@@ -206,6 +206,13 @@ def _get_engine(engine):
     return engine
 
 
+def model_query(model, *args, **kwargs):
+    """Query helper for simpler session usage."""
+    session = kwargs.get('session')
+    query = session.query(model, *args)
+    return query
+
+
 def _initialize_secret_stores_data():
     """Initializes secret stores data in database.
 
@@ -419,6 +426,23 @@ class BaseRepo(object):
                   'create secret:%s', (time.time() - start))  # DEBUG
 
         return entity
+
+    def update_from(self, model_class, entity_id, values, session=None):
+        if id in values:
+            raise Exception('Cannot update id')
+        LOG.debug('Begin update from ...')
+        session = self.get_session(session=session)
+
+        query = session.query(model_class)
+        query = query.filter_by(id=entity_id)
+        try:
+            LOG.debug('Updating value ...')
+            entity = query.one()
+        except sa_orm.exc.NoResultFound:
+            raise exception.NotFound('DB Entity with id {0} not '
+                                     'found'.format(entity_id))
+        self._update_values(entity, values)
+        entity.save(session)
 
     def save(self, entity):
         """Saves the state of the entity."""

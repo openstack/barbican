@@ -50,7 +50,7 @@ class ContainerACL(base.BarbicanObject, base.BarbicanPersistentObject,
             raise exception.MissingArgumentError(msg.format("operation"))
 
     def _get_db_entity(self, user_ids=None):
-        return self.db_model(user_ids=user_ids)
+        return self.db_model(user_ids=user_ids, check_exc=False)
 
     def create(self, session=None, user_ids=None):
         change_fields = self._get_changed_persistent_fields()

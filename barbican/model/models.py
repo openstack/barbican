@@ -125,6 +125,9 @@ class ModelBase(object):
         self._do_delete_children(session)
         session.delete(self)
 
+    def get(self, key, default=None):
+        return getattr(self, key, default)
+
     def _do_delete_children(self, session):
         """Sub-class hook: delete children relationships."""
         pass
@@ -240,6 +243,9 @@ class ContainerSecret(BASE, SoftDeleteMixIn, ModelBase):
     __table_args__ = (sa.UniqueConstraint('container_id', 'secret_id', 'name',
                                           name='_container_secret_name_uc'),)
 
+    def __init__(self, check_exc=True):
+        super(ContainerSecret, self).__init__()
+
 
 class Project(BASE, SoftDeleteMixIn, ModelBase):
     """Represents a Project in the datastore.
@@ -257,6 +263,9 @@ class Project(BASE, SoftDeleteMixIn, ModelBase):
     containers = orm.relationship("Container", backref="project")
     cas = orm.relationship("ProjectCertificateAuthority", backref="project")
     project_quotas = orm.relationship("ProjectQuotas", backref="project")
+
+    def __init__(self, check_exc=True):
+        super(Project, self).__init__()
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
@@ -307,7 +316,7 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
         backref="secret",
         cascade="all, delete-orphan")
 
-    def __init__(self, parsed_request=None):
+    def __init__(self, parsed_request=None, check_exc=True):
         """Creates secret from a dict."""
         super(Secret, self).__init__()
 
@@ -373,17 +382,17 @@ class SecretStoreMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     secret_id = sa.Column(
         sa.String(36), sa.ForeignKey('secrets.id'), index=True, nullable=False)
 
-    def __init__(self, key, value):
+    def __init__(self, key=None, value=None, check_exc=True):
         super(SecretStoreMetadatum, self).__init__()
 
         msg = u._("Must supply non-None {0} argument "
                   "for SecretStoreMetadatum entry.")
 
-        if key is None:
+        if key is None and check_exc:
             raise exception.MissingArgumentError(msg.format("key"))
         self.key = key
 
-        if value is None:
+        if value is None and check_exc:
             raise exception.MissingArgumentError(msg.format("value"))
         self.value = value
 
@@ -408,17 +417,17 @@ class SecretUserMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     __table_args__ = (sa.UniqueConstraint('secret_id', 'key',
                                           name='_secret_key_uc'),)
 
-    def __init__(self, key, value):
+    def __init__(self, key=None, value=None, check_exc=True):
         super(SecretUserMetadatum, self).__init__()
 
         msg = u._("Must supply non-None {0} argument "
                   "for SecretUserMetadatum entry.")
 
-        if key is None:
+        if key is None and check_exc:
             raise exception.MissingArgumentError(msg.format("key"))
         self.key = key
 
-        if value is None:
+        if value is None and check_exc:
             raise exception.MissingArgumentError(msg.format("value"))
         self.value = value
 
@@ -449,7 +458,7 @@ class EncryptedDatum(BASE, SoftDeleteMixIn, ModelBase):
     # Eager load this relationship via 'lazy=False'.
     kek_meta_project = orm.relationship("KEKDatum", lazy=False)
 
-    def __init__(self, secret=None, kek_datum=None):
+    def __init__(self, secret=None, kek_datum=None, check_exc=True):
         """Creates encrypted datum from a secret and KEK metadata."""
         super(EncryptedDatum, self).__init__()
 
@@ -509,6 +518,9 @@ class KEKDatum(BASE, SoftDeleteMixIn, ModelBase):
     mode = sa.Column(sa.String(255))
     plugin_meta = sa.Column(sa.Text)
 
+    def __index__(self, check_exc=True):
+        super(KEKDatum, self).__init__()
+
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""
         return {'algorithm': self.algorithm}
@@ -558,7 +570,7 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
         backref="order",
         cascade="all, delete-orphan")
 
-    def __init__(self, parsed_request=None):
+    def __init__(self, parsed_request=None, check_exc=True):
             """Creates a Order entity from a dict."""
             super(Order, self).__init__()
             if parsed_request:
@@ -629,17 +641,17 @@ class OrderPluginMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     key = sa.Column(sa.String(255), nullable=False)
     value = sa.Column(sa.String(255), nullable=False)
 
-    def __init__(self, key, value):
+    def __init__(self, key=None, value=None, check_exc=True):
         super(OrderPluginMetadatum, self).__init__()
 
         msg = u._("Must supply non-None {0} argument "
                   "for OrderPluginMetadatum entry.")
 
-        if key is None:
+        if key is None and check_exc:
             raise exception.MissingArgumentError(msg.format("key"))
         self.key = key
 
-        if value is None:
+        if value is None and check_exc:
             raise exception.MissingArgumentError(msg.format("value"))
         self.value = value
 
@@ -665,17 +677,17 @@ class OrderBarbicanMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     key = sa.Column(sa.String(255), nullable=False)
     value = sa.Column(sa.Text, nullable=False)
 
-    def __init__(self, key, value):
+    def __init__(self, key=None, value=None, check_exc=True):
         super(OrderBarbicanMetadatum, self).__init__()
 
         msg = u._("Must supply non-None {0} argument "
                   "for OrderBarbicanMetadatum entry.")
 
-        if key is None:
+        if key is None and check_exc:
             raise exception.MissingArgumentError(msg.format("key"))
         self.key = key
 
-        if value is None:
+        if value is None and check_exc:
             raise exception.MissingArgumentError(msg.format("value"))
         self.value = value
 
@@ -703,6 +715,9 @@ class OrderRetryTask(BASE, SoftDeleteMixIn, ModelBase):
     retry_kwargs = sa.Column(JsonBlob(), nullable=False)
     retry_count = sa.Column(sa.Integer, nullable=False, default=0)
 
+    def __index__(self, check_exc):
+        super(OrderRetryTask, self).__init__()
+
 
 class Container(BASE, SoftDeleteMixIn, ModelBase):
     """Represents a Container for Secrets in the datastore.
@@ -726,7 +741,7 @@ class Container(BASE, SoftDeleteMixIn, ModelBase):
     consumers = sa.orm.relationship("ContainerConsumerMetadatum")
     creator_id = sa.Column(sa.String(255))
 
-    def __init__(self, parsed_request=None):
+    def __init__(self, parsed_request=None, check_exc=True):
         """Creates a Container entity from a dict."""
         super(Container, self).__init__()
 
@@ -805,7 +820,8 @@ class ContainerConsumerMetadatum(BASE, SoftDeleteMixIn, ModelBase):
         sa.Index('values_index', 'container_id', 'name', 'URL')
     )
 
-    def __init__(self, container_id, project_id, parsed_request):
+    def __init__(self, container_id=None, project_id=None,
+                 parsed_request=None, check_exc=True):
         """Registers a Consumer to a Container."""
         super(ContainerConsumerMetadatum, self).__init__()
 
@@ -839,18 +855,18 @@ class TransportKey(BASE, SoftDeleteMixIn, ModelBase):
     plugin_name = sa.Column(sa.String(255), nullable=False)
     transport_key = sa.Column(sa.Text, nullable=False)
 
-    def __init__(self, plugin_name, transport_key):
+    def __init__(self, plugin_name=None, transport_key=None, check_exc=True):
         """Creates transport key entity."""
         super(TransportKey, self).__init__()
 
         msg = u._("Must supply non-None {0} argument for TransportKey entry.")
 
-        if plugin_name is None:
+        if plugin_name is None and check_exc:
             raise exception.MissingArgumentError(msg.format("plugin_name"))
 
         self.plugin_name = plugin_name
 
-        if transport_key is None:
+        if transport_key is None and check_exc:
             raise exception.MissingArgumentError(msg.format("transport_key"))
 
         self.transport_key = transport_key
@@ -886,7 +902,7 @@ class CertificateAuthority(BASE, ModelBase):
         cascade="all, delete-orphan"
     )
 
-    def __init__(self, parsed_ca_in):
+    def __init__(self, parsed_ca_in=None, check_exc=True):
         """Creates certificate authority entity."""
         super(CertificateAuthority, self).__init__()
 
@@ -961,17 +977,17 @@ class CertificateAuthorityMetadatum(BASE, ModelBase):
     __table_args__ = (sa.UniqueConstraint(
         'ca_id', 'key', name='_certificate_authority_metadatum_uc'),)
 
-    def __init__(self, key, value):
+    def __init__(self, key=None, value=None, check_exc=True):
         super(CertificateAuthorityMetadatum, self).__init__()
 
         msg = u._("Must supply non-None {0} argument "
                   "for CertificateAuthorityMetadatum entry.")
 
-        if key is None:
+        if key is None and check_exc:
             raise exception.MissingArgumentError(msg.format("key"))
         self.key = key
 
-        if value is None:
+        if value is None and check_exc:
             raise exception.MissingArgumentError(msg.format("value"))
         self.value = value
 
@@ -1007,18 +1023,18 @@ class ProjectCertificateAuthority(BASE, ModelBase):
     __table_args__ = (sa.UniqueConstraint(
         'project_id', 'ca_id', name='_project_certificate_authority_uc'),)
 
-    def __init__(self, project_id, ca_id):
+    def __init__(self, project_id=None, ca_id=None, check_exc=True):
         """Registers a Consumer to a Container."""
         super(ProjectCertificateAuthority, self).__init__()
 
         msg = u._("Must supply non-None {0} argument "
                   "for ProjectCertificateAuthority entry.")
 
-        if project_id is None:
+        if project_id is None and check_exc:
             raise exception.MissingArgumentError(msg.format("project_id"))
         self.project_id = project_id
 
-        if ca_id is None:
+        if ca_id is None and check_exc:
             raise exception.MissingArgumentError(msg.format("ca_id"))
         self.ca_id = ca_id
 
@@ -1059,18 +1075,18 @@ class PreferredCertificateAuthority(BASE, ModelBase):
     ca = orm.relationship('CertificateAuthority',
                           backref=orm.backref('preferred_ca'))
 
-    def __init__(self, project_id, ca_id):
+    def __init__(self, project_id=None, ca_id=None, check_exc=True):
         """Registers a Consumer to a Container."""
         super(PreferredCertificateAuthority, self).__init__()
 
         msg = u._("Must supply non-None {0} argument "
                   "for PreferredCertificateAuthority entry.")
 
-        if project_id is None:
+        if project_id is None and check_exc:
             raise exception.MissingArgumentError(msg.format("project_id"))
         self.project_id = project_id
 
-        if ca_id is None:
+        if ca_id is None and check_exc:
             raise exception.MissingArgumentError(msg.format("ca_id"))
         self.ca_id = ca_id
 
@@ -1113,18 +1129,18 @@ class SecretACL(BASE, ModelBase):
     __table_args__ = (sa.UniqueConstraint(
         'secret_id', 'operation', name='_secret_acl_operation_uc'),)
 
-    def __init__(self, secret_id, operation, project_access=None,
-                 user_ids=None):
+    def __init__(self, secret_id=None, operation=None, project_access=None,
+                 user_ids=None, check_exc=True):
         """Creates secret ACL entity."""
         super(SecretACL, self).__init__()
 
         msg = u._("Must supply non-None {0} argument for SecretACL entry.")
 
-        if secret_id is None:
+        if secret_id is None and check_exc:
             raise exception.MissingArgumentError(msg.format("secret_id"))
         self.secret_id = secret_id
 
-        if operation is None:
+        if operation is None and check_exc:
             raise exception.MissingArgumentError(msg.format("operation"))
         self.operation = operation
 
@@ -1189,18 +1205,18 @@ class ContainerACL(BASE, ModelBase):
     __table_args__ = (sa.UniqueConstraint(
         'container_id', 'operation', name='_container_acl_operation_uc'),)
 
-    def __init__(self, container_id, operation, project_access=None,
-                 user_ids=None):
+    def __init__(self, container_id=None, operation=None, project_access=None,
+                 user_ids=None, check_exc=True):
         """Creates container ACL entity."""
         super(ContainerACL, self).__init__()
 
         msg = u._("Must supply non-None {0} argument for ContainerACL entry.")
 
-        if container_id is None:
+        if container_id is None and check_exc:
             raise exception.MissingArgumentError(msg.format("container_id"))
         self.container_id = container_id
 
-        if operation is None:
+        if operation is None and check_exc:
             raise exception.MissingArgumentError(msg.format("operation"))
         self.operation = operation
 
@@ -1254,14 +1270,14 @@ class SecretACLUser(BASE, ModelBase):
     __table_args__ = (sa.UniqueConstraint(
         'acl_id', 'user_id', name='_secret_acl_user_uc'),)
 
-    def __init__(self, acl_id, user_id):
+    def __init__(self, acl_id=None, user_id=None, check_exc=True):
         """Creates secret ACL user entity."""
         super(SecretACLUser, self).__init__()
 
         msg = u._("Must supply non-None {0} argument for SecretACLUser entry.")
 
         self.acl_id = acl_id
-        if user_id is None:
+        if user_id is None and check_exc:
             raise exception.MissingArgumentError(msg.format("user_id"))
         self.user_id = user_id
         self.status = States.ACTIVE
@@ -1291,7 +1307,7 @@ class ContainerACLUser(BASE, ModelBase):
     __table_args__ = (sa.UniqueConstraint(
         'acl_id', 'user_id', name='_container_acl_user_uc'),)
 
-    def __init__(self, acl_id, user_id):
+    def __init__(self, acl_id=None, user_id=None, check_exc=True):
         """Creates container ACL user entity."""
         super(ContainerACLUser, self).__init__()
 
@@ -1299,7 +1315,7 @@ class ContainerACLUser(BASE, ModelBase):
                   "entry.")
 
         self.acl_id = acl_id
-        if user_id is None:
+        if user_id is None and check_exc:
             raise exception.MissingArgumentError(msg.format("user_id"))
         self.user_id = user_id
         self.status = States.ACTIVE
@@ -1331,7 +1347,8 @@ class ProjectQuotas(BASE, ModelBase):
     consumers = sa.Column(sa.Integer, nullable=True)
     cas = sa.Column(sa.Integer, nullable=True)
 
-    def __init__(self, project_id=None, parsed_project_quotas=None):
+    def __init__(self, project_id=None, parsed_project_quotas=None,
+                 check_exc=True):
         """Creates Project Quotas entity from a project and a dict.
 
         :param project_id: the internal id of the project with quotas
@@ -1344,7 +1361,7 @@ class ProjectQuotas(BASE, ModelBase):
 
         msg = u._("Must supply non-None {0} argument for ProjectQuotas entry.")
 
-        if project_id is None:
+        if project_id is None and check_exc:
             raise exception.MissingArgumentError(msg.format("project_id"))
         self.project_id = project_id
 
@@ -1400,16 +1417,16 @@ class SecretStores(BASE, ModelBase):
         name='_secret_stores_plugin_names_uc'),
         sa.UniqueConstraint('name', name='_secret_stores_name_uc'),)
 
-    def __init__(self, name, store_plugin, crypto_plugin=None,
-                 global_default=None):
+    def __init__(self, name=None, store_plugin=None, crypto_plugin=None,
+                 global_default=None, check_exc=True):
         """Creates secret store entity."""
         super(SecretStores, self).__init__()
 
         msg = u._("Must supply non-Blank {0} argument for SecretStores entry.")
 
-        if not name:
+        if not name and check_exc:
             raise exception.MissingArgumentError(msg.format("name"))
-        if not store_plugin:
+        if not store_plugin and check_exc:
             raise exception.MissingArgumentError(msg.format("store_plugin"))
 
         self.store_plugin = store_plugin
@@ -1456,17 +1473,17 @@ class ProjectSecretStore(BASE, ModelBase):
     __table_args__ = (sa.UniqueConstraint(
         'project_id', name='_project_secret_store_project_uc'),)
 
-    def __init__(self, project_id, secret_store_id):
+    def __init__(self, project_id=None, secret_store_id=None, check_exc=True):
         """Creates project secret store mapping entity."""
         super(ProjectSecretStore, self).__init__()
 
         msg = u._("Must supply non-None {0} argument for ProjectSecretStore "
                   " entry.")
 
-        if not project_id:
+        if not project_id and check_exc:
             raise exception.MissingArgumentError(msg.format("project_id"))
         self.project_id = project_id
-        if not secret_store_id:
+        if not secret_store_id and check_exc:
             raise exception.MissingArgumentError(msg.format("secret_store_id"))
         self.secret_store_id = secret_store_id
 

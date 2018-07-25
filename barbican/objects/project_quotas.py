@@ -45,7 +45,8 @@ class ProjectQuotas(base.BarbicanObject, base.BarbicanPersistentObject,
             raise exception.MissingArgumentError(msg.format("project_id"))
 
     def _get_db_entity(self, parsed_project_quotas=None):
-        return self.db_model(parsed_project_quotas=parsed_project_quotas)
+        return self.db_model(parsed_project_quotas=parsed_project_quotas,
+                             check_exc=False)
 
     def create(self, session=None, parsed_project_quotas=None):
         change_fields = self._get_changed_persistent_fields()
