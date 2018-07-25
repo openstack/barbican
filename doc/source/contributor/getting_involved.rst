@@ -21,9 +21,9 @@ convenience at `eavesdrop.openstack.org`_. For more information regarding
 OpenStack IRC channels please visit the `OpenStack IRC Wiki`_.
 
 .. _`freenode`: https://freenode.net
-.. _`OpenStack IRC Wiki`: https://wiki.openstack.org/wiki/IRC
 .. _`eavesdrop.openstack.org`: http://eavesdrop.openstack.org/irclogs/
                               %23openstack-barbican/
+.. _`OpenStack IRC Wiki`: https://wiki.openstack.org/wiki/IRC
 
 Mailing List
 --------------
@@ -42,10 +42,10 @@ email subject line. To participate on the mailing list\:
 Launchpad
 -----------
 
-Most of the tools used for OpenStack require a launchpad.net ID for
+Most of the tools used for OpenStack require a `launchpad.net`_ ID for
 authentication.
 
-.. _`https://launchpad.net`: https://launchpad.net
+.. _`launchpad.net`: https://launchpad.net
 
 
 Storyboard
@@ -69,7 +69,7 @@ to GitHub for easier browsing.
 
 * `Barbican on GitHub`_
 
-.. _`git.openstack.org`: http://git.openstack.org/cgit/openstack/barbican
+.. _`git.openstack.org`: https://git.openstack.org/cgit/openstack/barbican
 .. _`Barbican on GitHub`: https://github.com/openstack/barbican
 
 
@@ -80,4 +80,5 @@ review system for all code reviews. If you're unfamiliar with using
 the OpenStack Gerrit review system, please review the `Gerrit Workflow`_
 wiki documentation.
 
-.. _`Gerrit Workflow`: http://docs.openstack.org/infra/manual/developers.html#development-workflow
+.. _`Gerrit Workflow`: https://docs.openstack.org/infra/manual/developers
+                              .html#development-workflow
