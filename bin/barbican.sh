@@ -94,7 +94,7 @@ install_barbican()
     pip install -e .
 
     # Run unit tests
-    python setup.py testr
+    stestr run
 
     start_barbican
 }

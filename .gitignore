@@ -27,11 +27,10 @@ pip-log.txt
 
 # Unit test / coverage reports
 cover
-.testrepository
+.stestr/
 .coverage
 .coverage.*
 .tox
-nosetests.xml
 coverage.xml
 flake8.log
 
