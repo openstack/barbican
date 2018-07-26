@@ -105,7 +105,7 @@ class SecretController(controllers.ACLMixin):
                     pecan.abort(405)
         else:
             # only 'acl' and 'metadata' as sub-resource is supported
-            pecan.abort(405)
+            pecan.abort(404)
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
