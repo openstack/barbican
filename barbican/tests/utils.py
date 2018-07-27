@@ -610,20 +610,6 @@ def get_tomorrow_timestamp():
     return tomorrow.isoformat()
 
 
-def string_to_datetime(datetimestring, date_formats=None):
-    date_formats = date_formats or [
-        '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%dT%H:%M:%S.%fZ',
-        '%Y-%m-%dT%H:%M:%S.%f', "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S"]
-
-    for dateformat in date_formats:
-        try:
-            return datetime.datetime.strptime(datetimestring, dateformat)
-        except ValueError:
-            continue
-    else:
-        raise
-
-
 def get_id_from_ref(ref):
     """Returns id from reference."""
     ref_id = None
@@ -674,6 +660,10 @@ def is_public_key_valid(expected, observed):
 
 def is_kmip_enabled():
     return os.environ.get('KMIP_PLUGIN_ENABLED') is not None
+
+
+def is_vault_enabled():
+    return os.environ.get('VAULT_PLUGIN_ENABLED') is not None
 
 
 class DummyClassForTesting(object):
