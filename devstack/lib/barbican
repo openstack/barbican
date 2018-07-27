@@ -597,8 +597,13 @@ function install_vault {
         echo "Wah! Need to throw an error code here!"
     fi
 
-    #debug code follows:
     export VAULT_ADDR="http://${HOST_IP}:8200"
+
+    # Enable kv version 1
+    vault secrets disable secret/
+    vault secrets enable -version=1 -path=secret -description "kv version 1" kv
+
+    #debug code follows:
     vault status
     vault kv put secret/hello foo=world
     vault kv get secret/hello

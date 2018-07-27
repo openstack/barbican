@@ -67,7 +67,9 @@ class CastellanSecretStore(ss.SecretStoreBase):
             secret = self.key_manager.get(
                 self.context,
                 secret_ref)
-            return secret.get_encoded()
+
+            return ss.SecretDTO(secret_type, secret.get_encoded(),
+                                ss.KeySpec(), secret_metadata['content_type'])
         except Exception as e:
             LOG.exception("Error retrieving secret {}: {}".format(
                 secret_ref, six.text_type(e)))

@@ -155,18 +155,23 @@ class WhenTestingVaultSecretStore(utils.BaseTestCase):
         )
 
     def test_get_secret(self):
-        secret_metadata = {css.CastellanSecretStore.KEY_ID: key_ref1}
+        secret_metadata = {
+            css.CastellanSecretStore.KEY_ID: key_ref1,
+            "content_type": "application/octet-stream"
+        }
         response = self.plugin.get_secret(
             ss.SecretType.SYMMETRIC,
             secret_metadata
         )
 
+        self.assertIsInstance(response, ss.SecretDTO)
+
+        self.assertEqual(ss.SecretType.SYMMETRIC, response.type)
+        self.assertEqual(secret_passphrase, response.secret)
         self.plugin.key_manager.get.assert_called_once_with(
             mock.ANY,
             key_ref1
         )
-
-        self.assertEqual(response, secret_passphrase)
 
     def test_get_secret_throws_exception(self):
         secret_metadata = {css.CastellanSecretStore.KEY_ID: key_ref1}
