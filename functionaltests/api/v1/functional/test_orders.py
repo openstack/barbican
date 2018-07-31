@@ -16,6 +16,7 @@ from oslo_serialization import jsonutils
 import sys
 import time
 
+import testtools
 from testtools import testcase
 
 from barbican.tests import utils
@@ -567,6 +568,8 @@ class OrdersTestCase(base.TestCase):
         self.assertRegex(order_resp.model.order_ref, regex)
 
     @testcase.attr('positive')
+    @testtools.skipIf(utils.is_vault_enabled(),
+                      "Vault does not support this operation")
     def test_encryption_using_generated_key(self):
         """Tests functionality of a generated asymmetric key pair."""
         test_model = order_models.OrderModel(**self.asymmetric_data)
