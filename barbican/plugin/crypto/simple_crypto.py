@@ -192,10 +192,12 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
 
         if type_enum == c.PluginSupportTypes.SYMMETRIC_KEY_GENERATION:
             return self._is_algorithm_supported(algorithm,
-                                                bit_length)
+                                                bit_length,
+                                                mode)
         elif type_enum == c.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION:
             return self._is_algorithm_supported(algorithm,
-                                                bit_length)
+                                                bit_length,
+                                                mode)
         else:
             return False
 
@@ -217,14 +219,23 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
 
         return algorithm
 
-    def _is_algorithm_supported(self, algorithm=None, bit_length=None):
+    def _is_algorithm_supported(self, algorithm=None,
+                                bit_length=None, mode=None):
         """check if algorithm and bit_length combination is supported."""
         if algorithm is None or bit_length is None:
             return False
 
-        if (algorithm.lower() in
-                c.PluginSupportTypes.SYMMETRIC_ALGORITHMS and bit_length in
-                c.PluginSupportTypes.SYMMETRIC_KEY_LENGTHS):
+        length_factor = 1
+
+        # xts-mode cuts the effective key for the algorithm in half,
+        # so the bit_length must be the double of the supported length.
+        # in the future there should be a validation of supported modes too.
+        if mode is not None and mode.lower() == "xts":
+            length_factor = 2
+
+        if (algorithm.lower() in c.PluginSupportTypes.SYMMETRIC_ALGORITHMS
+            and bit_length/length_factor
+                in c.PluginSupportTypes.SYMMETRIC_KEY_LENGTHS):
             return True
         elif (algorithm.lower() in c.PluginSupportTypes.ASYMMETRIC_ALGORITHMS
               and bit_length in c.PluginSupportTypes.ASYMMETRIC_KEY_LENGTHS):
