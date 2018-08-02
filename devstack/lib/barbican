@@ -77,6 +77,7 @@ function configure_barbicanclient {
 
 # configure_dogtag_plugin - Change config to use dogtag plugin
 function configure_dogtag_plugin {
+    pip_install 'dogtag-pki'
     sudo openssl pkcs12 -in /root/.dogtag/pki-tomcat/ca_admin_cert.p12 -passin pass:PASSWORD -out $BARBICAN_CONF_DIR/kra_admin_cert.pem -nodes
     sudo chown $USER $BARBICAN_CONF_DIR/kra_admin_cert.pem
     iniset $BARBICAN_CONF dogtag_plugin dogtag_port 8373
@@ -554,9 +555,6 @@ EOF
 }
 
 function install_dogtag_plugin_dependencies {
-    # Removing the pip-installed python-requests package is needed because of:
-    # https://bugzilla.redhat.com/show_bug.cgi?id=1352554
-    sudo rm -rf /usr/lib/python2.7/site-packages/requests
     install_package nss-devel 389-ds-base pki-ca pki-kra
 }
 
