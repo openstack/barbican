@@ -675,5 +675,13 @@ def is_kmip_enabled():
     return os.environ.get('KMIP_PLUGIN_ENABLED') is not None
 
 
+def is_vault_enabled():
+    return os.environ.get('VAULT_PLUGIN_ENABLED') is not None
+
+
+def is_pkcs11_enabled():
+    return os.environ.get('PKCS11_PLUGIN_ENABLED') is not None
+
+
 class DummyClassForTesting(object):
     pass

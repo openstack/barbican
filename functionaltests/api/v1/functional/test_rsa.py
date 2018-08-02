@@ -236,6 +236,8 @@ class RSATestCase(base.TestCase):
         self.verify_container_keys_equal(secrets, with_passphrase=True)
 
     @testcase.attr('positive')
+    @testtools.skipIf(utils.is_vault_enabled() or utils.is_pkcs11_enabled(),
+                      "Vault does not support this operation")
     def test_rsa_order_container(self):
         """Post an order for a container"""
         order_ref = self.order_container()
@@ -244,7 +246,8 @@ class RSATestCase(base.TestCase):
         self.verify_container_keys_valid(secrets)
 
     @testcase.attr('positive')
-    @testtools.skipIf(utils.is_kmip_enabled(),
+    @testtools.skipIf(utils.is_kmip_enabled() or utils.is_vault_enabled()
+                      or utils.is_pkcs11_enabled(),
                       "PyKMIP does not support this operation")
     def test_rsa_order_container_with_passphrase(self):
         """Post an order for a container with a passphrase"""
@@ -265,6 +268,8 @@ class RSATestCase(base.TestCase):
         self.verify_container_keys_equal(secrets)
 
     @testcase.attr('positive')
+    @testtools.skipIf(utils.is_vault_enabled() or utils.is_pkcs11_enabled(),
+                      "Vault does not support this operation")
     def test_rsa_order_certificate_from_ordered_container(self):
         """Post an order for a certificate"""
         order_ref = self.order_container()
@@ -276,7 +281,8 @@ class RSATestCase(base.TestCase):
         self.verify_certificate_order_status(order_status)
 
     @testcase.attr('positive')
-    @testtools.skipIf(utils.is_kmip_enabled(),
+    @testtools.skipIf(utils.is_kmip_enabled() or utils.is_vault_enabled()
+                      or utils.is_pkcs11_enabled(),
                       "PyKMIP does not support this operation")
     def test_rsa_order_certificate_from_ordered_container_with_pass(self):
         """Post an order for a certificate"""

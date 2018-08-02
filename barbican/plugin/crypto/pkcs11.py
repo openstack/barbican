@@ -15,6 +15,7 @@ import collections
 import textwrap
 
 import cffi
+from cryptography.hazmat.primitives import padding
 
 from barbican.common import exception
 from barbican.common import utils
@@ -39,6 +40,14 @@ CKS_RW_USER_FUNCTIONS = 3
 
 CKO_SECRET_KEY = 4
 CKK_AES = 0x1f
+CKK_GENERIC_SECRET = 0x10
+CKK_SHA256_HMAC = 0x0000002B
+
+_KEY_TYPES = {
+    'CKK_AES': CKK_AES,
+    'CKK_GENERIC_SECRET': CKK_GENERIC_SECRET,
+    'CKK_SHA256_HMAC': CKK_SHA256_HMAC
+}
 
 CKA_CLASS = 0
 CKA_TOKEN = 1
@@ -128,12 +137,29 @@ CKM_AES_CBC = 0x1082
 CKM_AES_CBC_PAD = 0x1085
 CKM_AES_GCM = 0x1087
 CKM_AES_KEY_WRAP = 0x1090
+CKM_GENERIC_SECRET_KEY_GEN = 0x350
 VENDOR_SAFENET_CKM_AES_GCM = 0x8000011c
 
-CKM_NAMES = {
+# Thales Vendor-defined Mechanisms
+CKM_NC_SHA256_HMAC_KEY_GEN = 0xDE436997
+
+_ENCRYPTION_MECHANISMS = {
+    'CKM_AES_CBC': CKM_AES_CBC,
     'CKM_AES_GCM': CKM_AES_GCM,
-    'VENDOR_SAFENET_CKM_AES_GCM': VENDOR_SAFENET_CKM_AES_GCM
+    'VENDOR_SAFENET_CKM_AES_GCM': VENDOR_SAFENET_CKM_AES_GCM,
 }
+
+_CBC_IV_SIZE = 16  # bytes
+_CBC_BLOCK_SIZE = 128  # bits
+
+_KEY_GEN_MECHANISMS = {
+    'CKM_AES_KEY_GEN': CKM_AES_KEY_GEN,
+    'CKM_NC_SHA256_HMAC_KEY_GEN': CKM_NC_SHA256_HMAC_KEY_GEN
+}
+
+CKM_NAMES = dict()
+CKM_NAMES.update(_ENCRYPTION_MECHANISMS)
+CKM_NAMES.update(_KEY_GEN_MECHANISMS)
 
 ERROR_CODES = {
     1: 'CKR_CANCEL',
@@ -286,6 +312,8 @@ def build_ffi():
     CK_RV C_GetSessionInfo(CK_SESSION_HANDLE, CK_SESSION_INFO_PTR);
     CK_RV C_Login(CK_SESSION_HANDLE, CK_USER_TYPE, CK_UTF8CHAR_PTR,
                   CK_ULONG);
+    CK_RV C_GetAttributeValue(CK_SESSION_HANDLE, CK_OBJECT_HANDLE,
+                              CK_ATTRIBUTE *, CK_ULONG);
     CK_RV C_SetAttributeValue(CK_SESSION_HANDLE, CK_OBJECT_HANDLE,
                               CK_ATTRIBUTE *, CK_ULONG);
     CK_RV C_DestroyObject(CK_SESSION_HANDLE, CK_OBJECT_HANDLE);
@@ -324,9 +352,22 @@ def build_ffi():
 
 class PKCS11(object):
     def __init__(self, library_path, login_passphrase, rw_session, slot_id,
-                 ffi=None, algorithm='CKM_AES_GCM',
+                 encryption_mechanism=None,
+                 ffi=None, algorithm=None,
                  seed_random_buffer=None,
                  generate_iv=None):
+        if algorithm:
+            LOG.warning("WARNING: Using deprecated 'algorithm' argument.")
+            encryption_mechanism = encryption_mechanism or algorithm
+
+        if encryption_mechanism not in _ENCRYPTION_MECHANISMS:
+            raise ValueError("Invalid encryption_mechanism.")
+        self.encrypt_mech = _ENCRYPTION_MECHANISMS[encryption_mechanism]
+        self.encrypt = getattr(
+            self,
+            '_{}_encrypt'.format(encryption_mechanism)
+        )
+
         self.ffi = ffi or build_ffi()
         self.lib = self.ffi.dlopen(library_path)
         rv = self.lib.C_Initialize(self.ffi.NULL)
@@ -338,7 +379,7 @@ class PKCS11(object):
         self.slot_id = slot_id
 
         # Algorithm options
-        self.algorithm = CKM_NAMES[algorithm]
+        self.algorithm = CKM_NAMES[encryption_mechanism]
         self.blocksize = 16
         self.noncesize = 12
         self.gcmtagsize = 16
@@ -368,10 +409,10 @@ class PKCS11(object):
         buf = self._generate_random(length, session)
         return self.ffi.buffer(buf)[:]
 
-    def get_key_handle(self, label, session):
+    def get_key_handle(self, key_type, label, session):
         attributes = self._build_attributes([
             Attribute(CKA_CLASS, CKO_SECRET_KEY),
-            Attribute(CKA_KEY_TYPE, CKK_AES),
+            Attribute(CKA_KEY_TYPE, _KEY_TYPES[key_type]),
             Attribute(CKA_LABEL, str(label))
         ])
         rv = self.lib.C_FindObjectsInit(
@@ -392,7 +433,54 @@ class PKCS11(object):
             raise exception.P11CryptoPluginKeyException()
         return key
 
-    def encrypt(self, key, pt_data, session):
+    def _CKM_AES_CBC_encrypt(self, key, pt_data, session):
+        iv = self._generate_random(_CBC_IV_SIZE, session)
+        ck_mechanism = self._build_cbc_mechanism(iv)
+        rv = self.lib.C_EncryptInit(session, ck_mechanism.mech, key)
+        self._check_error(rv)
+
+        padder = padding.PKCS7(_CBC_BLOCK_SIZE).padder()
+        padded_pt_data = padder.update(pt_data)
+        padded_pt_data += padder.finalize()
+
+        pt_len = len(padded_pt_data)
+        ct_len = self.ffi.new("CK_ULONG *", pt_len)
+
+        ct = self.ffi.new("CK_BYTE[{}]".format(ct_len[0]))
+        rv = self.lib.C_Encrypt(session, padded_pt_data, pt_len, ct, ct_len)
+        self._check_error(rv)
+
+        return {
+            "iv": self.ffi.buffer(iv)[:],
+            "ct": self.ffi.buffer(ct, ct_len[0])[:]
+        }
+
+    def _build_cbc_mechanism(self, iv):
+        mech = self.ffi.new("CK_MECHANISM *")
+        mech.mechanism = self.encrypt_mech
+        mech.parameter = iv
+        mech.parameter_len = _CBC_IV_SIZE
+        return CKMechanism(mech, None)
+
+    def _CKM_AES_CBC_decrypt(self, key, iv, ct_data, session):
+        iv = self.ffi.new("CK_BYTE[{}]".format(len(iv)), iv)
+        ck_mechanism = self._build_cbc_mechanism(iv)
+        rv = self.lib.C_DecryptInit(session, ck_mechanism.mech, key)
+        self._check_error(rv)
+
+        ct_len = len(ct_data)
+        pt_len = self.ffi.new("CK_ULONG *", ct_len)
+        pt = self.ffi.new("CK_BYTE[{0}]".format(pt_len[0]))
+        rv = self.lib.C_Decrypt(session, ct_data, ct_len, pt, pt_len)
+        self._check_error(rv)
+        pt = self.ffi.buffer(pt, pt_len[0])[:]
+
+        unpadder = padding.PKCS7(_CBC_BLOCK_SIZE).unpadder()
+        unpadded_pt = unpadder.update(pt)
+        unpadded_pt += unpadder.finalize()
+        return unpadded_pt
+
+    def _VENDOR_SAFENET_CKM_AES_GCM_encrypt(self, key, pt_data, session):
         iv = None
         if self.generate_iv:
             iv = self._generate_random(self.noncesize, session)
@@ -419,9 +507,25 @@ class PKCS11(object):
             return {
                 "iv": self.ffi.buffer(ct, ct_len[0])[-self.gcmtagsize:],
                 "ct": self.ffi.buffer(ct, ct_len[0])[:-self.gcmtagsize]
-                }
+            }
 
-    def decrypt(self, key, iv, ct_data, session):
+    def _build_gcm_mechanism(self, iv=None):
+        mech = self.ffi.new("CK_MECHANISM *")
+        mech.mechanism = self.algorithm
+        gcm = self.ffi.new("CK_AES_GCM_PARAMS *")
+
+        if iv:
+            iv_len = len(iv)
+            gcm.pIv = iv
+            gcm.ulIvLen = iv_len
+            gcm.ulIvBits = iv_len * 8
+
+        gcm.ulTagBits = self.gcmtagsize * 8
+        mech.parameter = gcm
+        mech.parameter_len = 48
+        return CKMechanism(mech, gcm)
+
+    def _VENDOR_SAFENET_CKM_AES_GCM_decrypt(self, key, iv, ct_data, session):
         iv = self.ffi.new("CK_BYTE[{0}]".format(len(iv)), iv)
         ck_mechanism = self._build_gcm_mechanism(iv)
         rv = self.lib.C_DecryptInit(session, ck_mechanism.mech, key)
@@ -452,23 +556,39 @@ class PKCS11(object):
 
         return pt
 
-    def generate_key(self, key_length, session, key_label=None,
-                     encrypt=False, sign=False, wrap=False, master_key=False):
-        if not encrypt and not sign and not wrap:
+    def _CKM_AES_GCM_encrypt(self, key, pt_data, session):
+        return self._VENDOR_SAFENET_CKM_AES_GCM_encrypt(key, pt_data, session)
+
+    def _CKM_AES_GCM_decrypt(self, key, iv, ct_data, session):
+        return self._VENDOR_SAFENET_CKM_AES_GCM_decrypt(key, ct_data, session)
+
+    def decrypt(self, mechanism, key, iv, ct_data, session):
+        if mechanism not in _ENCRYPTION_MECHANISMS:
+            raise ValueError(u._("Unsupported decryption mechanism"))
+        return getattr(self, '_{}_decrypt'.format(mechanism))(
+            key, iv, ct_data, session
+        )
+
+    def generate_key(self, key_type, key_length, mechanism, session,
+                     key_label=None, master_key=False,
+                     encrypt=False, sign=False, wrap=False):
+        if not any((encrypt, sign, wrap)):
             raise exception.P11CryptoPluginException()
         if master_key and not key_label:
             raise ValueError(u._("key_label must be set for master_keys"))
 
-        token = True if master_key else False
-        extractable = False if master_key else True
+        token = master_key
+        extractable = not master_key
+        # in some HSMs extractable keys cannot be marked sensitive
+        sensitive = not extractable
 
         ck_attributes = [
             Attribute(CKA_CLASS, CKO_SECRET_KEY),
-            Attribute(CKA_KEY_TYPE, CKK_AES),
+            Attribute(CKA_KEY_TYPE, _KEY_TYPES[key_type]),
             Attribute(CKA_VALUE_LEN, key_length),
             Attribute(CKA_TOKEN, token),
             Attribute(CKA_PRIVATE, True),
-            Attribute(CKA_SENSITIVE, True),
+            Attribute(CKA_SENSITIVE, sensitive),
             Attribute(CKA_ENCRYPT, encrypt),
             Attribute(CKA_DECRYPT, encrypt),
             Attribute(CKA_SIGN, sign),
@@ -481,7 +601,9 @@ class PKCS11(object):
             ck_attributes.append(Attribute(CKA_LABEL, key_label))
         ck_attributes = self._build_attributes(ck_attributes)
         mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = CKM_AES_KEY_GEN
+
+        mech.mechanism = _KEY_GEN_MECHANISMS[mechanism]
+
         obj_handle_ptr = self.ffi.new("CK_OBJECT_HANDLE *")
         rv = self.lib.C_GenerateKey(
             session, mech, ck_attributes.template, len(ck_attributes.template),
@@ -657,19 +779,3 @@ class PKCS11(object):
         if test_random == b'\x00' * 100:
             raise exception.P11CryptoPluginException(
                 u._("Apparent RNG self-test failure."))
-
-    def _build_gcm_mechanism(self, iv=None):
-        mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = self.algorithm
-        gcm = self.ffi.new("CK_AES_GCM_PARAMS *")
-
-        if iv:
-            iv_len = len(iv)
-            gcm.pIv = iv
-            gcm.ulIvLen = iv_len
-            gcm.ulIvBits = iv_len * 8
-
-        gcm.ulTagBits = self.gcmtagsize * 8
-        mech.parameter = gcm
-        mech.parameter_len = 48
-        return CKMechanism(mech, gcm)

@@ -12,10 +12,15 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from oslo_serialization import jsonutils
 import sys
 import time
 
+from cryptography.hazmat import backends
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
+from oslo_serialization import jsonutils
+import testtools
 from testtools import testcase
 
 from barbican.tests import utils
@@ -24,11 +29,6 @@ from functionaltests.api.v1.behaviors import container_behaviors
 from functionaltests.api.v1.behaviors import order_behaviors
 from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.models import order_models
-
-from cryptography.hazmat import backends
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives import serialization
 
 
 def get_default_order_create_data():
@@ -567,6 +567,8 @@ class OrdersTestCase(base.TestCase):
         self.assertRegex(order_resp.model.order_ref, regex)
 
     @testcase.attr('positive')
+    @testtools.skipIf(utils.is_vault_enabled() or utils.is_pkcs11_enabled(),
+                      "Vault does not support this operation")
     def test_encryption_using_generated_key(self):
         """Tests functionality of a generated asymmetric key pair."""
         test_model = order_models.OrderModel(**self.asymmetric_data)
