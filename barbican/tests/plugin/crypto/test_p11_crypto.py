@@ -60,7 +60,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.cfg_mock.p11_crypto_plugin.pkek_length = 32
         self.cfg_mock.p11_crypto_plugin.pkek_cache_ttl = 900
         self.cfg_mock.p11_crypto_plugin.pkek_cache_limit = 10
-        self.cfg_mock.p11_crypto_plugin.algorithm = 'CKM_AES_GCM'
+        self.cfg_mock.p11_crypto_plugin.encryption_mechanism = 'CKM_AES_CBC'
         self.cfg_mock.p11_crypto_plugin.seed_file = ''
         self.cfg_mock.p11_crypto_plugin.seed_length = 32
 
@@ -154,13 +154,13 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
 
     def test_decrypt(self):
         ct = b'ctct'
-        kek_meta_extended = '{"iv":"AAAA"}'
+        kek_meta_extended = '{"iv":"AAAA","mechanism":"CKM_AES_CBC"}'
         decrypt_dto = plugin_import.DecryptDTO(ct)
         kek_meta = mock.MagicMock()
         kek_meta.kek_label = 'pkek'
         kek_meta.plugin_meta = ('{"iv": "iv==",'
                                 '"hmac": "hmac",'
-                                '"wrapped_key": "wrappedkey==",'
+                                '"wrapped_key": "c2VjcmV0a2V5BwcHBwcHBw==",'
                                 '"mkek_label": "mkek_label",'
                                 '"hmac_label": "hmac_label"}')
         pt = self.plugin.decrypt(decrypt_dto,
@@ -183,7 +183,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
             'Testing error handling'
         )
         ct = b'ctct'
-        kek_meta_extended = '{"iv":"AAAA"}'
+        kek_meta_extended = '{"iv":"AAAA","mechanism":"CKM_AES_CBC"}'
         decrypt_dto = plugin_import.DecryptDTO(ct)
         kek_meta = mock.MagicMock()
         kek_meta.kek_label = 'pkek'
@@ -273,6 +273,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.pkcs11.get_key_handle.return_value = None
         self.assertRaises(ex.P11CryptoKeyHandleException,
                           self.plugin._get_master_key,
+                          self.plugin.mkek_key_type,
                           'bad_key_label')
 
     def test_cached_kek_expired(self):

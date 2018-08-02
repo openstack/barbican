@@ -59,11 +59,13 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.cfg_mock.login_passphrase = 'foobar'
         self.cfg_mock.rw_session = False
         self.cfg_mock.slot_id = 1
-        self.cfg_mock.algorithm = 'CKM_AES_GCM'
+        self.cfg_mock.encryption_mechanism = 'CKM_AES_CBC'
 
         self.pkcs11 = pkcs11.PKCS11(
             self.cfg_mock.library_path, self.cfg_mock.login_passphrase,
-            self.cfg_mock.rw_session, self.cfg_mock.slot_id, ffi=self.ffi
+            self.cfg_mock.rw_session, self.cfg_mock.slot_id,
+            self.cfg_mock.encryption_mechanism,
+            ffi=self.ffi
         )
 
     def _generate_random(self, session, buf, length):
@@ -183,7 +185,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
                           self.pkcs11._rng_self_test, mock.MagicMock())
 
     def test_get_key_handle_one_key(self):
-        key = self.pkcs11.get_key_handle('foo', mock.MagicMock())
+        key = self.pkcs11.get_key_handle('CKK_AES', 'foo', mock.MagicMock())
 
         self.assertEqual(2, key)
 
@@ -193,7 +195,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
 
     def test_get_key_handle_no_keys(self):
         self.lib.C_FindObjects.side_effect = self._find_objects_zero
-        key = self.pkcs11.get_key_handle('foo', mock.MagicMock())
+        key = self.pkcs11.get_key_handle('CKK_AES', 'foo', mock.MagicMock())
 
         self.assertIsNone(key)
 
@@ -205,21 +207,24 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.lib.C_FindObjects.side_effect = self._find_objects_two
 
         self.assertRaises(exception.P11CryptoPluginKeyException,
-                          self.pkcs11.get_key_handle, 'foo', mock.MagicMock())
+                          self.pkcs11.get_key_handle, 'CKK_AES', 'foo',
+                          mock.MagicMock())
 
         self.assertEqual(1, self.lib.C_FindObjectsInit.call_count)
         self.assertEqual(1, self.lib.C_FindObjects.call_count)
         self.assertEqual(1, self.lib.C_FindObjectsFinal.call_count)
 
     def test_generate_session_key(self):
-        key = self.pkcs11.generate_key(16, mock.MagicMock(), encrypt=True)
+        key = self.pkcs11.generate_key('CKK_AES', 16, 'CKM_AES_KEY_GEN',
+                                       mock.MagicMock(), encrypt=True)
 
         self.assertEqual(3, key)
 
         self.assertEqual(1, self.lib.C_GenerateKey.call_count)
 
     def test_generate_master_key(self):
-        key = self.pkcs11.generate_key(16, mock.MagicMock(), key_label='key',
+        key = self.pkcs11.generate_key('CKK_AES', 16, 'CKM_AES_KEY_GEN',
+                                       mock.MagicMock(), key_label='key',
                                        encrypt=True, master_key=True)
 
         self.assertEqual(3, key)
@@ -228,18 +233,22 @@ class WhenTestingPKCS11(utils.BaseTestCase):
 
     def test_generate_key_no_flags(self):
         self.assertRaises(exception.P11CryptoPluginException,
-                          self.pkcs11.generate_key, mock.MagicMock(),
-                          mock.MagicMock())
+                          self.pkcs11.generate_key, 'CKK_AES', 16,
+                          mock.MagicMock(), mock.MagicMock())
 
     def test_generate_master_key_no_label(self):
         self.assertRaises(ValueError, self.pkcs11.generate_key,
+                          'CKK_AES', 16,
                           mock.MagicMock(), mock.MagicMock(),
                           encrypt=True, master_key=True)
 
     def test_encrypt_with_no_iv_generation(self):
         pt = b'0123456789ABCDEF'
         self.pkcs11.generate_iv = False
-        ct = self.pkcs11.encrypt(mock.MagicMock(), pt, mock.MagicMock())
+        ct = self.pkcs11._VENDOR_SAFENET_CKM_AES_GCM_encrypt(
+            mock.MagicMock(),
+            pt, mock.MagicMock()
+        )
 
         self.assertEqual(ct['ct'][:len(pt)], pt[::-1])
         self.assertGreater(len(ct['iv']), 0)
@@ -251,7 +260,9 @@ class WhenTestingPKCS11(utils.BaseTestCase):
     def test_encrypt_with_iv_generation(self):
         pt = b'0123456789ABCDEF'
         self.pkcs11.generate_iv = True
-        ct = self.pkcs11.encrypt(mock.MagicMock(), pt, mock.MagicMock())
+        ct = self.pkcs11._VENDOR_SAFENET_CKM_AES_GCM_encrypt(
+            mock.MagicMock(), pt, mock.MagicMock()
+        )
 
         self.assertEqual(ct['ct'][:len(pt)], pt[::-1])
         self.assertGreater(len(ct['iv']), 0)
@@ -261,9 +272,10 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertEqual(1, self.lib.C_Encrypt.call_count)
 
     def test_decrypt(self):
-        ct = b'FEDCBA9876543210' + b'0' * self.pkcs11.gcmtagsize
+        ct = b'c2VjcmV0a2V5BwcHBwcHBw=='
         iv = b'0' * self.pkcs11.noncesize
-        pt = self.pkcs11.decrypt(mock.MagicMock(), iv, ct, mock.MagicMock())
+        pt = self.pkcs11.decrypt('VENDOR_SAFENET_CKM_AES_GCM',
+                                 mock.MagicMock(), iv, ct, mock.MagicMock())
 
         pt_len = len(ct) - self.pkcs11.gcmtagsize
         self.assertEqual(pt[:pt_len], ct[:-self.pkcs11.gcmtagsize][::-1])
@@ -272,9 +284,10 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertEqual(1, self.lib.C_Decrypt.call_count)
 
     def test_decrypt_with_pad(self):
-        ct = b'\x03\x03\x03CBA9876543210' + b'0' * self.pkcs11.gcmtagsize
+        ct = b'c2VjcmV0a2V5BwcHBwcHBw=='
         iv = b'0' * self.pkcs11.blocksize
-        pt = self.pkcs11.decrypt(mock.MagicMock(), iv, ct, mock.MagicMock())
+        pt = self.pkcs11.decrypt('VENDOR_SAFENET_CKM_AES_GCM',
+                                 mock.MagicMock(), iv, ct, mock.MagicMock())
 
         pt_len = len(ct) - self.pkcs11.gcmtagsize - 3
         self.assertEqual(pt[:pt_len], ct[3:-self.pkcs11.gcmtagsize][::-1])
@@ -283,9 +296,10 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertEqual(1, self.lib.C_Decrypt.call_count)
 
     def test_decrypt_with_pad_new_iv(self):
-        ct = b'\x03\x03\x03CBA9876543210' + b'0' * self.pkcs11.gcmtagsize
+        ct = b'c2VjcmV0a2V5BwcHBwcHBw=='
         iv = b'0' * self.pkcs11.gcmtagsize
-        pt = self.pkcs11.decrypt(mock.MagicMock(), iv, ct, mock.MagicMock())
+        pt = self.pkcs11.decrypt('VENDOR_SAFENET_CKM_AES_GCM',
+                                 mock.MagicMock(), iv, ct, mock.MagicMock())
 
         pt_len = len(ct) - self.pkcs11.gcmtagsize
         self.assertEqual(pt[:pt_len], ct[:-self.pkcs11.gcmtagsize][::-1])
@@ -294,9 +308,10 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertEqual(1, self.lib.C_Decrypt.call_count)
 
     def test_decrypt_with_pad_wrong_size(self):
-        ct = b'\x03\x03\x03CBA987654321' + b'0' * self.pkcs11.gcmtagsize
+        ct = b'c2VjcmV0a2V5BwcHBwcHBw=='
         iv = b'0' * self.pkcs11.blocksize
-        pt = self.pkcs11.decrypt(mock.MagicMock(), iv, ct, mock.MagicMock())
+        pt = self.pkcs11.decrypt('VENDOR_SAFENET_CKM_AES_GCM',
+                                 mock.MagicMock(), iv, ct, mock.MagicMock())
 
         pt_len = len(ct) - self.pkcs11.gcmtagsize
         self.assertEqual(pt[:pt_len], ct[:-self.pkcs11.gcmtagsize][::-1])
@@ -305,9 +320,10 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertEqual(1, self.lib.C_Decrypt.call_count)
 
     def test_decrypt_with_pad_wrong_length(self):
-        ct = b'\x03EDCBA9876543210' + b'0' * self.pkcs11.gcmtagsize
+        ct = b'c2VjcmV0a2V5BwcHBwcHBw=='
         iv = b'0' * self.pkcs11.blocksize
-        pt = self.pkcs11.decrypt(mock.MagicMock(), iv, ct, mock.MagicMock())
+        pt = self.pkcs11.decrypt('VENDOR_SAFENET_CKM_AES_GCM',
+                                 mock.MagicMock(), iv, ct, mock.MagicMock())
 
         pt_len = len(ct) - self.pkcs11.gcmtagsize
         self.assertEqual(pt[:pt_len], ct[:-self.pkcs11.gcmtagsize][::-1])
@@ -316,9 +332,10 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertEqual(1, self.lib.C_Decrypt.call_count)
 
     def test_decrypt_with_too_large_pad(self):
-        ct = b'\x11EDCBA9876543210' + b'0' * self.pkcs11.gcmtagsize
+        ct = b'c2VjcmV0a2V5BwcHBwcHBw=='
         iv = b'0' * self.pkcs11.blocksize
-        pt = self.pkcs11.decrypt(mock.MagicMock(), iv, ct, mock.MagicMock())
+        pt = self.pkcs11.decrypt('VENDOR_SAFENET_CKM_AES_GCM',
+                                 mock.MagicMock(), iv, ct, mock.MagicMock())
 
         pt_len = len(ct) - self.pkcs11.gcmtagsize
         self.assertEqual(pt[:pt_len], ct[:-self.pkcs11.gcmtagsize][::-1])

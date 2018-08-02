@@ -28,6 +28,8 @@ if [[ "$plugin" == "kmip" ]]; then
     export KMIP_PLUGIN_ENABLED=1
 elif [[ "$plugin" == "vault" ]]; then
     export VAULT_PLUGIN_ENABLED=1
+elif [[ "$plugin" == "pkcs11" ]]; then
+    export PKCS11_PLUGIN_ENABLED=1
 fi
 
 # run the tests sequentially

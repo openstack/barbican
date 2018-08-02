@@ -185,12 +185,16 @@ class HSMCommands(object):
     @args('--label', '-L', metavar='<label>', default='primarymkek',
           help='The label of the Master Key Encrypt Key')
     @args('--length', '-l', metavar='<length>', default=32,
-          help='The length of the Master Key Encrypt Key (default is 32)')
+          help='The length in bytes of the Master Key Encryption Key'
+               ' (default is 32)')
     def gen_mkek(self, passphrase, libpath=None, slotid=None, label=None,
                  length=None):
+        CKK_AES = 'CKK_AES'
+        CKM_AES_KEY_GEN = 'CKM_AES_KEY_GEN'
         self._create_pkcs11_session(str(passphrase), str(libpath), int(slotid))
-        self._verify_label_does_not_exist(str(label), self.session)
-        self.pkcs11.generate_key(int(length), self.session, str(label),
+        self._verify_label_does_not_exist(CKK_AES, str(label), self.session)
+        self.pkcs11.generate_key(CKK_AES, int(length), CKM_AES_KEY_GEN,
+                                 self.session, str(label),
                                  encrypt=True, wrap=True, master_key=True)
         self.pkcs11.return_session(self.session)
         print("MKEK successfully generated!")
@@ -207,13 +211,19 @@ class HSMCommands(object):
           help='Password to login to PKCS11 session')
     @args('--label', '-L', metavar='<label>', default='primarymkek',
           help='The label of the Master HMAC Key')
+    @args('--key-type', '-t', metavar='<key type>', dest='keytype',
+          default='CKK_AES', help='The HMAC Key Type (e.g. CKK_AES)')
     @args('--length', '-l', metavar='<length>', default=32,
-          help='The length of the Master HMAC Key (default is 32)')
+          help='The length in bytes of the Master HMAC Key (default is 32)')
+    @args('--mechanism', '-m', metavar='<mechanism>',
+          default='CKM_AES_KEY_GEN', help='The HMAC Key Generation mechanism')
     def gen_hmac(self, passphrase, libpath=None, slotid=None, label=None,
-                 length=None):
+                 keytype=None, mechanism=None, length=None):
         self._create_pkcs11_session(str(passphrase), str(libpath), int(slotid))
-        self._verify_label_does_not_exist(str(label), self.session)
-        self.pkcs11.generate_key(int(length), self.session, str(label),
+        self._verify_label_does_not_exist(str(keytype), str(label),
+                                          self.session)
+        self.pkcs11.generate_key(str(keytype), int(length), str(mechanism),
+                                 self.session, str(label),
                                  sign=True, master_key=True)
         self.pkcs11.return_session(self.session)
         print("HMAC successfully generated!")
@@ -230,12 +240,13 @@ class HSMCommands(object):
     def _create_pkcs11_session(self, passphrase, libpath, slotid):
         self.pkcs11 = pkcs11.PKCS11(
             library_path=libpath, login_passphrase=passphrase,
-            rw_session=True, slot_id=slotid
+            rw_session=True, slot_id=slotid,
+            encryption_mechanism='CKM_AES_CBC',
         )
         self.session = self.pkcs11.get_session()
 
-    def _verify_label_does_not_exist(self, label, session):
-        key_handle = self.pkcs11.get_key_handle(label, session)
+    def _verify_label_does_not_exist(self, key_type, label, session):
+        key_handle = self.pkcs11.get_key_handle(key_type, label, session)
         if key_handle:
             print(
                 "The label {label} already exists! "
