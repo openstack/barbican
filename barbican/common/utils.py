@@ -186,7 +186,12 @@ def generate_uuid():
 
 
 def is_multiple_backends_enabled():
-    secretstore_conf = config.get_module_config('secretstore')
+    try:
+        secretstore_conf = config.get_module_config('secretstore')
+    except KeyError:
+        # Ensure module is initialized
+        from barbican.plugin.interface import secret_store  # nopep8
+        secretstore_conf = config.get_module_config('secretstore')
     return secretstore_conf.secretstore.enable_multiple_secret_stores
 
 
