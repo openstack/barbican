@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    Added new options to the PKCS#11 Cryptographic Plugin configuration to
+    enable the use of different encryption and hmac mechanisms.
+    Added support for `CKM_AES_CBC` encryption in the PKCS#11 Cryptographic
+    Plugin.
+deprecations:
+  - |
+    Deprecated the `p11_crypto_plugin:algoritm` option. Users should update
+    their configuration to use `p11_crypto_plugin:encryption_mechanism`
+    instead.
