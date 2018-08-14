@@ -13,6 +13,8 @@
 #    under the License.
 from oslo_versionedobjects import base as object_base
 
+from barbican.common import exception
+from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repos
 from barbican.objects import base
@@ -32,6 +34,14 @@ class SecretStores(base.BarbicanObject, base.BarbicanPersistentObject,
 
     db_model = models.SecretStores
     db_repo = repos.get_secret_stores_repository()
+
+    def _validate_fields(self, change_fields):
+        msg = u._("Must supply non-Blank {0} argument for SecretStores entry.")
+
+        if not change_fields.get('name'):
+            raise exception.MissingArgumentError(msg.format("name"))
+        if not change_fields.get('store_plugin'):
+            raise exception.MissingArgumentError(msg.format("store_plugin"))
 
     @classmethod
     def get_all(cls, session=None):
