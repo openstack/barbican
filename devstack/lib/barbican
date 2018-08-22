@@ -445,27 +445,15 @@ function install_389_directory_server {
 
     sudo mkdir -p /etc/389-ds
 
-    # Instead of spawning a sub-shell to cat this whole chunk into the desired
-    # file. I just cat it into a temporary file that this user will have access
-    # to, and subsequently use elevated privileges to move the already made
-    # file where we need it to be.
-    cat > .tmp.setup.inf <<EOF
-[General]
-FullMachineName= localhost.localdomain
-SuiteSpotUserID= nobody
-SuiteSpotGroup= nobody
+    dscreate create-template ds.tmp
+    sed -e 's/;root_password = .*/root_password = PASSWORD/g' \
+	-e 's/;full_machine_name = .*/full_machine_name = localhost.localdomain/g' \
+	-e 's/;instance_name =.*/instance_name = pki-tomcat/g' \
+	ds.tmp > ds.inf
+    rm ds.tmp
 
-[slapd]
-ServerPort= 389
-ServerIdentifier= pki-tomcat
-Suffix= dc=example,dc=com
-RootDN= cn=Directory Manager
-RootDNPwd= PASSWORD
-EOF
-
-    sudo mv .tmp.setup.inf /etc/389-ds/setup.inf
-
-    sudo setup-ds.pl --silent --file=/etc/389-ds/setup.inf
+    sudo mv ds.inf /etc/389-ds/ds.inf
+    sudo dscreate fromfile /etc/389-ds/ds.inf
 }
 
 function install_dogtag_ca {
