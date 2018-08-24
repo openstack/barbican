@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: barbican VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-03-19 22:02+0000\n"
+"POT-Creation-Date: 2018-08-23 14:54+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -306,9 +306,6 @@ msgstr "Full CMC请求暂不支持。"
 msgid "General exception"
 msgstr "常规异常"
 
-msgid "HMAC label (used in the HSM)"
-msgstr "HMAC标签（用于HSM）"
-
 msgid "HSM Slot ID"
 msgstr "HSM插槽ID"
 
@@ -423,9 +420,6 @@ msgstr "待加载的证书存储插件列表"
 
 msgid "Malformed JSON"
 msgstr "有缺陷的 JSON"
-
-msgid "Master KEK label (used in the HSM)"
-msgstr "Master KEK标签（用于HSM）"
 
 msgid "Master KEK length in bytes."
 msgstr "Master KEK字节长度"
@@ -801,9 +795,6 @@ msgstr "创建秘密"
 
 msgid "Secret deletion"
 msgstr "删除秘密"
-
-msgid "Secret encryption algorithm"
-msgstr "秘密加密算法"
 
 msgid "Secret metadata creation"
 msgstr "创建秘密元数据"
