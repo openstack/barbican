@@ -561,7 +561,9 @@ class PKCS11(object):
         return self._VENDOR_SAFENET_CKM_AES_GCM_encrypt(key, pt_data, session)
 
     def _CKM_AES_GCM_decrypt(self, key, iv, ct_data, session):
-        return self._VENDOR_SAFENET_CKM_AES_GCM_decrypt(key, ct_data, session)
+        return self._VENDOR_SAFENET_CKM_AES_GCM_decrypt(
+            key, iv, ct_data, session
+        )
 
     def decrypt(self, mechanism, key, iv, ct_data, session):
         if mechanism not in _ENCRYPTION_MECHANISMS:
