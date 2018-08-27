@@ -1,0 +1,6 @@
+---
+deprecations:
+  - |
+    Deprecated the `generate_iv` option name.  It has been renamed to
+    `aes_gcm_generate_iv` to reflect the fact that it only applies to the
+    CKM_AES_GCM mechanism.
