@@ -161,6 +161,12 @@
     timeout: 7800
 
 - project:
+    templates:
+      - openstack-python-jobs
+      - openstack-python35-jobs
+      - publish-openstack-sphinx-docs
+      - release-notes-jobs
+      - check-requirements
     check:
       jobs:
         - barbican-simple-crypto-devstack-tempest
@@ -185,6 +191,10 @@
         - tripleo-ci-centos-7-scenario002-multinode-oooq-container:
             voting: false
         - openstack-tox-lower-constraints
+        - openstack-tox-cover:
+            voting: false
+        - octavia-v1-dsvm-scenario:
+            voting: false
     gate:
       queue: barbican
       jobs:
