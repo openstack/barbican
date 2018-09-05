@@ -194,7 +194,9 @@
         - openstack-tox-lower-constraints
         - openstack-tox-cover:
             voting: false
-        - octavia-v1-dsvm-scenario:
+        - octavia-v2-dsvm-scenario:
+            voting: false
+        - octavia-v2-dsvm-py35-scenario:
             voting: false
     gate:
       queue: barbican
