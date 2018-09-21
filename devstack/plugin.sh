@@ -1,7 +1,13 @@
 # Configure the needed tempest options
 function configure_barbican_tempest() {
     iniset $TEMPEST_CONFIG service_available barbican True
-    iniset $TEMPEST_CONFIG auth tempest_roles creator
+    roles="$(iniget $TEMPEST_CONFIG auth tempest_roles)"
+    if [[ -z $roles ]]; then
+        roles="creator"
+    else
+        roles="$roles,creator"
+    fi
+    iniset $TEMPEST_CONFIG auth tempest_roles $roles
 }
 
 # check for service enabled
