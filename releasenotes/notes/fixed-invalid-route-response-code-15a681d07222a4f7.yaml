@@ -2,5 +2,5 @@
 fixes:
   - |
     Fixed the response code for invalid subroutes for individual secrets.  The
-    API was previously responding with the incorrect code "406 - Method not
+    API was previously responding with the incorrect code "405 - Method not
     allowed", but now responds correctly with "404 - Not Found".
