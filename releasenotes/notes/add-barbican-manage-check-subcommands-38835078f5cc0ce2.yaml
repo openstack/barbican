@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added two new subcommands to `barbican-manage hsm` that can query the HSM
+    to check if a MKEK or HMAC key with the given label already exists.  See
+    `barbican-manage hsm check_mkek --help` and
+    `barbican-manage hsm check_hmac --help` for details.

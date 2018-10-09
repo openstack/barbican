@@ -172,6 +172,27 @@ class HSMCommands(object):
 
     description = "Subcommands for managing HSM/PKCS11"
 
+    check_mkek_description = "Checks if a MKEK label is available"
+
+    @args('--library-path', metavar='<library-path>', dest='libpath',
+          default='/usr/lib/libCryptoki2_64.so',
+          help='Path to vendor PKCS11 library')
+    @args('--slot-id', metavar='<slot-id>', dest='slotid', default=1,
+          help='HSM Slot id (Should correspond to a configured PKCS11 slot, \
+          default is 1)')
+    @args('--passphrase', metavar='<passphrase>', default=None, required=True,
+          help='Password to login to PKCS11 session')
+    @args('--label', '-L', metavar='<label>', default='primarymkek',
+          help='The label of the Master Key Encrypt Key')
+    def check_mkek(self, passphrase, libpath=None, slotid=None, label=None):
+        CKK_AES = 'CKK_AES'
+        self._create_pkcs11_session(str(passphrase), str(libpath), int(slotid))
+        handle = self.pkcs11.get_key_handle(CKK_AES, str(label), self.session)
+        self.pkcs11.return_session(self.session)
+        if not handle:
+            print("Label {label} is not set.".format(label=label))
+            sys.exit(1)
+
     gen_mkek_description = "Generates a new MKEK"
 
     @args('--library-path', metavar='<library-path>', dest='libpath',
@@ -198,6 +219,30 @@ class HSMCommands(object):
                                  encrypt=True, wrap=True, master_key=True)
         self.pkcs11.return_session(self.session)
         print("MKEK successfully generated!")
+
+    check_hmac_description = "Checks if a HMAC key label is available"
+
+    @args('--library-path', metavar='<library-path>', dest='libpath',
+          default='/usr/lib/libCryptoki2_64.so',
+          help='Path to vendor PKCS11 library')
+    @args('--slot-id', metavar='<slot-id>', dest='slotid', default=1,
+          help='HSM Slot id (Should correspond to a configured PKCS11 slot, \
+          default is 1)')
+    @args('--passphrase', metavar='<passphrase>', default=None, required=True,
+          help='Password to login to PKCS11 session')
+    @args('--label', '-L', metavar='<label>', default='primarymkek',
+          help='The label of the Master HMAC key')
+    @args('--key-type', '-t', metavar='<key type>', dest='keytype',
+          default='CKK_AES', help='The HMAC Key Type (e.g. CKK_AES)')
+    def check_hmac(self, passphrase, libpath=None, slotid=None, label=None,
+                   keytype=None):
+        self._create_pkcs11_session(str(passphrase), str(libpath), int(slotid))
+        handle = self.pkcs11.get_key_handle(str(keytype), str(label),
+                                            self.session)
+        self.pkcs11.return_session(self.session)
+        if not handle:
+            print("Label {label} is not set.".format(label=label))
+            sys.exit(1)
 
     gen_hmac_description = "Generates a new HMAC key"
 
@@ -248,10 +293,7 @@ class HSMCommands(object):
     def _verify_label_does_not_exist(self, key_type, label, session):
         key_handle = self.pkcs11.get_key_handle(key_type, label, session)
         if key_handle:
-            print(
-                "The label {label} already exists! "
-                "Please try again.".format(label=label)
-            )
+            print("The label {label} already exists!".format(label=label))
             sys.exit(1)
 
 
@@ -357,6 +399,7 @@ def main():
         return fn(*fn_args, **fn_kwargs)
     except Exception as e:
         sys.exit("ERROR: %s" % e)
+
 
 if __name__ == '__main__':
     main()
