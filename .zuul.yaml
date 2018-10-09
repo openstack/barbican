@@ -64,7 +64,6 @@
 - job:
     name: barbican-vault-devstack-functional
     parent: barbican-devstack-functional-base
-    voting: false
     vars:
       services: barbican-vault,tempest,rabbit,mysql,key
       plugin: vault
@@ -162,12 +161,14 @@
 
 - project:
     templates:
+      - check-requirements
+      - openstack-cover-jobs
+      - openstack-lower-constraints-jobs
       - openstack-python-jobs
       - openstack-python35-jobs
       - openstack-python36-jobs
       - publish-openstack-docs-pti
       - release-notes-jobs-python3
-      - check-requirements
     check:
       jobs:
         - barbican-simple-crypto-devstack-tempest
@@ -191,9 +192,6 @@
             voting: false
         - tripleo-ci-centos-7-scenario002-multinode-oooq-container:
             voting: false
-        - openstack-tox-lower-constraints
-        - openstack-tox-cover:
-            voting: false
         - octavia-v2-dsvm-scenario:
             voting: false
         - octavia-v2-dsvm-py35-scenario:
@@ -207,7 +205,6 @@
         - barbican-dogtag-devstack-functional-fedora-latest
         - barbican-vault-devstack-functional
         - grenade-devstack-barbican
-        - openstack-tox-lower-constraints
     experimental:
       jobs:
         - barbican-simple-crypto-devstack-tempest-py35
