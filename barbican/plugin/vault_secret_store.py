@@ -28,6 +28,10 @@ vault_opt_group = cfg.OptGroup(name='vault_plugin', title='Vault Plugin')
 vault_opts = [
     cfg.StrOpt('root_token_id',
                help='root token for vault'),
+    cfg.StrOpt('approle_role_id',
+               help='AppRole role_id for authentication with vault'),
+    cfg.StrOpt('approle_secret_id',
+               help='AppRole secret_id for authentication with vault'),
     cfg.StrOpt('vault_url',
                default=DEFAULT_VAULT_URL,
                help='Use this endpoint to connect to Vault, for example: '
@@ -69,6 +73,8 @@ class VaultSecretStore(css.CastellanSecretStore):
             vault_conf,
             backend='vault',
             vault_root_token_id=conf.vault_plugin.root_token_id,
+            vault_approle_role_id=conf.vault_plugin.approle_role_id,
+            vault_approle_secret_id=conf.vault_plugin.approle_secret_id,
             vault_url=conf.vault_plugin.vault_url,
             vault_ssl_ca_crt_file=conf.vault_plugin.ssl_ca_crt_file,
             vault_use_ssl=conf.vault_plugin.use_ssl
