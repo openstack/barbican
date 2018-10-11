@@ -49,13 +49,6 @@ def _do_enforce_rbac(inst, req, action_name, ctx, **kwargs):
     """Enforce RBAC based on 'request' information."""
     if action_name and ctx:
 
-        # Prepare credentials information.
-        credentials = {
-            'roles': ctx.roles,
-            'user': ctx.user,
-            'project': ctx.project_id
-        }
-
         # Enforce special case: secret GET decryption
         if 'secret:get' == action_name and not is_json_request_accept(req):
             action_name = 'secret:decrypt'  # Override to perform special rules
@@ -69,7 +62,7 @@ def _do_enforce_rbac(inst, req, action_name, ctx, **kwargs):
         # Enforce access controls.
         if ctx.policy_enforcer:
             ctx.policy_enforcer.enforce(action_name, flatten(policy_dict),
-                                        credentials, do_raise=True)
+                                        ctx, do_raise=True)
 
 
 def enforce_rbac(action_name='default'):

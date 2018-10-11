@@ -41,7 +41,7 @@ rules = [
                   'rule:audit or rule:service_admin'),
     policy.RuleDefault(
         name='secret_project_match',
-        check_str='project:%(target.secret.project_id)s'),
+        check_str='project_id:%(target.secret.project_id)s'),
     policy.RuleDefault(
         name='secret_acl_read',
         check_str="'read':%(target.secret.read)s"),
@@ -50,10 +50,10 @@ rules = [
         check_str="'False':%(target.secret.read_project_access)s"),
     policy.RuleDefault(
         name='secret_creator_user',
-        check_str="user:%(target.secret.creator_id)s"),
+        check_str="user_id:%(target.secret.creator_id)s"),
     policy.RuleDefault(
         name='container_project_match',
-        check_str="project:%(target.container.project_id)s"),
+        check_str="project_id:%(target.container.project_id)s"),
     policy.RuleDefault(
         name='container_acl_read',
         check_str="'read':%(target.container.read)s"),
@@ -62,7 +62,7 @@ rules = [
         check_str="'False':%(target.container.read_project_access)s"),
     policy.RuleDefault(
         name='container_creator_user',
-        check_str="user:%(target.container.creator_id)s"),
+        check_str="user_id:%(target.container.creator_id)s"),
     policy.RuleDefault(
         name='secret_non_private_read',
         check_str="rule:all_users and rule:secret_project_match and not " +
