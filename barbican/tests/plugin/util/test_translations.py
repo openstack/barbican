@@ -174,6 +174,28 @@ class WhenNormalizingBeforeEncryption(utils.BaseTestCase):
         self.assertEqual(base64.encode_as_bytes('bam'), unencrypted)
         self.assertEqual('application/octet-stream', content_type)
 
+    def test_can_normalize_base64_str(self):
+        unencrypted, content_type = self.normalize(
+            unencrypted=base64.encode_as_bytes('stuff').decode('utf-8'),
+            content_type='application/octet-stream',
+            content_encoding='base64',
+            secret_type=s.SecretType.OPAQUE
+        )
+
+        self.assertEqual(base64.encode_as_bytes('stuff'), unencrypted)
+        self.assertEqual('application/octet-stream', content_type)
+
+    def test_can_normalize_base64_bytes(self):
+        unencrypted, content_type = self.normalize(
+            unencrypted=base64.encode_as_bytes('stuff'),
+            content_type='application/octet-stream',
+            content_encoding='base64',
+            secret_type=s.SecretType.OPAQUE
+        )
+
+        self.assertEqual(base64.encode_as_bytes('stuff'), unencrypted)
+        self.assertEqual('application/octet-stream', content_type)
+
     @utils.parameterized_dataset(dataset_for_raised_exceptions)
     def test_normalize_raising_exceptions_with(self, exception, **kwargs):
         self.assertRaises(exception, self.normalize, **kwargs)
