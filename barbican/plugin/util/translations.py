@@ -60,7 +60,10 @@ def normalize_before_encryption(unencrypted, content_type, content_encoding,
         if not content_encoding:
             b64payload = base64.encode_as_bytes(unencrypted)
         elif content_encoding.lower() == 'base64':
-            b64payload = unencrypted
+            if not isinstance(unencrypted, six.binary_type):
+                b64payload = unencrypted.encode('utf-8')
+            else:
+                b64payload = unencrypted
         elif enforce_text_only:
             # For text-based protocols (such as the one-step secret POST),
             #   only 'base64' encoding is possible/supported.
