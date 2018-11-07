@@ -33,7 +33,7 @@ from barbican.tests import utils
 
 def get_barbican_env(external_project_id):
     class NoopPolicyEnforcer(object):
-        def enforce(self, *args, **kwargs):
+        def authorize(self, *args, **kwargs):
             return
 
     kwargs = {'roles': None,

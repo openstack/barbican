@@ -61,8 +61,8 @@ def _do_enforce_rbac(inst, req, action_name, ctx, **kwargs):
         policy_dict.update(kwargs)
         # Enforce access controls.
         if ctx.policy_enforcer:
-            ctx.policy_enforcer.enforce(action_name, flatten(policy_dict),
-                                        ctx, do_raise=True)
+            ctx.policy_enforcer.authorize(action_name, flatten(policy_dict),
+                                          ctx, do_raise=True)
 
 
 def enforce_rbac(action_name='default'):
