@@ -57,11 +57,13 @@ Steps
 
 #. Edit ``/etc/barbican/barbican-api-paste.ini``
 
-       Replace the /v1 app pipeline from ``barbican_api`` to
-       ``barbican-api-keystone-audit`` pipeline
+   Replace the /v1 app pipeline from ``barbican_api`` to
+   ``barbican-api-keystone-audit`` pipeline:
 
-       [pipeline:barbican-api-keystone-audit] pipeline =
-       authtoken context audit apiapp
+   .. code-block:: text
+
+      [pipeline:barbican-api-keystone-audit]
+      pipeline = authtoken context audit apiapp
 
 #. Edit ``barbican.conf`` to update *notification_driver* value.
 
