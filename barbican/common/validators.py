@@ -58,36 +58,6 @@ def get_invalid_property(validation_error):
         return validation_error.schema_path[1]
 
 
-def validate_ca_id(project_id, order_meta):
-    ca_id = order_meta.get('ca_id')
-    if not ca_id:
-        return
-
-    ca_repo = repo.get_ca_repository()
-    ca = ca_repo.get(ca_id, suppress_exception=True)
-    if not ca:
-        raise exception.InvalidCAID(ca_id=ca_id)
-
-    if ca.project_id and ca.project_id != project_id:
-        raise exception.UnauthorizedSubCA()
-
-    project_ca_repo = repo.get_project_ca_repository()
-    project_cas, offset, limit, total = project_ca_repo.get_by_create_date(
-        project_id=project_id,
-        suppress_exception=True
-    )
-    if total < 1:
-        return
-
-    for project_ca in project_cas:
-        if ca.id == project_ca.ca_id:
-            return
-
-    raise exception.CANotDefinedForProject(
-        ca_id=ca_id,
-        project_id=project_id)
-
-
 def validate_stored_key_rsa_container(project_id, container_ref, req):
         try:
             container_id = hrefs.get_container_id_from_ref(container_ref)
