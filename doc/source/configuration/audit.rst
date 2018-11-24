@@ -44,7 +44,7 @@ used for creating events in CADF format.
 
 
 .. note::
-   Audit middleware filter should be included after Keystone middleware’s keystone_authtoken
+   Audit middleware filter should be included after Keystone middleware's keystone_authtoken
    middleware in request pipeline. This is needed so that audit middleware can utilize
    environment variables set by keystone_authtoken middleware.
 
