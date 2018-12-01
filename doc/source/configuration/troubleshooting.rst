@@ -16,9 +16,9 @@ You get a HTTP 401 Unauthorized response even with a valid token
 
 .. code-block:: bash
 
-    curl -X POST -H "X-Auth-Token: $TOKEN" -H "Content-type: application/json" \
-    -d '{"payload": "my-secret-here", "payload_content_type": "text/plain"}' \
-    http://localhost:9311/v1/secrets
+   curl -X POST -H "X-Auth-Token: $TOKEN" -H "Content-type: application/json" \
+   -d '{"payload": "my-secret-here", "payload_content_type": "text/plain"}' \
+   http://localhost:9311/v1/secrets
 
 Caused by
 ^^^^^^^^^^
@@ -33,22 +33,22 @@ Check for an expired Keystone signing certificate on your Barbican server.
 Look at the expiration date in ``/tmp/barbican/cache/signing_cert.pem``. If
 it is expired then follow these steps.
 
- #. On your Keystone server, verify that signing_cert.pem has the same
-    expiration date as the one on your Barbican machine. You can normally find
-    ``signing_cert.pem`` on your Keystone server in ``/etc/keystone/ssl/certs``.
+#. On your Keystone server, verify that signing_cert.pem has the same
+   expiration date as the one on your Barbican machine. You can normally find
+   ``signing_cert.pem`` on your Keystone server in ``/etc/keystone/ssl/certs``.
 
- #. If the cert matches then follow these steps to create a new one
+#. If the cert matches then follow these steps to create a new one
 
-    #. Delete it from both your Barbican and Keystone servers.
-    #. Edit ``/etc/keystone/ssl/certs/index.txt.attr`` and set unique_subject
-       to no.
-    #. Run ``keystone-manage pki_setup`` to create a new ``signing_cert.pem``
-    #. The updated cert will be downloaded to your Barbican server the next
-       time you hit the Barbican API.
+   #. Delete it from both your Barbican and Keystone servers.
+   #. Edit ``/etc/keystone/ssl/certs/index.txt.attr`` and set unique_subject
+      to no.
+   #. Run ``keystone-manage pki_setup`` to create a new ``signing_cert.pem``
+   #. The updated cert will be downloaded to your Barbican server the next
+      time you hit the Barbican API.
 
- #. If the cert **doesn't match** then delete the ``signing_cert.pem`` from
-    your Barbican server. Do not delete from Keystone. The cert from Keystone
-    will be downloaded to your machine the next time you hit the Barbican API.
+#. If the cert **doesn't match** then delete the ``signing_cert.pem`` from
+   your Barbican server. Do not delete from Keystone. The cert from Keystone
+   will be downloaded to your machine the next time you hit the Barbican API.
 
 
 Returned refs use localhost instead of the correct hostname
@@ -59,15 +59,14 @@ What you might see
 
 .. code-block:: bash
 
-    curl -X POST \
-    -H "Content-type: application/json" -H "X-Auth-Token: $TOKEN" -d \
-    '{"payload": "my-secret-here", "payload_content_type": "text/plain"}' \
-    http://myhostname.com/v1/secrets
+   curl -X POST -H "X-Auth-Token: $TOKEN" -H "Content-type: application/json" \
+   -d '{"payload": "my-secret-here", "payload_content_type": "text/plain"}' \
+   http://myhostname.com/v1/secrets
 
-    # Response:
-    {
-      "secret_ref": "http://localhost:9311/v1/secrets/UUID_HERE"
-    }
+   # Response:
+   {
+     "secret_ref": "http://localhost:9311/v1/secrets/UUID_HERE"
+   }
 
 
 Caused by
@@ -90,7 +89,9 @@ Barbican's tox tests fail to run on my Mac
 What you might see
 ^^^^^^^^^^^^^^^^^^^
 
-``clang: error: unknown argument: '-mno-fused-madd'``
+.. code-block:: text
+
+   clang: error: unknown argument: '-mno-fused-madd'
 
 How to avoid
 ^^^^^^^^^^^^^
@@ -111,9 +112,9 @@ What you might see
 
 .. code-block:: text
 
-    c/_cffi_backend.c:13:10: fatal error: 'ffi.h' file not found
-    ...
-    ERROR: could not install deps [...]; v = InvocationError('...', 1)
+   c/_cffi_backend.c:13:10: fatal error: 'ffi.h' file not found
+   ...
+   ERROR: could not install deps [...]; v = InvocationError('...', 1)
 
 How to avoid
 ^^^^^^^^^^^^
@@ -133,7 +134,7 @@ What you might see
 
 .. code-block:: text
 
-    ImportError: No module named _bsddb
+   ImportError: No module named _bsddb
 
 How to avoid
 ^^^^^^^^^^^^
@@ -149,19 +150,19 @@ What you might see
 
 .. code-block:: text
 
-    ...
-    spawned uWSGI master process (pid: 59190)
-    spawned uWSGI worker 1 (pid: 59191, cores: 1)
-    spawned uWSGI worker 1 (pid: 59192, cores: 1)
-    Loading paste environment: config:/etc/barbican/barbican-api-paste.ini
-    WSGI app 0 (mountpoint='') ready in 0 seconds on interpreter \
-        0x7fd098c08520 pid: 59191 (default app)
-    OOPS ! failed loading app in worker 1 (pid 59192) :( trying again...
-    Respawned uWSGI worker 1 (new pid: 59193)
-    Loading paste environment: config:/etc/barbican/barbican-api-paste.ini
-    OOPS ! failed loading app in worker 1 (pid 59193) :( trying again...
-    worker respawning too fast !!! i have to sleep a bit (2 seconds)...
-    ...
+   ...
+   spawned uWSGI master process (pid: 59190)
+   spawned uWSGI worker 1 (pid: 59191, cores: 1)
+   spawned uWSGI worker 1 (pid: 59192, cores: 1)
+   Loading paste environment: config:/etc/barbican/barbican-api-paste.ini
+   WSGI app 0 (mountpoint='') ready in 0 seconds on interpreter \
+       0x7fd098c08520 pid: 59191 (default app)
+   OOPS ! failed loading app in worker 1 (pid 59192) :( trying again...
+   Respawned uWSGI worker 1 (new pid: 59193)
+   Loading paste environment: config:/etc/barbican/barbican-api-paste.ini
+   OOPS ! failed loading app in worker 1 (pid 59193) :( trying again...
+   worker respawning too fast !!! i have to sleep a bit (2 seconds)...
+   ...
 
 .. note:: You will not see any useful logs or stack traces with this error!
 
@@ -187,10 +188,10 @@ What you might see
 
 .. code-block:: text
 
-    ...
-    File ".../oslo_config/cfg.py", line 1275, in register_cli_opt
-    raise ArgsAlreadyParsedError("cannot register CLI option")
-    ArgsAlreadyParsedError: arguments already parsed: cannot register CLI option
+   ...
+     File ".../oslo_config/cfg.py", line 1275, in register_cli_opt
+       raise ArgsAlreadyParsedError("cannot register CLI option")
+   ArgsAlreadyParsedError: arguments already parsed: cannot register CLI option
 
 
 Caused by
@@ -211,18 +212,18 @@ logger, call ``from barbican.common import config`` with this to get a logger
 to use in your source file: ``LOG = config.getLogger(__name__)``.
 
 
-Responder raised TypeError: 'NoneType' object has no attribute '__getitem__'
-----------------------------------------------------------------------------
+Responder raised ``TypeError: 'NoneType' object has no attribute '__getitem__'``
+--------------------------------------------------------------------------------
 
 What you might see
 ^^^^^^^^^^^^^^^^^^
 
 .. code-block:: text
 
-    ...
-    2013-04-14 14:17:56 [FALCON] [ERROR] POST \
-    /da71dfbc-a959-4ad3-bdab-5ee190ce7515/csrs? => Responder raised \
-    TypeError: 'NoneType' object has no attribute '__getitem__'
+   ...
+   2013-04-14 14:17:56 [FALCON] [ERROR] POST \
+   /da71dfbc-a959-4ad3-bdab-5ee190ce7515/csrs? => Responder raised \
+   TypeError: 'NoneType' object has no attribute '__getitem__'
 
 
 Caused by
@@ -247,11 +248,11 @@ What you might see
 
 .. code-block:: text
 
-    ...
-    uwsgi socket 0 bound to TCP address :9311 fd 3
-    Python version: 2.7.3 (...)  [...]
-    Set PythonHome to ./.venv
-    ImportError: No module named site
+   ...
+   uwsgi socket 0 bound to TCP address :9311 fd 3
+   Python version: 2.7.3 (...)  [...]
+   Set PythonHome to ./.venv
+   ImportError: No module named site
 
 
 Caused by
@@ -278,9 +279,9 @@ What you might see
 
 .. code-block:: json
 
-    {
-        "title": "Malformed JSON"
-    }
+   {
+       "title": "Malformed JSON"
+   }
 
 
 Caused by
@@ -315,8 +316,7 @@ A stack trace that has this in it (for example):
 
 .. code-block:: text
 
-    CryptoMimeTypeNotSupportedException: Crypto Mime Type of 'text/plain' not \
-    supported
+   CryptoMimeTypeNotSupportedException: Crypto Mime Type of 'text/plain' not supported
 
 
 Caused by
@@ -340,19 +340,17 @@ What you might see
 
 .. code-block:: text
 
-    *** has_emperor mode detected (fd: 6) ***
-    ...
-    !!! UNABLE to load uWSGI plugin: dlopen(./python_plugin.so, 10): image not \
-    found !!!
-    ...
-    File "./site-packages/paste/deploy/loadwsgi.py", line 22, in import_string
-      return pkg_resources.EntryPoint.parse("x=" + s).load(False)
-    File "./site-packages/distribute-0.6.35-py2.7.egg/pkg_resources.py", line \
-    2015, in load
-      entry = __import__(self.module_name, globals(),globals(), ['__name__'])
-    ImportError: No module named barbican.api.app
-    ...
-    *** Starting uWSGI 1.9.13 (64bit) on [Fri Jul  5 09:59:29 2013] ***
+   *** has_emperor mode detected (fd: 6) ***
+   ...
+   !!! UNABLE to load uWSGI plugin: dlopen(./python_plugin.so, 10): image not found !!!
+   ...
+     File "./site-packages/paste/deploy/loadwsgi.py", line 22, in import_string
+         return pkg_resources.EntryPoint.parse("x=" + s).load(False)
+     File "./site-packages/distribute-0.6.35-py2.7.egg/pkg_resources.py", line 2015, in load
+         entry = __import__(self.module_name, globals(),globals(), ['__name__'])
+   ImportError: No module named barbican.api.app
+   ...
+   *** Starting uWSGI 1.9.13 (64bit) on [Fri Jul  5 09:59:29 2013] ***
 
 
 Caused by
@@ -379,14 +377,14 @@ What you might see
 
 .. code-block:: text
 
-    ...
-    File "./site-packages/sqlalchemy/engine/strategies.py", line 80, in connect
-      return dialect.connect(*cargs, **cparams)
-    File "./site-packages/sqlalchemy/engine/default.py", line 283, in connect
-      return self.dbapi.connect(*cargs, **cparams)
-    OperationalError: (OperationalError) unable to open database file None None
-    [emperor] removed uwsgi instance barbican-api.ini
-    ...
+   ...
+     File "./site-packages/sqlalchemy/engine/strategies.py", line 80, in connect
+       return dialect.connect(*cargs, **cparams)
+     File "./site-packages/sqlalchemy/engine/default.py", line 283, in connect
+       return self.dbapi.connect(*cargs, **cparams)
+   OperationalError: (OperationalError) unable to open database file None None
+   [emperor] removed uwsgi instance barbican-api.ini
+   ...
 
 
 Caused by
@@ -410,20 +408,20 @@ What you might see
 
 .. code-block:: text
 
-    ...
-    2013-08-15 16:55:15.759 2445 DEBUG keystoneclient.middleware.auth_token \
-    [-] Token validation failure. _validate_user_token \
-    ./site-packages/keystoneclient/middleware/auth_token.py:711
-    ...
-    2013-08-15 16:55:15.759 2445 TRACE keystoneclient.middleware.auth_token \
-    raise ValueError("No JSON object could be decoded")
-    2013-08-15 16:55:15.759 24458 TRACE keystoneclient.middleware.auth_token \
-    ValueError: No JSON object could be decoded
-    ...
-    2013-08-15 16:55:15.766 2445 WARNING keystoneclient.middleware.auth_token \
-    [-] Authorization failed for token ...
-    2013-08-15 16:55:15.766 2445 INFO keystoneclient.middleware.auth_token \
-    [-] Invalid user token - rejecting request...
+   ...
+   2013-08-15 16:55:15.759 2445 DEBUG keystoneclient.middleware.auth_token \
+   [-] Token validation failure. _validate_user_token \
+   ./site-packages/keystoneclient/middleware/auth_token.py:711
+   ...
+   2013-08-15 16:55:15.759 2445 TRACE keystoneclient.middleware.auth_token \
+   raise ValueError("No JSON object could be decoded")
+   2013-08-15 16:55:15.759 24458 TRACE keystoneclient.middleware.auth_token \
+   ValueError: No JSON object could be decoded
+   ...
+   2013-08-15 16:55:15.766 2445 WARNING keystoneclient.middleware.auth_token \
+   [-] Authorization failed for token ...
+   2013-08-15 16:55:15.766 2445 INFO keystoneclient.middleware.auth_token \
+   [-] Invalid user token - rejecting request...
 
 
 Caused by
@@ -447,8 +445,7 @@ What you might see
 
 .. code-block:: text
 
-    Secret retrieval issue seen - accept-encoding of 'gzip,deflate,sdch' not \
-    supported
+   Secret retrieval issue seen - accept-encoding of 'gzip,deflate,sdch' not supported
 
 
 Caused by

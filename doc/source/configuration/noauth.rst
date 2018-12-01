@@ -6,16 +6,16 @@ other OpenStack service for identity and access control. Nonetheless, sometimes
 it may be useful to run barbican without any authentication service for
 development purposes.
 
-To this end, `barbican-api-paste.ini` contains a filter pipeline
+To this end, ``barbican-api-paste.ini`` contains a filter pipeline
 without any authentication (no auth mode):
 
 .. code-block:: ini
 
-    # Use this pipeline for barbican API - DEFAULT no authentication
-    [pipeline:barbican_api]
-    pipeline = unauthenticated-context apiapp
+   # Use this pipeline for barbican API - DEFAULT no authentication
+   [pipeline:barbican_api]
+   pipeline = unauthenticated-context apiapp
 
-To enable this pipe line proceed as follows:
+To enable this pipeline proceed as follows:
 
 1. Turn off any active instances of barbican
 
@@ -26,10 +26,10 @@ To enable this pipe line proceed as follows:
 
    .. code-block:: ini
 
-           [composite:main]
-           use = egg:Paste#urlmap
-           /: barbican_version
-           /v1: barbican_api
+      [composite:main]
+      use = egg:Paste#urlmap
+      /: barbican_version
+      /v1: barbican_api
 
 With every OpenStack service integrated with keystone, its API requires access
 token to retireve certain information and validate user's information and
