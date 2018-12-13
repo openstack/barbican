@@ -194,7 +194,7 @@
             voting: false
         - octavia-v2-dsvm-scenario:
             voting: false
-        - octavia-v2-dsvm-py35-scenario:
+        - octavia-v2-dsvm-py2-scenario:
             voting: false
     gate:
       queue: barbican
