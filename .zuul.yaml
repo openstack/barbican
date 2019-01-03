@@ -190,7 +190,7 @@
         # failures, please reach us on #tripleo IRC channel.
         - tripleo-ci-centos-7-scenario002-multinode-oooq:
             voting: false
-        - tripleo-ci-centos-7-scenario002-multinode-oooq-container:
+        - tripleo-ci-centos-7-scenario002-standalone:
             voting: false
         - octavia-v2-dsvm-scenario:
             voting: false
