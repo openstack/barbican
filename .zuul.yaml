@@ -60,6 +60,7 @@
     vars:
       services: barbican-dogtag,tempest,rabbit,mysql,key
       plugin: dogtag
+    post-run: playbooks/legacy/barbican-devstack-functional-base/dogtag-post.yaml
 
 - job:
     name: barbican-kmip-devstack-functional
