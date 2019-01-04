@@ -60,6 +60,7 @@
     vars:
       services: barbican-dogtag,tempest,rabbit,mysql,key
       plugin: dogtag
+    post-run: playbooks/legacy/barbican-devstack-functional-base/dogtag-post.yaml
 
 - job:
     name: barbican-vault-devstack-functional
@@ -179,7 +180,8 @@
         - barbican-kmip-devstack-functional:
             voting: false
         - barbican-vault-devstack-functional
-        - grenade-devstack-barbican
+        - grenade-devstack-barbican:
+            voting: false
         # TripleO jobs that deploy Barbican.
         # Note we don't use a project-template here, so it's easier
         # to disable voting on one specific job if things go wrong.
@@ -204,7 +206,8 @@
         - barbican-simple-crypto-devstack-functional-py35
         - barbican-dogtag-devstack-functional-fedora-latest
         - barbican-vault-devstack-functional
-        - grenade-devstack-barbican
+        - grenade-devstack-barbican:
+            voting: false
     experimental:
       jobs:
         - barbican-simple-crypto-devstack-tempest-py35

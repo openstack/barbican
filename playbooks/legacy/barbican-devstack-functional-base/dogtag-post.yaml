@@ -1,0 +1,41 @@
+- hosts: all
+  tasks:
+
+    - name: Make dogtag server logs readable
+      file:
+        path: "/var/log/pki/pki-tomcat/"
+        mode: u=rwX,g=rX,o=rX
+        recurse: yes
+      become: true
+      failed_when: false
+
+    - name: Collect dogtag server logs
+      synchronize:
+        dest: "{{ zuul.executor.log_root }}/logs"
+        mode: pull
+        src: "/var/log/pki/pki-tomcat"
+        verify_host: true
+      failed_when: false
+
+    - name: export dogtag journal output
+      become: true
+      shell: >
+        /usr/bin/journalctl -u pki-tomcatd@pki-tomcat.service -o export |
+        xz - > /tmp/dogtag.journal.xz
+      failed_when: false
+
+    - name: copy dogtag journal output
+      synchronize:
+        dest: "{{ zuul.executor.log_root }}/logs"
+        mode: pull
+        src: "/tmp/dogtag.journal.xz"
+        verify_host: true
+      failed_when: false
+
+    - name: copy over pki module
+      synchronize:
+        dest: "{{ zuul.executor.log_root }}/logs"
+        mode: pull
+        src: "/usr/lib/python2.7/site-packages/pki"
+        verify_host: true
+      failed_when: false
