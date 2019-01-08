@@ -81,6 +81,10 @@ p11_crypto_plugin_opts = [
     cfg.BoolOpt('aes_gcm_generate_iv',
                 help=u._('Generate IVs for CKM_AES_GCM mechanism.'),
                 default=True, deprecated_name='generate_iv'),
+    cfg.BoolOpt('always_set_cka_sensitive',
+                help=u._('Always set CKA_SENSITIVE=CK_TRUE including '
+                         'CKA_EXTRACTABLE=CK_TRUE keys.'),
+                default=True),
 ]
 CONF.register_group(p11_crypto_plugin_group)
 CONF.register_opts(p11_crypto_plugin_opts, group=p11_crypto_plugin_group)
@@ -302,6 +306,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             ffi=ffi,
             seed_random_buffer=seed_random_buffer,
             generate_iv=plugin_conf.aes_gcm_generate_iv,
+            always_set_cka_sensitive=plugin_conf.always_set_cka_sensitive,
         )
 
     def _reinitialize_pkcs11(self):
