@@ -119,6 +119,7 @@ class BarbicanClient(object):
             'method': request_kwargs.get('method'),
             'url': request_kwargs.get('url'),
             'headers': response.request.headers,
+            'response_headers': response.headers,
         }
 
         format_kwargs['body'] = self._attempt_to_stringify_content(
@@ -130,6 +131,7 @@ class BarbicanClient(object):
         return ('{code} {method} {url}\n'
                 'Request Headers: {headers}\n'
                 'Request Body: {body}\n'
+                'Response Headers: {response_headers}\n'
                 'Response: {response_body}').format(**format_kwargs)
 
     def log_request(self, request_kwargs, response, user_name):
