@@ -9,6 +9,7 @@ such as Symmetric Keys, Asymmetric Keys, Certificates and raw binary data.
    :maxdepth: 2
 
    admin/index
+   cli/index
    install/index
    configuration/index
    contributor/index
