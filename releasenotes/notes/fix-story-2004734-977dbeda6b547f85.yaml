@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Fixed Story #2004734:  Added a new option `always_set_cka_sensitive` to
+    fix a regression that affected Safenet HSMs.  The option defaults to `True`
+    as required by Safenet HSMs.  Other HSMs may require it be set to `False`.
+

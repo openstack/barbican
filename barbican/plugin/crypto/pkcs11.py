@@ -356,7 +356,7 @@ class PKCS11(object):
                  encryption_mechanism=None,
                  ffi=None, algorithm=None,
                  seed_random_buffer=None,
-                 generate_iv=None):
+                 generate_iv=None, always_set_cka_sensitive=None):
         if algorithm:
             LOG.warning("WARNING: Using deprecated 'algorithm' argument.")
             encryption_mechanism = encryption_mechanism or algorithm
@@ -385,6 +385,7 @@ class PKCS11(object):
         self.noncesize = 12
         self.gcmtagsize = 16
         self.generate_iv = generate_iv
+        self.always_set_cka_sensitive = always_set_cka_sensitive
 
         # Validate configuration and RNG
         session = self.get_session()
@@ -583,7 +584,7 @@ class PKCS11(object):
         token = master_key
         extractable = not master_key
         # in some HSMs extractable keys cannot be marked sensitive
-        sensitive = not extractable
+        sensitive = self.always_set_cka_sensitive or not extractable
 
         ck_attributes = [
             Attribute(CKA_CLASS, CKO_SECRET_KEY),
