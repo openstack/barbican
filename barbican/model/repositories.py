@@ -993,18 +993,17 @@ class KEKDatumRepo(BaseRepo):
 
         session = self.get_session(session)
 
-        # TODO(jfwood): Reverse this...attempt insert first, then get on fail.
-        try:
-            query = session.query(models.KEKDatum)
-            query = query.filter_by(project_id=project.id,
-                                    plugin_name=plugin_name,
-                                    active=True,
-                                    deleted=False)
+        query = session.query(models.KEKDatum)
+        query = query.filter_by(project_id=project.id,
+                                plugin_name=plugin_name,
+                                active=True,
+                                deleted=False)
 
-            kek_datum = query.one()
+        query = query.order_by(models.KEKDatum.created_at)
 
-        except sa_orm.exc.NoResultFound:
+        kek_datums = query.all()
 
+        if not kek_datums:
             kek_datum = models.KEKDatum()
 
             kek_datum.kek_label = "project-{0}-key-{1}".format(
@@ -1014,6 +1013,23 @@ class KEKDatumRepo(BaseRepo):
             kek_datum.status = models.States.ACTIVE
 
             self.save(kek_datum)
+        else:
+            kek_datum = kek_datums.pop()
+
+            # (alee)  There should be only one active KEKDatum.
+            # Due to a race condition with many threads or
+            # many barbican processes, its possible to have
+            # multiple active KEKDatum.  The code below makes
+            # all the extra KEKDatum inactive
+            # See LP#1726378
+            for kd in kek_datums:
+                LOG.debug(
+                    "Multiple active KEKDatum found for %s."
+                    "Setting %s to be inactive.",
+                    project.external_id,
+                    kd.kek_label)
+                kd.active = False
+                self.save(kd)
 
         return kek_datum
 
