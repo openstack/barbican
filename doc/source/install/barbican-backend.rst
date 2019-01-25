@@ -68,8 +68,13 @@ using the PKCS#11 protocol.
 Secrets are encrypted (and decrypted on retrieval) by a project specific
 Key Encryption Key (KEK), which resides in the HSM.
 
-The configuration for this plugin in ``/etc/barbican/barbican.conf`` with settings shown for
-use with a SafeNet HSM is as follows:
+The configuration for this plugin in ``/etc/barbican/barbican.conf``.
+Settings for some different HSMs are provided below:
+
+Safenet
++++++++
+
+The PKCS#11 plugin configuration looks like:
 
     .. code-block:: ini
 
@@ -81,24 +86,186 @@ use with a SafeNet HSM is as follows:
        [p11_crypto_plugin]
        # Path to vendor PKCS11 library
        library_path = '/usr/lib/libCryptoki2_64.so'
+
        # Password to login to PKCS11 session
        login = 'mypassword'
+
        # Label to identify master KEK in the HSM (must not be the same as HMAC label)
        mkek_label = 'an_mkek'
+
        # Length in bytes of master KEK
        mkek_length = 32
+
        # Label to identify HMAC key in the HSM (must not be the same as MKEK label)
        hmac_label = 'my_hmac_label'
+
        # HSM Slot id (Should correspond to a configured PKCS11 slot). Default: 1
        # slot_id = 1
+
        # Enable Read/Write session with the HSM?
        # rw_session = True
+
        # Length of Project KEKs to create
        # pkek_length = 32
+
        # How long to cache unwrapped Project KEKs
        # pkek_cache_ttl = 900
+
        # Max number of items in pkek cache
        # pkek_cache_limit = 100
+
+Thales
+++++++
+
+For a Thales NetHSM, the plugin configuration looks like:
+
+    .. code-block:: ini
+
+       # ================= Secret Store Plugin ===================
+       [secretstore]
+       ..
+       enabled_secretstore_plugins = store_crypto
+
+       [p11_crypto_plugin]
+       # Path to vendor PKCS11 library
+       library_path = '/opt/nfast/toolkits/pkcs11/libcknfast.so'
+
+       # Password to login to PKCS11 session
+       login = 'XXX'
+
+       # Label to identify master KEK in the HSM (must not be the same as HMAC label)
+       mkek_label = 'thales_mkek_0'
+
+       # Length in bytes of master KEK
+       mkek_length = 32
+
+       # Label to identify HMAC key in the HSM (must not be the same as MKEK label)
+       hmac_label = 'thales_hmac_0'
+
+       # HSM Slot id (Should correspond to a configured PKCS11 slot). Default: 1
+       # slot_id = 1
+
+       # Enable Read/Write session with the HSM?
+       # rw_session = True
+
+       # Length of Project KEKs to create
+       # pkek_length = 32
+
+       # How long to cache unwrapped Project KEKs
+       # pkek_cache_ttl = 900
+
+       # Max number of items in pkek cache
+       # pkek_cache_limit = 100
+
+       # Secret encryption mechanism (string value)
+       # Deprecated group/name - [p11_crypto_plugin]/algorithm
+       encryption_mechanism = CKM_AES_CBC
+
+       # HMAC Key Type (string value)
+       hmac_key_type=CKK_SHA256_HMAC
+
+       # HMAC Key Generation Mechanism (string value)
+       hmac_keygen_mechanism = CKM_NC_SHA256_HMAC_KEY_GEN
+
+       # Generate IVs for CKM_AES_GCM mechanism. (boolean value)
+       # Deprecated group/name - [p11_crypto_plugin]/generate_iv
+       aes_gcm_generate_iv=True
+
+       # Always set CKA_SENSITIVE=CK_TRUE including
+       # CKA_EXTRACTABLE=CK_TRUE keys.
+       # default true
+       always_set_cka_sensitive=false
+
+
+The HMAC and MKEK keys can be generated as follows:
+
+    .. code-block:: ini
+
+       barbican-manage hsm gen_hmac \
+       --library-path /opt/nfast/toolkits/pkcs11/libcknfast.so \
+       --passphrase XXX --slot-id 1 --label thales_hmac_0 \
+       --key-type CKK_SHA256_HMAC \
+       --mechanism CKM_NC_SHA256_HMAC_KEY_GEN
+
+    .. code-block:: ini
+
+       barbican-manage hsm gen_mkek \
+       --library-path /opt/nfast/toolkits/pkcs11/libcknfast.so \
+       --passphrase XXX --slot-id 1 --label thales_mkek_0
+
+ATOS Bull
++++++++++
+
+For an ATOS Bull HSM, the plugin configuration looks like:
+
+    .. code-block:: ini
+
+       # ================= Secret Store Plugin ===================
+       [secretstore]
+       ..
+       enabled_secretstore_plugins = store_crypto
+
+       [p11_crypto_plugin]
+       # Path to vendor PKCS11 library
+       library_path = '/usr/lib64/libnethsm.so'
+
+       # Password to login to PKCS11 session
+       login = 'XXX'
+
+       # Label to identify master KEK in the HSM (must not be the same as HMAC label)
+       mkek_label = 'atos_mkek_0'
+
+       # Length in bytes of master KEK
+       mkek_length = 32
+
+       # Label to identify HMAC key in the HSM (must not be the same as MKEK label)
+       hmac_label = 'atos_hmac_0'
+
+       # HSM Slot id (Should correspond to a configured PKCS11 slot). Default: 1
+       # slot_id = 1
+
+       # Enable Read/Write session with the HSM?
+       # rw_session = True
+
+       # Length of Project KEKs to create
+       # pkek_length = 32
+
+       # How long to cache unwrapped Project KEKs
+       # pkek_cache_ttl = 900
+
+       # Max number of items in pkek cache
+       # pkek_cache_limit = 100
+
+       # Secret encryption mechanism (string value)
+       # Deprecated group/name - [p11_crypto_plugin]/algorithm
+       encryption_mechanism = CKM_AES_CBC
+
+       # HMAC Key Type (string value)
+       hmac_key_type = CKK_GENERIC_SECRET
+
+       # HMAC Key Generation Mechanism (string value)
+       hmac_keygen_mechanism = CKM_GENERIC_SECRET_KEY_GEN
+
+       # Always set CKA_SENSITIVE=CK_TRUE including
+       # CKA_EXTRACTABLE=CK_TRUE keys.
+       # default true
+       always_set_cka_sensitive=false
+
+
+The HMAC and MKEK keys can be generated as follows:
+
+    .. code-block:: ini
+
+       barbican-manage hsm gen_hmac --library-path /usr/lib64/libnethsm.so \
+       --passphrase XXX --slot-id 1 --label atos_hmac_0 \
+       --key-type  CKK_GENERIC_SECRET \
+       --mechanism  CKM_GENERIC_SECRET_KEY_GEN
+
+    .. code-block:: ini
+
+       barbican-manage hsm gen_mkek --library-path /usr/lib64/libnethsm.so \
+       --passphrase XXX --slot-id 1 --label atos_mkek_0
+
 
 KMIP Plugin
 -----------
