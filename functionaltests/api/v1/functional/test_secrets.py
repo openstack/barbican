@@ -1613,7 +1613,7 @@ class SecretsMultipleBackendTestCase(base.TestCase):
                 user_name=admin_a)
             self.assertEqual(200, resp.status_code)
             secret_store_ref = None
-            for store in stores['secret-stores']:
+            for store in stores['secret_stores']:
                 if not store['global_default']:
                     secret_store_ref = store['secret_store_ref']
                     break

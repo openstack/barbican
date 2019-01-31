@@ -78,8 +78,8 @@ class SecretStoresTestCase(base.TestCase):
 
         self.assertEqual(expected_return, resp.status_code)
         if expected_return == 200:
-            self.assertIsNotNone(json_data['secret-stores'])
-            stores = json_data['secret-stores']
+            self.assertIsNotNone(json_data.get('secret_stores'))
+            stores = json_data['secret_stores']
             for secret_store in stores:
                 self._validate_secret_store_fields(secret_store)
 
@@ -125,7 +125,7 @@ class SecretStoresTestCase(base.TestCase):
             user_name=admin_a)
         self.assertEqual(200, resp.status_code)
 
-        stores = json_data['secret-stores']
+        stores = json_data['secret_stores']
 
         store = stores[len(stores)-1]
         secret_store_ref = store['secret_store_ref']
@@ -191,7 +191,7 @@ class SecretStoresTestCase(base.TestCase):
             user_name=admin_a)
         self.assertEqual(200, resp.status_code)
 
-        stores = json_data['secret-stores']
+        stores = json_data['secret_stores']
 
         store = stores[len(stores)-1]
         secret_store_ref = store['secret_store_ref']
