@@ -82,8 +82,9 @@ class SecretMetadataTestCase(base.TestCase):
 
     @testcase.attr('negative')
     def test_secret_metadata_create_no_secret(self):
-        secret_ref = ('http://localhost/key-manager/secrets/%s' %
-                      uuidutils.generate_uuid(dashed=False))
+        secret_ref = ('{}/secrets/{}/metadata'.format(
+                      self.client.get_base_url(),
+                      uuidutils.generate_uuid(dashed=False)))
 
         meta_resp, metadata_ref = self.behaviors.create_or_update_metadata(
             secret_ref, self.invalid_metadata)
@@ -111,8 +112,9 @@ class SecretMetadataTestCase(base.TestCase):
 
     @testcase.attr('negative')
     def test_secret_metadata_get_no_secret(self):
-        secret_ref = ('http://localhost/key-manager/secrets/%s' %
-                      uuidutils.generate_uuid(dashed=False))
+        secret_ref = ('{}/secrets/{}/metadata'.format(
+                      self.client.get_base_url(),
+                      uuidutils.generate_uuid(dashed=False)))
 
         get_resp = self.behaviors.get_metadata(secret_ref)
         self.assertEqual(404, get_resp.status_code)
