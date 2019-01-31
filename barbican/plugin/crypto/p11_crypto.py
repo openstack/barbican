@@ -78,9 +78,9 @@ p11_crypto_plugin_opts = [
     cfg.StrOpt('plugin_name',
                help=u._('User friendly plugin name'),
                default='PKCS11 HSM'),
-    cfg.BoolOpt('generate_iv',
-                help=u._('Flag for plugin generated iv case'),
-                default=False),
+    cfg.BoolOpt('aes_gcm_generate_iv',
+                help=u._('Generate IVs for CKM_AES_GCM mechanism.'),
+                default=True, deprecated_name='generate_iv'),
 ]
 CONF.register_group(p11_crypto_plugin_group)
 CONF.register_opts(p11_crypto_plugin_opts, group=p11_crypto_plugin_group)
@@ -301,7 +301,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             encryption_mechanism=plugin_conf.encryption_mechanism,
             ffi=ffi,
             seed_random_buffer=seed_random_buffer,
-            generate_iv=plugin_conf.generate_iv,
+            generate_iv=plugin_conf.aes_gcm_generate_iv,
         )
 
     def _reinitialize_pkcs11(self):
