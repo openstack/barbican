@@ -1609,18 +1609,23 @@ class SecretsMultipleBackendTestCase(base.TestCase):
             self.client)
         self.default_secret_create_data = get_default_data()
         if base.conf_multiple_backends_enabled:
+            # set preferred secret store for admin_a (project a) user
+            # and don't set preferred secret store for admin_b (project b) user
             resp, stores = self.ss_behaviors.get_all_secret_stores(
                 user_name=admin_a)
             self.assertEqual(200, resp.status_code)
-            secret_store_ref = None
+            global_ss = None
+            first_non_global_ss = None
             for store in stores['secret_stores']:
-                if not store['global_default']:
-                    secret_store_ref = store['secret_store_ref']
+                if store['global_default']:
+                    global_ss = store['secret_store_ref']
+                else:
+                    first_non_global_ss = store['secret_store_ref']
                     break
-            # set preferred secret store for admin_a (project a) user
-            # and don't set preferred secret store for admin_b (project b) user
-            self.ss_behaviors.set_preferred_secret_store(secret_store_ref,
-                                                         user_name=admin_a)
+            self.ss_behaviors.set_preferred_secret_store(
+                first_non_global_ss or global_ss,
+                user_name=admin_a
+            )
 
     def tearDown(self):
         self.behaviors.delete_all_created_secrets()
