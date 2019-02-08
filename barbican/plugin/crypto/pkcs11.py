@@ -134,6 +134,7 @@ CKA_SUPPORTED_CMS_ATTRIBUTES = 0x503
 CKM_SHA256_HMAC = 0x251
 CKM_AES_KEY_GEN = 0x1080
 CKM_AES_CBC = 0x1082
+CKM_AES_MAC = 0x1083
 CKM_AES_CBC_PAD = 0x1085
 CKM_AES_GCM = 0x1087
 CKM_AES_KEY_WRAP = 0x1090
@@ -158,9 +159,15 @@ _KEY_GEN_MECHANISMS = {
     'CKM_GENERIC_SECRET_KEY_GEN': CKM_GENERIC_SECRET_KEY_GEN,
 }
 
+_KEY_WRAP_MECHANISMS = {
+    'CKM_SHA256_HMAC': CKM_SHA256_HMAC,
+    'CKM_AES_MAC': CKM_AES_MAC
+}
+
 CKM_NAMES = dict()
 CKM_NAMES.update(_ENCRYPTION_MECHANISMS)
 CKM_NAMES.update(_KEY_GEN_MECHANISMS)
+CKM_NAMES.update(_KEY_WRAP_MECHANISMS)
 
 ERROR_CODES = {
     1: 'CKR_CANCEL',
@@ -356,7 +363,8 @@ class PKCS11(object):
                  encryption_mechanism=None,
                  ffi=None, algorithm=None,
                  seed_random_buffer=None,
-                 generate_iv=None, always_set_cka_sensitive=None):
+                 generate_iv=None, always_set_cka_sensitive=None,
+                 hmac_keywrap_mechanism='CKM_SHA256_HMAC'):
         if algorithm:
             LOG.warning("WARNING: Using deprecated 'algorithm' argument.")
             encryption_mechanism = encryption_mechanism or algorithm
@@ -368,6 +376,9 @@ class PKCS11(object):
             self,
             '_{}_encrypt'.format(encryption_mechanism)
         )
+
+        if hmac_keywrap_mechanism not in _KEY_WRAP_MECHANISMS:
+            raise ValueError("Invalid HMAC keywrap mechanism")
 
         self.ffi = ffi or build_ffi()
         self.lib = self.ffi.dlopen(library_path)
@@ -386,6 +397,7 @@ class PKCS11(object):
         self.gcmtagsize = 16
         self.generate_iv = generate_iv
         self.always_set_cka_sensitive = always_set_cka_sensitive
+        self.hmac_keywrap_mechanism = CKM_NAMES[hmac_keywrap_mechanism]
 
         # Validate configuration and RNG
         session = self.get_session()
@@ -674,7 +686,7 @@ class PKCS11(object):
 
     def compute_hmac(self, hmac_key, data, session):
         mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = CKM_SHA256_HMAC
+        mech.mechanism = self.hmac_keywrap_mechanism
         rv = self.lib.C_SignInit(session, mech, hmac_key)
         self._check_error(rv)
 
@@ -687,7 +699,7 @@ class PKCS11(object):
 
     def verify_hmac(self, hmac_key, sig, data, session):
         mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = CKM_SHA256_HMAC
+        mech.mechanism = self.hmac_keywrap_mechanism
 
         rv = self.lib.C_VerifyInit(session, mech, hmac_key)
         self._check_error(rv)

@@ -184,9 +184,14 @@ class HSMCommands(object):
           help='Password to login to PKCS11 session')
     @args('--label', '-L', metavar='<label>', default='primarymkek',
           help='The label of the Master Key Encrypt Key')
-    def check_mkek(self, passphrase, libpath=None, slotid=None, label=None):
+    @args('--hmac-wrap-mechanism', metavar='<hmac key wrap mechanism>',
+          dest='hmacwrap', default='CKM_SHA256_HMAC',
+          help='HMAC Key wrap mechanism, default is CKM_SHA256_HMAC')
+    def check_mkek(self, passphrase, libpath=None, slotid=None, label=None,
+                   hmacwrap=None):
         CKK_AES = 'CKK_AES'
-        self._create_pkcs11_session(str(passphrase), str(libpath), int(slotid))
+        self._create_pkcs11_session(str(passphrase), str(libpath),
+                                    int(slotid), str(hmacwrap))
         handle = self.pkcs11.get_key_handle(CKK_AES, str(label), self.session)
         self.pkcs11.return_session(self.session)
         if not handle:
@@ -208,11 +213,15 @@ class HSMCommands(object):
     @args('--length', '-l', metavar='<length>', default=32,
           help='The length in bytes of the Master Key Encryption Key'
                ' (default is 32)')
+    @args('--hmac-wrap-mechanism', metavar='<hmac key wrap mechanism>',
+          dest='hmacwrap', default='CKM_SHA256_HMAC',
+          help='HMAC Key wrap mechanism, default is CKM_SHA256_HMAC')
     def gen_mkek(self, passphrase, libpath=None, slotid=None, label=None,
-                 length=None):
+                 length=None, hmacwrap=None):
         CKK_AES = 'CKK_AES'
         CKM_AES_KEY_GEN = 'CKM_AES_KEY_GEN'
-        self._create_pkcs11_session(str(passphrase), str(libpath), int(slotid))
+        self._create_pkcs11_session(str(passphrase), str(libpath),
+                                    int(slotid), str(hmacwrap))
         self._verify_label_does_not_exist(CKK_AES, str(label), self.session)
         self.pkcs11.generate_key(CKK_AES, int(length), CKM_AES_KEY_GEN,
                                  self.session, str(label),
@@ -234,9 +243,13 @@ class HSMCommands(object):
           help='The label of the Master HMAC key')
     @args('--key-type', '-t', metavar='<key type>', dest='keytype',
           default='CKK_AES', help='The HMAC Key Type (e.g. CKK_AES)')
+    @args('--hmac-wrap-mechanism', metavar='<hmac key wrap mechanism>',
+          dest='hmacwrap', default='CKM_SHA256_HMAC',
+          help='HMAC Key wrap mechanism, default is CKM_SHA256_HMAC')
     def check_hmac(self, passphrase, libpath=None, slotid=None, label=None,
-                   keytype=None):
-        self._create_pkcs11_session(str(passphrase), str(libpath), int(slotid))
+                   keytype=None, hmacwrap=None):
+        self._create_pkcs11_session(str(passphrase), str(libpath),
+                                    int(slotid), str(hmacwrap))
         handle = self.pkcs11.get_key_handle(str(keytype), str(label),
                                             self.session)
         self.pkcs11.return_session(self.session)
@@ -262,9 +275,13 @@ class HSMCommands(object):
           help='The length in bytes of the Master HMAC Key (default is 32)')
     @args('--mechanism', '-m', metavar='<mechanism>',
           default='CKM_AES_KEY_GEN', help='The HMAC Key Generation mechanism')
+    @args('--hmac-wrap-mechanism', metavar='<hmac key wrap mechanism>',
+          dest='hmacwrap', default='CKM_SHA256_HMAC',
+          help='HMAC Key wrap mechanism, default is CKM_SHA256_HMAC')
     def gen_hmac(self, passphrase, libpath=None, slotid=None, label=None,
-                 keytype=None, mechanism=None, length=None):
-        self._create_pkcs11_session(str(passphrase), str(libpath), int(slotid))
+                 keytype=None, mechanism=None, length=None, hmacwrap=None):
+        self._create_pkcs11_session(str(passphrase), str(libpath), int(slotid),
+                                    str(hmacwrap))
         self._verify_label_does_not_exist(str(keytype), str(label),
                                           self.session)
         self.pkcs11.generate_key(str(keytype), int(length), str(mechanism),
@@ -282,11 +299,13 @@ class HSMCommands(object):
         rewrapper.execute(dryrun)
         rewrapper.pkcs11.return_session(rewrapper.hsm_session)
 
-    def _create_pkcs11_session(self, passphrase, libpath, slotid):
+    def _create_pkcs11_session(self, passphrase, libpath, slotid,
+                               hmacwrap):
         self.pkcs11 = pkcs11.PKCS11(
             library_path=libpath, login_passphrase=passphrase,
             rw_session=True, slot_id=slotid,
             encryption_mechanism='CKM_AES_CBC',
+            hmac_keywrap_mechanism=hmacwrap
         )
         self.session = self.pkcs11.get_session()
 
