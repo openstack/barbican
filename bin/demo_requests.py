@@ -21,10 +21,11 @@ required including the Barbican Python client. Note that this script is not
 intended to replace DevStack or Tempest style testing.
 """
 
-import json
 import logging
 import requests
 import sys
+
+from oslo_serialization import jsonutils as json
 
 
 LOG = logging.getLogger(__name__)
