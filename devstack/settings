@@ -14,9 +14,13 @@ PYKMIP_CONF_DIR=${PYKMIP_CONF_DIR:-/etc/pykmip}
 PYKMIP_CONF=${PYKMIP_CONF_DIR}/server.conf
 PYKMIP_LOG_DIR=${PYKMIP_LOG_DIR:-/var/log/pykmip}
 
-# Support potential entry-points console scripts
-BARBICAN_BIN_DIR=$(get_python_exec_prefix)
-
+# Barbican virtual environment
+if [[ ${USE_VENV} = True ]]; then
+    PROJECT_VENV["barbican"]=${BARBICAN_DIR}.venv
+    BARBICAN_BIN_DIR=${PROJECT_VENV["barbican"]}/bin
+else
+    BARBICAN_BIN_DIR=$(get_python_exec_prefix)
+fi
 # WSGI variables
 BARBICAN_WSGI=$BARBICAN_BIN_DIR/barbican-wsgi-api
 BARBICAN_UWSGI_CONF=$BARBICAN_CONF_DIR/barbican-uwsgi.ini

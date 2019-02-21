@@ -19,7 +19,7 @@ if is_service_enabled barbican; then
 
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing Barbican"
-        install_barbican
+        stack_install_service barbican
         install_barbicanclient
         if is_service_enabled barbican-pykmip; then
             echo_summary "Installing PyKMIP"
