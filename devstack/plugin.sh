@@ -8,6 +8,7 @@ function configure_barbican_tempest() {
         roles="$roles,creator"
     fi
     iniset $TEMPEST_CONFIG auth tempest_roles $roles
+    iniset $TEMPEST_CONFIG service_available barbican True
 }
 
 # check for service enabled
