@@ -410,36 +410,3 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             'mkek_label': self.mkek_label,
             'hmac_label': self.hmac_label
         }
-
-    def _generate_mkek(self, key_length, key_label):
-        with self.mk_cache_lock, self.caching_session_lock:
-            session = self.caching_session
-            if key_label in self.mk_cache or \
-                    self.pkcs11.get_key_handle(key_label, session) is not None:
-                raise exception.P11CryptoPluginKeyException(
-                    u._("A master key with that label already exists")
-                )
-            mk = self.pkcs11.generate_key(
-                'CKK_AES', key_length, 'CKM_AES_KEY_GEN', session,
-                key_label=key_label,
-                encrypt=True, wrap=True, master_key=True
-            )
-
-            self.mk_cache[key_label] = mk
-        return mk
-
-    def _generate_mkhk(self, key_length, key_label):
-        with self.mk_cache_lock, self.caching_session_lock:
-            session = self.caching_session
-            if key_label in self.mk_cache or \
-                    self.pkcs11.get_key_handle(key_label, session, 'hmac') \
-                    is not None:
-                raise exception.P11CryptoPluginKeyException(
-                    u._("A master key with that label already exists")
-                )
-            mk = self.pkcs11.generate_key(
-                self.hmac_key_type, key_length, self.hmac_keygen_mechanism,
-                session, key_label, sign=True, master_key=True
-            )
-            self.mk_cache[key_label] = mk
-        return mk
