@@ -63,6 +63,8 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.cfg_mock.p11_crypto_plugin.encryption_mechanism = 'CKM_AES_CBC'
         self.cfg_mock.p11_crypto_plugin.seed_file = ''
         self.cfg_mock.p11_crypto_plugin.seed_length = 32
+        self.cfg_mock.p11_crypto_plugin.hmac_keywrap_mechanism = \
+            'CKM_SHA256_HMAC'
 
         self.plugin_name = 'Test PKCS11 plugin'
         self.cfg_mock.p11_crypto_plugin.plugin_name = self.plugin_name

@@ -60,12 +60,14 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.cfg_mock.rw_session = False
         self.cfg_mock.slot_id = 1
         self.cfg_mock.encryption_mechanism = 'CKM_AES_CBC'
+        self.cfg_mock.hmac_keywrap_mechanism = 'CKM_SHA256_HMAC'
 
         self.pkcs11 = pkcs11.PKCS11(
             self.cfg_mock.library_path, self.cfg_mock.login_passphrase,
             self.cfg_mock.rw_session, self.cfg_mock.slot_id,
             self.cfg_mock.encryption_mechanism,
-            ffi=self.ffi
+            ffi=self.ffi,
+            hmac_keywrap_mechanism=self.cfg_mock.hmac_keywrap_mechanism
         )
 
     def _generate_random(self, session, buf, length):

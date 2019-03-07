@@ -69,6 +69,9 @@ p11_crypto_plugin_opts = [
     cfg.StrOpt('hmac_keygen_mechanism',
                help=u._('HMAC Key Generation Algorithm'),
                default='CKM_AES_KEY_GEN'),
+    cfg.StrOpt('hmac_keywrap_mechanism',
+               help=u._('HMAC key wrap mechanism'),
+               default='CKM_SHA256_HMAC'),
     cfg.StrOpt('seed_file',
                help=u._('File to pull entropy for seeding RNG'),
                default=''),
@@ -307,6 +310,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             seed_random_buffer=seed_random_buffer,
             generate_iv=plugin_conf.aes_gcm_generate_iv,
             always_set_cka_sensitive=plugin_conf.always_set_cka_sensitive,
+            hmac_keywrap_mechanism=plugin_conf.hmac_keywrap_mechanism
         )
 
     def _reinitialize_pkcs11(self):

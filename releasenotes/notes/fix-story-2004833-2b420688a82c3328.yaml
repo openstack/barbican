@@ -1,0 +1,9 @@
+---
+fixes:
+  - |
+    Fixed Story #2004734: Added a new option 'hmac_keywrap_mechanism' to make
+    the mechanism used to calculate a HMAC from an wrapped PKEK configurable.
+    This was introduced because of an problem with Utimaco HSMs which throw an
+    'CKR_MECHANISM_INVALID' error, e.g. when a new PKEK is generated. For
+    Utimaco HSMs, 'hmac_keywrap_mechanism' should be set to 'CKM_AES_MAC' in
+    barbican.conf.
