@@ -280,44 +280,6 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.plugin.pkek_cache['expired_kek'] = p11_crypto.CachedKEK(4, 0)
         self.assertIsNone(self.plugin._pkek_cache_get('expired_kek'))
 
-    def test_generate_mkek(self):
-        self.pkcs11.get_key_handle.return_value = None
-
-        mkek = self.plugin._generate_mkek(256, 'mkek_label_2')
-        self.assertEqual(3, mkek)
-
-        self.assertEqual(3, self.pkcs11.get_key_handle.call_count)
-        self.assertEqual(1, self.pkcs11.generate_key.call_count)
-
-    def test_cached_generate_mkek(self):
-        self.assertRaises(ex.P11CryptoPluginKeyException,
-                          self.plugin._generate_mkek, 256, 'mkek_label')
-        self.assertEqual(2, self.pkcs11.get_key_handle.call_count)
-
-    def test_existing_generate_mkek(self):
-        self.assertRaises(ex.P11CryptoPluginKeyException,
-                          self.plugin._generate_mkek, 256, 'mkek2_label')
-        self.assertEqual(3, self.pkcs11.get_key_handle.call_count)
-
-    def test_generate_mkhk(self):
-        self.pkcs11.get_key_handle.return_value = None
-
-        mkhk = self.plugin._generate_mkhk(256, 'mkhk_label_2')
-        self.assertEqual(3, mkhk)
-
-        self.assertEqual(3, self.pkcs11.get_key_handle.call_count)
-        self.assertEqual(1, self.pkcs11.generate_key.call_count)
-
-    def test_cached_generate_mkhk(self):
-        self.assertRaises(ex.P11CryptoPluginKeyException,
-                          self.plugin._generate_mkhk, 256, 'hmac_label')
-        self.assertEqual(2, self.pkcs11.get_key_handle.call_count)
-
-    def test_existing_generate_mkhk(self):
-        self.assertRaises(ex.P11CryptoPluginKeyException,
-                          self.plugin._generate_mkhk, 256, 'mkhk2_label')
-        self.assertEqual(3, self.pkcs11.get_key_handle.call_count)
-
     def test_create_pkcs11(self):
         def _generate_random(session, buf, length):
             ffi.buffer(buf)[:] = b'0' * length
