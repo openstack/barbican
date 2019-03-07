@@ -12,9 +12,11 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
-import mock
+
 import os
+
+import mock
+from oslo_serialization import jsonutils as json
 from oslo_utils import uuidutils
 
 from barbican.tests import utils

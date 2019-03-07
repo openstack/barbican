@@ -12,7 +12,9 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from oslo_serialization import jsonutils
+
+from oslo_serialization import jsonutils as json
+from oslo_utils import uuidutils
 from testtools import testcase
 
 from barbican.tests import utils
@@ -20,7 +22,6 @@ from functionaltests.api import base
 from functionaltests.api.v1.behaviors import secret_behaviors
 from functionaltests.api.v1.behaviors import secretmeta_behaviors
 from functionaltests.api.v1.models import secret_models
-from oslo_utils import uuidutils
 
 
 @utils.parameterized_test_case
@@ -107,7 +108,7 @@ class SecretMetadataTestCase(base.TestCase):
 
         get_resp = self.behaviors.get_metadata(secret_ref)
         self.assertEqual(200, get_resp.status_code)
-        self.assertEqual(jsonutils.loads(get_resp.content),
+        self.assertEqual(json.loads(get_resp.content),
                          self.valid_metadata)
 
     @testcase.attr('negative')
@@ -171,7 +172,7 @@ class SecretMetadataTestCase(base.TestCase):
         get_resp = self.behaviors.get_metadatum(secret_ref,
                                                 self.valid_metadatum_key)
         self.assertEqual(200, get_resp.status_code)
-        self.assertEqual(jsonutils.loads(get_resp.content),
+        self.assertEqual(json.loads(get_resp.content),
                          self.valid_metadatum)
 
     @testcase.attr('negative')

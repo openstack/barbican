@@ -12,10 +12,11 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from oslo_serialization import jsonutils
+
 import sys
 import time
 
+from oslo_serialization import jsonutils as json
 import testtools
 from testtools import testcase
 
@@ -296,7 +297,7 @@ class OrdersTestCase(base.TestCase):
         resp, order_ref = self.behaviors.create_order(test_model)
 
         # Make sure we actually get a message back
-        error_msg = jsonutils.loads(resp.content).get('title')
+        error_msg = json.loads(resp.content).get('title')
 
         self.assertEqual(400, resp.status_code)
         self.assertIsNotNone(error_msg)

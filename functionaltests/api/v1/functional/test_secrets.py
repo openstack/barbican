@@ -15,7 +15,7 @@
 
 import datetime
 from oslo_serialization import base64 as oslo_base64
-from oslo_serialization import jsonutils
+from oslo_serialization import jsonutils as json
 import six
 import sys
 import testtools
@@ -512,7 +512,7 @@ class SecretsTestCase(base.TestCase):
         # first, ensure that the return code is 400
         self.assertEqual(400, resp.status_code)
 
-        resp_dict = jsonutils.loads(resp.content)
+        resp_dict = json.loads(resp.content)
 
         self.assertIn(
             "Provided object does not match schema 'Secret': "

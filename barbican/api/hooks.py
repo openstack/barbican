@@ -15,7 +15,7 @@
 import pecan
 import webob
 
-from oslo_serialization import jsonutils
+from oslo_serialization import jsonutils as json
 
 try:
     import newrelic.agent
@@ -29,7 +29,7 @@ from barbican.model import repositories
 class JSONErrorHook(pecan.hooks.PecanHook):
     def on_error(self, state, exc):
         if isinstance(exc, webob.exc.HTTPError):
-            exc.body = jsonutils.dump_as_bytes({
+            exc.body = json.dump_as_bytes({
                 'code': exc.status_int,
                 'title': exc.title,
                 'description': exc.detail

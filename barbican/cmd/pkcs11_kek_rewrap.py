@@ -11,12 +11,13 @@
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #  License for the specific language governing permissions and limitations
 #  under the License.
+
 import argparse
 import base64
-import json
 import traceback
 
 from oslo_db.sqlalchemy import session
+from oslo_serialization import jsonutils as json
 from sqlalchemy import orm
 from sqlalchemy.orm import scoping
 

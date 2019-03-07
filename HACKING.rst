@@ -1,5 +1,5 @@
 Barbican Style Commandments
-============================
+===========================
 
 - Step 1: Read the OpenStack Style Commandments
   https://docs.openstack.org/hacking/latest/
@@ -7,7 +7,7 @@ Barbican Style Commandments
 
 
 Barbican Specific Commandments
--------------------------------
+------------------------------
 
 - [B310] Check for improper use of logging format arguments.
 - [B311] Use assertIsNone(...) instead of assertEqual(None, ...).
