@@ -45,12 +45,24 @@ class KekRewrap(object):
         self.hsm_session = self.pkcs11.get_session()
         self.new_mkek_label = self.crypto_plugin.mkek_label
         self.new_hmac_label = self.crypto_plugin.hmac_label
-        self.new_mkek = self.crypto_plugin._get_master_key(self.new_mkek_label)
-        self.new_mkhk = self.crypto_plugin._get_master_key(self.new_hmac_label)
+        self.new_mkek_type = self.crypto_plugin.mkek_key_type
+        self.new_hmac_type = self.crypto_plugin.hmac_key_type
+        self.new_mkek = self.crypto_plugin._get_master_key(
+            self.new_mkek_type,
+            self.new_mkek_label)
+        self.new_mkhk = self.crypto_plugin._get_master_key(
+            self.new_hmac_type,
+            self.new_hmac_label)
 
     def rewrap_kek(self, project, kek):
         with self.db_session.begin():
             meta_dict = json.loads(kek.plugin_meta)
+
+            # check if old and new mkek and hmac labels are the same
+            # if so, skip this kek.
+            if (self.new_mkek_label == meta_dict['mkek_label'] and
+                    self.new_hmac_label == meta_dict['hmac_label']):
+                return
 
             if self.dry_run:
                 msg = 'Would have unwrapped key with {} and rewrapped with {}'
@@ -64,12 +76,20 @@ class KekRewrap(object):
 
             session = self.hsm_session
 
+            # TODO(alee) We never store the mkek and hmac key types in the db
+            # record for the KEK metadata.  Therefore, for now assume that the
+            # key types will not change.
+
             # Get KEK's master keys
             kek_mkek = self.pkcs11.get_key_handle(
-                meta_dict['mkek_label'], session
+                self.new_mkek_type,
+                meta_dict['mkek_label'],
+                session
             )
             kek_mkhk = self.pkcs11.get_key_handle(
-                meta_dict['hmac_label'], session
+                self.new_hmac_type,
+                meta_dict['hmac_label'],
+                session
             )
             # Decode data
             iv = base64.b64decode(meta_dict['iv'])
@@ -159,6 +179,9 @@ def main():
         help='Displays changes that will be made (Non-destructive)'
     )
     args = parser.parse_args()
+
+    print("Warning: Calling this utility directly is deprecated.  "
+          "Please use barbican-manage instead")
 
     rewrapper = KekRewrap(CONF)
     rewrapper.execute(args.dry_run)
