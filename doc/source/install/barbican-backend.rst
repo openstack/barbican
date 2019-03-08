@@ -266,6 +266,90 @@ The HMAC and MKEK keys can be generated as follows:
        barbican-manage hsm gen_mkek --library-path /usr/lib64/libnethsm.so \
        --passphrase XXX --slot-id 1 --label atos_mkek_0
 
+Utimaco
++++++++
+
+The PKCS#11 plugin configuration looks like:
+
+    .. code-block:: ini
+
+        # ================= Secret Store Plugin ===================
+        [secretstore]
+        ..
+        enabled_secretstore_plugins = store_crypto
+
+        [p11_crypto_plugin]
+        # Path to vendor PKCS11 library (string value)
+        library_path = '/opt/utimaco/lib/libcs_pkcs11_R2.so'
+
+        # Password to login to PKCS11 session (string value)
+        login = '$up3r$e<retP4ssw0rd'
+
+        # Master KEK label (as stored in the HSM) (string value)
+        mkek_label = 'my_mkek'
+
+        # Master KEK length in bytes. (integer value)
+        #mkek_length = <None>
+
+        # Master HMAC Key label (as stored in the HSM) (string value)
+        hmac_label = 'my_hmac_key'
+
+        # HSM Slot ID (integer value)
+        slot_id = 0
+
+        # Flag for Read/Write Sessions (boolean value)
+        #rw_session = true
+
+        # Project KEK length in bytes. (integer value)
+        #pkek_length = 32
+
+        # Project KEK Cache Time To Live, in seconds (integer value)
+        #pkek_cache_ttl = 900
+
+        # Project KEK Cache Item Limit (integer value)
+        #pkek_cache_limit = 100
+
+        # Secret encryption mechanism (string value)
+        # Deprecated group/name - [p11_crypto_plugin]/algorithm
+        encryption_mechanism = CKM_AES_CBC
+
+        # HMAC Key Type (string value)
+        #hmac_key_type = CKK_AES
+
+        # HMAC Key Generation Algorithm (string value)
+        #hmac_keygen_mechanism = CKM_AES_KEY_GEN
+
+        # File to pull entropy for seeding RNG (string value)
+        #seed_file =
+
+        # Amount of data to read from file for seed (integer value)
+        #seed_length = 32
+
+        # User friendly plugin name (string value)
+        #plugin_name = PKCS11 HSM
+
+        # Generate IVs for CKM_AES_GCM mechanism. (boolean value)
+        # Deprecated group/name - [p11_crypto_plugin]/generate_iv
+        #aes_gcm_generate_iv = true
+
+        # HMAC key wrap mechanism
+        hmac_keywrap_mechanism = CKM_AES_MAC
+
+
+The HMAC and MKEK keys can be generated as follows:
+
+    .. code-block:: ini
+
+       barbican-manage hsm gen_mkek --library-path \
+       /opt/utimaco/lib/libcs_pkcs11_R2.so --passphrase XXX \
+       --slot-id 0 --label 'my_mkek'
+
+    .. code-block:: ini
+
+       barbican-manage hsm gen_hmac --library-path \
+       /opt/utimaco/lib/libcs_pkcs11_R2.so --passphrase XXX \
+       --slot-id 0 --label 'my_hmac_key'
+
 
 KMIP Plugin
 -----------
