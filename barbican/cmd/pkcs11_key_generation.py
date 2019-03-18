@@ -36,7 +36,8 @@ class KeyGenerator(object):
             login_passphrase=self.args.passphrase or password,
             rw_session=True,
             slot_id=int(self.args.slot_id),
-            ffi=ffi
+            ffi=ffi,
+            encryption_mechanism='CKM_AES_CBC'
         )
         self.session = self.pkcs11.get_session()
 
@@ -77,14 +78,24 @@ class KeyGenerator(object):
         """Create HMAC generation parser and arguments."""
         create_parser = self.subparsers.add_parser('hmac', help='Generates a '
                                                    'new HMAC.')
+        create_parser.add_argument('--type', '-t', default='CKK_AES',
+                                   help='HMAC key type, one of: '
+                                   '\'CKK_AES\', \'CKK_GENERIC_SECRET\' or '
+                                   '\'CKK_SHA256_HMAC\'')
+        create_parser.add_argument('--keygen', '-g',
+                                   default='CKM_AES_KEY_GEN',
+                                   help='HMAC key generation mechanism, '
+                                   'one of: \'CKM_AES_KEY_GEN\' '
+                                   '\'CKM_NC_SHA256_HMAC_KEY_GEN\' or '
+                                   '\'CKM_GENERIC_SECRET_KEY_GEN\'')
         create_parser.add_argument('--length', '-l', default=32,
                                    help='the length of the HMACKEY')
         create_parser.add_argument('--label', '-L', default='primaryhmac',
                                    help='the label for the HMAC')
         create_parser.set_defaults(func=self.generate_hmac)
 
-    def verify_label_does_not_exist(self, label, session):
-        key_handle = self.pkcs11.get_key_handle(label, session)
+    def verify_label_does_not_exist(self, key_type, label, session):
+        key_handle = self.pkcs11.get_key_handle(key_type, label, session)
         if key_handle:
             print(
                 "The label {label} already exists! "
@@ -94,17 +105,19 @@ class KeyGenerator(object):
 
     def generate_mkek(self, args):
         """Process the generate MKEK with given arguments"""
-        self.verify_label_does_not_exist(args.label, self.session)
-        self.pkcs11.generate_key(int(args.length), self.session, args.label,
+        self.verify_label_does_not_exist(args.type, args.label, self.session)
+        self.pkcs11.generate_key('CKK_AES', int(args.length),
+                                 'CKM_AES_KEY_GEN',
+                                 self.session, args.label,
                                  encrypt=True, wrap=True, master_key=True)
         print("MKEK successfully generated!")
 
     def generate_hmac(self, args):
         """Process the generate HMAC with given arguments"""
-        self.verify_label_does_not_exist(args.label, self.session)
-        self.pkcs11.generate_key(int(args.length), self.session,
-                                 args.label, sign=True,
-                                 master_key=True)
+        self.verify_label_does_not_exist(args.type, args.label, self.session)
+        self.pkcs11.generate_key(args.type, int(args.length), args.keygen,
+                                 self.session, args.label,
+                                 sign=True, master_key=True)
         print("HMAC successfully generated!")
 
     def execute(self):
