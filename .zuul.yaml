@@ -8,7 +8,7 @@
       python_version: py27
       services: tempest,rabbit,mysql,key
     required-projects:
-      - openstack-infra/devstack-gate
+      - openstack/devstack-gate
       - openstack/barbican
       - openstack/barbican-tempest-plugin
       - openstack/python-barbicanclient
@@ -24,8 +24,8 @@
       python_version: py27
       services: tempest,keystone
     required-projects:
-      - openstack-dev/devstack
-      - openstack-infra/devstack-gate
+      - openstack/devstack
+      - openstack/devstack-gate
       - openstack/barbican
       - openstack/barbican-tempest-plugin
       - openstack/python-barbicanclient
@@ -42,11 +42,11 @@
       castellan_from_git: 0
       cursive: 0
     required-projects:
-      - openstack-infra/devstack-gate
+      - openstack/devstack-gate
       - openstack/barbican
       - openstack/barbican-tempest-plugin
       - openstack/castellan
-      - openstack/cursive
+      - x/cursive
       - openstack/python-barbicanclient
       - openstack/tempest
     run: playbooks/legacy/barbican-devstack-tempest-base/run.yaml
@@ -154,8 +154,8 @@
     run: playbooks/legacy/grenade-devstack-barbican/run.yaml
     post-run: playbooks/legacy/grenade-devstack-barbican/post.yaml
     required-projects:
-      - openstack-dev/grenade
-      - openstack-infra/devstack-gate
+      - openstack/grenade
+      - openstack/devstack-gate
       - openstack/barbican
       - openstack/barbican-tempest-plugin
       - openstack/python-barbicanclient
