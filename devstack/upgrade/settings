@@ -23,8 +23,8 @@ devstack_localrc base """
 [image-feature-enabled]
 api_v1=False"""
 
-devstack_localrc base enable_plugin barbican https://git.openstack.org/openstack/barbican
-devstack_localrc target enable_plugin barbican https://git.openstack.org/openstack/barbican
+devstack_localrc base enable_plugin barbican https://opendev.org/openstack/barbican
+devstack_localrc target enable_plugin barbican https://opendev.org/openstack/barbican
 
 devstack_localrc base enable_service barbican-svc barbican-retry
 devstack_localrc target enable_service barbican-svc barbican-retry

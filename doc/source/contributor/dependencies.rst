@@ -22,4 +22,4 @@ If you need to add a new dependency to Barbican, you must edit a few things:
    fpm and upload it to the cloudkeep yum repo.
 
 
-.. _`global requirements`: https://git.openstack.org/cgit/openstack/requirements/tree/global-requirements.txt
+.. _`global requirements`: https://opendev.org/openstack/requirements/src/branch/master/global-requirements.txt

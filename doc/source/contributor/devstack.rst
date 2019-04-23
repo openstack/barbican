@@ -115,7 +115,7 @@ Installation
 
     .. code-block:: ini
 
-        enable_plugin barbican https://git.openstack.org/openstack/barbican
+        enable_plugin barbican https://opendev.org/openstack/barbican
         enable_service rabbit mysql key
 
    If this is your first time and you do not have a local.conf file, there is

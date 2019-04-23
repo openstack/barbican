@@ -64,12 +64,12 @@ storyboard which represents barbican as a repository.
 Source Repository
 -------------------
 Like other OpenStack related projects, the official Git repository is
-available on `git.openstack.org`_; however, the repository is also mirrored
+available on `opendev.org`_; however, the repository is also mirrored
 to GitHub for easier browsing.
 
 * `Barbican on GitHub`_
 
-.. _`git.openstack.org`: https://git.openstack.org/cgit/openstack/barbican
+.. _`opendev.org`: https://opendev.org/openstack/barbican
 .. _`Barbican on GitHub`: https://github.com/openstack/barbican
 
 

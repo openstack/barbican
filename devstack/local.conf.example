@@ -1,9 +1,9 @@
 [[local|localrc]]
 disable_all_services
 
-enable_plugin barbican https://git.openstack.org/openstack/barbican
+enable_plugin barbican https://opendev.org/openstack/barbican
 # To use a specific branch:
-# enable_plugin barbican https://git.openstack.org/openstack/barbican stable/<release-name>
+# enable_plugin barbican https://opendev.org/openstack/barbican stable/<release-name>
 
 enable_service rabbit mysql key
 

@@ -15,7 +15,7 @@ where
 
 For example
 
-    enable_plugin barbican https://git.openstack.org/openstack/barbican stable/liberty
+    enable_plugin barbican https://opendev.org/openstack/barbican stable/liberty
 
 For more information, see the "Externally Hosted Plugins" section of
 https://docs.openstack.org/devstack/latest/plugins.html

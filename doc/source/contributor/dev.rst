@@ -51,7 +51,7 @@ installed as well.
 .. code-block:: bash
 
     # Clone barbican source
-    git clone https://git.openstack.org/openstack/barbican
+    git clone https://opendev.org/openstack/barbican
     cd barbican
 
     # Create and activate a virtual environment
