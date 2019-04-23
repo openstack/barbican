@@ -4,8 +4,8 @@ export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update
 sudo apt-get install -y python-pip python-dev libffi-dev libssl-dev git
 
-git clone https://github.com/openstack-dev/devstack.git
-git clone https://github.com/openstack/barbican.git
+git clone https://opendev.org/openstack/devstack.git
+git clone https://opendev.org/openstack/barbican.git
 
 cp barbican/devstack/local.conf.example devstack/local.conf
 

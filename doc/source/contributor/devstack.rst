@@ -38,7 +38,7 @@ running on Devstack.
 
     .. code-block:: bash
 
-        git clone https://github.com/openstack/barbican.git
+        git clone https://opendev.org/openstack/barbican.git
 
 2. Move the ``barbican-vagrant`` directory outside of the Barbican directory
    and into your current directory for vagrant files. If you do not have one,
@@ -106,7 +106,7 @@ Installation
 
     .. code-block:: bash
 
-        git clone https://github.com/openstack-dev/devstack.git
+        git clone https://opendev.org/openstack/devstack.git
 
 4. Add the Barbican plugin to the local.conf file and verify the minimum
    services required are included. You can pull down a specific branch by

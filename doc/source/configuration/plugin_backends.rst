@@ -15,7 +15,7 @@ choose to select preferred plugin backend for storing their secret at a project
 level.
 
 
-.. _Spec Link: https://review.openstack.org/#/c/263972
+.. _Spec Link: https://review.opendev.org/#/c/263972
 
 
 Enabling Multiple Barbican Backends
