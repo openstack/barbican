@@ -129,7 +129,7 @@
       cursive: 1
 
 - job:
-    name: grenade-devstack-barbican
+    name: barbican-grenade-devstack
     parent: legacy-dsvm-base
     # Start testing with pike
     branches: ^(?!stable/ocata).*$
@@ -165,8 +165,7 @@
         - barbican-kmip-devstack-functional:
             voting: false
         - barbican-vault-devstack-functional
-        - grenade-devstack-barbican:
-            voting: false
+        - barbican-grenade-devstack
         # TripleO jobs that deploy Barbican.
         # Note we don't use a project-template here, so it's easier
         # to disable voting on one specific job if things go wrong.
@@ -185,5 +184,4 @@
         - barbican-simple-crypto-devstack-functional
         - barbican-dogtag-devstack-functional-fedora-latest
         - barbican-vault-devstack-functional
-        - grenade-devstack-barbican:
-            voting: false
+        - barbican-grenade-devstack
