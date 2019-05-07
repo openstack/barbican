@@ -1310,7 +1310,7 @@ class ContainerRepo(BaseRepo):
     """Repository for the Container entity."""
 
     def get_by_create_date(self, external_project_id, offset_arg=None,
-                           limit_arg=None, name_arg=None,
+                           limit_arg=None, name_arg=None, type_arg=None,
                            suppress_exception=False, session=None):
         """Returns a list of containers
 
@@ -1329,6 +1329,9 @@ class ContainerRepo(BaseRepo):
 
         if name_arg:
             query = query.filter(models.Container.name.like(name_arg))
+
+        if type_arg:
+            query = query.filter(models.Container.type == type_arg)
 
         query = query.join(models.Project, models.Container.project)
         query = query.filter(models.Project.external_id == external_project_id)

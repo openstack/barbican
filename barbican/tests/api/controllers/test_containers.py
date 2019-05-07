@@ -160,12 +160,12 @@ class WhenGettingContainersListUsingContainersResource(
             'limit': self.limit
         }
 
-    def _create_containers(self):
+    def _create_containers(self, type='generic'):
         for i in range(self.num_containers):
             resp, container_uuid = create_container(
                 self.app,
                 name='test container name {num}'.format(num=i),
-                container_type='generic'
+                container_type=type
             )
             self._assert_successful_container_create(resp, container_uuid)
 
@@ -198,6 +198,24 @@ class WhenGettingContainersListUsingContainersResource(
         url_hrefs = self._create_url()
         self.assertEqual((self.limit + 2),
                          resp.body.decode('utf-8').count(url_hrefs))
+
+    def test_list_containerss_by_type(self):
+        # Creating containers to be retrieved later
+        self._create_containers(type='generic')
+        self._create_containers(type='certificate')
+        self._create_containers(type='rsa')
+
+        for type in ('generic', 'certificate', 'rsa'):
+            params = {
+                'limit': self.num_containers,
+                'type': type
+            }
+            resp = self.app.get(
+                '/containers/',
+                params
+            )
+            self.assertEqual(200, resp.status_int)
+            self.assertEqual(self.num_containers, resp.namespace.get('total'))
 
     def test_response_should_include_total(self):
         self._create_containers()
