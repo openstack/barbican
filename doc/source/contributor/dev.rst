@@ -8,12 +8,6 @@ encryption system such as an HSM (Hardware Security Module). In addition,
 the SQLite backend has known issues with thread-safety. This setup is purely
 to aid in development workflows.
 
-.. warning::
-
-    The default key store implementation in Barbican **is not secure** in
-    any way. **Do not use this development standalone mode to store sensitive
-    information!**
-
 Installing system dependencies
 ------------------------------
 
@@ -41,12 +35,12 @@ Setting up a virtual environment
 --------------------------------
 
 We highly recommend using virtual environments for development.  You can learn
-more about `Virtual Environments`_ in the Python Guide.
+more about `Virtual Environments`_ in The Python Tutorial.
 
 If you installed tox in the previous step you should already have virtualenv
 installed as well.
 
-.. _Virtual Environments: http://docs.python-guide.org/en/latest/dev/virtualenvs/
+.. _Virtual Environments: https://docs.python.org/3/tutorial/venv.html
 
 .. code-block:: bash
 
@@ -109,7 +103,7 @@ For more information on configuring Barbican with Keystone auth see the
 Building the Documentation
 --------------------------
 
-You can build the html developer documentation using tox:
+You can build the html documentation using tox:
 
 .. code-block:: bash
 
@@ -123,4 +117,4 @@ You can run the unit test suite using tox:
 
 .. code-block:: bash
 
-   tox -e py27
+   tox -e py36

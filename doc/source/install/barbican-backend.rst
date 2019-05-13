@@ -1,45 +1,56 @@
 .. _barbican_backend:
 
-Secret Store Back-ends
-~~~~~~~~~~~~~~~~~~~~~~
+Configure Secret Store Back-end
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Key Manager service has a plugin architecture that allows the deployer to
-store secrets in one or more secret stores.  Secret stores can be software-based
-such as a software token,  or hardware devices such as a hardware security
-module (HSM).
+store secrets in one or more secret stores.  Secret stores can be
+software-based such as a software-only encryption mechanism, or hardware
+devices such as a hardware security module (HSM).
 
-This section describes the plugins that are currently available
-and how they might be configured.
+Secret Stores implement both the encryption mechanisms as well as the storage
+of the encrypted secrets.
 
-Crypto Plugins
---------------
-
-These types of plugins store secrets as encrypted blobs within the
-Barbican database.  The plugin is invoked to encrypt the secret on secret
-storage, and decrypt the secret on secret retrieval.
-
-To enable these plugins, add ``store_crypto`` to the list of enabled
-secret store plugins in the ``[secret_store]`` section of
-``/etc/barbican/barbican.conf`` :
-
-    .. code-block:: ini
-
-       [secretstore]
-       namespace = barbican.secretstore.plugin
-       enabled_secretstore_plugins = store_crypto
-
-There are two flavors of storage plugins currently available: the Simple
-Crypto plugin and the PKCS#11 crypto plugin.
+This section compares all the plugins that are currently available and the
+security tradeoffs that need to be considered when deciding which pluings to
+use.
 
 Simple Crypto Plugin
 ^^^^^^^^^^^^^^^^^^^^
 
-This crypto plugin is configured by default in ``/etc/barbican/barbican.conf``.  This plugin
-is completely insecure and is only suitable for development testing.
+This back end plugin implements encryption using only software.  The encrypted
+secrets are stored in the Barbican database.
+
+This crypto plugin is configured by default in ``/etc/barbican/barbican.conf``.
 
 This plugin uses single symmetric key (kek - or 'key encryption key')
 - which is stored in plain text in the ``/etc/barbican/barbican.conf`` file to encrypt
 and decrypt all secrets.
+
++------------------+--------------------------------------------------------+
+| Security         | ⚠ Master Key (KEK) stored in the configuration file    |
++------------------+--------------------------------------------------------+
+| Maturity         | ✅ Tested on every patch                               |
++------------------+--------------------------------------------------------+
+| Ease of Use      | | ✅ Simple to deploy                                  |
+|                  | | ❌ Key rotation is disruptive                        |
+|                  | | (all secrets must be re-encrypted)                   |
++------------------+--------------------------------------------------------+
+| Scalability      | | ✅ Storage can be scaled in SQL DB                   |
+|                  | | ✅ Failover/HA is simple, just run more barbican-api |
+|                  |   instances                                            |
+|                  | | ✅ High performance - Software crypto is fast        |
++------------------+--------------------------------------------------------+
+| Cost             | ✅ Free (as in beer)                                   |
++------------------+--------------------------------------------------------+
+
+.. warning::
+
+    This plugin stores its KEK in plain text in the configuration file,
+    which will be present in any node running the `barbican-api` or
+    `barbican-worker` services.  Extreme care should be taken to prevent
+    unauthrized access to these nodes.  When using this plugin the KEK is the
+    only thing protecting the secrets stored in the database.
 
 The configuration for this plugin in ``/etc/barbican/barbican.conf`` is as follows:
 
