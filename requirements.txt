@@ -6,7 +6,7 @@ Babel!=2.4.0,>=2.3.4 # BSD
 cffi>=1.7.0 # MIT
 cryptography>=2.1 # BSD/Apache-2.0
 eventlet>=0.18.2,!=0.18.3,!=0.20.1  # MIT
-jsonschema<3.0.0,>=2.6.0 # MIT
+jsonschema>=2.6.0 # MIT
 oslo.config>=5.2.0 # Apache-2.0
 oslo.context>=2.19.2 # Apache-2.0
 oslo.db>=4.27.0 # Apache-2.0
