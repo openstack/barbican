@@ -91,13 +91,6 @@
       plugin: simple-crypto
 
 - job:
-    name: barbican-simple-crypto-devstack-functional-py35
-    parent: barbican-devstack-functional-base
-    vars:
-      python_version: py35
-      plugin: simple-crypto
-
-- job:
     name: barbican-dogtag-devstack-fedora-latest
     nodeset: devstack-single-node-fedora-latest
     parent: barbican-devstack-base
@@ -136,13 +129,6 @@
       cursive: 1
 
 - job:
-    name: barbican-simple-crypto-devstack-tempest-py35
-    parent: barbican-devstack-tempest-base
-    voting: false
-    vars:
-      python_version: py35
-
-- job:
     name: grenade-devstack-barbican
     parent: legacy-dsvm-base
     # Start testing with pike
@@ -166,7 +152,6 @@
       - openstack-cover-jobs
       - openstack-lower-constraints-jobs
       - openstack-python-jobs
-      - openstack-python35-jobs
       - openstack-python36-jobs
       - openstack-python37-jobs
       - publish-openstack-docs-pti
@@ -175,7 +160,6 @@
       jobs:
         - barbican-simple-crypto-devstack-tempest
         - barbican-simple-crypto-devstack-functional
-        - barbican-simple-crypto-devstack-functional-py35
         - barbican-simple-crypto-devstack-functional-postgres
         - barbican-dogtag-devstack-functional-fedora-latest
         - barbican-kmip-devstack-functional:
@@ -199,11 +183,7 @@
       jobs:
         - barbican-simple-crypto-devstack-tempest
         - barbican-simple-crypto-devstack-functional
-        - barbican-simple-crypto-devstack-functional-py35
         - barbican-dogtag-devstack-functional-fedora-latest
         - barbican-vault-devstack-functional
         - grenade-devstack-barbican:
             voting: false
-    experimental:
-      jobs:
-        - barbican-simple-crypto-devstack-tempest-py35
