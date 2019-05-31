@@ -38,6 +38,7 @@ import pki.key as key
 import pki.kra
 import pki.profile
 from requests import exceptions as request_exceptions
+import six
 
 from barbican.common import exception
 from barbican.common import utils
@@ -93,6 +94,9 @@ def _setup_nss_db_services(conf):
         return None
     if nss_password is None:
         raise ValueError(u._("nss_password is required"))
+    if type(nss_password) is not six.binary_type:
+        # Password needs to be a bytes object in Python 3
+        nss_password = nss_password.encode('UTF-8')
 
     nss_db_created = _create_nss_db_if_needed(nss_db_path, nss_password)
     crypto = cryptoutil.NSSCryptoProvider(nss_db_path, nss_password)
@@ -109,7 +113,7 @@ def _import_kra_transport_cert_to_nss_db(conf, crypto):
         systemcert_client = kraclient.system_certs
 
         transport_cert = systemcert_client.get_transport_cert()
-        crypto.import_cert(KRA_TRANSPORT_NICK, transport_cert, "u,u,u")
+        crypto.import_cert(KRA_TRANSPORT_NICK, transport_cert, ",,")
     except Exception as e:
         LOG.error("Error in importing transport cert."
                   " KRA may not be enabled: %s", e)

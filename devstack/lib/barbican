@@ -543,7 +543,7 @@ EOF
 }
 
 function install_dogtag_plugin_dependencies {
-    install_package nss-devel 389-ds-base pki-ca pki-kra python2-pki python3-pki
+    install_package nss-devel 389-ds-base dogtag-pki
 }
 
 function install_dogtag_components {
