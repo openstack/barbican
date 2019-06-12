@@ -1,0 +1,14 @@
+---
+features:
+  - |
+    It is now possible for barbican-keystone-listener to listen on the same
+    standard notification topic without interfering with other services by
+    using the notification listener pools feature of oslo.messaging.
+    To use it, set the new ``[keystone_notifications]pool_name`` option
+    to some unique value (but the same for all instances of
+    barbican-keystone-listener service).
+    This feature is available only for those messaging transports of
+    oslo.messaging that support it.
+    At the moment those are rabbitmq and kafka.
+    For more details see
+    `oslo.messagind docs <https://docs.openstack.org/oslo.messaging/latest/reference/notification_listener.html>`_
