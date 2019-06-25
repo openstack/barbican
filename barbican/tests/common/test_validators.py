@@ -286,7 +286,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('mode', exception.invalid_property)
-        self.assertIn('mode',  six.text_type(exception))
+        self.assertIn('mode', six.text_type(exception))
 
     def test_should_raise_mode_is_non_string(self):
         self.secret_req['mode'] = 123

@@ -127,7 +127,7 @@ class SecretStoresTestCase(base.TestCase):
 
         stores = json_data['secret_stores']
 
-        store = stores[len(stores)-1]
+        store = stores[len(stores) - 1]
         secret_store_ref = store['secret_store_ref']
         resp = self.ss_behaviors.set_preferred_secret_store(secret_store_ref,
                                                             user_name=user)
@@ -193,7 +193,7 @@ class SecretStoresTestCase(base.TestCase):
 
         stores = json_data['secret_stores']
 
-        store = stores[len(stores)-1]
+        store = stores[len(stores) - 1]
         secret_store_ref = store['secret_store_ref']
         resp = self.ss_behaviors.set_preferred_secret_store(secret_store_ref,
                                                             user_name=user)

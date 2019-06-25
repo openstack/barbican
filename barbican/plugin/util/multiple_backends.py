@@ -64,7 +64,7 @@ def read_multiple_backends_config():
                                      'global default plugin for deployment. '
                                      'Default is False.')
                             ),
-                ]
+            ]
             conf.register_group(store_opt_group)
             conf.register_opts(store_opts, group=store_opt_group)
 
