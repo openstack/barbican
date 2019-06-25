@@ -1637,61 +1637,61 @@ class SecretsMultipleBackendTestCase(base.TestCase):
             'symmetric',
             oslo_base64.decode_as_bytes(get_default_payload()),
             get_default_data()
-            ],
+        ],
         'private_type_preferred_store': [
             admin_a,
             'private',
             keys.get_private_key_pem(),
             get_private_key_req()
-            ],
+        ],
         'public_type_preferred_store': [
             admin_a,
             'public',
             keys.get_public_key_pem(),
             get_public_key_req()
-            ],
+        ],
         'certificate_type_preferred_store': [
             admin_a,
             'certificate',
             keys.get_certificate_pem(),
             get_certificate_req()
-            ],
+        ],
         'passphrase_type_preferred_store': [
             admin_a,
             'passphrase',
             'mysecretpassphrase',
             get_passphrase_req()
-            ],
+        ],
         'symmetric_type_no_preferred_store': [
             admin_b,
             'symmetric',
             oslo_base64.decode_as_bytes(get_default_payload()),
             get_default_data()
-            ],
+        ],
         'private_type_no_preferred_store': [
             admin_b,
             'private',
             keys.get_private_key_pem(),
             get_private_key_req()
-            ],
+        ],
         'public_type_no_preferred_store': [
             admin_b,
             'public',
             keys.get_public_key_pem(),
             get_public_key_req()
-            ],
+        ],
         'certificate_type_no_preferred_store': [
             admin_b,
             'certificate',
             keys.get_certificate_pem(),
             get_certificate_req()
-            ],
+        ],
         'passphrase_type_no_preferred_store': [
             admin_b,
             'passphrase',
             b'mysecretpassphrase',
             get_passphrase_req()
-            ],
+        ],
     })
     def test_secret_create_for(self, user_name, secret_type, expected, spec):
         """Create secrets with various secret types with multiple backends."""

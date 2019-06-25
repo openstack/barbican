@@ -503,7 +503,7 @@ class PKCS11(object):
             return {
                 "iv": self.ffi.buffer(iv)[:],
                 "ct": self.ffi.buffer(ct, ct_len[0])[:]
-                }
+            }
         else:
             # HSM-generated IVs are appended to the end of the ciphertext
             return {

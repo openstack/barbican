@@ -234,7 +234,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
             length_factor = 2
 
         if (algorithm.lower() in c.PluginSupportTypes.SYMMETRIC_ALGORITHMS
-            and bit_length/length_factor
+            and bit_length / length_factor
                 in c.PluginSupportTypes.SYMMETRIC_KEY_LENGTHS):
             return True
         elif (algorithm.lower() in c.PluginSupportTypes.ASYMMETRIC_ALGORITHMS

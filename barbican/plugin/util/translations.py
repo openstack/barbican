@@ -145,12 +145,12 @@ def _convert_private_pem_to_der(pem):
         pem,
         password=None,
         backend=default_backend()
-        )
+    )
     der = private_key.private_bytes(
         encoding=serialization.Encoding.DER,
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption()
-        )
+    )
     return der
 
 
@@ -159,12 +159,12 @@ def _convert_private_der_to_pem(der):
         der,
         password=None,
         backend=default_backend()
-        )
+    )
     pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption()
-        )
+    )
     return pem
 
 
@@ -172,11 +172,11 @@ def _convert_public_pem_to_der(pem):
     public_key = serialization.load_pem_public_key(
         pem,
         backend=default_backend()
-        )
+    )
     der = public_key.public_bytes(
         encoding=serialization.Encoding.DER,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
+    )
     return der
 
 
@@ -184,11 +184,11 @@ def _convert_public_der_to_pem(der):
     public_key = serialization.load_der_public_key(
         der,
         backend=default_backend()
-        )
+    )
     pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
+    )
     return pem
 
 

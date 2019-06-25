@@ -416,19 +416,19 @@ class TestPluginsGenerateStoreAPIMultipleBackend(
             'crypto_plugins': ['simple_crypto', '', 'p11_crypto'],
             'default_store_class': store_crypto.StoreCryptoAdapterPlugin,
             'default_crypto_class': simple_crypto.SimpleCryptoPlugin
-            }],
+        }],
         "kmip": [{
             'store_plugins': ['kmip_plugin', 'store_crypto', 'store_crypto'],
             'crypto_plugins': ['', 'p11_crypto', 'simple_crypto'],
             'default_store_class': kss.KMIPSecretStore,
             'default_crypto_class': None
-            }],
+        }],
         "pkcs11": [{
             'store_plugins': ['store_crypto', 'store_crypto', 'kmip_plugin'],
             'crypto_plugins': ['p11_crypto', 'simple_crypto', ''],
             'default_store_class': store_crypto.StoreCryptoAdapterPlugin,
             'default_crypto_class': p11_crypto.P11CryptoPlugin
-            }]
+        }]
     }
 
     def setUp(self):
