@@ -342,7 +342,7 @@ returned on successful deletion.
 
 Delete operation removes existing ACL on a secret or a container if there. It
 can be treated as resetting a secret or a container to
-`Default ACL <https://developer.openstack.org/api-guide/key-manager/acls.html#default-acl>`__
+`Default ACL <https://docs.openstack.org/api-guide/key-manager/acls.html#default-acl>`__
 setting. That's why invoking delete multiple times on this resource will not
 result in error.
 
