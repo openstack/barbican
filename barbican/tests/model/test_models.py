@@ -748,5 +748,90 @@ class WhenCreatingNewProjectSecretStore(utils.BaseTestCase):
                          project_ss.to_dict_fields()['status'])
 
 
+class WhenCreatingNewSecretConsumer(utils.BaseTestCase):
+    def setUp(self):
+        super(WhenCreatingNewSecretConsumer, self).setUp()
+        self.secret_id = "12345secret"
+        self.project_id = "12345project"
+        self.service = "12345service"
+        self.resource_type = "12345resource_type"
+        self.resource_id = "12345resource_id"
+
+    def test_new_secret_consumer(self):
+        consumer = models.SecretConsumerMetadatum(
+            self.secret_id,
+            self.project_id,
+            self.service,
+            self.resource_type,
+            self.resource_id
+        )
+        self.assertEqual(self.secret_id, consumer.secret_id)
+        self.assertEqual(self.project_id, consumer.project_id)
+        self.assertEqual(self.service, consumer.service)
+        self.assertEqual(self.resource_type, consumer.resource_type)
+        self.assertEqual(self.resource_id, consumer.resource_id)
+        self.assertEqual(models.States.ACTIVE, consumer.status)
+
+    def test_to_dict_fields(self):
+        consumer = models.SecretConsumerMetadatum(
+            self.secret_id,
+            self.project_id,
+            self.service,
+            self.resource_type,
+            self.resource_id
+        )
+        fields = consumer.to_dict_fields()
+        self.assertEqual(self.service, fields["service"])
+        self.assertEqual(self.resource_type, fields["resource_type"])
+        self.assertEqual(self.resource_id, fields["resource_id"])
+
+    def test_should_raise_exception_when_missing_arguments(self):
+        self.assertRaises(
+            exception.MissingArgumentError,
+            models.SecretConsumerMetadatum,
+            None,
+            self.project_id,
+            self.service,
+            self.resource_type,
+            self.resource_id,
+        )
+        self.assertRaises(
+            exception.MissingArgumentError,
+            models.SecretConsumerMetadatum,
+            self.secret_id,
+            None,
+            self.service,
+            self.resource_type,
+            self.resource_id,
+        )
+        self.assertRaises(
+            exception.MissingArgumentError,
+            models.SecretConsumerMetadatum,
+            self.secret_id,
+            self.project_id,
+            None,
+            self.resource_type,
+            self.resource_id,
+        )
+        self.assertRaises(
+            exception.MissingArgumentError,
+            models.SecretConsumerMetadatum,
+            self.secret_id,
+            self.project_id,
+            self.service,
+            None,
+            self.resource_id,
+        )
+        self.assertRaises(
+            exception.MissingArgumentError,
+            models.SecretConsumerMetadatum,
+            self.secret_id,
+            self.project_id,
+            self.service,
+            self.resource_type,
+            None,
+        )
+
+
 if __name__ == '__main__':
     unittest.main()

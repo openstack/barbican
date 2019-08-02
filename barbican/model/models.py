@@ -316,6 +316,11 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
         backref="secret",
         cascade="all, delete-orphan")
 
+    consumers = orm.relationship(
+        "SecretConsumerMetadatum",
+        backref="secret",
+        cascade="all, delete-orphan")
+
     def __init__(self, parsed_request=None, check_exc=True):
         """Creates secret from a dict."""
         super(Secret, self).__init__()
@@ -1493,3 +1498,63 @@ class ProjectSecretStore(BASE, ModelBase):
         """Sub-class hook method: return dict of fields."""
         return {'secret_store_id': self.secret_store_id,
                 'project_id': self.project_id}
+
+
+class SecretConsumerMetadatum(BASE, SoftDeleteMixIn, ModelBase):
+    """Stores Consumer Registrations for Secrets in the datastore.
+
+    Services can register interest in Secrets. Services will provide a
+    resource type and a resource id for the object that is using the Secret.
+    """
+
+    __tablename__ = "secret_consumer_metadata"
+
+    secret_id = sa.Column(
+        sa.String(36), sa.ForeignKey("secrets.id"), index=True, nullable=False
+    )
+    project_id = sa.Column(
+        sa.String(36), sa.ForeignKey("projects.id"), index=True, nullable=True
+    )
+    service = sa.Column(sa.String(255), nullable=False)
+    resource_type = sa.Column(sa.String(255), nullable=False)
+    resource_id = sa.Column(sa.String(36), index=True, nullable=False)
+
+    __table_args__ = (
+        sa.UniqueConstraint(
+            "secret_id", "resource_id", name="_secret_consumer_resource_uc"
+        ),
+    )
+
+    def __init__(self, secret_id=None, project_id=None, service=None,
+                 resource_type=None, resource_id=None, check_exc=True):
+        """Registers a Consumer to a Secret."""
+        super(SecretConsumerMetadatum, self).__init__()
+
+        msg = u._("Must supply non-None {0} argument "
+                  "for SecretConsumerMetadatum entry.")
+
+        if secret_id is None and check_exc:
+            raise exception.MissingArgumentError(msg.format("secret_id"))
+        if project_id is None and check_exc:
+            raise exception.MissingArgumentError(msg.format("project_id"))
+        if service is None and check_exc:
+            raise exception.MissingArgumentError(msg.format("service"))
+        if resource_type is None and check_exc:
+            raise exception.MissingArgumentError(msg.format("resource_type"))
+        if resource_id is None and check_exc:
+            raise exception.MissingArgumentError(msg.format("resource_id"))
+
+        self.secret_id = secret_id
+        self.project_id = project_id
+        self.service = service
+        self.resource_type = resource_type
+        self.resource_id = resource_id
+        self.status = States.ACTIVE
+
+    def _do_extra_dict_fields(self):
+        """Sub-class hook method: return dict of fields."""
+        return {
+            "service": self.service,
+            "resource_type": self.resource_type,
+            "resource_id": self.resource_id,
+        }

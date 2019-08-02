@@ -39,6 +39,7 @@ def cleanup_unassociated_projects():
     session = repo.get_session()
     project_children_tables = [models.Order,
                                models.KEKDatum,
+                               models.SecretConsumerMetadatum,
                                models.Secret,
                                models.ContainerConsumerMetadatum,
                                models.Container,
@@ -158,6 +159,8 @@ def cleanup_all(threshold_date=None):
     total += cleanup_softdeletes(models.ContainerSecret,
                                  threshold_date=threshold_date)
 
+    total += cleanup_softdeletes(models.SecretConsumerMetadatum,
+                                 threshold_date=threshold_date)
     total += cleanup_parent_with_no_child(models.Secret, models.Order,
                                           threshold_date=threshold_date)
 
