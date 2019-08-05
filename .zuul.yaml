@@ -162,8 +162,6 @@
         - barbican-simple-crypto-devstack-functional
         - barbican-simple-crypto-devstack-functional-postgres
         - barbican-dogtag-devstack-functional-fedora-latest
-        - barbican-kmip-devstack-functional:
-            voting: false
         - barbican-vault-devstack-functional
         - barbican-grenade-devstack
         # TripleO jobs that deploy Barbican.
@@ -185,3 +183,7 @@
         - barbican-dogtag-devstack-functional-fedora-latest
         - barbican-vault-devstack-functional
         - barbican-grenade-devstack
+    experimental:
+      jobs:
+        - barbican-kmip-devstack-functional
+
