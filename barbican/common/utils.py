@@ -43,7 +43,7 @@ API_VERSION = 'v1'
 # barbican.plugin.interface.secret_store which introduces a cyclic dependency
 # if `secret_store` plugin needs to use db model classes. So moving shared
 # value to another common python module which is already imported in both.
-SECRET_TYPE_OPAQUE = "opaque"
+SECRET_TYPE_OPAQUE = "opaque"  # nosec
 
 
 def _do_allow_certain_content_types(func, content_types_list=[]):
