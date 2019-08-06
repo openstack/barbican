@@ -201,7 +201,7 @@ An attempt to call the olso.config's ``register_cli_opt()`` function after the
 configuration arguments were 'parsed' (see the comments and method in
 `the oslo.config project's cfg.py file`__ for details.
 
-__ https://github.com/openstack/oslo.config/blob/master/oslo_config/cfg.py
+__ https://opendev.org/openstack/oslo.config/src/branch/master/oslo_config/cfg.py
 
 
 How to avoid
