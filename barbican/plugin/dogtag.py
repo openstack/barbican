@@ -165,8 +165,8 @@ class DogtagKRAPlugin(sstore.SecretStoreBase):
     BIT_LENGTH = "bit_length"
     GENERATED = "generated"
     KEY_ID = "key_id"
-    SECRET_MODE = "secret_mode"
-    PASSPHRASE_KEY_ID = "passphrase_key_id"
+    SECRET_MODE = "secret_mode"  # nosec
+    PASSPHRASE_KEY_ID = "passphrase_key_id"  # nosec
     CONVERT_TO_PEM = "convert_to_pem"
 
     # string constants

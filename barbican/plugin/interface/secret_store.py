@@ -278,7 +278,7 @@ class SecretType(object):
     PRIVATE = "private"
     """Constant to define the passphrase type. Used by getSecret to retrieve a
     passphrase."""
-    PASSPHRASE = "passphrase"
+    PASSPHRASE = "passphrase"  # nosec
     """Constant to define the certificate type. Used by getSecret to retrieve a
     certificate."""
     CERTIFICATE = "certificate"

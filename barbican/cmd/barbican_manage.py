@@ -143,8 +143,8 @@ class DbCommands(object):
             commands.current(verbose, sql_url=CONF.sql_connection)
         else:
             commands.current(verbose, sql_url=str(dburl))
-
-    sync_secret_stores_description = "Sync secret_stores with barbican.conf"
+    sync_secret_stores_description = ("Sync secret_stores with "  # nosec
+                                      "barbican.conf")
 
     @args('--db-url', '-d', metavar='<db-url>', dest='dburl',
           help='barbican database URL')
