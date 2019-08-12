@@ -16,6 +16,7 @@ import textwrap
 
 import cffi
 from cryptography.hazmat.primitives import padding
+import six
 
 from barbican.common import exception
 from barbican.common import utils
@@ -386,7 +387,7 @@ class PKCS11(object):
         self._check_error(rv)
 
         # Session options
-        self.login_passphrase = login_passphrase
+        self.login_passphrase = _to_bytes(login_passphrase)
         self.rw_session = rw_session
         self.slot_id = slot_id
 
@@ -795,3 +796,10 @@ class PKCS11(object):
         if test_random == b'\x00' * 100:
             raise exception.P11CryptoPluginException(
                 u._("Apparent RNG self-test failure."))
+
+
+def _to_bytes(string):
+    if isinstance(string, six.binary_type):
+        return string
+    else:
+        return string.encode('UTF-8')
