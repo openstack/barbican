@@ -75,6 +75,7 @@ _SECRET_REPOSITORY = None
 _TRANSPORT_KEY_REPOSITORY = None
 _SECRET_STORES_REPOSITORY = None
 _PROJECT_SECRET_STORE_REPOSITORY = None
+_SECRET_CONSUMER_REPOSITORY = None
 
 
 CONF = config.CONF
@@ -2432,6 +2433,152 @@ class ProjectSecretStoreRepo(BaseRepo):
             project_id=project_id)
 
 
+class SecretConsumerRepo(BaseRepo):
+    """Repository for the SecretConsumer entity."""
+
+    def get_by_secret_id(self, secret_id,
+                         offset_arg=None, limit_arg=None,
+                         suppress_exception=False, session=None):
+        """Returns a list of SecretConsumers for a specific secret_id
+
+        The list is ordered by the date they were created at and paged
+        based on the offset and limit fields.
+        """
+
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
+
+        session = self.get_session(session)
+
+        query = session.query(models.SecretConsumerMetadatum)
+        query = query.order_by(models.SecretConsumerMetadatum.created_at)
+        query = query.filter_by(deleted=False)
+        query = query.filter(
+            models.SecretConsumerMetadatum.secret_id == secret_id
+        )
+
+        start = offset
+        end = offset + limit
+        LOG.debug('Retrieving from %s to %s', start, end)
+        total = query.count()
+        entities = query.offset(start).limit(limit).all()
+        LOG.debug('Number entities retrieved: %s out of %s',
+                  len(entities), total
+                  )
+
+        if total <= 0 and not suppress_exception:
+            _raise_no_entities_found(self._do_entity_name())
+
+        return entities, offset, limit, total
+
+    def get_by_resource_id(self, resource_id,
+                           offset_arg=None, limit_arg=None,
+                           suppress_exception=False, session=None):
+        """Returns a list of SecretConsumers for a specific resource_id
+
+        The list is ordered by the date they were created at and paged
+        based on the offset and limit fields.
+        """
+
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
+
+        session = self.get_session(session)
+
+        query = session.query(models.SecretConsumerMetadatum)
+        query = query.order_by(models.SecretConsumerMetadatum.created_at)
+        query = query.filter_by(deleted=False)
+        query = query.filter(
+            models.SecretConsumerMetadatum.resource_id == resource_id
+        )
+
+        start = offset
+        end = offset + limit
+        LOG.debug('Retrieving from %s to %s', start, end)
+        total = query.count()
+        entities = query.offset(start).limit(limit).all()
+        LOG.debug('Number entities retrieved: %s out of %s',
+                  len(entities), total
+                  )
+
+        if total <= 0 and not suppress_exception:
+            _raise_no_entities_found(self._do_entity_name())
+
+        return entities, offset, limit, total
+
+    def get_by_values(self, secret_id, resource_id, suppress_exception=False,
+                      show_deleted=False, session=None):
+        session = self.get_session(session)
+
+        try:
+            query = session.query(models.SecretConsumerMetadatum)
+            query = query.filter_by(
+                secret_id=secret_id,
+                resource_id=resource_id,
+            )
+
+            if not show_deleted:
+                query.filter_by(deleted=False)
+            consumer = query.one()
+        except sa_orm.exc.NoResultFound:
+            consumer = None
+            if not suppress_exception:
+                raise exception.NotFound(
+                    u._("Could not find {entity_name}").format(
+                        entity_name=self._do_entity_name()))
+
+        return consumer
+
+    def create_or_update_from(self, new_consumer, secret, session=None):
+        session = self.get_session(session)
+        try:
+            secret.updated_at = timeutils.utcnow()
+            secret.consumers.append(new_consumer)
+            secret.save(session=session)
+        except db_exc.DBDuplicateEntry:
+            session.rollback()  # We know consumer already exists.
+
+            # This operation is idempotent, so log this and move on
+            LOG.debug(
+                "Consumer with resource_id %s already exists for secret %s...",
+                new_consumer.resource_id, new_consumer.secret_id
+            )
+            # Get the existing entry and reuse it by clearing the deleted flags
+            existing_consumer = self.get_by_values(
+                new_consumer.secret_id,
+                new_consumer.resource_id,
+                show_deleted=True
+            )
+            existing_consumer.deleted = False
+            existing_consumer.deleted_at = None
+            # We are not concerned about timing here -- set only, no reads
+            existing_consumer.save()
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "SecretConsumer"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+        query = session.query(models.SecretConsumerMetadatum)
+        return query.filter_by(id=entity_id, deleted=False)
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+    def _build_get_project_entities_query(self, project_id, session):
+        """Builds query for retrieving consumers associated with given project
+
+        :param project_id: id of barbican project entity
+        :param session: existing db session reference.
+        """
+        query = session.query(
+            models.SecretConsumerMetadatum).filter_by(deleted=False)
+        query = query.filter(
+            models.SecretConsumerMetadatum.project_id == project_id)
+
+        return query
+
+
 def get_ca_repository():
     """Returns a singleton Secret repository instance."""
     global _CA_REPOSITORY
@@ -2583,6 +2730,13 @@ def get_project_secret_store_repository():
     global _PROJECT_SECRET_STORE_REPOSITORY
     return _get_repository(_PROJECT_SECRET_STORE_REPOSITORY,
                            ProjectSecretStoreRepo)
+
+
+def get_secret_consumer_repository():
+    """Returns a singleton Secret Consumer repository instance."""
+    global _SECRET_CONSUMER_REPOSITORY
+    return _get_repository(_SECRET_CONSUMER_REPOSITORY,
+                           SecretConsumerRepo)
 
 
 def _get_repository(global_ref, repo_class):

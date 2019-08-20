@@ -196,6 +196,21 @@ def create_container_consumer_meta(container=None, parsed_request=None,
     return container_consumer_meta
 
 
+def create_secret_consumer(secret=None, service="service",
+                           resource_id="resource_id",
+                           resource_type="resource_type", session=None):
+    consumer = models.SecretConsumerMetadatum(
+        secret_id=secret.id,
+        project_id=secret.project_id,
+        service=service,
+        resource_type=resource_type,
+        resource_id=resource_id,
+    )
+    repo = repositories.get_secret_consumer_repository()
+    repo.create_from(consumer, session=session)
+    return consumer
+
+
 def create_certificate_authority(project=None, parsed_ca_in=None,
                                  session=None):
     if not parsed_ca_in:
