@@ -28,6 +28,7 @@ from barbican.objects import project_quotas
 from barbican.objects import project_secret_store
 from barbican.objects import secret
 from barbican.objects import secret_acl
+from barbican.objects import secret_consumer_metadatum
 from barbican.objects import secret_store_metadatum
 from barbican.objects import secret_stores
 from barbican.objects import secret_user_metadatum
@@ -54,6 +55,7 @@ SecretACL = secret_acl.SecretACL
 SecretStores = secret_stores.SecretStores
 SecretUserMetadatum = secret_user_metadatum.SecretUserMetadatum
 SecretStoreMetadatum = secret_store_metadatum.SecretStoreMetadatum
+SecretConsumerMetadatum = secret_consumer_metadatum.SecretConsumerMetadatum
 
 __all__ = (
     States,
@@ -76,5 +78,6 @@ __all__ = (
     SecretStores,
     SecretUserMetadatum,
     SecretStoreMetadatum,
+    SecretConsumerMetadatum,
     TransportKey,
 )
