@@ -67,7 +67,18 @@ function is_barbican-keystone-listener_enabled {
 # cleanup_barbican - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
 function cleanup_barbican {
-    :
+    if is_service_enabled barbican-vault; then
+        # Kill the vault process, screen session and remove the generated files
+        # during installation.
+        local session_name="barbican_vault"
+        local vault_token_file="${BARBICAN_DIR}/vault_root_token_id"
+        existing_ses=$(screen -ls | grep ${session_name} | awk '{print $1}')
+        if [[ -n "${existing_ses}" ]]; then
+            screen -S ${existing_ses} -X quit
+        fi
+        sudo pkill -f -9 "vault server"
+        sudo rm -f ${vault_token_file} vault.log
+    fi
 }
 
 # configure_barbicanclient - Set config files, create data dirs, etc
@@ -561,16 +572,29 @@ function install_dogtag_components {
 # ----------------
 
 function install_vault {
-    wget https://releases.hashicorp.com/vault/0.10.3/vault_0.10.3_linux_amd64.zip
-    unzip vault_0.10.3_linux_amd64.zip
-    sudo mv vault /usr/bin
+    # Install vault if needed
+    if [[ ! -x "$(command -v vault)" ]]; then
+        wget https://releases.hashicorp.com/vault/1.3.0/vault_1.3.0_linux_amd64.zip
+        unzip vault_1.3.0_linux_amd64.zip
+        sudo mv vault /usr/bin
+    fi
+
     install_package screen
-    screen -d -m bash -c "vault server -dev -dev-listen-address=${HOST_IP}:8200 2>&1 >vault.log"
+    TOKEN_ID_FILE="${BARBICAN_DIR}/vault_root_token_id"
+    local session_name="barbican_vault"
+
+    # Clean up first before starting new screen session
+    existing_ses=$(screen -ls | grep ${session_name} | awk '{print $1}')
+    if [[ -n "${existing_ses}" ]]; then
+        screen -S ${existing_ses} -X quit
+    fi
+    rm -f ${TOKEN_ID_FILE} vault.log
+
+    screen -dmS ${session_name}
+    screen -S ${session_name} -p bash -X stuff 'vault server -dev 2>&1 >vault.log\n'
 
     # get the root_token_id, use tempfile for counter
-    TOKEN_ID_FILE="${BARBICAN_DIR}/vault_root_token_id"
     touch $TOKEN_ID_FILE
-
     COUNTER=0
 
     while [ ! -s $TOKEN_ID_FILE ] && [ "$COUNTER" -lt "20" ]
@@ -584,7 +608,7 @@ function install_vault {
         echo "Wah! Need to throw an error code here!"
     fi
 
-    export VAULT_ADDR="http://${HOST_IP}:8200"
+    export VAULT_ADDR="http://127.0.0.1:8200"
 
     # Enable kv version 1
     vault secrets disable secret/
@@ -602,7 +626,7 @@ function configure_vault_plugin {
     root_token_id=`cat ${BARBICAN_DIR}/vault_root_token_id`
     iniset $BARBICAN_CONF secretstore enabled_secretstore_plugins vault_plugin
     iniset $BARBICAN_CONF vault_plugin root_token_id $root_token_id
-    iniset $BARBICAN_CONF vault_plugin vault_url "http://${HOST_IP}:8200"
+    iniset $BARBICAN_CONF vault_plugin vault_url "http://127.0.0.1:8200"
     iniset $BARBICAN_CONF vault_plugin use_ssl "false"
 }
 
