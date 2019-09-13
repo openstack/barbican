@@ -1,7 +1,5 @@
 - job:
     name: barbican-devstack-functional-base
-    # start running with Pike
-    branches: ^(?!stable/ocata).*$
     parent: legacy-dsvm-base
     vars:
       database: sql
@@ -148,8 +146,6 @@
 - job:
     name: grenade-devstack-barbican
     parent: legacy-dsvm-base
-    # Start testing with pike
-    branches: ^(?!stable/ocata).*$
     irrelevant-files:
       - ^(test-|)requirements.txt$
       - ^setup.cfg$
