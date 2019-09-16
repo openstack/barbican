@@ -120,6 +120,11 @@
     parent: barbican-devstack-tempest-base
 
 - job:
+    name: barbican-simple-crypto-devstack-tempest-ipv6-only
+    parent: barbican-simple-crypto-devstack-tempest
+    run: playbooks/legacy/barbican-devstack-tempest-base/run-ipv6.yaml
+
+- job:
     name: barbican-simple-crypto-devstack-tempest-castellan-from-git
     parent: barbican-devstack-tempest-base
     vars:
@@ -166,6 +171,7 @@
         - barbican-dogtag-devstack-functional-fedora-latest
         - barbican-vault-devstack-functional
         - barbican-grenade-devstack
+        - barbican-simple-crypto-devstack-tempest-ipv6-only
         # TripleO jobs that deploy Barbican.
         # Note we don't use a project-template here, so it's easier
         # to disable voting on one specific job if things go wrong.
@@ -186,6 +192,7 @@
         #- barbican-dogtag-devstack-functional-fedora-latest
         - barbican-vault-devstack-functional
         - barbican-grenade-devstack
+        - barbican-simple-crypto-devstack-tempest-ipv6-only
     experimental:
       jobs:
         - barbican-kmip-devstack-functional
