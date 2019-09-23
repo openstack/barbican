@@ -21,12 +21,12 @@ Installing system dependencies
     # Install dependency build requirements
     sudo apt-get install libffi-dev libssl-dev python-dev gcc
 
-**Fedora 23:**
+**Fedora 30:**
 
 .. code-block:: bash
 
     # Install development tools
-    sudo dnf install git python-tox
+    sudo dnf install git python3-tox
 
     # Install dependency build requirements
     sudo dnf install gcc libffi-devel openssl-devel redhat-rpm-config
@@ -72,6 +72,9 @@ source code assume that you'll be using ``/etc/barbican/`` for configuration and
    sudo chown $(whoami) /etc/barbican
    sudo chown $(whoami) /var/lib/barbican
    cp -r etc/barbican /etc
+   tox -e genconfig
+   cp etc/osloconfig-generator/barbican.conf /etc/barbican/barbican.conf
+   sed -i 's/\/v1: barbican-api-keystone/\/v1: barbican_api/' /etc/barbican/barbican-api-paste.ini
 
 All the locations are configurable, so you don't have to use ``/etc`` and
 ``/var/lib`` in your development machine if you don't want to.
