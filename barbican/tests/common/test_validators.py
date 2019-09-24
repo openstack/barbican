@@ -1972,5 +1972,84 @@ class WhenTestingSecretMetadatumValidator(utils.BaseTestCase):
                       "'SecretMetadatum'",
                       six.text_type(exception))
 
+
+class WhenTestingSecretConsumerValidator(utils.BaseTestCase):
+
+    def setUp(self):
+        super(WhenTestingSecretConsumerValidator, self).setUp()
+
+        self.service = "service"
+        self.resource_type = "resource_type"
+        self.resource_id = "resource_id"
+        self.consumer_req = {
+            "service": self.service,
+            "resource_type": self.resource_type,
+            "resource_id": self.resource_id,
+        }
+        self.validator = validators.SecretConsumerValidator()
+
+    def test_should_raise_with_invalid_json_data_type(self):
+        self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            []
+        )
+
+    def test_should_raise_with_missing_service(self):
+        self.consumer_req.pop("service")
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.consumer_req
+        )
+
+        self.assertIn('\'service\'', exception.args[0])
+
+    def test_should_raise_with_missing_resource_type(self):
+        self.consumer_req.pop("resource_type")
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.consumer_req
+        )
+
+        self.assertIn('\'resource_type\'', exception.args[0])
+
+    def test_should_raise_with_missing_resource_id(self):
+        self.consumer_req.pop("resource_id")
+        exception = self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.consumer_req
+        )
+
+        self.assertIn('\'resource_id\'', exception.args[0])
+
+    def test_should_validate_all_fields(self):
+        self.validator.validate(self.consumer_req)
+
+    def test_service_too_long_should_raise_with_invalid_object(self):
+        # Negative test to make sure our maxLength parameter for the
+        # service field raises the proper exception when a value greater
+        # than 255 in this case is passed in.
+        self.consumer_req["service"] = 'a' * 256
+        self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.consumer_req
+        )
+
+    def test_resource_type_too_long_should_raise_with_invalid_object(self):
+        # Negative test to make sure our maxLength parameter for the
+        # service field raises the proper exception when a value greater
+        # than 255 in this case is passed in.
+        self.consumer_req["resource_type"] = 'a' * 256
+        self.assertRaises(
+            excep.InvalidObject,
+            self.validator.validate,
+            self.consumer_req
+        )
+
+
 if __name__ == '__main__':
     unittest.main()
