@@ -141,6 +141,20 @@ class MockModelRepositoryMixin(object):
             mock_repo_obj=mock_container_consumer_repo,
             patcher_obj=self.mock_container_consumer_repo_patcher)
 
+    def setup_secret_consumer_repository_mock(
+            self, mock_secret_consumer_repo=mock.MagicMock()):
+        """Mocks the secret consumer repository factory function
+
+        :param mock_secret_consumer_repo: The pre-configured mock
+                                          secret consumer repo to be
+                                          returned.
+        """
+        self.mock_secret_consumer_repo_patcher = None
+        self._setup_repository_mock(
+            repo_factory='get_secret_consumer_repository',
+            mock_repo_obj=mock_secret_consumer_repo,
+            patcher_obj=self.mock_secret_consumer_repo_patcher)
+
     def setup_container_repository_mock(self,
                                         mock_container_repo=mock.MagicMock()):
         """Mocks the container repository factory function

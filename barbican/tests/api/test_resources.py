@@ -52,14 +52,17 @@ def get_barbican_env(external_project_id):
 
 
 def create_secret(id_ref="id", name="name",
-                  algorithm=None, bit_length=None,
-                  mode=None, encrypted_datum=None, content_type=None):
+                  algorithm=None, bit_length=None, mode=None,
+                  encrypted_datum=None, content_type=None, project_id=None):
     """Generate a Secret entity instance."""
-    info = {'id': id_ref,
-            'name': name,
-            'algorithm': algorithm,
-            'bit_length': bit_length,
-            'mode': mode}
+    info = {
+        'id': id_ref,
+        'name': name,
+        'algorithm': algorithm,
+        'bit_length': bit_length,
+        'mode': mode,
+        'project_id': project_id,
+    }
     secret = models.Secret(info)
     secret.id = id_ref
     if encrypted_datum:
@@ -109,7 +112,7 @@ def create_container(id_ref, project_id=None, external_project_id=None):
     return container
 
 
-def create_consumer(container_id, project_id, id_ref):
+def create_container_consumer(container_id, project_id, id_ref):
     """Generate a ContainerConsumerMetadatum entity instance."""
     data = {
         'name': 'test name',
@@ -118,6 +121,19 @@ def create_consumer(container_id, project_id, id_ref):
     consumer = models.ContainerConsumerMetadatum(container_id,
                                                  project_id,
                                                  data)
+    consumer.id = id_ref
+    return consumer
+
+
+def create_secret_consumer(secret_id, project_id, id_ref):
+    """Generate a SecretConsumerMetadatum entity instance."""
+    consumer = models.SecretConsumerMetadatum(
+        secret_id,
+        project_id,
+        "service",
+        "resource_type",
+        "resource_id",
+    )
     consumer.id = id_ref
     return consumer
 
@@ -719,10 +735,10 @@ class TestingJsonSanitization(utils.BaseTestCase):
                          .endswith(' '), "whitespace should be gone")
 
 
-class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
+class WhenCreatingContainerConsumersUsingResource(FunctionalTest):
     def setUp(self):
         super(
-            WhenCreatingConsumersUsingConsumersResource, self
+            WhenCreatingContainerConsumersUsingResource, self
         ).setUp()
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
@@ -832,11 +848,11 @@ class WhenCreatingConsumersUsingConsumersResource(FunctionalTest):
         self.assertEqual(404, resp.status_int)
 
 
-class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
+class WhenGettingOrDeletingContainerConsumersUsingResource(FunctionalTest):
 
     def setUp(self):
         super(
-            WhenGettingOrDeletingConsumersUsingConsumerResource, self
+            WhenGettingOrDeletingContainerConsumersUsingResource, self
         ).setUp()
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
@@ -871,10 +887,10 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
             external_project_id=self.external_project_id)
 
         # Set up mocked consumers
-        self.consumer = create_consumer(
+        self.consumer = create_container_consumer(
             self.container.id, self.project_internal_id,
             id_ref=utils.generate_test_valid_uuid())
-        self.consumer2 = create_consumer(
+        self.consumer2 = create_container_consumer(
             self.container.id, self.project_internal_id,
             id_ref=utils.generate_test_valid_uuid())
 
@@ -1019,10 +1035,10 @@ class WhenGettingOrDeletingConsumersUsingConsumerResource(FunctionalTest):
         )
 
 
-class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
+class WhenPerformingUnallowedOperationsOnContainerConsumers(FunctionalTest):
     def setUp(self):
         super(
-            WhenPerformingUnallowedOperationsOnConsumers, self
+            WhenPerformingUnallowedOperationsOnContainerConsumers, self
         ).setUp()
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
@@ -1078,10 +1094,10 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
             external_project_id=self.external_project_id)
 
         # Set up mocked container consumers
-        self.consumer = create_consumer(
+        self.consumer = create_container_consumer(
             self.container.id, self.project_internal_id,
             id_ref=utils.generate_test_valid_uuid())
-        self.consumer2 = create_consumer(
+        self.consumer2 = create_container_consumer(
             self.container.id, self.project_internal_id,
             id_ref=utils.generate_test_valid_uuid())
 
@@ -1145,11 +1161,11 @@ class WhenPerformingUnallowedOperationsOnConsumers(FunctionalTest):
         self.assertEqual(405, resp.status_int)
 
 
-class WhenOwnershipMismatch(FunctionalTest):
+class WhenOwnershipMismatchForContainerConsumer(FunctionalTest):
 
     def setUp(self):
         super(
-            WhenOwnershipMismatch, self
+            WhenOwnershipMismatchForContainerConsumer, self
         ).setUp()
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
@@ -1183,12 +1199,12 @@ class WhenOwnershipMismatch(FunctionalTest):
             external_project_id='differentProjectId')
 
         # Set up mocked consumers
-        self.consumer = create_consumer(self.container.id,
-                                        self.project_internal_id,
-                                        id_ref='id2')
-        self.consumer2 = create_consumer(self.container.id,
-                                         self.project_internal_id,
-                                         id_ref='id3')
+        self.consumer = create_container_consumer(self.container.id,
+                                                  self.project_internal_id,
+                                                  id_ref='id2')
+        self.consumer2 = create_container_consumer(self.container.id,
+                                                   self.project_internal_id,
+                                                   id_ref='id3')
 
         self.consumer_ref = {
             'name': self.consumer.name,
@@ -1213,5 +1229,464 @@ class WhenOwnershipMismatch(FunctionalTest):
     def test_consumer_check_ownership_mismatch(self):
         resp = self.app.delete_json(
             '/containers/{0}/consumers/'.format(self.container.id),
+            self.consumer_ref, expect_errors=True)
+        self.assertEqual(403, resp.status_int)
+
+
+class WhenCreatingSecretConsumersUsingResource(FunctionalTest):
+    def setUp(self):
+        super(
+            WhenCreatingSecretConsumersUsingResource, self
+        ).setUp()
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
+
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            secrets = controllers.secrets.SecretsController()
+
+        return RootController()
+
+    def _init(self):
+        self.external_project_id = 'keystoneid1234'
+        self.project_internal_id = 'projectid1234'
+
+        # Set up mocked project
+        self.project = models.Project()
+        self.project.id = self.project_internal_id
+        self.project.external_id = self.external_project_id
+
+        # Set up mocked secret
+        self.secret = models.Secret()
+        self.secret.id = utils.generate_test_valid_uuid()
+        self.secret.project = self.project
+        self.secret.project_id = self.project_internal_id
+
+        # Set up consumer ref
+        self.consumer_ref = {
+            "service": "service",
+            "resource_type": "resource_type",
+            "resource_id": "resource_id",
+        }
+
+        # Set up mocked project repo
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
+        self.setup_project_repository_mock(self.project_repo)
+
+        # Set up mocked quota enforcer
+        self.quota_patch = mock.patch(
+            'barbican.common.quota.QuotaEnforcer.enforce', return_value=None)
+        self.quota_patch.start()
+        self.addCleanup(self.quota_patch.stop)
+
+        # Set up mocked secret repo
+        self.secret_repo = mock.MagicMock()
+        self.secret_repo.get_secret_by_id.return_value = self.secret
+        self.setup_secret_repository_mock(self.secret_repo)
+
+        # Set up mocked secret meta repo
+        self.secret_meta_repo = mock.MagicMock()
+        self.secret_meta_repo.get_metadata_for_secret.return_value = None
+        self.setup_secret_meta_repository_mock(self.secret_meta_repo)
+
+        # Set up mocked secret consumer repo
+        self.consumer_repo = mock.MagicMock()
+        self.consumer_repo.create_from.return_value = None
+        self.setup_secret_consumer_repository_mock(self.consumer_repo)
+
+    def test_should_add_new_consumer(self):
+        resp = self.app.post_json(
+            '/secrets/{0}/consumers/'.format(self.secret.id),
+            self.consumer_ref
+        )
+        self.assertEqual(200, resp.status_int)
+        self.assertNotIn(self.external_project_id, resp.headers['Location'])
+
+        args, kwargs = self.consumer_repo.create_or_update_from.call_args
+        consumer = args[0]
+        self.assertIsInstance(consumer, models.SecretConsumerMetadatum)
+
+    def test_should_fail_consumer_bad_json(self):
+        resp = self.app.post(
+            '/secrets/{0}/consumers/'.format(self.secret.id),
+            '',
+            expect_errors=True
+        )
+        self.assertEqual(415, resp.status_int)
+
+    def test_should_404_when_secret_ref_doesnt_exist(self):
+        self.secret_repo.get_secret_by_id.return_value = None
+        resp = self.app.post_json(
+            '/secrets/{0}/consumers/'.format('bad_id'),
+            self.consumer_ref, expect_errors=True
+        )
+        self.assertEqual(404, resp.status_int)
+
+
+class WhenGettingOrDeletingSecretConsumersUsingResource(FunctionalTest):
+
+    def setUp(self):
+        super(
+            WhenGettingOrDeletingSecretConsumersUsingResource, self
+        ).setUp()
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
+
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            secrets = controllers.secrets.SecretsController()
+
+        return RootController()
+
+    def _init(self):
+        self.external_project_id = 'keystoneid1234'
+        self.project_internal_id = 'projectid1234'
+
+        # Set up mocked project
+        self.project = models.Project()
+        self.project.id = self.project_internal_id
+        self.project.external_id = self.external_project_id
+
+        # Set up mocked secret
+        self.secret = models.Secret()
+        self.secret.id = utils.generate_test_valid_uuid()
+        self.secret.project = self.project
+        self.secret.project_id = self.project_internal_id
+
+        # Set up mocked consumers
+        self.consumer = create_secret_consumer(
+            self.secret.id, self.project_internal_id,
+            id_ref=utils.generate_test_valid_uuid())
+        self.consumer2 = create_secret_consumer(
+            self.secret.id, self.project_internal_id,
+            id_ref=utils.generate_test_valid_uuid())
+
+        self.consumer_ref = {
+            "service": self.consumer.service,
+            "resource_type": self.consumer.resource_type,
+            "resource_id": self.consumer.resource_type,
+        }
+
+        # Set up mocked project repo
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
+        self.setup_project_repository_mock(self.project_repo)
+
+        # Set up mocked secret repo
+        self.secret_repo = mock.MagicMock()
+        self.secret_repo.get_secret_by_id.return_value = self.secret
+        self.setup_secret_repository_mock(self.secret_repo)
+
+        # Set up mocked secret meta repo
+        self.secret_meta_repo = mock.MagicMock()
+        self.secret_meta_repo.get_metadata_for_secret.return_value = None
+        self.setup_secret_meta_repository_mock(self.secret_meta_repo)
+
+        # Set up mocked secret consumer repo
+        self.consumer_repo = mock.MagicMock()
+        self.consumer_repo.get_by_values.return_value = self.consumer
+        self.consumer_repo.delete_entity_by_id.return_value = None
+        self.setup_secret_consumer_repository_mock(self.consumer_repo)
+
+    def test_should_get_consumer(self):
+        ret_val = ([self.consumer], 0, 0, 1)
+        self.consumer_repo.get_by_secret_id.return_value = ret_val
+
+        resp = self.app.get('/secrets/{0}/consumers/'.format(
+            self.secret.id
+        ))
+        self.assertEqual(200, resp.status_int)
+
+        self.consumer_repo.get_by_secret_id.assert_called_once_with(
+            self.secret.id,
+            limit_arg=None,
+            offset_arg=0,
+            suppress_exception=True
+        )
+
+        self.assertEqual(
+            self.consumer.service,
+            resp.json["consumers"][0]["service"],
+        )
+        self.assertEqual(
+            self.consumer.resource_type,
+            resp.json["consumers"][0]["resource_type"]
+        )
+        self.assertEqual(
+            self.consumer.resource_id,
+            resp.json["consumers"][0]["resource_id"]
+        )
+
+    def test_should_404_when_secret_ref_doesnt_exist(self):
+        self.secret_repo.get_secret_by_id.return_value = None
+        resp = self.app.get('/secrets/{0}/consumers/'.format(
+            'bad_id'
+        ), expect_errors=True)
+        self.assertEqual(404, resp.status_int)
+
+    def test_should_get_consumer_by_id(self):
+        self.consumer_repo.get.return_value = self.consumer
+        resp = self.app.get('/secrets/{0}/consumers/{1}/'.format(
+            self.secret.id, self.consumer.id
+        ))
+        self.assertEqual(200, resp.status_int)
+
+    def test_should_404_with_bad_consumer_id(self):
+        self.consumer_repo.get.return_value = None
+        resp = self.app.get('/secrets/{0}/consumers/{1}/'.format(
+            self.secret.id, 'bad_id'
+        ), expect_errors=True)
+        self.assertEqual(404, resp.status_int)
+
+    def test_should_get_no_consumers(self):
+        self.consumer_repo.get_by_secret_id.return_value = ([], 0, 0, 0)
+        resp = self.app.get('/secrets/{0}/consumers/'.format(
+            self.secret.id
+        ))
+        self.assertEqual(200, resp.status_int)
+
+    def test_should_delete_consumer(self):
+        self.app.delete_json('/secrets/{0}/consumers/'.format(
+            self.secret.id
+        ), self.consumer_ref)
+
+        self.consumer_repo.delete_entity_by_id.assert_called_once_with(
+            self.consumer.id, self.external_project_id)
+
+    def test_should_fail_deleting_consumer_bad_json(self):
+        resp = self.app.delete(
+            '/secrets/{0}/consumers/'.format(self.secret.id),
+            '',
+            expect_errors=True
+        )
+        self.assertEqual(415, resp.status_int)
+
+    def test_should_404_on_delete_when_consumer_not_found(self):
+        old_return = self.consumer_repo.get_by_values.return_value
+        self.consumer_repo.get_by_values.return_value = None
+        resp = self.app.delete_json('/secrets/{0}/consumers/'.format(
+            self.secret.id
+        ), self.consumer_ref, expect_errors=True)
+        self.consumer_repo.get_by_values.return_value = old_return
+        self.assertEqual(404, resp.status_int)
+        # Error response should have json content type
+        self.assertEqual("application/json", resp.content_type)
+
+    def test_should_404_on_delete_when_consumer_not_found_later(self):
+        self.consumer_repo.delete_entity_by_id.side_effect = excep.NotFound()
+        resp = self.app.delete_json('/secrets/{0}/consumers/'.format(
+            self.secret.id
+        ), self.consumer_ref, expect_errors=True)
+        self.consumer_repo.delete_entity_by_id.side_effect = None
+        self.assertEqual(404, resp.status_int)
+        # Error response should have json content type
+        self.assertEqual("application/json", resp.content_type)
+
+    def test_should_delete_consumers_on_secret_delete(self):
+        consumers = [self.consumer, self.consumer2]
+        ret_val = (consumers, 0, 0, 1)
+        self.consumer_repo.get_by_secret_id.return_value = ret_val
+
+        resp = self.app.delete(
+            '/secrets/{0}/'.format(self.secret.id)
+        )
+        self.assertEqual(204, resp.status_int)
+
+        # Verify consumers were deleted
+        calls = []
+        for consumer in consumers:
+            calls.append(mock.call(consumer.id, self.external_project_id))
+        self.consumer_repo.delete_entity_by_id.assert_has_calls(
+            calls, any_order=True
+        )
+
+    def test_should_pass_on_secret_delete_with_missing_consumers(self):
+        consumers = [self.consumer, self.consumer2]
+        ret_val = (consumers, 0, 0, 1)
+        self.consumer_repo.get_by_secret_id.return_value = ret_val
+        self.consumer_repo.delete_entity_by_id.side_effect = excep.NotFound
+
+        resp = self.app.delete(
+            '/secrets/{0}/'.format(self.secret.id)
+        )
+        self.assertEqual(204, resp.status_int)
+
+        # Verify consumers were deleted
+        calls = []
+        for consumer in consumers:
+            calls.append(mock.call(consumer.id, self.external_project_id))
+        self.consumer_repo.delete_entity_by_id.assert_has_calls(
+            calls, any_order=True
+        )
+
+
+class WhenPerformingUnallowedOperationsOnSecretConsumers(FunctionalTest):
+    def setUp(self):
+        super(
+            WhenPerformingUnallowedOperationsOnSecretConsumers, self
+        ).setUp()
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
+
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            secrets = controllers.secrets.SecretsController()
+
+        return RootController()
+
+    def _init(self):
+        self.external_project_id = 'keystoneid1234'
+        self.project_internal_id = 'projectid1234'
+
+        # Set up mocked project
+        self.project = models.Project()
+        self.project.id = self.project_internal_id
+        self.project.external_id = self.external_project_id
+
+        # Set up mocked secret
+        self.secret = models.Secret()
+        self.secret.id = utils.generate_test_valid_uuid()
+        self.secret.project_id = self.project_internal_id
+
+        # Set up mocked secret consumers
+        self.consumer = create_secret_consumer(
+            self.secret.id, self.project_internal_id,
+            id_ref=utils.generate_test_valid_uuid())
+        self.consumer_ref = {
+            "service": self.consumer.service,
+            "resource_type": self.consumer.resource_type,
+            "resource_id": self.consumer.resource_type,
+        }
+
+        # Set up mocked project repo
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
+        self.setup_project_repository_mock(self.project_repo)
+
+        # Set up secret repo
+        self.secret_repo = mock.MagicMock()
+        self.secret_repo.get_secret_by_id.return_value = self.secret
+        self.setup_secret_repository_mock(self.secret_repo)
+
+        # Set up secret consumer repo
+        self.consumer_repo = mock.MagicMock()
+        self.consumer_repo.get_by_values.return_value = self.consumer
+        self.consumer_repo.delete_entity_by_id.return_value = None
+        self.setup_secret_consumer_repository_mock(self.consumer_repo)
+
+    def test_should_not_allow_put_on_consumers(self):
+        ret_val = ([self.consumer], 0, 0, 1)
+        self.consumer_repo.get_by_secret_id.return_value = ret_val
+
+        resp = self.app.put_json(
+            '/secrets/{0}/consumers/'.format(self.secret.id),
+            self.consumer_ref,
+            expect_errors=True
+        )
+        self.assertEqual(405, resp.status_int)
+
+    def test_should_not_allow_post_on_consumer_by_id(self):
+        self.consumer_repo.get.return_value = self.consumer
+        resp = self.app.post_json(
+            '/secrets/{0}/consumers/{1}/'.format(self.secret.id,
+                                                 self.consumer.id),
+            self.consumer_ref,
+            expect_errors=True
+        )
+        self.assertEqual(405, resp.status_int)
+
+    def test_should_not_allow_put_on_consumer_by_id(self):
+        self.consumer_repo.get.return_value = self.consumer
+        resp = self.app.put_json(
+            '/secrets/{0}/consumers/{1}/'.format(self.secret.id,
+                                                 self.consumer.id),
+            self.consumer_ref,
+            expect_errors=True
+        )
+        self.assertEqual(405, resp.status_int)
+
+    def test_should_not_allow_delete_on_consumer_by_id(self):
+        self.consumer_repo.get.return_value = self.consumer
+        resp = self.app.delete(
+            '/secrets/{0}/consumers/{1}/'.format(self.secret.id,
+                                                 self.consumer.id),
+            expect_errors=True
+        )
+        self.assertEqual(405, resp.status_int)
+
+
+class WhenOwnershipMismatchForSecretConsumer(FunctionalTest):
+
+    def setUp(self):
+        super(
+            WhenOwnershipMismatchForSecretConsumer, self
+        ).setUp()
+        self.app = webtest.TestApp(app.build_wsgi_app(self.root))
+        self.app.extra_environ = get_barbican_env(self.external_project_id)
+
+    @property
+    def root(self):
+        self._init()
+
+        class RootController(object):
+            secrets = controllers.secrets.SecretsController()
+        return RootController()
+
+    def _init(self):
+        self.external_project_id = 'keystoneid1234'
+        self.project_internal_id = 'projectid1234'
+
+        # Set up mocked project
+        self.project = models.Project()
+        self.project.id = self.project_internal_id
+        self.project.external_id = self.external_project_id
+
+        # Set up mocked secret
+        self.secret = models.Secret()
+        self.secret.id = utils.generate_test_valid_uuid()
+        self.secret.project = models.Project()
+        self.secret.project.external_id = "differentProjectId"
+
+        # Set up mocked consumer
+        self.consumer = create_secret_consumer(self.secret.id,
+                                               self.project_internal_id,
+                                               id_ref='consumerid1234')
+
+        self.consumer_ref = {
+            "service": self.consumer.service,
+            "resource_type": self.consumer.resource_type,
+            "resource_id": self.consumer.resource_type,
+        }
+
+        # Set up mocked project repo
+        self.project_repo = mock.MagicMock()
+        self.project_repo.get.return_value = self.project
+        self.setup_project_repository_mock(self.project_repo)
+
+        # Set up mocked secret repo
+        self.secret_repo = mock.MagicMock()
+        self.secret_repo.get.return_value = self.secret
+        self.secret_repo.get_secret_by_id.return_value = self.secret
+        self.setup_secret_repository_mock(self.secret_repo)
+
+        # Set up mocked secret consumer repo
+        self.consumer_repo = mock.MagicMock()
+        self.consumer_repo.get_by_values.return_value = self.consumer
+        self.consumer_repo.delete_entity_by_id.return_value = None
+        self.setup_secret_consumer_repository_mock(self.consumer_repo)
+
+    def test_consumer_check_ownership_mismatch(self):
+        resp = self.app.delete_json(
+            '/secrets/{0}/consumers/'.format(self.secret.id),
             self.consumer_ref, expect_errors=True)
         self.assertEqual(403, resp.status_int)

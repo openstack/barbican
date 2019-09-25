@@ -116,6 +116,14 @@ class PreferredSecretStoreResource(TestableResource):
     controller_cls = secretstores.PreferredSecretStoreController
 
 
+class SecretConsumersResource(TestableResource):
+    controller_cls = consumers.SecretConsumersController
+
+
+class SecretConsumerResource(TestableResource):
+    controller_cls = consumers.SecretConsumerController
+
+
 class BaseTestCase(utils.BaseTestCase, utils.MockModelRepositoryMixin):
 
     def setUp(self):
@@ -1275,3 +1283,99 @@ class WhenTestingPreferredSecretStoreResource(BaseTestCase):
 
     def _invoke_on_post(self):
         self.resource.on_post(self.req, self.resp)
+
+
+class WhenTestingSecretConsumersResource(BaseTestCase):
+    """RBAC tests for barbican.api.resources.SecretConsumersResource"""
+    def setUp(self):
+        super(WhenTestingSecretConsumersResource, self).setUp()
+
+        self.external_project_id = '12345project'
+        self.secret_id = '12345secret'
+
+        # Force an error on GET calls that pass RBAC, as we are not testing
+        #   such flows in this test module.
+        self.consumer_repo = mock.MagicMock()
+        get_by_secret_id = mock.MagicMock(return_value=None,
+                                          side_effect=self
+                                          ._generate_get_error())
+        self.consumer_repo.get_by_secret_id = get_by_secret_id
+
+        self.setup_project_repository_mock()
+        self.setup_secret_consumer_repository_mock(self.consumer_repo)
+        self.setup_secret_repository_mock()
+
+        self.resource = SecretConsumersResource(secret_id=self.secret_id)
+
+    def test_rules_should_be_loaded(self):
+        self.assertIsNotNone(self.policy_enforcer.rules)
+
+    def test_should_pass_create_consumer(self):
+        self._assert_pass_rbac(['admin'], self._invoke_on_post,
+                               content_type='application/json')
+
+    def test_should_raise_create_consumer(self):
+        self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
+                               self._invoke_on_post,
+                               content_type='application/json')
+
+    def test_should_pass_delete_consumer(self):
+        self._assert_pass_rbac(['admin'], self._invoke_on_delete,
+                               content_type='application/json')
+
+    def test_should_raise_delete_consumer(self):
+        self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
+                               self._invoke_on_delete)
+
+    def test_should_pass_get_consumers(self):
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get,
+                               content_type='application/json')
+
+    def test_should_raise_get_consumers(self):
+        self._assert_fail_rbac([None, 'bogus'],
+                               self._invoke_on_get,
+                               content_type='application/json')
+
+    def _invoke_on_post(self):
+        self.resource.on_post(self.req, self.resp)
+
+    def _invoke_on_delete(self):
+        self.resource.on_delete(self.req, self.resp)
+
+    def _invoke_on_get(self):
+        self.resource.on_get(self.req, self.resp)
+
+
+class WhenTestingSecretConsumerResource(BaseTestCase):
+    """RBAC tests for barbican.api.resources.SecretConsumerResource"""
+    def setUp(self):
+        super(WhenTestingSecretConsumerResource, self).setUp()
+
+        self.external_project_id = '12345project'
+        self.consumer_id = '12345consumer'
+
+        # Force an error on GET calls that pass RBAC, as we are not testing
+        #   such flows in this test module.
+        self.consumer_repo = mock.MagicMock()
+        fail_method = mock.MagicMock(return_value=None,
+                                     side_effect=self._generate_get_error())
+        self.consumer_repo.get = fail_method
+
+        self.setup_project_repository_mock()
+        self.setup_secret_consumer_repository_mock(self.consumer_repo)
+        self.resource = SecretConsumerResource(consumer_id=self.consumer_id)
+
+    def test_rules_should_be_loaded(self):
+        self.assertIsNotNone(self.policy_enforcer.rules)
+
+    def test_should_pass_get_consumer(self):
+        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+                               self._invoke_on_get)
+
+    def test_should_raise_get_consumer(self):
+        self._assert_fail_rbac([None, 'bogus'],
+                               self._invoke_on_get)
+
+    def _invoke_on_get(self):
+        self.resource.on_get(self.req, self.resp)

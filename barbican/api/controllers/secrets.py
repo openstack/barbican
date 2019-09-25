@@ -17,6 +17,7 @@ from six.moves.urllib import parse
 from barbican import api
 from barbican.api import controllers
 from barbican.api.controllers import acls
+from barbican.api.controllers import consumers
 from barbican.api.controllers import secretmeta
 from barbican.common import accept
 from barbican.common import exception
@@ -77,6 +78,8 @@ class SecretController(controllers.ACLMixin):
     def __init__(self, secret):
         LOG.debug('=== Creating SecretController ===')
         self.secret = secret
+        self.consumers = consumers.SecretConsumersController(secret.id)
+        self.consumer_repo = repo.get_secret_consumer_repository()
         self.transport_key_repo = repo.get_transport_key_repository()
 
     def get_acl_tuple(self, req, **kwargs):
@@ -254,8 +257,19 @@ class SecretController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Secret deletion'))
     @controllers.enforce_rbac('secret:delete')
     def on_delete(self, external_project_id, **kwargs):
+        secret_consumers = self.consumer_repo.get_by_secret_id(
+            self.secret.id,
+            suppress_exception=True
+        )
         plugin.delete_secret(self.secret, external_project_id)
         LOG.info('Deleted secret for project: %s', external_project_id)
+
+        for consumer in secret_consumers[0]:
+            try:
+                self.consumer_repo.delete_entity_by_id(
+                    consumer.id, external_project_id)
+            except exception.NotFound:  # nosec
+                pass
 
 
 class SecretsController(controllers.ACLMixin):
