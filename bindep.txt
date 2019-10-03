@@ -15,3 +15,7 @@ pki-kra [platform:rpm]
 #Required for cryptography lib
 libssl-dev [platform:dpkg]
 openssl-devel [platform:rpm]
+
+# libsrvg2 is needed for sphinxcontrib-svg2pdfconverter in docs builds.
+librsvg2-tools [doc platform:rpm]
+librsvg2-bin [doc platform:dpkg]

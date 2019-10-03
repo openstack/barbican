@@ -23,7 +23,7 @@ API.
    configuration/index
    contributor/index
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    api/index.rst
 
@@ -31,7 +31,7 @@ Sample Files
 ============
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    sample_config
    sample_policy

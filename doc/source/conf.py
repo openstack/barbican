@@ -27,6 +27,7 @@ extensions = [
     'oslo_config.sphinxconfiggen',
     'oslo_policy.sphinxext',
     'oslo_policy.sphinxpolicygen',
+    'sphinxcontrib.rsvgconverter',
 ]
 
 config_generator_config_file = [
@@ -89,10 +90,12 @@ htmlhelp_basename = '%sdoc' % project
 # [howto/manual]).
 latex_documents = [
     ('index',
-     '%s.tex' % project,
+     'doc-barbican.tex',
      u'%s Documentation' % project,
      u'OpenStack Foundation', 'manual'),
 ]
+
+latex_use_xindy = False
 
 # Example configuration for intersphinx: refer to the Python standard library.
 # intersphinx_mapping = {'http://docs.python.org/': None}
