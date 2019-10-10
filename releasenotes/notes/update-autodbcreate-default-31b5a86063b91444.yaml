@@ -1,0 +1,8 @@
+---
+upgrade:
+  - |
+    Default for auto_db_create has been changed to False (was True). This is a
+    change compared to the previous behavior, but required to protect
+    production deployments from performing upgrades without control. If you
+    wish to keep the auto db creation/upgrade behavior, change this to True
+    in your configuration.

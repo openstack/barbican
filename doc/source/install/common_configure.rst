@@ -51,12 +51,10 @@
 
 #. Populate the Key Manager service database:
 
-   The Key Manager service database will be automatically populated
-   when the service is first started.  To prevent this, and run the
-   database sync manually, edit the ``/etc/barbican/barbican.conf`` file
-   and set db_auto_create in the ``[DEFAULT]`` section to False.
-
-   Then populate the database as below:
+   If you wish the Key Manager service to automatically populate the
+   database when the service is first started, set db_auto_create to
+   True in the ``[DEFAULT]`` section. By default this will not be active
+   and you can populate the database manually as below:
 
    .. code-block:: console
 

@@ -12,10 +12,6 @@ Database migrations can be optionally enabled during the API startup process.
 Corollaries for this are that a new deployment should begin with only one node
 to avoid migration race conditions.
 
-Alternatively, the automatic update startup behavior can be disabled, forcing
-the use of the migration script. This latter mode is probably safer to use in
-production environments.
-
 Policy
 -------
 

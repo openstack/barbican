@@ -89,7 +89,7 @@ db_opts = [
     cfg.IntOpt('sql_retry_interval', default=1,
                help=u._("Interval between retries of opening a SQL "
                         "connection.")),
-    cfg.BoolOpt('db_auto_create', default=True,
+    cfg.BoolOpt('db_auto_create', default=False,
                 help=u._("Create the Barbican database on service startup.")),
     cfg.IntOpt('max_limit_paging', default=100,
                help=u._("Maximum page size for the 'limit' paging URL "
