@@ -115,6 +115,7 @@ def _import_kra_transport_cert_to_nss_db(conf, crypto):
         transport_cert = systemcert_client.get_transport_cert()
         crypto.import_cert(KRA_TRANSPORT_NICK, transport_cert, ",,")
     except Exception as e:
+        LOG.debug("Error importing KRA transport cert.", exc_info=True)
         LOG.error("Error in importing transport cert."
                   " KRA may not be enabled: %s", e)
 
