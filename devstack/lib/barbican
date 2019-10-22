@@ -72,7 +72,7 @@ function cleanup_barbican {
 
 # configure_barbicanclient - Set config files, create data dirs, etc
 function configure_barbicanclient {
-    setup_develop $BARBICANCLIENT_DIR
+    setup_dev_lib "python-barbicanclient"
 }
 
 # configure_dogtag_plugin - Change config to use dogtag plugin
@@ -184,8 +184,10 @@ function install_barbican {
 
 # install_barbicanclient - Collect source and prepare
 function install_barbicanclient {
-    git_clone $BARBICANCLIENT_REPO $BARBICANCLIENT_DIR $BARBICANCLIENT_BRANCH
-    setup_develop $BARBICANCLIENT_DIR
+    if use_library_from_git "python-barbicanclient"; then
+        git_clone_by_name "python-barbicanclient"
+        setup_dev_lib "python-barbicanclient"
+    fi
 }
 
 # start_barbican - Start running processes, including screen
