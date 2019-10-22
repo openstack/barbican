@@ -42,7 +42,6 @@ if is_service_enabled barbican; then
             echo_summary "Configuring Vault plugin"
             configure_vault_plugin
         fi
-        configure_barbicanclient
 
         # Configure Cinder, Nova and Glance to use Barbican
         configure_core_services
