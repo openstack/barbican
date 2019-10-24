@@ -48,13 +48,18 @@ class Secret(base.BarbicanObject, base.BarbicanPersistentObject,
             'SecretUserMetadatum',
             default=dict(),
             nullable=True),
+        'consumers': fields.ListOfObjectsField('SecretConsumerMetadatum',
+                                               default=list(),
+                                               nullable=True),
+
         'status': fields.StringField(nullable=True, default=base.States.ACTIVE)
     }
 
     db_model = models.Secret
     db_repo = repo.get_secret_repository()
     synthetic_fields = ['encrypted_data', 'secret_acls',
-                        'secret_store_metadata', 'secret_user_metadata']
+                        'secret_store_metadata', 'secret_user_metadata',
+                        'consumers']
 
     @classmethod
     def get_secret_list(cls, external_project_id,
