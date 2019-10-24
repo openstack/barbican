@@ -59,31 +59,31 @@ def get_invalid_property(validation_error):
 
 
 def validate_stored_key_rsa_container(project_id, container_ref, req):
-        try:
-            container_id = hrefs.get_container_id_from_ref(container_ref)
-        except Exception:
-            reason = u._("Bad Container Reference {ref}").format(
-                ref=container_ref
-            )
-            raise exception.InvalidContainer(reason=reason)
+    try:
+        container_id = hrefs.get_container_id_from_ref(container_ref)
+    except Exception:
+        reason = u._("Bad Container Reference {ref}").format(
+            ref=container_ref
+        )
+        raise exception.InvalidContainer(reason=reason)
 
-        container_repo = repo.get_container_repository()
+    container_repo = repo.get_container_repository()
 
-        container = container_repo.get_container_by_id(entity_id=container_id,
-                                                       suppress_exception=True)
-        if not container:
-            reason = u._("Container Not Found")
-            raise exception.InvalidContainer(reason=reason)
+    container = container_repo.get_container_by_id(entity_id=container_id,
+                                                   suppress_exception=True)
+    if not container:
+        reason = u._("Container Not Found")
+        raise exception.InvalidContainer(reason=reason)
 
-        if container.type != 'rsa':
-            reason = u._("Container Wrong Type")
-            raise exception.InvalidContainer(reason=reason)
+    if container.type != 'rsa':
+        reason = u._("Container Wrong Type")
+        raise exception.InvalidContainer(reason=reason)
 
-        ctxt = controllers._get_barbican_context(req)
-        inst = controllers.containers.ContainerController(container)
-        controllers._do_enforce_rbac(inst, req,
-                                     controllers.containers.CONTAINER_GET,
-                                     ctxt)
+    ctxt = controllers._get_barbican_context(req)
+    inst = controllers.containers.ContainerController(container)
+    controllers._do_enforce_rbac(inst, req,
+                                 controllers.containers.CONTAINER_GET,
+                                 ctxt)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -1003,4 +1003,36 @@ class NewCAValidator(ValidatorBase, CACommonHelpersMixin):
 
         subject_dn = json_data['subject_dn']
         self._validate_subject_dn_data(subject_dn)
+        return json_data
+
+
+class SecretConsumerValidator(ValidatorBase):
+    """Validate a new Secret Consumer."""
+
+    def __init__(self):
+        self.name = "Secret Consumer"
+
+        self.schema = {
+            "type": "object",
+            "properties": {
+                "service": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1,
+                },
+                "resource_type": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1,
+                },
+                "resource_id": {"type": "string", "minLength": 1},
+            },
+            "required": ["service", "resource_type", "resource_id"],
+        }
+
+    def validate(self, json_data, parent_schema=None):
+        schema_name = self._full_name(parent_schema)
+
+        self._assert_schema_is_valid(json_data, schema_name)
+
         return json_data
