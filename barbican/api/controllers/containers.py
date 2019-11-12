@@ -33,8 +33,7 @@ CONTAINER_GET = 'container:get'
 
 def container_not_found():
     """Throw exception indicating container not found."""
-    pecan.abort(404, u._('Not Found. Sorry but your container is in '
-                         'another castle.'))
+    pecan.abort(404, u._('Secrets container not found.'))
 
 
 def invalid_container_id():

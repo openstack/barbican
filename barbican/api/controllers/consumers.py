@@ -29,8 +29,7 @@ LOG = utils.getLogger(__name__)
 
 def _consumer_not_found():
     """Throw exception indicating consumer not found."""
-    pecan.abort(404, u._('Not Found. Sorry but your consumer is in '
-                         'another castle.'))
+    pecan.abort(404, u._('Consumer not found.'))
 
 
 def _consumer_ownership_mismatch():

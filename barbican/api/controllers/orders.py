@@ -32,8 +32,7 @@ _DEPRECATION_MSG = '%s has been deprecated in the Newton release. ' \
 
 def _order_not_found():
     """Throw exception indicating order not found."""
-    pecan.abort(404, u._('Not Found. Sorry but your order is in '
-                         'another castle.'))
+    pecan.abort(404, u._('Order not found.'))
 
 
 def _secret_not_in_order():

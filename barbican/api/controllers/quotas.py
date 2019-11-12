@@ -29,8 +29,7 @@ LOG = utils.getLogger(__name__)
 
 def _project_quotas_not_found():
     """Throw exception indicating project quotas not found."""
-    pecan.abort(404, u._('Not Found. Sorry but your project quotas are in '
-                         'another castle.'))
+    pecan.abort(404, u._('Project quotas not found.'))
 
 
 class QuotasController(controllers.ACLMixin):
