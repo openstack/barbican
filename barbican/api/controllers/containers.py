@@ -149,6 +149,7 @@ class ContainersController(controllers.ACLMixin):
             offset_arg=kw.get('offset', 0),
             limit_arg=kw.get('limit', None),
             name_arg=kw.get('name', None),
+            type_arg=kw.get('type', None),
             suppress_exception=True
         )
 
