@@ -53,19 +53,13 @@
               fi
           }
           export -f pre_test_hook
-
+          export DEVSTACK_GATE_USE_PYTHON3=True
           if [ "{{ database }}" == "postgres" ] ; then
               export DEVSTACK_GATE_POSTGRES=1
           elif [ "{{ castellan_from_git }}" == "1" ] ; then
               export DEVSTACK_PROJECT_FROM_GIT="castellan"
           elif [ "{{ cursive }}" == "1" ] ; then
               export DEVSTACK_PROJECT_FROM_GIT="cursive"
-          elif [ "{{ python_version }}" == "py35" ] ; then
-             export DEVSTACK_GATE_USE_PYTHON3=True
-             export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-account"
-             export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-container"
-             export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-object"
-             export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-proxy"
           fi
 
           function post_test_hook {

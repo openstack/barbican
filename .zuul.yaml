@@ -3,7 +3,6 @@
     parent: legacy-dsvm-base
     vars:
       database: sql
-      python_version: py36
       services: tempest,rabbit,mysql,key
     required-projects:
       - openstack/devstack-gate
@@ -19,7 +18,6 @@
     parent: legacy-base
     vars:
       database: sql
-      python_version: py27
       services: tempest,keystone
     required-projects:
       - openstack/devstack
@@ -35,7 +33,6 @@
     name: barbican-devstack-tempest-base
     parent: legacy-dsvm-base
     vars:
-      python_version: py27
       database: sql
       castellan_from_git: 0
       cursive: 0
@@ -58,7 +55,6 @@
     # non-voting until https://pagure.io/dogtagpki/issue/3108 is fixed
     voting: false
     vars:
-      python_version: py35
       services: barbican-dogtag,tempest,rabbit,mysql,key
       plugin: dogtag
     post-run: playbooks/legacy/barbican-devstack-functional-base/dogtag-post.yaml
@@ -155,7 +151,6 @@
       - check-requirements
       - openstack-cover-jobs
       - openstack-lower-constraints-jobs
-      - openstack-python-jobs
       - openstack-python3-ussuri-jobs
       - publish-openstack-docs-pti
       - release-notes-jobs-python3
