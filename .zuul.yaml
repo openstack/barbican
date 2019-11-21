@@ -57,6 +57,9 @@
     name: barbican-dogtag-devstack-functional-fedora-latest
     nodeset: devstack-single-node-fedora-latest
     parent: barbican-devstack-functional-base
+    # non-voting until https://pagure.io/dogtagpki/issue/3108 is fixed
+    # and more work done in https://review.opendev.org/#/c/662543/
+    voting: false
     vars:
       services: barbican-dogtag,tempest,rabbit,mysql,key
       plugin: dogtag
@@ -200,7 +203,8 @@
         - barbican-simple-crypto-devstack-tempest
         - barbican-simple-crypto-devstack-functional
         - barbican-simple-crypto-devstack-functional-py35
-        - barbican-dogtag-devstack-functional-fedora-latest
+        # TODO(redrobot): add this back once job is voting again
+        # - barbican-dogtag-devstack-functional-fedora-latest
         - barbican-vault-devstack-functional
         - grenade-devstack-barbican:
             voting: false
