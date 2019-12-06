@@ -25,8 +25,7 @@ LOG = utils.getLogger(__name__)
 
 def _secret_metadata_not_found():
     """Throw exception indicating secret metadata not found."""
-    pecan.abort(404, u._('Not Found. Sorry but your secret metadata is in '
-                         'another castle.'))
+    pecan.abort(404, u._('Secret metadata not found.'))
 
 
 class SecretMetadataController(controllers.ACLMixin):

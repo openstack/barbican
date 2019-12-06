@@ -37,8 +37,7 @@ LOG = utils.getLogger(__name__)
 
 def _secret_not_found():
     """Throw exception indicating secret not found."""
-    pecan.abort(404, u._('Not Found. Sorry but your secret is in '
-                         'another castle.'))
+    pecan.abort(404, u._('Secret not found.'))
 
 
 def _invalid_secret_id():

@@ -204,8 +204,7 @@ class SecretAcceptNotSupportedException(exception.BarbicanHTTPException):
 class SecretNotFoundException(exception.BarbicanHTTPException):
     """Raised when secret information could not be located."""
 
-    client_message = u._("Not Found. Sorry but your secret is in another "
-                         "castle")
+    client_message = u._("Secret not found.")
     status_code = 404
 
     def __init__(self):
