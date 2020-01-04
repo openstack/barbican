@@ -3,15 +3,16 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 # Andi Chandler <andi@gowling.com>, 2017. #zanata
 # Andi Chandler <andi@gowling.com>, 2018. #zanata
+# Andi Chandler <andi@gowling.com>, 2019. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: barbican VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2019-04-12 15:02+0000\n"
+"POT-Creation-Date: 2020-01-04 06:24+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2018-09-12 09:02+0000\n"
+"PO-Revision-Date: 2019-12-21 01:03+0000\n"
 "Last-Translator: Andi Chandler <andi@gowling.com>\n"
 "Language-Team: English (United Kingdom)\n"
 "Language: en_GB\n"
@@ -95,6 +96,11 @@ msgstr ""
 "Allow unauthenticated users to access the API with read-only privileges. "
 "This only applies when using ContextMiddleware."
 
+msgid ""
+"Always set CKA_SENSITIVE=CK_TRUE including CKA_EXTRACTABLE=CK_TRUE keys."
+msgstr ""
+"Always set CKA_SENSITIVE=CK_TRUE including CKA_EXTRACTABLE=CK_TRUE keys."
+
 msgid "Amount of data to read from file for seed"
 msgstr "Amount of data to read from file for seed"
 
@@ -169,6 +175,9 @@ msgstr ""
 
 msgid "Conflict. Key in request is already in the secret metadata"
 msgstr "Conflict. Key in request is already in the secret metadata"
+
+msgid "Consumer not found."
+msgstr "Consumer not found."
 
 #, python-format
 msgid ""
@@ -428,6 +437,9 @@ msgstr "HMAC Key Generation Algorithm"
 msgid "HMAC Key Type"
 msgstr "HMAC Key Type"
 
+msgid "HMAC key wrap mechanism"
+msgstr "HMAC key wrap mechanism"
+
 msgid "HSM Slot ID"
 msgstr "HSM Slot ID"
 
@@ -678,6 +690,9 @@ msgstr "Must supply non-None {0} argument for SecretACL entry."
 msgid "Must supply non-None {0} argument for SecretACLUser entry."
 msgstr "Must supply non-None {0} argument for SecretACLUser entry."
 
+msgid "Must supply non-None {0} argument for SecretConsumerMetadatum entry."
+msgstr "Must supply non-None {0} argument for SecretConsumerMetadatum entry."
+
 msgid "Must supply non-None {0} argument for SecretStoreMetadatum entry."
 msgstr "Must supply non-None {0} argument for SecretStoreMetadatum entry."
 
@@ -779,29 +794,8 @@ msgstr "Not Found. Provided transport key id is invalid."
 msgid "Not Found. Secret store not found."
 msgstr "Not Found. Secret store not found."
 
-msgid "Not Found. Sorry but your consumer is in another castle."
-msgstr "Not Found. Sorry but your consumer is in another castle."
-
-msgid "Not Found. Sorry but your container is in another castle."
-msgstr "Not Found. Sorry but your container is in another castle."
-
-msgid "Not Found. Sorry but your order is in another castle."
-msgstr "Not Found. Sorry but your order is in another castle."
-
-msgid "Not Found. Sorry but your project quotas are in another castle."
-msgstr "Not Found. Sorry but your project quotas are in another castle."
-
 msgid "Not Found. Sorry but your secret has no payload."
 msgstr "Not Found. Sorry but your secret has no payload."
-
-msgid "Not Found. Sorry but your secret is in another castle"
-msgstr "Not Found. Sorry but your secret is in another castle"
-
-msgid "Not Found. Sorry but your secret is in another castle."
-msgstr "Not Found. Sorry but your secret is in another castle."
-
-msgid "Not Found. Sorry but your secret metadata is in another castle."
-msgstr "Not Found. Sorry but your secret metadata is in another castle."
 
 msgid "Not Found. Transport Key not found."
 msgstr "Not Found. Transport Key not found."
@@ -847,6 +841,9 @@ msgstr "Order creation"
 
 msgid "Order deletion"
 msgstr "Order deletion"
+
+msgid "Order not found."
+msgstr "Order not found."
 
 msgid "Order retrieval"
 msgstr "Order retrieval"
@@ -919,6 +916,9 @@ msgstr ""
 "exceptions. If you notice this, you can lower this value to ensure that "
 "SQLAlchemy reconnects before MySQL can drop the connection."
 
+msgid "Placeholder"
+msgstr "Placeholder"
+
 msgid "Plugin does not support generation of subordinate CAs"
 msgstr "Plugin does not support generation of subordinate CAs"
 
@@ -977,6 +977,9 @@ msgstr "Project Quotas"
 
 msgid "Project cleanup via Keystone notifications"
 msgstr "Project clean-up via Keystone notifications"
+
+msgid "Project quotas not found."
+msgstr "Project quotas not found."
 
 #, python-format
 msgid "Provided Transport key %(transport_key_id)s could not be found"
@@ -1110,6 +1113,9 @@ msgstr "Secret metadata creation"
 msgid "Secret metadata expected but not received."
 msgstr "Secret metadata expected but not received."
 
+msgid "Secret metadata not found."
+msgstr "Secret metadata not found."
+
 msgid "Secret metadata retrieval"
 msgstr "Secret metadata retrieval"
 
@@ -1124,6 +1130,9 @@ msgstr "Secret metadatum retrieval"
 
 msgid "Secret metadatum update"
 msgstr "Secret metadatum update"
+
+msgid "Secret not found."
+msgstr "Secret not found."
 
 msgid "Secret object type {object_type} is not supported"
 msgstr "Secret object type {object_type} is not supported"
@@ -1178,6 +1187,9 @@ msgstr "SecretACL(s) retrieval"
 
 msgid "Secret_ref does not match the configured hostname, please try again"
 msgstr "Secret_ref does not match the configured hostname, please try again"
+
+msgid "Secrets container not found."
+msgstr "Secrets container not found."
 
 msgid ""
 "Secrets of type {secret_type} should not have a passphrase in the database, "

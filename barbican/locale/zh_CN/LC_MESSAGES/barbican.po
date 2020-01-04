@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: barbican VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2019-04-12 15:02+0000\n"
+"POT-Creation-Date: 2020-01-04 06:24+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -562,29 +562,8 @@ msgstr "未发现。该项目没有定义首选秘密存储。"
 msgid "Not Found. Secret store not found."
 msgstr "未发现。未发现秘密存储。"
 
-msgid "Not Found. Sorry but your consumer is in another castle."
-msgstr "没有找到。对不起，您的用户名是在另一个城堡。"
-
-msgid "Not Found. Sorry but your container is in another castle."
-msgstr "没有找到。对不起，您的容器在另一个城堡。"
-
-msgid "Not Found. Sorry but your order is in another castle."
-msgstr "未发现。抱歉你的order在另一个城堡。"
-
-msgid "Not Found. Sorry but your project quotas are in another castle."
-msgstr "未发现。抱歉你的项目配额在另一个城堡。"
-
 msgid "Not Found. Sorry but your secret has no payload."
 msgstr "未发现。抱歉你的秘密没有负载。"
-
-msgid "Not Found. Sorry but your secret is in another castle"
-msgstr "未发现。抱歉你的秘密在另一个城堡"
-
-msgid "Not Found. Sorry but your secret is in another castle."
-msgstr "未发现。抱歉你的秘密在另一个城堡。"
-
-msgid "Not Found. Sorry but your secret metadata is in another castle."
-msgstr "未发现。抱歉你的秘密元数据在另一个城堡。"
 
 msgid "Not Found. Transport Key not found."
 msgstr "未发现。传输密钥未发现。"
