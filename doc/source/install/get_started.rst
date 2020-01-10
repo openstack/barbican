@@ -12,7 +12,7 @@ The Key Manager service consists of the following components:
   Barbican secrets.
 
 ``barbican-worker`` service
-  Provides an Openstack RPC interface that interacts with ''barican-api''
+  Provides an Openstack RPC interface that interacts with ``barbican-api``
   and reads from the barbican message queue.  Supports the fulfillment of
   Barbican orders.
 
