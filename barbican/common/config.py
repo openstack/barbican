@@ -183,7 +183,22 @@ ks_queue_opts = [
                         "will be dispatched to one of the servers in a "
                         "round-robin fashion. That's why Barbican service "
                         "should have its own dedicated notification queue so "
-                        "that it receives all of Keystone notifications.")),
+                        "that it receives all of Keystone notifications. "
+                        "Alternatively if the chosen oslo.messaging backend "
+                        "supports listener pooling (for example rabbitmq), "
+                        "setting a non-default 'pool_name' option "
+                        "should be preferred.")),
+    cfg.StrOpt('pool_name',
+               help=u._("Pool name for notifications listener. "
+                        "Setting this to a distinctive value will allow "
+                        "barbican notifications listener to receive its own "
+                        "copy of all messages from the topic without "
+                        "without interfering with other services listening "
+                        "on the same topic. This feature is supported only "
+                        "by some oslo.messaging backends "
+                        "(in particilar by rabbitmq) and for those it is "
+                        "preferrable to use it instead of separate "
+                        "notification topic for barbican.")),
     cfg.BoolOpt('allow_requeue', default=False,
                 help=u._('True enables requeue feature in case of notification'
                          ' processing error. Enable this only when underlying '

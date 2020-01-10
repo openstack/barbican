@@ -106,10 +106,13 @@ def get_notification_server(targets, endpoints, serializer=None):
     """
     allow_requeue = getattr(getattr(CONF, KS_NOTIFICATIONS_GRP_NAME),
                             'allow_requeue')
+    pool_name = getattr(getattr(CONF, KS_NOTIFICATIONS_GRP_NAME),
+                        'pool_name')
     TRANSPORT._require_driver_features(requeue=allow_requeue)
     dispatcher = notify_dispatcher.NotificationDispatcher(endpoints,
                                                           serializer)
     # we don't want blocking executor so use eventlet as executor choice
     return listener.NotificationServer(TRANSPORT, targets, dispatcher,
                                        executor='eventlet',
+                                       pool=pool_name,
                                        allow_requeue=allow_requeue)
