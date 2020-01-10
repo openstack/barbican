@@ -33,15 +33,7 @@
           export PROJECTS="openstack/python-barbicanclient $PROJECTS"
           export PROJECTS="openstack/barbican-tempest-plugin $PROJECTS"
           export DEVSTACK_LOCAL_CONFIG="enable_plugin barbican https://opendev.org/openstack/barbican"
-          if [[ "{{ python_version }}" == py3* ]] ; then
-             export DEVSTACK_GATE_USE_PYTHON3=True
-             export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-account"
-             export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-container"
-             export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-object"
-             export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-proxy"
-          else
-             export DEVSTACK_GATE_USE_PYTHON3=False
-          fi
+          export DEVSTACK_GATE_USE_PYTHON3=True
 
           function gate_hook {
               $BASE/new/barbican/devstack/gate_hook.sh
