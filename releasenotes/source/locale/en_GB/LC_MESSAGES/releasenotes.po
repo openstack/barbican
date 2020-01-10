@@ -1,14 +1,15 @@
 # Andi Chandler <andi@gowling.com>, 2017. #zanata
 # Andi Chandler <andi@gowling.com>, 2018. #zanata
+# Andi Chandler <andi@gowling.com>, 2019. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: barbican\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-06 08:38+0000\n"
+"POT-Creation-Date: 2020-01-04 06:24+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2018-11-14 05:34+0000\n"
+"PO-Revision-Date: 2019-12-21 01:03+0000\n"
 "Last-Translator: Andi Chandler <andi@gowling.com>\n"
 "Language-Team: English (United Kingdom)\n"
 "Language: en_GB\n"
@@ -42,8 +43,17 @@ msgstr "5.0.0"
 msgid "6.0.0"
 msgstr "6.0.0"
 
+msgid "6.0.1-12"
+msgstr "6.0.1-12"
+
 msgid "7.0.0"
 msgstr "7.0.0"
+
+msgid "7.0.0-16"
+msgstr "7.0.0-16"
+
+msgid "8.0.0"
+msgstr "8.0.0"
 
 msgid ""
 "Added new options to the PKCS#11 Cryptographic Plugin configuration to "
@@ -53,6 +63,9 @@ msgstr ""
 "Added new options to the PKCS#11 Cryptographic Plugin configuration to "
 "enable the use of different encryption and HMAC mechanisms. Added support "
 "for `CKM_AES_CBC` encryption in the PKCS#11 Cryptographic Plugin."
+
+msgid "Added new tool ``barbican-status upgrade check``."
+msgstr "Added new tool ``barbican-status upgrade check``."
 
 msgid ""
 "Added two new subcommands to `barbican-manage hsm` that can query the HSM to "
@@ -121,6 +134,30 @@ msgid "Deprecation Notes"
 msgstr "Deprecation Notes"
 
 msgid ""
+"Fixed Story #2004734:  Added a new option `always_set_cka_sensitive` to fix "
+"a regression that affected Safenet HSMs.  The option defaults to `True` as "
+"required by Safenet HSMs.  Other HSMs may require it be set to `False`."
+msgstr ""
+"Fixed Story #2004734:  Added a new option `always_set_cka_sensitive` to fix "
+"a regression that affected Safenet HSMs.  The option defaults to `True` as "
+"required by Safenet HSMs.  Other HSMs may require it be set to `False`."
+
+msgid ""
+"Fixed Story #2004734: Added a new option 'hmac_keywrap_mechanism' to make "
+"the mechanism used to calculate a HMAC from an wrapped PKEK configurable. "
+"This was introduced because of an problem with Utimaco HSMs which throw an "
+"'CKR_MECHANISM_INVALID' error, e.g. when a new PKEK is generated. For "
+"Utimaco HSMs, 'hmac_keywrap_mechanism' should be set to 'CKM_AES_MAC' in "
+"barbican.conf."
+msgstr ""
+"Fixed Story #2004734: Added a new option 'hmac_keywrap_mechanism' to make "
+"the mechanism used to calculate a HMAC from an wrapped PKEK configurable. "
+"This was introduced because of an problem with Utimaco HSMs which throw an "
+"'CKR_MECHANISM_INVALID' error, e.g. when a new PKEK is generated. For "
+"Utimaco HSMs, 'hmac_keywrap_mechanism' should be set to 'CKM_AES_MAC' in "
+"barbican.conf."
+
+msgid ""
 "Fixed the response code for invalid subroutes for individual secrets.  The "
 "API was previously responding with the incorrect code \"406 - Method not "
 "allowed\", but now responds correctly with \"404 - Not Found\"."
@@ -182,6 +219,15 @@ msgstr ""
 "barbican/setup/plugin_backends.html for instructions on how to setup "
 "Barbican multiple backends, and the API documentation for further details."
 
+msgid ""
+"New framework for ``barbican-status upgrade check`` command is added. This "
+"framework allows adding various checks which can be run before a Barbican "
+"upgrade to ensure if the upgrade can be performed safely."
+msgstr ""
+"New framework for ``barbican-status upgrade check`` command is added. This "
+"framework allows adding various checks which can be run before a Barbican "
+"upgrade to ensure if the upgrade can be performed safely."
+
 msgid "Newton Series Release Notes"
 msgstr "Newton Series Release Notes"
 
@@ -198,6 +244,13 @@ msgstr ""
 
 msgid "Ocata Series Release Notes"
 msgstr "Ocata Series Release Notes"
+
+msgid ""
+"Operator can now use new CLI tool ``barbican-status upgrade check`` to check "
+"if Barbican deployment can be safely upgraded from N-1 to N release."
+msgstr ""
+"Operator can now use new CLI tool ``barbican-status upgrade check`` to check "
+"if Barbican deployment can be safely upgraded from N-1 to N release."
 
 msgid "Other Notes"
 msgstr "Other Notes"
@@ -237,6 +290,9 @@ msgstr "Rocky Series Release Notes"
 
 msgid "Start using reno to manage release notes."
 msgstr "Start using reno to manage release notes."
+
+msgid "Stein Series Release Notes"
+msgstr "Stein Series Release Notes"
 
 msgid ""
 "The 'barbican-db-manage' script is deprecated.  Use the new 'barbican-"
