@@ -163,6 +163,7 @@
         - barbican-vault-devstack-functional
         - barbican-grenade-devstack
         - barbican-simple-crypto-devstack-tempest-ipv6-only
+        - octavia-v2-dsvm-tls-barbican
         # TripleO jobs that deploy Barbican.
         # Note we don't use a project-template here, so it's easier
         # to disable voting on one specific job if things go wrong.
@@ -171,8 +172,6 @@
         # If you need any support to debug these jobs in case of
         # failures, please reach us on #tripleo IRC channel.
         - tripleo-ci-centos-7-scenario002-standalone:
-            voting: false
-        - octavia-v2-dsvm-tls-barbican:
             voting: false
     gate:
       queue: barbican
@@ -184,6 +183,7 @@
         - barbican-vault-devstack-functional
         - barbican-grenade-devstack
         - barbican-simple-crypto-devstack-tempest-ipv6-only
+        - octavia-v2-dsvm-tls-barbican
     experimental:
       jobs:
         - barbican-kmip-devstack-functional
