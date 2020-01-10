@@ -41,7 +41,7 @@ class ProjectQuotas(base.BarbicanObject, base.BarbicanPersistentObject,
     def _validate_fields(self, change_fields):
         msg = u._("Must supply non-None {0} argument for ProjectQuotas entry.")
 
-        if change_fields.get('project_id') is None:
+        if not change_fields.get('project_id'):
             raise exception.MissingArgumentError(msg.format("project_id"))
 
     def _get_db_entity(self, parsed_project_quotas=None):
