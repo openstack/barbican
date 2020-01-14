@@ -125,10 +125,10 @@ The PKCS#11 plugin configuration looks like:
        # Max number of items in pkek cache
        # pkek_cache_limit = 100
 
-Thales
-++++++
+nCipher
++++++++
 
-For a Thales NetHSM, the plugin configuration looks like:
+For a nCipher nShield Connect XC, the plugin configuration looks like:
 
     .. code-block:: ini
 
