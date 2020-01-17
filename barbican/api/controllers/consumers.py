@@ -44,7 +44,7 @@ def _invalid_consumer_id():
 
 
 class ContainerConsumerController(controllers.ACLMixin):
-    """Handles Consumer entity retrieval and deletion requests."""
+    """Handles Container Consumer entity retrieval and deletion requests"""
 
     def __init__(self, consumer_id):
         self.consumer_id = consumer_id
@@ -76,7 +76,7 @@ class ContainerConsumerController(controllers.ACLMixin):
 
 
 class ContainerConsumersController(controllers.ACLMixin):
-    """Handles Consumer creation requests."""
+    """Handles Container Consumer creation requests"""
 
     def __init__(self, container_id):
         self.container_id = container_id
@@ -131,7 +131,7 @@ class ContainerConsumersController(controllers.ACLMixin):
             )
             resp_ctrs_overall.update({'total': total})
 
-        LOG.info('Retrieved a consumer list for project: %s',
+        LOG.info('Retrieved a container consumer list for project: %s',
                  external_project_id)
         return resp_ctrs_overall
 
@@ -157,7 +157,7 @@ class ContainerConsumersController(controllers.ACLMixin):
         url = hrefs.convert_consumer_to_href(new_consumer.container_id)
         pecan.response.headers['Location'] = url
 
-        LOG.info('Created a consumer for project: %s',
+        LOG.info('Created a container consumer for project: %s',
                  external_project_id)
 
         return self._return_container_data(self.container_id)
@@ -182,7 +182,7 @@ class ContainerConsumersController(controllers.ACLMixin):
         )
         if not consumer:
             _consumer_not_found()
-        LOG.debug("Found consumer: %s", consumer)
+        LOG.debug("Found container consumer: %s", consumer)
 
         container = self._get_container(self.container_id)
         owner_of_consumer = consumer.project_id == project.id
@@ -195,11 +195,11 @@ class ContainerConsumersController(controllers.ACLMixin):
             self.consumer_repo.delete_entity_by_id(consumer.id,
                                                    external_project_id)
         except exception.NotFound:
-            LOG.exception('Problem deleting consumer')
+            LOG.exception('Problem deleting container consumer')
             _consumer_not_found()
 
         ret_data = self._return_container_data(self.container_id)
-        LOG.info('Deleted a consumer for project: %s',
+        LOG.info('Deleted a container consumer for project: %s',
                  external_project_id)
         return ret_data
 
@@ -219,6 +219,186 @@ class ContainerConsumersController(controllers.ACLMixin):
             hrefs.convert_to_hrefs(secret_ref)
 
         # TODO(john-wood-w) Why two calls to convert_to_hrefs()?
+        return hrefs.convert_to_hrefs(
+            hrefs.convert_to_hrefs(dict_fields)
+        )
+
+
+class SecretConsumerController(controllers.ACLMixin):
+    """Handles Secret Consumer entity retrieval and deletion requests"""
+
+    def __init__(self, consumer_id):
+        self.consumer_id = consumer_id
+        self.consumer_repo = repo.get_secret_consumer_repository()
+        self.validator = validators.SecretConsumerValidator()
+
+    @pecan.expose(generic=True)
+    def index(self):
+        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
+
+    @index.when(method='GET', template='json')
+    @controllers.handle_exceptions(u._('SecretConsumer retrieval'))
+    @controllers.enforce_rbac('consumer:get')
+    def on_get(self, external_project_id):
+        consumer = self.consumer_repo.get(
+            entity_id=self.consumer_id,
+            suppress_exception=True)
+        if not consumer:
+            _consumer_not_found()
+
+        dict_fields = consumer.to_dict_fields()
+
+        LOG.info('Retrieved a secret consumer for project: %s',
+                 external_project_id)
+
+        return hrefs.convert_to_hrefs(
+            hrefs.convert_to_hrefs(dict_fields)
+        )
+
+
+class SecretConsumersController(controllers.ACLMixin):
+    """Handles Secret Consumer creation requests"""
+
+    def __init__(self, secret_id):
+        self.secret_id = secret_id
+        self.consumer_repo = repo.get_secret_consumer_repository()
+        self.secret_repo = repo.get_secret_repository()
+        self.project_repo = repo.get_project_repository()
+        self.validator = validators.SecretConsumerValidator()
+        self.quota_enforcer = quota.QuotaEnforcer('consumers',
+                                                  self.consumer_repo)
+
+    @pecan.expose()
+    def _lookup(self, consumer_id, *remainder):
+        if not utils.validate_id_is_uuid(consumer_id):
+            _invalid_consumer_id()()
+        return SecretConsumerController(consumer_id), remainder
+
+    @pecan.expose(generic=True)
+    def index(self, **kwargs):
+        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
+
+    @index.when(method='GET', template='json')
+    @controllers.handle_exceptions(u._('SecretConsumers(s) retrieval'))
+    @controllers.enforce_rbac('consumers:get')
+    def on_get(self, external_project_id, **kw):
+        LOG.debug('Start consumers on_get '
+                  'for secret-ID %s:', self.secret_id)
+        result = self.consumer_repo.get_by_secret_id(
+            self.secret_id,
+            offset_arg=kw.get('offset', 0),
+            limit_arg=kw.get('limit'),
+            suppress_exception=True
+        )
+
+        consumers, offset, limit, total = result
+
+        if not consumers:
+            resp_ctrs_overall = {'consumers': [], 'total': total}
+        else:
+            resp_ctrs = [
+                hrefs.convert_to_hrefs(c.to_dict_fields())
+                for c in consumers
+            ]
+            consumer_path = "secrets/{secret_id}/consumers".format(
+                secret_id=self.secret_id)
+
+            resp_ctrs_overall = hrefs.add_nav_hrefs(
+                consumer_path,
+                offset,
+                limit,
+                total,
+                {'consumers': resp_ctrs}
+            )
+            resp_ctrs_overall.update({'total': total})
+
+        LOG.info('Retrieved a consumer list for project: %s',
+                 external_project_id)
+        return resp_ctrs_overall
+
+    @index.when(method='POST', template='json')
+    @controllers.handle_exceptions(u._('SecretConsumer creation'))
+    @controllers.enforce_rbac('consumers:post')
+    @controllers.enforce_content_types(['application/json'])
+    def on_post(self, external_project_id, **kwargs):
+
+        project = res.get_or_create_project(external_project_id)
+        data = api.load_body(pecan.request, validator=self.validator)
+        LOG.debug('Start on_post...%s', data)
+
+        secret = self._get_secret(self.secret_id)
+
+        self.quota_enforcer.enforce(project)
+
+        new_consumer = models.SecretConsumerMetadatum(
+            self.secret_id,
+            project.id,
+            data["service"],
+            data["resource_type"],
+            data["resource_id"],
+        )
+        self.consumer_repo.create_or_update_from(new_consumer, secret)
+
+        url = hrefs.convert_consumer_to_href(new_consumer.secret_id)
+        pecan.response.headers['Location'] = url
+
+        LOG.info('Created a consumer for project: %s',
+                 external_project_id)
+
+        return self._return_secret_data(self.secret_id)
+
+    @index.when(method='DELETE', template='json')
+    @controllers.handle_exceptions(u._('SecretConsumer deletion'))
+    @controllers.enforce_rbac('consumers:delete')
+    @controllers.enforce_content_types(['application/json'])
+    def on_delete(self, external_project_id, **kwargs):
+        data = api.load_body(pecan.request, validator=self.validator)
+        LOG.debug('Start on_delete...%s', data)
+        project = self.project_repo.find_by_external_project_id(
+            external_project_id, suppress_exception=True)
+        if not project:
+            _consumer_not_found()
+
+        consumer = self.consumer_repo.get_by_values(
+            self.secret_id,
+            data["resource_id"],
+            suppress_exception=True
+        )
+        if not consumer:
+            _consumer_not_found()
+        LOG.debug("Found consumer: %s", consumer)
+
+        secret = self._get_secret(self.secret_id)
+        owner_of_consumer = consumer.project_id == project.id
+        owner_of_secret = secret.project.external_id \
+            == external_project_id
+        if not owner_of_consumer and not owner_of_secret:
+            _consumer_ownership_mismatch()
+
+        try:
+            self.consumer_repo.delete_entity_by_id(consumer.id,
+                                                   external_project_id)
+        except exception.NotFound:
+            LOG.exception('Problem deleting consumer')
+            _consumer_not_found()
+
+        ret_data = self._return_secret_data(self.secret_id)
+        LOG.info('Deleted a consumer for project: %s',
+                 external_project_id)
+        return ret_data
+
+    def _get_secret(self, secret_id):
+        secret = self.secret_repo.get_secret_by_id(
+            secret_id, suppress_exception=True)
+        if not secret:
+            controllers.secrets.secret_not_found()
+        return secret
+
+    def _return_secret_data(self, secret_id):
+        secret = self._get_secret(secret_id)
+
+        dict_fields = secret.to_dict_fields()
+
         return hrefs.convert_to_hrefs(
             hrefs.convert_to_hrefs(dict_fields)
         )

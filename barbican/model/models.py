@@ -374,6 +374,13 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
             'bit_length': self.bit_length,
             'mode': self.mode,
             'creator_id': self.creator_id,
+            "consumers": [
+                {
+                    "service": consumer.service,
+                    "resource_type": consumer.resource_type,
+                    "resource_id": consumer.resource_id,
+                } for consumer in self.consumers if not consumer.deleted
+            ],
         }
 
 
@@ -576,16 +583,16 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
         cascade="all, delete-orphan")
 
     def __init__(self, parsed_request=None, check_exc=True):
-            """Creates a Order entity from a dict."""
-            super(Order, self).__init__()
-            if parsed_request:
-                self.type = parsed_request.get('type')
-                self.meta = parsed_request.get('meta')
-                self.status = States.ACTIVE
-                self.sub_status = parsed_request.get('sub_status')
-                self.sub_status_message = parsed_request.get(
-                    'sub_status_message')
-                self.creator_id = parsed_request.get('creator_id')
+        """Creates a Order entity from a dict."""
+        super(Order, self).__init__()
+        if parsed_request:
+            self.type = parsed_request.get('type')
+            self.meta = parsed_request.get('meta')
+            self.status = States.ACTIVE
+            self.sub_status = parsed_request.get('sub_status')
+            self.sub_status_message = parsed_request.get(
+                'sub_status_message')
+            self.creator_id = parsed_request.get('creator_id')
 
     def set_error_reason_safely(self, error_reason_raw):
         """Ensure error reason does not raise database attribute exceptions."""
