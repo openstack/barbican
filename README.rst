@@ -39,15 +39,11 @@ think, just add
 `[barbican]` to the subject. You can also join our IRC channel
 `#openstack-barbican` on Freenode.
 
-Barbican began as part of a set of applications that make up the CloudKeep
-ecosystem.  The other systems are:
+Client Libraries
+----------------
 
-* `Postern <https://github.com/cloudkeep/postern>_` - Go based agent that
-  provides access to secrets from the Barbican API.
-* `Palisade <https://github.com/cloudkeep/palisade>`_ - AngularJS based web ui
-  for the Barbican API.
-* `Python-barbicanclient
-  <https://github.com/openstack/python-barbicanclient>`_ -
+* `python-barbicanclient
+  <https://opendev.org/openstack/python-barbicanclient>`_ -
   A convenient Python-based library to interact with the Barbican API.
 
 Getting Started
@@ -86,15 +82,10 @@ Barbican will handle many types of secrets, including:
   digital signatures.
 * **Raw Secrets** - Barbican stores secrets as a base64 encoded block of data
   (encrypted, naturally). Clients can use the API to store any secrets in any
-  format they desire. The `Postern
-  <https://github.com/cloudkeep/postern>`_ agent
-  is capable of presenting these secrets in various formats to ease
-  integration.
+  format they desire.
 
 For the symmetric and asymmetric key types, Barbican supports full life cycle
-management including provisioning, expiration, reporting, etc. A plugin system
-allows for multiple certificate authority support (including public and private
-CAs).
+management including provisioning, expiration, reporting, etc.
 
 Design Goals
 ------------
