@@ -329,335 +329,335 @@ class WhenTestingContainerConsumersResource(utils.BarbicanAPIBaseTestCase):
         )
         self.assertEqual(400, consumer_resp.status_int)
 
-
-class WhenTestingSecretConsumersResource(utils.BarbicanAPIBaseTestCase):
-
-    def setUp(self):
-        super(WhenTestingSecretConsumersResource, self).setUp()
-
-        self.consumer_a = {
-            "service": "service_a",
-            "resource_type": "resource_type_a",
-            "resource_id": "resource_id_a",
-        }
-
-        self.consumer_b = {
-            "service": "service_b",
-            "resource_type": "resource_type_b",
-            "resource_id": "resource_id_b",
-        }
-
-        self.consumer_c = {
-            "service": "service_c",
-            "resource_type": "resource_type_c",
-            "resource_id": "resource_id_c",
-        }
-
-    def test_can_create_new_consumer(self):
-        resp, secret_id = create_secret(self.app)
-        self.assertEqual(201, resp.status_int)
-
-        consumer_resp, consumer = create_secret_consumer(
-            self.app,
-            secret_id=secret_id,
-            service=self.consumer_a["service"],
-            resource_type=self.consumer_a["resource_type"],
-            resource_id=self.consumer_a["resource_id"],
-        )
-
-        self.assertEqual(200, consumer_resp.status_int)
-        self.assertEqual([self.consumer_a], consumer)
-
-    def test_can_get_consumers(self):
-        resp, secret_id = create_secret(self.app)
-        self.assertEqual(201, resp.status_int)
-
-        consumer_resp, consumers = create_secret_consumer(
-            self.app,
-            secret_id=secret_id,
-            service=self.consumer_a["service"],
-            resource_type=self.consumer_a["resource_type"],
-            resource_id=self.consumer_a["resource_id"],
-        )
-        self.assertEqual(200, consumer_resp.status_int)
-
-        consumer_resp, consumers = create_secret_consumer(
-            self.app,
-            secret_id=secret_id,
-            service=self.consumer_b["service"],
-            resource_type=self.consumer_b["resource_type"],
-            resource_id=self.consumer_b["resource_id"],
-        )
-        self.assertEqual(200, consumer_resp.status_int)
-
-        consumer_resp, consumers = create_secret_consumer(
-            self.app,
-            secret_id=secret_id,
-            service=self.consumer_c["service"],
-            resource_type=self.consumer_c["resource_type"],
-            resource_id=self.consumer_c["resource_id"],
-        )
-        self.assertEqual(200, consumer_resp.status_int)
-
-        consumer_get_resp = self.app.get(
-            '/secrets/{secret_id}/consumers/'.format(
-                secret_id=secret_id))
-
-        self.assertEqual(200, consumer_get_resp.status_int)
-        self.assertIn(consumers[0]["service"],
-                      consumer_get_resp.json["consumers"][0]["service"])
-        self.assertIn(consumers[0]["resource_type"],
-                      consumer_get_resp.json["consumers"][0]["resource_type"])
-        self.assertIn(consumers[0]["resource_id"],
-                      consumer_get_resp.json["consumers"][0]["resource_id"])
-        self.assertIn(consumers[1]["service"],
-                      consumer_get_resp.json["consumers"][1]["service"])
-        self.assertIn(consumers[1]["resource_type"],
-                      consumer_get_resp.json["consumers"][1]["resource_type"])
-        self.assertIn(consumers[1]["resource_id"],
-                      consumer_get_resp.json["consumers"][1]["resource_id"])
-        self.assertIn(consumers[2]["service"],
-                      consumer_get_resp.json["consumers"][2]["service"])
-        self.assertIn(consumers[2]["resource_type"],
-                      consumer_get_resp.json["consumers"][2]["resource_type"])
-        self.assertIn(consumers[2]["resource_id"],
-                      consumer_get_resp.json["consumers"][2]["resource_id"])
-
-    def test_can_get_consumers_with_limit_and_offset(self):
-        resp, secret_id = create_secret(self.app)
-        self.assertEqual(201, resp.status_int)
-
-        consumer_resp, consumers = create_secret_consumer(
-            self.app,
-            secret_id=secret_id,
-            service=self.consumer_a["service"],
-            resource_type=self.consumer_a["resource_type"],
-            resource_id=self.consumer_a["resource_id"],
-        )
-        self.assertEqual(200, consumer_resp.status_int)
-
-        consumer_resp, consumers = create_secret_consumer(
-            self.app,
-            secret_id=secret_id,
-            service=self.consumer_b["service"],
-            resource_type=self.consumer_b["resource_type"],
-            resource_id=self.consumer_b["resource_id"],
-        )
-        self.assertEqual(200, consumer_resp.status_int)
-
-        consumer_resp, consumers = create_secret_consumer(
-            self.app,
-            secret_id=secret_id,
-            service=self.consumer_c["service"],
-            resource_type=self.consumer_c["resource_type"],
-            resource_id=self.consumer_c["resource_id"],
-        )
-        self.assertEqual(200, consumer_resp.status_int)
-
-        consumer_get_resp = self.app.get(
-            '/secrets/{secret_id}/consumers/?limit=1&offset=1'.format(
-                secret_id=secret_id))
-        self.assertEqual(200, consumer_get_resp.status_int)
-
-        secret_url = resp.json["secret_ref"]
-
-        prev_cons = u"{secret_url}/consumers?limit=1&offset=0".format(
-            secret_url=secret_url)
-        self.assertEqual(prev_cons, consumer_get_resp.json["previous"])
-
-        next_cons = u"{secret_url}/consumers?limit=1&offset=2".format(
-            secret_url=secret_url)
-        self.assertEqual(next_cons, consumer_get_resp.json["next"])
-
-        self.assertEqual(
-            self.consumer_b["service"],
-            consumer_get_resp.json["consumers"][0]["service"]
-        )
-        self.assertEqual(
-            self.consumer_b["resource_type"],
-            consumer_get_resp.json["consumers"][0]["resource_type"]
-        )
-        self.assertEqual(
-            self.consumer_b["resource_id"],
-            consumer_get_resp.json["consumers"][0]["resource_id"]
-        )
-
-        self.assertEqual(3, consumer_get_resp.json["total"])
-
-    def test_can_delete_consumer(self):
-        resp, secret_id = create_secret(self.app)
-        self.assertEqual(201, resp.status_int)
-
-        consumer_resp, consumers = create_secret_consumer(
-            self.app,
-            secret_id=secret_id,
-            service=self.consumer_a["service"],
-            resource_type=self.consumer_a["resource_type"],
-            resource_id=self.consumer_a["resource_id"],
-        )
-        self.assertEqual(200, consumer_resp.status_int)
-
-        request = {
-            "service": self.consumer_a["service"],
-            "resource_type": self.consumer_a["resource_type"],
-            "resource_id": self.consumer_a["resource_id"],
-        }
-        cleaned_request = {key: val for key, val in request.items()
-                           if val is not None}
-
-        consumer_del_resp = self.app.delete_json(
-            '/secrets/{secret_id}/consumers/'.format(
-                secret_id=secret_id
-            ), cleaned_request, headers={'Content-Type': 'application/json'})
-
-        self.assertEqual(200, consumer_del_resp.status_int)
-
-    def test_can_get_no_consumers(self):
-        resp, secret_id = create_secret(self.app)
-        self.assertEqual(201, resp.status_int)
-
-        consumer_get_resp = self.app.get(
-            '/secrets/{secret_id}/consumers/'.format(
-                secret_id=secret_id))
-
-        self.assertEqual(200, consumer_get_resp.status_int)
-        self.assertEqual([], consumer_get_resp.json["consumers"])
-
-    def test_fail_create_secret_not_found(self):
-        consumer_resp, consumers = create_secret_consumer(
-            self.app,
-            secret_id="bad_secret_id",
-            service=self.consumer_a["service"],
-            resource_type=self.consumer_a["resource_type"],
-            resource_id=self.consumer_a["resource_id"],
-            expect_errors=True
-        )
-        self.assertEqual(404, consumer_resp.status_int)
-
-    def test_fail_get_secret_not_found(self):
-        consumer_get_resp = self.app.get(
-            '/secrets/{secret_id}/consumers/'.format(
-                secret_id="bad_secret_id"), expect_errors=True)
-
-        self.assertEqual(404, consumer_get_resp.status_int)
-
-    def test_fail_delete_secret_not_found(self):
-        request = {
-            "service": self.consumer_a["service"],
-            "resource_type": self.consumer_a["resource_type"],
-            "resource_id": self.consumer_a["resource_id"],
-        }
-        cleaned_request = {key: val for key, val in request.items()
-                           if val is not None}
-
-        consumer_del_resp = self.app.delete_json(
-            '/secrets/{secret_id}/consumers/'.format(
-                secret_id="bad_secret_id"
-            ), cleaned_request, headers={'Content-Type': 'application/json'},
-            expect_errors=True)
-
-        self.assertEqual(404, consumer_del_resp.status_int)
-
-    def test_fail_delete_consumer_not_found(self):
-        resp, secret_id = create_secret(self.app)
-        self.assertEqual(201, resp.status_int)
-
-        request = {
-            "service": self.consumer_a["service"],
-            "resource_type": self.consumer_a["resource_type"],
-            "resource_id": self.consumer_a["resource_id"],
-        }
-        cleaned_request = {key: val for key, val in request.items()
-                           if val is not None}
-
-        consumer_del_resp = self.app.delete_json(
-            '/secrets/{secret_id}/consumers/'.format(
-                secret_id=secret_id
-            ), cleaned_request, headers={'Content-Type': 'application/json'},
-            expect_errors=True)
-
-        self.assertEqual(404, consumer_del_resp.status_int)
-
-    def test_fail_create_no_service(self):
-        resp, secret_id = create_secret(self.app)
-        self.assertEqual(201, resp.status_int)
-
-        consumer_resp, consumer = create_secret_consumer(
-            self.app,
-            secret_id=secret_id,
-            resource_type="resource_type",
-            resource_id="resource_id",
-            expect_errors=True
-        )
-        self.assertEqual(400, consumer_resp.status_int)
-
-    def test_fail_create_no_resource_type(self):
-        resp, secret_id = create_secret(self.app)
-        self.assertEqual(201, resp.status_int)
-
-        consumer_resp, consumer = create_secret_consumer(
-            self.app,
-            secret_id=secret_id,
-            service="service",
-            resource_id="resource_id",
-            expect_errors=True
-        )
-        self.assertEqual(400, consumer_resp.status_int)
-
-    def test_fail_create_no_resource_id(self):
-        resp, secret_id = create_secret(self.app)
-        self.assertEqual(201, resp.status_int)
-
-        consumer_resp, consumer = create_secret_consumer(
-            self.app,
-            secret_id=secret_id,
-            service="service",
-            resource_type="resource_type",
-            expect_errors=True
-        )
-        self.assertEqual(400, consumer_resp.status_int)
-
-    def test_fail_create_empty_service(self):
-        resp, secret_id = create_secret(self.app)
-        self.assertEqual(201, resp.status_int)
-
-        consumer_resp, consumer = create_secret_consumer(
-            self.app,
-            secret_id=secret_id,
-            service="",
-            resource_type="resource_type",
-            resource_id="resource_id",
-            expect_errors=True
-        )
-        self.assertEqual(400, consumer_resp.status_int)
-
-    def test_fail_create_empty_resource_type(self):
-        resp, secret_id = create_secret(self.app)
-        self.assertEqual(201, resp.status_int)
-
-        consumer_resp, consumer = create_secret_consumer(
-            self.app,
-            secret_id=secret_id,
-            service="service",
-            resource_type="",
-            resource_id="resource_id",
-            expect_errors=True
-        )
-        self.assertEqual(400, consumer_resp.status_int)
-
-    def test_fail_create_empty_resource_id(self):
-        resp, secret_id = create_secret(self.app)
-        self.assertEqual(201, resp.status_int)
-
-        consumer_resp, consumer = create_secret_consumer(
-            self.app,
-            secret_id=secret_id,
-            service="service",
-            resource_type="resource_type",
-            resource_id="",
-            expect_errors=True
-        )
-        self.assertEqual(400, consumer_resp.status_int)
+# TODO(redrobot): Uncomment this after adding microversion
+# class WhenTestingSecretConsumersResource(utils.BarbicanAPIBaseTestCase):
+#
+#     def setUp(self):
+#         super(WhenTestingSecretConsumersResource, self).setUp()
+#
+#         self.consumer_a = {
+#             "service": "service_a",
+#             "resource_type": "resource_type_a",
+#             "resource_id": "resource_id_a",
+#         }
+#
+#         self.consumer_b = {
+#             "service": "service_b",
+#             "resource_type": "resource_type_b",
+#             "resource_id": "resource_id_b",
+#         }
+#
+#         self.consumer_c = {
+#             "service": "service_c",
+#             "resource_type": "resource_type_c",
+#             "resource_id": "resource_id_c",
+#         }
+#
+#     def test_can_create_new_consumer(self):
+#         resp, secret_id = create_secret(self.app)
+#         self.assertEqual(201, resp.status_int)
+#
+#         consumer_resp, consumer = create_secret_consumer(
+#             self.app,
+#             secret_id=secret_id,
+#             service=self.consumer_a["service"],
+#             resource_type=self.consumer_a["resource_type"],
+#             resource_id=self.consumer_a["resource_id"],
+#         )
+#
+#         self.assertEqual(200, consumer_resp.status_int)
+#         self.assertEqual([self.consumer_a], consumer)
+#
+#     def test_can_get_consumers(self):
+#         resp, secret_id = create_secret(self.app)
+#         self.assertEqual(201, resp.status_int)
+#
+#         consumer_resp, consumers = create_secret_consumer(
+#             self.app,
+#             secret_id=secret_id,
+#             service=self.consumer_a["service"],
+#             resource_type=self.consumer_a["resource_type"],
+#             resource_id=self.consumer_a["resource_id"],
+#         )
+#         self.assertEqual(200, consumer_resp.status_int)
+#
+#         consumer_resp, consumers = create_secret_consumer(
+#             self.app,
+#             secret_id=secret_id,
+#             service=self.consumer_b["service"],
+#             resource_type=self.consumer_b["resource_type"],
+#             resource_id=self.consumer_b["resource_id"],
+#         )
+#         self.assertEqual(200, consumer_resp.status_int)
+#
+#         consumer_resp, consumers = create_secret_consumer(
+#             self.app,
+#             secret_id=secret_id,
+#             service=self.consumer_c["service"],
+#             resource_type=self.consumer_c["resource_type"],
+#             resource_id=self.consumer_c["resource_id"],
+#         )
+#         self.assertEqual(200, consumer_resp.status_int)
+#
+#         consumer_get_resp = self.app.get(
+#             '/secrets/{secret_id}/consumers/'.format(
+#                 secret_id=secret_id))
+#
+#         self.assertEqual(200, consumer_get_resp.status_int)
+#         self.assertIn(consumers[0]["service"],
+#                       consumer_get_resp.json["consumers"][0]["service"])
+#         self.assertIn(consumers[0]["resource_type"],
+#                       consumer_get_resp.json["consumers"][0]["resource_type"])
+#         self.assertIn(consumers[0]["resource_id"],
+#                       consumer_get_resp.json["consumers"][0]["resource_id"])
+#         self.assertIn(consumers[1]["service"],
+#                       consumer_get_resp.json["consumers"][1]["service"])
+#         self.assertIn(consumers[1]["resource_type"],
+#                       consumer_get_resp.json["consumers"][1]["resource_type"])
+#         self.assertIn(consumers[1]["resource_id"],
+#                       consumer_get_resp.json["consumers"][1]["resource_id"])
+#         self.assertIn(consumers[2]["service"],
+#                       consumer_get_resp.json["consumers"][2]["service"])
+#         self.assertIn(consumers[2]["resource_type"],
+#                       consumer_get_resp.json["consumers"][2]["resource_type"])
+#         self.assertIn(consumers[2]["resource_id"],
+#                       consumer_get_resp.json["consumers"][2]["resource_id"])
+#
+#     def test_can_get_consumers_with_limit_and_offset(self):
+#         resp, secret_id = create_secret(self.app)
+#         self.assertEqual(201, resp.status_int)
+#
+#         consumer_resp, consumers = create_secret_consumer(
+#             self.app,
+#             secret_id=secret_id,
+#             service=self.consumer_a["service"],
+#             resource_type=self.consumer_a["resource_type"],
+#             resource_id=self.consumer_a["resource_id"],
+#         )
+#         self.assertEqual(200, consumer_resp.status_int)
+#
+#         consumer_resp, consumers = create_secret_consumer(
+#             self.app,
+#             secret_id=secret_id,
+#             service=self.consumer_b["service"],
+#             resource_type=self.consumer_b["resource_type"],
+#             resource_id=self.consumer_b["resource_id"],
+#         )
+#         self.assertEqual(200, consumer_resp.status_int)
+#
+#         consumer_resp, consumers = create_secret_consumer(
+#             self.app,
+#             secret_id=secret_id,
+#             service=self.consumer_c["service"],
+#             resource_type=self.consumer_c["resource_type"],
+#             resource_id=self.consumer_c["resource_id"],
+#         )
+#         self.assertEqual(200, consumer_resp.status_int)
+#
+#         consumer_get_resp = self.app.get(
+#             '/secrets/{secret_id}/consumers/?limit=1&offset=1'.format(
+#                 secret_id=secret_id))
+#         self.assertEqual(200, consumer_get_resp.status_int)
+#
+#         secret_url = resp.json["secret_ref"]
+#
+#         prev_cons = u"{secret_url}/consumers?limit=1&offset=0".format(
+#             secret_url=secret_url)
+#         self.assertEqual(prev_cons, consumer_get_resp.json["previous"])
+#
+#         next_cons = u"{secret_url}/consumers?limit=1&offset=2".format(
+#             secret_url=secret_url)
+#         self.assertEqual(next_cons, consumer_get_resp.json["next"])
+#
+#         self.assertEqual(
+#             self.consumer_b["service"],
+#             consumer_get_resp.json["consumers"][0]["service"]
+#         )
+#         self.assertEqual(
+#             self.consumer_b["resource_type"],
+#             consumer_get_resp.json["consumers"][0]["resource_type"]
+#         )
+#         self.assertEqual(
+#             self.consumer_b["resource_id"],
+#             consumer_get_resp.json["consumers"][0]["resource_id"]
+#         )
+#
+#         self.assertEqual(3, consumer_get_resp.json["total"])
+#
+#     def test_can_delete_consumer(self):
+#         resp, secret_id = create_secret(self.app)
+#         self.assertEqual(201, resp.status_int)
+#
+#         consumer_resp, consumers = create_secret_consumer(
+#             self.app,
+#             secret_id=secret_id,
+#             service=self.consumer_a["service"],
+#             resource_type=self.consumer_a["resource_type"],
+#             resource_id=self.consumer_a["resource_id"],
+#         )
+#         self.assertEqual(200, consumer_resp.status_int)
+#
+#         request = {
+#             "service": self.consumer_a["service"],
+#             "resource_type": self.consumer_a["resource_type"],
+#             "resource_id": self.consumer_a["resource_id"],
+#         }
+#         cleaned_request = {key: val for key, val in request.items()
+#                            if val is not None}
+#
+#         consumer_del_resp = self.app.delete_json(
+#             '/secrets/{secret_id}/consumers/'.format(
+#                 secret_id=secret_id
+#             ), cleaned_request, headers={'Content-Type': 'application/json'})
+#
+#         self.assertEqual(200, consumer_del_resp.status_int)
+#
+#     def test_can_get_no_consumers(self):
+#         resp, secret_id = create_secret(self.app)
+#         self.assertEqual(201, resp.status_int)
+#
+#         consumer_get_resp = self.app.get(
+#             '/secrets/{secret_id}/consumers/'.format(
+#                 secret_id=secret_id))
+#
+#         self.assertEqual(200, consumer_get_resp.status_int)
+#         self.assertEqual([], consumer_get_resp.json["consumers"])
+#
+#     def test_fail_create_secret_not_found(self):
+#         consumer_resp, consumers = create_secret_consumer(
+#             self.app,
+#             secret_id="bad_secret_id",
+#             service=self.consumer_a["service"],
+#             resource_type=self.consumer_a["resource_type"],
+#             resource_id=self.consumer_a["resource_id"],
+#             expect_errors=True
+#         )
+#         self.assertEqual(404, consumer_resp.status_int)
+#
+#     def test_fail_get_secret_not_found(self):
+#         consumer_get_resp = self.app.get(
+#             '/secrets/{secret_id}/consumers/'.format(
+#                 secret_id="bad_secret_id"), expect_errors=True)
+#
+#         self.assertEqual(404, consumer_get_resp.status_int)
+#
+#     def test_fail_delete_secret_not_found(self):
+#         request = {
+#             "service": self.consumer_a["service"],
+#             "resource_type": self.consumer_a["resource_type"],
+#             "resource_id": self.consumer_a["resource_id"],
+#         }
+#         cleaned_request = {key: val for key, val in request.items()
+#                            if val is not None}
+#
+#         consumer_del_resp = self.app.delete_json(
+#             '/secrets/{secret_id}/consumers/'.format(
+#                 secret_id="bad_secret_id"
+#             ), cleaned_request, headers={'Content-Type': 'application/json'},
+#             expect_errors=True)
+#
+#         self.assertEqual(404, consumer_del_resp.status_int)
+#
+#     def test_fail_delete_consumer_not_found(self):
+#         resp, secret_id = create_secret(self.app)
+#         self.assertEqual(201, resp.status_int)
+#
+#         request = {
+#             "service": self.consumer_a["service"],
+#             "resource_type": self.consumer_a["resource_type"],
+#             "resource_id": self.consumer_a["resource_id"],
+#         }
+#         cleaned_request = {key: val for key, val in request.items()
+#                            if val is not None}
+#
+#         consumer_del_resp = self.app.delete_json(
+#             '/secrets/{secret_id}/consumers/'.format(
+#                 secret_id=secret_id
+#             ), cleaned_request, headers={'Content-Type': 'application/json'},
+#             expect_errors=True)
+#
+#         self.assertEqual(404, consumer_del_resp.status_int)
+#
+#     def test_fail_create_no_service(self):
+#         resp, secret_id = create_secret(self.app)
+#         self.assertEqual(201, resp.status_int)
+#
+#         consumer_resp, consumer = create_secret_consumer(
+#             self.app,
+#             secret_id=secret_id,
+#             resource_type="resource_type",
+#             resource_id="resource_id",
+#             expect_errors=True
+#         )
+#         self.assertEqual(400, consumer_resp.status_int)
+#
+#     def test_fail_create_no_resource_type(self):
+#         resp, secret_id = create_secret(self.app)
+#         self.assertEqual(201, resp.status_int)
+#
+#         consumer_resp, consumer = create_secret_consumer(
+#             self.app,
+#             secret_id=secret_id,
+#             service="service",
+#             resource_id="resource_id",
+#             expect_errors=True
+#         )
+#         self.assertEqual(400, consumer_resp.status_int)
+#
+#     def test_fail_create_no_resource_id(self):
+#         resp, secret_id = create_secret(self.app)
+#         self.assertEqual(201, resp.status_int)
+#
+#         consumer_resp, consumer = create_secret_consumer(
+#             self.app,
+#             secret_id=secret_id,
+#             service="service",
+#             resource_type="resource_type",
+#             expect_errors=True
+#         )
+#         self.assertEqual(400, consumer_resp.status_int)
+#
+#     def test_fail_create_empty_service(self):
+#         resp, secret_id = create_secret(self.app)
+#         self.assertEqual(201, resp.status_int)
+#
+#         consumer_resp, consumer = create_secret_consumer(
+#             self.app,
+#             secret_id=secret_id,
+#             service="",
+#             resource_type="resource_type",
+#             resource_id="resource_id",
+#             expect_errors=True
+#         )
+#         self.assertEqual(400, consumer_resp.status_int)
+#
+#     def test_fail_create_empty_resource_type(self):
+#         resp, secret_id = create_secret(self.app)
+#         self.assertEqual(201, resp.status_int)
+#
+#         consumer_resp, consumer = create_secret_consumer(
+#             self.app,
+#             secret_id=secret_id,
+#             service="service",
+#             resource_type="",
+#             resource_id="resource_id",
+#             expect_errors=True
+#         )
+#         self.assertEqual(400, consumer_resp.status_int)
+#
+#     def test_fail_create_empty_resource_id(self):
+#         resp, secret_id = create_secret(self.app)
+#         self.assertEqual(201, resp.status_int)
+#
+#         consumer_resp, consumer = create_secret_consumer(
+#             self.app,
+#             secret_id=secret_id,
+#             service="service",
+#             resource_type="resource_type",
+#             resource_id="",
+#             expect_errors=True
+#         )
+#         self.assertEqual(400, consumer_resp.status_int)
 
 
 # ----------------------- Helper Functions ---------------------------
