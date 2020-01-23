@@ -1,33 +1,46 @@
+---
 - job:
-    name: barbican-devstack-functional-base
-    parent: legacy-dsvm-base
-    vars:
-      database: sql
-      services: tempest,rabbit,mysql,key
+    name: barbican-tox-functional
+    parent: devstack-tox-functional
+    description: Functional testing
     required-projects:
-      - openstack/devstack-gate
-      - openstack/barbican
-      - openstack/barbican-tempest-plugin
-      - openstack/python-barbicanclient
-    run: playbooks/legacy/barbican-devstack-functional-base/run.yaml
-    post-run: playbooks/legacy/barbican-devstack-functional-base/post.yaml
-    timeout: 4200
+      - name: openstack/barbican
+      - name: openstack/castellan
+      - name: openstack/openstacksdk
+    vars:
+      devstack_localrc:
+        USE_PYTHON3: true
+      devstack_plugins:
+        barbican: https://opendev.org/openstack/barbican
+      tox_install_siblings: true
 
 - job:
-    name: barbican-devstack-base
-    parent: legacy-base
+    name: barbican-dogtag-tox-functional
+    nodeset: devstack-single-node-fedora-latest
+    parent: barbican-tox-functional
+    description: |
+      Functional testing for DogTag backend
     vars:
-      database: sql
-      services: tempest,keystone
-    required-projects:
-      - openstack/devstack
-      - openstack/devstack-gate
-      - openstack/barbican
-      - openstack/barbican-tempest-plugin
-      - openstack/python-barbicanclient
-    run: playbooks/legacy/barbican-devstack-base/run.yaml
-    post-run: playbooks/legacy/barbican-devstack-base/post.yaml
-    timeout: 4200
+      devstack_services:
+        dogtag: true
+
+- job:
+    name: barbican-vault-tox-functional
+    parent: barbican-tox-functional
+    description: |
+      Functional testing for Hashicorp Vault backend
+    vars:
+      devstack_services:
+        vault: true
+
+- job:
+    name: barbican-kmip-tox-functional
+    parent: devstack-tox-functional
+    description: |
+      Functional testing for KMIP backend using PyKMIP
+    vars:
+      devstack_services:
+        kmip: true
 
 - job:
     name: barbican-devstack-tempest-base
@@ -47,67 +60,6 @@
     run: playbooks/legacy/barbican-devstack-tempest-base/run.yaml
     post-run: playbooks/legacy/barbican-devstack-tempest-base/post.yaml
     timeout: 4200
-
-- job:
-    name: barbican-dogtag-devstack-functional-fedora-latest
-    nodeset: devstack-single-node-fedora-latest
-    parent: barbican-devstack-functional-base
-    # non-voting until https://pagure.io/dogtagpki/issue/3108 is fixed
-    voting: false
-    vars:
-      services: barbican-dogtag,tempest,rabbit,mysql,key
-      plugin: dogtag
-    post-run: playbooks/legacy/barbican-devstack-functional-base/dogtag-post.yaml
-
-- job:
-    name: barbican-vault-devstack-functional
-    parent: barbican-devstack-functional-base
-    vars:
-      services: barbican-vault,tempest,rabbit,mysql,key
-      plugin: vault
-
-- job:
-    name: barbican-kmip-devstack-functional
-    parent: barbican-devstack-functional-base
-    vars:
-      services: barbican-pykmip,pykmip-server,tempest,rabbit,mysql,key
-      plugin: kmip
-
-- job:
-    name: barbican-simple-crypto-devstack-functional
-    parent: barbican-devstack-functional-base
-    vars:
-      plugin: simple-crypto
-
-- job:
-    name: barbican-simple-crypto-devstack-functional-postgres
-    parent: barbican-devstack-functional-base
-    voting: false
-    vars:
-      database: postgres
-      plugin: simple-crypto
-
-- job:
-    name: barbican-dogtag-devstack-fedora-latest
-    nodeset: devstack-single-node-fedora-latest
-    parent: barbican-devstack-base
-    vars:
-      services: barbican-dogtag,tempest,keystone
-      plugin: dogtag
-
-- job:
-    name: barbican-simple-crypto-devstack
-    parent: barbican-devstack-base
-    vars:
-      plugin: simple-crypto
-
-- job:
-    name: barbican-simple-crypto-devstack-postgres
-    parent: barbican-devstack-base
-    voting: false
-    vars:
-      plugin: simple-crypto
-      database: postgres
 
 - job:
     name: barbican-simple-crypto-devstack-tempest
@@ -131,20 +83,13 @@
       cursive: 1
 
 - job:
-    name: barbican-grenade-devstack
-    parent: legacy-dsvm-base
-    irrelevant-files:
-      - ^(test-|)requirements.txt$
-      - ^setup.cfg$
-    run: playbooks/legacy/grenade-devstack-barbican/run.yaml
-    post-run: playbooks/legacy/grenade-devstack-barbican/post.yaml
+    name: barbican-grenade
+    parent: grenade-py3
     required-projects:
       - openstack/grenade
-      - openstack/devstack-gate
       - openstack/barbican
       - openstack/barbican-tempest-plugin
       - openstack/python-barbicanclient
-    timeout: 7800
 
 - project:
     templates:
@@ -156,13 +101,15 @@
       - release-notes-jobs-python3
     check:
       jobs:
-        - barbican-simple-crypto-devstack-tempest
-        - barbican-simple-crypto-devstack-functional
-        - barbican-simple-crypto-devstack-functional-postgres
-        - barbican-dogtag-devstack-functional-fedora-latest
-        - barbican-vault-devstack-functional
-        - barbican-grenade-devstack
-        - barbican-simple-crypto-devstack-tempest-ipv6-only
+        - barbican-tox-functional
+        - barbican-dogtag-tox-functional:
+            voting: false
+        - barbican-vault-tox-functional:
+            voting: false
+        - barbican-grenade:
+            voting: false
+        # - barbican-simple-crypto-devstack-tempest
+        # - barbican-simple-crypto-devstack-tempest-ipv6-only
         - octavia-v2-dsvm-tls-barbican
         # TripleO jobs that deploy Barbican.
         # Note we don't use a project-template here, so it's easier
@@ -176,15 +123,8 @@
     gate:
       queue: barbican
       jobs:
-        - barbican-simple-crypto-devstack-tempest
-        - barbican-simple-crypto-devstack-functional
-        # TODO(redrobot): add this back once job is voting again
-        #- barbican-dogtag-devstack-functional-fedora-latest
-        - barbican-vault-devstack-functional
-        - barbican-grenade-devstack
-        - barbican-simple-crypto-devstack-tempest-ipv6-only
-        - octavia-v2-dsvm-tls-barbican
+        - barbican-tox-functional
     experimental:
       jobs:
-        - barbican-kmip-devstack-functional
+        - barbican-kmip-tox-functional
 

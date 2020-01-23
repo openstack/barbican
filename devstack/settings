@@ -1,6 +1,8 @@
 # Defaults
 # --------
 
+define_plugin barbican
+
 # Set up default directories
 BARBICAN_DIR=$DEST/barbican
 BARBICAN_CONF_DIR=${BARBICAN_CONF_DIR:-/etc/barbican}
