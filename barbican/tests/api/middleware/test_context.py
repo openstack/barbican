@@ -12,7 +12,8 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import mock
+from unittest import mock
+
 import oslotest.base as oslotest
 
 from barbican.api.middleware import context

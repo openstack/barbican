@@ -12,8 +12,8 @@
 # limitations under the License.
 
 import datetime
+from unittest import mock
 
-import mock
 import testtools
 
 from barbican.common import utils as common_utils

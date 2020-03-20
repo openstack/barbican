@@ -12,11 +12,11 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from oslo_utils import uuidutils
+from unittest import mock
 
-import mock
 import oslo_messaging
 from oslo_service import service
+from oslo_utils import uuidutils
 
 from barbican.common import config
 from barbican import queue

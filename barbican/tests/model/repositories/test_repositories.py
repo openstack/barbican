@@ -10,11 +10,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mock
-import six
-import sqlalchemy
+from unittest import mock
 
 from alembic import script as alembic_script
+from oslo_config import cfg
+import six
+import sqlalchemy
 
 from barbican.common import config
 from barbican.common import exception
@@ -23,8 +24,6 @@ from barbican.model import models
 from barbican.model import repositories
 from barbican.tests import database_utils
 from barbican.tests import utils
-
-from oslo_config import cfg
 
 
 class WhenCleaningRepositoryPagingParameters(utils.BaseTestCase):

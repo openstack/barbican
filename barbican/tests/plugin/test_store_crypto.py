@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import base64
+from unittest import mock
 
-import mock
 import testtools
 
 from barbican.common import utils

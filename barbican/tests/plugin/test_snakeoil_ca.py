@@ -15,11 +15,11 @@
 
 import base64
 import os
+from unittest import mock
 
 from cryptography.hazmat.backends import default_backend
 from cryptography import x509
 import fixtures
-import mock
 from OpenSSL import crypto
 from oslo_config import fixture as oslo_fixture
 

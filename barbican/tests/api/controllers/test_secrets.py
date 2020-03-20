@@ -14,8 +14,8 @@
 # limitations under the License.
 import base64
 import os
+from unittest import mock
 
-import mock
 from oslo_utils import timeutils
 
 from barbican.api.controllers import secrets

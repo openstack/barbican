@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest import mock
+
 from castellan.common import exception
 from castellan.common.objects import opaque_data
-import mock
 
 import barbican.plugin.castellan_secret_store as css
 import barbican.plugin.interface.secret_store as ss

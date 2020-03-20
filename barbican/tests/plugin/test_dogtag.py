@@ -17,12 +17,11 @@ import base64
 import datetime
 import os
 import tempfile
+from unittest import mock
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
-
-import mock
 from requests import exceptions as request_exceptions
 import testtools
 

@@ -13,15 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
+from unittest import mock
+
+from oslo_db import exception as db_exc
+from sqlalchemy.exc import IntegrityError
+
 from barbican.model import clean
 from barbican.model import models
 from barbican.model import repositories as repos
 from barbican.tests import database_utils as utils
-from oslo_db import exception as db_exc
-from sqlalchemy.exc import IntegrityError
-
-import datetime
-import mock
 
 
 def _create_project(project_name):
