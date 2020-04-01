@@ -352,6 +352,7 @@ def set_middleware_defaults():
                        'PATCH']
     )
 
+
 CONF = new_config()
 LOG = logging.getLogger(__name__)
 parse_args(CONF)

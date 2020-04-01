@@ -54,7 +54,7 @@ def cleanup_unassociated_projects():
     for model in project_children_tables:
         sub_query = sub_query.outerjoin(model,
                                         models.Project.id == model.project_id)
-        sub_query = sub_query.filter(model.id == None)  # nopep8
+        sub_query = sub_query.filter(model.id == None)  # noqa
     sub_query = sub_query.subquery()
     sub_query = sa_sql.select([sub_query])
     query = session.query(models.Project)
@@ -89,7 +89,7 @@ def cleanup_parent_with_no_child(parent_model, child_model,
     session = repo.get_session()
     sub_query = session.query(parent_model.id)
     sub_query = sub_query.outerjoin(child_model)
-    sub_query = sub_query.filter(child_model.id == None)  # nopep8
+    sub_query = sub_query.filter(child_model.id == None)  # noqa
     sub_query = sub_query.subquery()
     sub_query = sa_sql.select([sub_query])
     query = session.query(parent_model)

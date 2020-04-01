@@ -188,5 +188,6 @@ def main():
     rewrapper.execute(args.dry_run)
     rewrapper.pkcs11.return_session(rewrapper.hsm_session)
 
+
 if __name__ == '__main__':
     main()

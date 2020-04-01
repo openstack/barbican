@@ -1395,19 +1395,19 @@ class ContainerRepo(BaseRepo):
 
 
 class ContainerSecretRepo(BaseRepo):
-        """Repository for the ContainerSecret entity."""
-        def _do_entity_name(self):
-            """Sub-class hook: return entity name, such as for debugging."""
-            return "ContainerSecret"
+    """Repository for the ContainerSecret entity."""
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "ContainerSecret"
 
-        def _do_build_get_query(self, entity_id, external_project_id, session):
-            """Sub-class hook: build a retrieve query."""
-            return session.query(models.ContainerSecret
-                                 ).filter_by(id=entity_id)
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+        return session.query(models.ContainerSecret
+                             ).filter_by(id=entity_id)
 
-        def _do_validate(self, values):
-            """Sub-class hook: validate values."""
-            pass
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
 
 
 class ContainerConsumerRepo(BaseRepo):

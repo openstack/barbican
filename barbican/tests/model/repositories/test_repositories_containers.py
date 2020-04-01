@@ -109,3 +109,7 @@ class WhenTestingContainerRepository(database_utils.RepositoryTestCase):
 
         count = self.repo.get_count(project.id, session=session)
         self.assertEqual(1, count)
+
+    def test_container_secret_repo(self):
+        repo = repositories.ContainerSecretRepo()
+        self.assertEqual("ContainerSecret", repo._do_entity_name())

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from unittest import mock
+from unittest.mock import patch
 
 from oslo_config import cfg
 import six
@@ -197,3 +198,12 @@ class TestConfigValues(test_utils.BaseTestCase):
         # mechanism
         self.assertEqual('barbican', self.barbican_config.project)
         self.assertEqual('barbican', self.oslo_config.project)
+
+
+class WhenTestingIsMultipleBackendsEnabled(test_utils.BaseTestCase):
+    @patch('barbican.common.utils.config.get_module_config')
+    def test_is_multiple_backends_enabled_catches_keyerror(self, mock_conf):
+        mock_ss_conf = mock.Mock()
+        mock_ss_conf.secretstore.enable_multiple_secret_stores = False
+        mock_conf.side_effect = [KeyError, mock_ss_conf]
+        self.assertFalse(utils.is_multiple_backends_enabled())
