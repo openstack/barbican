@@ -12,23 +12,21 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import sys
 import textwrap
 from unittest import mock
 
-import ddt
-import pep8
+import pycodestyle
 
 from barbican.hacking import checks
-from barbican.tests import utils
+import oslotest
 
 
-@ddt.ddt
-class HackingTestCase(utils.BaseTestCase):
+class HackingTestCase(oslotest.base.BaseTestCase):
     """Hacking test cases
 
     This class tests the hacking checks in barbican.hacking.checks by passing
-    strings to the check methods like the pep8/flake8 parser would. The parser
+    strings to the check methods like the pycodestyle/flake8 parser would. The
+    parser
     loops over each line in the file and then passes the parameters to the
     check method. The parameter names in the check method dictate what type of
     object is passed to the check method. The parameter types are::
@@ -48,7 +46,7 @@ class HackingTestCase(utils.BaseTestCase):
         indent_level: indentation (with tabs expanded to multiples of 8)
         previous_indent_level: indentation on previous line
         previous_logical: previous logical line
-        filename: Path of the file being run through pep8
+        filename: Path of the file being run through pycodestyle
 
     When running a test on a check method the return will be False/None if
     there is no violation in the sample input. If there is an error a tuple is
@@ -57,16 +55,16 @@ class HackingTestCase(utils.BaseTestCase):
     should pass.
     """
 
-    # We are patching pep8 so that only the check under test is actually
+    # We are patching pycodestyle so that only the check under test is actually
     # installed.
-    @mock.patch('pep8._checks',
+    @mock.patch('pycodestyle._checks',
                 {'physical_line': {}, 'logical_line': {}, 'tree': {}})
     def _run_check(self, code, checker, filename=None):
-        pep8.register_check(checker)
+        pycodestyle.register_check(checker)
 
         lines = textwrap.dedent(code).strip().splitlines(True)
 
-        checker = pep8.Checker(filename=filename, lines=lines)
+        checker = pycodestyle.Checker(filename=filename, lines=lines)
         checker.check_all()
         checker.report._deferred_print.sort()
         return checker.report._deferred_print
@@ -91,95 +89,6 @@ class HackingTestCase(utils.BaseTestCase):
                          " climbing.", 'volume1', 500)
                """
         self._assert_has_no_errors(code, checker)
-
-    @ddt.data(*checks.CheckLoggingFormatArgs.LOG_METHODS)
-    def test_logging_with_tuple_argument(self, log_method):
-        checker = checks.CheckLoggingFormatArgs
-        code = """
-               import logging
-               LOG = logging.getLogger()
-               LOG.{0}("Volume %s caught fire and is at %d degrees C and "
-                      "climbing.", ('volume1', 500))
-               """
-        if (sys.version_info >= (3, 8)):
-            exc_errors = [(4, 20, 'B310')]
-        else:
-            exc_errors = [(4, 21, 'B310')]
-        self._assert_has_errors(code.format(log_method), checker,
-                                expected_errors=exc_errors)
-
-    def test_str_on_exception(self):
-
-        checker = checks.CheckForStrUnicodeExc
-        code = """
-               def f(a, b):
-                   try:
-                       p = str(a) + str(b)
-                   except ValueError as e:
-                       p = str(e)
-                   return p
-               """
-        errors = [(5, 16, 'B314')]
-        self._assert_has_errors(code, checker, expected_errors=errors)
-
-    def test_no_str_unicode_on_exception(self):
-        checker = checks.CheckForStrUnicodeExc
-        code = """
-               def f(a, b):
-                   try:
-                       p = unicode(a) + str(b)
-                   except ValueError as e:
-                       p = e
-                   return p
-               """
-        self._assert_has_no_errors(code, checker)
-
-    def test_unicode_on_exception(self):
-        checker = checks.CheckForStrUnicodeExc
-        code = """
-               def f(a, b):
-                   try:
-                       p = str(a) + str(b)
-                   except ValueError as e:
-                       p = unicode(e)
-                   return p
-               """
-        errors = [(5, 20, 'B314')]
-        self._assert_has_errors(code, checker, expected_errors=errors)
-
-    def test_str_on_multiple_exceptions(self):
-        checker = checks.CheckForStrUnicodeExc
-        code = """
-               def f(a, b):
-                   try:
-                       p = str(a) + str(b)
-                   except ValueError as e:
-                       try:
-                           p  = unicode(a) + unicode(b)
-                       except ValueError as ve:
-                           p = str(e) + str(ve)
-                       p = e
-                   return p
-               """
-        errors = [(8, 20, 'B314'), (8, 29, 'B314')]
-        self._assert_has_errors(code, checker, expected_errors=errors)
-
-    def test_str_unicode_on_multiple_exceptions(self):
-        checker = checks.CheckForStrUnicodeExc
-        code = """
-               def f(a, b):
-                   try:
-                       p = str(a) + str(b)
-                   except ValueError as e:
-                       try:
-                           p  = unicode(a) + unicode(b)
-                       except ValueError as ve:
-                           p = str(e) + unicode(ve)
-                       p = str(e)
-                   return p
-               """
-        errors = [(8, 20, 'B314'), (8, 33, 'B314'), (9, 16, 'B314')]
-        self._assert_has_errors(code, checker, expected_errors=errors)
 
     def test_dict_constructor_with_list_copy(self):
         self.assertEqual(1, len(list(checks.dict_constructor_with_list_copy(

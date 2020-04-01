@@ -83,7 +83,7 @@ def set_subject_X509Name(target, dn):
         elif name.lower() == 'l':
             target.L = value
         elif name.lower() == 'o':
-            target.O = value
+            target.O = value  # noqa: E741
     return target
 
 
