@@ -43,7 +43,7 @@ data models.
 
 .. autoclass:: GenerateDTO
 
-.. autoclass:: GenerateDTO
+.. autoclass:: ResponseDTO
 
 Plugin Base Class
 =================
