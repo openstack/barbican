@@ -32,6 +32,9 @@ To file a bug, use our bug tracker on `OpenStack Storyboard
 Release notes for the project can be found at
 https://docs.openstack.org/releasenotes/barbican.
 
+Future design work is tracked at
+https://specs.openstack.org/openstack/barbican-specs.
+
 For development questions or discussion, use the `OpenStack-discuss
 mailing list <http://lists.openstack.org/pipermail/openstack-discuss/>`_
 at `openstack-discuss@lists.openstack.org` and let us know what you
