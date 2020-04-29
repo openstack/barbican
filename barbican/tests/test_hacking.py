@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import sys
 import textwrap
 from unittest import mock
 
@@ -100,8 +101,12 @@ class HackingTestCase(utils.BaseTestCase):
                LOG.{0}("Volume %s caught fire and is at %d degrees C and "
                       "climbing.", ('volume1', 500))
                """
+        if (sys.version_info >= (3, 8)):
+            exc_errors = [(4, 20, 'B310')]
+        else:
+            exc_errors = [(4, 21, 'B310')]
         self._assert_has_errors(code.format(log_method), checker,
-                                expected_errors=[(4, 21, 'B310')])
+                                expected_errors=exc_errors)
 
     def test_str_on_exception(self):
 
