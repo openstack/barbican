@@ -14,7 +14,7 @@
 """
 This test module tests the barbican.api.__init__.py module functionality.
 """
-import mock
+from unittest import mock
 
 from oslo_serialization import jsonutils as json
 

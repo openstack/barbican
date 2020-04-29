@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mock
+from unittest import mock
+
+from oslo_utils import uuidutils
 import sqlalchemy
 
 from barbican.common import exception
@@ -24,7 +26,6 @@ from barbican.plugin.crypto import manager
 from barbican.plugin import resources as plugin
 from barbican.tasks import keystone_consumer as consumer
 from barbican.tests import database_utils
-from oslo_utils import uuidutils
 
 
 class InitializeDatabaseMixin(object):

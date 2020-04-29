@@ -13,9 +13,9 @@
 
 import datetime
 import time
+from unittest import mock
 
 import eventlet
-import mock
 import oslotest.base as oslotest
 
 from barbican.model import models

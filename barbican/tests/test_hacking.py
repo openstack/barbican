@@ -13,9 +13,9 @@
 #    under the License.
 
 import textwrap
+from unittest import mock
 
 import ddt
-import mock
 import pep8
 
 from barbican.hacking import checks

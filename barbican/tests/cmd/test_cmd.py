@@ -12,8 +12,8 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import mock
 import sys
+from unittest import mock
 
 from barbican.cmd import retry_scheduler
 from barbican.cmd import worker

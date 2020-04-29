@@ -19,18 +19,16 @@ import os
 from os import path
 import time
 import types
+from unittest import mock
 
-import mock
+from OpenSSL import crypto
 from oslo_config import cfg
 from oslo_utils import uuidutils
 import oslotest.base as oslotest
 from oslotest import createfile
-
 import six
 from six.moves.urllib import parse
 import webtest
-
-from OpenSSL import crypto
 
 from barbican.api import app
 from barbican.common import config
@@ -38,7 +36,6 @@ import barbican.context
 from barbican.model import repositories
 from barbican.plugin.crypto import manager as cm
 from barbican.plugin.crypto import p11_crypto
-
 from barbican.plugin.interface import secret_store
 from barbican.plugin import kmip_secret_store as kss
 from barbican.tests import database_utils

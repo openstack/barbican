@@ -19,8 +19,8 @@ resource classes. For RBAC tests of these classes, see the
 'resources_policy_test.py' module.
 """
 import mimetypes
+from unittest import mock
 
-import mock
 import pecan
 from testtools import testcase
 import webtest

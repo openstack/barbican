@@ -14,11 +14,11 @@
 # limitations under the License.
 
 import os
+from unittest import mock
 
 from cryptography import fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-import mock
 import six
 
 from barbican.model import models

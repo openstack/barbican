@@ -14,8 +14,8 @@
 # limitations under the License.
 
 import os
+from unittest import mock
 
-import mock
 from oslo_serialization import jsonutils as json
 from oslo_utils import uuidutils
 

@@ -16,19 +16,17 @@ import base64
 import ssl
 import stat
 import testtools
-
-import mock
-
-from barbican.plugin.interface import secret_store
-from barbican.tests import keys
-from barbican.tests import utils
+from unittest import mock
 
 from kmip.core import enums
 from kmip.pie import client
 from kmip.pie import objects
 
+from barbican.plugin.interface import secret_store
 from barbican.plugin import kmip_secret_store as kss
 from barbican.plugin.util import translations
+from barbican.tests import keys
+from barbican.tests import utils
 
 
 def get_sample_opaque_secret():

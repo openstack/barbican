@@ -12,8 +12,7 @@
 # limitations under the License.
 
 import unittest
-
-import mock
+from unittest import mock
 
 from barbican.api.middleware import simple
 

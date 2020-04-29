@@ -14,7 +14,8 @@
 # limitations under the License.
 
 import collections
-import mock
+from unittest import mock
+
 from oslo_utils import uuidutils
 
 from barbican.common import config

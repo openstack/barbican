@@ -18,7 +18,8 @@ This test module focuses on typical-flow business logic tests with the
 transport key resource classes.
 """
 
-import mock
+from unittest import mock
+
 import pecan
 from six import moves
 import webtest

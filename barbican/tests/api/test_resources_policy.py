@@ -18,8 +18,8 @@ For typical-flow business logic tests of these classes, see the
 'resources_test.py' module.
 """
 import os
+from unittest import mock
 
-import mock
 from webob import exc
 
 from barbican.api.controllers import consumers
