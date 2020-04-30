@@ -60,9 +60,6 @@ repository_name = 'openstack/barbican'
 bug_project = 'barbican'
 bug_tag = ''
 
-# Must set this variable to include year, month, day, hours, and minutes.
-html_last_updated_fmt = '%Y-%m-%d %H:%M'
-
 # Release notes are version independent.
 # The short X.Y version.
 version = ''
