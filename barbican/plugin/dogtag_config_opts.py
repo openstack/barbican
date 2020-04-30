@@ -46,7 +46,7 @@ dogtag_plugin_opts = [
     cfg.StrOpt('auto_approved_profiles',
                default="caServerCert",
                help=u._('List of automatically approved enrollment profiles')),
-    cfg.StrOpt('ca_expiration_time',
+    cfg.IntOpt('ca_expiration_time',
                default=cm.CA_INFO_DEFAULT_EXPIRATION_DAYS,
                help=u._('Time in days for CA entries to expire')),
     cfg.StrOpt('plugin_working_dir',
