@@ -345,7 +345,7 @@ class NewSecretMetadataValidator(ValidatorBase):
         """Extracts and returns the metadata from the JSON data."""
         metadata = json_data['metadata']
 
-        for key in metadata:
+        for key in list(metadata):
             # make sure key is a string and url-safe.
             if not isinstance(key, six.string_types):
                 raise exception.InvalidMetadataRequest()
