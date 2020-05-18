@@ -99,7 +99,6 @@ Design Goals
 3. Application adoption costs should be minimal or non-existent.
 4. Build a community and ecosystem by being open-source and extensible.
 5. Improve security through sane defaults and centralized management
-   of `policies for all secrets
-   <https://github.com/cloudkeep/barbican/wiki/Policies>`_.
+   of `policies for all secrets`.
 6. Provide an out of band communication mechanism to notify and protect sensitive
    assets.
