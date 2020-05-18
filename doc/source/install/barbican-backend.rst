@@ -363,7 +363,7 @@ The HMAC and MKEK keys can be generated as follows:
 
 
 KMIP Plugin
------------
+^^^^^^^^^^^
 
 This secret store plugin is used to communicate with a KMIP device.
 The secret is securely stored in the KMIP device directly, rather than in the
@@ -391,7 +391,7 @@ The configuration for this plugin in ``/etc/barbican/barbican.conf`` is as follo
        ca_certs = '/path/to/certs/LocalCA.crt'
 
 Dogtag Plugin
--------------
+^^^^^^^^^^^^^
 
 Dogtag is the upstream project corresponding to the Red Hat Certificate System,
 a robust, full-featured PKI solution that contains a Certificate Manager (CA)
