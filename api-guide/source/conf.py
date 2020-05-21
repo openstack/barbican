@@ -46,9 +46,10 @@ source_suffix = '.rst'
 master_doc = 'index'
 # General information about the project.
 project = u'Key Manager API Guide'
-bug_tag = u'api-guide'
-repository_name = 'openstack/barbican'
-bug_project = 'barbican'
+openstackdocs_bug_tag = u'api-guide'
+openstackdocs_repo_name = 'openstack/barbican'
+openstackdocs_auto_name = False
+openstackdocs_bug_project = 'barbican'
 
 copyright = u'2016, OpenStack contributors'
 
@@ -83,7 +84,7 @@ exclude_patterns = []
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'native'
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
