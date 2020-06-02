@@ -12,7 +12,6 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import with_statement
 
 from alembic import context
 from oslo_db.sqlalchemy import session

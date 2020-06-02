@@ -19,8 +19,6 @@
     CLI interface for barbican management
 """
 
-from __future__ import print_function
-
 import argparse
 import sys
 
