@@ -1,12 +1,19 @@
-Welcome to the Barbican Project documentation!
-==============================================
+OpenStack Key Manager (barbican)
+================================
+
+.. figure:: images/mascot.png
+   :alt: Barbican logo
+   :width: 210
+
+What is Barbican?
+-----------------
 
 Barbican is the OpenStack Key Manager service. It provides secure storage,
 provisioning and management of secret data.  This includes keying material
 such as Symmetric Keys, Asymmetric Keys, Certificates and raw binary data.
 
 API Guide
-==========
+---------
 
 If you're trying to learn how to use barbican, you can start by reading about
 `Secrets in the Barbican API Guide <https://docs.openstack.org/api-guide/key-manager/secrets.html>`__.
@@ -22,13 +29,14 @@ API.
    install/index
    configuration/index
    contributor/index
+
 .. toctree::
    :maxdepth: 2
 
    api/index.rst
 
 Sample Files
-============
+------------
 
 .. toctree::
    :maxdepth: 2
@@ -39,7 +47,7 @@ Sample Files
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
