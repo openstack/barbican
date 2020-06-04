@@ -56,9 +56,10 @@ master_doc = 'index'
 # General information about the project.
 project = u'Barbican Release Notes'
 copyright = u'2015, Barbican Developers'
-repository_name = 'openstack/barbican'
-bug_project = 'barbican'
-bug_tag = ''
+openstackdocs_repo_name = 'openstack/barbican'
+openstackdocs_auto_name = False
+openstackdocs_bug_project = 'barbican'
+openstackdocs_bug_tag = ''
 
 # Release notes are version independent.
 # The short X.Y version.
@@ -96,7 +97,7 @@ exclude_patterns = []
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'native'
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []

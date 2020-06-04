@@ -51,9 +51,11 @@ master_doc = 'index'
 # General information about the project.
 project = u'Barbican'
 copyright = u'2014, OpenStack Foundation'
-repository_name = 'openstack/barbican'
-bug_project = 'barbican'
-bug_tag = ''
+openstackdocs_repo_name = 'openstack/barbican'
+openstackdocs_pdf_link = True
+openstackdocs_auto_name = False
+openstackdocs_bug_project = 'barbican'
+openstackdocs_bug_tag = ''
 
 # Add any paths that contain "extra" files, such as .htaccess or
 # robots.txt.
@@ -67,7 +69,7 @@ add_function_parentheses = True
 add_module_names = True
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'native'
 
 # -- Options for HTML output --------------------------------------------------
 
