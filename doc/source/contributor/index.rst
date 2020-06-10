@@ -21,6 +21,7 @@ When you're ready to dive deeper in to barbican take a look at:
 .. toctree::
    :maxdepth: 1
 
+   contributing.rst
    getting_involved.rst
    architecture.rst
    structure.rst
