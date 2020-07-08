@@ -97,21 +97,21 @@ class TestProjectQuotas(test_ovo_base.OVOTestCase):
         self.assertEqual(0, offset)
         self.assertEqual(10, limit)
         self.assertEqual(2, total)
-        self.assertItemsEqual([self.project_id1, self.project_id2],
+        self.assertCountEqual([self.project_id1, self.project_id2],
                               [s.project_id for s in retrieved_project_quotas])
-        self.assertItemsEqual([self.external_id1,
+        self.assertCountEqual([self.external_id1,
                                self.external_id2],
                               [s.project.external_id for s
                                in retrieved_project_quotas])
-        self.assertItemsEqual([101, 201],
+        self.assertCountEqual([101, 201],
                               [s.secrets for s in retrieved_project_quotas])
-        self.assertItemsEqual([102, 202],
+        self.assertCountEqual([102, 202],
                               [s.orders for s in retrieved_project_quotas])
-        self.assertItemsEqual([103, 203],
+        self.assertCountEqual([103, 203],
                               [s.containers for s in retrieved_project_quotas])
-        self.assertItemsEqual([105, 205],
+        self.assertCountEqual([105, 205],
                               [s.consumers for s in retrieved_project_quotas])
-        self.assertItemsEqual([106, 206],
+        self.assertCountEqual([106, 206],
                               [s.cas for s in retrieved_project_quotas])
 
     def test_ovo_should_raise_get_list_of_zero_project_quotas(self):
