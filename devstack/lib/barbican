@@ -163,7 +163,7 @@ function configure_barbican {
     iniset $BARBICAN_PASTE_CONF 'pipeline:barbican_api' pipeline 'barbican-api-keystone'
 
     # Set the keystone parameters
-    configure_auth_token_middleware $BARBICAN_CONF barbican $BARBICAN_AUTH_CACHE_DIR
+    configure_keystone_authtoken_middleware $BARBICAN_CONF barbican
 
     # Enable the keystone listener
     iniset $BARBICAN_CONF keystone_notifications enable True
@@ -172,11 +172,6 @@ function configure_barbican {
 
 # init_barbican - Initialize etc.
 function init_barbican {
-    # Create cache dir
-    sudo mkdir -p $BARBICAN_AUTH_CACHE_DIR
-    sudo chown $STACK_USER $BARBICAN_AUTH_CACHE_DIR
-    rm -f $BARBICAN_AUTH_CACHE_DIR/*
-
     recreate_database barbican utf8
 
     $BARBICAN_BIN_DIR/barbican-manage db upgrade -v head
