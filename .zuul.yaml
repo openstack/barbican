@@ -20,7 +20,7 @@
       Functional testing for DogTag backend
     vars:
       devstack_services:
-        dogtag: true
+        barbican-dogtag: true
 
 - job:
     name: barbican-vault-tox-functional
