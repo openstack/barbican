@@ -36,7 +36,7 @@ GITBRANCH["python-barbicanclient"]=${BARBICANCLIENT_BRANCH:-$TARGET_BRANCH}
 GITDIR["python-barbicanclient"]=$DEST/python-barbicanclient
 
 # Set host href
-BARBICAN_HOST_HREF=${BARBICAN_HOST_HREF:-http://${SERVICE_HOST}/key-manager}
+BARBICAN_HOST_HREF=${BARBICAN_HOST_HREF:-$SERVICE_PROTOCOL://${SERVICE_HOST}/key-manager}
 
 GITREPO["barbican-tempest-plugin"]=${BARBICANTEMPEST_REPO:-${GIT_BASE}/openstack/barbican-tempest-plugin.git}
 GITBRANCH["barbican-tempest-plugin"]=${BARBICANTEMPEST_BRANCH:-master}
