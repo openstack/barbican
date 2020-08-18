@@ -9,6 +9,7 @@
 # - functions
 # - OS_AUTH_URL for auth in api
 # - DEST set to the destination directory
+# - SERVICE_PROTOCOL, SERVICE_HOST to define the API endpoints
 # - SERVICE_PASSWORD, SERVICE_PROJECT_NAME for auth in api
 # - STACK_USER service user
 
@@ -386,12 +387,12 @@ function create_barbican_accounts {
         --os-identity-api-version 3 \
         --region RegionOne \
         $BARBICAN_SERVICE \
-        public "http://$SERVICE_HOST/key-manager"
+        public "$SERVICE_PROTOCOL://$SERVICE_HOST/key-manager"
     openstack endpoint create \
         --os-identity-api-version 3 \
         --region RegionOne \
         $BARBICAN_SERVICE \
-        internal "http://$SERVICE_HOST/key-manager"
+        internal "$SERVICE_PROTOCOL://$SERVICE_HOST/key-manager"
 
 }
 
