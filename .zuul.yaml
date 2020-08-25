@@ -8,8 +8,6 @@
       - name: openstack/castellan
       - name: openstack/openstacksdk
     vars:
-      devstack_localrc:
-        USE_PYTHON3: true
       devstack_plugins:
         barbican: https://opendev.org/openstack/barbican
       tox_install_siblings: true
