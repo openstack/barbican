@@ -30,6 +30,8 @@ class BaseContextMiddleware(mw.Middleware):
         if not request_id:
             request_id = 'req-' + utils.generate_uuid()
         setattr(req, 'request_id', request_id)
+        LOG.info('Begin processing request %(request_id)',
+                 {'request_id': request_id})
 
     def process_response(self, resp):
 
