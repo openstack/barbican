@@ -666,7 +666,7 @@ def _catch_subca_deletion_exceptions(ca_related_function):
     def _catch_subca_exception(self, *args, **kwargs):
         try:
             return ca_related_function(self, *args, **kwargs)
-        except pki.ResourceNotFoundException as e:
+        except pki.ResourceNotFoundException:
             LOG.warning("Sub-CA already deleted")
             pass
         except pki.PKIException as e:
