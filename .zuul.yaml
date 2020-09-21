@@ -2,6 +2,12 @@
 - job:
     name: barbican-tox-functional
     parent: devstack-tox-functional
+    # TODO(gmann): Remove the below nodeset setting to Bionic once
+    # https://storyboard.openstack.org/#!/story/2007732 is fixed
+    # Once nodeset is removed form here then devstack-tox-functional job
+    # will automatically run this job on Ubuntu Focal nodeset from
+    # Victoria gate onwards.
+    nodeset: openstack-single-node-bionic
     description: Functional testing
     required-projects:
       - name: openstack/barbican
