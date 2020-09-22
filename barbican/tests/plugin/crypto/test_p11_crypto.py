@@ -24,9 +24,6 @@ from barbican.plugin.crypto import p11_crypto
 from barbican.plugin.crypto import pkcs11
 from barbican.tests import utils
 
-if six.PY3:
-    long = int
-
 
 def generate_random_effect(length, session):
     return b'0' * length
@@ -38,15 +35,15 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         super(WhenTestingP11CryptoPlugin, self).setUp()
 
         self.pkcs11 = mock.Mock()
-        self.pkcs11.get_session.return_value = long(1)
+        self.pkcs11.get_session.return_value = int(1)
         self.pkcs11.return_session.return_value = None
         self.pkcs11.generate_random.side_effect = generate_random_effect
-        self.pkcs11.get_key_handle.return_value = long(2)
+        self.pkcs11.get_key_handle.return_value = int(2)
         self.pkcs11.encrypt.return_value = {'iv': b'0', 'ct': b'0'}
         self.pkcs11.decrypt.return_value = b'0'
-        self.pkcs11.generate_key.return_value = long(3)
+        self.pkcs11.generate_key.return_value = int(3)
         self.pkcs11.wrap_key.return_value = {'iv': b'1', 'wrapped_key': b'1'}
-        self.pkcs11.unwrap_key.return_value = long(4)
+        self.pkcs11.unwrap_key.return_value = int(4)
         self.pkcs11.compute_hmac.return_value = b'1'
         self.pkcs11.verify_hmac.return_value = None
         self.pkcs11.destroy_object.return_value = None
