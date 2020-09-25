@@ -13,14 +13,10 @@
 
 from unittest import mock
 
-import six
 
 from barbican.common import exception
 from barbican.plugin.crypto import pkcs11
 from barbican.tests import utils
-
-if six.PY3:
-    long = int
 
 
 class WhenTestingPKCS11(utils.BaseTestCase):
@@ -90,16 +86,16 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         return pkcs11.CKR_OK
 
     def _open_session(self, *args, **kwargs):
-        args[4][0] = long(1)
+        args[4][0] = int(1)
         return pkcs11.CKR_OK
 
     def _find_objects_one(self, session, obj_handle_ptr, max_count, count):
-        obj_handle_ptr[0] = long(2)
+        obj_handle_ptr[0] = int(2)
         count[0] = 1
         return pkcs11.CKR_OK
 
     def _find_objects_two(self, session, obj_handle_ptr, max_count, count):
-        obj_handle_ptr[0] = long(2)
+        obj_handle_ptr[0] = int(2)
         count[0] = 2
         return pkcs11.CKR_OK
 
@@ -109,7 +105,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
 
     def _generate_key(self, session, mech, attributes, attributes_len,
                       obj_handle_ptr):
-        obj_handle_ptr[0] = long(3)
+        obj_handle_ptr[0] = int(3)
         return pkcs11.CKR_OK
 
     def _encrypt(self, session, pt, pt_len, ct, ct_len):
@@ -128,14 +124,14 @@ class WhenTestingPKCS11(utils.BaseTestCase):
     def _wrap_key(self, *args, **kwargs):
         wrapped_key = args[4]
         wrapped_key_len = args[5]
-        wrapped_key_len[0] = long(16)
+        wrapped_key_len[0] = int(16)
         if wrapped_key != self.ffi.NULL:
             self.ffi.buffer(wrapped_key)[:] = b'0' * 16
         return pkcs11.CKR_OK
 
     def _unwrap_key(self, *args, **kwargs):
         unwrapped_key = args[7]
-        unwrapped_key[0] = long(1)
+        unwrapped_key[0] = int(1)
         return pkcs11.CKR_OK
 
     def _sign(self, *args, **kwargs):
