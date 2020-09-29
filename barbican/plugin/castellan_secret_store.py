@@ -26,8 +26,7 @@ from barbican.plugin.interface import secret_store as ss
 LOG = log.getLogger(__name__)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class CastellanSecretStore(ss.SecretStoreBase):
+class CastellanSecretStore(ss.SecretStoreBase, metaclass=abc.ABCMeta):
 
     KEY_ID = "key_id"
     ALG = "alg"

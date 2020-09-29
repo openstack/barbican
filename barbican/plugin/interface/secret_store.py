@@ -16,7 +16,6 @@
 import abc
 
 from oslo_config import cfg
-import six
 from stevedore import named
 
 from barbican.common import config
@@ -389,8 +388,7 @@ class AsymmetricKeyMetadataDTO(object):
         self.passphrase_meta = passphrase_meta
 
 
-@six.add_metaclass(abc.ABCMeta)
-class SecretStoreBase(object):
+class SecretStoreBase(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_plugin_name(self):

@@ -13,8 +13,6 @@
 
 import abc
 
-import six
-
 from barbican.common import exception
 from barbican import i18n as u
 
@@ -240,8 +238,7 @@ class EncryptDTO(object):
         self.unencrypted = unencrypted
 
 
-@six.add_metaclass(abc.ABCMeta)
-class CryptoPluginBase(object):
+class CryptoPluginBase(object, metaclass=abc.ABCMeta):
     """Base class for all Crypto plugins.
 
     Barbican requests operations by invoking the methods on an instance of the

@@ -86,8 +86,7 @@ def validate_stored_key_rsa_container(project_id, container_ref, req):
                                  ctxt)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ValidatorBase(object):
+class ValidatorBase(object, metaclass=abc.ABCMeta):
     """Base class for validators."""
 
     name = ''
