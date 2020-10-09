@@ -430,3 +430,31 @@ The configuration for this plugin in ``/etc/barbican/barbican.conf`` is as follo
        dogtag_port = 8443
        nss_db_path = '/etc/barbican/alias'
        nss_password = 'password123'
+
+Vault Plugin
+^^^^^^^^^^^^
+
+Vault is a Hashicorp tool for securely accessing secrets and other objects,
+such as API keys, passwords, or certificates. Vault provides a unified
+interface to any secret, while providing tight access control and recording
+a detailed audit log.
+
+The plugin communicates with the Vault using a Vault token.
+
+The configuration for this plugin in ``/etc/barbican/barbican.conf`` is as
+follows:
+
+    .. code-block:: ini
+
+       [secretstore]
+       ..
+       enabled_secretstore_plugins = vault_plugin
+
+       [vault_plugin]
+       root_token_id =
+       approle_role_id =
+       approle_secret_id =
+       kv_mountpoint = secret
+       vault_url = https://127.0.0.1:8200
+       use_ssl = True
+       ssl_ca_crt_file = /opt/vault/tls/tls-ca.crt

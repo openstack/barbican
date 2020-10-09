@@ -39,7 +39,7 @@ Multiple plugin configuration can be defined as follows.
     [secretstore]
     # Set to True when multiple plugin backends support is needed
     enable_multiple_secret_stores = True
-    stores_lookup_suffix = software, kmip, pkcs11, dogtag
+    stores_lookup_suffix = software, kmip, pkcs11, dogtag, vault
 
     [secretstore:software]
     secret_store_plugin = store_crypto
@@ -55,6 +55,9 @@ Multiple plugin configuration can be defined as follows.
     [secretstore:pkcs11]
     secret_store_plugin = store_crypto
     crypto_plugin = p11_crypto
+
+    [secretstore:vault]
+    secret_store_plugin = vault_plugin
 
 When `enable_multiple_secret_stores` is enabled (True), then list property
 `stores_lookup_suffix` is used for looking up supported plugin names in
