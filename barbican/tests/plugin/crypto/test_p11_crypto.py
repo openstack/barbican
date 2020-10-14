@@ -56,6 +56,8 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.cfg_mock.p11_crypto_plugin.hmac_label = 'hmac_label'
         self.cfg_mock.p11_crypto_plugin.mkek_length = 32
         self.cfg_mock.p11_crypto_plugin.slot_id = 1
+        self.cfg_mock.p11_crypto_plugin.token_serial_number = None
+        self.cfg_mock.p11_crypto_plugin.token_label = None
         self.cfg_mock.p11_crypto_plugin.rw_session = True
         self.cfg_mock.p11_crypto_plugin.pkek_length = 32
         self.cfg_mock.p11_crypto_plugin.pkek_cache_ttl = 900
@@ -288,6 +290,8 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
             return pkcs11.CKR_OK
         lib = mock.Mock()
         lib.C_Initialize.return_value = pkcs11.CKR_OK
+        lib.C_GetSlotList.return_value = pkcs11.CKR_OK
+        lib.C_GetTokenInfo.return_value = pkcs11.CKR_OK
         lib.C_OpenSession.return_value = pkcs11.CKR_OK
         lib.C_CloseSession.return_value = pkcs11.CKR_OK
         lib.C_GetSessionInfo.return_value = pkcs11.CKR_OK

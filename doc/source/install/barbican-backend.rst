@@ -98,6 +98,15 @@ The PKCS#11 plugin configuration looks like:
        # Path to vendor PKCS11 library
        library_path = '/usr/lib/libCryptoki2_64.so'
 
+       # Token serial number used to identify the token to be used.  Required
+       # when the device has multiple tokens with the same label. (string
+       # value)
+       token_serial_number = 12345678
+
+       # Token label used to identify the token to be used.  Required when
+       # token_serial_number is not specified. (string value)
+       #token_label = <None>
+
        # Password to login to PKCS11 session
        login = 'mypassword'
 
@@ -110,8 +119,10 @@ The PKCS#11 plugin configuration looks like:
        # Label to identify HMAC key in the HSM (must not be the same as MKEK label)
        hmac_label = 'my_hmac_label'
 
-       # HSM Slot id (Should correspond to a configured PKCS11 slot). Default: 1
-       # slot_id = 1
+       # (Optional) HSM Slot ID that contains the token device to be used.
+       # (integer value)
+       #slot_id = 1
+
 
        # Enable Read/Write session with the HSM?
        # rw_session = True
@@ -141,6 +152,15 @@ For a nCipher nShield Connect XC, the plugin configuration looks like:
        # Path to vendor PKCS11 library
        library_path = '/opt/nfast/toolkits/pkcs11/libcknfast.so'
 
+       # Token serial number used to identify the token to be used.  Required
+       # when the device has multiple tokens with the same label. (string
+       # value)
+       token_serial_number = 12345678
+
+       # Token label used to identify the token to be used.  Required when
+       # token_serial_number is not specified. (string value)
+       #token_label = <None>
+
        # Password to login to PKCS11 session
        login = 'XXX'
 
@@ -153,7 +173,8 @@ For a nCipher nShield Connect XC, the plugin configuration looks like:
        # Label to identify HMAC key in the HSM (must not be the same as MKEK label)
        hmac_label = 'thales_hmac_0'
 
-       # HSM Slot id (Should correspond to a configured PKCS11 slot). Default: 1
+       # (Optional) HSM Slot ID that contains the token device to be used.
+       # (integer value)
        # slot_id = 1
 
        # Enable Read/Write session with the HSM?
@@ -220,6 +241,15 @@ For an ATOS Bull HSM, the plugin configuration looks like:
        # Path to vendor PKCS11 library
        library_path = '/usr/lib64/libnethsm.so'
 
+       # Token serial number used to identify the token to be used.  Required
+       # when the device has multiple tokens with the same label. (string
+       # value)
+       token_serial_number = 12345678
+
+       # Token label used to identify the token to be used.  Required when
+       # token_serial_number is not specified. (string value)
+       #token_label = <None>
+
        # Password to login to PKCS11 session
        login = 'XXX'
 
@@ -232,7 +262,8 @@ For an ATOS Bull HSM, the plugin configuration looks like:
        # Label to identify HMAC key in the HSM (must not be the same as MKEK label)
        hmac_label = 'atos_hmac_0'
 
-       # HSM Slot id (Should correspond to a configured PKCS11 slot). Default: 1
+       # (Optional) HSM Slot ID that contains the token device to be used.
+       # (integer value)
        # slot_id = 1
 
        # Enable Read/Write session with the HSM?
@@ -293,6 +324,15 @@ The PKCS#11 plugin configuration looks like:
         # Path to vendor PKCS11 library (string value)
         library_path = '/opt/utimaco/lib/libcs_pkcs11_R2.so'
 
+        # Token serial number used to identify the token to be used.  Required
+        # when the device has multiple tokens with the same label. (string
+        # value)
+        token_serial_number = 12345678
+
+        # Token label used to identify the token to be used.  Required when
+        # token_serial_number is not specified. (string value)
+        #token_label = <None>
+
         # Password to login to PKCS11 session (string value)
         login = '$up3r$e<retP4ssw0rd'
 
@@ -305,8 +345,9 @@ The PKCS#11 plugin configuration looks like:
         # Master HMAC Key label (as stored in the HSM) (string value)
         hmac_label = 'my_hmac_key'
 
-        # HSM Slot ID (integer value)
-        slot_id = 0
+        # (Optional) HSM Slot ID that contains the token device to be used.
+        # (integer value)
+        # slot_id = 1
 
         # Flag for Read/Write Sessions (boolean value)
         #rw_session = true

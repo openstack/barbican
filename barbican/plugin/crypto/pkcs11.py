@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import collections
+import itertools
 import textwrap
 
 import cffi
@@ -27,8 +28,10 @@ LOG = utils.getLogger(__name__)
 Attribute = collections.namedtuple("Attribute", ["type", "value"])
 CKAttributes = collections.namedtuple("CKAttributes", ["template", "cffivals"])
 CKMechanism = collections.namedtuple("CKMechanism", ["mech", "cffivals"])
+Token = collections.namedtuple("Token", ["slot_id", "label", "serial_number"])
 
 CKR_OK = 0
+CK_TRUE = 1
 CKF_RW_SESSION = (1 << 1)
 CKF_SERIAL_SESSION = (1 << 2)
 CKU_SO = 0
@@ -263,11 +266,15 @@ def build_ffi():
     ffi = cffi.FFI()
     ffi.cdef(textwrap.dedent("""
     typedef unsigned char CK_BYTE;
+    typedef CK_BYTE CK_CHAR;
+    typedef CK_BYTE CK_UTF8CHAR;
+    typedef CK_BYTE CK_BBOOL;
     typedef unsigned long CK_ULONG;
     typedef unsigned long CK_RV;
     typedef unsigned long CK_SESSION_HANDLE;
     typedef unsigned long CK_OBJECT_HANDLE;
     typedef unsigned long CK_SLOT_ID;
+    typedef CK_SLOT_ID * CK_SLOT_ID_PTR;
     typedef unsigned long CK_FLAGS;
     typedef unsigned long CK_STATE;
     typedef unsigned long CK_USER_TYPE;
@@ -293,6 +300,44 @@ def build_ffi():
     typedef CK_MECHANISM *CK_MECHANISM_PTR;
     typedef CK_BYTE *CK_BYTE_PTR;
     typedef CK_ULONG *CK_ULONG_PTR;
+
+    typedef struct CK_VERSION {
+        CK_BYTE major;
+        CK_BYTE minor;
+    } CK_VERSION;
+
+    typedef struct CK_SLOT_INFO {
+        CK_UTF8CHAR slotDescription[64];
+        CK_UTF8CHAR manufacturerID[32];
+        CK_FLAGS    flags;
+
+        CK_VERSION  hardwareVersion;
+        CK_VERSION  firmwareVersion;
+    } CK_SLOT_INFO;
+    typedef CK_SLOT_INFO * CK_SLOT_INFO_PTR;
+
+    typedef struct CK_TOKEN_INFO {
+        CK_UTF8CHAR label[32];
+        CK_UTF8CHAR manufacturerID[32];
+        CK_UTF8CHAR model[16];
+        CK_CHAR serialNumber[16];
+        CK_FLAGS flags;
+
+        CK_ULONG ulMaxSessionCount;
+        CK_ULONG ulSessionCount;
+        CK_ULONG ulMaxRwSessionCount;
+        CK_ULONG ulRwSessionCount;
+        CK_ULONG ulMaxPinLen;
+        CK_ULONG ulMinPinLen;
+        CK_ULONG ulTotalPublicMemory;
+        CK_ULONG ulFreePublicMemory;
+        CK_ULONG ulTotalPrivateMemory;
+        CK_ULONG ulFreePrivateMemory;
+        CK_VERSION hardwareVersion;
+        CK_VERSION firmwareVersion;
+        CK_CHAR utcTime[16];
+    } CK_TOKEN_INFO;
+    typedef CK_TOKEN_INFO * CK_TOKEN_INFO_PTR;
 
     typedef struct ck_session_info {
         CK_SLOT_ID slot_id;
@@ -321,6 +366,9 @@ def build_ffi():
     CK_RV C_GetSessionInfo(CK_SESSION_HANDLE, CK_SESSION_INFO_PTR);
     CK_RV C_Login(CK_SESSION_HANDLE, CK_USER_TYPE, CK_UTF8CHAR_PTR,
                   CK_ULONG);
+    CK_RV C_GetSlotList(CK_BBOOL, CK_SLOT_ID_PTR, CK_ULONG_PTR);
+    CK_RV C_GetSlotInfo(CK_SLOT_ID, CK_SLOT_INFO_PTR);
+    CK_RV C_GetTokenInfo(CK_SLOT_ID, CK_TOKEN_INFO_PTR);
     CK_RV C_GetAttributeValue(CK_SESSION_HANDLE, CK_OBJECT_HANDLE,
                               CK_ATTRIBUTE *, CK_ULONG);
     CK_RV C_SetAttributeValue(CK_SESSION_HANDLE, CK_OBJECT_HANDLE,
@@ -365,7 +413,9 @@ class PKCS11(object):
                  ffi=None, algorithm=None,
                  seed_random_buffer=None,
                  generate_iv=None, always_set_cka_sensitive=None,
-                 hmac_keywrap_mechanism='CKM_SHA256_HMAC'):
+                 hmac_keywrap_mechanism='CKM_SHA256_HMAC',
+                 token_serial_number=None,
+                 token_label=None):
         if algorithm:
             LOG.warning("WARNING: Using deprecated 'algorithm' argument.")
             encryption_mechanism = encryption_mechanism or algorithm
@@ -389,7 +439,10 @@ class PKCS11(object):
         # Session options
         self.login_passphrase = _to_bytes(login_passphrase)
         self.rw_session = rw_session
-        self.slot_id = slot_id
+        self.slot_id = self._get_slot_id(
+            token_serial_number,
+            token_label,
+            slot_id)
 
         # Algorithm options
         self.algorithm = CKM_NAMES[encryption_mechanism]
@@ -406,6 +459,72 @@ class PKCS11(object):
             self._seed_random(session, seed_random_buffer)
         self._rng_self_test(session)
         self.return_session(session)
+        LOG.debug("Connected to PCKS11 sn: %s label: %s slot: %s",
+                  token_serial_number, token_label, self.slot_id)
+
+    def _get_slot_id(self, token_serial_number, token_label, slot_id):
+        # First find out how many slots with tokens are available
+        slots_ptr = self.ffi.new("CK_ULONG_PTR")
+        rv = self.lib.C_GetSlotList(CK_TRUE, self.ffi.NULL, slots_ptr)
+        self._check_error(rv)
+
+        # Next get the Slot IDs for each of the available slots
+        slot_ids_ptr = self.ffi.new("CK_SLOT_ID[{}]".format(slots_ptr[0]))
+        rv = self.lib.C_GetSlotList(CK_TRUE, slot_ids_ptr, slots_ptr)
+        self._check_error(rv)
+
+        # Gather details from each token
+        tokens = list()
+        for id in slot_ids_ptr:
+            token_info_ptr = self.ffi.new("CK_TOKEN_INFO_PTR")
+            rv = self.lib.C_GetTokenInfo(id, token_info_ptr)
+            self._check_error(rv)
+            tokens.append(Token(
+                id,
+                self.ffi.string(token_info_ptr.label).decode("UTF-8").strip(),
+                self.ffi.string(
+                    token_info_ptr.serialNumber
+                ).decode("UTF-8").strip()
+            ))
+
+        # Matching serial number gets highest priority
+        if token_serial_number:
+            for token in tokens:
+                if token.serial_number == token_serial_number:
+                    LOG.debug("Found token sn: %s in slot %s",
+                              token.serial_number,
+                              token.slot_id)
+                    if token_label:
+                        LOG.warning(
+                            "Ignoring token_label: %s from barbican.conf",
+                            token_label
+                        )
+                    if slot_id:
+                        LOG.warning("Ignoring slot_id: %s from barbican.conf",
+                                    slot_id)
+                    return token.slot_id
+            raise ValueError("Token Serial Number not found.")
+
+        # Label match is next, raises an error if there's not exactly one match
+        if token_label:
+            matched = list(itertools.dropwhile(
+                lambda x: x.label != token_label,
+                tokens
+            ))
+            if len(matched) > 1:
+                raise ValueError("More than one matching token label found")
+            if len(matched) < 1:
+                raise ValueError("Token Label not found.")
+
+            token = matched.pop()
+            LOG.debug("Found token label: %s in slot %s", token.label,
+                      token.slot_id)
+            if slot_id:
+                LOG.warning("Ignoring slot_id: %s from barbican.conf", slot_id)
+            return token.slot_id
+
+        # If we got this far, slot_id was the only param given, so we return it
+        return slot_id
 
     def get_session(self):
         session = self._open_session(self.slot_id)
