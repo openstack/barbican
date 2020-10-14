@@ -36,6 +36,14 @@ p11_crypto_plugin_group = cfg.OptGroup(name='p11_crypto_plugin',
 p11_crypto_plugin_opts = [
     cfg.StrOpt('library_path',
                help=u._('Path to vendor PKCS11 library')),
+    cfg.StrOpt('token_serial_number',
+               help=u._('Token serial number used to identify the token to be '
+                        'used.  Required when the device has multiple tokens '
+                        'with the same label.')),
+    cfg.StrOpt('token_label',
+               help=u._('Token label used to identify the token to '
+                        'be used.  Required when token_serial_number is '
+                        'not specified.')),
     cfg.StrOpt('login',
                help=u._('Password to login to PKCS11 session'),
                secret=True),
@@ -46,7 +54,8 @@ p11_crypto_plugin_opts = [
     cfg.StrOpt('hmac_label',
                help=u._('Master HMAC Key label (as stored in the HSM)')),
     cfg.IntOpt('slot_id',
-               help=u._('HSM Slot ID'),
+               help=u._('(Optional) HSM Slot ID that contains the token '
+                        'device to be used.'),
                default=1),
     cfg.BoolOpt('rw_session',
                 help=u._('Flag for Read/Write Sessions'),
@@ -310,7 +319,9 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             seed_random_buffer=seed_random_buffer,
             generate_iv=plugin_conf.aes_gcm_generate_iv,
             always_set_cka_sensitive=plugin_conf.always_set_cka_sensitive,
-            hmac_keywrap_mechanism=plugin_conf.hmac_keywrap_mechanism
+            hmac_keywrap_mechanism=plugin_conf.hmac_keywrap_mechanism,
+            token_serial_number=plugin_conf.token_serial_number,
+            token_label=plugin_conf.token_label
         )
 
     def _reinitialize_pkcs11(self):
