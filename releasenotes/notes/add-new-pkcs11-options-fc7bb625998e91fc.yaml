@@ -1,0 +1,14 @@
+---
+features:
+  - |
+    Added two options for the PKCS#11 Crypto Plugin:
+    `[p11_crypto_plugin]/token_serial_number` and
+    `[p11_crypto_plugin]/token_label`.  Both are optional and can be used
+    instead of `[p11_crypto_plugin]/slot_id` to identify the Token to be
+    used by the PKCS#11 plugin.  When either one of the new options is defined
+    the plugin will search all slots on the PKCS#11 device for a token that
+    matches the given value.  `token_serial_number` has the highest precendence
+    and other values will be ignored when this value is set.  If
+    `token_serial_number` is not set, then `token_label` has
+    the next highest precedence and `slot_id` will be ignored.
+    `slot_id` will be used when neither one of the new options is set.

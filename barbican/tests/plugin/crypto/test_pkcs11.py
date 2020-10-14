@@ -27,6 +27,8 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.lib = mock.Mock()
         self.lib.C_Initialize.return_value = pkcs11.CKR_OK
         self.lib.C_Finalize.return_value = pkcs11.CKR_OK
+        self.lib.C_GetSlotList.side_effect = self._get_slot_list
+        self.lib.C_GetTokenInfo.side_effect = self._get_token_info
         self.lib.C_OpenSession.side_effect = self._open_session
         self.lib.C_CloseSession.return_value = pkcs11.CKR_OK
         self.lib.C_GetSessionInfo.side_effect = self._get_session_user
@@ -59,6 +61,10 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.cfg_mock.encryption_mechanism = 'CKM_AES_CBC'
         self.cfg_mock.hmac_keywrap_mechanism = 'CKM_SHA256_HMAC'
 
+        self.token_mock = mock.MagicMock()
+        self.token_mock.label = b'myLabel'
+        self.token_mock.serial_number = b'111111'
+
         self.pkcs11 = pkcs11.PKCS11(
             self.cfg_mock.library_path, self.cfg_mock.login_passphrase,
             self.cfg_mock.rw_session, self.cfg_mock.slot_id,
@@ -69,6 +75,31 @@ class WhenTestingPKCS11(utils.BaseTestCase):
 
     def _generate_random(self, session, buf, length):
         self.ffi.buffer(buf)[:] = b'0' * length
+        return pkcs11.CKR_OK
+
+    def _get_slot_list(self, token_present, slot_ids_ptr, slots_ptr):
+        # default to mocking only one slot (ID: 1)
+        if slot_ids_ptr is not self.ffi.NULL:
+            slot_ids_ptr[0] = 1
+        slots_ptr[0] = 1
+        return pkcs11.CKR_OK
+
+    def _get_token_info(self, id, token_info_ptr):
+        token_info_ptr.serialNumber = self.token_mock.serial_number
+        token_info_ptr.label = self.token_mock.label
+        return pkcs11.CKR_OK
+
+    def _get_two_slot_list(self, token_present, slot_ids_ptr, slots_ptr):
+        # mock two slots (IDs: 1, 2)
+        if slot_ids_ptr is not self.ffi.NULL:
+            slot_ids_ptr[0] = 1
+            slot_ids_ptr[1] = 2
+        slots_ptr[0] = 2
+        return pkcs11.CKR_OK
+
+    def _get_two_token_info_same_label(self, id, token_info_ptr):
+        token_info_ptr.serialNumber = (str(id) * 6).encode('UTF-8')
+        token_info_ptr.label = self.token_mock.label
         return pkcs11.CKR_OK
 
     def _get_session_public(self, session, session_info_ptr):
@@ -142,6 +173,45 @@ class WhenTestingPKCS11(utils.BaseTestCase):
 
     def _verify(self, *args, **kwargs):
         return pkcs11.CKR_OK
+
+    def test_get_slot_id_from_serial_number(self):
+        slot_id = self.pkcs11._get_slot_id('111111', None, 1)
+        self.assertEqual(1, slot_id)
+
+    def test_get_slot_id_from_label(self):
+        slot_id = self.pkcs11._get_slot_id(None, 'myLabel', 1)
+        self.assertEqual(1, slot_id)
+
+    def test_get_slot_id_backwards_compatibility(self):
+        slot_id = self.pkcs11._get_slot_id(None, None, 5)
+        self.assertEqual(5, slot_id)
+
+    def test_get_slot_id_from_serial_ignores_label(self):
+        slot_id = self.pkcs11._get_slot_id('111111', 'badLabel', 1)
+        self.assertEqual(1, slot_id)
+
+    def test_get_slot_id_from_serial_ignores_given_slot(self):
+        slot_id = self.pkcs11._get_slot_id('111111', None, 3)
+        self.assertEqual(1, slot_id)
+
+    def test_get_slot_id_from_label_ignores_given_slot(self):
+        slot_id = self.pkcs11._get_slot_id(None, 'myLabel', 3)
+        self.assertEqual(1, slot_id)
+
+    def test_get_slot_id_serial_not_found(self):
+        self.assertRaises(ValueError,
+                          self.pkcs11._get_slot_id, '222222', None, 1)
+
+    def test_get_slot_id_label_not_found(self):
+        self.assertRaises(ValueError,
+                          self.pkcs11._get_slot_id, None, 'badLabel', 1)
+
+    def test_get_slot_id_two_tokens_same_label(self):
+        self.lib.C_GetSlotList.side_effect = self._get_two_slot_list
+        self.lib.C_GetTokenInfo.side_effect = \
+            self._get_two_token_info_same_label
+        self.assertRaises(ValueError,
+                          self.pkcs11._get_slot_id, None, 'myLabel', 1)
 
     def test_public_get_session(self):
         self.lib.C_GetSessionInfo.side_effect = self._get_session_public
