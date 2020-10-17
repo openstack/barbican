@@ -231,7 +231,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         self.assertIsInstance(secret_dto, secret_store.SecretDTO)
         self.assertEqual(secret_store.SecretType.OPAQUE, secret_dto.type)
         self.assertEqual(
-            base64.encodestring(self.decrypted_secret).rstrip(b'\n'),
+            base64.encodebytes(self.decrypted_secret).rstrip(b'\n'),
             secret_dto.secret)
         self.assertEqual(
             self.encrypted_datum_model.content_type, secret_dto.content_type)
@@ -277,7 +277,7 @@ class WhenTestingStoreCrypto(TestSecretStoreBase):
         secret_type = input_secret_dto.type
 
         decrypt_mock = self.retrieving_plugin.decrypt
-        decrypt_mock.return_value = base64.decodestring(secret)
+        decrypt_mock.return_value = base64.decodebytes(secret)
 
         secret_model = self.context.secret_model
         secret_model.algorithm = key_spec.alg
@@ -703,7 +703,7 @@ class WhenTestingStoreCryptoStoreSecretAndDatum(TestSecretStoreBase):
         self.assertEqual(
             self.content_type, test_datum_model.content_type)
         self.assertEqual(
-            base64.encodestring(self.cypher_text).rstrip(b'\n'),
+            base64.encodebytes(self.cypher_text).rstrip(b'\n'),
             test_datum_model.cypher_text)
         self.assertEqual(
             self.response_dto.kek_meta_extended,
