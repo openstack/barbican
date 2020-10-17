@@ -73,7 +73,7 @@ source code assume that you'll be using ``/etc/barbican/`` for configuration and
    sudo chown $(whoami) /var/lib/barbican
    cp -r etc/barbican /etc
    tox -e genconfig
-   cp etc/osloconfig-generator/barbican.conf /etc/barbican/barbican.conf
+   cp etc/oslo-config-generator/barbican.conf /etc/barbican/barbican.conf
    sed -i 's/\/v1: barbican-api-keystone/\/v1: barbican_api/' /etc/barbican/barbican-api-paste.ini
 
 All the locations are configurable, so you don't have to use ``/etc`` and
