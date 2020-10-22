@@ -107,6 +107,11 @@ def list_opts():
     yield p11_crypto_plugin_group, p11_crypto_plugin_opts
 
 
+def register_opts(conf):
+    for group, options in list_opts():
+        conf.register_opts(options, group)
+
+
 def json_dumps_compact(data):
     return json.dumps(data, separators=(',', ':'))
 

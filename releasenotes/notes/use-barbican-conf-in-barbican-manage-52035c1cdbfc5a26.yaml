@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    The hsm subcommand for the barbican-manage command line tool no longer
+    requires any parameters at run time.  If any value used by the PKCS#11
+    value is needed it will be taken from /etc/barbican/barbican.conf.
+    You may continue to specify any values on the command line, and those
+    will take precedence over the values specified in barbican.conf, so any
+    existing scripts that use barbican-manage should continue to work as
+    expected.
