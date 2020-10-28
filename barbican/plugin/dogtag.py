@@ -133,6 +133,7 @@ def create_connection(conf, subsystem_path):
     connection.set_authentication_cert(pem_path)
     return connection
 
+
 crypto = _setup_nss_db_services(CONF)
 if crypto:
     crypto.initialize()

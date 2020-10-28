@@ -36,6 +36,7 @@ def get_default_container_create_data(secret):
         ]
     }
 
+
 create_container_data = {
     "name": "containername",
     "type": "generic",

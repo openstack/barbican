@@ -17,7 +17,8 @@ import ast
 import re
 import six
 
-import pep8
+from hacking import core
+import pycodestyle
 
 
 """
@@ -61,7 +62,7 @@ class BaseASTChecker(ast.NodeVisitor):
     CHECK_DESC = 'No check message specified'
 
     def __init__(self, tree, filename):
-        """This object is created automatically by pep8.
+        """This object is created automatically by pycodestyle.
 
         :param tree: an AST tree
         :param filename: name of the file being analyzed
@@ -71,12 +72,13 @@ class BaseASTChecker(ast.NodeVisitor):
         self._errors = []
 
     def run(self):
-        """Called automatically by pep8."""
+        """Called automatically by pycodestyle."""
         self.visit(self._tree)
         return self._errors
 
     def add_error(self, node, message=None):
         """Add an error caused by a node to the list of errors for pep8."""
+
         message = message or self.CHECK_DESC
         error = (node.lineno, node.col_offset, message, self.__class__)
         self._errors.append(error)
@@ -98,6 +100,8 @@ class CheckLoggingFormatArgs(BaseASTChecker):
     The format arguments should not be a tuple as it is easy to miss.
 
     """
+    name = "check_logging_format_args"
+    version = "1.0"
 
     CHECK_DESC = 'B310 Log method arguments should not be a tuple.'
     LOG_METHODS = [
@@ -154,59 +158,13 @@ class CheckLoggingFormatArgs(BaseASTChecker):
         return super(CheckLoggingFormatArgs, self).generic_visit(node)
 
 
-class CheckForStrUnicodeExc(BaseASTChecker):
-    """Checks for the use of str() or unicode() on an exception.
-
-    This currently only handles the case where str() or unicode()
-    is used in the scope of an exception handler.  If the exception
-    is passed into a function, returned from an assertRaises, or
-    used on an exception created in the same scope, this does not
-    catch it.
-    """
-
-    CHECK_DESC = ('B314 str() and unicode() cannot be used on an '
-                  'exception.  Remove or use six.text_type()')
-
-    def __init__(self, tree, filename):
-        super(CheckForStrUnicodeExc, self).__init__(tree, filename)
-        self.name = []
-        self.already_checked = []
-
-    # Python 2
-    def visit_TryExcept(self, node):
-        for handler in node.handlers:
-            if handler.name:
-                self.name.append(handler.name.id)
-                super(CheckForStrUnicodeExc, self).generic_visit(node)
-                self.name = self.name[:-1]
-            else:
-                super(CheckForStrUnicodeExc, self).generic_visit(node)
-
-    # Python 3
-    def visit_ExceptHandler(self, node):
-        if node.name:
-            self.name.append(node.name)
-            super(CheckForStrUnicodeExc, self).generic_visit(node)
-            self.name = self.name[:-1]
-        else:
-            super(CheckForStrUnicodeExc, self).generic_visit(node)
-
-    def visit_Call(self, node):
-        if self._check_call_names(node, ['str', 'unicode']):
-            if node not in self.already_checked:
-                self.already_checked.append(node)
-                if isinstance(node.args[0], ast.Name):
-                    if node.args[0].id in self.name:
-                        self.add_error(node.args[0])
-        super(CheckForStrUnicodeExc, self).generic_visit(node)
-
-
-def check_oslo_namespace_imports(logical_line, physical_line, filename):
+@core.flake8ext
+def check_oslo_namespace_imports(physical_line, logical_line, filename):
     """'oslo_' should be used instead of 'oslo.'
 
     B317
     """
-    if pep8.noqa(physical_line):
+    if pycodestyle.noqa(physical_line):
         return
     if re.match(oslo_namespace_imports, logical_line):
         msg = ("B317: '%s' must be used instead of '%s'.") % (
@@ -215,6 +173,7 @@ def check_oslo_namespace_imports(logical_line, physical_line, filename):
         yield(0, msg)
 
 
+@core.flake8ext
 def dict_constructor_with_list_copy(logical_line):
     """Use a dict comprehension instead of a dict constructor
 
@@ -227,6 +186,7 @@ def dict_constructor_with_list_copy(logical_line):
         yield (0, msg)
 
 
+@core.flake8ext
 def no_xrange(logical_line):
     """Do not use 'xrange'
 
@@ -236,6 +196,7 @@ def no_xrange(logical_line):
         yield(0, "B319: Do not use xrange().")
 
 
+@core.flake8ext
 def validate_assertTrue(logical_line):
     """Use 'assertTrue' instead of 'assertEqual'
 
@@ -247,6 +208,7 @@ def validate_assertTrue(logical_line):
         yield(0, msg)
 
 
+@core.flake8ext
 def validate_assertIsNone(logical_line):
     """Use 'assertIsNone' instead of 'assertEqual'
 
@@ -258,6 +220,7 @@ def validate_assertIsNone(logical_line):
         yield(0, msg)
 
 
+@core.flake8ext
 def no_log_warn_check(logical_line):
     """Disallow 'LOG.warn'
 
@@ -268,6 +231,7 @@ def no_log_warn_check(logical_line):
         yield(0, msg)
 
 
+@core.flake8ext
 def validate_assertIsNotNone(logical_line):
     """Use 'assertIsNotNone'
 
@@ -279,15 +243,3 @@ def validate_assertIsNotNone(logical_line):
                " of using assertNotEqual(None, value) or"
                " assertIsNot(None, value).")
         yield(0, msg)
-
-
-def factory(register):
-    register(CheckForStrUnicodeExc)
-    register(CheckLoggingFormatArgs)
-    register(check_oslo_namespace_imports)
-    register(dict_constructor_with_list_copy)
-    register(no_xrange)
-    register(validate_assertTrue)
-    register(validate_assertIsNone)
-    register(no_log_warn_check)
-    register(validate_assertIsNotNone)

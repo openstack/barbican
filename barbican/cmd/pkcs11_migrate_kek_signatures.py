@@ -167,5 +167,6 @@ def main():
     )
     migrator.execute(args.dry_run)
 
+
 if __name__ == '__main__':
     main()

@@ -88,7 +88,7 @@ def get_base_url_from_request():
         # FIXME: implement SERVER_NAME lookup if HTTP_HOST is not set
         if p_url.path:
             # Remove the version from the path to extract the base path
-            base_path = re.sub('/v[0-9\.]+$', '', p_url.path)
+            base_path = re.sub(r'/v[0-9\.]+$', '', p_url.path)
             base_url = '%s://%s%s' % (scheme, netloc, base_path)
         else:
             base_url = '%s://%s' % (scheme, netloc)
@@ -204,7 +204,7 @@ def is_multiple_backends_enabled():
         secretstore_conf = config.get_module_config('secretstore')
     except KeyError:
         # Ensure module is initialized
-        from barbican.plugin.interface import secret_store  # nopep8
+        from barbican.plugin.interface import secret_store  # noqa: F401
         secretstore_conf = config.get_module_config('secretstore')
     return secretstore_conf.secretstore.enable_multiple_secret_stores
 
