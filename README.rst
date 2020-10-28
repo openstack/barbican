@@ -23,9 +23,6 @@ Johns Hopkins University, HP, Red Hat, Cisco Systems, and many more.
 The full documentation can be found on the `Barbican Developer Documentation
 Site <https://docs.openstack.org/barbican/latest/>`_.
 
-If you have a technical question, you can ask it at `Ask OpenStack
-<https://ask.openstack.org/en/questions/>`_ with the `barbican` tag.
-
 To file a bug, use our bug tracker on `OpenStack Storyboard
 <https://storyboard.openstack.org/#!/project/980>`_.
 
