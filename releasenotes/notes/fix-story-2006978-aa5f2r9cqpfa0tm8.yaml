@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed Story #2006978:  An admin user now can delete other users secrets
+    by adjust the policy file.
+

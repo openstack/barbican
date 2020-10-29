@@ -260,6 +260,12 @@ class SecretController(controllers.ACLMixin):
             self.secret.id,
             suppress_exception=True
         )
+
+        # With ACL support, the user token project does not have to be same as
+        # project associated with secret. The lookup project_id needs to be
+        # derived from the secret's data considering authorization is already
+        # done.
+        external_project_id = self.secret.project.external_id
         plugin.delete_secret(self.secret, external_project_id)
         LOG.info('Deleted secret for project: %s', external_project_id)
 
