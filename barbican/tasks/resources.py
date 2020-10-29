@@ -18,8 +18,6 @@ Task resources for the Barbican API.
 """
 import abc
 
-import six
-
 from barbican import api
 from barbican.common import utils
 from barbican import i18n as u
@@ -33,8 +31,7 @@ from barbican.tasks import common
 LOG = utils.getLogger(__name__)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseTask(object):
+class BaseTask(object, metaclass=abc.ABCMeta):
     """Base asynchronous task."""
 
     @abc.abstractmethod

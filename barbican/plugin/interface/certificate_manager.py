@@ -25,7 +25,6 @@ import datetime
 
 from oslo_config import cfg
 from oslo_utils import encodeutils
-import six
 from stevedore import named
 
 from barbican.common import config
@@ -203,8 +202,7 @@ class CertificateStatusInvalidOperation(exception.BarbicanHTTPException):
         self.client_message = self.message
 
 
-@six.add_metaclass(abc.ABCMeta)
-class CertificateEventPluginBase(object):
+class CertificateEventPluginBase(object, metaclass=abc.ABCMeta):
     """Base class for certificate eventing plugins.
 
     This class is the base plugin contract for issuing certificate related
@@ -239,8 +237,7 @@ class CertificateEventPluginBase(object):
         raise NotImplementedError  # pragma: no cover
 
 
-@six.add_metaclass(abc.ABCMeta)
-class CertificatePluginBase(object):
+class CertificatePluginBase(object, metaclass=abc.ABCMeta):
     """Base class for certificate plugins.
 
     This class is the base plugin contract for certificates.
