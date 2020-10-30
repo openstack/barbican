@@ -165,7 +165,39 @@ class TestBarbicanManage(TestBarbicanManageBase):
         self._main_test_helper(
             ['barbican.cmd.barbican_manage', 'hsm', 'check_mkek',
              '--library-path', 'mocklib', '--passphrase', 'mockpassewd',
+             '--slot', '0', '--label', 'mocklabel'], mock_getkey, 'CKK_AES',
+            'mocklabel', 1)
+
+    @mock.patch('barbican.plugin.crypto.pkcs11.PKCS11')
+    def test_hsm_check_mkek_no_label(self, mock_pkcs11):
+        mock_pkcs11.return_value.get_session.return_value = 1
+        mock_pkcs11.return_value.get_key_handle.return_value = 1
+        mock_getkey = mock_pkcs11.return_value.get_key_handle
+        self._main_test_helper(
+            ['barbican.cmd.barbican_manage', 'hsm', 'check_mkek',
+             '--library-path', 'mocklib', '--passphrase', 'mockpassewd'],
+            mock_getkey, 'CKK_AES', None, 1)
+
+    @mock.patch('barbican.plugin.crypto.pkcs11.PKCS11')
+    def test_hsm_check_mkek_defaults(self, mock_pkcs11):
+        mock_pkcs11.return_value.get_session.return_value = 1
+        mock_pkcs11.return_value.get_key_handle.return_value = 1
+        mock_getkey = mock_pkcs11.return_value.get_key_handle
+        self._main_test_helper(
+            ['barbican.cmd.barbican_manage', 'hsm', 'check_mkek'],
+            mock_getkey, 'CKK_AES', None, 1)
+
+    @mock.patch('barbican.plugin.crypto.pkcs11.PKCS11')
+    @mock.patch('sys.exit')
+    def test_hsm_check_mkek_not_found(self, mock_exit, mock_pkcs11):
+        mock_pkcs11.return_value.get_session.return_value = 1
+        mock_pkcs11.return_value.get_key_handle.return_value = None
+        mock_getkey = mock_pkcs11.return_value.get_key_handle
+        self._main_test_helper(
+            ['barbican.cmd.barbican_manage', 'hsm', 'check_mkek',
+             '--library-path', 'mocklib', '--passphrase', 'mockpassewd',
              '--label', 'mocklabel'], mock_getkey, 'CKK_AES', 'mocklabel', 1)
+        mock_exit.assert_called_once_with(1)
 
     @mock.patch('barbican.plugin.crypto.pkcs11.PKCS11')
     def test_hsm_gen_mkek(self, mock_pkcs11):
@@ -178,6 +210,19 @@ class TestBarbicanManage(TestBarbicanManageBase):
              '--library-path', 'mocklib', '--passphrase', 'mockpassewd',
              '--label', 'mocklabel'], mock_genkey, 'CKK_AES',
             32, 'CKM_AES_KEY_GEN', 1, 'mocklabel', encrypt=True, wrap=True,
+            master_key=True)
+
+    @mock.patch('barbican.plugin.crypto.pkcs11.PKCS11')
+    def test_hsm_gen_mkek_default_label(self, mock_pkcs11):
+        mock_pkcs11.return_value.get_session.return_value = 1
+        mock_pkcs11.return_value.get_key_handle.return_value = None
+        mock_pkcs11.return_value.generate_key.return_value = 0
+        mock_genkey = mock_pkcs11.return_value.generate_key
+        self._main_test_helper(
+            ['barbican.cmd.barbican_manage', 'hsm', 'gen_mkek',
+             '--library-path', 'mocklib', '--passphrase', 'mockpassewd'],
+            mock_genkey, 'CKK_AES',
+            32, 'CKM_AES_KEY_GEN', 1, 'primarymkek', encrypt=True, wrap=True,
             master_key=True)
 
     @mock.patch('barbican.plugin.crypto.pkcs11.PKCS11')
@@ -216,6 +261,28 @@ class TestBarbicanManage(TestBarbicanManageBase):
              '--label', 'mocklabel'], mock_getkey, 'CKK_AES', 'mocklabel', 1)
 
     @mock.patch('barbican.plugin.crypto.pkcs11.PKCS11')
+    def test_hsm_check_hmac_no_label(self, mock_pkcs11):
+        mock_pkcs11.return_value.get_session.return_value = 1
+        mock_pkcs11.return_value.get_key_handle.return_value = 1
+        mock_getkey = mock_pkcs11.return_value.get_key_handle
+        self._main_test_helper(
+            ['barbican.cmd.barbican_manage', 'hsm', 'check_hmac',
+             '--library-path', 'mocklib', '--passphrase', 'mockpassewd'],
+            mock_getkey, 'CKK_AES', None, 1)
+
+    @mock.patch('barbican.plugin.crypto.pkcs11.PKCS11')
+    @mock.patch('sys.exit')
+    def test_hsm_check_hmac_not_found(self, mock_exit, mock_pkcs11):
+        mock_pkcs11.return_value.get_session.return_value = 1
+        mock_pkcs11.return_value.get_key_handle.return_value = None
+        mock_getkey = mock_pkcs11.return_value.get_key_handle
+        self._main_test_helper(
+            ['barbican.cmd.barbican_manage', 'hsm', 'check_hmac',
+             '--library-path', 'mocklib', '--passphrase', 'mockpassewd',
+             '--label', 'mocklabel'], mock_getkey, 'CKK_AES', 'mocklabel', 1)
+        mock_exit.assert_called_once_with(1)
+
+    @mock.patch('barbican.plugin.crypto.pkcs11.PKCS11')
     def test_hsm_gen_hmac_non_default_length(self, mock_pkcs11):
         mock_pkcs11.return_value.get_session.return_value = 1
         mock_pkcs11.return_value.get_key_handle.return_value = None
@@ -227,3 +294,23 @@ class TestBarbicanManage(TestBarbicanManageBase):
              '--passphrase', 'mockpassewd', '--label', 'mocklabel'],
             mock_genkey, 'CKK_AES', 48, 'CKM_AES_KEY_GEN', 1, 'mocklabel',
             sign=True, master_key=True)
+
+    @mock.patch('barbican.plugin.crypto.pkcs11.PKCS11')
+    def test_hsm_gen_hmac_default_label(self, mock_pkcs11):
+        mock_pkcs11.return_value.get_session.return_value = 1
+        mock_pkcs11.return_value.get_key_handle.return_value = None
+        mock_pkcs11.return_value.generate_key.return_value = 0
+        mock_genkey = mock_pkcs11.return_value.generate_key
+        self._main_test_helper(
+            ['barbican.cmd.barbican_manage', 'hsm', 'gen_hmac',
+             '--library-path', 'mocklib', '--passphrase', 'mockpassewd'],
+            mock_genkey, 'CKK_AES',
+            32, 'CKM_AES_KEY_GEN', 1, 'primaryhmac', sign=True,
+            master_key=True)
+
+    @mock.patch('barbican.cmd.barbican_manage.pkcs11_rewrap')
+    def test_rewrap_pkek(self, mock_rewrap):
+        mock_execute = mock_rewrap.KekRewrap.return_value.execute
+        self._main_test_helper(
+            ['barbican.cmd.barbican_manage', 'hsm', 'rewrap_pkek',
+             '--dry-run'], mock_execute, True)
