@@ -23,6 +23,14 @@
         barbican-dogtag: true
 
 - job:
+    name: barbican-tox-functional-fips
+    nodeset: devstack-single-node-centos-8-stream
+    parent: barbican-tox-functional
+    description: |
+      Functional testing for a FIPS enabled Centos 8 system
+    pre-run: playbooks/enable-fips.yaml
+
+- job:
     name: barbican-vault-tox-functional
     parent: barbican-tox-functional
     description: |
@@ -91,6 +99,7 @@
             voting: false
         - barbican-tempest-plugin-simple-crypto
         - barbican-tempest-plugin-simple-crypto-ipv6-only
+        - barbican-tox-functional-fips
         - octavia-v2-dsvm-tls-barbican
         # TripleO jobs that deploy Barbican.
         # Note we don't use a project-template here, so it's easier
