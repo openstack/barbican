@@ -7,9 +7,12 @@ libnss3-dev [platform:dpkg]
 gettext [test]
 
 # Required for the Dogtag plugin
-389-ds-base [platform:rpm]
-pki-ca [platform:rpm]
-pki-kra [platform:rpm]
+# Comment out for now -- these are not installing due to need to
+# enable idm module
+# yum module enable idm:DL1
+# 389-ds-base [platform:rpm]
+# pki-ca [platform:rpm]
+# pki-kra [platform:rpm]
 
 #Required for cryptography lib
 libssl-dev [platform:dpkg]
