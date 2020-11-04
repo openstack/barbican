@@ -30,6 +30,7 @@ from barbican.common import config
 from barbican.model import clean
 from barbican.model.migration import commands
 from barbican.model import sync
+from barbican.plugin.crypto import p11_crypto
 from barbican.plugin.crypto import pkcs11
 import barbican.version
 
@@ -69,8 +70,8 @@ class DbCommands(object):
     @args('--soft-delete-expired-secrets', '-e', action='store_true',
           dest='do_soft_delete_expired_secrets', default=False,
           help='Soft delete secrets that are expired.')
-    def clean(self, dburl=None, min_days=None, verbose=None, log_file=None,
-              do_clean_unassociated_projects=None,
+    def clean(self, conf, dburl=None, min_days=None, verbose=None,
+              log_file=None, do_clean_unassociated_projects=None,
               do_soft_delete_expired_secrets=None):
         """Clean soft deletions in the database"""
         if dburl is None:
@@ -94,7 +95,7 @@ class DbCommands(object):
           help='the message for the DB change')
     @args('--autogenerate', action="store_true", dest='autogen',
           default=False, help='autogenerate from models')
-    def revision(self, dburl=None, message=None, autogen=None):
+    def revision(self, conf, dburl=None, message=None, autogen=None):
         """Process the 'revision' Alembic command."""
         if dburl is None:
             commands.generate(autogenerate=autogen, message=str(message),
@@ -110,7 +111,7 @@ class DbCommands(object):
     @args('--version', '-v', metavar='<version>', default='head',
           help='the version to upgrade to, or else '
           'the latest/head if not specified.')
-    def upgrade(self, dburl=None, version=None):
+    def upgrade(self, conf, dburl=None, version=None):
         """Process the 'upgrade' Alembic command."""
         if dburl is None:
             commands.upgrade(to_version=str(version),
@@ -124,7 +125,7 @@ class DbCommands(object):
           help='barbican database URL')
     @args('--verbose', '-V', action='store_true', dest='verbose',
           default=False, help='Show full information about the revisions.')
-    def history(self, dburl=None, verbose=None):
+    def history(self, conf, dburl=None, verbose=None):
         if dburl is None:
             commands.history(verbose, sql_url=CONF.sql_connection)
         else:
@@ -136,7 +137,7 @@ class DbCommands(object):
           help='barbican database URL')
     @args('--verbose', '-V', action='store_true', dest='verbose',
           default=False, help='Show full information about the revisions.')
-    def current(self, dburl=None, verbose=None):
+    def current(self, conf, dburl=None, verbose=None):
         if dburl is None:
             commands.current(verbose, sql_url=CONF.sql_connection)
         else:
@@ -152,7 +153,8 @@ class DbCommands(object):
           dest='log_file',
           help='Set log file location. '
                'Default value for log_file can be found in barbican.conf')
-    def sync_secret_stores(self, dburl=None, verbose=None, log_file=None):
+    def sync_secret_stores(self, conf, dburl=None, verbose=None,
+                           log_file=None):
         """Sync secret_stores table with barbican.conf"""
         if dburl is None:
             dburl = CONF.sql_connection
@@ -168,61 +170,66 @@ class DbCommands(object):
 class HSMCommands(object):
     """Class for managing HSM/pkcs11 plugin"""
 
+    _CKK_AES = 'CKK_AES'
+
     description = "Subcommands for managing HSM/PKCS11"
 
     check_mkek_description = "Checks if a MKEK label is available"
 
     @args('--library-path', metavar='<library-path>', dest='libpath',
-          default='/usr/lib/libCryptoki2_64.so',
-          help='Path to vendor PKCS11 library')
-    @args('--slot-id', metavar='<slot-id>', dest='slotid', default=1,
-          help='HSM Slot id (Should correspond to a configured PKCS11 slot, \
-          default is 1)')
-    @args('--passphrase', metavar='<passphrase>', default=None, required=True,
-          help='Password to login to PKCS11 session')
-    @args('--label', '-L', metavar='<label>', default='primarymkek',
-          help='The label of the Master Key Encrypt Key')
+          help='Path to vendor PKCS#11 library')
+    @args('--slot-id', metavar='<slot-id>', dest='slotid',
+          help='HSM Slot ID containing Token to be used.')
+    @args('--passphrase', metavar='<passphrase>',
+          help='Password (PIN) to login to PKCS#11 Token')
+    @args('--label', '-L', metavar='<label>',
+          help='The label of the Master Key Encryption Key')
     @args('--hmac-wrap-mechanism', metavar='<hmac key wrap mechanism>',
-          dest='hmacwrap', default='CKM_SHA256_HMAC',
-          help='HMAC Key wrap mechanism, default is CKM_SHA256_HMAC')
-    def check_mkek(self, passphrase, libpath=None, slotid=None, label=None,
-                   hmacwrap=None):
-        CKK_AES = 'CKK_AES'
-        self._create_pkcs11_session(str(passphrase), str(libpath),
-                                    int(slotid), str(hmacwrap))
-        handle = self.pkcs11.get_key_handle(CKK_AES, str(label), self.session)
+          dest='hmacwrap',
+          help='HMAC Key wrap mechanism')
+    def check_mkek(self, conf, passphrase=None, libpath=None, slotid=None,
+                   label=None, hmacwrap=None):
+        self._create_pkcs11_session(conf, passphrase, libpath, slotid,
+                                    hmacwrap)
+        if label is None:
+            label = conf.p11_crypto_plugin.mkek_label
+        handle = self.pkcs11.get_key_handle(self._CKK_AES, label, self.session)
         self.pkcs11.return_session(self.session)
         if not handle:
             print("Label {label} is not set.".format(label=label))
             sys.exit(1)
+        print("Key labeled {} found!".format(label))
 
     gen_mkek_description = "Generates a new MKEK"
 
     @args('--library-path', metavar='<library-path>', dest='libpath',
-          default='/usr/lib/libCryptoki2_64.so',
           help='Path to vendor PKCS11 library')
-    @args('--slot-id', metavar='<slot-id>', dest='slotid', default=1,
-          help='HSM Slot id (Should correspond to a configured PKCS11 slot, \
-          default is 1)')
-    @args('--passphrase', metavar='<passphrase>', default=None, required=True,
-          help='Password to login to PKCS11 session')
-    @args('--label', '-L', metavar='<label>', default='primarymkek',
-          help='The label of the Master Key Encrypt Key')
-    @args('--length', '-l', metavar='<length>', default=32,
+    @args('--slot-id', metavar='<slot-id>', dest='slotid',
+          help='HSM Slot ID containing Token to be used.')
+    @args('--passphrase', metavar='<passphrase>',
+          help='Password (PIN) to login to PKCS#11 Token')
+    @args('--label', '-L', metavar='<label>',
+          help='The label of the Master Key Encryption Key')
+    @args('--length', '-l', metavar='<length>',
           help='The length in bytes of the Master Key Encryption Key'
                ' (default is 32)')
     @args('--hmac-wrap-mechanism', metavar='<hmac key wrap mechanism>',
-          dest='hmacwrap', default='CKM_SHA256_HMAC',
+          dest='hmacwrap',
           help='HMAC Key wrap mechanism, default is CKM_SHA256_HMAC')
-    def gen_mkek(self, passphrase, libpath=None, slotid=None, label=None,
-                 length=None, hmacwrap=None):
-        CKK_AES = 'CKK_AES'
+    def gen_mkek(self, conf, passphrase=None, libpath=None, slotid=None,
+                 label=None, length=None, hmacwrap=None):
         CKM_AES_KEY_GEN = 'CKM_AES_KEY_GEN'
-        self._create_pkcs11_session(str(passphrase), str(libpath),
-                                    int(slotid), str(hmacwrap))
-        self._verify_label_does_not_exist(CKK_AES, str(label), self.session)
-        self.pkcs11.generate_key(CKK_AES, int(length), CKM_AES_KEY_GEN,
-                                 self.session, str(label),
+        self._create_pkcs11_session(conf, passphrase, libpath, slotid,
+                                    hmacwrap)
+        if label is None:
+            label = conf.p11_crypto_plugin.mkek_label or 'primarymkek'
+        self._verify_label_does_not_exist(self._CKK_AES, label, self.session)
+        if length is None:
+            length = conf.p11_crypto_plugin.mkek_length or 32
+        if type(length) is not int:
+            length = int(length)
+        self.pkcs11.generate_key(self._CKK_AES, length, CKM_AES_KEY_GEN,
+                                 self.session, label,
                                  encrypt=True, wrap=True, master_key=True)
         self.pkcs11.return_session(self.session)
         print("MKEK successfully generated!")
@@ -230,61 +237,72 @@ class HSMCommands(object):
     check_hmac_description = "Checks if a HMAC key label is available"
 
     @args('--library-path', metavar='<library-path>', dest='libpath',
-          default='/usr/lib/libCryptoki2_64.so',
-          help='Path to vendor PKCS11 library')
-    @args('--slot-id', metavar='<slot-id>', dest='slotid', default=1,
-          help='HSM Slot id (Should correspond to a configured PKCS11 slot, \
-          default is 1)')
-    @args('--passphrase', metavar='<passphrase>', default=None, required=True,
-          help='Password to login to PKCS11 session')
-    @args('--label', '-L', metavar='<label>', default='primarymkek',
+          help='Path to vendor PKCS#11 library')
+    @args('--slot-id', metavar='<slot-id>', dest='slotid',
+          help='HSM Slot ID containing Token to be used.')
+    @args('--passphrase', metavar='<passphrase>',
+          help='Password (PIN) to login to PKCS#11 Token')
+    @args('--label', '-L', metavar='<label>',
           help='The label of the Master HMAC key')
     @args('--key-type', '-t', metavar='<key type>', dest='keytype',
-          default='CKK_AES', help='The HMAC Key Type (e.g. CKK_AES)')
+          help='The HMAC Key Type (e.g. CKK_AES)')
     @args('--hmac-wrap-mechanism', metavar='<hmac key wrap mechanism>',
-          dest='hmacwrap', default='CKM_SHA256_HMAC',
-          help='HMAC Key wrap mechanism, default is CKM_SHA256_HMAC')
-    def check_hmac(self, passphrase, libpath=None, slotid=None, label=None,
-                   keytype=None, hmacwrap=None):
-        self._create_pkcs11_session(str(passphrase), str(libpath),
-                                    int(slotid), str(hmacwrap))
-        handle = self.pkcs11.get_key_handle(str(keytype), str(label),
-                                            self.session)
+          dest='hmacwrap',
+          help='HMAC Key wrap mechanism')
+    def check_hmac(self, conf, passphrase=None, libpath=None, slotid=None,
+                   label=None, keytype=None, hmacwrap=None):
+        self._create_pkcs11_session(conf, passphrase, libpath, slotid,
+                                    hmacwrap)
+        if label is None:
+            label = conf.p11_crypto_plugin.hmac_label
+        if keytype is None:
+            keytype = conf.p11_crypto_plugin.hmac_key_type
+        handle = self.pkcs11.get_key_handle(keytype, label, self.session)
         self.pkcs11.return_session(self.session)
         if not handle:
             print("Label {label} is not set.".format(label=label))
             sys.exit(1)
+        print("Key labeled {} found!".format(label))
 
     gen_hmac_description = "Generates a new HMAC key"
 
     @args('--library-path', metavar='<library-path>', dest='libpath',
-          default='/usr/lib/libCryptoki2_64.so',
           help='Path to vendor PKCS11 library')
-    @args('--slot-id', metavar='<slot-id>', dest='slotid', default=1,
-          help='HSM Slot id (Should correspond to a configured PKCS11 slot, \
-          default is 1)')
-    @args('--passphrase', metavar='<passphrase>', default=None, required=True,
-          help='Password to login to PKCS11 session')
-    @args('--label', '-L', metavar='<label>', default='primarymkek',
+    @args('--slot-id', metavar='<slot-id>', dest='slotid',
+          help='HSM Slot ID containing Token to be used.')
+    @args('--passphrase', metavar='<passphrase>',
+          help='Password (PIN) to login to PKCS#11 Token')
+    @args('--label', '-L', metavar='<label>',
           help='The label of the Master HMAC Key')
     @args('--key-type', '-t', metavar='<key type>', dest='keytype',
-          default='CKK_AES', help='The HMAC Key Type (e.g. CKK_AES)')
-    @args('--length', '-l', metavar='<length>', default=32,
+          help='The HMAC Key Type (e.g. CKK_AES)')
+    @args('--length', '-l', metavar='<length>',
           help='The length in bytes of the Master HMAC Key (default is 32)')
     @args('--mechanism', '-m', metavar='<mechanism>',
-          default='CKM_AES_KEY_GEN', help='The HMAC Key Generation mechanism')
+          help='The HMAC Key Generation mechanism')
     @args('--hmac-wrap-mechanism', metavar='<hmac key wrap mechanism>',
-          dest='hmacwrap', default='CKM_SHA256_HMAC',
+          dest='hmacwrap',
           help='HMAC Key wrap mechanism, default is CKM_SHA256_HMAC')
-    def gen_hmac(self, passphrase, libpath=None, slotid=None, label=None,
-                 keytype=None, mechanism=None, length=None, hmacwrap=None):
-        self._create_pkcs11_session(str(passphrase), str(libpath), int(slotid),
-                                    str(hmacwrap))
-        self._verify_label_does_not_exist(str(keytype), str(label),
-                                          self.session)
-        self.pkcs11.generate_key(str(keytype), int(length), str(mechanism),
-                                 self.session, str(label),
-                                 sign=True, master_key=True)
+    def gen_hmac(self, conf, passphrase=None, libpath=None, slotid=None,
+                 label=None, keytype=None, mechanism=None, length=None,
+                 hmacwrap=None):
+        self._create_pkcs11_session(conf, passphrase, libpath, slotid,
+                                    hmacwrap)
+        if label is None:
+            label = conf.p11_crypto_plugin.hmac_label or 'primaryhmac'
+        if keytype is None:
+            keytype = conf.p11_crypto_plugin.hmac_key_type
+        self._verify_label_does_not_exist(keytype, label, self.session)
+
+        if length is None:
+            # barbican.conf doesn't have an HMAC length
+            length = 32  # bytes
+        elif type(length) is not int:
+            length = int(length)
+        if mechanism is None:
+            mechanism = conf.p11_crypto_plugin.hmac_keygen_mechanism
+        self.pkcs11.generate_key(keytype, length, mechanism, self.session,
+                                 label, sign=True, master_key=True)
         self.pkcs11.return_session(self.session)
         print("HMAC successfully generated!")
 
@@ -292,18 +310,31 @@ class HSMCommands(object):
 
     @args('--dry-run', action="store_true", dest='dryrun', default=False,
           help='Displays changes that will be made (Non-destructive)')
-    def rewrap_pkek(self, dryrun=None):
+    def rewrap_pkek(self, conf, dryrun=None):
         rewrapper = pkcs11_rewrap.KekRewrap(pkcs11_rewrap.CONF)
         rewrapper.execute(dryrun)
         rewrapper.pkcs11.return_session(rewrapper.hsm_session)
 
-    def _create_pkcs11_session(self, passphrase, libpath, slotid,
+    def _create_pkcs11_session(self, conf, passphrase, libpath, slotid,
                                hmacwrap):
+        if passphrase is None:
+            passphrase = conf.p11_crypto_plugin.login
+        if libpath is None:
+            libpath = conf.p11_crypto_plugin.library_path
+        if slotid is None:
+            slotid = conf.p11_crypto_plugin.slot_id
+        elif type(slotid) is not int:
+            slotid = int(slotid)
+        if hmacwrap is None:
+            hmacwrap = conf.p11_crypto_plugin.hmac_keywrap_mechanism
+
         self.pkcs11 = pkcs11.PKCS11(
             library_path=libpath, login_passphrase=passphrase,
             rw_session=True, slot_id=slotid,
             encryption_mechanism='CKM_AES_CBC',
-            hmac_keywrap_mechanism=hmacwrap
+            hmac_keywrap_mechanism=hmacwrap,
+            token_serial_number=conf.p11_crypto_plugin.token_serial_number,
+            token_label=conf.p11_crypto_plugin.token_label
         )
         self.session = self.pkcs11.get_session()
 
@@ -384,6 +415,7 @@ def main():
     """Parse options and call the appropriate class/method."""
     CONF = config.new_config()
     CONF.register_cli_opt(category_opt)
+    p11_crypto.register_opts(CONF)
 
     try:
         logging.register_options(CONF)
@@ -413,7 +445,7 @@ def main():
 
     # call the action with the remaining arguments
     try:
-        return fn(*fn_args, **fn_kwargs)
+        return fn(CONF, *fn_args, **fn_kwargs)
     except Exception as e:
         sys.exit("ERROR: %s" % e)
 
