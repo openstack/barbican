@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Fixed Story # 2007732: Migrations broken on MySQL 8.x.
