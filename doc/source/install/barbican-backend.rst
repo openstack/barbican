@@ -70,6 +70,14 @@ The configuration for this plugin in ``/etc/barbican/barbican.conf`` is as follo
        # the kek should be a 32-byte value which is base64 encoded
        kek = 'YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY='
 
+.. note::
+
+   Setting crypto plugins has effect only when `secretstore` plugin is set to
+   `store_crypto` unless multibackend storage is used.
+   So, for example, using vault for secretstore and PKCS#11 for crypto will not
+   work (vault will be responsible for both storage and encryption).
+
+
 PKCS#11 Crypto Plugin
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -77,15 +85,16 @@ This crypto plugin can be used to interface with a Hardware Security Module (HSM
 using the PKCS#11 protocol.
 
 Secrets are encrypted (and decrypted on retrieval) by a project specific
-Key Encryption Key (KEK), which resides in the HSM.
+Key Encryption Key (KEK), which in it's turn encrypted with Master Key (MKEK)
+and signed with HMAC key. Both MKEK and HMAC resides in the HSM.
 
 The configuration for this plugin in ``/etc/barbican/barbican.conf``.
 Settings for some different HSMs are provided below:
 
-Safenet
-+++++++
+Thales Luna Network HSM (Safenet)
++++++++++++++++++++++++++++++++++
 
-The PKCS#11 plugin configuration looks like:
+The PKCS#11 plugin configuration for Luna Network HSM looks like:
 
     .. code-block:: ini
 
@@ -94,6 +103,11 @@ The PKCS#11 plugin configuration looks like:
        ..
        enabled_secretstore_plugins = store_crypto
 
+       # ================= Crypto plugin ===================
+       [crypto]
+       ..
+       enabled_crypto_plugins = p11_crypto
+
        [p11_crypto_plugin]
        # Path to vendor PKCS11 library
        library_path = '/usr/lib/libCryptoki2_64.so'
@@ -101,7 +115,7 @@ The PKCS#11 plugin configuration looks like:
        # Token serial number used to identify the token to be used.  Required
        # when the device has multiple tokens with the same label. (string
        # value)
-       token_serial_number = 12345678
+       #token_serial_number = 12345678
 
        # Token label used to identify the token to be used.  Required when
        # token_serial_number is not specified. (string value)
@@ -136,6 +150,24 @@ The PKCS#11 plugin configuration looks like:
        # Max number of items in pkek cache
        # pkek_cache_limit = 100
 
+.. note::
+
+   Barbican does not support FIPS mode enabled for SafeNet Luna HSM or
+   Data Protection on Demand HSM. Make sure that it's operating in non-FIPS
+   mode while integrating with Barbican.
+
+The HMAC and MKEK keys can be generated as follows:
+
+    .. code-block:: ini
+
+       barbican-manage hsm gen_hmac --library-path /usr/lib/libCryptoki2_64.so \
+       --passphrase XXX --slot-id 1 --label thales_hmac_0
+
+    .. code-block:: ini
+
+       barbican-manage hsm gen_mkek --library-path /usr/lib/libCryptoki2_64.so \
+       --passphrase XXX --slot-id 1 --label thales_hmac_0
+
 nCipher
 +++++++
 
@@ -147,6 +179,11 @@ For a nCipher nShield Connect XC, the plugin configuration looks like:
        [secretstore]
        ..
        enabled_secretstore_plugins = store_crypto
+
+       # ================= Crypto plugin ===================
+       [crypto]
+       ..
+       enabled_crypto_plugins = p11_crypto
 
        [p11_crypto_plugin]
        # Path to vendor PKCS11 library
@@ -237,6 +274,11 @@ For an ATOS Bull HSM, the plugin configuration looks like:
        ..
        enabled_secretstore_plugins = store_crypto
 
+       # ================= Crypto plugin ===================
+       [crypto]
+       ..
+       enabled_crypto_plugins = p11_crypto
+
        [p11_crypto_plugin]
        # Path to vendor PKCS11 library
        library_path = '/usr/lib64/libnethsm.so'
@@ -319,6 +361,11 @@ The PKCS#11 plugin configuration looks like:
         [secretstore]
         ..
         enabled_secretstore_plugins = store_crypto
+
+        # ================= Crypto plugin ===================
+        [crypto]
+        ..
+        enabled_crypto_plugins = p11_crypto
 
         [p11_crypto_plugin]
         # Path to vendor PKCS11 library (string value)
