@@ -29,7 +29,9 @@
       Functional testing for Hashicorp Vault backend
     vars:
       devstack_services:
-        vault: true
+        barbican-vault: true
+      tox_environment:
+        VAULT_PLUGIN_ENABLED: 1
 
 - job:
     name: barbican-kmip-tox-functional
