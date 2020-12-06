@@ -9,7 +9,7 @@ Like many other services, the Key Manager service supports the protection of its
 APIs by enforcing policy rules defined in a policy file.  The Key Manager
 service stores a reference to a policy JSON file in its configuration file,
 :file:`/etc/barbican/barbican.conf`.  Typically this file is named
-``policy.json`` and it is stored in :file:`/etc/barbican/policy.json`.
+``policy.yaml`` and it is stored in :file:`/etc/barbican/policy.yaml`.
 
 Each Key Manager API call has a line in the policy file that dictates which
 level of access applies:
@@ -46,7 +46,7 @@ Default Policy
 
 The policy engine in OpenStack is very flexible and allows for customized
 policies that make sense for your particular cloud.  The Key Manager service
-comes with a sample ``policy.json`` file which can be used as the starting
+comes with a sample ``policy.yaml`` file which can be used as the starting
 point for a customized policy.  The sample policy defines 5 distinct roles:
 
 key-manager:service-admin

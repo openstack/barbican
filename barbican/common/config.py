@@ -23,6 +23,7 @@ import os
 from oslo_config import cfg
 from oslo_log import log
 from oslo_middleware import cors
+from oslo_policy import opts as policy_opts
 from oslo_service import _options
 
 from barbican import i18n as u
@@ -320,6 +321,24 @@ def setup_remote_pydev_debug():
                           {'debug-host': CONF.pydev_debug_host,
                            'debug-port': CONF.pydev_debug_port})
             raise
+
+
+def set_lib_defaults():
+    """Update default value for configuration options from other namespace.
+
+    Example, oslo lib config options. This is needed for
+    config generator tool to pick these default value changes.
+    https://docs.openstack.org/oslo.config/latest/cli/
+    generator.html#modifying-defaults-from-other-namespaces
+    """
+
+    set_middleware_defaults()
+
+    # TODO(gmann): Remove setting the default value of config policy_file
+    # once oslo_policy change the default value to 'policy.yaml'.
+    # https://github.com/openstack/oslo.policy/blob/a626ad12fe5a3abd49d70e3e5b95589d279ab578/oslo_policy/opts.py#L49
+    DEFAULT_POLICY_FILE = 'policy.yaml'
+    policy_opts.set_defaults(CONF, DEFAULT_POLICY_FILE)
 
 
 def set_middleware_defaults():

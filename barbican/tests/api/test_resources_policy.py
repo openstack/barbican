@@ -36,7 +36,7 @@ from barbican.model import models
 from barbican.tests import utils
 
 
-# Point to the policy.json file located in source control.
+# Point to the policy.yaml file located in source control.
 TEST_VAR_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                             '../../../etc', 'barbican'))
 
