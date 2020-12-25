@@ -125,7 +125,7 @@ The PKCS#11 plugin configuration for Luna Network HSM looks like:
        login = 'mypassword'
 
        # Label to identify master KEK in the HSM (must not be the same as HMAC label)
-       mkek_label = 'an_mkek'
+       mkek_label = 'my_mkek_label'
 
        # Length in bytes of master KEK
        mkek_length = 32
@@ -135,7 +135,7 @@ The PKCS#11 plugin configuration for Luna Network HSM looks like:
 
        # (Optional) HSM Slot ID that contains the token device to be used.
        # (integer value)
-       #slot_id = 1
+       slot_id = 1
 
 
        # Enable Read/Write session with the HSM?
@@ -161,12 +161,12 @@ The HMAC and MKEK keys can be generated as follows:
     .. code-block:: ini
 
        barbican-manage hsm gen_hmac --library-path /usr/lib/libCryptoki2_64.so \
-       --passphrase XXX --slot-id 1 --label thales_hmac_0
+       --passphrase XXX --slot-id 1 --label my_hmac_label
 
     .. code-block:: ini
 
        barbican-manage hsm gen_mkek --library-path /usr/lib/libCryptoki2_64.so \
-       --passphrase XXX --slot-id 1 --label thales_hmac_0
+       --passphrase XXX --slot-id 1 --label my_mkek_label
 
 nCipher
 +++++++
