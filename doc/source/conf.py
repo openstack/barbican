@@ -49,8 +49,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Barbican'
-copyright = u'2014, OpenStack Foundation'
+project = 'Barbican'
+copyright = '2014, OpenStack Foundation'
 openstackdocs_repo_name = 'openstack/barbican'
 openstackdocs_pdf_link = True
 openstackdocs_auto_name = False
@@ -90,8 +90,8 @@ htmlhelp_basename = '%sdoc' % project
 latex_documents = [
     ('index',
      'doc-barbican.tex',
-     u'%s Documentation' % project,
-     u'OpenStack Foundation', 'manual'),
+     '%s Documentation' % project,
+     'OpenStack Foundation', 'manual'),
 ]
 
 latex_use_xindy = False

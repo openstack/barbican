@@ -54,8 +54,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Barbican Release Notes'
-copyright = u'2015, Barbican Developers'
+project = 'Barbican Release Notes'
+copyright = '2015, Barbican Developers'
 openstackdocs_repo_name = 'openstack/barbican'
 openstackdocs_auto_name = False
 openstackdocs_bug_project = 'barbican'
@@ -209,7 +209,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     ('index', 'BarbicanReleaseNotes.tex',
-     u'Barbican Release Notes Documentation', u'Barbican Developers',
+     'Barbican Release Notes Documentation', 'Barbican Developers',
      'manual'),
 ]
 
@@ -239,8 +239,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'barbicanreleasenotes', u'Barbican Release Notes Documentation',
-     [u'Barbican Developers'], 1)
+    ('index', 'barbicanreleasenotes', 'Barbican Release Notes Documentation',
+     ['Barbican Developers'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -253,8 +253,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'BarbicanReleaseNotes', u'Barbican Release Notes Documentation',
-     u'Barbican Developers', 'BarbicanReleaseNotes',
+    ('index', 'BarbicanReleaseNotes', 'Barbican Release Notes Documentation',
+     'Barbican Developers', 'BarbicanReleaseNotes',
      'Barbican Release Notes Documentation.', 'Miscellaneous'),
 ]
 
