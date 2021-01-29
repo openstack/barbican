@@ -97,6 +97,10 @@ p11_crypto_plugin_opts = [
                 help=u._('Always set CKA_SENSITIVE=CK_TRUE including '
                          'CKA_EXTRACTABLE=CK_TRUE keys.'),
                 default=True),
+    cfg.BoolOpt('os_locking_ok',
+                help=u._('Enable CKF_OS_LOCKING_OK flag when initializing the '
+                         'PKCS#11 client library.'),
+                default=False),
 ]
 CONF.register_group(p11_crypto_plugin_group)
 CONF.register_opts(p11_crypto_plugin_opts, group=p11_crypto_plugin_group)
@@ -326,7 +330,8 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             always_set_cka_sensitive=plugin_conf.always_set_cka_sensitive,
             hmac_keywrap_mechanism=plugin_conf.hmac_keywrap_mechanism,
             token_serial_number=plugin_conf.token_serial_number,
-            token_label=plugin_conf.token_label
+            token_label=plugin_conf.token_label,
+            os_locking_ok=plugin_conf.os_locking_ok
         )
 
     def _reinitialize_pkcs11(self):
