@@ -34,6 +34,7 @@ CKR_OK = 0
 CK_TRUE = 1
 CKF_RW_SESSION = (1 << 1)
 CKF_SERIAL_SESSION = (1 << 2)
+CKF_OS_LOCKING_OK = 0x02
 CKU_SO = 0
 CKU_USER = 1
 
@@ -279,6 +280,8 @@ def build_ffi():
     typedef unsigned long CK_STATE;
     typedef unsigned long CK_USER_TYPE;
     typedef unsigned char * CK_UTF8CHAR_PTR;
+    typedef void * CK_VOID_PTR;
+    typedef CK_VOID_PTR * CK_VOID_PTR_PTR;
     typedef ... *CK_NOTIFY;
 
     typedef unsigned long ck_attribute_type_t;
@@ -289,6 +292,20 @@ def build_ffi():
     };
     typedef struct ck_attribute CK_ATTRIBUTE;
     typedef CK_ATTRIBUTE *CK_ATTRIBUTE_PTR;
+
+    typedef CK_RV (*CK_CREATEMUTEX)(CK_VOID_PTR_PTR);
+    typedef CK_RV (*CK_DESTROYMUTEX)(CK_VOID_PTR);
+    typedef CK_RV (*CK_LOCKMUTEX)(CK_VOID_PTR);
+    typedef CK_RV (*CK_UNLOCKMUTEX)(CK_VOID_PTR);
+
+    typedef struct CK_C_INITIALIZE_ARGS {
+        CK_CREATEMUTEX CreateMutex;
+        CK_DESTROYMUTEX DestroyMutex;
+        CK_LOCKMUTEX LockMutex;
+        CK_UNLOCKMUTEX UnlockMutex;
+        CK_FLAGS flags;
+        CK_VOID_PTR pReserved;
+    } CK_C_INITIALIZE_ARGS;
 
     typedef unsigned long ck_mechanism_type_t;
     struct ck_mechanism {
@@ -415,7 +432,8 @@ class PKCS11(object):
                  generate_iv=None, always_set_cka_sensitive=None,
                  hmac_keywrap_mechanism='CKM_SHA256_HMAC',
                  token_serial_number=None,
-                 token_label=None):
+                 token_label=None,
+                 os_locking_ok=False):
         if algorithm:
             LOG.warning("WARNING: Using deprecated 'algorithm' argument.")
             encryption_mechanism = encryption_mechanism or algorithm
@@ -433,7 +451,14 @@ class PKCS11(object):
 
         self.ffi = ffi or build_ffi()
         self.lib = self.ffi.dlopen(library_path)
-        rv = self.lib.C_Initialize(self.ffi.NULL)
+
+        if os_locking_ok:
+            init_arg_pt = self.ffi.new("CK_C_INITIALIZE_ARGS *")
+            init_arg_pt.flags = CKF_OS_LOCKING_OK
+        else:
+            init_arg_pt = self.ffi.NULL
+
+        rv = self.lib.C_Initialize(init_arg_pt)
         self._check_error(rv)
 
         # Session options
@@ -479,13 +504,18 @@ class PKCS11(object):
             token_info_ptr = self.ffi.new("CK_TOKEN_INFO_PTR")
             rv = self.lib.C_GetTokenInfo(id, token_info_ptr)
             self._check_error(rv)
-            tokens.append(Token(
+            token = Token(
                 id,
                 self.ffi.string(token_info_ptr.label).decode("UTF-8").strip(),
                 self.ffi.string(
                     token_info_ptr.serialNumber
                 ).decode("UTF-8").strip()
-            ))
+            )
+            LOG.debug("Slot %s: label: %s sn: %s",
+                      token.slot_id,
+                      token.label,
+                      token.serial_number)
+            tokens.append(token)
 
         # Matching serial number gets highest priority
         if token_serial_number:

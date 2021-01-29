@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added a new boolean option to the PKCS#11 backend: `os_locking_ok`.  When
+    set to True, the flag CKF_OS_LOCKING_OK will be passed to the C_Initialize
+    function.  The new option defaults to False.
