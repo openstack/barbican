@@ -342,6 +342,16 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.assertEqual(0, self.pkcs11.return_session.call_count)
         self.assertEqual(2, self.plugin._encrypt.call_count)
 
+    def test_call_pkcs11_reinitializes_pkcs11_object(self):
+        self.plugin._reinitialize_pkcs11 = mock.Mock()
+        self.plugin.pkcs11 = None
+
+        def test_func(*args, **kwargs):
+            pass
+
+        self.plugin._call_pkcs11(test_func)
+        self.plugin._reinitialize_pkcs11.assert_called_once()
+
     def test_reinitialize_pkcs11(self):
         pkcs11 = self.pkcs11
         self.plugin._create_pkcs11 = mock.Mock()

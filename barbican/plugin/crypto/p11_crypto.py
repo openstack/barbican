@@ -184,6 +184,8 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         # Wrap pkcs11 calls to enable a single retry when exceptions are raised
         # that can be fixed by reinitializing the pkcs11 library
         try:
+            if self.pkcs11 is None:
+                self._reinitialize_pkcs11()
             return func(*args, **kwargs)
         except (exception.PKCS11Exception) as pe:
             LOG.warning("Reinitializing PKCS#11 library: %s", pe)
@@ -335,7 +337,8 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         )
 
     def _reinitialize_pkcs11(self):
-        self.pkcs11.finalize()
+        if self.pkcs11 is not None:
+            self.pkcs11.finalize()
         self.pkcs11 = None
 
         with self.caching_session_lock:
