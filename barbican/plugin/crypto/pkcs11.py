@@ -31,6 +31,7 @@ CKMechanism = collections.namedtuple("CKMechanism", ["mech", "cffivals"])
 Token = collections.namedtuple("Token", ["slot_id", "label", "serial_number"])
 
 CKR_OK = 0
+CKR_CRYPTOKI_ALREADY_INITIALIZED = 0x00000191
 CK_TRUE = 1
 CKF_RW_SESSION = (1 << 1)
 CKF_SERIAL_SESSION = (1 << 2)
@@ -867,7 +868,7 @@ class PKCS11(object):
         self._check_error(rv)
 
     def _check_error(self, value):
-        if value != CKR_OK:
+        if value != CKR_OK and value != CKR_CRYPTOKI_ALREADY_INITIALIZED:
             code = ERROR_CODES.get(value, 'CKR_????')
             hex_code = "{hex} {code}".format(hex=hex(value), code=code)
 

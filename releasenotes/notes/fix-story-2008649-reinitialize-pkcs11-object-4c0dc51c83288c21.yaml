@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed Story #2008649: Correctly reinitialize PKCS11 object after secondary
+    failures.
