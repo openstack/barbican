@@ -38,12 +38,17 @@ p11_crypto_plugin_opts = [
                help=u._('Path to vendor PKCS11 library')),
     cfg.StrOpt('token_serial_number',
                help=u._('Token serial number used to identify the token to be '
-                        'used.  Required when the device has multiple tokens '
-                        'with the same label.')),
+                        'used.')),
     cfg.StrOpt('token_label',
-               help=u._('Token label used to identify the token to '
-                        'be used.  Required when token_serial_number is '
-                        'not specified.')),
+               deprecated_for_removal=True,
+               help=u._('DEPRECATED: Use token_labels instead. '
+                        'Token label used to identify the token to '
+                        'be used.')),
+    cfg.ListOpt('token_labels',
+                help=u._('List of labels for one or more tokens to be used. '
+                         'Typically this is a single label, but some HSM '
+                         'devices may require more than one label for Load '
+                         'Balancing or High Availability configurations.')),
     cfg.StrOpt('login',
                help=u._('Password to login to PKCS11 session'),
                secret=True),
@@ -128,23 +133,41 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
     def __init__(self, conf=CONF, ffi=None, pkcs11=None):
         self.conf = conf
         plugin_conf = conf.p11_crypto_plugin
-        if plugin_conf.library_path is None:
-            raise ValueError(u._("library_path is required"))
-
-        # Use specified or create new pkcs11 object
-        self.pkcs11 = pkcs11 or self._create_pkcs11(plugin_conf, ffi)
 
         # Save conf arguments
+        if plugin_conf.library_path is None:
+            raise ValueError(u._("library_path is required"))
+        self.library_path = plugin_conf.library_path
+
         self.encryption_mechanism = plugin_conf.encryption_mechanism
+        self.generate_iv = plugin_conf.aes_gcm_generate_iv
+        self.cka_sensitive = plugin_conf.always_set_cka_sensitive
         self.mkek_key_type = 'CKK_AES'
         self.mkek_length = plugin_conf.mkek_length
         self.mkek_label = plugin_conf.mkek_label
         self.hmac_label = plugin_conf.hmac_label
         self.hmac_key_type = plugin_conf.hmac_key_type
         self.hmac_keygen_mechanism = plugin_conf.hmac_keygen_mechanism
+        self.hmac_keywrap_mechanism = plugin_conf.hmac_keywrap_mechanism
+        self.os_locking_ok = plugin_conf.os_locking_ok
         self.pkek_length = plugin_conf.pkek_length
         self.pkek_cache_ttl = plugin_conf.pkek_cache_ttl
         self.pkek_cache_limit = plugin_conf.pkek_cache_limit
+        self.rw_session = plugin_conf.rw_session
+        self.seed_file = plugin_conf.seed_file
+        self.seed_length = plugin_conf.seed_length
+        self.slot_id = plugin_conf.slot_id
+        self.login = plugin_conf.login
+        self.token_serial_number = plugin_conf.token_serial_number
+        self.token_labels = plugin_conf.token_labels or list()
+        if plugin_conf.token_label:
+            LOG.warning('Using deprecated option "token_label". Please update '
+                        'your configuration file.')
+            if plugin_conf.token_label not in self.token_labels:
+                self.token_labels.append(plugin_conf.token_label)
+
+        # Use specified or create new pkcs11 object
+        self.pkcs11 = pkcs11 or self._create_pkcs11(ffi)
 
         self._configure_object_cache()
 
@@ -315,25 +338,25 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             else:
                 break
 
-    def _create_pkcs11(self, plugin_conf, ffi=None):
+    def _create_pkcs11(self, ffi=None):
         seed_random_buffer = None
-        if plugin_conf.seed_file:
-            with open(plugin_conf.seed_file, 'rb') as f:
-                seed_random_buffer = f.read(plugin_conf.seed_length)
+        if self.seed_file:
+            with open(self.seed_file, 'rb') as f:
+                seed_random_buffer = f.read(self.seed_length)
         return pkcs11.PKCS11(
-            library_path=plugin_conf.library_path,
-            login_passphrase=plugin_conf.login,
-            rw_session=plugin_conf.rw_session,
-            slot_id=plugin_conf.slot_id,
-            encryption_mechanism=plugin_conf.encryption_mechanism,
+            library_path=self.library_path,
+            login_passphrase=self.login,
+            rw_session=self.rw_session,
+            slot_id=self.slot_id,
+            encryption_mechanism=self.encryption_mechanism,
             ffi=ffi,
             seed_random_buffer=seed_random_buffer,
-            generate_iv=plugin_conf.aes_gcm_generate_iv,
-            always_set_cka_sensitive=plugin_conf.always_set_cka_sensitive,
-            hmac_keywrap_mechanism=plugin_conf.hmac_keywrap_mechanism,
-            token_serial_number=plugin_conf.token_serial_number,
-            token_label=plugin_conf.token_label,
-            os_locking_ok=plugin_conf.os_locking_ok
+            generate_iv=self.generate_iv,
+            always_set_cka_sensitive=self.cka_sensitive,
+            hmac_keywrap_mechanism=self.hmac_keywrap_mechanism,
+            token_serial_number=self.token_serial_number,
+            token_labels=self.token_labels,
+            os_locking_ok=self.os_locking_ok
         )
 
     def _reinitialize_pkcs11(self):
@@ -350,7 +373,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         with self.mk_cache_lock:
             self.mk_cache.clear()
 
-        self.pkcs11 = self._create_pkcs11(self.conf.p11_crypto_plugin)
+        self.pkcs11 = self._create_pkcs11()
         self._configure_object_cache()
 
     def _get_session(self):
