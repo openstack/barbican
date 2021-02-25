@@ -178,11 +178,11 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         return pkcs11.CKR_OK
 
     def test_get_slot_id_from_serial_number(self):
-        slot_id = self.pkcs11._get_slot_id('111111', None, 1)
+        slot_id = self.pkcs11._get_slot_id('111111', None, 2)
         self.assertEqual(1, slot_id)
 
     def test_get_slot_id_from_label(self):
-        slot_id = self.pkcs11._get_slot_id(None, 'myLabel', 1)
+        slot_id = self.pkcs11._get_slot_id(None, ['myLabel'], 2)
         self.assertEqual(1, slot_id)
 
     def test_get_slot_id_backwards_compatibility(self):
@@ -190,7 +190,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertEqual(5, slot_id)
 
     def test_get_slot_id_from_serial_ignores_label(self):
-        slot_id = self.pkcs11._get_slot_id('111111', 'badLabel', 1)
+        slot_id = self.pkcs11._get_slot_id('111111', ['badLabel'], 2)
         self.assertEqual(1, slot_id)
 
     def test_get_slot_id_from_serial_ignores_given_slot(self):
@@ -198,7 +198,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertEqual(1, slot_id)
 
     def test_get_slot_id_from_label_ignores_given_slot(self):
-        slot_id = self.pkcs11._get_slot_id(None, 'myLabel', 3)
+        slot_id = self.pkcs11._get_slot_id(None, ['myLabel'], 3)
         self.assertEqual(1, slot_id)
 
     def test_get_slot_id_serial_not_found(self):
@@ -207,14 +207,14 @@ class WhenTestingPKCS11(utils.BaseTestCase):
 
     def test_get_slot_id_label_not_found(self):
         self.assertRaises(ValueError,
-                          self.pkcs11._get_slot_id, None, 'badLabel', 1)
+                          self.pkcs11._get_slot_id, None, ['myLabelbad'], 1)
 
     def test_get_slot_id_two_tokens_same_label(self):
         self.lib.C_GetSlotList.side_effect = self._get_two_slot_list
         self.lib.C_GetTokenInfo.side_effect = \
             self._get_two_token_info_same_label
-        self.assertRaises(ValueError,
-                          self.pkcs11._get_slot_id, None, 'myLabel', 1)
+        slot_id = self.pkcs11._get_slot_id(None, ['myLabel'], 3)
+        self.assertEqual(1, slot_id)
 
     def test_public_get_session(self):
         self.lib.C_GetSessionInfo.side_effect = self._get_session_public
