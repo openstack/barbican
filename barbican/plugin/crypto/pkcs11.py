@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import collections
-import itertools
 import textwrap
 
 import cffi
@@ -433,7 +432,7 @@ class PKCS11(object):
                  generate_iv=None, always_set_cka_sensitive=None,
                  hmac_keywrap_mechanism='CKM_SHA256_HMAC',
                  token_serial_number=None,
-                 token_label=None,
+                 token_labels=None,
                  os_locking_ok=False):
         if algorithm:
             LOG.warning("WARNING: Using deprecated 'algorithm' argument.")
@@ -467,7 +466,7 @@ class PKCS11(object):
         self.rw_session = rw_session
         self.slot_id = self._get_slot_id(
             token_serial_number,
-            token_label,
+            token_labels,
             slot_id)
 
         # Algorithm options
@@ -485,10 +484,9 @@ class PKCS11(object):
             self._seed_random(session, seed_random_buffer)
         self._rng_self_test(session)
         self.return_session(session)
-        LOG.debug("Connected to PCKS11 sn: %s label: %s slot: %s",
-                  token_serial_number, token_label, self.slot_id)
+        LOG.debug("Connected to PCKS#11 Token in Slot %s", self.slot_id)
 
-    def _get_slot_id(self, token_serial_number, token_label, slot_id):
+    def _get_slot_id(self, token_serial_number, token_labels, slot_id):
         # First find out how many slots with tokens are available
         slots_ptr = self.ffi.new("CK_ULONG_PTR")
         rv = self.lib.C_GetSlotList(CK_TRUE, self.ffi.NULL, slots_ptr)
@@ -525,10 +523,10 @@ class PKCS11(object):
                     LOG.debug("Found token sn: %s in slot %s",
                               token.serial_number,
                               token.slot_id)
-                    if token_label:
+                    if token_labels:
                         LOG.warning(
-                            "Ignoring token_label: %s from barbican.conf",
-                            token_label
+                            "Ignoring token_labels: %s from barbican.conf",
+                            token_labels
                         )
                     if slot_id:
                         LOG.warning("Ignoring slot_id: %s from barbican.conf",
@@ -537,22 +535,16 @@ class PKCS11(object):
             raise ValueError("Token Serial Number not found.")
 
         # Label match is next, raises an error if there's not exactly one match
-        if token_label:
-            matched = list(itertools.dropwhile(
-                lambda x: x.label != token_label,
-                tokens
-            ))
-            if len(matched) > 1:
-                raise ValueError("More than one matching token label found")
-            if len(matched) < 1:
-                raise ValueError("Token Label not found.")
-
-            token = matched.pop()
-            LOG.debug("Found token label: %s in slot %s", token.label,
-                      token.slot_id)
-            if slot_id:
-                LOG.warning("Ignoring slot_id: %s from barbican.conf", slot_id)
-            return token.slot_id
+        if token_labels:
+            for token in tokens:
+                if token.label in token_labels:
+                    LOG.debug("Found token label: %s in slot %s", token.label,
+                              token.slot_id)
+                    if slot_id:
+                        LOG.warning("Ignoring slot_id: %s from barbican.conf",
+                                    slot_id)
+                    return token.slot_id
+            raise ValueError("Token Labels not found.")
 
         # If we got this far, slot_id was the only param given, so we return it
         return slot_id

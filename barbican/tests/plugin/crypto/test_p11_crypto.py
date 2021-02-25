@@ -56,6 +56,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.cfg_mock.p11_crypto_plugin.slot_id = 1
         self.cfg_mock.p11_crypto_plugin.token_serial_number = None
         self.cfg_mock.p11_crypto_plugin.token_label = None
+        self.cfg_mock.p11_crypto_plugin.token_labels = None
         self.cfg_mock.p11_crypto_plugin.rw_session = True
         self.cfg_mock.p11_crypto_plugin.pkek_length = 32
         self.cfg_mock.p11_crypto_plugin.pkek_cache_ttl = 900
@@ -70,7 +71,8 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.cfg_mock.p11_crypto_plugin.plugin_name = self.plugin_name
 
         self.plugin = p11_crypto.P11CryptoPlugin(
-            conf=self.cfg_mock, pkcs11=self.pkcs11
+            conf=self.cfg_mock,
+            pkcs11=self.pkcs11
         )
 
     def test_invalid_library_path(self):
@@ -299,19 +301,18 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         ffi = pkcs11.build_ffi()
         setattr(ffi, 'dlopen', lambda x: lib)
 
-        p11 = self.plugin._create_pkcs11(self.cfg_mock.p11_crypto_plugin, ffi)
+        p11 = self.plugin._create_pkcs11(ffi)
         self.assertIsInstance(p11, pkcs11.PKCS11)
 
         # test for when plugin_conf.seed_file is not None
-        self.cfg_mock.p11_crypto_plugin.seed_file = 'seed_file'
+        self.plugin.seed_file = 'seed_file'
         d = '01234567' * 4
         mo = mock.mock_open(read_data=d)
 
         with mock.patch(six.moves.builtins.__name__ + '.open',
                         mo,
                         create=True):
-            p11 = self.plugin._create_pkcs11(
-                self.cfg_mock.p11_crypto_plugin, ffi)
+            p11 = self.plugin._create_pkcs11(ffi)
 
         self.assertIsInstance(p11, pkcs11.PKCS11)
         mo.assert_called_once_with('seed_file', 'rb')

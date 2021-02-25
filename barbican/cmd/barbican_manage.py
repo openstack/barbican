@@ -334,7 +334,7 @@ class HSMCommands(object):
             encryption_mechanism='CKM_AES_CBC',
             hmac_keywrap_mechanism=hmacwrap,
             token_serial_number=conf.p11_crypto_plugin.token_serial_number,
-            token_label=conf.p11_crypto_plugin.token_label
+            token_labels=conf.p11_crypto_plugin.token_labels
         )
         self.session = self.pkcs11.get_session()
 
