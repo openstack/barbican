@@ -1,0 +1,14 @@
+---
+features:
+  - |
+    A new "token_labels" option has been added to the PKCS#11 driver which
+    supersedes the previous "token_label" option.  The new option is used to
+    specify a list of tokens that can be used by Barbican.  This is required
+    for some HSM devices that use separate tokens for load balancing.  For most
+    use cases the new option will just have a single token.  The old option
+    is deprecated, but will still be used if present.
+deprecations:
+  - |
+    The "token_label" option in the PKCS#11 driver is deprecated.  Th new
+    "token_labels" option should be used instead.  If present, "token_label"
+    will still be used by appending it to "token_labels".
