@@ -13,11 +13,19 @@
 from oslo_policy import policy
 
 
+_READER = "role:reader"
+_MEMBER = "role:member"
+_ADMIN = "role:admin"
+_PROJECT_MEMBER = f"{_MEMBER} and project_id:%(target.container.project_id)s"
+_PROJECT_ADMIN = f"{_ADMIN} and project_id:%(target.container.project_id)s"
+_CONTAINER_CREATOR = "user_id:%(target.container.creator_id)s"
+_CONTAINER_IS_NOT_PRIVATE = "True:%(target.container.read_project_access)s"
+
 rules = [
     policy.DocumentedRuleDefault(
         name='containers:post',
-        check_str='rule:admin_or_creator',
-        scope_types=[],
+        check_str=f"rule:admin_or_creator or {_MEMBER}",
+        scope_types=['project'],
         description='Creates a container.',
         operations=[
             {
@@ -28,8 +36,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='containers:get',
-        check_str='rule:all_but_audit',
-        scope_types=[],
+        check_str=f"rule:all_but_audit or {_MEMBER}",
+        scope_types=['project'],
         description='Lists a projects containers.',
         operations=[
             {
@@ -43,8 +51,10 @@ rules = [
         check_str='rule:container_non_private_read or ' +
                   'rule:container_project_creator or ' +
                   'rule:container_project_admin or ' +
-                  'rule:container_acl_read',
-        scope_types=[],
+                  'rule:container_acl_read or ' +
+                  f"({_PROJECT_MEMBER} and ({_CONTAINER_CREATOR} or " +
+                  f"{_CONTAINER_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
+        scope_types=['project'],
         description='Retrieves a single container.',
         operations=[
             {
@@ -56,8 +66,10 @@ rules = [
     policy.DocumentedRuleDefault(
         name='container:delete',
         check_str='rule:container_project_admin or ' +
-                  'rule:container_project_creator',
-        scope_types=[],
+                  'rule:container_project_creator or ' +
+                  f"({_PROJECT_MEMBER} and ({_CONTAINER_CREATOR} or " +
+                  f"{_CONTAINER_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
+        scope_types=['project'],
         description='Deletes a container.',
         operations=[
             {
@@ -68,8 +80,10 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='container_secret:post',
-        check_str='rule:admin',
-        scope_types=[],
+        check_str='rule:admin or ' +
+                  f"({_PROJECT_MEMBER} and ({_CONTAINER_CREATOR} or " +
+                  f"{_CONTAINER_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
+        scope_types=['project'],
         description='Add a secret to an existing container.',
         operations=[
             {
@@ -80,8 +94,10 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='container_secret:delete',
-        check_str='rule:admin',
-        scope_types=[],
+        check_str='rule:admin or ' +
+                  f"({_PROJECT_MEMBER} and ({_CONTAINER_CREATOR} or " +
+                  f"{_CONTAINER_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
+        scope_types=['project'],
         description='Remove a secret from a container.',
         operations=[
             {
