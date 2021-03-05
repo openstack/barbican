@@ -13,13 +13,23 @@
 from oslo_policy import policy
 
 
+_READER = "role:reader"
+_MEMBER = "role:member"
+_ADMIN = "role:admin"
+_PROJECT_MEMBER = f"{_MEMBER} and project_id:%(target.secret.project_id)s"
+_PROJECT_ADMIN = f"{_ADMIN} and project_id:%(target.secret.project_id)s"
+_SECRET_CREATOR = "user_id:%(target.secret.creator_id)s"
+_SECRET_IS_NOT_PRIVATE = "True:%(target.secret.read_project_access)s"
+
 rules = [
     policy.DocumentedRuleDefault(
         name='secret:decrypt',
         check_str='rule:secret_decrypt_non_private_read or ' +
                   'rule:secret_project_creator or ' +
-                  'rule:secret_project_admin or rule:secret_acl_read',
-        scope_types=[],
+                  'rule:secret_project_admin or rule:secret_acl_read or ' +
+                  f"({_PROJECT_MEMBER} and ({_SECRET_CREATOR} or " +
+                  f"{_SECRET_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
+        scope_types=['project'],
         description='Retrieve a secrets payload.',
         operations=[
             {
@@ -32,8 +42,10 @@ rules = [
         name='secret:get',
         check_str='rule:secret_non_private_read or ' +
                   'rule:secret_project_creator or ' +
-                  'rule:secret_project_admin or rule:secret_acl_read',
-        scope_types=[],
+                  'rule:secret_project_admin or rule:secret_acl_read or ' +
+                  f"({_PROJECT_MEMBER} and ({_SECRET_CREATOR} or " +
+                  f"{_SECRET_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
+        scope_types=['project'],
         description='Retrieves a secrets metadata.',
         operations=[
             {
@@ -44,8 +56,10 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secret:put',
-        check_str='rule:admin_or_creator and rule:secret_project_match',
-        scope_types=[],
+        check_str='rule:admin_or_creator and rule:secret_project_match or ' +
+                  f"({_PROJECT_MEMBER} and ({_SECRET_CREATOR} or " +
+                  f"{_SECRET_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
+        scope_types=['project'],
         description='Add the payload to an existing metadata-only secret.',
         operations=[
             {
@@ -57,8 +71,10 @@ rules = [
     policy.DocumentedRuleDefault(
         name='secret:delete',
         check_str='rule:secret_project_admin or ' +
-                  'rule:secret_project_creator',
-        scope_types=[],
+                  'rule:secret_project_creator or ' +
+                  f"({_PROJECT_MEMBER} and ({_SECRET_CREATOR} or " +
+                  f"{_SECRET_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
+        scope_types=['project'],
         description='Delete a secret by uuid.',
         operations=[
             {
@@ -69,8 +85,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secrets:post',
-        check_str='rule:admin_or_creator',
-        scope_types=[],
+        check_str=f'rule:admin_or_creator or {_MEMBER}',
+        scope_types=['project'],
         description='Creates a Secret entity.',
         operations=[
             {
@@ -81,8 +97,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secrets:get',
-        check_str='rule:all_but_audit',
-        scope_types=[],
+        check_str=f'rule:all_but_audit or {_MEMBER}',
+        scope_types=['project'],
         description='Lists a projects secrets.',
         operations=[
             {
