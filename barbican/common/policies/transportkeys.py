@@ -13,6 +13,8 @@
 from oslo_policy import policy
 
 
+_SYSTEM_ADMIN = "role:admin and system_scope:all"
+
 rules = [
     policy.DocumentedRuleDefault(
         name='transport_key:get',
@@ -28,8 +30,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='transport_key:delete',
-        check_str='rule:admin',
-        scope_types=[],
+        check_str=f'{_SYSTEM_ADMIN}',
+        scope_types=['system'],
         description='Delete a specific transport key.',
         operations=[
             {
@@ -52,8 +54,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='transport_keys:post',
-        check_str='rule:admin',
-        scope_types=[],
+        check_str=f'{_SYSTEM_ADMIN}',
+        scope_types=['system'],
         description='Create a new transport key.',
         operations=[
             {

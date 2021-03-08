@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Implement secure-rbac for transportkeys resource.
+security:
+  - |
+    The current policy allows users with the admin role to add or delete
+    transport keys.  This interface was only ever intended to be used by
+    system admins, and so it has been restricted using the new policy
+    to the system admin only (admins with system_scope:all).
