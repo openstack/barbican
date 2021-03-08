@@ -13,11 +13,12 @@
 from oslo_policy import policy
 
 
+_MEMBER = "role:member"
 rules = [
     policy.DocumentedRuleDefault(
         name='secret_meta:get',
-        check_str='rule:all_but_audit',
-        scope_types=[],
+        check_str=f'rule:all_but_audit or {_MEMBER}',
+        scope_types=['project'],
         description='metadata/: Lists a secrets user-defined metadata. || ' +
                     'metadata/{key}: Retrieves a secrets user-added metadata.',
         operations=[
@@ -33,8 +34,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secret_meta:post',
-        check_str='rule:admin_or_creator',
-        scope_types=[],
+        check_str=f'rule:admin_or_creator or {_MEMBER}',
+        scope_types=['project'],
         description='Adds a new key/value pair to the secrets user-defined ' +
                     'metadata.',
         operations=[
@@ -46,8 +47,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secret_meta:put',
-        check_str='rule:admin_or_creator',
-        scope_types=[],
+        check_str=f'rule:admin_or_creator or {_MEMBER}',
+        scope_types=['project'],
         description='metadata/: Sets the user-defined metadata for a secret ' +
                     '|| metadata/{key}: Updates an existing key/value pair ' +
                     'in the secrets user-defined metadata.',
@@ -64,8 +65,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secret_meta:delete',
-        check_str='rule:admin_or_creator',
-        scope_types=[],
+        check_str=f'rule:admin_or_creator or {_MEMBER}',
+        scope_types=['project'],
         description='Delete secret user-defined metadata by key.',
         operations=[
             {
