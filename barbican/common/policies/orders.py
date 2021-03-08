@@ -12,12 +12,13 @@
 
 from oslo_policy import policy
 
+_MEMBER = "role:member"
 
 rules = [
     policy.DocumentedRuleDefault(
         name='orders:get',
-        check_str='rule:all_but_audit',
-        scope_types=[],
+        check_str=f'rule:all_but_audit or {_MEMBER}',
+        scope_types=['project'],
         description='Gets list of all orders associated with a project.',
         operations=[
             {
@@ -28,8 +29,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='orders:post',
-        check_str='rule:admin_or_creator',
-        scope_types=[],
+        check_str=f'rule:admin_or_creator or {_MEMBER}',
+        scope_types=['project'],
         description='Creates an order.',
         operations=[
             {
@@ -40,8 +41,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='orders:put',
-        check_str='rule:admin_or_creator',
-        scope_types=[],
+        check_str=f'rule:admin_or_creator or {_MEMBER}',
+        scope_types=['project'],
         description='Unsupported method for the orders API.',
         operations=[
             {
@@ -52,8 +53,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='order:get',
-        check_str='rule:all_users',
-        scope_types=[],
+        check_str=f'rule:all_users or {_MEMBER}',
+        scope_types=['project'],
         description='Retrieves an orders metadata.',
         operations=[
             {
@@ -64,8 +65,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='order:delete',
-        check_str='rule:admin',
-        scope_types=[],
+        check_str=f'rule:admin or {_MEMBER}',
+        scope_types=['project'],
         description='Deletes an order.',
         operations=[
             {

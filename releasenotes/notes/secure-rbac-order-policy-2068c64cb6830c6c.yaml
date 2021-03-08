@@ -1,0 +1,15 @@
+---
+features:
+  - |
+    Implement secure-rbac for orders resource.
+security:
+  - |
+    The current policy allows all users except those with the audit role to
+    list orders or retrieve an orders metadata.  The new desired policy will
+    restrict this to members.  For backwards compatibility, the old policies
+    remain in effect, but they are deprecated and will be removed in future,
+    leaving the more restrictive new policy.
+  - |
+    The new secure-rbac policy allows for secret deletion by members.  This is
+    a change from the previous policy that only allowed deletion by the
+    project admin.
