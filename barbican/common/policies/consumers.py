@@ -16,14 +16,27 @@ from oslo_policy import policy
 #                  The POST/DELETE rules also share the check stirngs.
 #                  These can probably be turned into constants in base
 
+
+_READER = "role:reader"
+_MEMBER = "role:member"
+_ADMIN = "role:admin"
+_SYSTEM_ADMIN = "role:admin and system_scope:all"
+_PROJECT_MEMBER = f"{_MEMBER} and project_id:%(target.container.project_id)s"
+_PROJECT_ADMIN = f"{_ADMIN} and project_id:%(target.container.project_id)s"
+_CONTAINER_CREATOR = "user_id:%(target.container.creator_id)s"
+_CONTAINER_IS_NOT_PRIVATE = "True:%(target.container.read_project_access)s"
+
 rules = [
     policy.DocumentedRuleDefault(
         name='consumer:get',
         check_str='rule:admin or rule:observer or rule:creator or ' +
                   'rule:audit or rule:container_non_private_read or ' +
                   'rule:container_project_creator or ' +
-                  'rule:container_project_admin or rule:container_acl_read',
-        scope_types=[],
+                  'rule:container_project_admin or rule:container_acl_read' +
+                  f" or ({_PROJECT_MEMBER} and ({_CONTAINER_CREATOR} or " +
+                  f"{_CONTAINER_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN} or " +
+                  f"{_SYSTEM_ADMIN}",
+        scope_types=['project', 'system'],
         description='List a specific consumer for a given container.',
         operations=[
             {
@@ -38,8 +51,11 @@ rules = [
         check_str='rule:admin or rule:observer or rule:creator or ' +
                   'rule:audit or rule:container_non_private_read or ' +
                   'rule:container_project_creator or ' +
-                  'rule:container_project_admin or rule:container_acl_read',
-        scope_types=[],
+                  'rule:container_project_admin or rule:container_acl_read' +
+                  f" or ({_PROJECT_MEMBER} and ({_CONTAINER_CREATOR} or " +
+                  f"{_CONTAINER_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN} or " +
+                  f"{_SYSTEM_ADMIN}",
+        scope_types=['project', 'system'],
         description='List a containers consumers.',
         operations=[
             {
@@ -52,8 +68,11 @@ rules = [
         name='consumers:post',
         check_str='rule:admin or rule:container_non_private_read or ' +
                   'rule:container_project_creator or ' +
-                  'rule:container_project_admin or rule:container_acl_read',
-        scope_types=[],
+                  'rule:container_project_admin or rule:container_acl_read' +
+                  f" or ({_PROJECT_MEMBER} and ({_CONTAINER_CREATOR} or " +
+                  f"{_CONTAINER_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN} or " +
+                  f"{_SYSTEM_ADMIN}",
+        scope_types=['project', 'system'],
         description='Creates a consumer.',
         operations=[
             {
@@ -66,8 +85,11 @@ rules = [
         name='consumers:delete',
         check_str='rule:admin or rule:container_non_private_read or ' +
                   'rule:container_project_creator or ' +
-                  'rule:container_project_admin or rule:container_acl_read',
-        scope_types=[],
+                  'rule:container_project_admin or rule:container_acl_read' +
+                  f" or ({_PROJECT_MEMBER} and ({_CONTAINER_CREATOR} or " +
+                  f"{_CONTAINER_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN} or " +
+                  f"{_SYSTEM_ADMIN}",
+        scope_types=['project', 'system'],
         description='Deletes a consumer.',
         operations=[
             {

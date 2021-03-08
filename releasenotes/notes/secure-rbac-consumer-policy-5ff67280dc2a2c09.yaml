@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    Implement secure-rbac for consumers resource.
+security:
+  - |
+    The new secure-rbac policy allows consumers to be added and deleted by
+    members.  This is a change from the previous policy which only allowed the
+    secret's creator or admins or those that had a read acl on the secret.
