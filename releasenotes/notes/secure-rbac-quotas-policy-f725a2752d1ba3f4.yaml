@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    Implement secure-rbac for quotas resource.
+security:
+  - |
+    The current policy only allows users with the key-manager:service-admin
+    role to list, get, add, update or delete project quotas.  The new
+    policy allows system readers to list quotas and get quotas for specific
+    projects and system admins (role:admin and system_scope:all) to add,
+    update and delete project quotas.
