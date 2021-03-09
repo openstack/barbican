@@ -1164,28 +1164,19 @@ class WhenTestingSecretStoresResource(BaseTestCase):
         self.assertIsNotNone(self.policy_enforcer.rules)
 
     def test_should_pass_get_all_secret_stores(self):
-        self._assert_pass_rbac(['admin'],
-                               self._invoke_on_get)
-
-    def test_should_raise_get_all_secret_stores(self):
-        self._assert_fail_rbac([None, 'creator', 'observer', 'audit'],
-                               self._invoke_on_get)
+        self._assert_pass_rbac(
+            ['admin', 'observer', 'audit', 'creator', 'reader'],
+            self._invoke_on_get)
 
     def test_should_pass_get_global_default(self):
-        self._assert_pass_rbac(['admin'],
-                               self._invoke_get_global_default)
-
-    def test_should_raise_get_global_default(self):
-        self._assert_fail_rbac([None, 'creator', 'observer', 'audit'],
-                               self._invoke_get_global_default)
+        self._assert_pass_rbac(
+            ['admin', 'observer', 'audit', 'creator', 'reader'],
+            self._invoke_get_global_default)
 
     def test_should_pass_get_preferred(self):
-        self._assert_pass_rbac(['admin'],
-                               self._invoke_get_preferred)
-
-    def test_should_raise_get_preferred(self):
-        self._assert_fail_rbac([None, 'creator', 'observer', 'audit'],
-                               self._invoke_get_preferred)
+        self._assert_pass_rbac(
+            ['admin', 'observer', 'audit', 'creator', 'reader'],
+            self._invoke_get_preferred)
 
     def _invoke_on_get(self):
         self.resource.on_get(self.req, self.resp)
@@ -1235,12 +1226,9 @@ class WhenTestingSecretStoreResource(BaseTestCase):
         self.assertIsNotNone(self.policy_enforcer.rules)
 
     def test_should_pass_get_a_secret_store(self):
-        self._assert_pass_rbac(['admin'],
-                               self._invoke_on_get)
-
-    def test_should_raise_get_a_secret_store(self):
-        self._assert_fail_rbac([None, 'creator', 'observer', 'audit'],
-                               self._invoke_on_get)
+        self._assert_pass_rbac(
+            ['admin', 'observer', 'audit', 'creator', 'reader'],
+            self._invoke_on_get)
 
     def _invoke_on_get(self):
         self.resource.on_get(self.req, self.resp)
@@ -1278,8 +1266,9 @@ class WhenTestingPreferredSecretStoreResource(BaseTestCase):
                                self._invoke_on_post)
 
     def test_should_raise_set_preferred_secret_store(self):
-        self._assert_fail_rbac([None, 'creator', 'observer', 'audit'],
-                               self._invoke_on_post)
+        self._assert_fail_rbac(
+            [None, 'creator', 'observer', 'audit', 'reader'],
+            self._invoke_on_post)
 
     def _invoke_on_post(self):
         self.resource.on_post(self.req, self.resp)
