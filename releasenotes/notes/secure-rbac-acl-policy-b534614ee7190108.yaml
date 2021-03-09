@@ -1,0 +1,15 @@
+---
+features:
+  - |
+    Implement secure-rbac policy for ACLs.
+security:
+  - |
+    The new secure-rbac policy does not allow listing ACLs for private secrets
+    or private containers.  This is a change from the previous policy which
+    allowed listing ACLs of private secrets or private containers by users with
+    some role assignments on the project.  The previous policy is deprecated,
+    but it will continue to be used until it is removed in a future release.
+  - |
+    The new secure-rbac policy allows ACLs to be modified or deleted by members
+    of a project.  This is a change from the previous policy which only allowed
+    these operations by the project admin or the secret or container creators.
