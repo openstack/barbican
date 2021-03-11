@@ -13,11 +13,13 @@
 from oslo_policy import policy
 
 
+_READER = "role:reader"
+
 rules = [
     policy.DocumentedRuleDefault(
         name='secretstores:get',
-        check_str='rule:admin',
-        scope_types=[],
+        check_str=f'rule:all_users or {_READER}',
+        scope_types=['project', 'system'],
         description='Get list of available secret store backends.',
         operations=[
             {
@@ -28,8 +30,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secretstores:get_global_default',
-        check_str='rule:admin',
-        scope_types=[],
+        check_str=f'rule:all_users or {_READER}',
+        scope_types=['project', 'system'],
         description='Get a reference to the secret store that is used as ' +
                     'default secret store backend for the deployment.',
         operations=[
@@ -41,8 +43,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secretstores:get_preferred',
-        check_str='rule:admin',
-        scope_types=[],
+        check_str=f'rule:all_users or {_READER}',
+        scope_types=['project', 'system'],
         description='Get a reference to the preferred secret store if ' +
                     'assigned previously.',
         operations=[
@@ -55,7 +57,7 @@ rules = [
     policy.DocumentedRuleDefault(
         name='secretstore_preferred:post',
         check_str='rule:admin',
-        scope_types=[],
+        scope_types=['project'],
         description='Set a secret store backend to be preferred store ' +
                     'backend for their project.',
         operations=[
@@ -68,7 +70,7 @@ rules = [
     policy.DocumentedRuleDefault(
         name='secretstore_preferred:delete',
         check_str='rule:admin',
-        scope_types=[],
+        scope_types=['project'],
         description='Remove preferred secret store backend setting for ' +
                     'their project.',
         operations=[
@@ -80,8 +82,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secretstore:get',
-        check_str='rule:admin',
-        scope_types=[],
+        check_str=f'rule:all_users or {_READER}',
+        scope_types=['project', 'system'],
         description='Get details of secret store by its ID.',
         operations=[
             {

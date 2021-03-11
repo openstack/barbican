@@ -30,6 +30,13 @@ observer_b = CONF.rbac_users.observer_b
 
 test_user_data_when_enabled = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
+    'with_creator_a': {'user': creator_a, 'expected_return': 200},
+    'with_observer_a': {'user': observer_a, 'expected_return': 200},
+    'with_auditor_a': {'user': auditor_a, 'expected_return': 200},
+}
+
+test_user_data_admin_ops_when_enabled = {
+    'with_admin_a': {'user': admin_a, 'expected_return': 200},
     'with_creator_a': {'user': creator_a, 'expected_return': 403},
     'with_observer_a': {'user': observer_a, 'expected_return': 403},
     'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
@@ -37,9 +44,9 @@ test_user_data_when_enabled = {
 
 test_user_data_when_not_enabled = {
     'with_admin_a': {'user': admin_a, 'expected_return': 404},
-    'with_creator_a': {'user': creator_a, 'expected_return': 403},
-    'with_observer_a': {'user': observer_a, 'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_creator_a': {'user': creator_a, 'expected_return': 404},
+    'with_observer_a': {'user': observer_a, 'expected_return': 404},
+    'with_auditor_a': {'user': auditor_a, 'expected_return': 404},
 }
 
 
@@ -183,7 +190,7 @@ class SecretStoresTestCase(base.TestCase):
     @testcase.skipUnless(base.conf_multiple_backends_enabled, 'executed only '
                          'when multiple backends support is enabled in '
                          'barbican server side')
-    @utils.parameterized_dataset(test_user_data_when_enabled)
+    @utils.parameterized_dataset(test_user_data_admin_ops_when_enabled)
     def test_unset_project_preferred_store_multiple_enabled(self, user,
                                                             expected_return):
 
