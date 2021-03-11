@@ -13,11 +13,15 @@
 from oslo_policy import policy
 
 
+_READER = "role:reader"
+_SYSTEM_ADMIN = "role:admin and system_scope:all"
+_SYSTEM_READER = "role:reader and system_scope:all"
+
 rules = [
     policy.DocumentedRuleDefault(
         name='quotas:get',
-        check_str='rule:all_users',
-        scope_types=[],
+        check_str=f'rule:all_users or {_READER}',
+        scope_types=['project'],
         description='List quotas for the project the user belongs to.',
         operations=[
             {
@@ -28,8 +32,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='project_quotas:get',
-        check_str='rule:service_admin',
-        scope_types=[],
+        check_str=f'rule:service_admin or {_SYSTEM_READER}',
+        scope_types=['system'],
         description='List quotas for the specified project.',
         operations=[
             {
@@ -44,8 +48,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='project_quotas:put',
-        check_str='rule:service_admin',
-        scope_types=[],
+        check_str=f'rule:service_admin or {_SYSTEM_ADMIN}',
+        scope_types=['system'],
         description='Create or update the configured project quotas for '
                     'the project with the specified UUID.',
         operations=[
@@ -57,8 +61,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='project_quotas:delete',
-        check_str='rule:service_admin',
-        scope_types=[],
+        check_str=f'rule:service_admin or {_SYSTEM_ADMIN}',
+        scope_types=['system'],
         description='Delete the project quotas configuration for the '
                     'project with the requested UUID.',
         operations=[
