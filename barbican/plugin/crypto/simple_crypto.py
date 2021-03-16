@@ -189,8 +189,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
                  mode=None):
         if type_enum == c.PluginSupportTypes.ENCRYPT_DECRYPT:
             return True
-
-        if type_enum == c.PluginSupportTypes.SYMMETRIC_KEY_GENERATION:
+        elif type_enum == c.PluginSupportTypes.SYMMETRIC_KEY_GENERATION:
             return self._is_algorithm_supported(algorithm,
                                                 bit_length,
                                                 mode)
