@@ -217,6 +217,23 @@ class ACLMixin(object):
                     if ctxt.user in acl.to_dict_fields().get('users', [])}
         co_dict = {'%s_project_access' % acl.operation: acl.project_access for
                    acl in acl_list if acl.project_access is not None}
+        if not co_dict:
+            """
+            The co_dict is empty when the entity (secret or container) has no
+            acls in its acl_list.  This causes any policy with
+
+                "%(target.secret.read_project_access)s"
+            or
+                "%(target.container.read_project_access)s"
+
+            to always evaluate to False.  This is probelmatic because we want
+            to allow project access by default (with additional role checks).
+            To work around this we allow read here.
+
+            When the entity has an acl, co_dict will use the value from the
+            database, and this if statement will be skipped.
+            """
+            co_dict = {'read_project_access': True}
         acl_dict.update(co_dict)
 
         return acl_dict
