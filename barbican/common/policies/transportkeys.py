@@ -18,7 +18,7 @@ _SYSTEM_ADMIN = "role:admin and system_scope:all"
 rules = [
     policy.DocumentedRuleDefault(
         name='transport_key:get',
-        check_str='rule:all_users or {_READER}',
+        check_str=f'rule:all_users or {_READER}',
         scope_types=['project', 'system'],
         description='Get a specific transport key.',
         operations=[
@@ -42,7 +42,7 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='transport_keys:get',
-        check_str='rule:all_users or {_READER}',
+        check_str=f'rule:all_users or {_READER}',
         scope_types=['project', 'system'],
         description='Get a list of all transport keys.',
         operations=[
