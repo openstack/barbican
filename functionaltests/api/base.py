@@ -36,7 +36,7 @@ conf_multiple_backends_enabled = CONF.keymanager.\
 
 
 class TestCase(oslotest.BaseTestCase):
-    max_payload_size = 10000
+    max_payload_size = 20000
     max_sized_payload = b'a' * max_payload_size
     oversized_payload = b'a' * (max_payload_size + 1)
     max_field_size = 255
