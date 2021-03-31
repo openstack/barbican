@@ -235,6 +235,12 @@ class ContainersSecretsController(controllers.ACLMixin):
         self.secret_repo = repo.get_secret_repository()
         self.validator = validators.ContainerSecretValidator()
 
+    def get_acl_tuple(self, req, **kwargs):
+        acl = self.get_acl_dict_for_user(req, self.container.container_acls)
+        acl['project_id'] = self.container.project.external_id
+        acl['creator_id'] = self.container.creator_id
+        return ('container', acl)
+
     @pecan.expose(generic=True)
     def index(self, **kwargs):
         pecan.abort(405)  # HTTP 405 Method Not Allowed as default
