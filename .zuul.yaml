@@ -90,6 +90,7 @@
         - barbican-grenade:
             voting: false
         - barbican-tempest-plugin-simple-crypto
+        - barbican-tempest-plugin-simple-crypto-secure-rbac
         - barbican-tempest-plugin-simple-crypto-ipv6-only
         - octavia-v2-dsvm-tls-barbican
         # TripleO jobs that deploy Barbican.
