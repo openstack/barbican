@@ -5,15 +5,16 @@
 # Andi Chandler <andi@gowling.com>, 2018. #zanata
 # Andi Chandler <andi@gowling.com>, 2019. #zanata
 # Andi Chandler <andi@gowling.com>, 2020. #zanata
+# Andi Chandler <andi@gowling.com>, 2021. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: barbican VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2020-10-28 22:42+0000\n"
+"POT-Creation-Date: 2021-04-26 11:39+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2020-10-28 01:17+0000\n"
+"PO-Revision-Date: 2021-03-21 10:51+0000\n"
 "Last-Translator: Andi Chandler <andi@gowling.com>\n"
 "Language-Team: English (United Kingdom)\n"
 "Language: en_GB\n"
@@ -287,6 +288,13 @@ msgid "Crypto plugin not found."
 msgstr "Crypto plugin not found."
 
 msgid ""
+"DEPRECATED: Use token_labels instead. Token label used to identify the token "
+"to be used."
+msgstr ""
+"DEPRECATED: Use token_labels instead. Token label used to identify the token "
+"to be used."
+
+msgid ""
 "DSA keys should not have a passphrase in the database, for being used during "
 "retrieval."
 msgstr ""
@@ -321,6 +329,11 @@ msgstr "Duplicate reference names are not allowed"
 
 msgid "Duplicate secret ids are not allowed"
 msgstr "Duplicate secret ids are not allowed"
+
+msgid ""
+"Enable CKF_OS_LOCKING_OK flag when initializing the PKCS#11 client library."
+msgstr ""
+"Enable CKF_OS_LOCKING_OK flag when initializing the PKCS#11 client library."
 
 msgid "Encoding type must be 'base64' for text-based payloads."
 msgstr "Encoding type must be 'base64' for text-based payloads."
@@ -592,6 +605,15 @@ msgstr "List of certificate plugins to load."
 
 msgid "List of crypto plugins to load."
 msgstr "List of crypto plugins to load."
+
+msgid ""
+"List of labels for one or more tokens to be used. Typically this is a single "
+"label, but some HSM devices may require more than one label for Load "
+"Balancing or High Availability configurations."
+msgstr ""
+"List of labels for one or more tokens to be used. Typically this is a single "
+"label, but some HSM devices may require more than one label for Load "
+"Balancing or High Availability configurations."
 
 msgid "List of secret store plugins to load."
 msgstr "List of secret store plugins to load."
@@ -921,9 +943,6 @@ msgstr ""
 "exceptions. If you notice this, you can lower this value to ensure that "
 "SQLAlchemy reconnects before MySQL can drop the connection."
 
-msgid "Placeholder"
-msgstr "Placeholder"
-
 msgid "Plugin does not support generation of subordinate CAs"
 msgstr "Plugin does not support generation of subordinate CAs"
 
@@ -933,6 +952,9 @@ msgid ""
 msgstr ""
 "Plugin lookup property 'stores_lookup_suffix' is not defined in service "
 "configuration"
+
+msgid "Policy File JSON to YAML Migration"
+msgstr "Policy File JSON to YAML Migration"
 
 msgid ""
 "Pool name for notifications listener. Setting this to a distinctive value "
@@ -1339,19 +1361,8 @@ msgstr "There was an error with the PKCS#11 library."
 msgid "Time in days for CA entries to expire"
 msgstr "Time in days for CA entries to expire"
 
-msgid ""
-"Token label used to identify the token to be used.  Required when "
-"token_serial_number is not specified."
-msgstr ""
-"Token label used to identify the token to be used.  Required when "
-"token_serial_number is not specified."
-
-msgid ""
-"Token serial number used to identify the token to be used.  Required when "
-"the device has multiple tokens with the same label."
-msgstr ""
-"Token serial number used to identify the token to be used.  Required when "
-"the device has multiple tokens with the same label."
+msgid "Token serial number used to identify the token to be used."
+msgstr "Token serial number used to identify the token to be used."
 
 msgid "Transport Key Creation"
 msgstr "Transport Key Creation"
