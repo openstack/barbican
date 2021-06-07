@@ -13,14 +13,14 @@ ways you can contribute to the Barbican project\:
 * Deployment scripts
 
 
-Freenode IRC (Chat)
+OFTC IRC (Chat)
 --------------------
-You can find Barbicaneers in our publicly accessible channel on `freenode`_
+You can find Barbicaneers in our publicly accessible channel on `OFTC`_
 ``#openstack-barbican``. All conversations are logged and stored for your
 convenience at `eavesdrop.openstack.org`_. For more information regarding
 OpenStack IRC channels please visit the `OpenStack IRC Wiki`_.
 
-.. _`freenode`: https://freenode.net
+.. _`OFTC`: http://oftc.net
 .. _`eavesdrop.openstack.org`: http://eavesdrop.openstack.org/irclogs/
                               %23openstack-barbican/
 .. _`OpenStack IRC Wiki`: https://wiki.openstack.org/wiki/IRC

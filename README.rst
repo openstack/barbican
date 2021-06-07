@@ -37,7 +37,7 @@ mailing list <http://lists.openstack.org/pipermail/openstack-discuss/>`_
 at `openstack-discuss@lists.openstack.org` and let us know what you
 think, just add
 `[barbican]` to the subject. You can also join our IRC channel
-`#openstack-barbican` on Freenode.
+`#openstack-barbican` on `OFTC <http://oftc.net>`_.
 
 Client Libraries
 ----------------

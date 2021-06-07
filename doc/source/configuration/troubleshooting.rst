@@ -3,7 +3,7 @@ Troubleshooting your Barbican Setup
 =====================================
 
 If you cannot find the answers you're looking for within this document,
-you can ask questions on the Freenode IRC channel ``#openstack-barbican``
+you can ask questions on the OFTC IRC channel ``#openstack-barbican``
 
 
 Getting a Barbican HTTP 401 error after a successful authentication to Keystone

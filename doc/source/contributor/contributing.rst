@@ -50,13 +50,13 @@ Communication
 
 IRC
     People working on the Barbican project may be found in the
-    ``#openstack-barbican`` channel on Freenode during working hours
+    ``#openstack-barbican`` channel on OFTC during working hours
     in their timezone.  The channel is logged, so if you ask a question
     when no one is around, you can check the log to see if it's been
     answered: http://eavesdrop.openstack.org/irclogs/%23openstack-barbican/
 
 weekly meeting
-    Tuesdays at 13:00 UTC in ``#openstack-barbican`` on Freenode.
+    Tuesdays at 13:00 UTC in ``#openstack-barbican`` on OFTC.
     Meetings are logged: http://eavesdrop.openstack.org/meetings/barbican/
 
     More information (including a link to the Agenda, some pointers on
