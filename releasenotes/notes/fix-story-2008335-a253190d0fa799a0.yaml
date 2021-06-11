@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed Story 2008335: Fixed a data encoding issue in the Hashicorp Vault
+    backend that was causing errors when retrieving keys that were generated
+    by the Vault Key Manager in Castellan.

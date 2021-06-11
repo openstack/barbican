@@ -187,6 +187,25 @@ class OrdersTestCase(base.TestCase):
         self.assertEqual(406, secret_resp.status_code)
 
     @testcase.attr('positive')
+    def test_order_create_check_secret_payload_positive(self):
+        """Create order and check the secret payload.
+
+        Check the secret payload with correct payload_content_type.
+        """
+        test_model = order_models.OrderModel(**self.create_default_data)
+        resp, order_ref = self.behaviors.create_order(test_model)
+        self.assertEqual(202, resp.status_code)
+        order_resp = self.behaviors.get_order(order_ref)
+        self.assertEqual(200, order_resp.status_code)
+        # PENDING orders may take a moment to be processed by the workers
+        # when running tests with queue enabled
+        self.wait_for_order(order_resp, order_ref)
+        secret_ref = order_resp.model.secret_ref
+        secret_resp = self.secret_behaviors.get_secret(
+            secret_ref, payload_content_type="application/octet-stream")
+        self.assertEqual(200, secret_resp.status_code)
+
+    @testcase.attr('positive')
     def test_order_and_secret_metadata_same(self):
         """Checks that metadata from secret GET and order GET are the same.
 

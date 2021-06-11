@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
 from unittest import mock
 
 from castellan.common import exception
@@ -25,7 +26,9 @@ from barbican.tests import utils
 
 key_ref1 = 'aff825be-6ede-4b1d-aeb0-aaec8e62aec6'
 key_ref2 = '9c94c9c7-16ea-43e8-8ebe-0de282c0e6d5'
-secret_passphrase = 'secret passphrase'
+
+mock_key = b'\xae9Eso\xd4\x98\x04>\xc3\x05n\x0f\x03\x96\xa3' + \
+           b'\xc3Z;\x9c\x11&oYY\x00\x13\xae\xf4>\x83\x82'
 
 
 class WhenTestingVaultSecretStore(utils.BaseTestCase):
@@ -39,7 +42,7 @@ class WhenTestingVaultSecretStore(utils.BaseTestCase):
         self.key_manager_mock.create_key.return_value = key_ref1
         self.key_manager_mock.store.return_value = key_ref1
 
-        secret_object = opaque_data.OpaqueData(secret_passphrase)
+        secret_object = opaque_data.OpaqueData(mock_key)
         self.key_manager_mock.get.return_value = secret_object
 
         self.cfg_mock = mock.MagicMock(name='config mock')
@@ -52,6 +55,21 @@ class WhenTestingVaultSecretStore(utils.BaseTestCase):
         self.plugin.key_manager = self.key_manager_mock
         self.plugin_name = "VaultSecretStore"
 
+    def test_meta_dict(self):
+        key_id = 'SOME_KEY_UUID'
+        meta = self.plugin._meta_dict(key_id)
+        self.assertNotIn(css.CastellanSecretStore.BIT_LENGTH, meta)
+        self.assertNotIn(css.CastellanSecretStore.ALG, meta)
+        self.assertEqual(key_id, meta[css.CastellanSecretStore.KEY_ID])
+
+        meta = self.plugin._meta_dict(key_id, bit_length=128)
+        self.assertEqual(128, meta[css.CastellanSecretStore.BIT_LENGTH])
+
+        meta = self.plugin._meta_dict(key_id, algorithm='AES')
+        self.assertEqual('AES', meta[css.CastellanSecretStore.ALG])
+
+        self.assertEqual(1, meta[css.CastellanSecretStore.METADATA_VERSION])
+
     def test_generate_symmetric_key(self):
         key_spec = ss.KeySpec(ss.KeyAlgorithm.AES, 128)
         response = self.plugin.generate_symmetric_key(key_spec)
@@ -62,7 +80,10 @@ class WhenTestingVaultSecretStore(utils.BaseTestCase):
             128
         )
 
-        expected_response = {css.CastellanSecretStore.KEY_ID: key_ref1}
+        expected_response = {
+            css.CastellanSecretStore.KEY_ID: key_ref1,
+            css.CastellanSecretStore.METADATA_VERSION:
+                css.CastellanSecretStore.CURRENT_VERSION}
         self.assertEqual(response, expected_response)
 
     def test_generate_symmetric_key_raises_exception(self):
@@ -118,32 +139,32 @@ class WhenTestingVaultSecretStore(utils.BaseTestCase):
         )
 
     def test_store_secret(self):
-        payload = 'encrypt me!!'
+        payload = b'encrypt me!!'
         key_spec = mock.MagicMock()
         content_type = mock.MagicMock()
         transport_key = None
         secret_dto = ss.SecretDTO(ss.SecretType.SYMMETRIC,
-                                  payload,
+                                  base64.b64encode(payload),
                                   key_spec,
                                   content_type,
                                   transport_key)
         response = self.plugin.store_secret(secret_dto)
 
-        data = opaque_data.OpaqueData(secret_dto.secret)
+        data = opaque_data.OpaqueData(payload)
         self.plugin.key_manager.store.assert_called_once_with(
             mock.ANY,
             data
         )
-        expected_response = {css.CastellanSecretStore.KEY_ID: key_ref1}
+        expected_response = self.plugin._meta_dict(key_ref1)
         self.assertEqual(response, expected_response)
 
     def test_store_secret_raises_exception(self):
-        payload = 'encrypt me!!'
+        payload = b'encrypt me!!'
         key_spec = mock.MagicMock()
         content_type = mock.MagicMock()
         transport_key = None
         secret_dto = ss.SecretDTO(ss.SecretType.SYMMETRIC,
-                                  payload,
+                                  base64.b64encode(payload),
                                   key_spec,
                                   content_type,
                                   transport_key)
@@ -156,10 +177,8 @@ class WhenTestingVaultSecretStore(utils.BaseTestCase):
         )
 
     def test_get_secret(self):
-        secret_metadata = {
-            css.CastellanSecretStore.KEY_ID: key_ref1,
-            "content_type": "application/octet-stream"
-        }
+        secret_metadata = self.plugin._meta_dict(key_ref1, 256, 'AES')
+
         response = self.plugin.get_secret(
             ss.SecretType.SYMMETRIC,
             secret_metadata
@@ -167,15 +186,17 @@ class WhenTestingVaultSecretStore(utils.BaseTestCase):
 
         self.assertIsInstance(response, ss.SecretDTO)
 
+        plaintext = base64.b64decode(response.secret)
+
         self.assertEqual(ss.SecretType.SYMMETRIC, response.type)
-        self.assertEqual(secret_passphrase, response.secret)
+        self.assertEqual(mock_key, plaintext)
         self.plugin.key_manager.get.assert_called_once_with(
             mock.ANY,
             key_ref1
         )
 
     def test_get_secret_throws_exception(self):
-        secret_metadata = {css.CastellanSecretStore.KEY_ID: key_ref1}
+        secret_metadata = self.plugin._meta_dict(key_ref1, 256, 'AES')
         self.plugin.key_manager.get.side_effect = exception.Forbidden()
         self.assertRaises(
             ss.SecretGeneralException,
