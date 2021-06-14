@@ -353,10 +353,10 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
             datum.delete(session)
 
         for secret_ref in self.container_secrets:
-            session.delete(secret_ref)
+            secret_ref.delete(session)
 
         for secret_acl in self.secret_acls:
-            session.delete(secret_acl)
+            secret_acl.delete(session)
 
     def _do_extra_dict_fields(self):
         """Sub-class hook method: return dict of fields."""

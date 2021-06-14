@@ -187,7 +187,7 @@ def _soft_delete_expired_secrets(threshold_date):
     """
     current_time = timeutils.utcnow()
     session = repo.get_session()
-    query = session.query(models.Secret.id)
+    query = session.query(models.Secret)
     query = query.filter(~models.Secret.deleted)
     query = query.filter(
         models.Secret.expiration <= threshold_date

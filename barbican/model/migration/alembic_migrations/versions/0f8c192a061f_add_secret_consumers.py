@@ -30,10 +30,8 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    ctx = op.get_context()
     con = op.get_bind()
-    table_exists = ctx.dialect.has_table(con.engine,
-                                         "secret_consumer_metadata")
+    table_exists = sa.inspect(con.engine).has_table("secret_consumer_metadata")
     if not table_exists:
         op.create_table(
             "secret_consumer_metadata",

@@ -664,8 +664,6 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
                           self.result_follow_on)
 
     def test_should_raise_for_pycrypto_stored_key_no_private_key(self):
-        self.order_meta.update(self.stored_key_meta)
-
         private_key = rsa.generate_private_key(
             public_exponent=65537,
             key_size=2048,
@@ -693,6 +691,11 @@ class WhenIssuingCertificateRequests(BaseCertificateRequestsTestCase):
         secret_repo.delete_entity_by_id(
             self.private_key.id, self.external_project_id)
 
+        # We need to commit deletions or we'll get deleted objects with deleted
+        # set to True.  This is caused by SQLAlchemy's identity mapping and our
+        # use of scoped_session.
+        repositories.commit()
+        self.order.meta.update(self.stored_key_meta)
         self.assertRaises(excep.StoredKeyPrivateKeyNotFound,
                           cert_res.issue_certificate_request,
                           self.order,
