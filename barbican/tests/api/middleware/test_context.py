@@ -14,12 +14,11 @@
 # limitations under the License.
 from unittest import mock
 
-import oslotest.base as oslotest
-
 from barbican.api.middleware import context
+from barbican.tests import utils
 
 
-class TestUnauthenticatedContextMiddleware(oslotest.BaseTestCase):
+class TestUnauthenticatedContextMiddleware(utils.BaseTestCase):
 
     def setUp(self):
         super(TestUnauthenticatedContextMiddleware, self).setUp()

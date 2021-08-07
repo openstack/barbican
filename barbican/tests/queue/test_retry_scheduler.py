@@ -16,12 +16,13 @@ import time
 from unittest import mock
 
 import eventlet
-import oslotest.base as oslotest
 
 from barbican.model import models
 from barbican.model import repositories
 from barbican.queue import retry_scheduler
 from barbican.tests import database_utils
+from barbican.tests import utils
+
 
 # Oslo messaging RPC server uses eventlet.
 eventlet.monkey_patch()
@@ -148,7 +149,7 @@ class WhenRunningPeriodicServerRetryLogic(database_utils.RepositoryTestCase):
         return args, kwargs, retry_repo
 
 
-class WhenRunningPeriodicServer(oslotest.BaseTestCase):
+class WhenRunningPeriodicServer(utils.BaseTestCase):
     """Tests the timing-related functionality of the periodic task retry server.
 
     These tests are only concerned with whether or not periodic tasks are

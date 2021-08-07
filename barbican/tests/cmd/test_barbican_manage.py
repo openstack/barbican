@@ -30,8 +30,6 @@ class TestBarbicanManageBase(utils.BaseTestCase):
         clear_conf()
         self.addCleanup(clear_conf)
 
-        self.useFixture(fixtures.MonkeyPatch(
-            'oslo_log.log.setup', lambda barbican_test, version='test': None))
         manager.CONF.set_override('sql_connection', 'mockdburl')
 
     def _main_test_helper(self, argv, func_name=None, *exp_args, **exp_kwargs):
