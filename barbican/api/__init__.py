@@ -96,7 +96,7 @@ def generate_safe_exception_message(operation_name, excep):
 
     try:
         raise excep
-    except policy.PolicyNotAuthorized:
+    except (policy.PolicyNotAuthorized, policy.InvalidScope):
         message = u._(
             '{operation} attempt not allowed - '
             'please review your '
