@@ -107,13 +107,11 @@
         # TripleO jobs that deploy Barbican.
         # Note we don't use a project-template here, so it's easier
         # to disable voting on one specific job if things go wrong.
-        # tripleo-ci-centos-7-scenario002-standalone will
-        # run in Pike and beyond.
         # If you need any support to debug these jobs in case of
         # failures, please reach us on #tripleo IRC channel.
-        - tripleo-ci-centos-7-scenario002-standalone:
+        - tripleo-ci-centos-8-scenario002-standalone:
             voting: false
-        - tripleo-ci-centos-7-undercloud-containers:
+        - tripleo-ci-centos-8-undercloud-containers:
             voting: false
     gate:
       queue: barbican
