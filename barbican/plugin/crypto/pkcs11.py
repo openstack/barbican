@@ -259,7 +259,9 @@ ERROR_CODES = {
     0x1a0: 'CKR_MUTEX_BAD',
     0x1a1: 'CKR_MUTEX_NOT_LOCKED',
     0x200: 'CKR_FUNCTION_REJECTED',
-    1 << 31: 'CKR_VENDOR_DEFINED'
+    1 << 31: 'CKR_VENDOR_DEFINED',
+    # Trustway Proteccio Codes
+    0x81000071: 'EHOSTUNREACH'
 }
 
 
@@ -857,7 +859,10 @@ class PKCS11(object):
 
     def finalize(self):
         rv = self.lib.C_Finalize(self.ffi.NULL)
-        self._check_error(rv)
+        try:
+            self._check_error(rv)
+        except exception.TrustwayProteccioException:
+            LOG.warning("Trustway Proteccio client failed to finalize.")
 
     def _check_error(self, value):
         if value != CKR_OK and value != CKR_CRYPTOKI_ALREADY_INITIALIZED:
@@ -866,6 +871,10 @@ class PKCS11(object):
 
             if code == 'CKR_TOKEN_NOT_PRESENT':
                 raise exception.P11CryptoTokenException(slot_id=self.slot_id)
+
+            if code == 'EHOSTUNREACH':
+                raise exception.TrustwayProteccioException(
+                    "Trustway Proteccio Error: {code}".format(code=hex_code))
 
             raise exception.P11CryptoPluginException(u._(
                 "HSM returned response code: {code}").format(code=hex_code))
