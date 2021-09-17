@@ -339,6 +339,10 @@ class P11CryptoTokenException(PKCS11Exception):
     message = u._("No token was found in slot %(slot_id)s")
 
 
+class TrustwayProteccioException(PKCS11Exception):
+    message = u._("Trustway Proteccio HSM Error")
+
+
 class MultipleStorePreferredPluginMissing(BarbicanException):
     """Raised when a preferred plugin is missing in service configuration."""
     def __init__(self, store_name):

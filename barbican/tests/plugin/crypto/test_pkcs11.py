@@ -456,6 +456,12 @@ class WhenTestingPKCS11(utils.BaseTestCase):
 
         self.assertEqual(1, self.lib.C_Finalize.call_count)
 
+    def test_finalize_ignores_trustway_network_errors(self):
+        self.lib.C_Finalize.return_value = 0x81000071
+        self.pkcs11.finalize()
+
+        self.assertEqual(1, self.lib.C_Finalize.call_count)
+
     def test_check_error(self):
         self.assertIsNone(self.pkcs11._check_error(pkcs11.CKR_OK))
 
