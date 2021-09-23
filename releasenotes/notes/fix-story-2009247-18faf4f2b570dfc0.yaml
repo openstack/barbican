@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed Story #2009247 - Fixed the response for
+    POST /v1/secrets/{secret-id}/metadata so it matches the documented
+    behavior.
