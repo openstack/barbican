@@ -16,7 +16,9 @@ from oslo_policy import policy
 rules = [
     policy.DocumentedRuleDefault(
         name='secret_meta:get',
-        check_str='rule:all_but_audit',
+        check_str='rule:secret_non_private_read or ' +
+                  'rule:secret_project_creator or ' +
+                  'rule:secret_project_admin or rule:secret_acl_read',
         scope_types=[],
         description='metadata/: Lists a secrets user-defined metadata. || ' +
                     'metadata/{key}: Retrieves a secrets user-added metadata.',
@@ -33,7 +35,10 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secret_meta:post',
-        check_str='rule:admin_or_creator',
+        check_str='rule:secret_project_admin or ' +
+                  'rule:secret_project_creator or ' +
+                  '(rule:secret_project_creator_role and ' +
+                  'rule:secret_non_private_read)',
         scope_types=[],
         description='Adds a new key/value pair to the secrets user-defined ' +
                     'metadata.',
@@ -46,7 +51,10 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secret_meta:put',
-        check_str='rule:admin_or_creator',
+        check_str='rule:secret_project_admin or ' +
+                  'rule:secret_project_creator or ' +
+                  '(rule:secret_project_creator_role and ' +
+                  'rule:secret_non_private_read)',
         scope_types=[],
         description='metadata/: Sets the user-defined metadata for a secret ' +
                     '|| metadata/{key}: Updates an existing key/value pair ' +
@@ -64,7 +72,10 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secret_meta:delete',
-        check_str='rule:admin_or_creator',
+        check_str='rule:secret_project_admin or ' +
+                  'rule:secret_project_creator or ' +
+                  '(rule:secret_project_creator_role and ' +
+                  'rule:secret_non_private_read)',
         scope_types=[],
         description='Delete secret user-defined metadata by key.',
         operations=[

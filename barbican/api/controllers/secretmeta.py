@@ -28,7 +28,7 @@ def _secret_metadata_not_found():
     pecan.abort(404, u._('Secret metadata not found.'))
 
 
-class SecretMetadataController(controllers.ACLMixin):
+class SecretMetadataController(controllers.SecretACLMixin):
     """Handles SecretMetadata requests by a given secret id."""
 
     def __init__(self, secret):
@@ -106,7 +106,7 @@ class SecretMetadataController(controllers.ACLMixin):
         return {'key': key, 'value': value}
 
 
-class SecretMetadatumController(controllers.ACLMixin):
+class SecretMetadatumController(controllers.SecretACLMixin):
 
     def __init__(self, secret):
         LOG.debug('=== Creating SecretMetadatumController ===')
