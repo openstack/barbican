@@ -71,7 +71,7 @@ def _request_has_twsk_but_no_transport_key_id():
                          'transport key id has not been provided.'))
 
 
-class SecretController(controllers.ACLMixin):
+class SecretController(controllers.SecretACLMixin):
     """Handles Secret retrieval and deletion requests."""
 
     def __init__(self, secret):
@@ -80,12 +80,6 @@ class SecretController(controllers.ACLMixin):
         self.consumers = consumers.SecretConsumersController(secret.id)
         self.consumer_repo = repo.get_secret_consumer_repository()
         self.transport_key_repo = repo.get_transport_key_repository()
-
-    def get_acl_tuple(self, req, **kwargs):
-        d = self.get_acl_dict_for_user(req, self.secret.secret_acls)
-        d['project_id'] = self.secret.project.external_id
-        d['creator_id'] = self.secret.creator_id
-        return 'secret', d
 
     @pecan.expose()
     def _lookup(self, sub_resource, *remainder):
