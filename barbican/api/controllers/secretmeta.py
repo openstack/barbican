@@ -29,7 +29,7 @@ def _secret_metadata_not_found():
                          'another castle.'))
 
 
-class SecretMetadataController(controllers.ACLMixin):
+class SecretMetadataController(controllers.SecretACLMixin):
     """Handles SecretMetadata requests by a given secret id."""
 
     def __init__(self, secret):
@@ -107,7 +107,7 @@ class SecretMetadataController(controllers.ACLMixin):
         return {'key': key, 'value': value}
 
 
-class SecretMetadatumController(controllers.ACLMixin):
+class SecretMetadatumController(controllers.SecretACLMixin):
 
     def __init__(self, secret):
         LOG.debug('=== Creating SecretMetadatumController ===')
