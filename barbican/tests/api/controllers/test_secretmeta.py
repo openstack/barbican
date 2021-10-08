@@ -36,32 +36,32 @@ class WhenTestingSecretMetadataResource(utils.BarbicanAPIBaseTestCase):
         }
 
     def test_create_secret_metadata(self):
-        secret_resp, secret_uuid = create_secret(self.app)
+        secret_id, secret_resp = create_secret(self.app)
         meta_resp = create_secret_metadata(self.app,
                                            self.valid_metadata,
-                                           secret_resp)
+                                           secret_id)
 
         self.assertEqual(201, meta_resp.status_int)
         self.assertIsNotNone(meta_resp.json)
 
     def test_can_get_secret_metadata(self):
-        secret_resp, secret_uuid = create_secret(self.app)
+        secret_id, secret_resp = create_secret(self.app)
         meta_resp = create_secret_metadata(self.app,
                                            self.valid_metadata,
-                                           secret_resp)
+                                           secret_id)
 
         self.assertEqual(201, meta_resp.status_int)
 
-        get_resp = self.app.get('/secrets/%s/metadata' % secret_resp)
+        get_resp = self.app.get('/secrets/%s/metadata' % secret_id)
 
         self.assertEqual(200, get_resp.status_int)
         self.assertEqual(self.valid_metadata, get_resp.json)
 
     def test_get_secret_metadata_invalid_secret_should_fail(self):
-        secret_resp, secret_uuid = create_secret(self.app)
+        secret_id, secret_resp = create_secret(self.app)
         create_secret_metadata(self.app,
                                self.valid_metadata,
-                               secret_resp)
+                               secret_id)
 
         get_resp = self.app.get('/secrets/%s/metadata' %
                                 uuidutils.generate_uuid(dashed=False),
@@ -97,12 +97,12 @@ class WhenTestingSecretMetadatumResource(utils.BarbicanAPIBaseTestCase):
     @mock.patch('barbican.model.repositories.SecretUserMetadatumRepo.'
                 'get_metadata_for_secret')
     def test_can_create_secret_metadatum(self, mocked_get):
-        secret_resp, secret_uuid = create_secret(self.app)
+        secret_id, secret_resp = create_secret(self.app)
 
         mocked_get.return_value = self.valid_metadata['metadata']
         meta_resp = create_secret_metadatum(self.app,
                                             self.valid_metadatum,
-                                            secret_resp)
+                                            secret_id)
 
         self.assertEqual(201, meta_resp.status_int)
         self.assertIsNotNone(meta_resp.json)
@@ -110,7 +110,7 @@ class WhenTestingSecretMetadatumResource(utils.BarbicanAPIBaseTestCase):
     @mock.patch('barbican.model.repositories.SecretUserMetadatumRepo.'
                 'get_metadata_for_secret')
     def test_conflict_create_same_key_secret_metadatum(self, mocked_get):
-        secret_resp, secret_uuid = create_secret(self.app)
+        secret_id, secret_resp = create_secret(self.app)
 
         mocked_get.return_value = self.valid_metadata['metadata']
         latitude_metadatum = {
@@ -119,7 +119,7 @@ class WhenTestingSecretMetadatumResource(utils.BarbicanAPIBaseTestCase):
         }
         meta_resp = create_secret_metadatum(self.app,
                                             latitude_metadatum,
-                                            secret_resp,
+                                            secret_id,
                                             expect_errors=True)
 
         self.assertEqual(409, meta_resp.status_int)
@@ -128,62 +128,62 @@ class WhenTestingSecretMetadatumResource(utils.BarbicanAPIBaseTestCase):
     @mock.patch('barbican.model.repositories.SecretUserMetadatumRepo.'
                 'get_metadata_for_secret')
     def test_can_delete_secret_metadatum(self, mocked_get):
-        secret_resp, secret_uuid = create_secret(self.app)
+        secret_id, secret_resp = create_secret(self.app)
 
         mocked_get.return_value = self.valid_metadata['metadata']
         meta_resp = create_secret_metadatum(self.app,
                                             self.valid_metadatum,
-                                            secret_resp)
+                                            secret_id)
         self.assertEqual(201, meta_resp.status_int)
 
         delete_resp = self.app.delete('/secrets/%s/metadata/access-limit' %
-                                      secret_resp)
+                                      secret_id)
 
         self.assertEqual(204, delete_resp.status_int)
 
     @mock.patch('barbican.model.repositories.SecretUserMetadatumRepo.'
                 'get_metadata_for_secret')
     def test_can_get_secret_metadatum(self, mocked_get):
-        secret_resp, secret_uuid = create_secret(self.app)
+        secret_id, secret_resp = create_secret(self.app)
 
         mocked_get.return_value = self.valid_metadata['metadata']
         meta_resp = create_secret_metadatum(self.app,
                                             self.valid_metadatum,
-                                            secret_resp)
+                                            secret_id)
         self.assertEqual(201, meta_resp.status_int)
 
         mocked_get.return_value = self.updated_valid_metadata['metadata']
         get_resp = self.app.get('/secrets/%s/metadata/access-limit' %
-                                secret_resp)
+                                secret_id)
         self.assertEqual(200, get_resp.status_int)
         self.assertEqual(self.valid_metadatum, get_resp.json)
 
     @mock.patch('barbican.model.repositories.SecretUserMetadatumRepo.'
                 'get_metadata_for_secret')
     def test_get_secret_metadatum_not_found(self, mocked_get):
-        secret_resp, secret_uuid = create_secret(self.app)
+        secret_id, secret_resp = create_secret(self.app)
 
         mocked_get.return_value = self.valid_metadata['metadata']
         meta_resp = create_secret_metadatum(self.app,
                                             self.valid_metadatum,
-                                            secret_resp)
+                                            secret_id)
         self.assertEqual(201, meta_resp.status_int)
 
         mocked_get.return_value = self.updated_valid_metadata['metadata']
         get_resp = self.app.get('/secrets/%s/metadata/nothere' %
-                                secret_resp,
+                                secret_id,
                                 expect_errors=True)
         self.assertEqual(404, get_resp.status_int)
 
     @mock.patch('barbican.model.repositories.SecretUserMetadatumRepo.'
                 'get_metadata_for_secret')
     def test_can_update_secret_metadatum(self, mocked_get):
-        secret_resp, secret_uuid = create_secret(self.app)
+        secret_id, secret_resp = create_secret(self.app)
 
         mocked_get.return_value = self.valid_metadata['metadata']
         meta_resp = create_secret_metadatum(self.app,
                                             self.valid_metadatum,
-                                            secret_resp)
+                                            secret_id)
         self.assertEqual(201, meta_resp.status_int)
 
         new_metadatum = {
@@ -194,7 +194,7 @@ class WhenTestingSecretMetadatumResource(utils.BarbicanAPIBaseTestCase):
 
         mocked_get.return_value = self.updated_valid_metadata['metadata']
         put_resp = self.app.put('/secrets/%s/metadata/access-limit' %
-                                secret_resp,
+                                secret_id,
                                 new_metadatum_json,
                                 headers={'Content-Type': 'application/json'})
 
@@ -204,12 +204,12 @@ class WhenTestingSecretMetadatumResource(utils.BarbicanAPIBaseTestCase):
     @mock.patch('barbican.model.repositories.SecretUserMetadatumRepo.'
                 'get_metadata_for_secret')
     def test_can_update_secret_metadatum_not_found(self, mocked_get):
-        secret_resp, secret_uuid = create_secret(self.app)
+        secret_id, secret_resp = create_secret(self.app)
 
         mocked_get.return_value = self.valid_metadata['metadata']
         meta_resp = create_secret_metadatum(self.app,
                                             self.valid_metadatum,
-                                            secret_resp)
+                                            secret_id)
         self.assertEqual(201, meta_resp.status_int)
 
         new_metadatum = {
@@ -220,7 +220,7 @@ class WhenTestingSecretMetadatumResource(utils.BarbicanAPIBaseTestCase):
 
         mocked_get.return_value = self.updated_valid_metadata['metadata']
         put_resp = self.app.put('/secrets/%s/metadata/newwwww' %
-                                secret_resp,
+                                secret_id,
                                 new_metadatum_json,
                                 headers={'Content-Type': 'application/json'},
                                 expect_errors=True)
@@ -230,12 +230,12 @@ class WhenTestingSecretMetadatumResource(utils.BarbicanAPIBaseTestCase):
     @mock.patch('barbican.model.repositories.SecretUserMetadatumRepo.'
                 'get_metadata_for_secret')
     def test_conflict_update_secret_metadatum(self, mocked_get):
-        secret_resp, secret_uuid = create_secret(self.app)
+        secret_id, secret_resp = create_secret(self.app)
 
         mocked_get.return_value = self.valid_metadata['metadata']
         meta_resp = create_secret_metadatum(self.app,
                                             self.valid_metadatum,
-                                            secret_resp)
+                                            secret_id)
         self.assertEqual(201, meta_resp.status_int)
 
         new_metadatum = {
@@ -245,7 +245,7 @@ class WhenTestingSecretMetadatumResource(utils.BarbicanAPIBaseTestCase):
         new_metadatum_json = json.dumps(new_metadatum)
         mocked_get.return_value = self.updated_valid_metadata['metadata']
         put_resp = self.app.put('/secrets/%s/metadata/access-limit' %
-                                secret_resp,
+                                secret_id,
                                 new_metadatum_json,
                                 headers={'Content-Type': 'application/json'},
                                 expect_errors=True)
