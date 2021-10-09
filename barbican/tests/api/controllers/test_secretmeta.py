@@ -35,6 +35,29 @@ class WhenTestingSecretMetadataResource(utils.BarbicanAPIBaseTestCase):
             }
         }
 
+    def test_post_secret_metadata(self):
+        secret_id, secret_resp = create_secret(self.app)
+        resp = self.app.post_json(
+            '/secrets/{}/metadata'.format(secret_id),
+            {'key': 'foo',
+             'value': 'bar'}
+        )
+        meta = json.loads(resp.body)
+        self.assertIn('key', meta.keys())
+        self.assertIn('value', meta.keys())
+        self.assertEqual('foo', meta['key'])
+        self.assertEqual('bar', meta['value'])
+
+    def test_post_secret_metadata_response_sets_location_header(self):
+        secret_id, secret_resp = create_secret(self.app)
+        resp = self.app.post_json(
+            '/secrets/{}/metadata'.format(secret_id),
+            {'key': 'foo',
+             'value': 'bar'}
+        )
+        self.assertIn('Location', resp.headers)
+        self.assertTrue(resp.headers['Location'].endswith('foo'))
+
     def test_create_secret_metadata(self):
         secret_id, secret_resp = create_secret(self.app)
         meta_resp = create_secret_metadata(self.app,
