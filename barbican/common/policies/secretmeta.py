@@ -17,7 +17,10 @@ _MEMBER = "role:member"
 rules = [
     policy.DocumentedRuleDefault(
         name='secret_meta:get',
-        check_str=f'rule:all_but_audit or {_MEMBER}',
+        check_str='rule:secret_non_private_read or ' +
+                  'rule:secret_project_creator or ' +
+                  'rule:secret_project_admin or rule:secret_acl_read or ' +
+                  f'{_MEMBER}',
         scope_types=['project'],
         description='metadata/: Lists a secrets user-defined metadata. || ' +
                     'metadata/{key}: Retrieves a secrets user-added metadata.',
@@ -34,7 +37,10 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secret_meta:post',
-        check_str=f'rule:admin_or_creator or {_MEMBER}',
+        check_str='rule:secret_project_admin or ' +
+                  'rule:secret_project_creator or ' +
+                  '(rule:secret_project_creator_role and ' +
+                  f'rule:secret_non_private_read) or {_MEMBER}',
         scope_types=['project'],
         description='Adds a new key/value pair to the secrets user-defined ' +
                     'metadata.',
@@ -47,7 +53,10 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secret_meta:put',
-        check_str=f'rule:admin_or_creator or {_MEMBER}',
+        check_str='rule:secret_project_admin or ' +
+                  'rule:secret_project_creator or ' +
+                  '(rule:secret_project_creator_role and ' +
+                  f'rule:secret_non_private_read) or {_MEMBER}',
         scope_types=['project'],
         description='metadata/: Sets the user-defined metadata for a secret ' +
                     '|| metadata/{key}: Updates an existing key/value pair ' +
@@ -65,7 +74,10 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secret_meta:delete',
-        check_str=f'rule:admin_or_creator or {_MEMBER}',
+        check_str='rule:secret_project_admin or ' +
+                  'rule:secret_project_creator or ' +
+                  '(rule:secret_project_creator_role and ' +
+                  f'rule:secret_non_private_read) or {_MEMBER}',
         scope_types=['project'],
         description='Delete secret user-defined metadata by key.',
         operations=[
