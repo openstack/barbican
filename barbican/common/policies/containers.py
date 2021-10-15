@@ -80,7 +80,10 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='container_secret:post',
-        check_str='rule:admin or ' +
+        check_str='rule:container_project_admin or ' +
+                  'rule:container_project_creator or ' +
+                  'rule:container_project_creator_role and ' +
+                  'rule:container_non_private_read or ' +
                   f"({_PROJECT_MEMBER} and ({_CONTAINER_CREATOR} or " +
                   f"{_CONTAINER_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
         scope_types=['project'],
@@ -94,7 +97,10 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='container_secret:delete',
-        check_str='rule:admin or ' +
+        check_str='rule:container_project_admin or ' +
+                  'rule:container_project_creator or ' +
+                  'rule:container_project_creator_role and ' +
+                  'rule:container_non_private_read or ' +
                   f"({_PROJECT_MEMBER} and ({_CONTAINER_CREATOR} or " +
                   f"{_CONTAINER_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
         scope_types=['project'],
