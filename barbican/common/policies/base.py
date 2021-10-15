@@ -92,6 +92,9 @@ rules = [
         name='container_project_creator',
         check_str="rule:creator and rule:container_project_match and " +
                   "rule:container_creator_user"),
+    policy.RuleDefault(
+        name='container_project_creator_role',
+        check_str="rule:creator and rule:container_project_match"),
 ]
 
 
