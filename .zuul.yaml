@@ -160,7 +160,6 @@
         - barbican-simple-crypto-devstack-functional-postgres
         - barbican-dogtag-devstack-functional-fedora-latest
         - barbican-vault-devstack-functional
-        - barbican-grenade-devstack
         # TripleO jobs that deploy Barbican.
         # Note we don't use a project-template here, so it's easier
         # to disable voting on one specific job if things go wrong.
@@ -180,8 +179,8 @@
         # TODO(redrobot): add this back once job is voting again
         #- barbican-dogtag-devstack-functional-fedora-latest
         - barbican-vault-devstack-functional
-        - barbican-grenade-devstack
     experimental:
       jobs:
         - barbican-kmip-devstack-functional
+        - barbican-grenade-devstack
 
