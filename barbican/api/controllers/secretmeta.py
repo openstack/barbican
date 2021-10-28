@@ -102,9 +102,8 @@ class SecretMetadataController(controllers.ACLMixin):
         LOG.debug('URI to secret metadata is %s', url)
 
         pecan.response.status = 201
-        return {'metadata_ref': url + "/%s {key: %s, value:%s}" % (key,
-                                                                   key,
-                                                                   value)}
+        pecan.response.headers['Location'] = url + '/' + key
+        return {'key': key, 'value': value}
 
 
 class SecretMetadatumController(controllers.ACLMixin):
