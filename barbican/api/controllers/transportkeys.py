@@ -43,6 +43,7 @@ class TransportKeyController(controllers.ACLMixin):
 
     def __init__(self, transport_key_id, transport_key_repo=None):
         LOG.debug('=== Creating TransportKeyController ===')
+        super().__init__()
         self.transport_key_id = transport_key_id
         self.repo = transport_key_repo or repo.TransportKeyRepo()
 
@@ -83,6 +84,7 @@ class TransportKeysController(controllers.ACLMixin):
 
     def __init__(self, transport_key_repo=None):
         LOG.debug('Creating TransportKeyController')
+        super().__init__()
         self.repo = transport_key_repo or repo.TransportKeyRepo()
         self.validator = validators.NewTransportKeyValidator()
 

@@ -47,6 +47,7 @@ class SecretACLsController(controllers.ACLMixin):
     """Handles SecretACL requests by a given secret id."""
 
     def __init__(self, secret):
+        super().__init__()
         self.secret = secret
         self.secret_project_id = self.secret.project.external_id
         self.acl_repo = repo.get_secret_acl_repository()
@@ -210,6 +211,7 @@ class ContainerACLsController(controllers.ACLMixin):
     """Handles ContainerACL requests by a given container id."""
 
     def __init__(self, container):
+        super().__init__()
         self.container = container
         self.container_id = container.id
         self.acl_repo = repo.get_container_acl_repository()

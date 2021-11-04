@@ -45,20 +45,15 @@ class ContainerController(controllers.ACLMixin):
     """Handles Container entity retrieval and deletion requests."""
 
     def __init__(self, container):
+        super().__init__()
         self.container = container
         self.container_id = container.id
         self.consumer_repo = repo.get_container_consumer_repository()
         self.container_repo = repo.get_container_repository()
         self.validator = validators.ContainerValidator()
         self.consumers = consumers.ContainerConsumersController(
-            self.container_id)
+            self.container)
         self.acl = acls.ContainerACLsController(self.container)
-
-    def get_acl_tuple(self, req, **kwargs):
-        d = self.get_acl_dict_for_user(req, self.container.container_acls)
-        d['project_id'] = self.container.project.external_id
-        d['creator_id'] = self.container.creator_id
-        return 'container', d
 
     @pecan.expose(generic=True, template='json')
     def index(self, **kwargs):
@@ -112,6 +107,7 @@ class ContainersController(controllers.ACLMixin):
     """Handles Container creation requests."""
 
     def __init__(self):
+        super().__init__()
         self.consumer_repo = repo.get_container_consumer_repository()
         self.container_repo = repo.get_container_repository()
         self.secret_repo = repo.get_secret_repository()
@@ -230,16 +226,11 @@ class ContainersSecretsController(controllers.ACLMixin):
 
     def __init__(self, container):
         LOG.debug('=== Creating ContainerSecretsController ===')
+        super().__init__()
         self.container = container
         self.container_secret_repo = repo.get_container_secret_repository()
         self.secret_repo = repo.get_secret_repository()
         self.validator = validators.ContainerSecretValidator()
-
-    def get_acl_tuple(self, req, **kwargs):
-        acl = self.get_acl_dict_for_user(req, self.container.container_acls)
-        acl['project_id'] = self.container.project.external_id
-        acl['creator_id'] = self.container.creator_id
-        return ('container', acl)
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
