@@ -57,6 +57,7 @@ class PreferredSecretStoreController(controllers.ACLMixin):
 
     def __init__(self, secret_store):
         LOG.debug('=== Creating PreferredSecretStoreController ===')
+        super().__init__()
         self.secret_store = secret_store
         self.proj_store_repo = repo.get_project_secret_store_repository()
 
@@ -103,6 +104,7 @@ class SecretStoreController(controllers.ACLMixin):
 
     def __init__(self, secret_store):
         LOG.debug('=== Creating SecretStoreController ===')
+        super().__init__()
         self.secret_store = secret_store
 
     @pecan.expose()
@@ -129,6 +131,7 @@ class SecretStoresController(controllers.ACLMixin):
 
     def __init__(self):
         LOG.debug('Creating SecretStoresController')
+        super().__init__()
         self.secret_stores_repo = repo.get_secret_stores_repository()
         self.proj_store_repo = repo.get_project_secret_store_repository()
 

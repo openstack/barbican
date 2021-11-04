@@ -1,0 +1,13 @@
+---
+fixes:
+  - |
+    Fixed Story 2009664 - Fixed the Consumer controller to be able to use the
+    associated Container's ownership information in policy checks.
+security:
+  - |
+    Part of the fix for Story 2009664 required renaming the policy for
+    Container Consumers from "consumers:get" to "container_consumers:get",
+    "consumers:post" to "container_consumers:post", and "consumers:delete"
+    to "container_consumers:delete".  If you are using custom policies to
+    override the default policies you will need to update them to use the
+    new names.

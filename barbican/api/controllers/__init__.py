@@ -173,8 +173,22 @@ def flatten(d, parent_key=''):
 
 class ACLMixin(object):
 
+    def __init__(self):
+        self.secret = None
+        self.container = None
+
     def get_acl_tuple(self, req, **kwargs):
-        return None, None
+        if self.secret is not None:
+            entity = 'secret'
+        elif self.container is not None:
+            entity = 'container'
+        else:
+            return None, None
+        entity_acls = getattr(getattr(self, entity), '{}_acls'.format(entity))
+        acl = self.get_acl_dict_for_user(req, entity_acls)
+        acl['project_id'] = getattr(self, entity).project.external_id
+        acl['creator_id'] = getattr(self, entity).creator_id
+        return entity, acl
 
     def get_acl_dict_for_user(self, req, acl_list):
         """Get acl operation found for token user in acl list.
@@ -237,12 +251,3 @@ class ACLMixin(object):
         acl_dict.update(co_dict)
 
         return acl_dict
-
-
-class SecretACLMixin(ACLMixin):
-
-    def get_acl_tuple(self, req, **kwargs):
-        acl = self.get_acl_dict_for_user(req, self.secret.secret_acls)
-        acl['project_id'] = self.secret.project.external_id
-        acl['creator_id'] = self.secret.creator_id
-        return 'secret', acl

@@ -61,6 +61,7 @@ class OrderController(controllers.ACLMixin):
     """Handles Order retrieval and deletion requests."""
 
     def __init__(self, order, queue_resource=None):
+        super().__init__()
         self.order = order
         self.order_repo = repo.get_order_repository()
         self.queue = queue_resource or async_client.TaskClient()
@@ -96,8 +97,8 @@ class OrdersController(controllers.ACLMixin):
     """Handles Order requests for Secret creation."""
 
     def __init__(self, queue_resource=None):
-
         LOG.debug('Creating OrdersController')
+        super().__init__()
         self.order_repo = repo.get_order_repository()
         self.queue = queue_resource or async_client.TaskClient()
         self.type_order_validator = validators.TypeOrderValidator()
