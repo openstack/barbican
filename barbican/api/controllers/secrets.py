@@ -71,13 +71,14 @@ def _request_has_twsk_but_no_transport_key_id():
                          'transport key id has not been provided.'))
 
 
-class SecretController(controllers.SecretACLMixin):
+class SecretController(controllers.ACLMixin):
     """Handles Secret retrieval and deletion requests."""
 
     def __init__(self, secret):
         LOG.debug('=== Creating SecretController ===')
+        super().__init__()
         self.secret = secret
-        self.consumers = consumers.SecretConsumersController(secret.id)
+        self.consumers = consumers.SecretConsumersController(secret)
         self.consumer_repo = repo.get_secret_consumer_repository()
         self.transport_key_repo = repo.get_transport_key_repository()
 
@@ -276,6 +277,7 @@ class SecretsController(controllers.ACLMixin):
 
     def __init__(self):
         LOG.debug('Creating SecretsController')
+        super().__init__()
         self.validator = validators.NewSecretValidator()
         self.secret_repo = repo.get_secret_repository()
         self.quota_enforcer = quota.QuotaEnforcer('secrets', self.secret_repo)

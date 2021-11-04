@@ -46,7 +46,9 @@ def _invalid_consumer_id():
 class ContainerConsumerController(controllers.ACLMixin):
     """Handles Container Consumer entity retrieval and deletion requests"""
 
-    def __init__(self, consumer_id):
+    def __init__(self, container, consumer_id):
+        super().__init__()
+        self.container = container
         self.consumer_id = consumer_id
         self.consumer_repo = repo.get_container_consumer_repository()
         self.validator = validators.ContainerConsumerValidator()
@@ -78,8 +80,10 @@ class ContainerConsumerController(controllers.ACLMixin):
 class ContainerConsumersController(controllers.ACLMixin):
     """Handles Container Consumer creation requests"""
 
-    def __init__(self, container_id):
-        self.container_id = container_id
+    def __init__(self, container):
+        super().__init__()
+        self.container = container
+        self.container_id = self.container.id
         self.consumer_repo = repo.get_container_consumer_repository()
         self.container_repo = repo.get_container_repository()
         self.project_repo = repo.get_project_repository()
@@ -91,7 +95,8 @@ class ContainerConsumersController(controllers.ACLMixin):
     def _lookup(self, consumer_id, *remainder):
         if not utils.validate_id_is_uuid(consumer_id):
             _invalid_consumer_id()()
-        return ContainerConsumerController(consumer_id), remainder
+        return ContainerConsumerController(self.container, consumer_id), \
+            remainder
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
@@ -99,7 +104,7 @@ class ContainerConsumersController(controllers.ACLMixin):
 
     @index.when(method='GET', template='json')
     @controllers.handle_exceptions(u._('ContainerConsumers(s) retrieval'))
-    @controllers.enforce_rbac('consumers:get')
+    @controllers.enforce_rbac('container_consumers:get')
     def on_get(self, external_project_id, **kw):
         LOG.debug('Start consumers on_get '
                   'for container-ID %s:', self.container_id)
@@ -137,7 +142,7 @@ class ContainerConsumersController(controllers.ACLMixin):
 
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('ContainerConsumer creation'))
-    @controllers.enforce_rbac('consumers:post')
+    @controllers.enforce_rbac('container_consumers:post')
     @controllers.enforce_content_types(['application/json'])
     def on_post(self, external_project_id, **kwargs):
 
@@ -145,14 +150,12 @@ class ContainerConsumersController(controllers.ACLMixin):
         data = api.load_body(pecan.request, validator=self.validator)
         LOG.debug('Start on_post...%s', data)
 
-        container = self._get_container(self.container_id)
-
         self.quota_enforcer.enforce(project)
 
         new_consumer = models.ContainerConsumerMetadatum(self.container_id,
                                                          project.id,
                                                          data)
-        self.consumer_repo.create_or_update_from(new_consumer, container)
+        self.consumer_repo.create_or_update_from(new_consumer, self.container)
 
         url = hrefs.convert_consumer_to_href(new_consumer.container_id)
         pecan.response.headers['Location'] = url
@@ -160,19 +163,16 @@ class ContainerConsumersController(controllers.ACLMixin):
         LOG.info('Created a container consumer for project: %s',
                  external_project_id)
 
-        return self._return_container_data(self.container_id)
+        return self._return_container_data()
 
     @index.when(method='DELETE', template='json')
     @controllers.handle_exceptions(u._('ContainerConsumer deletion'))
-    @controllers.enforce_rbac('consumers:delete')
+    @controllers.enforce_rbac('container_consumers:delete')
     @controllers.enforce_content_types(['application/json'])
     def on_delete(self, external_project_id, **kwargs):
         data = api.load_body(pecan.request, validator=self.validator)
         LOG.debug('Start on_delete...%s', data)
-        project = self.project_repo.find_by_external_project_id(
-            external_project_id, suppress_exception=True)
-        if not project:
-            _consumer_not_found()
+        project = res.get_or_create_project(external_project_id)
 
         consumer = self.consumer_repo.get_by_values(
             self.container_id,
@@ -184,9 +184,8 @@ class ContainerConsumersController(controllers.ACLMixin):
             _consumer_not_found()
         LOG.debug("Found container consumer: %s", consumer)
 
-        container = self._get_container(self.container_id)
         owner_of_consumer = consumer.project_id == project.id
-        owner_of_container = container.project.external_id \
+        owner_of_container = self.container.project.external_id \
             == external_project_id
         if not owner_of_consumer and not owner_of_container:
             _consumer_ownership_mismatch()
@@ -198,22 +197,13 @@ class ContainerConsumersController(controllers.ACLMixin):
             LOG.exception('Problem deleting container consumer')
             _consumer_not_found()
 
-        ret_data = self._return_container_data(self.container_id)
+        ret_data = self._return_container_data()
         LOG.info('Deleted a container consumer for project: %s',
                  external_project_id)
         return ret_data
 
-    def _get_container(self, container_id):
-        container = self.container_repo.get_container_by_id(
-            container_id, suppress_exception=True)
-        if not container:
-            controllers.containers.container_not_found()
-        return container
-
-    def _return_container_data(self, container_id):
-        container = self._get_container(container_id)
-
-        dict_fields = container.to_dict_fields()
+    def _return_container_data(self):
+        dict_fields = self.container.to_dict_fields()
 
         for secret_ref in dict_fields['secret_refs']:
             hrefs.convert_to_hrefs(secret_ref)
@@ -227,7 +217,9 @@ class ContainerConsumersController(controllers.ACLMixin):
 class SecretConsumerController(controllers.ACLMixin):
     """Handles Secret Consumer entity retrieval and deletion requests"""
 
-    def __init__(self, consumer_id):
+    def __init__(self, secret, consumer_id):
+        super().__init__()
+        self.secret = secret
         self.consumer_id = consumer_id
         self.consumer_repo = repo.get_secret_consumer_repository()
         self.validator = validators.SecretConsumerValidator()
@@ -259,8 +251,10 @@ class SecretConsumerController(controllers.ACLMixin):
 class SecretConsumersController(controllers.ACLMixin):
     """Handles Secret Consumer creation requests"""
 
-    def __init__(self, secret_id):
-        self.secret_id = secret_id
+    def __init__(self, secret):
+        super().__init__()
+        self.secret = secret
+        self.secret_id = secret.id
         self.consumer_repo = repo.get_secret_consumer_repository()
         self.secret_repo = repo.get_secret_repository()
         self.project_repo = repo.get_project_repository()
@@ -272,7 +266,7 @@ class SecretConsumersController(controllers.ACLMixin):
     def _lookup(self, consumer_id, *remainder):
         if not utils.validate_id_is_uuid(consumer_id):
             _invalid_consumer_id()()
-        return SecretConsumerController(consumer_id), remainder
+        return SecretConsumerController(self.secret, consumer_id), remainder
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
@@ -280,7 +274,7 @@ class SecretConsumersController(controllers.ACLMixin):
 
     @index.when(method='GET', template='json')
     @controllers.handle_exceptions(u._('SecretConsumers(s) retrieval'))
-    @controllers.enforce_rbac('consumers:get')
+    @controllers.enforce_rbac('secret_consumers:get')
     def on_get(self, external_project_id, **kw):
         LOG.debug('Start consumers on_get '
                   'for secret-ID %s:', self.secret_id)
@@ -318,15 +312,13 @@ class SecretConsumersController(controllers.ACLMixin):
 
     @index.when(method='POST', template='json')
     @controllers.handle_exceptions(u._('SecretConsumer creation'))
-    @controllers.enforce_rbac('consumers:post')
+    @controllers.enforce_rbac('secret_consumers:post')
     @controllers.enforce_content_types(['application/json'])
     def on_post(self, external_project_id, **kwargs):
 
         project = res.get_or_create_project(external_project_id)
         data = api.load_body(pecan.request, validator=self.validator)
         LOG.debug('Start on_post...%s', data)
-
-        secret = self._get_secret(self.secret_id)
 
         self.quota_enforcer.enforce(project)
 
@@ -337,7 +329,7 @@ class SecretConsumersController(controllers.ACLMixin):
             data["resource_type"],
             data["resource_id"],
         )
-        self.consumer_repo.create_or_update_from(new_consumer, secret)
+        self.consumer_repo.create_or_update_from(new_consumer, self.secret)
 
         url = hrefs.convert_consumer_to_href(new_consumer.secret_id)
         pecan.response.headers['Location'] = url
@@ -349,7 +341,7 @@ class SecretConsumersController(controllers.ACLMixin):
 
     @index.when(method='DELETE', template='json')
     @controllers.handle_exceptions(u._('SecretConsumer deletion'))
-    @controllers.enforce_rbac('consumers:delete')
+    @controllers.enforce_rbac('secret_consumers:delete')
     @controllers.enforce_content_types(['application/json'])
     def on_delete(self, external_project_id, **kwargs):
         data = api.load_body(pecan.request, validator=self.validator)
@@ -368,9 +360,8 @@ class SecretConsumersController(controllers.ACLMixin):
             _consumer_not_found()
         LOG.debug("Found consumer: %s", consumer)
 
-        secret = self._get_secret(self.secret_id)
         owner_of_consumer = consumer.project_id == project.id
-        owner_of_secret = secret.project.external_id \
+        owner_of_secret = self.secret.project.external_id \
             == external_project_id
         if not owner_of_consumer and not owner_of_secret:
             _consumer_ownership_mismatch()

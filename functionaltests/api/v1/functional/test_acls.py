@@ -136,20 +136,22 @@ test_data_read_container_consumer_acl_only = {
 
 test_data_delete_container_consumer_acl_only = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 403},
-    'with_observer_a': {'user': observer_a, 'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_creator_a': {'user': creator_a, 'expected_return': 200},
+    'with_observer_a': {'user': observer_a, 'expected_return': 200},
+    'with_auditor_a': {'user': auditor_a, 'expected_return': 200},
+    # the consumer being deleted is owned by project a, so attempts
+    # to remove it with users from project b below should fail
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
     'with_observer_b': {'user': observer_b, 'expected_return': 403},
 }
 
 test_data_create_container_consumer_acl_only = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 403},
-    'with_observer_a': {'user': observer_a, 'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_creator_a': {'user': creator_a, 'expected_return': 200},
+    'with_observer_a': {'user': observer_a, 'expected_return': 200},
+    'with_auditor_a': {'user': auditor_a, 'expected_return': 200},
     'with_admin_b': {'user': admin_b, 'expected_return': 200},
-    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_observer_b': {'user': observer_b, 'expected_return': 200},
 }
 
 
@@ -272,7 +274,14 @@ class AclTestCase(base.TestCase):
 
     @utils.parameterized_dataset(test_data_delete_container_consumer_acl_only)
     def test_container_acl_remove_consumer(self, user, expected_return):
-        """Acl access will not allow you to delete a consumer"""
+        """Test DELETE /v1/containers/{container-id}/consumers
+
+        Test default policy for deleting a consumer set by admin_a
+        from a private container owned by creator_a.
+
+        Each user in the data set is added to the ACL and then used
+        to delete the consumer set by admin_a.
+        """
         container_ref = self.store_container(user_name=creator_a,
                                              admin=admin_a)
         consumer_model = get_consumer_model()
@@ -298,7 +307,14 @@ class AclTestCase(base.TestCase):
 
     @utils.parameterized_dataset(test_data_create_container_consumer_acl_only)
     def test_container_acl_create_consumer(self, user, expected_return):
-        """Acl access will not allow you to add a consumer"""
+        """Test POST /v1/containers/{container_id}/consumers
+
+        Test default policy for adding consumers to a container owned by
+        creator_a and set to private.
+
+        Each user in the data set is added to the ACL and then used
+        to POST a new consumer.
+        """
         container_ref = self.store_container(user_name=creator_a,
                                              admin=admin_a)
 

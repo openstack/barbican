@@ -37,6 +37,7 @@ class QuotasController(controllers.ACLMixin):
 
     def __init__(self):
         LOG.debug('=== Creating QuotasController ===')
+        super().__init__()
         self.quota_driver = quota.QuotaDriver()
 
     @pecan.expose(generic=True)
@@ -59,6 +60,7 @@ class ProjectQuotasController(controllers.ACLMixin):
 
     def __init__(self, project_id):
         LOG.debug('=== Creating ProjectQuotasController ===')
+        super().__init__()
         self.passed_project_id = project_id
         self.validator = validators.ProjectQuotaValidator()
         self.quota_driver = quota.QuotaDriver()
@@ -114,6 +116,7 @@ class ProjectsQuotasController(controllers.ACLMixin):
 
     def __init__(self):
         LOG.debug('=== Creating ProjectsQuotaController ===')
+        super().__init__()
         self.quota_driver = quota.QuotaDriver()
 
     @pecan.expose()
