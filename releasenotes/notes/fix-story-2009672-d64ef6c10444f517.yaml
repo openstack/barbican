@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed Story #2009672 - Fixed validator for Container Consumers to prevent
+    500 errors.
