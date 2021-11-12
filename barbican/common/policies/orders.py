@@ -52,7 +52,7 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='order:get',
-        check_str='rule:all_users',
+        check_str='rule:all_users and project_id:%(target.order.project_id)s',
         scope_types=[],
         description='Retrieves an orders metadata.',
         operations=[
@@ -64,7 +64,7 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='order:delete',
-        check_str='rule:admin',
+        check_str='rule:admin and project_id:%(target.order.project_id)s',
         scope_types=[],
         description='Deletes an order.',
         operations=[

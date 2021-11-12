@@ -983,7 +983,8 @@ class WhenTestingOrdersResource(BaseTestCase):
 
     def test_should_pass_get_orders(self):
         self._assert_pass_rbac(['admin', 'observer', 'creator'],
-                               self._invoke_on_get)
+                               self._invoke_on_get,
+                               project_id=self.external_project_id)
 
     def test_should_raise_get_orders(self):
         self._assert_fail_rbac([None, 'audit', 'bogus'],
@@ -1004,8 +1005,16 @@ class WhenTestingOrderResource(BaseTestCase):
         self.external_project_id = '12345project'
         self.order_id = '12345order'
 
+        order = mock.MagicMock()
+        order.id = self.order_id
+        order.project.external_id = self.external_project_id
+        order.creator_id = 'CRE-A-TOR-UUID'
+
         # Force an error on GET and DELETE calls that pass RBAC,
         #   as we are not testing such flows in this test module.
+        mock_to_dict = mock.MagicMock()
+        mock_to_dict.side_effect = self._generate_get_error()
+        order.to_dict_fields = mock_to_dict
         self.order_repo = mock.MagicMock()
         fail_method = mock.MagicMock(return_value=None,
                                      side_effect=self._generate_get_error())
@@ -1014,21 +1023,23 @@ class WhenTestingOrderResource(BaseTestCase):
 
         self.setup_order_repository_mock(self.order_repo)
 
-        self.resource = OrderResource(self.order_id)
+        self.resource = OrderResource(order)
 
     def test_rules_should_be_loaded(self):
         self.assertIsNotNone(self.policy_enforcer.rules)
 
     def test_should_pass_get_order(self):
         self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
-                               self._invoke_on_get)
+                               self._invoke_on_get,
+                               project_id=self.external_project_id)
 
     def test_should_raise_get_order(self):
         self._assert_fail_rbac([None, 'bogus'],
                                self._invoke_on_get)
 
     def test_should_pass_delete_order(self):
-        self._assert_pass_rbac(['admin'], self._invoke_on_delete)
+        self._assert_pass_rbac(['admin'], self._invoke_on_delete,
+                               project_id=self.external_project_id)
 
     def test_should_raise_delete_order(self):
         self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
