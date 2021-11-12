@@ -66,6 +66,12 @@ class OrderController(controllers.ACLMixin):
         self.queue = queue_resource or async_client.TaskClient()
         self.type_order_validator = validators.TypeOrderValidator()
 
+    def get_acl_tuple(self, req, **kwargs):
+        acl = dict()
+        acl['project_id'] = self.order.project.external_id
+        acl['creator_id'] = self.order.creator_id
+        return 'order', acl
+
     @pecan.expose(generic=True)
     def index(self, **kwargs):
         pecan.abort(405)  # HTTP 405 Method Not Allowed as default
