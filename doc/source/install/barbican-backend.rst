@@ -12,7 +12,7 @@ Secret Stores implement both the encryption mechanisms as well as the storage
 of the encrypted secrets.
 
 This section compares all the plugins that are currently available and the
-security tradeoffs that need to be considered when deciding which pluings to
+security tradeoffs that need to be considered when deciding which plugins to
 use.
 
 Simple Crypto Plugin
@@ -49,7 +49,7 @@ and decrypt all secrets.
     This plugin stores its KEK in plain text in the configuration file,
     which will be present in any node running the `barbican-api` or
     `barbican-worker` services.  Extreme care should be taken to prevent
-    unauthrized access to these nodes.  When using this plugin the KEK is the
+    unauthorized access to these nodes.  When using this plugin the KEK is the
     only thing protecting the secrets stored in the database.
 
 The configuration for this plugin in ``/etc/barbican/barbican.conf`` is as follows:
@@ -522,7 +522,7 @@ The configuration for this plugin in ``/etc/barbican/barbican.conf`` is as follo
 Vault Plugin
 ^^^^^^^^^^^^
 
-Vault is a Hashicorp tool for securely accessing secrets and other objects,
+Vault is a HashiCorp tool for securely accessing secrets and other objects,
 such as API keys, passwords, or certificates. Vault provides a unified
 interface to any secret, while providing tight access control and recording
 a detailed audit log.
