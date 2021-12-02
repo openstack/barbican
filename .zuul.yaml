@@ -93,8 +93,6 @@
     check:
       jobs:
         - barbican-tox-functional
-        - barbican-dogtag-tox-functional:
-            voting: false
         - barbican-vault-tox-functional:
             voting: false
         - barbican-grenade:
@@ -119,5 +117,6 @@
         - barbican-tox-functional
     experimental:
       jobs:
+        - barbican-dogtag-tox-functional
         - barbican-kmip-tox-functional
 
