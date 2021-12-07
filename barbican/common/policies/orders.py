@@ -12,7 +12,9 @@
 
 from oslo_policy import policy
 
+
 _MEMBER = "role:member"
+_PROJECT_MEMBER = f"{_MEMBER} and project_id:%(target.order.project_id)s"
 
 rules = [
     policy.DocumentedRuleDefault(
@@ -53,7 +55,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='order:get',
-        check_str=f'rule:all_users or {_MEMBER}',
+        check_str='rule:all_users and project_id:%(target.order.project_id)s '
+                  f'or {_PROJECT_MEMBER}',
         scope_types=['project'],
         description='Retrieves an orders metadata.',
         operations=[
@@ -65,7 +68,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='order:delete',
-        check_str=f'rule:admin or {_MEMBER}',
+        check_str='rule:admin and project_id:%(target.order.project_id)s or '
+                  f'{_PROJECT_MEMBER}',
         scope_types=['project'],
         description='Deletes an order.',
         operations=[
