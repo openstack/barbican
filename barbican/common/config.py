@@ -28,8 +28,8 @@ from oslo_service import _options
 from barbican import i18n as u
 import barbican.version
 
-MAX_BYTES_REQUEST_INPUT_ACCEPTED = 15000
-DEFAULT_MAX_SECRET_BYTES = 10000
+MAX_BYTES_REQUEST_INPUT_ACCEPTED = 25000
+DEFAULT_MAX_SECRET_BYTES = 20000
 KS_NOTIFICATIONS_GRP_NAME = 'keystone_notifications'
 
 context_opts = [
