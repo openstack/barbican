@@ -90,7 +90,7 @@ test_data_rbac_delete_secret = {
     'with_creator_a': {'user': creator_a, 'admin': creator_a,
                        'expected_return': 204},
     'with_creator_a_2': {'user': creator_a_2, 'admin': creator_a,
-                         'expected_return': 403},
+                         'expected_return': 204},
     'with_observer_a': {'user': observer_a, 'admin': admin_a,
                         'expected_return': 403},
     'with_auditor_a': {'user': auditor_a, 'admin': admin_a,

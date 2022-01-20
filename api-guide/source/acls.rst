@@ -48,7 +48,8 @@ Following ACL rules are defined and used as `OR` in resource access policy:
   * ACL based access is allowed when token user is present in secret/container operation specific
     ACL user list e.g. token user present in `read` users list.
   * When secret/container resource is marked private, then project-level RBAC users access is not
-    allowed.
+    allowed. e.g. When a secret is marked private, only the user who created it
+    or a user with the "admin" role on the project will be able to remove it.
 
 .. note::
 

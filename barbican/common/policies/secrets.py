@@ -72,6 +72,8 @@ rules = [
         name='secret:delete',
         check_str='rule:secret_project_admin or ' +
                   'rule:secret_project_creator or ' +
+                  '(rule:secret_project_creator_role and ' +
+                  'not rule:secret_private_read) or ' +
                   f"({_PROJECT_MEMBER} and ({_SECRET_CREATOR} or " +
                   f"{_SECRET_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
         scope_types=['project'],
