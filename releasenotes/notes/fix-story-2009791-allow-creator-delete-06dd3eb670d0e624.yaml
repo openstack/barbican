@@ -1,0 +1,11 @@
+---
+security:
+  - |
+    Fixed Story #2009791: Users with the "creator" role on a project can now
+    delete secrets owned by the project even if the user is different than
+    the user that originally created the secret.  Previous to this fix a user
+    with the "creator" role was only allowed to delete a secret owned by the
+    project if they were also the same user that originally created, which
+    was inconsistent with the way that deletes are handled by other OpenStack
+    projects that integrate with Barbican.  This change does not affect private
+    secrets (i.e. secrets with the "project-access" flag set to "false").
