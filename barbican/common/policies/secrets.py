@@ -57,7 +57,9 @@ rules = [
     policy.DocumentedRuleDefault(
         name='secret:delete',
         check_str='rule:secret_project_admin or ' +
-                  'rule:secret_project_creator',
+                  'rule:secret_project_creator or ' +
+                  '(rule:secret_project_creator_role and ' +
+                  'not rule:secret_private_read)',
         scope_types=[],
         description='Delete a secret by uuid.',
         operations=[

@@ -655,15 +655,26 @@ class WhenTestingSecretResource(BaseTestCase):
                                content_type="application/octet-stream")
 
     def test_should_pass_delete_secret(self):
-        self._assert_pass_rbac(['admin'], self._invoke_on_delete,
+        self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_delete,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
 
     def test_should_raise_delete_secret(self):
-        """A non-admin user cannot delete other user's secret.
+        """Only admin and creator can delete secrets
 
         User id is different from initial user who has created the secret.
         """
+        self._assert_fail_rbac([None, 'audit', 'observer', 'bogus'],
+                               self._invoke_on_delete,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_raise_delete_private_secret(self):
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.SecretACL(secret_id=self.secret_id, operation='read',
+                                    project_access=False,
+                                    user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
         self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
                                self._invoke_on_delete,
                                user_id=self.user_id,
