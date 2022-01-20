@@ -628,7 +628,7 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
 
         self.assertEqual(201, resp.status_int)
 
-        text_too_big = 'x' * 10050
+        text_too_big = 'x' * 20050
         put_resp = self.app.put(
             '/secrets/{0}'.format(secret_uuid),
             text_too_big,
