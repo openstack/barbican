@@ -26,10 +26,47 @@ from barbican import version
 
 LOG = utils.getLogger(__name__)
 
+_MIN_MICROVERSION = 0
+_MAX_MICROVERSION = 1
+_LAST_UPDATED = '2021-02-10T00:00:00Z'
+
+# NOTE(xek): The above defines the minimum and maximum version of the API
+# across all of the v1 REST API.
+# When introducing a new microversion, the _MAX_MICROVERSION
+# needs to be incremented by 1 and the _LAST_UPDATED string updated.
+# The following is the complete (ordered) list of supported versions
+# used by the microversion middleware to parse what is allowed and
+# supported.
+
+VERSIONS = ['1.{}'.format(v) for v in range(_MIN_MICROVERSION,
+                                            _MAX_MICROVERSION + 1)]
+MIN_API_VERSION = VERSIONS[0]
+MAX_API_VERSION = VERSIONS[-1]
 
 MIME_TYPE_JSON = 'application/json'
 MIME_TYPE_JSON_HOME = 'application/json-home'
 MEDIA_TYPE_JSON = 'application/vnd.openstack.key-manager-%s+json'
+
+
+def is_supported(req, min_version=MIN_API_VERSION,
+                 max_version=MAX_API_VERSION):
+    """Check if API request version satisfies version restrictions.
+
+    :param req: request object
+    :param min_version: minimal version of API needed for correct
+           request processing
+    :param max_version: maximum version of API needed for correct
+           request processing
+
+    :returns: True if request satisfies minimal and maximum API version
+             requirements. False in other case.
+    """
+    requested_version = str(req.environ.get('key-manager.microversion',
+                                            MIN_API_VERSION))
+
+    return (VERSIONS.index(max_version) >=
+            VERSIONS.index(requested_version) >=
+            VERSIONS.index(min_version))
 
 
 def _version_not_found():
@@ -84,7 +121,9 @@ class V1Controller(BaseVersionController):
     # this is the same as the version string.
     version_id = 'v1'
 
-    last_updated = '2015-04-28T00:00:00Z'
+    version = MAX_API_VERSION
+    min_version = MIN_API_VERSION
+    last_updated = _LAST_UPDATED
 
     def __init__(self):
         LOG.debug('=== Creating V1Controller ===')

@@ -374,14 +374,13 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
             'bit_length': self.bit_length,
             'mode': self.mode,
             'creator_id': self.creator_id,
-            # TODO(redrobot): Uncomment this after adding microversions
-            # "consumers": [
-            #     {
-            #         "service": consumer.service,
-            #         "resource_type": consumer.resource_type,
-            #         "resource_id": consumer.resource_id,
-            #     } for consumer in self.consumers if not consumer.deleted
-            # ],
+            "consumers": [
+                {
+                    "service": consumer.service,
+                    "resource_type": consumer.resource_type,
+                    "resource_id": consumer.resource_id,
+                } for consumer in self.consumers if not consumer.deleted
+            ],
         }
 
 

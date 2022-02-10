@@ -224,7 +224,7 @@ class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
         secret_list = get_resp.json.get('secrets')
         self.assertEqual('secret mission', secret_list[0].get('name'))
 
-    def test_list_secrets(self):
+    def _test_list_secrets(self):
         # Creating a secret to be retrieved later
         create_resp, _ = create_secret(
             self.app,
@@ -239,6 +239,17 @@ class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
         self.assertIn('total', get_resp.json)
         secret_list = get_resp.json.get('secrets')
         self.assertGreater(len(secret_list), 0)
+
+        return secret_list
+
+    def test_list_secrets_v0(self):
+        secret_list = self._test_list_secrets()
+        self.assertNotIn('consumers', secret_list[0])
+
+    def test_list_secrets_v1(self):
+        utils.set_version(self.app, '1.1')
+        secret_list = self._test_list_secrets()
+        self.assertIn('consumers', secret_list[0])
 
     def test_pagination_attributes(self):
         # Create a list of secrets greater than default limit (10)

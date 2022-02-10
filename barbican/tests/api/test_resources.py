@@ -383,7 +383,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.transport_key_id = 'tkey12345'
 
     @mock.patch('barbican.plugin.resources.get_transport_key_id_for_retrieval')
-    def test_should_get_secret_as_json(self, mock_get_transport_key):
+    def _test_should_get_secret_as_json(self, mock_get_transport_key):
         mock_get_transport_key.return_value = None
         resp = self.app.get(
             '/secrets/{0}/'.format(self.secret.id),
@@ -399,6 +399,17 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         self.assertIn(self.datum.content_type,
                       resp.namespace['content_types'].values())
         self.assertNotIn('mime_type', resp.namespace)
+
+        return resp.json
+
+    def test_should_get_secret_as_json_v0(self):
+        secret = self._test_should_get_secret_as_json()
+        self.assertNotIn('consumers', secret)
+
+    def test_should_get_secret_as_json_v1(self):
+        utils.set_version(self.app, '1.1')
+        secret = self._test_should_get_secret_as_json()
+        self.assertIn('consumers', secret)
 
     @testcase.attr('deprecated')
     @mock.patch('barbican.plugin.resources.get_secret')

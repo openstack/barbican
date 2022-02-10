@@ -684,3 +684,8 @@ def is_pkcs11_enabled():
 
 class DummyClassForTesting(object):
     pass
+
+
+def set_version(app, version):
+    """Sets the requested version in the environ"""
+    app.extra_environ['key-manager.microversion'] = version

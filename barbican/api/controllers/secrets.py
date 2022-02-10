@@ -19,6 +19,7 @@ from barbican.api import controllers
 from barbican.api.controllers import acls
 from barbican.api.controllers import consumers
 from barbican.api.controllers import secretmeta
+from barbican.api.controllers import versions
 from barbican.common import accept
 from barbican.common import exception
 from barbican.common import hrefs
@@ -118,6 +119,9 @@ class SecretController(controllers.ACLMixin):
 
             LOG.info('Retrieved secret metadata for project: %s',
                      external_project_id)
+            if versions.is_supported(pecan.request, max_version='1.0'):
+                # NOTE(xek): consumers are being introduced in 1.1
+                del resp['consumers']
             return resp
         else:
             LOG.warning('Decrypted secret %s requested using deprecated '
@@ -360,8 +364,14 @@ class SecretsController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Secret(s) retrieval'))
     @controllers.enforce_rbac('secrets:get')
     def on_get(self, external_project_id, **kw):
+        no_consumers = versions.is_supported(pecan.request, max_version='1.0')
+        # NOTE(xek): consumers are being introduced in 1.1
+
         def secret_fields(field):
-            return putil.mime_types.augment_fields_with_content_types(field)
+            resp = putil.mime_types.augment_fields_with_content_types(field)
+            if no_consumers:
+                del resp['consumers']
+            return resp
 
         LOG.debug('Start secrets on_get '
                   'for project-ID %s:', external_project_id)
