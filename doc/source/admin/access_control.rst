@@ -58,11 +58,10 @@ admin
     by the project for which the admin role is scoped.
 
 creator
-    Users with this role are allowed to create new resources and can only
-    delete resources which are originally created (owned) by them. Users with
-    this role cannot delete other user's resources managed within same project.
-    They are also allowed full access to existing secrets owned by the project
-    in scope.
+    Users with this role are allowed to create new resources and can also
+    delete resources which are owned by the project for which the creator role
+    is scoped.  They are also allowed full access to existing secrets owned by
+    the project in scope.
 
 observer
     Users with this role are allowed to access to existing resources but are
@@ -76,10 +75,14 @@ Access Control List API
 -----------------------
 
 There are some limitations that result from scoping ownership of a secret at the
-project level.  For example, there is no easy way for a user to upload a secret
-for which only they have access.   There is also no easy way to grant a user
-access to only a single secret.
+project level.  For example, it is not possible to grant a user access to a
+single secret, as granting a role on a project would allow access to all
+all secrets owned by that project.
 
-To address this limitations the Key Manager service includes an Access Control
+Additionally, there is no easy way to upload a private secret (i.e. a secret
+that only you have access to) without creating a new project for which only
+you have roles assigned on it.
+
+To address these limitations the Key Manager service includes an Access Control
 List (ACL) API.  For full details see the
 `ACL API User Guide <https://docs.openstack.org/api-guide/key-manager/acls.html>`__
