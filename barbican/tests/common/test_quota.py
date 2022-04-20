@@ -84,7 +84,7 @@ class WhenTestingQuotaDriverFunctions(database_utils.RepositoryTestCase):
         self.create_a_test_project_quotas()
         project_quotas = self.quota_driver.get_project_quotas_list()
         self.assertEqual({'project_quotas': [{
-            'project_id': u'project1',
+            'project_id': 'project1',
             'project_quotas': {'consumers': 105,
                                'containers': 103,
                                'orders': 102,

@@ -68,7 +68,7 @@ Verify operation of the Key Manager (barbican) service.
       | Name          | mysecret                                                              |
       | Created       | 2016-08-16 16:04:10+00:00                                             |
       | Status        | ACTIVE                                                                |
-      | Content types | {u'default': u'application/octet-stream'}                             |
+      | Content types | {'default': 'application/octet-stream'}                               |
       | Algorithm     | aes                                                                   |
       | Bit length    | 256                                                                   |
       | Secret type   | opaque                                                                |

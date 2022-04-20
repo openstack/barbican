@@ -474,7 +474,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
                           self.pkcs11._check_error, 0xe0)
 
     def test_converting_unicode_to_bytes(self):
-        self.assertEqual(b'foo', pkcs11._to_bytes(u'foo'))
+        self.assertEqual(b'foo', pkcs11._to_bytes('foo'))
 
     def test_converting_default_str_type_to_bytes(self):
         self.assertEqual(b'foo', pkcs11._to_bytes('foo'))

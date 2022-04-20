@@ -130,7 +130,7 @@ class NotificationTask(object):
         """Gets project resource identifier from payload
 
         Sample payload is provided below::
-            {'resource_info': u'2b99a94ad02741978e613fb52dd1f4cd'}
+            {'resource_info': '2b99a94ad02741978e613fb52dd1f4cd'}
         """
         if payload_s:
             return payload_s.get('resource_info')

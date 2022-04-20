@@ -150,8 +150,8 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
 
         self.repo.get_by_create_date.assert_called_once_with(
             plugin_name=None,
-            offset_arg=u'{0}'.format(self.offset),
-            limit_arg=u'{0}'.format(self.limit),
+            offset_arg='{0}'.format(self.offset),
+            limit_arg='{0}'.format(self.limit),
             suppress_exception=True
         )
 
@@ -185,8 +185,8 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
 
         self.repo.get_by_create_date.assert_called_once_with(
             plugin_name=None,
-            offset_arg=u'{0}'.format(self.offset),
-            limit_arg=u'{0}'.format(self.limit),
+            offset_arg='{0}'.format(self.offset),
+            limit_arg='{0}'.format(self.limit),
             suppress_exception=True
         )
 

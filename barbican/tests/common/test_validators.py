@@ -103,9 +103,9 @@ class WhenTestingValidatorsFunctions(utils.BaseTestCase):
         self.assertTrue(is_too_big)
 
     def test_secret_too_big_is_true_for_big_unicode_secrets(self):
-        beer = u'\U0001F37A'
+        beer = '\U0001F37A'
         data = beer * (validators.CONF.max_allowed_secret_in_bytes // 4)
-        data += u'1'
+        data += '1'
 
         is_too_big = validators.secret_too_big(data)
 

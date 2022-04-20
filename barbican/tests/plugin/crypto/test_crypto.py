@@ -42,7 +42,7 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
         return self.plugin.bind_kek_metadata(kek_meta_dto)
 
     def test_encrypt_unicode_raises_value_error(self):
-        unencrypted = u'unicode_beer\U0001F37A'
+        unencrypted = 'unicode_beer\U0001F37A'
         encrypt_dto = plugin.EncryptDTO(unencrypted)
         secret = mock.MagicMock()
         secret.mime_type = 'text/plain'
