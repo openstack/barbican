@@ -50,7 +50,7 @@ rules = [
         operations=[
             {
                 'path': '/v1/secrets/{secret-id}',
-                'method': 'GET"'
+                'method': 'GET'
             }
         ]
     ),
