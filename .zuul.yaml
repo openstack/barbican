@@ -24,7 +24,7 @@
 
 - job:
     name: barbican-tox-functional-fips
-    nodeset: devstack-single-node-centos-8-stream
+    nodeset: devstack-single-node-centos-9-stream
     parent: barbican-tox-functional
     description: |
       Functional testing for a FIPS enabled Centos 8 system
@@ -107,9 +107,9 @@
         # to disable voting on one specific job if things go wrong.
         # If you need any support to debug these jobs in case of
         # failures, please reach us on #tripleo IRC channel.
-        - tripleo-ci-centos-8-scenario002-standalone:
+        - tripleo-ci-centos-9-scenario002-standalone:
             voting: false
-        - tripleo-ci-centos-8-undercloud-containers:
+        - tripleo-ci-centos-9-undercloud-containers:
             voting: false
     gate:
       queue: barbican
