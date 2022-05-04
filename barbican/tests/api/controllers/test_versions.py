@@ -38,20 +38,33 @@ class WhenTestingVersionsResource(utils.BarbicanAPIBaseTestCase):
         resp = self.app.get('/', headers=headers)
         self.assertEqual(302, resp.status_int)
 
-    def test_should_return_version_json(self):
+    def test_should_return_version_json_v1_0(self):
+        # NOTE: this is for clients that do not have the microversion set
+        # which should default to the old-pre-microversion behavior
         resp = self.app.get('/')
 
         versions_response = resp.json['versions']['values']
         v1_info = versions_response[0]
 
-        # NOTE(jaosorior): I used assertIn instead of assertEqual because we
-        # might start using decimal numbers in the future. So when that happens
-        # this test will still be valid.
         self.assertIn('v1', v1_info['id'])
+        self.assertNotIn('min_version', v1_info)
+        self.assertNotIn('max_version', v1_info)
         self.assertEqual(1, len(v1_info['media-types']))
         self.assertEqual('application/json', v1_info['media-types'][0]['base'])
 
-    def test_when_host_href_is_not_set_in_conf(self):
+    def test_should_return_version_json_v1_1(self):
+        utils.set_version(self.app, '1.1')
+        resp = self.app.get('/')
+
+        versions_response = resp.json['versions']
+        v1_info = versions_response[0]
+
+        self.assertIn('v1', v1_info['id'])
+        self.assertEqual('1.0', v1_info['min_version'])
+        self.assertIn('max_version', v1_info)
+        self.assertNotIn('media-types', v1_info)
+
+    def test_when_host_href_is_not_set_in_conf_v0(self):
         cmn_utils.CONF.set_override('host_href', '')
         host_hdr = 'http://myproxy.server.com:9311'
         utils.mock_pecan_request(self, host=host_hdr)
@@ -61,10 +74,27 @@ class WhenTestingVersionsResource(utils.BarbicanAPIBaseTestCase):
         versions_response = resp.json['versions']['values']
 
         for v_info in versions_response:
+            self.assertNotIn('min_version', v_info)
+            self.assertNotIn('max_version', v_info)
             self.assertIn(host_hdr, v_info['links'][0]['href'])
             self.assertNotIn(dummy_root, v_info['links'][0]['href'])
 
-    def test_when_host_href_is_set_in_conf(self):
+    def test_when_host_href_is_not_set_in_conf_v1(self):
+        cmn_utils.CONF.set_override('host_href', '')
+        host_hdr = 'http://myproxy.server.com:9311'
+        utils.mock_pecan_request(self, host=host_hdr, version='1.1')
+        dummy_root = 'http://mylocalhost:9999'
+        resp = self.app.get(dummy_root)
+
+        versions_response = resp.json['versions']
+
+        for v_info in versions_response:
+            self.assertEqual('1.0', v_info['min_version'])
+            self.assertIn('max_version', v_info)
+            self.assertIn(host_hdr, v_info['links'][0]['href'])
+            self.assertNotIn(dummy_root, v_info['links'][0]['href'])
+
+    def test_when_host_href_is_set_in_conf_v0(self):
         host_href = 'http://myapp.server.com:9311/'
         cmn_utils.CONF.set_override('host_href', host_href)
         host_hdr = 'http://myproxy.server.com:9311'
@@ -75,11 +105,30 @@ class WhenTestingVersionsResource(utils.BarbicanAPIBaseTestCase):
         versions_response = resp.json['versions']['values']
 
         for v_info in versions_response:
+            self.assertNotIn('min_version', v_info)
+            self.assertNotIn('max_version', v_info)
             self.assertIn(host_href, v_info['links'][0]['href'])
             self.assertNotIn(dummy_root, v_info['links'][0]['href'])
             self.assertNotIn(host_hdr, v_info['links'][0]['href'])
 
-    def test_when_host_href_is_general(self):
+    def test_when_host_href_is_set_in_conf_v1(self):
+        host_href = 'http://myapp.server.com:9311/'
+        cmn_utils.CONF.set_override('host_href', host_href)
+        host_hdr = 'http://myproxy.server.com:9311'
+        utils.mock_pecan_request(self, host=host_hdr, version='1.1')
+        dummy_root = 'http://mylocalhost:9999'
+        resp = self.app.get(dummy_root)
+
+        versions_response = resp.json['versions']
+
+        for v_info in versions_response:
+            self.assertEqual('1.0', v_info['min_version'])
+            self.assertIn('max_version', v_info)
+            self.assertIn(host_href, v_info['links'][0]['href'])
+            self.assertNotIn(dummy_root, v_info['links'][0]['href'])
+            self.assertNotIn(host_hdr, v_info['links'][0]['href'])
+
+    def test_when_host_href_is_general_v0(self):
         host_href = 'http://myapp.server.com/key-manager'
         cmn_utils.CONF.set_override('host_href', host_href)
         host_hdr = 'http://myproxy.server.com:9311'
@@ -90,11 +139,30 @@ class WhenTestingVersionsResource(utils.BarbicanAPIBaseTestCase):
         versions_response = resp.json['versions']['values']
 
         for v_info in versions_response:
+            self.assertNotIn('min_version', v_info)
+            self.assertNotIn('max_version', v_info)
             self.assertIn(host_href, v_info['links'][0]['href'])
             self.assertNotIn(dummy_root, v_info['links'][0]['href'])
             self.assertNotIn(host_hdr, v_info['links'][0]['href'])
 
-    def test_when_host_href_is_not_set_with_general_request_url(self):
+    def test_when_host_href_is_general_v1(self):
+        host_href = 'http://myapp.server.com/key-manager'
+        cmn_utils.CONF.set_override('host_href', host_href)
+        host_hdr = 'http://myproxy.server.com:9311'
+        utils.mock_pecan_request(self, host=host_hdr, version='1.1')
+        dummy_root = 'http://mylocalhost:9999'
+        resp = self.app.get(dummy_root)
+
+        versions_response = resp.json['versions']
+
+        for v_info in versions_response:
+            self.assertEqual('1.0', v_info['min_version'])
+            self.assertIn('max_version', v_info)
+            self.assertIn(host_href, v_info['links'][0]['href'])
+            self.assertNotIn(dummy_root, v_info['links'][0]['href'])
+            self.assertNotIn(host_hdr, v_info['links'][0]['href'])
+
+    def test_when_host_href_is_not_set_with_general_request_url_v0(self):
         cmn_utils.CONF.set_override('host_href', '')
         host_hdr = 'http://myproxy.server.com/key-manager'
         utils.mock_pecan_request(self, host=host_hdr)
@@ -104,6 +172,23 @@ class WhenTestingVersionsResource(utils.BarbicanAPIBaseTestCase):
         versions_response = resp.json['versions']['values']
 
         for v_info in versions_response:
+            self.assertNotIn('min_version', v_info)
+            self.assertNotIn('max_version', v_info)
+            self.assertIn(host_hdr, v_info['links'][0]['href'])
+            self.assertNotIn(dummy_root, v_info['links'][0]['href'])
+
+    def test_when_host_href_is_not_set_with_general_request_url_v1(self):
+        cmn_utils.CONF.set_override('host_href', '')
+        host_hdr = 'http://myproxy.server.com/key-manager'
+        utils.mock_pecan_request(self, host=host_hdr, version='1.1')
+        dummy_root = 'http://mylocalhost:9999'
+        resp = self.app.get(dummy_root)
+
+        versions_response = resp.json['versions']
+
+        for v_info in versions_response:
+            self.assertEqual('1.0', v_info['min_version'])
+            self.assertIn('max_version', v_info)
             self.assertIn(host_hdr, v_info['links'][0]['href'])
             self.assertNotIn(dummy_root, v_info['links'][0]['href'])
 
@@ -125,7 +210,7 @@ class WhenTestingV1Resource(utils.BarbicanAPIBaseTestCase):
         resp = self.app.get('/', headers=headers)  # / refers to /v1 path
         self.assertEqual(200, resp.status_int)
 
-    def test_get_response_should_return_version_json(self):
+    def test_get_response_should_return_version_json_v1_0(self):
         resp = self.app.get('/')  # / refers to /v1 path
         self.assertEqual(200, resp.status_int)
 
@@ -135,5 +220,22 @@ class WhenTestingV1Resource(utils.BarbicanAPIBaseTestCase):
         # might start using decimal numbers in the future. So when that happens
         # this test will still be valid.
         self.assertIn('v1', v1_info['id'])
+        self.assertNotIn('max_version', v1_info)
+        self.assertNotIn('min_version', v1_info)
         self.assertEqual(1, len(v1_info['media-types']))
         self.assertEqual('application/json', v1_info['media-types'][0]['base'])
+
+    def test_get_response_should_return_version_json_v1_1(self):
+        utils.set_version(self.app, '1.1')
+        resp = self.app.get('/')  # / refers to /v1 path
+        self.assertEqual(200, resp.status_int)
+
+        v1_info = resp.json['version']
+
+        # NOTE(jaosorior): I used assertIn instead of assertEqual because we
+        # might start using decimal numbers in the future. So when that happens
+        # this test will still be valid.
+        self.assertIn('v1', v1_info['id'])
+        self.assertIn('max_version', v1_info)
+        self.assertIn('min_version', v1_info)
+        self.assertNotIn('media-types', v1_info)

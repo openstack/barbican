@@ -88,28 +88,36 @@ class BaseVersionController(object):
     """Base class for the version-specific controllers"""
 
     @classmethod
-    def get_version_info(cls, request):
-        return {
+    def get_version_info(cls, microversion_spec=True):
+        version = {
             'id': cls.version_id,
-            'status': 'stable',
-            'updated': cls.last_updated,
+            'status': 'CURRENT',
+            'min_version': cls.min_version,
+            'max_version': cls.version,
             'links': [
                 {
                     'rel': 'self',
                     'href': _get_versioned_url(cls.version_string),
-                }, {
+                },
+                {
                     'rel': 'describedby',
                     'type': 'text/html',
                     'href': 'https://docs.openstack.org/'
                 }
             ],
-            'media-types': [
+        }
+        if not microversion_spec:
+            version.pop('min_version')
+            version.pop('max_version')
+            version['status'] = 'stable'
+            version['updated']: cls.last_updated
+            version['media-types'] = [
                 {
                     'base': MIME_TYPE_JSON,
                     'type': MEDIA_TYPE_JSON % cls.version_string
                 }
             ]
-        }
+        return version
 
 
 class V1Controller(BaseVersionController):
@@ -144,7 +152,10 @@ class V1Controller(BaseVersionController):
     @controllers.handle_exceptions(u._('Version retrieval'))
     def on_get(self):
         pecan.core.override_template('json')
-        return {'version': self.get_version_info(pecan.request)}
+        if is_supported(pecan.request, max_version='1.0'):
+            return {'version': self.get_version_info(microversion_spec=False)}
+        else:
+            return {'version': self.get_version_info()}
 
 
 AVAILABLE_VERSIONS = {
@@ -172,19 +183,25 @@ class VersionsController(object):
         if 'build' in kwargs:
             return {'build': version.__version__}
 
-        versions_info = [version_class.get_version_info(pecan.request) for
-                         version_class in AVAILABLE_VERSIONS.values()]
-
-        version_output = {
-            'versions': {
-                'values': versions_info
+        if is_supported(pecan.request, max_version='1.0'):
+            resp = {
+                'versions': {
+                    'values': [
+                        V1Controller.get_version_info(microversion_spec=False)
+                    ]
+                }
             }
-        }
+        else:
+            resp = {
+                'versions': [
+                    version_cls.get_version_info() for version_cls in
+                    AVAILABLE_VERSIONS.values()]
+            }
 
         # Since we are returning all the versions available, the proper status
         # code is Multiple Choices (300)
         pecan.response.status = 300
-        return version_output
+        return resp
 
     def _redirect_to_default_json_home_if_needed(self, request):
         if self._mime_best_match(request.accept) == MIME_TYPE_JSON_HOME:

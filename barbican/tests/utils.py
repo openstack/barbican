@@ -41,12 +41,13 @@ from barbican.plugin import kmip_secret_store as kss
 from barbican.tests import database_utils
 
 
-def mock_pecan_request(test_instance, host=None):
+def mock_pecan_request(test_instance, host=None, version='1.0'):
     patcher_obj = mock.patch('pecan.request')
     mock_req = patcher_obj.start()
     test_instance.addCleanup(patcher_obj.stop)
     mock_req.url = host
     mock_req.environ = os.environ.copy()
+    mock_req.environ['key-manager.microversion'] = version
     mock_req.application_url = host
 
 
