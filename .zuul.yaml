@@ -110,15 +110,6 @@
         # - barbican-simple-crypto-devstack-tempest
         # - barbican-simple-crypto-devstack-tempest-ipv6-only
         - octavia-v2-dsvm-tls-barbican-stable-ussuri
-        # TripleO jobs that deploy Barbican.
-        # Note we don't use a project-template here, so it's easier
-        # to disable voting on one specific job if things go wrong.
-        # tripleo-ci-centos-7-scenario002-standalone will
-        # run in Pike and beyond.
-        # If you need any support to debug these jobs in case of
-        # failures, please reach us on #tripleo IRC channel.
-        - tripleo-ci-centos-7-scenario002-standalone:
-            voting: false
     gate:
       queue: barbican
       jobs:
