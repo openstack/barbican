@@ -100,7 +100,8 @@
         - barbican-tempest-plugin-simple-crypto
         - barbican-tempest-plugin-simple-crypto-secure-rbac
         - barbican-tempest-plugin-simple-crypto-ipv6-only
-        - barbican-tox-functional-fips
+        - barbican-tox-functional-fips:
+            voting: false
         - octavia-v2-dsvm-tls-barbican
         # TripleO jobs that deploy Barbican.
         # Note we don't use a project-template here, so it's easier
