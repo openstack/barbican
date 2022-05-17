@@ -110,8 +110,6 @@
         # failures, please reach us on #tripleo IRC channel.
         - tripleo-ci-centos-9-scenario002-standalone:
             voting: false
-        - tripleo-ci-centos-9-undercloud-containers:
-            voting: false
     gate:
       queue: barbican
       jobs:
