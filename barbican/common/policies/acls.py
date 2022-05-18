@@ -33,7 +33,9 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secret_acls:delete',
-        check_str='rule:secret_project_admin or rule:secret_project_creator',
+        check_str='rule:secret_project_admin or rule:secret_project_creator ' +
+                  'or (rule:secret_project_creator_role and ' +
+                  'rule:secret_non_private_read)',
         scope_types=[],
         description='Delete the ACL settings for a given secret.',
         operations=[
@@ -45,7 +47,9 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secret_acls:put_patch',
-        check_str='rule:secret_project_admin or rule:secret_project_creator',
+        check_str='rule:secret_project_admin or rule:secret_project_creator ' +
+                  'or (rule:secret_project_creator_role and ' +
+                  'rule:secret_non_private_read)',
         scope_types=[],
         description='Create new, replaces, or updates existing ACL for a ' +
                     'given secret.',
@@ -75,7 +79,9 @@ rules = [
     policy.DocumentedRuleDefault(
         name='container_acls:delete',
         check_str='rule:container_project_admin or ' +
-                  'rule:container_project_creator',
+                  'rule:container_project_creator or ' +
+                  '(rule:container_project_creator_role and' +
+                  ' rule:container_non_private_read)',
         scope_types=[],
         description='Delete ACL for a given container. No content is returned '
                     'in the case of successful deletion.',
@@ -89,7 +95,9 @@ rules = [
     policy.DocumentedRuleDefault(
         name='container_acls:put_patch',
         check_str='rule:container_project_admin or ' +
-                  'rule:container_project_creator',
+                  'rule:container_project_creator or ' +
+                  '(rule:container_project_creator_role and' +
+                  ' rule:container_non_private_read)',
         scope_types=[],
         description='Create new or replaces existing ACL for a given '
                     'container.',

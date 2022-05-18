@@ -111,8 +111,8 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='create',
             entity_id=secret_uuid, roles=['creator'], user='NotSecretCreator',
-            expect_errors=True)
-        self.assertEqual(403, resp.status_int)
+            expect_errors=False)
+        self.assertEqual(200, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='create',
@@ -379,8 +379,8 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='update',
             entity_id=secret_uuid, roles=['creator'], user='NotSecretCreator',
-            expect_errors=True)
-        self.assertEqual(403, resp.status_int)
+            expect_errors=False)
+        self.assertEqual(200, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='update',
@@ -460,9 +460,9 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='delete',
             entity_id=secret_uuid, roles=['creator'], user='NotSecretCreator',
-            expect_errors=True)
+            expect_errors=False)
 
-        self.assertEqual(403, resp.status_int)
+        self.assertEqual(200, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='delete',
@@ -567,8 +567,8 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='create',
             entity_id=container_id, roles=['creator'],
-            user='NotContainerCreator', expect_errors=True)
-        self.assertEqual(403, resp.status_int)
+            user='NotContainerCreator', expect_errors=False)
+        self.assertEqual(200, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='create',
@@ -871,8 +871,8 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='update',
             entity_id=container_id, roles=['creator'], user='NotCreator',
-            expect_errors=True)
-        self.assertEqual(403, resp.status_int)
+            expect_errors=False)
+        self.assertEqual(200, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='update',
@@ -931,9 +931,9 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='delete',
             entity_id=container_id, roles=['creator'], user='NotCreator',
-            expect_errors=True)
+            expect_errors=False)
 
-        self.assertEqual(403, resp.status_int)
+        self.assertEqual(200, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='delete',
