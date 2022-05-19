@@ -15,7 +15,6 @@
 
 import abc
 import base64
-import six
 
 from castellan.common.objects import key
 from castellan.common.objects import opaque_data
@@ -126,7 +125,7 @@ class CastellanSecretStore(ss.SecretStoreBase, metaclass=abc.ABCMeta):
             return ss.SecretDTO(secret_type, data, ss.KeySpec(), None)
         except Exception as e:
             LOG.exception("Error retrieving secret {}: {}".format(
-                secret_ref, six.text_type(e)))
+                secret_ref, str(e)))
             raise ss.SecretGeneralException(e)
 
     def store_secret(self, secret_dto):
@@ -142,7 +141,7 @@ class CastellanSecretStore(ss.SecretStoreBase, metaclass=abc.ABCMeta):
             return self._meta_dict(secret_id)
         except Exception as e:
             LOG.exception("Error storing secret: {}".format(
-                six.text_type(e)))
+                str(e)))
             raise ss.SecretGeneralException(e)
 
     def delete_secret(self, secret_metadata):
@@ -156,7 +155,7 @@ class CastellanSecretStore(ss.SecretStoreBase, metaclass=abc.ABCMeta):
                 secret_ref))
         except Exception as e:
             LOG.exception("Error deleting secret: {}".format(
-                six.text_type(e)))
+                str(e)))
             raise ss.SecretGeneralException(e)
 
     def generate_symmetric_key(self, key_spec):
@@ -172,7 +171,7 @@ class CastellanSecretStore(ss.SecretStoreBase, metaclass=abc.ABCMeta):
             return self._meta_dict(secret_id)
         except Exception as e:
             LOG.exception("Error generating symmetric key: {}".format(
-                six.text_type(e)))
+                str(e)))
             raise ss.SecretGeneralException(e)
 
     def generate_asymmetric_key(self, key_spec):
@@ -205,7 +204,7 @@ class CastellanSecretStore(ss.SecretStoreBase, metaclass=abc.ABCMeta):
             )
         except Exception as e:
             LOG.exception("Error generating asymmetric key: {}".format(
-                six.text_type(e)))
+                str(e)))
             raise ss.SecretGeneralException(e)
 
     @abc.abstractmethod

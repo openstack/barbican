@@ -19,7 +19,6 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from oslo_config import cfg
 from oslo_utils import encodeutils
-import six
 
 from barbican.common import config
 from barbican.common import utils
@@ -67,7 +66,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         # the kek is stored encrypted. Need to decrypt.
         encryptor = fernet.Fernet(self.master_kek)
         # Note : If plugin_meta type is unicode, encode to byte.
-        if isinstance(kek_meta_dto.plugin_meta, six.text_type):
+        if isinstance(kek_meta_dto.plugin_meta, str):
             kek_meta_dto.plugin_meta = kek_meta_dto.plugin_meta.encode('utf-8')
 
         return encryptor.decrypt(kek_meta_dto.plugin_meta)
@@ -75,7 +74,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
     def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
         kek = self._get_kek(kek_meta_dto)
         unencrypted = encrypt_dto.unencrypted
-        if not isinstance(unencrypted, six.binary_type):
+        if not isinstance(unencrypted, bytes):
             raise ValueError(
                 u._(
                     'Unencrypted data must be a byte type, but was '
@@ -174,7 +173,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
 
         passphrase_dto = None
         if generate_dto.passphrase:
-            if isinstance(generate_dto.passphrase, six.text_type):
+            if isinstance(generate_dto.passphrase, str):
                 generate_dto.passphrase = generate_dto.passphrase.encode(
                     'utf-8')
 

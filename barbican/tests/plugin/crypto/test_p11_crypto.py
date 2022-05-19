@@ -13,9 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import builtins
 from unittest import mock
-
-import six
 
 from barbican.common import exception as ex
 from barbican.model import models
@@ -309,7 +308,7 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         d = '01234567' * 4
         mo = mock.mock_open(read_data=d)
 
-        with mock.patch(six.moves.builtins.__name__ + '.open',
+        with mock.patch(builtins.__name__ + '.open',
                         mo,
                         create=True):
             p11 = self.plugin._create_pkcs11(ffi)

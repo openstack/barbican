@@ -12,7 +12,6 @@ Barbican Specific Commandments
 - [B310] Check for improper use of logging format arguments.
 - [B311] Use assertIsNone(...) instead of assertEqual(None, ...).
 - [B312] Use assertTrue(...) rather than assertEqual(True, ...).
-- [B314] str() and unicode() cannot be used on an exception. Remove or use six.text_type().
 - [B317] `oslo_` should be used instead of `oslo`.
 - [B318] Must use a dict comprehension instead of a dict constructor
   with a sequence of key-value pairs.

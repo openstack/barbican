@@ -19,7 +19,6 @@ from unittest import mock
 from cryptography import fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-import six
 
 from barbican.model import models
 from barbican.plugin.crypto import base as plugin
@@ -68,7 +67,7 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
         project_kek = fernet.Fernet.generate_key()
         encryptor = fernet.Fernet(self.plugin.master_kek)
         ENC_project_kek = encryptor.encrypt(project_kek)
-        UENC_project_kek = six.u(ENC_project_kek)
+        UENC_project_kek = ENC_project_kek
         kek_meta_dto = self._get_mocked_kek_meta_dto()
         kek_meta_dto.plugin_meta = UENC_project_kek
 

@@ -12,7 +12,6 @@
 
 
 import pecan
-import six
 
 from barbican import api
 from barbican.api import controllers
@@ -104,8 +103,8 @@ class SecretACLsController(controllers.ACLMixin):
 
         existing_acls_map = {acl.operation: acl for acl in
                              self.secret.secret_acls}
-        for operation in six.moves.filter(lambda x: data.get(x),
-                                          validators.ACL_OPERATIONS):
+        for operation in filter(lambda x: data.get(x),
+                                validators.ACL_OPERATIONS):
             project_access = data[operation].get('project-access')
             user_ids = data[operation].get('users')
             s_acl = None
@@ -165,8 +164,8 @@ class SecretACLsController(controllers.ACLMixin):
 
         existing_acls_map = {acl.operation: acl for acl in
                              self.secret.secret_acls}
-        for operation in six.moves.filter(lambda x: data.get(x),
-                                          validators.ACL_OPERATIONS):
+        for operation in filter(lambda x: data.get(x),
+                                validators.ACL_OPERATIONS):
             project_access = data[operation].get('project-access', True)
             user_ids = data[operation].get('users', [])
             s_acl = None
@@ -270,8 +269,8 @@ class ContainerACLsController(controllers.ACLMixin):
 
         existing_acls_map = {acl.operation: acl for acl in
                              self.container.container_acls}
-        for operation in six.moves.filter(lambda x: data.get(x),
-                                          validators.ACL_OPERATIONS):
+        for operation in filter(lambda x: data.get(x),
+                                validators.ACL_OPERATIONS):
             project_access = data[operation].get('project-access')
             user_ids = data[operation].get('users')
             if operation in existing_acls_map:  # update if matching acl exists
@@ -334,8 +333,8 @@ class ContainerACLsController(controllers.ACLMixin):
 
         existing_acls_map = {acl.operation: acl for acl in
                              self.container.container_acls}
-        for operation in six.moves.filter(lambda x: data.get(x),
-                                          validators.ACL_OPERATIONS):
+        for operation in filter(lambda x: data.get(x),
+                                validators.ACL_OPERATIONS):
             project_access = data[operation].get('project-access', True)
             user_ids = data[operation].get('users', [])
             if operation in existing_acls_map:  # update if matching acl exists

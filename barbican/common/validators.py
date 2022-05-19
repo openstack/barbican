@@ -22,7 +22,6 @@ from ldap3.core import exceptions as ldap_exceptions
 from ldap3.utils.dn import parse_dn
 from OpenSSL import crypto
 from oslo_utils import timeutils
-import six
 
 from barbican.api import controllers
 from barbican.common import config
@@ -46,7 +45,7 @@ ACL_OPERATIONS = ['read', 'write', 'delete', 'list']
 
 
 def secret_too_big(data):
-    if isinstance(data, six.text_type):
+    if isinstance(data, str):
         return len(data.encode('UTF-8')) > CONF.max_allowed_secret_in_bytes
     else:
         return len(data) > CONF.max_allowed_secret_in_bytes
@@ -234,7 +233,7 @@ class NewSecretValidator(ValidatorBase):
     def _extract_name(self, json_data):
         """Extracts and returns the name from the JSON data."""
         name = json_data.get('name')
-        if isinstance(name, six.string_types):
+        if isinstance(name, str):
             return name.strip()
         return None
 
@@ -346,13 +345,13 @@ class NewSecretMetadataValidator(ValidatorBase):
 
         for key in list(metadata):
             # make sure key is a string and url-safe.
-            if not isinstance(key, six.string_types):
+            if not isinstance(key, str):
                 raise exception.InvalidMetadataRequest()
             self._check_string_url_safe(key)
 
             # make sure value is a string.
             value = metadata[key]
-            if not isinstance(value, six.string_types):
+            if not isinstance(value, str):
                 raise exception.InvalidMetadataRequest()
 
             # If key is not lowercase, then change it

@@ -15,8 +15,6 @@
 import datetime
 from unittest import mock
 
-import six
-
 from barbican.model import models
 from barbican.model import repositories
 from barbican.queue import server
@@ -412,10 +410,9 @@ class WhenUsingTaskServer(database_utils.RepositoryTestCase):
 
         self.assertEqual(models.States.ERROR, order_result.status)
         self.assertEqual(
-            six.u(
-                'Process TypeOrder failure seen - '
-                'please contact site administrator.'),
+            ('Process TypeOrder failure seen - '
+             'please contact site administrator.'),
             order_result.error_reason)
         self.assertEqual(
-            six.u('500'),
+            '500',
             order_result.error_status_code)

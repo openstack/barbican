@@ -11,7 +11,7 @@
 #  under the License.
 
 import pecan
-from six.moves.urllib import parse
+from urllib import parse
 
 from barbican.api import controllers
 from barbican.api.controllers import containers

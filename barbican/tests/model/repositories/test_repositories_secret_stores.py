@@ -15,7 +15,6 @@ from barbican.common import exception
 from barbican.model import models
 from barbican.model import repositories
 from barbican.tests import database_utils
-import six
 
 
 class WhenTestingSecretStoresRepo(database_utils.RepositoryTestCase):
@@ -171,7 +170,7 @@ class WhenTestingSecretStoresRepo(database_utils.RepositoryTestCase):
             self._create_secret_store(name, store_plugin, crypto_plugin, False)
             self.assertFail()
         except exception.ConstraintCheck as ex:
-            self.assertIn("SQL constraint check failed", six.text_type(ex))
+            self.assertIn("SQL constraint check failed", str(ex))
 
 
 class WhenTestingProjectSecretStoreRepo(database_utils.RepositoryTestCase):
@@ -315,7 +314,7 @@ class WhenTestingProjectSecretStoreRepo(database_utils.RepositoryTestCase):
             self._create_project_store(project1.id, s_store2.id)
             self.assertFail()
         except exception.ConstraintCheck as ex:
-            self.assertIn("SQL constraint check failed", six.text_type(ex))
+            self.assertIn("SQL constraint check failed", str(ex))
 
     def test_get_secret_store_for_project(self):
         project1 = self._create_project()

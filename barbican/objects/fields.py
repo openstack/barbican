@@ -14,7 +14,6 @@
 
 from oslo_serialization import jsonutils as json
 from oslo_versionedobjects import fields
-import six
 
 # Import field errors from oslo.versionedobjects
 KeyTypeError = fields.KeyTypeError
@@ -75,7 +74,7 @@ IPV6Network = fields.IPV6Network
 
 class Json(FieldType):
     def coerce(self, obj, attr, value):
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             loaded = json.loads(value)
             return loaded
         return value

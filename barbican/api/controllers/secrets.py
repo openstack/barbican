@@ -12,7 +12,7 @@
 
 from oslo_utils import timeutils
 import pecan
-from six.moves.urllib import parse
+from urllib import parse
 
 from barbican import api
 from barbican.api import controllers

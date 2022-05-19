@@ -38,7 +38,6 @@ import pki.key as key
 import pki.kra
 import pki.profile
 from requests import exceptions as request_exceptions
-import six
 
 from barbican.common import exception
 from barbican.common import utils
@@ -94,7 +93,7 @@ def _setup_nss_db_services(conf):
         return None
     if nss_password is None:
         raise ValueError(u._("nss_password is required"))
-    if type(nss_password) is not six.binary_type:
+    if type(nss_password) is not bytes:
         # Password needs to be a bytes object in Python 3
         nss_password = nss_password.encode('UTF-8')
 

@@ -11,8 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import six
-
 from oslo_utils import uuidutils
 
 from barbican.common import exception
@@ -150,7 +148,7 @@ class TestProjectSecretStore(test_ovo_base.OVOTestCase):
             self._create_project_secret_store(project1.id, secret_stores2.id)
             self.assertFail()
         except exception.ConstraintCheck as ex:
-            self.assertIn("SQL constraint check failed", six.text_type(ex))
+            self.assertIn("SQL constraint check failed", str(ex))
 
     def test_ovo_get_secret_store_for_project(self):
         project1 = self._create_project()
