@@ -32,16 +32,10 @@ Guidelines for writing new hacking checks
    on the B3xx value.
  - List the new rule in the top level HACKING.rst file
  - Add test cases for each new rule to barbican/tests/test_hacking.py
-
 """
 
 oslo_namespace_imports = re.compile(r"from[\s]*oslo[.](.*)")
 dict_constructor_with_list_copy_re = re.compile(r".*\bdict\((\[)?(\(|\[)")
-assert_no_xrange_re = re.compile(r"\s*xrange\s*\(")
-assert_True = re.compile(r".*assertEqual\(True, .*\)")
-assert_None = re.compile(r".*assertEqual\(None, .*\)")
-assert_Not_Equal = re.compile(r".*assertNotEqual\(None, .*\)")
-assert_Is_Not = re.compile(r".*assertIsNot\(None, .*\)")
 no_log_warn = re.compile(r".*LOG.warn\(.*\)")
 
 
@@ -179,45 +173,12 @@ def dict_constructor_with_list_copy(logical_line):
 
     B318
     """
-    msg = ("B318: Must use a dict comprehension instead of a dict constructor"
-           " with a sequence of key-value pairs."
-           )
+    msg = (
+        "B318: Must use a dict comprehension instead of a dict constructor "
+        "with a sequence of key-value pairs."
+    )
     if dict_constructor_with_list_copy_re.match(logical_line):
         yield (0, msg)
-
-
-@core.flake8ext
-def no_xrange(logical_line):
-    """Do not use 'xrange'
-
-    B319
-    """
-    if assert_no_xrange_re.match(logical_line):
-        yield(0, "B319: Do not use xrange().")
-
-
-@core.flake8ext
-def validate_assertTrue(logical_line):
-    """Use 'assertTrue' instead of 'assertEqual'
-
-    B312
-    """
-    if re.match(assert_True, logical_line):
-        msg = ("B312: Unit tests should use assertTrue(value) instead"
-               " of using assertEqual(True, value).")
-        yield(0, msg)
-
-
-@core.flake8ext
-def validate_assertIsNone(logical_line):
-    """Use 'assertIsNone' instead of 'assertEqual'
-
-    B311
-    """
-    if re.match(assert_None, logical_line):
-        msg = ("B311: Unit tests should use assertIsNone(value) instead"
-               " of using assertEqual(None, value).")
-        yield(0, msg)
 
 
 @core.flake8ext
@@ -228,18 +189,4 @@ def no_log_warn_check(logical_line):
     """
     msg = ("B320: LOG.warn is deprecated, please use LOG.warning!")
     if re.match(no_log_warn, logical_line):
-        yield(0, msg)
-
-
-@core.flake8ext
-def validate_assertIsNotNone(logical_line):
-    """Use 'assertIsNotNone'
-
-    B321
-    """
-    if re.match(assert_Not_Equal, logical_line) or \
-       re.match(assert_Is_Not, logical_line):
-        msg = ("B321: Unit tests should use assertIsNotNone(value) instead"
-               " of using assertNotEqual(None, value) or"
-               " assertIsNot(None, value).")
         yield(0, msg)
