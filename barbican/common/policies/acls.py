@@ -46,8 +46,10 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secret_acls:delete',
-        check_str='rule:secret_project_admin or rule:secret_project_creator' +
-                  f" or ({_SECRET_MEMBER} and ({_SECRET_CREATOR} or " +
+        check_str='rule:secret_project_admin or rule:secret_project_creator ' +
+                  'or (rule:secret_project_creator_role and ' +
+                  'rule:secret_non_private_read) or ' +
+                  f"({_SECRET_MEMBER} and ({_SECRET_CREATOR} or " +
                   f"{_SECRET_IS_NOT_PRIVATE})) or {_SECRET_ADMIN}",
         scope_types=['project'],
         description='Delete the ACL settings for a given secret.',
@@ -60,8 +62,10 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secret_acls:put_patch',
-        check_str='rule:secret_project_admin or rule:secret_project_creator' +
-                  f" or ({_SECRET_MEMBER} and ({_SECRET_CREATOR} or " +
+        check_str='rule:secret_project_admin or rule:secret_project_creator ' +
+                  'or (rule:secret_project_creator_role and ' +
+                  'rule:secret_non_private_read) or ' +
+                  f"({_SECRET_MEMBER} and ({_SECRET_CREATOR} or " +
                   f"{_SECRET_IS_NOT_PRIVATE})) or {_SECRET_ADMIN}",
         scope_types=['project'],
         description='Create new, replaces, or updates existing ACL for a ' +
@@ -95,6 +99,8 @@ rules = [
         name='container_acls:delete',
         check_str='rule:container_project_admin or ' +
                   'rule:container_project_creator or ' +
+                  '(rule:container_project_creator_role and' +
+                  ' rule:container_non_private_read) or ' +
                   f"({_CONTAINER_MEMBER} and ({_CONTAINER_CREATOR} or " +
                   f"{_CONTAINER_IS_NOT_PRIVATE})) or {_CONTAINER_ADMIN}",
         scope_types=['project'],
@@ -111,6 +117,8 @@ rules = [
         name='container_acls:put_patch',
         check_str='rule:container_project_admin or ' +
                   'rule:container_project_creator or ' +
+                  '(rule:container_project_creator_role and' +
+                  ' rule:container_non_private_read) or ' +
                   f"({_CONTAINER_MEMBER} and ({_CONTAINER_CREATOR} or " +
                   f"{_CONTAINER_IS_NOT_PRIVATE})) or {_CONTAINER_ADMIN}",
         scope_types=['project'],
