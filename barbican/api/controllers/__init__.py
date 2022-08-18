@@ -18,9 +18,12 @@ from webob import exc
 
 from barbican import api
 from barbican.common import accept
+from barbican.common import config
 from barbican.common import utils
 from barbican import i18n as u
 
+
+CONF = config.CONF
 LOG = utils.getLogger(__name__)
 
 
@@ -55,14 +58,17 @@ def _do_enforce_rbac(inst, req, action_name, ctx, **kwargs):
             action_name = 'secret:decrypt'  # Override to perform special rules
 
         target_name, target_data = inst.get_acl_tuple(req, **kwargs)
-        policy_dict = {}
+        policy_dict = {
+            "enforce_new_defaults": CONF.oslo_policy.enforce_new_defaults
+        }
         if target_name and target_data:
             policy_dict['target'] = {target_name: target_data}
 
         policy_dict.update(kwargs)
         # Enforce access controls.
         if ctx.policy_enforcer:
-            ctx.policy_enforcer.authorize(action_name, flatten(policy_dict),
+            target = flatten(policy_dict)
+            ctx.policy_enforcer.authorize(action_name, target,
                                           ctx, do_raise=True)
 
 
