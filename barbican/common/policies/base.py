@@ -76,8 +76,20 @@ rules = [
         check_str="rule:all_users and rule:container_project_match and not " +
                   "rule:container_private_read"),
     policy.RuleDefault(
+        name='secret_project_reader',
+        check_str='role:reader and rule:secret_project_match'),
+    policy.RuleDefault(
+        name='secret_project_member',
+        check_str='role:member and rule:secret_project_match'),
+    policy.RuleDefault(
         name='secret_project_admin',
-        check_str="rule:admin and rule:secret_project_match"),
+        check_str='rule:admin and rule:secret_project_match'),
+    policy.RuleDefault(
+        name='secret_owner',
+        check_str='user_id:%(target.secret.creator_id)s'),
+    policy.RuleDefault(
+        name='secret_is_not_private',
+        check_str='True:%(target.secret.read_project_access)s'),
     policy.RuleDefault(
         name='secret_project_creator',
         check_str="rule:creator and rule:secret_project_match and " +
