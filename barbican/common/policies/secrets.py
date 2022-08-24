@@ -25,7 +25,7 @@ deprecated_secret_decrypt = policy.DeprecatedRule(
               'rule:secret_project_creator or ' +
               'rule:secret_project_admin or rule:secret_acl_read',
     deprecated_reason=_LEGACY_POLICY_DEPRECATION,
-    deprecated_since=versionutils.deprecated.ZED
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_secret_get = policy.DeprecatedRule(
     name='secret:get',
@@ -33,13 +33,13 @@ deprecated_secret_get = policy.DeprecatedRule(
               'rule:secret_project_creator or ' +
               'rule:secret_project_admin or rule:secret_acl_read',
     deprecated_reason=_LEGACY_POLICY_DEPRECATION,
-    deprecated_since=versionutils.deprecated.ZED
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_secret_put = policy.DeprecatedRule(
     name='secret:put',
     check_str='rule:admin_or_creator and rule:secret_project_match',
     deprecated_reason=_LEGACY_POLICY_DEPRECATION,
-    deprecated_since=versionutils.deprecated.ZED
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_secret_delete = policy.DeprecatedRule(
     name='secret:delete',
@@ -48,19 +48,19 @@ deprecated_secret_delete = policy.DeprecatedRule(
               '(rule:secret_project_creator_role and ' +
               'not rule:secret_private_read)',
     deprecated_reason=_LEGACY_POLICY_DEPRECATION,
-    deprecated_since=versionutils.deprecated.ZED
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_secrets_post = policy.DeprecatedRule(
     name='secrets:post',
     check_str='rule:admin_or_creator',
     deprecated_reason=_LEGACY_POLICY_DEPRECATION,
-    deprecated_since=versionutils.deprecated.ZED
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_secrets_get = policy.DeprecatedRule(
     name='secrets:get',
     check_str='rule:all_but_audit',
     deprecated_reason=_LEGACY_POLICY_DEPRECATION,
-    deprecated_since=versionutils.deprecated.ZED
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 
 rules = [
