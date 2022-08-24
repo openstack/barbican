@@ -13,18 +13,15 @@
 from oslo_log import versionutils
 from oslo_policy import policy
 
+from barbican.common.policies import base
 
-_LEGACY_POLICY_DEPRECATION = (
-    'The default policy for the Key Manager API has been updated '
-    'to use scopes and default roles.'
-)
 
 deprecated_secret_decrypt = policy.DeprecatedRule(
     name='secret:decrypt',
     check_str='rule:secret_decrypt_non_private_read or ' +
               'rule:secret_project_creator or ' +
               'rule:secret_project_admin or rule:secret_acl_read',
-    deprecated_reason=_LEGACY_POLICY_DEPRECATION,
+    deprecated_reason=base.LEGACY_POLICY_DEPRECATION,
     deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_secret_get = policy.DeprecatedRule(
@@ -32,13 +29,13 @@ deprecated_secret_get = policy.DeprecatedRule(
     check_str='rule:secret_non_private_read or ' +
               'rule:secret_project_creator or ' +
               'rule:secret_project_admin or rule:secret_acl_read',
-    deprecated_reason=_LEGACY_POLICY_DEPRECATION,
+    deprecated_reason=base.LEGACY_POLICY_DEPRECATION,
     deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_secret_put = policy.DeprecatedRule(
     name='secret:put',
     check_str='rule:admin_or_creator and rule:secret_project_match',
-    deprecated_reason=_LEGACY_POLICY_DEPRECATION,
+    deprecated_reason=base.LEGACY_POLICY_DEPRECATION,
     deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_secret_delete = policy.DeprecatedRule(
@@ -47,19 +44,19 @@ deprecated_secret_delete = policy.DeprecatedRule(
               'rule:secret_project_creator or ' +
               '(rule:secret_project_creator_role and ' +
               'not rule:secret_private_read)',
-    deprecated_reason=_LEGACY_POLICY_DEPRECATION,
+    deprecated_reason=base.LEGACY_POLICY_DEPRECATION,
     deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_secrets_post = policy.DeprecatedRule(
     name='secrets:post',
     check_str='rule:admin_or_creator',
-    deprecated_reason=_LEGACY_POLICY_DEPRECATION,
+    deprecated_reason=base.LEGACY_POLICY_DEPRECATION,
     deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_secrets_get = policy.DeprecatedRule(
     name='secrets:get',
     check_str='rule:all_but_audit',
-    deprecated_reason=_LEGACY_POLICY_DEPRECATION,
+    deprecated_reason=base.LEGACY_POLICY_DEPRECATION,
     deprecated_since=versionutils.deprecated.WALLABY
 )
 
