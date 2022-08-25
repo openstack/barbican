@@ -20,6 +20,9 @@ LEGACY_POLICY_DEPRECATION = (
 
 rules = [
     policy.RuleDefault(
+        name='system_admin',
+        check_str='role:amdin and system_scope:all'),
+    policy.RuleDefault(
         name='admin',
         check_str='role:admin'),
     policy.RuleDefault(
