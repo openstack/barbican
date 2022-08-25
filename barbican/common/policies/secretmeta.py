@@ -10,24 +10,57 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
+from oslo_log import versionutils
 from oslo_policy import policy
 
+from barbican.common.policies import base
 
-_MEMBER = "role:member"
-_ADMIN = "role:admin"
-_PROJECT_MEMBER = f"{_MEMBER} and project_id:%(target.secret.project_id)s"
-_PROJECT_ADMIN = f"{_ADMIN} and project_id:%(target.secret.project_id)s"
-_SECRET_CREATOR = "user_id:%(target.secret.creator_id)s"
-_SECRET_IS_NOT_PRIVATE = "True:%(target.secret.read_project_access)s"
+
+deprecated_secret_meta_get = policy.DeprecatedRule(
+    name='secret_meta:get',
+    check_str='rule:secret_non_private_read or ' +
+              'rule:secret_project_creator or ' +
+              'rule:secret_project_admin or rule:secret_acl_read',
+    deprecated_reason=base.LEGACY_POLICY_DEPRECATION,
+    deprecated_since=versionutils.deprecated.WALLABY
+)
+deprecated_secret_meta_post = policy.DeprecatedRule(
+    name='secret_meta:post',
+    check_str='rule:secret_project_admin or ' +
+              'rule:secret_project_creator or ' +
+              '(rule:secret_project_creator_role and ' +
+              'rule:secret_non_private_read)',
+    deprecated_reason=base.LEGACY_POLICY_DEPRECATION,
+    deprecated_since=versionutils.deprecated.WALLABY
+)
+deprecated_secret_meta_put = policy.DeprecatedRule(
+    name='secret_meta:put',
+    check_str='rule:secret_project_admin or ' +
+              'rule:secret_project_creator or ' +
+              '(rule:secret_project_creator_role and ' +
+              'rule:secret_non_private_read)',
+    deprecated_reason=base.LEGACY_POLICY_DEPRECATION,
+    deprecated_since=versionutils.deprecated.WALLABY
+)
+deprecated_secret_meta_delete = policy.DeprecatedRule(
+    name='secret_meta:delete',
+    check_str='rule:secret_project_admin or ' +
+              'rule:secret_project_creator or ' +
+              '(rule:secret_project_creator_role and ' +
+              'rule:secret_non_private_read)',
+    deprecated_reason=base.LEGACY_POLICY_DEPRECATION,
+    deprecated_since=versionutils.deprecated.WALLABY
+)
 
 rules = [
     policy.DocumentedRuleDefault(
         name='secret_meta:get',
-        check_str='rule:secret_non_private_read or ' +
-                  'rule:secret_project_creator or ' +
-                  'rule:secret_project_admin or rule:secret_acl_read or ' +
-                  f"({_PROJECT_MEMBER} and ({_SECRET_CREATOR} or " +
-                  f"{_SECRET_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
+        check_str=(
+            "True:%(enforce_new_defaults)s and "
+            "(rule:secret_project_admin or "
+            "(rule:secret_project_member and rule:secret_owner) or "
+            "(rule:secret_project_member and rule:secret_is_not_private) or "
+            "rule:secret_acl_read)"),
         scope_types=['project'],
         description='metadata/: Lists a secrets user-defined metadata. || ' +
                     'metadata/{key}: Retrieves a secrets user-added metadata.',
@@ -40,16 +73,16 @@ rules = [
                 'path': '/v1/secrets/{secret-id}/metadata/{meta-key}',
                 'method': 'GET'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_secret_meta_get
     ),
     policy.DocumentedRuleDefault(
         name='secret_meta:post',
-        check_str='rule:secret_project_admin or ' +
-                  'rule:secret_project_creator or ' +
-                  '(rule:secret_project_creator_role and ' +
-                  'rule:secret_non_private_read) or ' +
-                  f"({_PROJECT_MEMBER} and ({_SECRET_CREATOR} or " +
-                  f"{_SECRET_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
+        check_str=(
+            "True:%(enforce_new_defaults)s and "
+            "(rule:secret_project_admin or "
+            "(rule:secret_project_member and rule:secret_owner) or "
+            "(rule:secret_project_member and rule:secret_is_not_private))"),
         scope_types=['project'],
         description='Adds a new key/value pair to the secrets user-defined ' +
                     'metadata.',
@@ -58,16 +91,16 @@ rules = [
                 'path': '/v1/secrets/{secret-id}/metadata/{meta-key}',
                 'method': 'POST'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_secret_meta_post
     ),
     policy.DocumentedRuleDefault(
         name='secret_meta:put',
-        check_str='rule:secret_project_admin or ' +
-                  'rule:secret_project_creator or ' +
-                  '(rule:secret_project_creator_role and ' +
-                  'rule:secret_non_private_read) or ' +
-                  f"({_PROJECT_MEMBER} and ({_SECRET_CREATOR} or " +
-                  f"{_SECRET_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
+        check_str=(
+            "True:%(enforce_new_defaults)s and "
+            "(rule:secret_project_admin or "
+            "(rule:secret_project_member and rule:secret_owner) or "
+            "(rule:secret_project_member and rule:secret_is_not_private))"),
         scope_types=['project'],
         description='metadata/: Sets the user-defined metadata for a secret ' +
                     '|| metadata/{key}: Updates an existing key/value pair ' +
@@ -81,16 +114,16 @@ rules = [
                 'path': '/v1/secrets/{secret-id}/metadata/{meta-key}',
                 'method': 'PUT'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_secret_meta_put
     ),
     policy.DocumentedRuleDefault(
         name='secret_meta:delete',
-        check_str='rule:secret_project_admin or ' +
-                  'rule:secret_project_creator or ' +
-                  '(rule:secret_project_creator_role and ' +
-                  'rule:secret_non_private_read) or ' +
-                  f"({_PROJECT_MEMBER} and ({_SECRET_CREATOR} or " +
-                  f"{_SECRET_IS_NOT_PRIVATE})) or {_PROJECT_ADMIN}",
+        check_str=(
+            "True:%(enforce_new_defaults)s and "
+            "(rule:secret_project_admin or "
+            "(rule:secret_project_member and rule:secret_owner) or "
+            "(rule:secret_project_member and rule:secret_is_not_private))"),
         scope_types=['project'],
         description='Delete secret user-defined metadata by key.',
         operations=[
@@ -98,7 +131,8 @@ rules = [
                 'path': '/v1/secrets/{secret-id}/metadata/{meta-key}',
                 'method': 'DELETE'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_secret_meta_delete
     ),
 ]
 
