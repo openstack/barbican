@@ -121,6 +121,12 @@ rules = [
     policy.RuleDefault(
         name='container_project_creator_role',
         check_str="rule:creator and rule:container_project_match"),
+    policy.RuleDefault(
+        name='order_project_match',
+        check_str='project_id:%(target.order.project_id)s'),
+    policy.RuleDefault(
+        name='order_project_member',
+        check_str='role:member and rule:order_project_match'),
 ]
 
 
