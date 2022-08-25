@@ -27,8 +27,10 @@
     nodeset: devstack-single-node-centos-9-stream
     parent: barbican-tox-functional
     description: |
-      Functional testing for a FIPS enabled Centos 8 system
+      Functional testing for a FIPS enabled Centos 9 system
     pre-run: playbooks/enable-fips.yaml
+    vars:
+      nslookup_target: 'opendev.org'
 
 - job:
     name: barbican-vault-tox-functional
@@ -50,13 +52,13 @@
 
 - job:
     name: barbican-simple-crypto-devstack-tempest
-    parent: barbican-tempest-plugin-simple-crypto
+    parent: barbican-tempest-plugin-simple-crypto-wallaby
     description: |
       Compatibility alias for barbican-tempest-plugin-simple-crypto
 
 - job:
     name: barbican-simple-crypto-devstack-tempest-ipv6-only
-    parent: barbican-tempest-plugin-simple-crypto-ipv6-only
+    parent: barbican-tempest-plugin-simple-crypto-ipv6-only-wallaby
     description: |
       Compatibility alias for barbican-tempest-plugin-simple-crypto-ipv6-only
 
@@ -97,9 +99,11 @@
             voting: false
         - barbican-grenade:
             voting: false
-        - barbican-tempest-plugin-simple-crypto
-        - barbican-tempest-plugin-simple-crypto-ipv6-only
+        - barbican-tempest-plugin-simple-crypto-wallaby
+        - barbican-tempest-plugin-simple-crypto-ipv6-only-wallaby
         - barbican-tox-functional-fips:
+            voting: false
+        - barbican-tempest-plugin-simple-crypto-secure-rbac-wallaby:
             voting: false
         - octavia-v2-dsvm-tls-barbican
         # TripleO jobs that deploy Barbican.
