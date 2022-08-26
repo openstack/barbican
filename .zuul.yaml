@@ -93,18 +93,14 @@
     check:
       jobs:
         - barbican-tox-functional
-        - barbican-dogtag-tox-functional:
-            voting: false
         - barbican-vault-tox-functional:
             voting: false
         - barbican-grenade:
             voting: false
         - barbican-tempest-plugin-simple-crypto-wallaby
         - barbican-tempest-plugin-simple-crypto-ipv6-only-wallaby
-        - barbican-tox-functional-fips:
-            voting: false
-        - barbican-tempest-plugin-simple-crypto-secure-rbac-wallaby:
-            voting: false
+        - barbican-tox-functional-fips
+        - barbican-tempest-plugin-simple-crypto-secure-rbac-wallaby
         - octavia-v2-dsvm-tls-barbican
         # TripleO jobs that deploy Barbican.
         # Note we don't use a project-template here, so it's easier
@@ -122,4 +118,5 @@
     experimental:
       jobs:
         - barbican-kmip-tox-functional
+        - barbican-dogtag-tox-functional
 
