@@ -10,17 +10,41 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
+from oslo_log import versionutils
 from oslo_policy import policy
 
+from barbican.common.policies import base
 
-_READER = "role:reader"
-_SYSTEM_ADMIN = "role:admin and system_scope:all"
-_SYSTEM_READER = "role:reader and system_scope:all"
+
+deprecated_quotas_get = policy.DeprecatedRule(
+    name='quotas:get',
+    check_str='rule:all_users',
+    deprecated_reason=base.LEGACY_POLICY_DEPRECATION,
+    deprecated_since=versionutils.deprecated.WALLABY
+)
+deprecated_project_quotas_get = policy.DeprecatedRule(
+    name='project_quotas:get',
+    check_str='rule:service_admin',
+    deprecated_reason=base.LEGACY_POLICY_DEPRECATION,
+    deprecated_since=versionutils.deprecated.WALLABY
+)
+deprecated_project_quotas_put = policy.DeprecatedRule(
+    name='project_quotas:put',
+    check_str='rule:service_admin',
+    deprecated_reason=base.LEGACY_POLICY_DEPRECATION,
+    deprecated_since=versionutils.deprecated.WALLABY
+)
+deprecated_project_quotas_delete = policy.DeprecatedRule(
+    name='project_quotas:delete',
+    check_str='rule:service_admin',
+    deprecated_reason=base.LEGACY_POLICY_DEPRECATION,
+    deprecated_since=versionutils.deprecated.WALLABY
+)
 
 rules = [
     policy.DocumentedRuleDefault(
         name='quotas:get',
-        check_str=f'rule:all_users or {_READER}',
+        check_str='True:%(enforce_new_defaults)s and role:reader',
         scope_types=['project'],
         description='List quotas for the project the user belongs to.',
         operations=[
@@ -28,11 +52,12 @@ rules = [
                 'path': '/v1/quotas',
                 'method': 'GET'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_quotas_get
     ),
     policy.DocumentedRuleDefault(
         name='project_quotas:get',
-        check_str=f'rule:service_admin or {_SYSTEM_READER}',
+        check_str='True:%(enforce_new_defaults)s and rule:system_reader',
         scope_types=['system'],
         description='List quotas for the specified project.',
         operations=[
@@ -44,11 +69,12 @@ rules = [
                 'path': '/v1/project-quotas/{uuid}',
                 'method': 'GET'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_project_quotas_get
     ),
     policy.DocumentedRuleDefault(
         name='project_quotas:put',
-        check_str=f'rule:service_admin or {_SYSTEM_ADMIN}',
+        check_str='True:%(enforce_new_defaults)s and rule:system_admin',
         scope_types=['system'],
         description='Create or update the configured project quotas for '
                     'the project with the specified UUID.',
@@ -57,11 +83,12 @@ rules = [
                 'path': '/v1/project-quotas/{uuid}',
                 'method': 'PUT'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_project_quotas_put
     ),
     policy.DocumentedRuleDefault(
         name='project_quotas:delete',
-        check_str=f'rule:service_admin or {_SYSTEM_ADMIN}',
+        check_str='True:%(enforce_new_defaults)s and rule:system_admin',
         scope_types=['system'],
         description='Delete the project quotas configuration for the '
                     'project with the requested UUID.',
@@ -70,7 +97,8 @@ rules = [
                 'path': '/v1/quotas}',
                 'method': 'DELETE'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_project_quotas_delete
     ),
 ]
 
