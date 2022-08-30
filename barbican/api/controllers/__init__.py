@@ -64,7 +64,6 @@ def _do_enforce_rbac(inst, req, action_name, ctx, **kwargs):
         if target_name and target_data:
             policy_dict['target'] = {target_name: target_data}
 
-        policy_dict.update(kwargs)
         # Enforce access controls.
         if ctx.policy_enforcer:
             target = flatten(policy_dict)
