@@ -19,12 +19,13 @@ API Reference
 
     ./reference/secrets.rst
     ./reference/secret_types.rst
+    ./reference/secret_consumers.rst
     ./reference/secret_metadata.rst
     ./reference/store_backends.rst
     ./reference/containers.rst
+    ./reference/container_consumers.rst
     ./reference/acls.rst
     ./reference/quotas.rst
-    ./reference/consumers.rst
     ./reference/orders.rst
     ./microversions.rst
     ./microversion_history.rst

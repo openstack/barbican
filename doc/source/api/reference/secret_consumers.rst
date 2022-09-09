@@ -1,14 +1,14 @@
-*************************
-Consumers API - Reference
-*************************
+********************************
+Secret consumers API - Reference
+********************************
 
-GET {container_ref}/consumers
-#############################
-Lists a container's consumers.
+GET {secret_ref}/consumers
+##########################
+Lists a secret's consumers.
 
 The list of consumers can be filtered by the parameters passed in via the URL.
 
-.. _consumer_parameters:
+.. _secret_consumer_list_parameters:
 
 Parameters
 **********
@@ -29,7 +29,7 @@ Request:
 
 .. code-block:: javascript
 
-    GET {container_ref}/consumers
+    GET {secret_ref}/consumers
     Headers:
         X-Auth-Token: <token>
 
@@ -44,25 +44,28 @@ Response:
         "total": 3,
         "consumers": [
             {
-                "status": "ACTIVE",
-                "URL": "consumerurl",
+                "created": "2015-10-15T21:06:33.123872",
                 "updated": "2015-10-15T21:06:33.123878",
-                "name": "consumername",
-                "created": "2015-10-15T21:06:33.123872"
+                "status": "ACTIVE",
+                "service": "image",
+                "resource_type": "image",
+                "resource_id": "123e4567-e89b-12d3-a456-426614174001"
             },
             {
-                "status": "ACTIVE",
-                "URL": "consumerURL2",
+                "created": "2015-10-15T21:17:08.092408",
                 "updated": "2015-10-15T21:17:08.092416",
-                "name": "consumername2",
-                "created": "2015-10-15T21:17:08.092408"
+                "status": "ACTIVE",
+                "service": "volume",
+                "resource_type": "volume",
+                "resource_id": "123e4567-e89b-12d3-a456-426614174002"
             },
             {
-                "status": "ACTIVE",
-                "URL": "consumerURL3",
+                "created": "2015-10-15T21:21:29.970365",
                 "updated": "2015-10-15T21:21:29.970370",
-                "name": "consumername3",
-                "created": "2015-10-15T21:21:29.970365"
+                "status": "ACTIVE",
+                "service": "load-balancer",
+                "resource_type": "listener",
+                "resource_id": "123e4567-e89b-12d3-a456-426614174003"
             }
         ]
     }
@@ -72,7 +75,7 @@ Request:
 
 .. code-block:: console
 
-    GET {container_ref}/consumers?limit=1\&offset=1
+    GET {secret_ref}/consumers?limit=1&offset=1
     Headers:
         X-Auth-Token: <token>
 
@@ -80,20 +83,21 @@ Request:
 
     {
         "total": 3,
-        "next": "http://localhost:9311/v1/containers/{container_ref}/consumers?limit=1&offset=2",
+        "next": "http://localhost:9311/v1/secrets/{secret_ref}/consumers?limit=1&offset=2",
         "consumers": [
             {
-                "status": "ACTIVE",
-                "URL": "consumerURL2",
+                "created": "2015-10-15T21:17:08.092408",
                 "updated": "2015-10-15T21:17:08.092416",
-                "name": "consumername2",
-                "created": "2015-10-15T21:17:08.092408"
+                "status": "ACTIVE",
+                "service": "volume",
+                "resource_type": "volume",
+                "resource_id": "123e4567-e89b-12d3-a456-426614174002"
             }
         ],
-        "previous": "http://localhost:9311/v1/containers/{container_ref}/consumers?limit=1&offset=0"
+        "previous": "http://localhost:9311/v1/secrets/{secret_ref}/consumers?limit=1&offset=0"
     }
 
-.. _consumer_response_attributes:
+.. _secret_consumer_response_attributes:
 
 Response Attributes
 *******************
@@ -116,7 +120,7 @@ Response Attributes
 +-----------+---------+----------------------------------------------------------------+
 
 
-.. _consumer_status_codes:
+.. _secret_consumer_status_codes:
 
 HTTP Status Codes
 *****************
@@ -129,42 +133,47 @@ HTTP Status Codes
 | 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource.|
 +------+-----------------------------------------------------------------------------+
 | 403  | Forbidden.  The user has been authenticated, but is not authorized to       |
-|      | delete a consumer. This can be based on the user's role.                    |
+|      | list consumers. This can be based on the user's role.                       |
 +------+-----------------------------------------------------------------------------+
 
-.. _post_consumers:
+.. _post_secret_consumers:
 
-POST {container_ref}/consumers
-##############################
+POST {secret_ref}/consumers
+###########################
 
 Creates a consumer
 
 Attributes
 **********
 
-+----------------------------+---------+----------------------------------------------+------------+
-| Attribute Name             | Type    | Description                                  | Default    |
-+============================+=========+==============================================+============+
-| name                       | string  | The name of the consumer set by the user.    | None       |
-+----------------------------+---------+----------------------------------------------+------------+
-| url                        | string  | The URL for the user or service using the    | None       |
-|                            |         | container.                                   |            |
-+----------------------------+---------+----------------------------------------------+------------+
++--------------------+---------+---------------------------------------------------------+------------+
+| Attribute Name     | Type    | Description                                             | Default    |
++====================+=========+=========================================================+============+
+| service            | string  | Consumer’s OpenStack service type. Each service should  | None       |
+|                    |         | preferably use it's reserved name, as shown in:         |            |
+|                    |         | https://service-types.openstack.org/service-types.json  |            |
++--------------------+---------+---------------------------------------------------------+------------+
+| resource_type      | string  | Name of the resource type using the secret              | None       |
+|                    |         |  e.g. “images” or “lbaas/loadbalancers”                 |            |
++--------------------+---------+---------------------------------------------------------+------------+
+| resource_id        | string  | Unique identifier for the resource using this secret.   | None       |
++--------------------+---------+---------------------------------------------------------+------------+
 
 Request:
 ********
 
 .. code-block:: javascript
 
-    POST {container_ref}/consumers
+    POST {secret_ref}/consumers
     Headers:
         X-Auth-Token: <token>
         Content-Type: application/json
 
     Content:
     {
-        "name": "ConsumerName",
-        "url": "ConsumerURL"
+        "service": "image",
+        "resource_type": "image",
+        "resource_id": "123e4567-e89b-12d3-a456-426614174000"
     }
 
 Response:
@@ -177,23 +186,22 @@ Response:
     {
         "status": "ACTIVE",
         "updated": "2015-10-15T17:56:18.626724",
-        "name": "container name",
+        "name": "secret name",
         "consumers": [
             {
-                "URL": "consumerURL",
-                "name": "consumername"
+                "service": "image",
+                "resource_type": "image",
+                "resource_id": "123e4567-e89b-12d3-a456-426614174000"
             }
         ],
         "created": "2015-10-15T17:55:44.380002",
-        "container_ref": "http://localhost:9311/v1/containers/74bbd3fd-9ba8-42ee-b87e-2eecf10e47b9",
+        "secret_ref": "http://localhost:9311/v1/secrets/74bbd3fd-9ba8-42ee-b87e-2eecf10e47b9",
         "creator_id": "b17c815d80f946ea8505c34347a2aeba",
-        "secret_refs": [
-            {
-                "secret_ref": "http://localhost:9311/v1/secrets/b61613fc-be53-4696-ac01-c3a789e87973",
-                "name": "private_key"
-            }
-        ],
-        "type": "generic"
+        "secret_type": "opaque",
+        "expiration": null,
+        "algorithm": "aes",
+        "bit_length": 256,
+        "mode": "cbc"
     }
 
 
@@ -215,39 +223,43 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 
 
-.. _delete_consumer:
+.. _delete_secret_consumer:
 
-DELETE {container_ref}/consumers
-################################
+DELETE {secret_ref}/consumers
+#############################
 
 Delete a consumer.
 
 Attributes
 **********
 
-+----------------------------+---------+----------------------------------------------+------------+
-| Attribute Name             | Type    | Description                                  | Default    |
-+============================+=========+==============================================+============+
-| name                       | string  | The name of the consumer set by the user.    | None       |
-+----------------------------+---------+----------------------------------------------+------------+
-| URL                        | string  | The URL for the user or service using the    | None       |
-|                            |         | container.                                   |            |
-+----------------------------+---------+----------------------------------------------+------------+
++--------------------+---------+---------------------------------------------------------+------------+
+| Attribute Name     | Type    | Description                                             | Default    |
++====================+=========+=========================================================+============+
+| service            | string  | Consumer’s OpenStack service type as shown in           | None       |
+|                    |         | https://service-types.openstack.org/service-types.json  |            |
++--------------------+---------+---------------------------------------------------------+------------+
+| resource_type      | string  | Name of the resource type using the secret              | None       |
+|                    |         |  e.g. “images” or “lbaas/loadbalancers”                 |            |
++--------------------+---------+---------------------------------------------------------+------------+
+| resource_id        | string  | Unique identifier for the resource using this secret.   | None       |
++--------------------+---------+---------------------------------------------------------+------------+
 
 Request:
 ********
 
 .. code-block:: javascript
 
-    DELETE {container_ref}/consumers
+    DELETE {secret_ref}/consumers
     Headers:
         X-Auth-Token: <token>
         Content-Type: application/json
 
     Content:
     {
-        "name": "ConsumerName",
-        "URL": "ConsumerURL"
+        "service": "image",
+        "resource_type": "image",
+        "resource_id": "123e4567-e89b-12d3-a456-426614174000"
     }
 
 
@@ -261,18 +273,16 @@ Response:
     {
         "status": "ACTIVE",
         "updated": "2015-10-15T17:56:18.626724",
-        "name": "container name",
+        "name": "secret name",
         "consumers": [],
         "created": "2015-10-15T17:55:44.380002",
-        "container_ref": "http://localhost:9311/v1/containers/74bbd3fd-9ba8-42ee-b87e-2eecf10e47b9",
+        "secret_ref": "http://localhost:9311/v1/secrets/74bbd3fd-9ba8-42ee-b87e-2eecf10e47b9",
         "creator_id": "b17c815d80f946ea8505c34347a2aeba",
-        "secret_refs": [
-            {
-                "secret_ref": "http://localhost:9311/v1/secrets/b61613fc-be53-4696-ac01-c3a789e87973",
-                "name": "private_key"
-            }
-        ],
-    "type": "generic"
+        "secret_type": "opaque",
+        "expiration": null,
+        "algorithm": "aes",
+        "bit_length": 256,
+        "mode": "cbc"
     }
 
 
