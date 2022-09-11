@@ -277,8 +277,12 @@ class TestSecretStorePluginManagerMultipleBackend(
             manager = str.SecretStorePluginManager()
 
             # check pkcs11 and kmip plugin instantiation call is invoked
-            m_pkcs11.called_once_with(mock.ANY, mock.ANY)
-            m_kmip.called_once_with(mock.ANY)
+            m_pkcs11.assert_called_once_with(None)
+            m_kmip.assert_called_once_with(hostname='localhost', port=5696,
+                                           cert=None, key=None, ca=None,
+                                           ssl_version='PROTOCOL_TLSv1_2',
+                                           username='sample_username',
+                                           password='sample_password')
             # check store crypto adapter is matched as its defined first.
             keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
             plugin_found = manager.get_plugin_store(keySpec)
@@ -310,8 +314,12 @@ class TestSecretStorePluginManagerMultipleBackend(
             manager = str.SecretStorePluginManager()
 
             # check pkcs11 and kmip plugin instantiation call is invoked
-            m_pkcs11.called_once_with(mock.ANY, mock.ANY)
-            m_kmip.called_once_with(mock.ANY)
+            m_pkcs11.assert_called_once_with(None)
+            m_kmip.assert_called_once_with(hostname='localhost', port=5696,
+                                           cert=None, key=None, ca=None,
+                                           ssl_version='PROTOCOL_TLSv1_2',
+                                           username='sample_username',
+                                           password='sample_password')
             # check kmip store is matched as its global default store.
             keySpec = str.KeySpec(str.KeyAlgorithm.AES, 128)
             plugin_found = manager.get_plugin_store(keySpec)
