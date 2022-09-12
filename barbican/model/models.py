@@ -1528,7 +1528,8 @@ class SecretConsumerMetadatum(BASE, SoftDeleteMixIn, ModelBase):
 
     __table_args__ = (
         sa.UniqueConstraint(
-            "secret_id", "resource_id", name="_secret_consumer_resource_uc"
+            "secret_id", "service", "resource_type", "resource_id",
+            name="_secret_consumer_resource_uc"
         ),
     )
 
