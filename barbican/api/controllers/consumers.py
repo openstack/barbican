@@ -353,6 +353,8 @@ class SecretConsumersController(controllers.ACLMixin):
 
         consumer = self.consumer_repo.get_by_values(
             self.secret_id,
+            data["service"],
+            data["resource_type"],
             data["resource_id"],
             suppress_exception=True
         )
@@ -374,7 +376,7 @@ class SecretConsumersController(controllers.ACLMixin):
             _consumer_not_found()
 
         ret_data = self._return_secret_data(self.secret_id)
-        LOG.info('Deleted a consumer for project: %s',
+        LOG.info('Deleted a secret consumer for project: %s',
                  external_project_id)
         return ret_data
 
