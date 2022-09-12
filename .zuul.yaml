@@ -78,12 +78,22 @@
 
 - job:
     name: barbican-grenade
-    parent: grenade-py3
+    parent: grenade
     required-projects:
-      - openstack/grenade
-      - openstack/barbican
-      - openstack/barbican-tempest-plugin
-      - openstack/python-barbicanclient
+      - opendev.org/openstack/grenade
+      - opendev.org/openstack/barbican
+      - opendev.org/openstack/barbican-tempest-plugin
+      - opendev.org/openstack/python-barbicanclient
+    vars:
+      devstack_plugins:
+        barbican: https://opendev.org/openstack/barbican
+      devstack_services:
+        barbican-svc: true
+        barbican-retry: true
+      tempest_plugins:
+        - barbican-tempest-plugin
+      tempest_test_regex: '\[.*\bsmoke\b.*\]|^(barbican_tempest_plugin.tests)'
+      tox_envlist: all
 
 - project:
     templates:
@@ -97,8 +107,7 @@
         - barbican-tox-functional
         - barbican-vault-tox-functional:
             voting: false
-        - barbican-grenade:
-            voting: false
+        - barbican-grenade
         - barbican-tempest-plugin-simple-crypto
         - barbican-tempest-plugin-simple-crypto-secure-rbac
         - barbican-tempest-plugin-simple-crypto-ipv6-only
