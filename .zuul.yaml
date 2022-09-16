@@ -96,6 +96,7 @@
       tox_envlist: all
 
 - project:
+    queue: barbican
     templates:
       - check-requirements
       - openstack-cover-jobs
@@ -107,7 +108,8 @@
         - barbican-tox-functional
         - barbican-vault-tox-functional:
             voting: false
-        - barbican-grenade
+        - barbican-grenade:
+            voting: false
         - barbican-tempest-plugin-simple-crypto
         - barbican-tempest-plugin-simple-crypto-secure-rbac
         - barbican-tempest-plugin-simple-crypto-ipv6-only
@@ -121,7 +123,6 @@
         - tripleo-ci-centos-9-scenario002-standalone:
             voting: false
     gate:
-      queue: barbican
       jobs:
         - barbican-tox-functional
     experimental:
