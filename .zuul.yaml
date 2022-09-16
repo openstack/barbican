@@ -84,6 +84,7 @@
       - openstack/python-barbicanclient
 
 - project:
+    queue: barbican
     templates:
       - check-requirements
       - openstack-cover-jobs
@@ -112,7 +113,6 @@
         - tripleo-ci-centos-9-undercloud-containers:
             voting: false
     gate:
-      queue: barbican
       jobs:
         - barbican-tox-functional
     experimental:
