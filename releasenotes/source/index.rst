@@ -8,6 +8,7 @@ Contents:
    :maxdepth: 1
 
    unreleased
+   zed
    yoga
    xena
    wallaby
