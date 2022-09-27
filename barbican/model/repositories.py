@@ -2507,7 +2507,8 @@ class SecretConsumerRepo(BaseRepo):
 
         return entities, offset, limit, total
 
-    def get_by_values(self, secret_id, resource_id, suppress_exception=False,
+    def get_by_values(self, secret_id, service, resource_type, resource_id,
+                      suppress_exception=False,
                       show_deleted=False, session=None):
         session = self.get_session(session)
 
@@ -2515,6 +2516,8 @@ class SecretConsumerRepo(BaseRepo):
             query = session.query(models.SecretConsumerMetadatum)
             query = query.filter_by(
                 secret_id=secret_id,
+                service=service,
+                resource_type=resource_type,
                 resource_id=resource_id,
             )
 
@@ -2547,6 +2550,8 @@ class SecretConsumerRepo(BaseRepo):
             # Get the existing entry and reuse it by clearing the deleted flags
             existing_consumer = self.get_by_values(
                 new_consumer.secret_id,
+                new_consumer.service,
+                new_consumer.resource_type,
                 new_consumer.resource_id,
                 show_deleted=True
             )
