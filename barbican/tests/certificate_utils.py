@@ -16,6 +16,7 @@
 """
 The following functions were created for testing purposes.
 """
+
 from OpenSSL import crypto
 
 
@@ -44,14 +45,21 @@ def create_good_csr():
 
 
 def create_csr_that_has_not_been_signed():
-    """Generate a CSR that has not been signed."""
-    key_pair = create_key_pair(crypto.TYPE_RSA, 2048)
-    csr = crypto.X509Req()
-    subject = csr.get_subject()
-    setattr(subject, "CN", "host.example.net")
-    csr.set_pubkey(key_pair)
-    pem = crypto.dump_certificate_request(crypto.FILETYPE_PEM, csr)
-    return pem
+    """Return a CSR that has not been signed."""
+    # NOTE(xek): This method was relying on unsupported behaviour
+    # in OpenSSL to create an unsigned CSR in the past, so just
+    # return a pre-generated certificate request.
+    return b"""-----BEGIN CERTIFICATE REQUEST-----
+MIIBUTCCAUgCAQAwGzEZMBcGA1UEAwwQaG9zdC5leGFtcGxlLm5ldDCCASIwDQYJ
+KoZIhvcNAQEBBQADggEPADCCAQoCggEBAPPO24Fzfoh4pAqfzGrJGEwINi42MY4S
+NMI8+l53vwD0Ld5FN9O044NAuDrGv5KbCoKI6APRYsESZ3adaiHKXfIiEX9QPn8D
+wJVU388O7gi43tUFl02a65ffczDDYQqHc05rFACvYhYzsjXescqeQjQydI8GcSe0
+UGsi4IEyU3iI9hKgYwGRRbPezlkpK5t/wW08Qv1muPNkJi1kJklSrNbVYfN+lj7U
+e3hntigVIo9AP7d++YcMVelrQqFRkhC9+LPo75cKZ5qONQKp5qbDXuHyXh8/H3gv
+G903n2Dy9QqqV3zNbDyhBLcjv6802ITtSZSv/GuGM2UUj1o+Eo4B2ycCAwEAAaAA
+MAADAQA=
+-----END CERTIFICATE REQUEST-----
+"""
 
 
 def create_csr_signed_with_wrong_key():
