@@ -47,7 +47,7 @@ class WhenTestingOrderRetryTaskRepository(database_utils.RepositoryTestCase):
         self.assertEqual(order_retry_task.id, order_retry_task_from_get.id)
         self.assertEqual(
             self.date_time_now, order_retry_task_from_get.retry_at)
-        self.assertEqual(u'retry-task', order_retry_task_from_get.retry_task)
+        self.assertEqual('retry-task', order_retry_task_from_get.retry_task)
         self.assertEqual(self.test_args, order_retry_task_from_get.retry_args)
         self.assertEqual(self.test_kwargs,
                          order_retry_task_from_get.retry_kwargs)
@@ -88,7 +88,7 @@ class WhenTestingOrderRetryTaskRepository(database_utils.RepositoryTestCase):
         order_retry_task_from_get = entities[0]
         self.assertEqual(order_retry_task.id, order_retry_task_from_get.id)
         self.assertEqual(date_time_future, order_retry_task_from_get.retry_at)
-        self.assertEqual(u'retry-task', order_retry_task_from_get.retry_task)
+        self.assertEqual('retry-task', order_retry_task_from_get.retry_task)
         self.assertEqual(self.test_args, order_retry_task_from_get.retry_args)
         self.assertEqual(self.test_kwargs,
                          order_retry_task_from_get.retry_kwargs)
@@ -120,7 +120,7 @@ class WhenTestingOrderRetryTaskRepository(database_utils.RepositoryTestCase):
 
         order_retry_task = models.OrderRetryTask()
         order_retry_task.order_id = order.id
-        order_retry_task.retry_task = u'retry-task'
+        order_retry_task.retry_task = 'retry-task'
         order_retry_task.retry_at = retry_at or self.date_time_now
         order_retry_task.retry_args = self.test_args
         order_retry_task.retry_kwargs = self.test_kwargs
