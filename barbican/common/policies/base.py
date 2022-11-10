@@ -24,7 +24,7 @@ rules = [
         check_str='role:reader and system_scope:all'),
     policy.RuleDefault(
         name='system_admin',
-        check_str='role:amdin and system_scope:all'),
+        check_str='role:admin and system_scope:all'),
 
     policy.RuleDefault(
         name='secret_project_match',
