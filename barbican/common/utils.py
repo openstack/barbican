@@ -16,6 +16,7 @@
 """
 Common utilities for Barbican.
 """
+import builtins
 import collections
 import importlib
 import mimetypes
@@ -25,8 +26,7 @@ from oslo_log import log
 from oslo_utils import uuidutils
 import pecan
 import re
-import six
-from six.moves.urllib import parse
+from urllib import parse
 
 from barbican.common import config
 from barbican import i18n as u
@@ -179,7 +179,7 @@ def generate_fullname_for(instance):
     module = type(instance).__module__
     class_name = type(instance).__name__
 
-    if module is None or module == six.moves.builtins.__name__:
+    if module is None or module == builtins.__name__:
         return class_name
     return "{module}.{class_name}".format(module=module, class_name=class_name)
 

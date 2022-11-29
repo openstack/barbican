@@ -18,9 +18,8 @@ import os
 
 from oslo_serialization import base64
 import requests
-import six
-from six.moves import urllib
 from tempest.lib.common.utils import test_utils
+import urllib
 
 from functionaltests.common import auth
 from functionaltests.common import config
@@ -94,7 +93,7 @@ class BarbicanClient(object):
         Throw an encode or decode exception is text can not be
         presented in ascii.
         """
-        if isinstance(text, six.text_type):
+        if isinstance(text, str):
             return text.encode('ascii')
         else:
             return text.decode('ascii')

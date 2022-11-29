@@ -14,7 +14,6 @@
 
 import argparse
 import base64
-import six
 import traceback
 
 from oslo_db.sqlalchemy import session
@@ -62,7 +61,7 @@ class KekSignatureMigrator(object):
                 self.pkcs11.verify_hmac(hmac_key, hmac, kek_data, self.session)
                 sig_good = True
             except P11CryptoPluginException as e:
-                if 'CKR_SIGNATURE_INVALID' in six.text_type(e):
+                if 'CKR_SIGNATURE_INVALID' in str(e):
                     sig_good = False
                 else:
                     raise
@@ -80,7 +79,7 @@ class KekSignatureMigrator(object):
                 )
                 sig_bad = True
             except P11CryptoPluginException as e:
-                if 'CKR_SIGNATURE_INVALID' in six.text_type(e):
+                if 'CKR_SIGNATURE_INVALID' in str(e):
                     sig_bad = False
                 else:
                     raise

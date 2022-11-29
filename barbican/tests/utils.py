@@ -26,8 +26,7 @@ from oslo_config import cfg
 from oslo_utils import uuidutils
 import oslotest.base as oslotest
 from oslotest import createfile
-import six
-from six.moves.urllib import parse
+from urllib import parse
 import webtest
 
 from barbican.api import app
@@ -374,11 +373,11 @@ def construct_new_test_function(original_func, name, build_params):
     :return: A new function object
     """
     new_func = types.FunctionType(
-        six.get_function_code(original_func),
-        six.get_function_globals(original_func),
+        original_func.__code__,
+        original_func.__globals__,
         name=name,
-        argdefs=six.get_function_defaults(original_func),
-        closure=six.get_function_closure(original_func)
+        argdefs=original_func.__defaults__,
+        closure=original_func.__closure__
     )
 
     for key, val in original_func.__dict__.items():

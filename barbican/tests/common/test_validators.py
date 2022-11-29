@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import datetime
-import six
 import unittest
 
 from oslo_serialization import base64
@@ -242,7 +241,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('bit_length', exception.invalid_property)
-        self.assertIn('bit_length', six.text_type(exception))
+        self.assertIn('bit_length', str(exception))
 
     def test_should_raise_non_integer_bit_length(self):
         self.secret_req['bit_length'] = "23"
@@ -253,7 +252,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('bit_length', exception.invalid_property)
-        self.assertIn('bit_length', six.text_type(exception))
+        self.assertIn('bit_length', str(exception))
 
     def test_should_raise_bit_length_less_than_min(self):
         self.secret_req['bit_length'] = 0
@@ -264,7 +263,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('bit_length', exception.invalid_property)
-        self.assertIn('bit_length', six.text_type(exception))
+        self.assertIn('bit_length', str(exception))
 
     def test_should_raise_bit_length_greater_than_max(self):
         self.secret_req['bit_length'] = 32768
@@ -275,7 +274,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('bit_length', exception.invalid_property)
-        self.assertIn('bit_length', six.text_type(exception))
+        self.assertIn('bit_length', str(exception))
 
     def test_should_raise_mode_length_greater_than_max(self):
         self.secret_req['mode'] = 'a' * 256
@@ -286,7 +285,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('mode', exception.invalid_property)
-        self.assertIn('mode', six.text_type(exception))
+        self.assertIn('mode', str(exception))
 
     def test_should_raise_mode_is_non_string(self):
         self.secret_req['mode'] = 123
@@ -297,7 +296,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('mode', exception.invalid_property)
-        self.assertIn('mode', six.text_type(exception))
+        self.assertIn('mode', str(exception))
 
     def test_validation_should_raise_with_empty_payload(self):
         self.secret_req['payload'] = '   '
@@ -308,7 +307,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('payload', exception.invalid_property)
-        self.assertIn('payload', six.text_type(exception))
+        self.assertIn('payload', str(exception))
 
     def test_should_raise_already_expired(self):
         self.secret_req['expiration'] = '2004-02-28T19:14:44.180394'
@@ -319,7 +318,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('expiration', exception.invalid_property)
-        self.assertIn('expiration', six.text_type(exception))
+        self.assertIn('expiration', str(exception))
 
     def test_should_raise_expiration_nonsense(self):
         self.secret_req['expiration'] = 'nonsense'
@@ -330,7 +329,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('expiration', exception.invalid_property)
-        self.assertIn('expiration', six.text_type(exception))
+        self.assertIn('expiration', str(exception))
 
     def test_should_raise_expiration_is_non_string(self):
         self.secret_req['expiration'] = 123
@@ -341,7 +340,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('expiration', exception.invalid_property)
-        self.assertIn('expiration', six.text_type(exception))
+        self.assertIn('expiration', str(exception))
 
     def test_should_raise_expiration_greater_than_max(self):
         self.secret_req['expiration'] = 'a' * 256
@@ -352,7 +351,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('expiration', exception.invalid_property)
-        self.assertIn('expiration', six.text_type(exception))
+        self.assertIn('expiration', str(exception))
 
     def test_should_raise_algorithm_is_non_string(self):
         self.secret_req['algorithm'] = 123
@@ -363,7 +362,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('algorithm', exception.invalid_property)
-        self.assertIn('algorithm', six.text_type(exception))
+        self.assertIn('algorithm', str(exception))
 
     def test_should_raise_algorithm_greater_than_max(self):
         self.secret_req['algorithm'] = 'a' * 256
@@ -374,7 +373,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('algorithm', exception.invalid_property)
-        self.assertIn('algorithm', six.text_type(exception))
+        self.assertIn('algorithm', str(exception))
 
     def test_should_raise_all_nulls(self):
         self.secret_req = {'name': None,
@@ -416,7 +415,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.validator.validate(self.secret_req)
         except excep.InvalidObject as e:
             self.assertIsNotNone(e)
-            self.assertIsNotNone(six.text_type(e))
+            self.assertIsNotNone(str(e))
         else:
             self.fail('No validation exception was raised')
 
@@ -454,7 +453,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
             self.secret_req,
         )
         self.assertEqual('payload_content_type', exception.invalid_property)
-        self.assertIn('payload_content_type', six.text_type(exception))
+        self.assertIn('payload_content_type', str(exception))
 
     def test_should_raise_with_payload_content_encoding_greater_than_max(self):
         self.secret_req['payload_content_encoding'] = 'a' * 256
@@ -465,7 +464,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
         )
         self.assertEqual('payload_content_encoding',
                          exception.invalid_property)
-        self.assertIn('payload_content_encoding', six.text_type(exception))
+        self.assertIn('payload_content_encoding', str(exception))
 
     def test_should_raise_with_plain_text_and_encoding(self):
         self.secret_req['payload_content_encoding'] = 'base64'
@@ -515,7 +514,7 @@ class WhenTestingSecretValidator(utils.BaseTestCase):
     def test_validation_should_raise_with_unicode_payload(self):
         self.secret_req['payload_content_type'] = 'application/octet-stream'
         self.secret_req['payload_content_encoding'] = 'base64'
-        self.secret_req['payload'] = six.unichr(0x0080)
+        self.secret_req['payload'] = chr(0x0080)
 
         exception = self.assertRaises(
             excep.InvalidObject,
@@ -624,7 +623,7 @@ class WhenTestingContainerValidator(utils.BaseTestCase):
             self.container_req,
         )
         self.assertEqual('name', exception.invalid_property)
-        self.assertIn('name', six.text_type(exception))
+        self.assertIn('name', str(exception))
 
     def test_should_raise_nonstring_secret_name(self):
         self.secret_refs[0]["name"] = 5
@@ -668,7 +667,7 @@ class WhenTestingContainerValidator(utils.BaseTestCase):
             self.container_req,
         )
 
-        self.assertIn('type', six.text_type(exception))
+        self.assertIn('type', str(exception))
 
     def test_should_raise_empty_type(self):
         self.container_req['type'] = ''
@@ -1258,7 +1257,7 @@ class WhenTestingKeyTypeOrderValidator(utils.BaseTestCase):
                                       self.validator.validate,
                                       self.key_order_req)
         self.assertIn("bit_length' is required field for key type order",
-                      six.text_type(exception))
+                      str(exception))
 
     def test_should_raise_with_zero_bit_length_in_order_refs(self):
         self.key_order_req['meta']['bit_length'] = 0
@@ -1347,7 +1346,7 @@ class WhenTestingAsymmetricTypeOrderValidator(utils.BaseTestCase):
                                       self.asymmetric_order_req)
         self.assertIn(
             "bit_length' is required field for asymmetric key type order",
-            six.text_type(exception))
+            str(exception))
 
     def test_should_raise_with_zero_bit_length_in_asymmetric_order_refs(self):
         self.asymmetric_order_req['meta']['bit_length'] = 0
@@ -1814,7 +1813,7 @@ class WhenTestingSecretMetadataValidator(utils.BaseTestCase):
                                       self.validator.validate,
                                       self.metadata_req)
         self.assertIn("metadata' is a required property",
-                      six.text_type(exception))
+                      str(exception))
 
     def test_should_raise_invalid_key_non_string(self):
         self.key1 = 0
@@ -1827,7 +1826,7 @@ class WhenTestingSecretMetadataValidator(utils.BaseTestCase):
                                       self.validator.validate,
                                       metadata_req)
         self.assertIn("Invalid Metadata. Keys and Values must be Strings.",
-                      six.text_type(exception))
+                      str(exception))
 
     def test_should_raise_invalid_key_non_url_safe_string(self):
         self.key1 = "key/01"
@@ -1840,7 +1839,7 @@ class WhenTestingSecretMetadataValidator(utils.BaseTestCase):
                                       self.validator.validate,
                                       metadata_req)
         self.assertIn("Invalid Key. Key must be URL safe.",
-                      six.text_type(exception))
+                      str(exception))
 
     def test_should_raise_invalid_value_non_string(self):
         self.value1 = 0
@@ -1853,7 +1852,7 @@ class WhenTestingSecretMetadataValidator(utils.BaseTestCase):
                                       self.validator.validate,
                                       metadata_req)
         self.assertIn("Invalid Metadata. Keys and Values must be Strings.",
-                      six.text_type(exception))
+                      str(exception))
 
 
 @utils.parameterized_test_case
@@ -1896,7 +1895,7 @@ class WhenTestingSecretMetadatumValidator(utils.BaseTestCase):
                                       self.metadata_req)
         self.assertIn("Provided object does not match schema "
                       "'SecretMetadatum'",
-                      six.text_type(exception))
+                      str(exception))
 
     def test_should_raise_invalid_key_no_key(self):
         del self.metadata_req[self.key2]
@@ -1905,7 +1904,7 @@ class WhenTestingSecretMetadatumValidator(utils.BaseTestCase):
                                       self.metadata_req)
         self.assertIn("Provided object does not match schema "
                       "'SecretMetadatum'",
-                      six.text_type(exception))
+                      str(exception))
 
     def test_should_raise_invalid_key_no_value(self):
         del self.metadata_req[self.key1]
@@ -1914,7 +1913,7 @@ class WhenTestingSecretMetadatumValidator(utils.BaseTestCase):
                                       self.metadata_req)
         self.assertIn("Provided object does not match schema "
                       "'SecretMetadatum'",
-                      six.text_type(exception))
+                      str(exception))
 
     def test_should_raise_invalid_key_non_string(self):
         self.value1 = 0
@@ -1928,7 +1927,7 @@ class WhenTestingSecretMetadatumValidator(utils.BaseTestCase):
                                       metadata_req)
         self.assertIn("Provided object does not match schema "
                       "'SecretMetadatum'",
-                      six.text_type(exception))
+                      str(exception))
 
     def test_should_raise_invalid_key_non_url_safe_string(self):
         self.value1 = "key/01"
@@ -1941,7 +1940,7 @@ class WhenTestingSecretMetadatumValidator(utils.BaseTestCase):
                                       self.validator.validate,
                                       metadata_req)
         self.assertIn("Invalid Key. Key must be URL safe.",
-                      six.text_type(exception))
+                      str(exception))
 
     def test_should_raise_invalid_value_non_string(self):
         self.value2 = 0
@@ -1955,7 +1954,7 @@ class WhenTestingSecretMetadatumValidator(utils.BaseTestCase):
                                       metadata_req)
         self.assertIn("Provided object does not match schema "
                       "'SecretMetadatum'",
-                      six.text_type(exception))
+                      str(exception))
 
     def test_should_raise_invalid_extra_sent_key(self):
         self.value2 = 0
@@ -1970,7 +1969,7 @@ class WhenTestingSecretMetadatumValidator(utils.BaseTestCase):
                                       metadata_req)
         self.assertIn("Provided object does not match schema "
                       "'SecretMetadatum'",
-                      six.text_type(exception))
+                      str(exception))
 
 
 class WhenTestingSecretConsumerValidator(utils.BaseTestCase):

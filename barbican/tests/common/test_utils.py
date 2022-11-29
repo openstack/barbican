@@ -12,10 +12,10 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import builtins
 from unittest import mock
 
 from oslo_config import cfg
-import six
 
 from barbican.common import config
 from barbican.common import utils
@@ -157,7 +157,7 @@ class WhenTestingGenerateFullClassnameForInstance(test_utils.BaseTestCase):
         test_string = "foo"
         fullname = utils.generate_fullname_for(test_string)
         self.assertEqual(0, fullname.count("."))
-        self.assertNotIn(six.moves.builtins.__name__, fullname)
+        self.assertNotIn(builtins.__name__, fullname)
 
     def test_returns_class_name_on_null_module(self):
         self.instance.__class__.__module__ = None

@@ -16,7 +16,6 @@ import textwrap
 
 import cffi
 from cryptography.hazmat.primitives import padding
-import six
 
 from barbican.common import exception
 from barbican.common import utils
@@ -950,7 +949,7 @@ class PKCS11(object):
 
 
 def _to_bytes(string):
-    if isinstance(string, six.binary_type):
+    if isinstance(string, bytes):
         return string
     else:
         return string.encode('UTF-8')

@@ -20,7 +20,6 @@ import hashlib
 
 from oslo_serialization import jsonutils as json
 from oslo_utils import timeutils
-import six
 import sqlalchemy as sa
 from sqlalchemy.ext import compiler
 from sqlalchemy.ext import declarative
@@ -195,7 +194,7 @@ class ModelBase(object):
 
     def _iso_to_datetime(self, expiration):
         """Convert ISO formatted string to datetime."""
-        if isinstance(expiration, six.string_types):
+        if isinstance(expiration, str):
             expiration_iso = timeutils.parse_isotime(expiration.strip())
             expiration = timeutils.normalize_time(expiration_iso)
 

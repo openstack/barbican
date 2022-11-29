@@ -16,7 +16,6 @@
 from unittest import mock
 
 from oslo_utils import timeutils
-import six
 
 from barbican import i18n as u
 from barbican.model import models
@@ -349,7 +348,7 @@ class WhenUpdatingOrder(BaseOrderTestCase):
             self.meta
         )
 
-        self.assertEqual('Abort!', six.text_type(exception))
+        self.assertEqual('Abort!', str(exception))
 
         mock_mod_cert.assert_called_once_with(self.order, self.meta)
 
@@ -526,7 +525,7 @@ class WhenCheckingCertificateStatus(BaseOrderTestCase):
         # Order state should be set to ERROR.
         self.assertEqual(models.States.ERROR, self.order.status)
         self.assertEqual(
-            six.u('Check Certificate Order Status failure seen - '
-                  'please contact site administrator.'),
+            ('Check Certificate Order Status failure seen - '
+             'please contact site administrator.'),
             self.order.error_reason)
         self.assertEqual(500, self.order.error_status_code)

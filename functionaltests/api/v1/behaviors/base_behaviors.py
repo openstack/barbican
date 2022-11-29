@@ -15,7 +15,6 @@ limitations under the License.
 """
 import logging
 import os
-import six
 
 
 class BaseBehaviors(object):
@@ -33,7 +32,7 @@ class BaseBehaviors(object):
         except ValueError as e:
             self.LOG.exception(e)
             self.LOG.error("Error converting response to JSON: %s",
-                           six.text_type(e))
+                           str(e))
             self.LOG.error("Response Content: %s", response.content)
 
         return json_data

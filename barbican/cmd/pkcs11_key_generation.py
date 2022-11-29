@@ -12,7 +12,6 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 import argparse
-import six
 import sys
 
 from barbican.plugin.crypto import pkcs11
@@ -30,7 +29,7 @@ class KeyGenerator(object):
         self.add_hmac_args()
         self.args = self.parser.parse_args()
         if not self.args.passphrase:
-            password = six.moves.input("Please enter your password: ")
+            password = input("Please enter your password: ")
         self.pkcs11 = pkcs11.PKCS11(
             library_path=self.args.library_path,
             login_passphrase=self.args.passphrase or password,

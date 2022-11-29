@@ -15,7 +15,6 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from OpenSSL import crypto
 from oslo_serialization import base64
-import six
 
 from barbican import i18n as u  # noqa
 from barbican.plugin.interface import secret_store as s
@@ -56,7 +55,7 @@ def normalize_before_encryption(unencrypted, content_type, content_encoding,
         if not content_encoding:
             b64payload = base64.encode_as_bytes(unencrypted)
         elif content_encoding.lower() == 'base64':
-            if not isinstance(unencrypted, six.binary_type):
+            if not isinstance(unencrypted, bytes):
                 b64payload = unencrypted.encode('utf-8')
             else:
                 b64payload = unencrypted

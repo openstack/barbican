@@ -16,7 +16,6 @@
 import datetime
 from oslo_serialization import base64 as oslo_base64
 from oslo_serialization import jsonutils as json
-import six
 import sys
 import testtools
 import time
@@ -884,8 +883,8 @@ class SecretsTestCase(base.TestCase):
         'array': [['boom']],
         'int': [123],
         'none': [None],
-        'bad_character': [six.unichr(0x0080)],
-        'bad_characters': [six.unichr(0x1111) + six.unichr(0xffff)]
+        'bad_character': [chr(0x0080)],
+        'bad_characters': [chr(0x1111) + chr(0xffff)]
     })
     @testcase.attr('negative')
     def test_secret_create_defaults_invalid_payload(self, payload):

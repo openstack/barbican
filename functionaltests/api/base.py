@@ -20,7 +20,6 @@ import os
 from oslo_utils import uuidutils
 
 import oslotest.base as oslotest
-import six
 from testtools import testcase
 
 from barbican.tests import utils
@@ -88,8 +87,7 @@ class TestCase(oslotest.BaseTestCase):
         return name
 
 
-@six.add_metaclass(abc.ABCMeta)
-class PagingTestCase(TestCase):
+class PagingTestCase(TestCase, metaclass=abc.ABCMeta):
 
     def setUp(self):
         # super(PagingTestCase, self).setUp()

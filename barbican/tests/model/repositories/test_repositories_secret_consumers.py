@@ -11,8 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import six
-
 from barbican.common import exception
 from barbican.model import models
 from barbican.model import repositories
@@ -119,7 +117,7 @@ class WhenTestingSecretConsumerRepository(utils.RepositoryTestCase):
             exception.ConstraintCheck, self._create_consumer
         )
         self.assertIn(
-            "SQL constraint check failed", six.text_type(exception_result)
+            "SQL constraint check failed", str(exception_result)
         )
 
     def test_should_get_count_zero(self):

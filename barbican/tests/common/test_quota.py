@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
 import unittest
 
 from barbican.common import exception as excep
@@ -234,10 +233,10 @@ class WhenTestingQuotaEnforcingFunctions(database_utils.RepositoryTestCase):
             quota_enforcer.enforce,
             self.project
         )
-        self.assertIn('Quota reached for project', six.text_type(exception))
-        self.assertIn('my_keystone_id', six.text_type(exception))
-        self.assertIn('secrets', six.text_type(exception))
-        self.assertIn(str(0), six.text_type(exception))
+        self.assertIn('Quota reached for project', str(exception))
+        self.assertIn('my_keystone_id', str(exception))
+        self.assertIn('secrets', str(exception))
+        self.assertIn(str(0), str(exception))
 
     def test_should_pass_below_limit(self):
         test_repo = DummyRepoForTestingQuotaEnforcement(4)
@@ -262,10 +261,10 @@ class WhenTestingQuotaEnforcingFunctions(database_utils.RepositoryTestCase):
             quota_enforcer.enforce,
             self.project
         )
-        self.assertIn('Quota reached for project', six.text_type(exception))
-        self.assertIn('my_keystone_id', six.text_type(exception))
-        self.assertIn('secrets', six.text_type(exception))
-        self.assertIn(str(5), six.text_type(exception))
+        self.assertIn('Quota reached for project', str(exception))
+        self.assertIn('my_keystone_id', str(exception))
+        self.assertIn('secrets', str(exception))
+        self.assertIn(str(5), str(exception))
 
     def test_should_raise_above_limit(self):
         test_repo = DummyRepoForTestingQuotaEnforcement(6)
@@ -280,10 +279,10 @@ class WhenTestingQuotaEnforcingFunctions(database_utils.RepositoryTestCase):
             quota_enforcer.enforce,
             self.project
         )
-        self.assertIn('Quota reached for project', six.text_type(exception))
-        self.assertIn('my_keystone_id', six.text_type(exception))
-        self.assertIn('secrets', six.text_type(exception))
-        self.assertIn(str(5), six.text_type(exception))
+        self.assertIn('Quota reached for project', str(exception))
+        self.assertIn('my_keystone_id', str(exception))
+        self.assertIn('secrets', str(exception))
+        self.assertIn(str(5), str(exception))
 
 
 if __name__ == '__main__':
