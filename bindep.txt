@@ -5,6 +5,7 @@ nss-devel [platform:rpm]
 libnss3-dev [platform:dpkg]
 
 gettext [test]
+graphviz [doc test]
 
 # Required for the Dogtag plugin
 # Comment out for now -- these are not installing due to need to

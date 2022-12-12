@@ -34,6 +34,9 @@ _LAST_UPDATED = '2021-02-10T00:00:00Z'
 # across all of the v1 REST API.
 # When introducing a new microversion, the _MAX_MICROVERSION
 # needs to be incremented by 1 and the _LAST_UPDATED string updated.
+# Additionally, the new microversion has to be documented in
+# doc/source/api/microversion_history.rst
+#
 # The following is the complete (ordered) list of supported versions
 # used by the microversion middleware to parse what is allowed and
 # supported.

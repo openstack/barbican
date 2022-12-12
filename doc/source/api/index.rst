@@ -5,6 +5,9 @@ Barbican API Documentation
 User Guide
 ##########
 
+The OpenStack Key Manager API version 1.0 supports microversions.
+See `doc/source/api/microversions.rst` for details.
+
 API guide docs are built to:
 https://docs.openstack.org/api-guide/key-manager/
 
@@ -23,3 +26,6 @@ API Reference
     ./reference/quotas.rst
     ./reference/consumers.rst
     ./reference/orders.rst
+    ./microversions.rst
+    ./microversion_history.rst
+

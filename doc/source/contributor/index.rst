@@ -28,5 +28,6 @@ When you're ready to dive deeper in to barbican take a look at:
    dataflow.rst
    dependencies.rst
    database_migrations.rst
+   microversions.rst
    plugin/index.rst
    testing.rst
