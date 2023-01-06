@@ -75,7 +75,7 @@ A client specifies the microversion of the API they want by using the following 
 
 This acts conceptually like the "Accept" header. Semantically this means:
 
-* If `OpenStack-API-Version` (specifying `key-manager`) is provided, act as
+* If `OpenStack-API-Version` (specifying `key-manager`) is not provided, act as
   if the minimum supported microversion was specified.
 
 * If `OpenStack-API-Version` is provided, respond with the API at
