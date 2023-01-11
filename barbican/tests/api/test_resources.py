@@ -1262,6 +1262,7 @@ class WhenCreatingSecretConsumersUsingResource(FunctionalTest):
         return RootController()
 
     def _init(self):
+        self.name = 'test container name'
         self.external_project_id = 'keystoneid1234'
         self.project_internal_id = 'projectid1234'
 
@@ -1271,8 +1272,35 @@ class WhenCreatingSecretConsumersUsingResource(FunctionalTest):
         self.project.external_id = self.external_project_id
 
         # Set up mocked secret
-        self.secret = models.Secret()
-        self.secret.id = utils.generate_test_valid_uuid()
+        secret_id = utils.generate_test_valid_uuid()
+        datum_id = "iddatum1"
+        kek_id = "idkek1"
+
+        self.secret_algorithm = "AES"
+        self.secret_bit_length = 256
+        self.secret_mode = "CBC"
+
+        self.kek_project = models.KEKDatum()
+        self.kek_project.id = kek_id
+        self.kek_project.active = True
+        self.kek_project.bind_completed = False
+        self.kek_project.kek_label = "kek_label"
+
+        self.datum = models.EncryptedDatum()
+        self.datum.id = datum_id
+        self.datum.secret_id = secret_id
+        self.datum.kek_id = kek_id
+        self.datum.kek_meta_project = self.kek_project
+        self.datum.content_type = "text/plain"
+        self.datum.cypher_text = "aaaa"  # base64 value.
+
+        self.secret = create_secret(id_ref=secret_id,
+                                    name=self.name,
+                                    algorithm=self.secret_algorithm,
+                                    bit_length=self.secret_bit_length,
+                                    mode=self.secret_mode,
+                                    encrypted_datum=self.datum,
+                                    content_type=self.datum.content_type)
         self.secret.project = self.project
         self.secret.project_id = self.project_internal_id
 
@@ -1320,6 +1348,7 @@ class WhenCreatingSecretConsumersUsingResource(FunctionalTest):
         args, kwargs = self.consumer_repo.create_or_update_from.call_args
         consumer = args[0]
         self.assertIsInstance(consumer, models.SecretConsumerMetadatum)
+        self.assertIn('content_types', resp.namespace)
 
     def test_should_fail_consumer_bad_json(self):
         resp = self.app.post(
@@ -1357,6 +1386,7 @@ class WhenGettingOrDeletingSecretConsumersUsingResource(FunctionalTest):
         return RootController()
 
     def _init(self):
+        self.name = 'test container name'
         self.external_project_id = 'keystoneid1234'
         self.project_internal_id = 'projectid1234'
 
@@ -1366,8 +1396,35 @@ class WhenGettingOrDeletingSecretConsumersUsingResource(FunctionalTest):
         self.project.external_id = self.external_project_id
 
         # Set up mocked secret
-        self.secret = models.Secret()
-        self.secret.id = utils.generate_test_valid_uuid()
+        secret_id = utils.generate_test_valid_uuid()
+        datum_id = "iddatum1"
+        kek_id = "idkek1"
+
+        self.secret_algorithm = "AES"
+        self.secret_bit_length = 256
+        self.secret_mode = "CBC"
+
+        self.kek_project = models.KEKDatum()
+        self.kek_project.id = kek_id
+        self.kek_project.active = True
+        self.kek_project.bind_completed = False
+        self.kek_project.kek_label = "kek_label"
+
+        self.datum = models.EncryptedDatum()
+        self.datum.id = datum_id
+        self.datum.secret_id = secret_id
+        self.datum.kek_id = kek_id
+        self.datum.kek_meta_project = self.kek_project
+        self.datum.content_type = "text/plain"
+        self.datum.cypher_text = "aaaa"  # base64 value.
+
+        self.secret = create_secret(id_ref=secret_id,
+                                    name=self.name,
+                                    algorithm=self.secret_algorithm,
+                                    bit_length=self.secret_bit_length,
+                                    mode=self.secret_mode,
+                                    encrypted_datum=self.datum,
+                                    content_type=self.datum.content_type)
         self.secret.project = self.project
         self.secret.project_id = self.project_internal_id
 
@@ -1464,12 +1521,13 @@ class WhenGettingOrDeletingSecretConsumersUsingResource(FunctionalTest):
         self.assertEqual(200, resp.status_int)
 
     def test_should_delete_consumer(self):
-        self.app.delete_json('/secrets/{0}/consumers/'.format(
+        resp = self.app.delete_json('/secrets/{0}/consumers/'.format(
             self.secret.id
         ), self.consumer_ref)
 
         self.consumer_repo.delete_entity_by_id.assert_called_once_with(
             self.consumer.id, self.external_project_id)
+        self.assertIn('content_types', resp.namespace)
 
     def test_should_fail_deleting_consumer_bad_json(self):
         resp = self.app.delete(
