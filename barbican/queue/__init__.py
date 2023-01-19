@@ -71,10 +71,9 @@ def get_client(target=None, version_cap=None, serializer=None):
         return None
 
     queue_target = target or get_target()
-    return messaging.RPCClient(TRANSPORT,
-                               target=queue_target,
-                               version_cap=version_cap,
-                               serializer=serializer)
+    return messaging.get_rpc_client(
+        TRANSPORT, target=queue_target, version_cap=version_cap,
+        serializer=serializer)
 
 
 def get_server(target, endpoints, serializer=None):
