@@ -1,0 +1,6 @@
+---
+security:
+  - |
+    Fixed Story #2010258:  Fixes a security vulnerability where the
+    contents of a request query string were mistakenly being used
+    in the RBAC policy engine.
