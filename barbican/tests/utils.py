@@ -38,6 +38,7 @@ from barbican.plugin.crypto import p11_crypto
 from barbican.plugin.interface import secret_store
 from barbican.plugin import kmip_secret_store as kss
 from barbican.tests import database_utils
+from barbican.tests import fixture as barbican_fixture
 
 
 def mock_pecan_request(test_instance, host=None, version='1.0'):
@@ -73,6 +74,7 @@ class BarbicanAPIBaseTestCase(oslotest.BaseTestCase):
 
     def setUp(self):
         super(BarbicanAPIBaseTestCase, self).setUp()
+        self.useFixture(barbican_fixture.StandardLogging())
         # Make sure we have a test db and session to work with
         database_utils.setup_in_memory_db()
 
@@ -96,9 +98,9 @@ class BarbicanAPIBaseTestCase(oslotest.BaseTestCase):
 
 
 class BaseTestCase(oslotest.BaseTestCase):
-    """DEPRECATED - Will remove in future refactoring."""
     def setUp(self):
         super(BaseTestCase, self).setUp()
+        self.useFixture(barbican_fixture.StandardLogging())
         self.order_id = 'order1234'
         self.external_project_id = 'keystone1234'
         self.request_id = 'request1234'

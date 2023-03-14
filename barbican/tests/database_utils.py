@@ -25,6 +25,7 @@ from sqlalchemy import event
 
 from barbican.model import models
 from barbican.model import repositories
+from barbican.tests import fixture as barbican_fixture
 
 
 @event.listens_for(Engine, "connect")
@@ -275,6 +276,7 @@ class RepositoryTestCase(oslotest.BaseTestCase):
     """
     def setUp(self):
         super(RepositoryTestCase, self).setUp()
+        self.useFixture(barbican_fixture.StandardLogging())
         setup_in_memory_db()
 
         # Clean up once tests are completed.
