@@ -188,7 +188,7 @@ class OrdersController(controllers.ACLMixin):
         request_id = None
         ctxt = controllers._get_barbican_context(pecan.request)
         if ctxt:
-            new_order.creator_id = ctxt.user
+            new_order.creator_id = ctxt.user_id
             request_id = ctxt.request_id
 
         self.order_repo.create_from(new_order)

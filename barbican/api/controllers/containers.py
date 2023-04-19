@@ -185,7 +185,7 @@ class ContainersController(controllers.ACLMixin):
         data = api.load_body(pecan.request, validator=self.validator)
         ctxt = controllers._get_barbican_context(pecan.request)
         if ctxt:  # in authenticated pipleline case, always use auth token user
-            data['creator_id'] = ctxt.user
+            data['creator_id'] = ctxt.user_id
 
         self.quota_enforcer.enforce(project)
 

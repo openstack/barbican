@@ -76,7 +76,7 @@ class ContextMiddleware(BaseContextMiddleware):
 
     def _get_anonymous_context(self):
         kwargs = {
-            'user': None,
+            'user_id': None,
             'tenant': None,
             'is_admin': False,
             'read_only': True,
@@ -121,7 +121,7 @@ class UnauthenticatedContextMiddleware(BaseContextMiddleware):
             roles = [config_admin_role]
 
         kwargs = {
-            'user': req.headers.get('X-User-Id'),
+            'user_id': req.headers.get('X-User-Id'),
             'domain': req.headers.get('X-Domain-Id'),
             'user_domain': req.headers.get('X-User-Domain-Id'),
             'project_domain': req.headers.get('X-Project-Domain-Id'),

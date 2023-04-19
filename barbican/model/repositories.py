@@ -176,7 +176,8 @@ def _get_engine(engine):
     # connection_dict = sqlalchemy.engine.url.make_url(_CONNECTION)
 
         engine_args = {
-            'idle_timeout': CONF.sql_idle_timeout}
+            'connection_recycle_time': CONF.sql_idle_timeout,
+        }
         if CONF.sql_pool_size:
             engine_args['max_pool_size'] = CONF.sql_pool_size
         if CONF.sql_pool_max_overflow:

@@ -29,7 +29,7 @@ class TestACLsWithContextMixin(test_policy.BaseTestCase):
         # define creator user for new secret entry.
         app.extra_environ = {
             'barbican.context': self._build_context(self.project_id,
-                                                    user=creator_user_id)
+                                                    user_id=creator_user_id)
         }
         secret_id, _ = create_secret(app)
         return secret_id
@@ -39,7 +39,7 @@ class TestACLsWithContextMixin(test_policy.BaseTestCase):
         # define creator user for new container entry.
         app.extra_environ = {
             'barbican.context': self._build_context(self.project_id,
-                                                    user=creator_user_id)
+                                                    user_id=creator_user_id)
         }
         container_id, _ = create_container(app)
         return container_id
@@ -56,7 +56,7 @@ class TestACLsWithContextMixin(test_policy.BaseTestCase):
         policy_enforcer = self.policy_enforcer if enforce_policy else None
         app.extra_environ = {
             'barbican.context': self._build_context(
-                self.project_id, roles=roles, user=user,
+                self.project_id, roles=roles, user_id=user,
                 is_admin=False, policy_enforcer=policy_enforcer)
         }
         resp = None

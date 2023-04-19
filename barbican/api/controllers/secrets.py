@@ -398,7 +398,7 @@ class SecretsController(controllers.ACLMixin):
         ctxt = controllers._get_barbican_context(pecan.request)
         user_id = None
         if ctxt:
-            user_id = ctxt.user
+            user_id = ctxt.user_id
 
         result = self.secret_repo.get_secret_list(
             external_project_id,
@@ -455,7 +455,7 @@ class SecretsController(controllers.ACLMixin):
                                         'false').lower() == 'true'
         ctxt = controllers._get_barbican_context(pecan.request)
         if ctxt:  # in authenticated pipleline case, always use auth token user
-            data['creator_id'] = ctxt.user
+            data['creator_id'] = ctxt.user_id
 
         secret_model = models.Secret(data)
 
