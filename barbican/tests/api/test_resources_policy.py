@@ -42,7 +42,7 @@ TEST_VAR_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
 
 CONF = config.new_config()
 
-policy.init()
+policy.init(suppress_deprecation_warnings=True)
 ENFORCER = policy.ENFORCER
 
 
