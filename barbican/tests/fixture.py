@@ -12,6 +12,7 @@
 
 import logging as std_logging
 import os
+import warnings
 
 import fixtures
 from oslo_db.sqlalchemy import session
@@ -162,3 +163,19 @@ class StandardLogging(fixtures.Fixture):
 
         self.useFixture(
             fixtures.MonkeyPatch('oslo_log.log.setup', fake_logging_setup))
+
+
+class WarningsFixture(fixtures.Fixture):
+    """Filters out warnings during test runs."""
+
+    def setUp(self):
+        super().setUp()
+
+        self._original_warning_filters = warnings.filters[:]
+
+        warnings.simplefilter('once', DeprecationWarning)
+
+        self.addCleanup(self._reset_warning_filters)
+
+    def _reset_warning_filters(self):
+        warnings.filters[:] = self._original_warning_filters
