@@ -20,13 +20,6 @@ LEGACY_POLICY_DEPRECATION = (
 
 rules = [
     policy.RuleDefault(
-        name='system_reader',
-        check_str='role:reader and system_scope:all'),
-    policy.RuleDefault(
-        name='system_admin',
-        check_str='role:admin and system_scope:all'),
-
-    policy.RuleDefault(
         name='secret_project_match',
         check_str='project_id:%(target.secret.project_id)s'),
     policy.RuleDefault(

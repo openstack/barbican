@@ -82,12 +82,12 @@ rules = [
         name='consumer:get',
         check_str=(
             'True:%(enforce_new_defaults)s and '
-            '(rule:system_admin or rule:container_project_admin or '
+            '(role:admin or '
             '(rule:container_project_member and rule:container_owner) or '
             '(rule:container_project_member and '
             ' rule:container_is_not_private) or '
             'rule:container_acl_read)'),
-        scope_types=['project', 'system'],
+        scope_types=['project'],
         # This API is unusable.  There is no way for a user to get
         # the consumer-id they would need to send a request.
         description='DEPRECATED: show information for a specific consumer',
@@ -101,12 +101,12 @@ rules = [
         name='container_consumers:get',
         check_str=(
             'True:%(enforce_new_defaults)s and '
-            '(rule:system_admin or rule:container_project_admin or '
+            '(rule:container_project_admin or '
             '(rule:container_project_member and rule:container_owner) or '
             '(rule:container_project_member and '
             ' rule:container_is_not_private) or '
             'rule:container_acl_read)'),
-        scope_types=['project', 'system'],
+        scope_types=['project'],
         description='List a containers consumers.',
         operations=[
             {
@@ -120,12 +120,12 @@ rules = [
         name='container_consumers:post',
         check_str=(
             'True:%(enforce_new_defaults)s and '
-            '(rule:system_admin or rule:container_project_admin or '
+            '(rule:container_project_admin or '
             '(rule:container_project_member and rule:container_owner) or '
             '(rule:container_project_member and '
             ' rule:container_is_not_private) or '
             'rule:container_acl_read)'),
-        scope_types=['project', 'system'],
+        scope_types=['project'],
         description='Creates a consumer.',
         operations=[
             {
@@ -139,12 +139,12 @@ rules = [
         name='container_consumers:delete',
         check_str=(
             'True:%(enforce_new_defaults)s and '
-            '(rule:system_admin or rule:container_project_admin or '
+            '(rule:container_project_admin or '
             '(rule:container_project_member and rule:container_owner) or '
             '(rule:container_project_member and '
             ' rule:container_is_not_private) or '
             'rule:container_acl_read)'),
-        scope_types=['project', 'system'],
+        scope_types=['project'],
         description='Deletes a consumer.',
         operations=[
             {
@@ -158,11 +158,11 @@ rules = [
         name='secret_consumers:get',
         check_str=(
             'True:%(enforce_new_defaults)s and '
-            '(rule:system_admin or rule:secret_project_admin or '
+            '(rule:secret_project_admin or '
             '(rule:secret_project_member and rule:secret_owner) or '
             '(rule:secret_project_member and rule:secret_is_not_private) or '
             'rule:secret_acl_read)'),
-        scope_types=['project', 'system'],
+        scope_types=['project'],
         description='List consumers for a secret.',
         operations=[
             {
@@ -176,11 +176,11 @@ rules = [
         name='secret_consumers:post',
         check_str=(
             'True:%(enforce_new_defaults)s and '
-            '(rule:system_admin or rule:secret_project_admin or '
+            '(rule:secret_project_admin or '
             '(rule:secret_project_member and rule:secret_owner) or '
             '(rule:secret_project_member and rule:secret_is_not_private) or '
             'rule:secret_acl_read)'),
-        scope_types=['project', 'system'],
+        scope_types=['project'],
         description='Creates a consumer.',
         operations=[
             {
@@ -194,11 +194,11 @@ rules = [
         name='secret_consumers:delete',
         check_str=(
             'True:%(enforce_new_defaults)s and '
-            '(rule:system_admin or rule:secret_project_admin or '
+            '(rule:secret_project_admin or '
             '(rule:secret_project_member and rule:secret_owner) or '
             '(rule:secret_project_member and rule:secret_is_not_private) or '
             'rule:secret_acl_read)'),
-        scope_types=['project', 'system'],
+        scope_types=['project'],
         description='Deletes a consumer.',
         operations=[
             {

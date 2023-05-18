@@ -45,7 +45,7 @@ rules = [
     policy.DocumentedRuleDefault(
         name='transport_key:get',
         check_str='True:%(enforce_new_defaults)s and role:reader',
-        scope_types=['project', 'system'],
+        scope_types=['project'],
         description='Get a specific transport key.',
         operations=[
             {
@@ -57,8 +57,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='transport_key:delete',
-        check_str='True:%(enforce_new_defaults)s and rule:system_admin',
-        scope_types=['system'],
+        check_str='True:%(enforce_new_defaults)s and role:admin',
+        scope_types=['project'],
         description='Delete a specific transport key.',
         operations=[
             {
@@ -71,7 +71,7 @@ rules = [
     policy.DocumentedRuleDefault(
         name='transport_keys:get',
         check_str='True:%(enforce_new_defaults)s and role:reader',
-        scope_types=['project', 'system'],
+        scope_types=['project'],
         description='Get a list of all transport keys.',
         operations=[
             {
@@ -83,8 +83,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='transport_keys:post',
-        check_str='True:%(enforce_new_defaults)s and rule:system_admin',
-        scope_types=['system'],
+        check_str='True:%(enforce_new_defaults)s and role:admin',
+        scope_types=['project'],
         description='Create a new transport key.',
         operations=[
             {
