@@ -5,7 +5,7 @@ disable_all_services
 # enable_plugin barbican https://opendev.org/openstack/barbican stable/<release-name>
 enable_plugin barbican https://opendev.org/openstack/barbican
 
-enable_service rabbit mysql key
+enable_service rabbit mysql key tempest
 
 # Modify passwords as needed
 DATABASE_PASSWORD=secretdatabase
