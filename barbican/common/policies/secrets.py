@@ -83,7 +83,8 @@ rules = [
         name='secret:get',
         check_str=(
             "True:%(enforce_new_defaults)s and "
-            "(rule:secret_project_admin or "
+            "(role:admin or "
+            "rule:secret_project_admin or "
             "(rule:secret_project_member and rule:secret_owner) or "
             "(rule:secret_project_member and rule:secret_is_not_private) or "
             "rule:secret_acl_read)"),
@@ -118,7 +119,8 @@ rules = [
         name='secret:delete',
         check_str=(
             "True:%(enforce_new_defaults)s and "
-            "(rule:secret_project_admin or "
+            "(role:admin or "
+            "rule:secret_project_admin or "
             "(rule:secret_project_member and rule:secret_owner) or "
             "(rule:secret_project_member and rule:secret_is_not_private))"),
         scope_types=['project'],
