@@ -57,8 +57,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='project_quotas:get',
-        check_str='True:%(enforce_new_defaults)s and rule:system_reader',
-        scope_types=['system'],
+        check_str='True:%(enforce_new_defaults)s and role:admin',
+        scope_types=['project'],
         description='List quotas for the specified project.',
         operations=[
             {
@@ -74,8 +74,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='project_quotas:put',
-        check_str='True:%(enforce_new_defaults)s and rule:system_admin',
-        scope_types=['system'],
+        check_str='True:%(enforce_new_defaults)s and role:admin',
+        scope_types=['project'],
         description='Create or update the configured project quotas for '
                     'the project with the specified UUID.',
         operations=[
@@ -88,8 +88,8 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='project_quotas:delete',
-        check_str='True:%(enforce_new_defaults)s and rule:system_admin',
-        scope_types=['system'],
+        check_str='True:%(enforce_new_defaults)s and role:admin',
+        scope_types=['project'],
         description='Delete the project quotas configuration for the '
                     'project with the requested UUID.',
         operations=[

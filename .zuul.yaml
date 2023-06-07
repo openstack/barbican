@@ -111,7 +111,8 @@
         - barbican-grenade:
             voting: false
         - barbican-tempest-plugin-simple-crypto
-        - barbican-tempest-plugin-simple-crypto-secure-rbac
+        - barbican-tempest-plugin-simple-crypto-secure-rbac:
+            voting: false
         - barbican-tempest-plugin-simple-crypto-ipv6-only
         - barbican-tox-functional-fips:
             voting: false

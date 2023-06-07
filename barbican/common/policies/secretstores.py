@@ -57,7 +57,7 @@ rules = [
     policy.DocumentedRuleDefault(
         name='secretstores:get',
         check_str='True:%(enforce_new_defaults)s and role:reader',
-        scope_types=['project', 'system'],
+        scope_types=['project'],
         description='Get list of available secret store backends.',
         operations=[
             {
@@ -70,7 +70,7 @@ rules = [
     policy.DocumentedRuleDefault(
         name='secretstores:get_global_default',
         check_str='True:%(enforce_new_defaults)s and role:reader',
-        scope_types=['project', 'system'],
+        scope_types=['project'],
         description='Get a reference to the secret store that is used as ' +
                     'default secret store backend for the deployment.',
         operations=[
@@ -84,7 +84,7 @@ rules = [
     policy.DocumentedRuleDefault(
         name='secretstores:get_preferred',
         check_str='True:%(enforce_new_defaults)s and role:reader',
-        scope_types=['project', 'system'],
+        scope_types=['project'],
         description='Get a reference to the preferred secret store if ' +
                     'assigned previously.',
         operations=[
@@ -126,7 +126,7 @@ rules = [
     policy.DocumentedRuleDefault(
         name='secretstore:get',
         check_str='True:%(enforce_new_defaults)s and role:reader',
-        scope_types=['project', 'system'],
+        scope_types=['project'],
         description='Get details of secret store by its ID.',
         operations=[
             {

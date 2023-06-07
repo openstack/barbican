@@ -1,0 +1,8 @@
+---
+security:
+  - |
+    System scope has been removed from the RBAC policies as specified in the
+    Consistent and Secure Default RBAC community goal. See:
+    https://governance.openstack.org/tc/goals/selected/consistent-and-secure-rbac.html
+    APIs that required system scoped tokens can now be accessed by using a
+    project scoped token with the "admin" role.
