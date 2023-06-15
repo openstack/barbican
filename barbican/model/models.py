@@ -307,18 +307,21 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
         "SecretStoreMetadatum",
         collection_class=col.attribute_mapped_collection('key'),
         backref="secret",
-        cascade="all, delete-orphan")
+        cascade="all, delete-orphan",
+        cascade_backrefs=False)
 
     secret_user_metadata = orm.relationship(
         "SecretUserMetadatum",
         collection_class=col.attribute_mapped_collection('key'),
         backref="secret",
-        cascade="all, delete-orphan")
+        cascade="all, delete-orphan",
+        cascade_backrefs=False)
 
     consumers = orm.relationship(
         "SecretConsumerMetadatum",
         backref="secret",
-        cascade="all, delete-orphan")
+        cascade="all, delete-orphan",
+        cascade_backrefs=False)
 
     def __init__(self, parsed_request=None, check_exc=True):
         """Creates secret from a dict."""
@@ -573,13 +576,15 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
         "OrderPluginMetadatum",
         collection_class=col.attribute_mapped_collection('key'),
         backref="order",
-        cascade="all, delete-orphan")
+        cascade="all, delete-orphan",
+        cascade_backrefs=False)
 
     order_barbican_metadata = orm.relationship(
         "OrderBarbicanMetadatum",
         collection_class=col.attribute_mapped_collection('key'),
         backref="order",
-        cascade="all, delete-orphan")
+        cascade="all, delete-orphan",
+        cascade_backrefs=False)
 
     def __init__(self, parsed_request=None, check_exc=True):
         """Creates a Order entity from a dict."""
@@ -910,7 +915,8 @@ class CertificateAuthority(BASE, ModelBase):
         'CertificateAuthorityMetadatum',
         collection_class=col.attribute_mapped_collection('key'),
         backref="ca",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        cascade_backrefs=False,
     )
 
     def __init__(self, parsed_ca_in=None, check_exc=True):
@@ -1134,8 +1140,10 @@ class SecretACL(BASE, ModelBase):
         'Secret', backref=orm.backref('secret_acls', lazy=False))
 
     acl_users = orm.relationship(
-        'SecretACLUser', backref=orm.backref('secret_acl', lazy=False),
-        cascade="all, delete-orphan")
+        'SecretACLUser',
+        backref=orm.backref('secret_acl', lazy=False),
+        cascade="all, delete-orphan",
+        cascade_backrefs=False)
 
     __table_args__ = (sa.UniqueConstraint(
         'secret_id', 'operation', name='_secret_acl_operation_uc'),)
@@ -1210,8 +1218,10 @@ class ContainerACL(BASE, ModelBase):
         'Container', backref=orm.backref('container_acls', lazy=False))
 
     acl_users = orm.relationship(
-        'ContainerACLUser', backref=orm.backref('container_acl', lazy=False),
-        cascade="all, delete-orphan")
+        'ContainerACLUser',
+        backref=orm.backref('container_acl', lazy=False),
+        cascade="all, delete-orphan",
+        cascade_backrefs=False)
 
     __table_args__ = (sa.UniqueConstraint(
         'container_id', 'operation', name='_container_acl_operation_uc'),)
