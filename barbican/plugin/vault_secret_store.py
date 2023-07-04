@@ -46,6 +46,10 @@ vault_opts = [
     cfg.BoolOpt('use_ssl',
                 default=False,
                 help=_('SSL Enabled/Disabled')),
+    cfg.StrOpt("namespace",
+               help=_("Vault Namespace to use for all requests. "
+                      "Namespaces is a feature available in HasiCorp Vault "
+                      "Enterprise only.")),
 ]
 
 CONF = config.new_config()
@@ -83,7 +87,8 @@ class VaultSecretStore(css.CastellanSecretStore):
             vault_kv_mountpoint=conf.vault_plugin.kv_mountpoint,
             vault_url=conf.vault_plugin.vault_url,
             vault_ssl_ca_crt_file=conf.vault_plugin.ssl_ca_crt_file,
-            vault_use_ssl=conf.vault_plugin.use_ssl
+            vault_use_ssl=conf.vault_plugin.use_ssl,
+            vault_namespace=conf.vault_plugin.namespace
         )
         return vault_conf
 
