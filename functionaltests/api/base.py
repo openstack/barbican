@@ -22,6 +22,7 @@ from oslo_utils import uuidutils
 import oslotest.base as oslotest
 from testtools import testcase
 
+from barbican.tests import fixture as barbican_fixture
 from barbican.tests import utils
 from functionaltests.common import client
 from functionaltests.common import config
@@ -48,11 +49,11 @@ class TestCase(oslotest.BaseTestCase):
     @classmethod
     def setUpClass(cls):
         cls.LOG = logging.getLogger(cls._get_full_case_name())
-        super(TestCase, cls).setUpClass()
+        super().setUpClass()
 
     def setUp(self):
         self.LOG.info('Starting: %s', self._testMethodName)
-        super(TestCase, self).setUp()
+        super().setUp()
 
         self.client = client.BarbicanClient()
 
@@ -74,8 +75,10 @@ class TestCase(oslotest.BaseTestCase):
                                                    format=self.log_format,
                                                    level=logging.DEBUG))
 
+        self.useFixture(barbican_fixture.WarningsFixture())
+
     def tearDown(self):
-        super(TestCase, self).tearDown()
+        super().tearDown()
         self.LOG.info('Finished: %s\n', self._testMethodName)
 
     @classmethod

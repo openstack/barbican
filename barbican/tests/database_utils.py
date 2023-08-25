@@ -275,8 +275,9 @@ class RepositoryTestCase(oslotest.BaseTestCase):
     hard to debug 'Broken Pipe' errors could result!
     """
     def setUp(self):
-        super(RepositoryTestCase, self).setUp()
+        super().setUp()
         self.useFixture(barbican_fixture.StandardLogging())
+        self.useFixture(barbican_fixture.WarningsFixture())
         setup_in_memory_db()
 
         # Clean up once tests are completed.

@@ -73,8 +73,9 @@ class BarbicanAPIBaseTestCase(oslotest.BaseTestCase):
         return context
 
     def setUp(self):
-        super(BarbicanAPIBaseTestCase, self).setUp()
+        super().setUp()
         self.useFixture(barbican_fixture.StandardLogging())
+        self.useFixture(barbican_fixture.WarningsFixture())
         # Make sure we have a test db and session to work with
         database_utils.setup_in_memory_db()
 
@@ -94,22 +95,23 @@ class BarbicanAPIBaseTestCase(oslotest.BaseTestCase):
 
     def tearDown(self):
         database_utils.in_memory_cleanup()
-        super(BarbicanAPIBaseTestCase, self).tearDown()
+        super().tearDown()
 
 
 class BaseTestCase(oslotest.BaseTestCase):
     def setUp(self):
-        super(BaseTestCase, self).setUp()
+        super().setUp()
         self.useFixture(barbican_fixture.StandardLogging())
+        self.useFixture(barbican_fixture.WarningsFixture())
         self.order_id = 'order1234'
         self.external_project_id = 'keystone1234'
         self.request_id = 'request1234'
 
     def tearDown(self):
-        super(BaseTestCase, self).tearDown()
         ss_conf = config.get_module_config('secretstore')
         ss_conf.clear_override("enable_multiple_secret_stores",
                                group='secretstore')
+        super().tearDown()
 
 
 class MockModelRepositoryMixin(object):
