@@ -61,11 +61,13 @@ class BarbicanAPIBaseTestCase(oslotest.BaseTestCase):
     """Base TestCase for all tests needing to interact with a Barbican app."""
     root_controller = None
 
-    def _build_context(self, project_id, roles=None, user=None, is_admin=True,
-                       policy_enforcer=None):
+    def _build_context(
+        self, project_id, roles=None, user_id=None, is_admin=True,
+        policy_enforcer=None,
+    ):
         context = barbican.context.RequestContext(
             roles=roles,
-            user=user,
+            user_id=user_id,
             project_id=project_id,
             is_admin=is_admin
         )

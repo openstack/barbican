@@ -233,7 +233,7 @@ class ACLMixin(object):
         if not ctxt:
             return {}
         acl_dict = {acl.operation: acl.operation for acl in acl_list
-                    if ctxt.user in acl.to_dict_fields().get('users', [])}
+                    if ctxt.user_id in acl.to_dict_fields().get('users', [])}
         co_dict = {'%s_project_access' % acl.operation: acl.project_access for
                    acl in acl_list if acl.project_access is not None}
         if not co_dict:

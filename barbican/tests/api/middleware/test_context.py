@@ -35,7 +35,7 @@ class TestUnauthenticatedContextMiddleware(utils.BaseTestCase):
             rc.assert_called_with(
                 project_id='trace',
                 is_admin=True,
-                user=None,
+                user_id=None,
                 roles=['admin'],
                 request_id=request.request_id,
                 project_domain=None,
@@ -53,7 +53,7 @@ class TestUnauthenticatedContextMiddleware(utils.BaseTestCase):
             rc.assert_called_with(
                 project_id='trace',
                 is_admin=False,
-                user=None,
+                user_id=None,
                 roles=['something'],
                 request_id=request.request_id,
                 project_domain=None,

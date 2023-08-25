@@ -254,7 +254,7 @@ class WhenTestingGetEnginePrivate(utils.BaseTestCase):
         engine.connect.assert_called_once_with()
         mock_create_engine.assert_called_once_with(
             'connection',
-            idle_timeout=3600,
+            connection_recycle_time=3600,
             max_pool_size=repositories.CONF.sql_pool_size,
             max_overflow=repositories.CONF.sql_pool_max_overflow
         )
@@ -278,7 +278,7 @@ class WhenTestingGetEnginePrivate(utils.BaseTestCase):
         engine.connect.assert_called_once_with()
         mock_create_engine.assert_called_once_with(
             'connection',
-            idle_timeout=3600,
+            connection_recycle_time=3600,
             max_pool_size=22,
             max_overflow=11
         )
