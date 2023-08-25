@@ -18,6 +18,7 @@ import fixtures
 from oslo_db.sqlalchemy import session
 from oslo_utils import timeutils
 import sqlalchemy as sa
+from sqlalchemy import exc as sqla_exc
 
 from barbican.model import models
 
@@ -174,6 +175,44 @@ class WarningsFixture(fixtures.Fixture):
         self._original_warning_filters = warnings.filters[:]
 
         warnings.simplefilter('once', DeprecationWarning)
+
+        # Enable deprecation warnings for barbican itself to capture upcoming
+        # SQLAlchemy changes
+
+        warnings.filterwarnings(
+            'ignore',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        warnings.filterwarnings(
+            'error',
+            module='barbican',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        warnings.filterwarnings(
+            'ignore',
+            module='barbican',
+            message=r'".*" object is being merged into a Session along .*',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        warnings.filterwarnings(
+            'ignore',
+            module='barbican',
+            message=r'The legacy calling style of select\(\) .*',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        # Enable general SQLAlchemy warnings also to ensure we're not doing
+        # silly stuff. It's possible that we'll need to filter things out here
+        # with future SQLAlchemy versions, but that's a good thing
+
+        warnings.filterwarnings(
+            'error',
+            module='barbican',
+            category=sqla_exc.SAWarning,
+        )
 
         self.addCleanup(self._reset_warning_filters)
 
