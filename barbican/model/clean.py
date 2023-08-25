@@ -56,7 +56,7 @@ def cleanup_unassociated_projects():
                                         models.Project.id == model.project_id)
         sub_query = sub_query.filter(model.id == None)  # noqa
     sub_query = sub_query.subquery()
-    sub_query = sa_sql.select([sub_query])
+    sub_query = sa_sql.select(sub_query)
     query = session.query(models.Project)
     query = query.filter(models.Project.id.in_(sub_query))
     delete_count = query.delete(synchronize_session='fetch')
@@ -91,7 +91,7 @@ def cleanup_parent_with_no_child(parent_model, child_model,
     sub_query = sub_query.outerjoin(child_model)
     sub_query = sub_query.filter(child_model.id == None)  # noqa
     sub_query = sub_query.subquery()
-    sub_query = sa_sql.select([sub_query])
+    sub_query = sa_sql.select(sub_query)
     query = session.query(parent_model)
     query = query.filter(parent_model.id.in_(sub_query))
     query = query.filter(parent_model.deleted)
@@ -213,7 +213,7 @@ def _hard_delete_acls_for_soft_deleted_secrets():
     acl_user_sub_query = acl_user_sub_query.join(models.Secret)
     acl_user_sub_query = acl_user_sub_query.filter(models.Secret.deleted)
     acl_user_sub_query = acl_user_sub_query.subquery()
-    acl_user_sub_query = sa_sql.select([acl_user_sub_query])
+    acl_user_sub_query = sa_sql.select(acl_user_sub_query)
 
     acl_user_query = session.query(models.SecretACLUser)
     acl_user_query = acl_user_query.filter(
@@ -224,7 +224,7 @@ def _hard_delete_acls_for_soft_deleted_secrets():
     acl_sub_query = acl_sub_query.join(models.Secret)
     acl_sub_query = acl_sub_query.filter(models.Secret.deleted)
     acl_sub_query = acl_sub_query.subquery()
-    acl_sub_query = sa_sql.select([acl_sub_query])
+    acl_sub_query = sa_sql.select(acl_sub_query)
 
     acl_query = session.query(models.SecretACL)
     acl_query = acl_query.filter(
@@ -262,7 +262,7 @@ def _soft_delete_expired_secret_children(threshold_date):
             models.Secret.expiration <= threshold_date
         )
         sub_query = sub_query.subquery()
-        sub_query = sa_sql.select([sub_query])
+        sub_query = sa_sql.select(sub_query)
         query = session.query(table)
         query = query.filter(table.id.in_(sub_query))
         current_update_count = query.update(
