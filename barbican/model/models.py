@@ -91,18 +91,24 @@ class ModelBase(object):
     __table_args__ = {'mysql_engine': 'InnoDB'}
     __table_initialized__ = False
     __protected_attributes__ = {
-        "created_at", "updated_at", "deleted_at", "deleted"}
+        "created_at", "updated_at", "deleted_at", "deleted",
+    }
 
-    id = sa.Column(sa.String(36), primary_key=True,
-                   default=utils.generate_uuid)
-
-    created_at = sa.Column(sa.DateTime, default=timeutils.utcnow,
-                           nullable=False)
-    updated_at = sa.Column(sa.DateTime, default=timeutils.utcnow,
-                           nullable=False, onupdate=timeutils.utcnow)
+    id = sa.Column(
+        sa.String(36),
+        primary_key=True,
+        default=utils.generate_uuid)
+    created_at = sa.Column(
+        sa.DateTime,
+        default=timeutils.utcnow,
+        nullable=False)
+    updated_at = sa.Column(
+        sa.DateTime,
+        default=timeutils.utcnow,
+        nullable=False,
+        onupdate=timeutils.utcnow)
     deleted_at = sa.Column(sa.DateTime)
     deleted = sa.Column(sa.Boolean, nullable=False, default=False)
-
     status = sa.Column(sa.String(20), nullable=False, default=States.PENDING)
 
     def save(self, session=None):
@@ -222,25 +228,35 @@ class ContainerSecret(BASE, SoftDeleteMixIn, ModelBase):
 
     name = sa.Column(sa.String(255), nullable=True)
     container_id = sa.Column(
-        sa.String(36), sa.ForeignKey('containers.id'), index=True,
+        sa.String(36),
+        sa.ForeignKey('containers.id'),
+        index=True,
         nullable=False)
     secret_id = sa.Column(
-        sa.String(36), sa.ForeignKey('secrets.id'), index=True, nullable=False)
+        sa.String(36),
+        sa.ForeignKey('secrets.id'),
+        index=True,
+        nullable=False)
 
     # Eager load this relationship via 'lazy=False'.
     container = orm.relationship(
         'Container',
-        backref=orm.backref('container_secrets', lazy=False,
-                            primaryjoin="and_(ContainerSecret.container_id == "
-                            "Container.id, ContainerSecret.deleted!=True)"))
+        back_populates='container_secrets',
+        primaryjoin='and_(ContainerSecret.container_id == Container.id, ContainerSecret.deleted != True)',  # noqa: E501
+        lazy=False,
+    )
     secrets = orm.relationship(
         'Secret',
-        backref=orm.backref('container_secrets',
-                            primaryjoin="and_(ContainerSecret.secret_id == "
-                            "Secret.id, ContainerSecret.deleted!=True)"))
+        back_populates='container_secrets',
+        primaryjoin='and_(ContainerSecret.secret_id == Secret.id, ContainerSecret.deleted != True)',  # noqa: E501
+        lazy=False,
+    )
 
-    __table_args__ = (sa.UniqueConstraint('container_id', 'secret_id', 'name',
-                                          name='_container_secret_name_uc'),)
+    __table_args__ = (
+        sa.UniqueConstraint(
+            'container_id', 'secret_id', 'name',
+            name='_container_secret_name_uc'),
+    )
 
     def __init__(self, check_exc=True):
         super(ContainerSecret, self).__init__()
@@ -256,12 +272,22 @@ class Project(BASE, SoftDeleteMixIn, ModelBase):
 
     external_id = sa.Column(sa.String(255), unique=True)
 
-    orders = orm.relationship("Order", backref="project")
-    secrets = orm.relationship("Secret", backref="project")
-    keks = orm.relationship("KEKDatum", backref="project")
-    containers = orm.relationship("Container", backref="project")
-    cas = orm.relationship("ProjectCertificateAuthority", backref="project")
-    project_quotas = orm.relationship("ProjectQuotas", backref="project")
+    orders = orm.relationship('Order', back_populates='project')
+    secrets = orm.relationship('Secret', back_populates='project')
+    keks = orm.relationship('KEKDatum', back_populates='project')
+    containers = orm.relationship('Container', back_populates='project')
+    cas = orm.relationship(
+        'ProjectCertificateAuthority',
+        back_populates='project')
+    project_quotas = orm.relationship(
+        'ProjectQuotas',
+        back_populates='project')
+    preferred_ca = orm.relationship(
+        'PreferredCertificateAuthority',
+        back_populates='project')
+    preferred_secret_store = orm.relationship(
+        'ProjectSecretStore',
+        back_populates='project')
 
     def __init__(self, check_exc=True):
         super(Project, self).__init__()
@@ -282,8 +308,9 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
     __tablename__ = 'secrets'
 
     name = sa.Column(sa.String(255))
-    secret_type = sa.Column(sa.String(255),
-                            server_default=utils.SECRET_TYPE_OPAQUE)
+    secret_type = sa.Column(
+        sa.String(255),
+        server_default=utils.SECRET_TYPE_OPAQUE)
     expiration = sa.Column(sa.DateTime, default=None)
     algorithm = sa.Column(sa.String(255))
     bit_length = sa.Column(sa.Integer)
@@ -302,26 +329,33 @@ class Secret(BASE, SoftDeleteMixIn, ModelBase):
     #   See barbican.api.resources.py::SecretsResource.on_get()
     # Eager load this relationship via 'lazy=False'.
     encrypted_data = orm.relationship("EncryptedDatum", lazy=False)
-
+    project = orm.relationship('Project', back_populates='secrets')
+    container_secrets = orm.relationship(
+        "ContainerSecret",
+        primaryjoin='and_(ContainerSecret.secret_id==Secret.id, ContainerSecret.deleted!=True)',  # noqa: E501
+        back_populates='secrets',
+        lazy=False)
     secret_store_metadata = orm.relationship(
         "SecretStoreMetadatum",
         collection_class=col.attribute_mapped_collection('key'),
-        backref="secret",
+        back_populates="secret",
         cascade="all, delete-orphan",
         cascade_backrefs=False)
-
     secret_user_metadata = orm.relationship(
         "SecretUserMetadatum",
         collection_class=col.attribute_mapped_collection('key'),
-        backref="secret",
+        back_populates="secret",
         cascade="all, delete-orphan",
         cascade_backrefs=False)
-
     consumers = orm.relationship(
         "SecretConsumerMetadatum",
-        backref="secret",
+        back_populates="secret",
         cascade="all, delete-orphan",
         cascade_backrefs=False)
+    secret_acls = orm.relationship(
+        "SecretACL",
+        back_populates="secret",
+        lazy=False)
 
     def __init__(self, parsed_request=None, check_exc=True):
         """Creates secret from a dict."""
@@ -394,7 +428,13 @@ class SecretStoreMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     key = sa.Column(sa.String(255), nullable=False)
     value = sa.Column(sa.String(255), nullable=False)
     secret_id = sa.Column(
-        sa.String(36), sa.ForeignKey('secrets.id'), index=True, nullable=False)
+        sa.String(36),
+        sa.ForeignKey('secrets.id'),
+        index=True,
+        nullable=False)
+
+    secret = orm.relationship(
+        "Secret", back_populates="secret_store_metadata")
 
     def __init__(self, key=None, value=None, check_exc=True):
         super(SecretStoreMetadatum, self).__init__()
@@ -426,10 +466,18 @@ class SecretUserMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     key = sa.Column(sa.String(255), nullable=False)
     value = sa.Column(sa.String(255), nullable=False)
     secret_id = sa.Column(
-        sa.String(36), sa.ForeignKey('secrets.id'), index=True, nullable=False)
+        sa.String(36),
+        sa.ForeignKey('secrets.id'),
+        index=True,
+        nullable=False)
 
-    __table_args__ = (sa.UniqueConstraint('secret_id', 'key',
-                                          name='_secret_key_uc'),)
+    secret = orm.relationship(
+        "Secret",
+        back_populates="secret_user_metadata")
+
+    __table_args__ = (
+        sa.UniqueConstraint('secret_id', 'key', name='_secret_key_uc'),
+    )
 
     def __init__(self, key=None, value=None, check_exc=True):
         super(SecretUserMetadatum, self).__init__()
@@ -460,11 +508,15 @@ class EncryptedDatum(BASE, SoftDeleteMixIn, ModelBase):
 
     content_type = sa.Column(sa.String(255))
     secret_id = sa.Column(
-        sa.String(36), sa.ForeignKey('secrets.id'), index=True, nullable=False)
-    kek_id = sa.Column(
-        sa.String(36), sa.ForeignKey('kek_data.id'), index=True,
+        sa.String(36),
+        sa.ForeignKey('secrets.id'),
+        index=True,
         nullable=False)
-
+    kek_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('kek_data.id'),
+        index=True,
+        nullable=False)
     # TODO(jwood) Why LargeBinary on Postgres (BYTEA) not work correctly?
     cypher_text = sa.Column(sa.Text)
     kek_meta_extended = sa.Column(sa.Text)
@@ -518,19 +570,19 @@ class KEKDatum(BASE, SoftDeleteMixIn, ModelBase):
 
     plugin_name = sa.Column(sa.String(255), nullable=False)
     kek_label = sa.Column(sa.String(255))
-
     project_id = sa.Column(
         sa.String(36),
         sa.ForeignKey('projects.id', name='kek_data_project_fk'),
         index=True,
         nullable=False)
-
     active = sa.Column(sa.Boolean, nullable=False, default=True)
     bind_completed = sa.Column(sa.Boolean, nullable=False, default=False)
     algorithm = sa.Column(sa.String(255))
     bit_length = sa.Column(sa.Integer)
     mode = sa.Column(sa.String(255))
     plugin_meta = sa.Column(sa.Text)
+
+    project = orm.relationship('Project', back_populates='keks')
 
     def __index__(self, check_exc=True):
         super(KEKDatum, self).__init__()
@@ -557,32 +609,36 @@ class Order(BASE, SoftDeleteMixIn, ModelBase):
         sa.ForeignKey('projects.id', name='orders_project_fk'),
         index=True,
         nullable=False)
-
     error_status_code = sa.Column(sa.String(16))
     error_reason = sa.Column(sa.String(ERROR_REASON_LENGTH))
-
     meta = sa.Column(JsonBlob(), nullable=True)
-
-    secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
-                          index=True, nullable=True)
-    container_id = sa.Column(sa.String(36), sa.ForeignKey('containers.id'),
-                             index=True, nullable=True)
+    secret_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('secrets.id'),
+        index=True,
+        nullable=True)
+    container_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('containers.id'),
+        index=True,
+        nullable=True)
     sub_status = sa.Column(sa.String(SUB_STATUS_LENGTH), nullable=True)
-    sub_status_message = sa.Column(sa.String(SUB_STATUS_MESSAGE_LENGTH),
-                                   nullable=True)
+    sub_status_message = sa.Column(
+        sa.String(SUB_STATUS_MESSAGE_LENGTH),
+        nullable=True)
     creator_id = sa.Column(sa.String(255))
 
+    project = orm.relationship('Project', back_populates='orders')
     order_plugin_metadata = orm.relationship(
         "OrderPluginMetadatum",
         collection_class=col.attribute_mapped_collection('key'),
-        backref="order",
+        back_populates="order",
         cascade="all, delete-orphan",
         cascade_backrefs=False)
-
     order_barbican_metadata = orm.relationship(
         "OrderBarbicanMetadatum",
         collection_class=col.attribute_mapped_collection('key'),
-        backref="order",
+        back_populates="order",
         cascade="all, delete-orphan",
         cascade_backrefs=False)
 
@@ -652,10 +708,15 @@ class OrderPluginMetadatum(BASE, SoftDeleteMixIn, ModelBase):
 
     __tablename__ = "order_plugin_metadata"
 
-    order_id = sa.Column(sa.String(36), sa.ForeignKey('orders.id'),
-                         index=True, nullable=False)
+    order_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('orders.id'),
+        index=True,
+        nullable=False)
     key = sa.Column(sa.String(255), nullable=False)
     value = sa.Column(sa.String(255), nullable=False)
+
+    order = orm.relationship("Order", back_populates="order_plugin_metadata")
 
     def __init__(self, key=None, value=None, check_exc=True):
         super(OrderPluginMetadatum, self).__init__()
@@ -688,10 +749,15 @@ class OrderBarbicanMetadatum(BASE, SoftDeleteMixIn, ModelBase):
 
     __tablename__ = "order_barbican_metadata"
 
-    order_id = sa.Column(sa.String(36), sa.ForeignKey('orders.id'),
-                         index=True, nullable=False)
+    order_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('orders.id'),
+        index=True,
+        nullable=False)
     key = sa.Column(sa.String(255), nullable=False)
     value = sa.Column(sa.Text, nullable=False)
+
+    order = orm.relationship("Order", back_populates="order_barbican_metadata")
 
     def __init__(self, key=None, value=None, check_exc=True):
         super(OrderBarbicanMetadatum, self).__init__()
@@ -720,11 +786,14 @@ class OrderRetryTask(BASE, SoftDeleteMixIn, ModelBase):
     __table_initialized__ = False
 
     id = sa.Column(
-        sa.String(36), primary_key=True, default=utils.generate_uuid,
-    )
+        sa.String(36),
+        primary_key=True,
+        default=utils.generate_uuid)
     order_id = sa.Column(
-        sa.String(36), sa.ForeignKey("orders.id"), index=True, nullable=False,
-    )
+        sa.String(36),
+        sa.ForeignKey("orders.id"),
+        index=True,
+        nullable=False)
     retry_task = sa.Column(sa.Text, nullable=False)
     retry_at = sa.Column(sa.DateTime, default=None, nullable=False)
     retry_args = sa.Column(JsonBlob(), nullable=False)
@@ -747,15 +816,29 @@ class Container(BASE, SoftDeleteMixIn, ModelBase):
     __tablename__ = 'containers'
 
     name = sa.Column(sa.String(255))
-    type = sa.Column(sa.Enum('generic', 'rsa', 'dsa', 'certificate',
-                             name='container_types'))
+    type = sa.Column(
+        sa.Enum(
+            'generic', 'rsa', 'dsa', 'certificate',
+            name='container_types'))
     project_id = sa.Column(
         sa.String(36),
         sa.ForeignKey('projects.id', name='containers_project_fk'),
         index=True,
         nullable=False)
-    consumers = sa.orm.relationship("ContainerConsumerMetadatum")
     creator_id = sa.Column(sa.String(255))
+
+    project = orm.relationship('Project', back_populates='containers')
+    consumers = orm.relationship('ContainerConsumerMetadatum')
+    container_acls = orm.relationship(
+        'ContainerACL',
+        back_populates='container',
+        lazy=False)
+    container_secrets = orm.relationship(
+        "ContainerSecret",
+        primaryjoin='and_(ContainerSecret.container_id==Container.id, ContainerSecret.deleted!=True)',  # noqa: E501
+        back_populates='container',
+        lazy=False,
+    )
 
     def __init__(self, parsed_request=None, check_exc=True):
         """Creates a Container entity from a dict."""
@@ -822,10 +905,16 @@ class ContainerConsumerMetadatum(BASE, SoftDeleteMixIn, ModelBase):
 
     __tablename__ = 'container_consumer_metadata'
 
-    container_id = sa.Column(sa.String(36), sa.ForeignKey('containers.id'),
-                             index=True, nullable=False)
-    project_id = sa.Column(sa.String(36), sa.ForeignKey('projects.id'),
-                           index=True, nullable=True)
+    container_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('containers.id'),
+        index=True,
+        nullable=False)
+    project_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('projects.id'),
+        index=True,
+        nullable=True)
     name = sa.Column(sa.String(36))
     URL = sa.Column(sa.String(255))
     data_hash = sa.Column(sa.CHAR(64))
@@ -914,10 +1003,15 @@ class CertificateAuthority(BASE, ModelBase):
     ca_meta = orm.relationship(
         'CertificateAuthorityMetadatum',
         collection_class=col.attribute_mapped_collection('key'),
-        backref="ca",
+        back_populates='ca',
         cascade="all, delete-orphan",
-        cascade_backrefs=False,
-    )
+        cascade_backrefs=False)
+    project_cas = orm.relationship(
+        'ProjectCertificateAuthority',
+        back_populates='ca')
+    preferred_ca = orm.relationship(
+        'PreferredCertificateAuthority',
+        back_populates='ca')
 
     def __init__(self, parsed_ca_in=None, check_exc=True):
         """Creates certificate authority entity."""
@@ -991,8 +1085,13 @@ class CertificateAuthorityMetadatum(BASE, ModelBase):
         sa.String(36), sa.ForeignKey('certificate_authorities.id'),
         index=True, nullable=False)
 
-    __table_args__ = (sa.UniqueConstraint(
-        'ca_id', 'key', name='_certificate_authority_metadatum_uc'),)
+    ca = orm.relationship('CertificateAuthority', back_populates='ca_meta')
+
+    __table_args__ = (
+        sa.UniqueConstraint(
+            'ca_id', 'key', name='_certificate_authority_metadatum_uc',
+        ),
+    )
 
     def __init__(self, key=None, value=None, check_exc=True):
         super(CertificateAuthorityMetadatum, self).__init__()
@@ -1025,20 +1124,25 @@ class ProjectCertificateAuthority(BASE, ModelBase):
 
     __tablename__ = 'project_certificate_authorities'
 
-    project_id = sa.Column(sa.String(36),
-                           sa.ForeignKey('projects.id'),
-                           index=True,
-                           nullable=False)
+    project_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('projects.id'),
+        index=True,
+        nullable=False)
+    ca_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('certificate_authorities.id'),
+        index=True,
+        nullable=False)
 
-    ca_id = sa.Column(sa.String(36),
-                      sa.ForeignKey('certificate_authorities.id'),
-                      index=True,
-                      nullable=False)
+    project = orm.relationship('Project', back_populates='cas')
+    ca = orm.relationship("CertificateAuthority", back_populates='project_cas')
 
-    ca = orm.relationship("CertificateAuthority", backref="project_cas")
-
-    __table_args__ = (sa.UniqueConstraint(
-        'project_id', 'ca_id', name='_project_certificate_authority_uc'),)
+    __table_args__ = (
+        sa.UniqueConstraint(
+            'project_id', 'ca_id', name='_project_certificate_authority_uc',
+        ),
+    )
 
     def __init__(self, project_id=None, ca_id=None, check_exc=True):
         """Registers a Consumer to a Container."""
@@ -1072,25 +1176,27 @@ class PreferredCertificateAuthority(BASE, ModelBase):
 
     __tablename__ = 'preferred_certificate_authorities'
 
-    project_id = sa.Column(sa.String(36),
-                           sa.ForeignKey('projects.id'),
-                           index=True,
-                           unique=True,
-                           nullable=False)
+    project_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('projects.id'),
+        index=True,
+        unique=True,
+        nullable=False)
+    ca_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey(
+            'certificate_authorities.id',
+            name='preferred_certificate_authorities_fk'),
+        index=True,
+        nullable=False)
 
-    ca_id = sa.Column(sa.String(36),
-                      sa.ForeignKey(
-                          'certificate_authorities.id',
-                          name='preferred_certificate_authorities_fk'),
-                      index=True,
-                      nullable=False)
-
-    project = orm.relationship('Project',
-                               backref=orm.backref('preferred_ca'),
-                               uselist=False)
-
-    ca = orm.relationship('CertificateAuthority',
-                          backref=orm.backref('preferred_ca'))
+    project = orm.relationship(
+        'Project',
+        back_populates='preferred_ca',
+        uselist=False)
+    ca = orm.relationship(
+        'CertificateAuthority',
+        back_populates='preferred_ca')
 
     def __init__(self, project_id=None, ca_id=None, check_exc=True):
         """Registers a Consumer to a Container."""
@@ -1129,24 +1235,30 @@ class SecretACL(BASE, ModelBase):
 
     __tablename__ = 'secret_acls'
 
-    secret_id = sa.Column(sa.String(36), sa.ForeignKey('secrets.id'),
-                          index=True, nullable=False)
-
+    secret_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('secrets.id'),
+        index=True,
+        nullable=False)
     operation = sa.Column(sa.String(255), nullable=False)
-
     project_access = sa.Column(sa.Boolean, nullable=False, default=True)
 
     secret = orm.relationship(
-        'Secret', backref=orm.backref('secret_acls', lazy=False))
-
+        'Secret',
+        back_populates='secret_acls',
+        lazy=False)
     acl_users = orm.relationship(
         'SecretACLUser',
-        backref=orm.backref('secret_acl', lazy=False),
+        back_populates='secret_acl',
+        lazy=False,
         cascade="all, delete-orphan",
         cascade_backrefs=False)
 
-    __table_args__ = (sa.UniqueConstraint(
-        'secret_id', 'operation', name='_secret_acl_operation_uc'),)
+    __table_args__ = (
+        sa.UniqueConstraint(
+            'secret_id', 'operation', name='_secret_acl_operation_uc',
+        ),
+    )
 
     def __init__(self, secret_id=None, operation=None, project_access=None,
                  user_ids=None, check_exc=True):
@@ -1207,24 +1319,29 @@ class ContainerACL(BASE, ModelBase):
 
     __tablename__ = 'container_acls'
 
-    container_id = sa.Column(sa.String(36), sa.ForeignKey('containers.id'),
-                             index=True, nullable=False)
-
+    container_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('containers.id'),
+        index=True,
+        nullable=False)
     operation = sa.Column(sa.String(255), nullable=False)
-
     project_access = sa.Column(sa.Boolean, nullable=False, default=True)
 
     container = orm.relationship(
-        'Container', backref=orm.backref('container_acls', lazy=False))
-
+        'Container',
+        back_populates='container_acls',
+        lazy=False)
     acl_users = orm.relationship(
         'ContainerACLUser',
-        backref=orm.backref('container_acl', lazy=False),
+        back_populates='container_acl',
         cascade="all, delete-orphan",
         cascade_backrefs=False)
 
-    __table_args__ = (sa.UniqueConstraint(
-        'container_id', 'operation', name='_container_acl_operation_uc'),)
+    __table_args__ = (
+        sa.UniqueConstraint(
+            'container_id', 'operation', name='_container_acl_operation_uc',
+        ),
+    )
 
     def __init__(self, container_id=None, operation=None, project_access=None,
                  user_ids=None, check_exc=True):
@@ -1283,13 +1400,21 @@ class SecretACLUser(BASE, ModelBase):
 
     __tablename__ = 'secret_acl_users'
 
-    acl_id = sa.Column(sa.String(36), sa.ForeignKey('secret_acls.id'),
-                       index=True, nullable=False)
-
+    acl_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('secret_acls.id'),
+        index=True,
+        nullable=False)
     user_id = sa.Column(sa.String(255), nullable=False)
 
-    __table_args__ = (sa.UniqueConstraint(
-        'acl_id', 'user_id', name='_secret_acl_user_uc'),)
+    secret_acl = orm.relationship(
+        'SecretACL',
+        back_populates='acl_users',
+        lazy=False)
+
+    __table_args__ = (
+        sa.UniqueConstraint('acl_id', 'user_id', name='_secret_acl_user_uc'),
+    )
 
     def __init__(self, acl_id=None, user_id=None, check_exc=True):
         """Creates secret ACL user entity."""
@@ -1320,13 +1445,23 @@ class ContainerACLUser(BASE, ModelBase):
 
     __tablename__ = 'container_acl_users'
 
-    acl_id = sa.Column(sa.String(36), sa.ForeignKey('container_acls.id'),
-                       index=True, nullable=False)
-
+    acl_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('container_acls.id'),
+        index=True,
+        nullable=False)
     user_id = sa.Column(sa.String(255), nullable=False)
 
-    __table_args__ = (sa.UniqueConstraint(
-        'acl_id', 'user_id', name='_container_acl_user_uc'),)
+    container_acl = orm.relationship(
+        'ContainerACL',
+        back_populates='acl_users',
+        lazy=False)
+
+    __table_args__ = (
+        sa.UniqueConstraint(
+            'acl_id', 'user_id', name='_container_acl_user_uc',
+        ),
+    )
 
     def __init__(self, acl_id=None, user_id=None, check_exc=True):
         """Creates container ACL user entity."""
@@ -1367,6 +1502,8 @@ class ProjectQuotas(BASE, ModelBase):
     containers = sa.Column(sa.Integer, nullable=True)
     consumers = sa.Column(sa.Integer, nullable=True)
     cas = sa.Column(sa.Integer, nullable=True)
+
+    project = orm.relationship('Project', back_populates='project_quotas')
 
     def __init__(self, project_id=None, parsed_project_quotas=None,
                  check_exc=True):
@@ -1433,10 +1570,16 @@ class SecretStores(BASE, ModelBase):
     global_default = sa.Column(sa.Boolean, nullable=False, default=False)
     name = sa.Column(sa.String(255), nullable=False)
 
-    __table_args__ = (sa.UniqueConstraint(
-        'store_plugin', 'crypto_plugin',
-        name='_secret_stores_plugin_names_uc'),
-        sa.UniqueConstraint('name', name='_secret_stores_name_uc'),)
+    project_store = orm.relationship(
+        'ProjectSecretStore',
+        back_populates='secret_store')
+
+    __table_args__ = (
+        sa.UniqueConstraint(
+            'store_plugin', 'crypto_plugin',
+            name='_secret_stores_plugin_names_uc'),
+        sa.UniqueConstraint('name', name='_secret_stores_name_uc'),
+    )
 
     def __init__(self, name=None, store_plugin=None, crypto_plugin=None,
                  global_default=None, check_exc=True):
@@ -1478,21 +1621,28 @@ class ProjectSecretStore(BASE, ModelBase):
 
     __tablename__ = 'project_secret_store'
 
-    secret_store_id = sa.Column(sa.String(36),
-                                sa.ForeignKey('secret_stores.id'),
-                                index=True,
-                                nullable=False)
-    project_id = sa.Column(sa.String(36),
-                           sa.ForeignKey('projects.id'),
-                           index=True,
-                           nullable=False)
+    secret_store_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('secret_stores.id'),
+        index=True,
+        nullable=False)
+    project_id = sa.Column(
+        sa.String(36),
+        sa.ForeignKey('projects.id'),
+        index=True,
+        nullable=False)
 
-    secret_store = orm.relationship("SecretStores", backref="project_store")
-    project = orm.relationship('Project',
-                               backref=orm.backref('preferred_secret_store'))
+    secret_store = orm.relationship(
+        'SecretStores',
+        back_populates='project_store')
+    project = orm.relationship(
+        'Project',
+        back_populates='preferred_secret_store')
 
-    __table_args__ = (sa.UniqueConstraint(
-        'project_id', name='_project_secret_store_project_uc'),)
+    __table_args__ = (
+        sa.UniqueConstraint(
+            'project_id', name='_project_secret_store_project_uc'),
+    )
 
     def __init__(self, project_id=None, secret_store_id=None, check_exc=True):
         """Creates project secret store mapping entity."""
@@ -1526,14 +1676,22 @@ class SecretConsumerMetadatum(BASE, SoftDeleteMixIn, ModelBase):
     __tablename__ = "secret_consumer_metadata"
 
     secret_id = sa.Column(
-        sa.String(36), sa.ForeignKey("secrets.id"), index=True, nullable=False
+        sa.String(36),
+        sa.ForeignKey("secrets.id"),
+        index=True,
+        nullable=False
     )
     project_id = sa.Column(
-        sa.String(36), sa.ForeignKey("projects.id"), index=True, nullable=True
+        sa.String(36),
+        sa.ForeignKey("projects.id"),
+        index=True,
+        nullable=True
     )
     service = sa.Column(sa.String(255), nullable=False)
     resource_type = sa.Column(sa.String(255), nullable=False)
     resource_id = sa.Column(sa.String(36), index=True, nullable=False)
+
+    secret = orm.relationship("Secret", back_populates="consumers")
 
     __table_args__ = (
         sa.UniqueConstraint(
