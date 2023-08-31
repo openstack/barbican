@@ -1,0 +1,7 @@
+---
+security:
+  - |
+    This release uses Secure RBAC by default (See: https://governance.openstack.org/tc/goals/selected/consistent-and-secure-rbac.html )
+    To opt out of this change and continue using the legacy policies set 
+    enforce_new_defaults=False and enforce_scope=False in the [oslo_policy]
+    section of barbican.conf.
