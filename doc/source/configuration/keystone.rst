@@ -13,7 +13,7 @@ following ways to setup your own.
 #. `Installing Keystone`_
 #. An OpenStack cloud with Keystone (Devstack in the simplest case)
 
-.. _Simple Dockerized Keystone: https://registry.hub.docker.com/u/
+.. _Simple Dockerized Keystone: https://registry.hub.docker.com/r/
                                 jmvrbanac/simple-keystone/
 .. _Installing Keystone: https://docs.openstack.org/keystone/latest/
                          install/index.html
