@@ -1,7 +1,7 @@
 # logrotate.d configuration
-# Used in rpm build.  Keep in sync with debian/barbican-api.logrotate
+# Used in rpm build.
 
-/var/log/barbican/barbican-api.log {
+/var/log/barbican/*.log {
     daily
     missingok
     compress
