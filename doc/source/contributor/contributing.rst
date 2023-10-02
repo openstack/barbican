@@ -16,29 +16,30 @@ barbican
     | code: https://opendev.org/openstack/barbican
     | docs: https://docs.openstack.org/barbican
     | api-ref: https://docs.openstack.org/barbican/latest/api/index.html#api-reference
-    | StoryBoard: https://storyboard.openstack.org/#!/project/openstack/barbican
+    | Launchpad: https://bugs.launchpad.net/barbican
 
 barbican-ui
     | Horizon extension for the OpenStack Key Manager API.
     | code: https://opendev.org/openstack/barbican-ui
-    | StoryBoard: https://storyboard.openstack.org/#!/project/openstack/barbican-ui
+    | Launchpad: https://bugs.launchpad.net/barbican-ui
 
 python-barbicanclient
     | Python client library for the OpenStack Key Manager API.
     | code: https://opendev.org/openstack/python-barbicanclient
     | docs: https://docs.openstack.org/python-barbicanclient
-    | StoryBoard: https://storyboard.openstack.org/#!/project/openstack/python-barbicanclient
+    | Launchpad: https://bugs.launchpad.net/python-barbicanclient
 
 barbican-tempest-plugin
     | Additional Barbican tempest-based tests beyond those in the
       main OpenStack Integration Test Suite (tempest).
     | code: https://opendev.org/openstack/barbican-tempest-plugin
-    | StoryBoard: https://storyboard.openstack.org/#!/project/openstack/barbican-tempest-plugin
+    | Launchpad: http://bugs.launchpad.net/barbican
 
 ansible-role-lunasa-hsm
     | Ansible role to manage Luna SA Hardware Security Module (HSM) client software
     | code: https://opendev.org/openstack/ansible-role-lunasa-hsm
-    | StoryBoard: https://storyboard.openstack.org/#!/project/openstack/ansible-role-lunasa-hsm
+    | Launchpad: http://bugs.launchpad.net/barbican
+
 
 See the ``CONTRIBUTING.rst`` file in each code repository for more
 information about contributing to that specific deliverable.  Additionally,
@@ -116,7 +117,7 @@ Here's a quick rundown of what they are and how the Barbican project uses them.
 
 specs
     | Exist in the barbican-specs repository.
-      Each spec must have a story in StoryBoard associated with it for tracking
+      Each spec must have a Launchpad blueprint associated with it for tracking
       purposes.
 
     | A spec is required for any new Barbican core feature, anything that
@@ -130,8 +131,8 @@ specs
     | https://specs.openstack.org/openstack/barbican-specs/
 
 blueprints
-    | Exist in StoryBoard, where they can be targeted to release milestones.
-    | You file one at https://storyboard.openstack.org/#!/project/openstack/barbican-specs
+    | Exist in Launchpad, where they can be targeted to release milestones.
+    | You file one at https://blueprints.launchpad.net/barbican
 
     | Examples of changes that can be covered by a blueprint only are:
 
@@ -152,8 +153,8 @@ current development cycle.
 Task Tracking
 ~~~~~~~~~~~~~
 
-We track our tasks in `StoryBoard
-<https://storyboard.openstack.org/#!/project_group/barbican>`_.  See the top of
+We track our tasks in `Launchpad
+<https://launchpad.net/barbican>`_.  See the top of
 the page for the URL of each Barbican project deliverable.
 
 If you're looking for some smaller, easier work item to pick up and get started
@@ -169,7 +170,7 @@ Reporting a Bug
 ~~~~~~~~~~~~~~~
 
 You found an issue and want to make sure we are aware of it? You can do so in
-the StoryBoard of the affected deliverable.
+the Launchpad bugs tracker of the affected deliverable.
 
 Getting Your Patch Merged
 ~~~~~~~~~~~~~~~~~~~~~~~~~
