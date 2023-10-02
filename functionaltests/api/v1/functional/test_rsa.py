@@ -268,8 +268,8 @@ class RSATestCase(base.TestCase):
         self.verify_container_keys_equal(secrets)
 
     @testcase.attr('positive')
-    @testtools.skipIf(utils.is_vault_enabled() or utils.is_pkcs11_enabled(),
-                      "Vault does not support this operation")
+    @testtools.skipIf(utils.is_pkcs11_enabled(),
+                      "PKCS11 does not support this operation")
     def test_rsa_order_certificate_from_ordered_container(self):
         """Post an order for a certificate"""
         order_ref = self.order_container()
