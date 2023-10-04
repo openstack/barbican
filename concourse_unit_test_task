@@ -1,0 +1,8 @@
+export DEBIAN_FRONTEND=noninteractive && \
+export UPPER_CONSTRAINTS_FILE=https://raw.githubusercontent.com/sapcc/requirements/stable/2023.2-m3/upper-constraints.txt && \
+apt-get update && \
+apt-get install -y build-essential python3-pip python3-dev git libpcre++-dev gettext libcap2 ssh && \
+pip3 install "tox<4.0" && \
+git clone -b stable/2023.2-m3 --single-branch https://github.com/sapcc/barbican.git --depth=1 && \
+cd barbican && \
+tox -r -e py310
