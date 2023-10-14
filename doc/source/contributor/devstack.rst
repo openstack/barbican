@@ -21,14 +21,14 @@ distributions`_ with all available system package updates.
        # CentOS
        sudo dnf install git
 
-3. Clone DevStack
+#. Clone DevStack
 
    .. code-block:: bash
 
        git clone https://opendev.org/openstack/devstack.git
        cd devstack/
 
-4. Add the Barbican plugin to the ``local.conf`` file and verify the
+#. Add the Barbican plugin to the ``local.conf`` file and verify the
    minimum services required are included. You can pull down a specific branch
    by appending the name to the end of the git URL. If you leave the space
    empty like below, then origin/master will be pulled.
@@ -36,7 +36,7 @@ distributions`_ with all available system package updates.
    .. code-block:: ini
 
        enable_plugin barbican https://opendev.org/openstack/barbican
-       enable_service rabbit mysql key
+       enable_service rabbit mysql key tempest
 
    If this is your first time and you do not have a ``local.conf`` file, there
    is a working sample file in the `Barbican repository`_.
@@ -44,8 +44,16 @@ distributions`_ with all available system package updates.
 
    .. _`Barbican repository`: https://opendev.org/openstack/barbican/src/branch/master/devstack/local.conf.example
 
-5. Start DevStack
+#. Start DevStack
 
    .. code-block:: bash
 
        ./stack.sh
+
+#. Clone and install barbican-tempest-plugin
+
+   .. code-block:: bash
+
+      cd /opt/stack/
+      git clone https://opendev.org/openstack/barbican-tempest-plugin.git
+      pip install -e /opt/stack/barbican-tempest-plugin
