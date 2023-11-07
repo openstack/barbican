@@ -47,6 +47,9 @@
 - job:
     name: barbican-tox-py310-with-sqlalchemy-2x
     parent: openstack-tox-py310
+    # TODO(tkajinam): Remove this once the following bug is fixed.
+    #                 https://bugs.launchpad.net/oslo.utils/+bug/2042886
+    voting: false
     description: |
       Run unit tests with main branch of SQLAlchemy, alembic and oslo.db.
       Takes advantage of the base tox job's install-siblings feature.
