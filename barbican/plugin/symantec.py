@@ -22,21 +22,32 @@ from symantecssl.core import Symantec
 from symantecssl import exceptions as symantec_exceptions
 
 from barbican.common import config
+from barbican.common import utils
 from barbican import i18n as u
 from barbican.plugin.interface import certificate_manager as cert
 
 CONF = config.new_config()
+LOG = utils.getLogger(__name__)
 
 symantec_plugin_group = cfg.OptGroup(name='symantec_plugin',
                                      title='Symantec Plugin Options')
 
 symantec_plugin_opts = [
     cfg.StrOpt('username',
+               deprecated_for_removal=True,
+               deprecated_reason=('Symantec certificate plugin has been '
+                                  'deprecated'),
                help=u._('Symantec username for authentication')),
     cfg.StrOpt('password',
+               deprecated_for_removal=True,
+               deprecated_reason=('Symantec certificate plugin has been '
+                                  'deprecated'),
                help=u._('Symantec password for authentication'),
                secret=True),
     cfg.StrOpt('url',
+               deprecated_for_removal=True,
+               deprecated_reason=('Symantec certificate plugin has been '
+                                  'deprecated'),
                help=u._('Domain of Symantec API'))
 ]
 
@@ -61,6 +72,9 @@ class SymantecCertificatePlugin(cert.CertificatePluginBase):
 
         if self.url is None:
             raise ValueError(u._("url is required"))
+
+        LOG.warning('Symantec certificate plugin has been deprecated and '
+                    'will be removed in a future release.')
 
     def get_default_ca_name(self):
         return "Symantec CA"
