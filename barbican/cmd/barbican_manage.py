@@ -75,7 +75,7 @@ class DbCommands(object):
               do_soft_delete_expired_secrets=None):
         """Clean soft deletions in the database"""
         if dburl is None:
-            dburl = CONF.sql_connection
+            dburl = CONF.database.connection
         if log_file is None:
             log_file = CONF.log_file
 
@@ -99,7 +99,7 @@ class DbCommands(object):
         """Process the 'revision' Alembic command."""
         if dburl is None:
             commands.generate(autogenerate=autogen, message=str(message),
-                              sql_url=CONF.sql_connection)
+                              sql_url=CONF.database.connection)
         else:
             commands.generate(autogenerate=autogen, message=str(message),
                               sql_url=str(dburl))
@@ -115,7 +115,7 @@ class DbCommands(object):
         """Process the 'upgrade' Alembic command."""
         if dburl is None:
             commands.upgrade(to_version=str(version),
-                             sql_url=CONF.sql_connection)
+                             sql_url=CONF.database.connection)
         else:
             commands.upgrade(to_version=str(version), sql_url=str(dburl))
 
@@ -127,7 +127,7 @@ class DbCommands(object):
           default=False, help='Show full information about the revisions.')
     def history(self, conf, dburl=None, verbose=None):
         if dburl is None:
-            commands.history(verbose, sql_url=CONF.sql_connection)
+            commands.history(verbose, sql_url=CONF.database.connection)
         else:
             commands.history(verbose, sql_url=str(dburl))
 
@@ -139,7 +139,7 @@ class DbCommands(object):
           default=False, help='Show full information about the revisions.')
     def current(self, conf, dburl=None, verbose=None):
         if dburl is None:
-            commands.current(verbose, sql_url=CONF.sql_connection)
+            commands.current(verbose, sql_url=CONF.database.connection)
         else:
             commands.current(verbose, sql_url=str(dburl))
     sync_secret_stores_description = ("Sync secret_stores with "  # nosec
@@ -157,7 +157,7 @@ class DbCommands(object):
                            log_file=None):
         """Sync secret_stores table with barbican.conf"""
         if dburl is None:
-            dburl = CONF.sql_connection
+            dburl = CONF.database.connection
         if log_file is None:
             log_file = CONF.log_file
 

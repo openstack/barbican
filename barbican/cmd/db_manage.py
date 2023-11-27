@@ -54,7 +54,8 @@ class DatabaseManager(object):
     def get_main_parser(self):
         """Create top-level parser and arguments."""
         parser = argparse.ArgumentParser(description='Barbican DB manager.')
-        parser.add_argument('--dburl', '-d', default=self.conf.sql_connection,
+        parser.add_argument('--dburl', '-d',
+                            default=self.conf.database.connection,
                             help='URL to the database.')
 
         return parser

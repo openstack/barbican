@@ -335,7 +335,7 @@ def clean_command(sql_url, min_num_days, do_clean_unassociated_projects,
     stop_watch.start()
     try:
         if sql_url:
-            CONF.set_override('sql_connection', sql_url)
+            CONF.set_override('connection', sql_url, 'database')
         repo.setup_database_engine_and_factory()
 
         if do_clean_unassociated_projects:
@@ -370,7 +370,7 @@ def clean_command(sql_url, min_num_days, do_clean_unassociated_projects,
         repo.clear()
 
         if sql_url:
-            CONF.clear_override('sql_connection')
+            CONF.clear_override('connection', 'database')
 
         log.setup(CONF, 'barbican')  # reset the overrides
 

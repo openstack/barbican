@@ -167,7 +167,7 @@ def get_session():
 
 def _get_engine(engine):
     if not engine:
-        connection = CONF.sql_connection
+        connection = CONF.database.connection
         if not connection:
             raise exception.BarbicanException(
                 u._('No SQL connection configured'))
@@ -176,20 +176,21 @@ def _get_engine(engine):
     # connection_dict = sqlalchemy.engine.url.make_url(_CONNECTION)
 
         engine_args = {
-            'connection_recycle_time': CONF.sql_idle_timeout,
+            'connection_recycle_time': CONF.database.connection_recycle_time
         }
-        if CONF.sql_pool_size:
-            engine_args['max_pool_size'] = CONF.sql_pool_size
-        if CONF.sql_pool_max_overflow:
-            engine_args['max_overflow'] = CONF.sql_pool_max_overflow
+        if CONF.database.max_pool_size:
+            engine_args['max_pool_size'] = CONF.database.max_pool_size
+        if CONF.database.max_overflow:
+            engine_args['max_overflow'] = CONF.database.max_overflow
 
         db_connection = None
         try:
             engine = _create_engine(connection, **engine_args)
             db_connection = engine.connect()
         except Exception as err:
-            msg = u._("Error configuring registry database with supplied "
-                      "sql_connection. Got error: {error}").format(error=err)
+            msg = u._(
+                "Error configuring registry database with supplied "
+                "database connection. Got error: {error}").format(error=err)
             LOG.exception(msg)
             raise exception.BarbicanException(msg)
         finally:
@@ -277,12 +278,12 @@ def wrap_db_error(f):
             if not is_db_connection_error(e.args[0]):
                 raise
 
-            remaining_attempts = CONF.sql_max_retries
+            remaining_attempts = CONF.database.max_retries
             while True:
                 LOG.warning('SQL connection failed. %d attempts left.',
                             remaining_attempts)
                 remaining_attempts -= 1
-                time.sleep(CONF.sql_retry_interval)
+                time.sleep(CONF.database.retry_interval)
                 try:
                     return f(*args, **kwargs)
                 except sqlalchemy.exc.OperationalError as e:
