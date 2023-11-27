@@ -297,8 +297,6 @@ def new_config():
     conf.register_opts(_options.eventlet_backdoor_opts)
     conf.register_opts(_options.periodic_opts)
 
-    conf.register_opts(_options.ssl_opts, "ssl")
-
     conf.register_group(db_opt_group)
     conf.register_opts(core_db_opts, group=db_opt_group)
 
