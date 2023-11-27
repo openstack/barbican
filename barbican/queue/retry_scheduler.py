@@ -19,7 +19,6 @@ Retry/scheduler classes and logic.
 import datetime
 import random
 
-from oslo_service import periodic_task
 from oslo_service import service
 
 from barbican.common import config
@@ -46,11 +45,9 @@ def _compute_next_periodic_interval():
 class PeriodicServer(service.Service):
     """Server to process retry and scheduled tasks.
 
-    This server is an Oslo periodic-task service (see
-    https://docs.openstack.org/oslo.service/latest/reference/periodic_task.html).
-    On a periodic basis, this server checks for tasks that need to be
-    retried, and then sends them up to the RPC queue for later
-    processing by a worker node.
+    This server is an Oslo service. This server runs a thread to periodically
+    check tasks that need to be retried, and then sends them up to the RPC
+    queue for later processing by a worker node.
     """
     def __init__(self, queue_resource=None):
         super(PeriodicServer, self).__init__()
@@ -80,7 +77,6 @@ class PeriodicServer(service.Service):
         LOG.info("Halting the PeriodicServer")
         super(PeriodicServer, self).stop(graceful=graceful)
 
-    @periodic_task.periodic_task
     def _check_retry_tasks(self):
         """Periodically check to see if tasks need to be scheduled.
 

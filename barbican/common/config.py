@@ -24,7 +24,6 @@ from oslo_config import cfg
 from oslo_log import log
 from oslo_middleware import cors
 from oslo_policy import opts as policy_opts
-from oslo_service import _options
 
 from barbican import i18n as u
 import barbican.version
@@ -256,7 +255,6 @@ def list_opts():
     yield None, common_opts
     yield None, host_opts
     yield None, db_opts
-    yield None, _options.eventlet_backdoor_opts
     yield db_opt_group, core_db_opts
     yield retry_opt_group, retry_opts
     yield queue_opt_group, queue_opts
@@ -294,8 +292,6 @@ def new_config():
     conf.register_opts(common_opts)
     conf.register_opts(host_opts)
     conf.register_opts(db_opts)
-    conf.register_opts(_options.eventlet_backdoor_opts)
-    conf.register_opts(_options.periodic_opts)
 
     conf.register_group(db_opt_group)
     conf.register_opts(core_db_opts, group=db_opt_group)
