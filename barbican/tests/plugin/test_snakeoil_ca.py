@@ -18,6 +18,7 @@ import os
 from unittest import mock
 
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import pkcs7
 from cryptography import x509
 import fixtures
 from OpenSSL import crypto
@@ -364,8 +365,8 @@ class SnakeoilCAPluginTestCase(BaseTestCase):
             "subordinate ca signing cert",
             subject.CN)
 
-        pkcs7 = crypto.load_pkcs7_data(crypto.FILETYPE_PEM, intermediates)
-        self.assertTrue(pkcs7.type_is_signed())
+        certs = pkcs7.load_pem_pkcs7_certificates(intermediates)
+        self.assertIsNotNone(certs[0].signature)
 
         # TODO(alee) Verify that ca cert is signed by parent CA
 
