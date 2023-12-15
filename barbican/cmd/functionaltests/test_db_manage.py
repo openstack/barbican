@@ -42,7 +42,7 @@ class DBManageTestCase(base.TestCase):
         self.sbehaviors = secret_behaviors.SecretBehaviors(self.client)
         self.cbehaviors = container_behaviors.ContainerBehaviors(self.client)
 
-        db_url = BCONF.sql_connection
+        db_url = BCONF.database.connection
 
         time.sleep(5)
         # Setup session for tests to query DB

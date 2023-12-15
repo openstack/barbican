@@ -1,0 +1,15 @@
+---
+deprecations:
+  - |
+    The following database options in the ``[DEFAULT]`` section were renamed
+    and moved to the ``[database]`` section.
+
+    - ``[DEFAULT] sql_connection`` was renamed to ``[database] connection``
+    - ``[DEFAULT] sql_idle_timeout`` was renamed to
+      ``[database] connection_recycle_time``
+    - ``[DEFAULT] sql_max_retries`` was renamed to ``[database] max_retries``
+    - ``[DEFAULT] sql_retry_interval`` was renamed to
+      ``[database] retry_interval``
+    - ``[DEFAULT] sql_pool_size`` was renamed to `[database] max_pool_size``
+    - ``[DEFAULT] sql_pool_max_overflow`` was renamed to
+      ``[database] max_overflow``

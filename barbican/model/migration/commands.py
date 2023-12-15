@@ -37,7 +37,7 @@ CONF = config.CONF
 
 def init_config(sql_url=None):
     """Initialize and return the Alembic configuration."""
-    sqlalchemy_url = sql_url or CONF.sql_connection
+    sqlalchemy_url = sql_url or CONF.database.connection
     if not sqlalchemy_url:
         raise RuntimeError("Please specify a SQLAlchemy-friendly URL to "
                            "connect to the proper database, either through "

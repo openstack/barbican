@@ -43,7 +43,7 @@ def sync_secret_stores(sql_url, verbose, log_file):
 
     try:
         if sql_url:
-            CONF.set_override('sql_connection', sql_url)
+            CONF.set_override('connection', sql_url, 'database')
         repo.setup_database_engine_and_factory(
             initialize_secret_stores=True)
         repo.commit()
@@ -60,6 +60,6 @@ def sync_secret_stores(sql_url, verbose, log_file):
         repo.clear()
 
         if sql_url:
-            CONF.clear_override('sql_connection')
+            CONF.clear_override('connection', 'database')
 
         log.setup(CONF, 'barbican')  # reset the overrides

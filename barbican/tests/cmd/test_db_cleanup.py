@@ -363,11 +363,11 @@ class WhenTestingDBCleanUpCommand(utils.RepositoryTestCase):
                             test_log_file)
         set_calls = [mock.call('debug', True),
                      mock.call('log_file', test_log_file),
-                     mock.call('sql_connection', test_sql_url)]
+                     mock.call('connection', test_sql_url, 'database')]
         mock_conf.set_override.assert_has_calls(set_calls)
 
         clear_calls = [mock.call('debug'), mock.call('log_file'),
-                       mock.call('sql_connection')]
+                       mock.call('connection', 'database')]
         mock_conf.clear_override.assert_has_calls(clear_calls)
         self.assertTrue(mock_repo.setup_database_engine_and_factory.called)
         self.assertTrue(mock_repo.commit.called)

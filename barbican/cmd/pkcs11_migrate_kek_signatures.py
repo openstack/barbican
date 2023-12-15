@@ -159,7 +159,7 @@ def main():
     args = parser.parse_args()
 
     migrator = KekSignatureMigrator(
-        db_connection=CONF.sql_connection,
+        db_connection=CONF.database.connection,
         library_path=CONF.p11_crypto_plugin.library_path,
         login=CONF.p11_crypto_plugin.login,
         slot_id=CONF.p11_crypto_plugin.slot_id

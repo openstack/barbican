@@ -30,7 +30,7 @@ class TestBarbicanManageBase(utils.BaseTestCase):
         clear_conf()
         self.addCleanup(clear_conf)
 
-        manager.CONF.set_override('sql_connection', 'mockdburl')
+        manager.CONF.set_override('connection', 'mockdburl', 'database')
 
     def _main_test_helper(self, argv, func_name=None, *exp_args, **exp_kwargs):
         self.useFixture(fixtures.MonkeyPatch('sys.argv', argv))
