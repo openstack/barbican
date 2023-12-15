@@ -39,12 +39,8 @@ p11_crypto_plugin_opts = [
     cfg.StrOpt('token_serial_number',
                help=u._('Token serial number used to identify the token to be '
                         'used.')),
-    cfg.StrOpt('token_label',
-               deprecated_for_removal=True,
-               help=u._('DEPRECATED: Use token_labels instead. '
-                        'Token label used to identify the token to '
-                        'be used.')),
     cfg.ListOpt('token_labels',
+                default=[],
                 help=u._('List of labels for one or more tokens to be used. '
                          'Typically this is a single label, but some HSM '
                          'devices may require more than one label for Load '
@@ -159,12 +155,7 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         self.slot_id = plugin_conf.slot_id
         self.login = plugin_conf.login
         self.token_serial_number = plugin_conf.token_serial_number
-        self.token_labels = plugin_conf.token_labels or list()
-        if plugin_conf.token_label:
-            LOG.warning('Using deprecated option "token_label". Please update '
-                        'your configuration file.')
-            if plugin_conf.token_label not in self.token_labels:
-                self.token_labels.append(plugin_conf.token_label)
+        self.token_labels = plugin_conf.token_labels
 
         # Use specified or create new pkcs11 object
         self.pkcs11 = pkcs11 or self._create_pkcs11(ffi)
