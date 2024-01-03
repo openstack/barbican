@@ -98,8 +98,9 @@ def generate_safe_exception_message(operation_name, excep):
     except (policy.PolicyNotAuthorized, policy.InvalidScope):
         message = u._(
             '{operation} attempt not allowed - '
-            'please review your '
-            'user/project privileges').format(operation=operation_name)
+            'please ensure you have the necessary '
+            'keymanager_viewer or keymanager_admin project roles for this operation'
+        ).format(operation=operation_name)
         status = 403
 
     except exception.BarbicanHTTPException as http_exception:
