@@ -150,7 +150,7 @@ class WhenRunningPeriodicServerRetryLogic(database_utils.RepositoryTestCase):
 
 
 class WhenRunningPeriodicServer(utils.BaseTestCase):
-    """Tests the timing-related functionality of the periodic task retry server.
+    """Tests the timing-related functionality of the periodic server.
 
     These tests are only concerned with whether or not periodic tasks are
     actually invoked per configured schedule configuration. The logic of the

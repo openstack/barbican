@@ -121,7 +121,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         - DSA, without passphrase (supported)
         - DSA, with passphrase (supported)
         """
-        if(generate_dto.algorithm is None or generate_dto
+        if (generate_dto.algorithm is None or generate_dto
                 .algorithm.lower() == 'rsa'):
             private_key = rsa.generate_private_key(
                 public_exponent=65537,

@@ -17,7 +17,6 @@ import ast
 import re
 
 from hacking import core
-import pycodestyle
 
 
 """
@@ -152,18 +151,18 @@ class CheckLoggingFormatArgs(BaseASTChecker):
 
 
 @core.flake8ext
-def check_oslo_namespace_imports(physical_line, logical_line, filename):
+def check_oslo_namespace_imports(logical_line, filename, noqa):
     """'oslo_' should be used instead of 'oslo.'
 
     B317
     """
-    if pycodestyle.noqa(physical_line):
+    if noqa:
         return
     if re.match(oslo_namespace_imports, logical_line):
         msg = ("B317: '%s' must be used instead of '%s'.") % (
             logical_line.replace('oslo.', 'oslo_'),
             logical_line)
-        yield(0, msg)
+        yield (0, msg)
 
 
 @core.flake8ext
@@ -188,4 +187,4 @@ def no_log_warn_check(logical_line):
     """
     msg = ("B320: LOG.warn is deprecated, please use LOG.warning!")
     if re.match(no_log_warn, logical_line):
-        yield(0, msg)
+        yield (0, msg)
