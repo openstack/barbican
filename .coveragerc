@@ -1,9 +1,10 @@
 [run]
 branch = True
-omit = etc/*,setup.py,*egg*,.tox/*,barbican/tests/*,
-       functionaltests/*,
-       barbican/model/migration/alembic_migrations/versions/*,
-       barbican/plugin/dogtag.py, barbican/plugin/symantec.py
+source = barbican
+omit = barbican/tests/*,
+       barbican/model/migration/alembic_migrations/versions/,
+       barbican/plugin/dogtag.py,
+       barbican/plugin/symantec.py
 
 [report]
 ignore_errors = True
