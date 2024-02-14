@@ -135,7 +135,7 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secrets:post',
-        check_str=f'True:%(enforce_new_defaults)s and role:member',
+        check_str='True:%(enforce_new_defaults)s and role:member',
         scope_types=['project'],
         description='Creates a Secret entity.',
         operations=[
@@ -148,7 +148,7 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name='secrets:get',
-        check_str=f'True:%(enforce_new_defaults)s and role:member',
+        check_str='True:%(enforce_new_defaults)s and role:member',
         scope_types=['project'],
         description='Lists a projects secrets.',
         operations=[

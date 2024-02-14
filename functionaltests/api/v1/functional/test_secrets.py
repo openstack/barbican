@@ -1047,7 +1047,7 @@ class SecretsTestCase(base.TestCase):
     @testcase.attr('negative')
     def test_secret_create_with_invalid_http_content_type_characters(
             self, http_content_type):
-        """Attempt to create secrets with invalid unicode characters in the
+        """Create secrets with invalid unicode characters in the
 
         HTTP request's Content-Type header. Should return a 415.
         """
@@ -1075,7 +1075,7 @@ class SecretsTestCase(base.TestCase):
     @testcase.attr('negative')
     def test_secret_create_with_invalid_payload_content_type_characters(
             self, payload_content_type):
-        """Attempt to create secrets with non-ascii characters in the
+        """Create secrets with non-ascii characters in the
 
         payload's content type attribute. Should return a 400.
         """
@@ -1296,7 +1296,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_create_unauthed_no_proj_id(self):
-        """Attempt to create a secret without a token or project id
+        """Create a secret without a token or project id
 
         Should return 401
         """
@@ -1307,7 +1307,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_create_unauthed_fake_proj_id(self):
-        """Attempt to create a secret with a project id but no token
+        """Create a secret with a project id but no token
 
         Should return 401
         """
@@ -1321,7 +1321,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_create_unauthed_real_proj_id(self):
-        """Attempt to create a secret with a project id but no token
+        """Create a secret with a project id but no token
 
         Should return 401
         """
@@ -1335,7 +1335,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_get_unauthed_no_proj_id_fake_secret(self):
-        """Attempt to read a non-existant secret without a token or project id
+        """Read a non-existant secret without a token or project id
 
         Should return 401
         """
@@ -1349,7 +1349,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_get_unauthed_no_proj_id_real_secret(self):
-        """Attempt to read an existing secret without a token or project id
+        """Read an existing secret without a token or project id
 
         Should return 401
         """
@@ -1363,7 +1363,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_get_unauthed_fake_proj_id_fake_secret(self):
-        """Attempt to get a non-existant secret with a project id but no token
+        """Get a non-existant secret with a project id but no token
 
         Should return 401
         """
@@ -1379,7 +1379,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_get_unauthed_fake_proj_id_real_secret(self):
-        """Attempt to get an existing secret with a project id but no token
+        """Get an existing secret with a project id but no token
 
         Should return 401
         """
@@ -1395,7 +1395,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_get_unauthed_real_proj_id_fake_secret(self):
-        """Attempt to get a non-existant secret with a project id but no token
+        """Get a non-existant secret with a project id but no token
 
         Should return 401
         """
@@ -1411,7 +1411,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_get_unauthed_real_proj_id_real_secret(self):
-        """Attempt to get an existing secret with a project id but no token
+        """Get an existing secret with a project id but no token
 
         Should return 401
         """
@@ -1427,7 +1427,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_put_unauthed_no_proj_id_fake_secret(self):
-        """Attempt to update a non-existant secret without a token or project id
+        """Update a non-existant secret without a token or project id
 
         Should return 401
         """
@@ -1441,7 +1441,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_put_unauthed_no_proj_id_real_secret(self):
-        """Attempt to update an existing secret without a token or project id
+        """Update an existing secret without a token or project id
 
         Should return 401
         """
@@ -1455,7 +1455,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_put_unauthed_fake_proj_id_fake_secret(self):
-        """Attempt to update a non-existant secret with a project id, but no token
+        """Update a non-existant secret with a project id, but no token
 
         Should return 401
         """
@@ -1471,7 +1471,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_put_unauthed_fake_proj_id_real_secret(self):
-        """Attempt to update an existing secret with a project id, but no token
+        """Update an existing secret with a project id, but no token
 
         Should return 401
         """
@@ -1487,7 +1487,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_put_unauthed_real_proj_id_fake_secret(self):
-        """Attempt to update a non-existant secret with a project id, but no token
+        """Update a non-existant secret with a project id, but no token
 
         Should return 401
         """
@@ -1503,7 +1503,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_put_unauthed_real_proj_id_real_secret(self):
-        """Attempt to update an existing secret with a project id, but no token
+        """Update an existing secret with a project id, but no token
 
         Should return 401
         """
@@ -1519,7 +1519,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_delete_unauthed_no_proj_id_fake_secret(self):
-        """Attempt to delete a non-existant secret without a token or project id
+        """Delete a non-existant secret without a token or project id
 
         Should return 401
         """
@@ -1531,7 +1531,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_delete_unauthed_no_proj_id_real_secret(self):
-        """Attempt to delete an existing secret without a token or project id
+        """Delete an existing secret without a token or project id
 
         Should return 401
         """
@@ -1543,7 +1543,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_delete_unauthed_fake_proj_id_fake_secret(self):
-        """Attempt to delete a non-existant secret with a project id, but no token
+        """Delete a non-existant secret with a project id, but no token
 
         Should return 401
         """
@@ -1557,7 +1557,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_delete_unauthed_fake_proj_id_real_secret(self):
-        """Attempt to delete an existing secret with a project id, but no token
+        """Delete an existing secret with a project id, but no token
 
         Should return 401
         """
@@ -1571,7 +1571,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_delete_unauthed_real_proj_id_fake_secret(self):
-        """Attempt to delete a non-existant secret with a project id, but no token
+        """Delete a non-existant secret with a project id, but no token
 
         Should return 401
         """
@@ -1585,7 +1585,7 @@ class SecretsUnauthedTestCase(base.TestCase):
 
     @testcase.attr('negative', 'security')
     def test_secret_delete_unauthed_real_proj_id_real_secret(self):
-        """Attempt to delete an existing secret with a project id, but no token
+        """Delete an existing secret with a project id, but no token
 
         Should return 401
         """
