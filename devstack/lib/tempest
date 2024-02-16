@@ -1,0 +1,16 @@
+function configure_barbican_tempest() {
+
+    iniset $TEMPEST_CONFIG service_available barbican True
+    iniset $TEMPEST_CONFIG enforce_scope barbican $BARBICAN_ENFORCE_SCOPE
+
+    if [[ "$BARBICAN_ENFORCE_SCOPE" == "False" ]]; then
+        # NOTE: legacy policies require the "creator" role
+        roles="$(iniget $TEMPEST_CONFIG auth tempest_roles)"
+        if [[ -z $roles ]]; then
+            roles="creator"
+        else
+            roles="$roles,creator"
+        fi
+        iniset $TEMPEST_CONFIG auth tempest_roles $roles
+    fi
+}

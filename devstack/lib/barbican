@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-# Install and start **Barbican** service
+# lib/barbican
+# Functions to control the configuration and operation of **Barbican**
 
 # To enable a minimal set of Barbican features, add the following to localrc:
 #   enable_service barbican-svc barbican-retry barbican-keystone-listener
@@ -87,6 +88,21 @@ function configure_barbicanclient {
     setup_dev_lib "python-barbicanclient"
 }
 
+# Set the correct config options in Nova, Cinder and Glance
+function configure_core_services {
+    if is_service_enabled n-cpu; then
+        iniset $NOVA_CONF key_manager backend 'barbican'
+    fi
+
+    if is_service_enabled c-vol; then
+        iniset $CINDER_CONF key_manager backend 'barbican'
+    fi
+
+    if is_service_enabled g-api; then
+        iniset $GLANCE_API_CONF key_manager backend 'barbican'
+    fi
+}
+
 # configure_dogtag_plugin - Change config to use dogtag plugin
 function configure_dogtag_plugin {
     sudo openssl pkcs12 -in /root/.dogtag/pki-tomcat/ca_admin_cert.p12 -passin pass:PASSWORD -out $BARBICAN_CONF_DIR/kra_admin_cert.pem -nodes
@@ -169,6 +185,10 @@ function configure_barbican {
     # Enable the keystone listener
     iniset $BARBICAN_CONF keystone_notifications enable True
     iniset $BARBICAN_CONF keystone_notifications control_exchange 'keystone'
+
+    # Set the Secure RBAC options
+    iniset $BARBICAN_CONF oslo_policy enforce_scope $BARBICAN_ENFORCE_SCOPE
+    iniset $BARBICAN_CONF oslo_policy enforce_new_defaults $BARBICAN_ENFORCE_SCOPE
 }
 
 # init_barbican - Initialize etc.
@@ -234,17 +254,52 @@ function get_id {
     echo `"$@" | awk '/ id / { print $4 }'`
 }
 
+# create_barbican_accounts() - Sets up required keystone accounts
 function create_barbican_accounts {
-    #
-    # Setup Default Admin User
-    #
-    SERVICE_PROJECT=$(openstack project list | awk "/ $SERVICE_PROJECT_NAME / { print \$2 }")
-    ADMIN_ROLE=$(openstack role list | awk "/ admin / { print \$2 }")
+    # create barbican service user
+    # the "admin" role is created by the keystone bootstrap process so we
+    # just reference it here.
+    local admin_role="admin"
+    create_service_user barbican $admin_role
+}
 
-    create_service_user barbican $ADMIN_ROLE
-    #
-    # Setup Default service-admin User
-    #
+# create_barbican_endpoints() - Sets up keystone endpoints for the barbican
+# service.
+function create_barbican_endpoints {
+    BARBICAN_SERVICE=$(get_or_create_service \
+        "barbican" \
+        "key-manager" \
+        "Barbican Key Manager Service")
+    # create all 3 endpoints (public, admin, internal)
+    get_or_create_endpoint \
+        "$BARBICAN_SERVICE" \
+        "RegionOne" \
+        "$SERVICE_PROTOCOL://$SERVICE_HOST/key-manager" \
+        "$SERVICE_PROTOCOL://$SERVICE_HOST/key-manager" \
+        "$SERVICE_PROTOCOL://$SERVICE_HOST/key-manager"
+}
+
+# create_deprecated_rbac_accounts() - Sets up rbac accounts for the deprecated
+# legacy policies.  Required wieh BARBICAN_ENABLE_SCOPE=False. The following
+# accounts will be created:
+#
+# +---------------------+---------------------------+-----------+
+# |        user         |           role            |  project  |
+# +---------------------+---------------------------+-----------+
+# | service-admin       | key-manager:service-admin | service   |
+# | project_a_admin     | admin                     | project_a |
+# | project_a_creator   | creator                   | project_a |
+# | project_a_creator_2 | creator                   | project_a |
+# | project_a_observer  | observer                  | project_a |
+# | project_a_auditor   | audit                     | project_a |
+# | project_b_admin     | admin                     | project_b |
+# | project_b_creator   | creator                   | project_b |
+# | project_b_observer  | observer                  | project_b |
+# | project_b_auditor   | audit                     | project_b |
+# +---------------------+---------------------------+-----------+
+#
+function create_deprecated_rbac_accounts {
+    # Set up the system-admin
     SERVICE_ADMIN=$(get_or_create_user \
                         "service-admin" \
                         "$SERVICE_PASSWORD" \
@@ -254,10 +309,9 @@ function create_barbican_accounts {
     get_or_add_user_project_role \
         "$SERVICE_ADMIN_ROLE" \
         "$SERVICE_ADMIN" \
-        "$SERVICE_PROJECT"
-    #
-    # Setup RBAC User Projects and Roles
-    #
+        "$SERVICE_PROJECT_NAME"
+
+    # Set up legacy RBAC User Projects and Roles
     PASSWORD="barbican"
     PROJECT_A_ID=$(get_or_create_project "project_a" "default")
     PROJECT_B_ID=$(get_or_create_project "project_b" "default")
@@ -265,100 +319,62 @@ function create_barbican_accounts {
     ROLE_CREATOR_ID=$(get_or_create_role "creator")
     ROLE_OBSERVER_ID=$(get_or_create_role "observer")
     ROLE_AUDIT_ID=$(get_or_create_role "audit")
-    #
-    # Setup RBAC Admin of Project A
-    #
+
     USER_ID=$(get_or_create_user \
                   "project_a_admin" \
                   "$PASSWORD" \
                   "default" \
                   "admin_a@example.net")
     get_or_add_user_project_role "$ROLE_ADMIN_ID" "$USER_ID" "$PROJECT_A_ID"
-    #
-    # Setup RBAC Creator of Project A
-    #
     USER_ID=$(get_or_create_user \
                   "project_a_creator" \
                   "$PASSWORD" \
                   "default" \
                   "creator_a@example.net")
     get_or_add_user_project_role "$ROLE_CREATOR_ID" "$USER_ID" "$PROJECT_A_ID"
-    # Adding second creator user in project_a
     USER_ID=$(get_or_create_user \
                   "project_a_creator_2" \
                   "$PASSWORD" \
                   "default" \
                   "creator2_a@example.net")
     get_or_add_user_project_role "$ROLE_CREATOR_ID" "$USER_ID" "$PROJECT_A_ID"
-    #
-    # Setup RBAC Observer of Project A
-    #
     USER_ID=$(get_or_create_user \
                   "project_a_observer" \
                   "$PASSWORD" \
                   "default" \
                   "observer_a@example.net")
     get_or_add_user_project_role "$ROLE_OBSERVER_ID" "$USER_ID" "$PROJECT_A_ID"
-    #
-    # Setup RBAC Auditor of Project A
-    #
     USER_ID=$(get_or_create_user \
                   "project_a_auditor" \
                   "$PASSWORD" \
                   "default" \
                   "auditor_a@example.net")
     get_or_add_user_project_role "$ROLE_AUDIT_ID" "$USER_ID" "$PROJECT_A_ID"
-    #
-    # Setup RBAC Admin of Project B
-    #
+
     USER_ID=$(get_or_create_user \
                   "project_b_admin" \
                   "$PASSWORD" \
                   "default" \
                   "admin_b@example.net")
     get_or_add_user_project_role "$ROLE_ADMIN_ID" "$USER_ID" "$PROJECT_B_ID"
-    #
-    # Setup RBAC Creator of Project B
-    #
     USER_ID=$(get_or_create_user \
                   "project_b_creator" \
                   "$PASSWORD" \
                   "default" \
                   "creator_b@example.net")
     get_or_add_user_project_role "$ROLE_CREATOR_ID" "$USER_ID" "$PROJECT_B_ID"
-    #
-    # Setup RBAC Observer of Project B
-    #
     USER_ID=$(get_or_create_user \
                   "project_b_observer" \
                   "$PASSWORD" \
                   "default" \
                   "observer_b@example.net")
     get_or_add_user_project_role "$ROLE_OBSERVER_ID" "$USER_ID" "$PROJECT_B_ID"
-    #
-    # Setup RBAC auditor of Project B
-    #
     USER_ID=$(get_or_create_user \
                   "project_b_auditor" \
                   "$PASSWORD" \
                   "default" \
                   "auditor_b@example.net")
     get_or_add_user_project_role "$ROLE_AUDIT_ID" "$USER_ID" "$PROJECT_B_ID"
-    #
-    # Setup Barbican Endpoint
-    #
-    BARBICAN_SERVICE=$(get_or_create_service \
-        "barbican" \
-        "key-manager" \
-        "Barbican Service")
-    # This creates all 3 endpoints (public, admin, internal)
-    get_or_create_endpoint \
-        "$BARBICAN_SERVICE" \
-        "RegionOne" \
-        "$SERVICE_PROTOCOL://$SERVICE_HOST/key-manager" \
-        "$SERVICE_PROTOCOL://$SERVICE_HOST/key-manager" \
-        "$SERVICE_PROTOCOL://$SERVICE_HOST/key-manager"
-
 }
 
 # PyKMIP functions

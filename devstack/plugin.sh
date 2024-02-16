@@ -1,23 +1,11 @@
-# Configure the needed tempest options
-function configure_barbican_tempest() {
-    iniset $TEMPEST_CONFIG service_available barbican True
-    roles="$(iniget $TEMPEST_CONFIG auth tempest_roles)"
-    if [[ -z $roles ]]; then
-        roles="creator"
-    else
-        roles="$roles,creator"
-    fi
-    iniset $TEMPEST_CONFIG auth tempest_roles $roles
-    iniset $TEMPEST_CONFIG service_available barbican True
-}
+# For more information on Devstack plugins, including a more detailed
+# explanation on when the different steps are executed please see:
+# https://docs.openstack.org/devstack/latest/plugins.html
 
-# check for service enabled
+BARBICAN_PLUGIN=$DEST/barbican/devstack
+source $BARBICAN_PLUGIN/lib/barbican
+
 if is_service_enabled barbican; then
-    if [[ "$1" == "source" || "`type -t install_barbican`" != 'function' ]]; then
-        # Initial source
-        source $BARBICAN_DIR/devstack/lib/barbican
-    fi
-
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing Barbican"
         stack_install_service barbican
@@ -55,6 +43,10 @@ if is_service_enabled barbican; then
 
         if is_service_enabled key; then
             create_barbican_accounts
+            create_barbican_endpoints
+            if [[ "$BARBICAN_ENFORCE_SCOPE" == "False" ]]; then
+                create_deprecated_rbac_accounts
+            fi
         fi
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
         echo_summary "Initializing Barbican"
@@ -67,6 +59,7 @@ if is_service_enabled barbican; then
     elif [[ "$1" == "stack" && "$2" == "test-config" ]]; then
         if is_service_enabled tempest; then
             echo_summary "Configuring Tempest options for Barbican"
+            source $BARBICAN_PLUGIN/lib/tempest
             configure_barbican_tempest
         fi
     fi
@@ -79,18 +72,3 @@ if is_service_enabled barbican; then
         cleanup_barbican
     fi
 fi
-
-# Set the correct config options in Nova, Cinder and Glance
-function configure_core_services {
-    if is_service_enabled n-cpu; then
-        iniset $NOVA_CONF key_manager backend 'barbican'
-    fi
-
-    if is_service_enabled c-vol; then
-        iniset $CINDER_CONF key_manager backend 'barbican'
-    fi
-
-    if is_service_enabled g-api; then
-        iniset $GLANCE_API_CONF key_manager backend 'barbican'
-    fi
-}

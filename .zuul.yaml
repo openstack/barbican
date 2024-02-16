@@ -113,6 +113,13 @@
       tempest_test_regex: '\[.*\bsmoke\b.*\]|^(barbican_tempest_plugin.tests)'
       tox_envlist: all
 
+- job:
+    name: octavia-v2-dsvm-tls-barbican-secure-rbac
+    parent: octavia-v2-dsvm-tls-barbican
+    vars:
+      devstack_localrc:
+        ENFORCE_SCOPE: True
+
 - project:
     queue: barbican
     templates:
@@ -134,6 +141,7 @@
         - barbican-tox-functional-fips:
             voting: false
         - octavia-v2-dsvm-tls-barbican
+        - octavia-v2-dsvm-tls-barbican-secure-rbac
         - barbican-tox-py310-with-sqlalchemy-2x
     gate:
       jobs:

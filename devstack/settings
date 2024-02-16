@@ -41,4 +41,7 @@ GITREPO["barbican-tempest-plugin"]=${BARBICANTEMPEST_REPO:-${GIT_BASE}/openstack
 GITBRANCH["barbican-tempest-plugin"]=${BARBICANTEMPEST_BRANCH:-master}
 GITDIR["barbican-tempest-plugin"]=$DEST/barbican-tempest-plugin
 
+# Secure RBAC
+BARBICAN_ENFORCE_SCOPE=$(trueorfalse True ENFORCE_SCOPE)
+
 enable_service barbican
