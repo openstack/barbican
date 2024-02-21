@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The deprecated certificate order resource was removed. Because of this,
+    create order API no longer accepts ``certificate`` type.

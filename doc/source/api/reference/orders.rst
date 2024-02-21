@@ -2,11 +2,6 @@
 Orders API - Reference
 **********************
 
-.. warning::
-
-  DEPRECATION WARNING: The Certificates Order resource has been deprecated
-  and will be removed in the P release.
-
 .. _get_orders:
 
 GET /v1/orders
@@ -144,7 +139,7 @@ Parameters
 | Attribute Name             | Type    | Description                                  | Default    |
 +============================+=========+==============================================+============+
 | type                       | string  | The type of key to be generated. Valid types | None       |
-|                            |         | are key, asymmetric, and certificate         |            |
+|                            |         | are key and asymmetric                       |            |
 +----------------------------+---------+----------------------------------------------+------------+
 | meta                       |         | Dictionary containing the secret metadata    | None       |
 |                            | dict    | used to generate the secret.                 |            |

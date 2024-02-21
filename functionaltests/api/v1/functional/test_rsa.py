@@ -95,25 +95,6 @@ def get_order_rsa_container_with_passphrase():
                      "mode": "cbc"}}
 
 
-def get_order_certificate(container_ref):
-    return {'type': 'certificate',
-            'meta': {'request_type': 'stored-key',
-                     'container_ref': container_ref,
-                     'subject_dn': 'cn=server.example.com,o=example.com',
-                     'requestor_name': 'Barbican User',
-                     'requestor_email': 'user@example.com',
-                     'requestor_phone': '555-1212'}}
-
-
-def get_order_certificate_simple_cmc(csr):
-    return {'type': 'certificate',
-            'meta': {'request_type': 'simple-cmc',
-                     'requestor_name': 'Barbican User',
-                     'requestor_email': 'user@example.com',
-                     'requestor_phone': '555-1212',
-                     'request_data': csr}}
-
-
 @utils.parameterized_test_case
 class RSATestCase(base.TestCase):
     """Positive test cases for all ways of working with RSA keys
@@ -266,70 +247,6 @@ class RSATestCase(base.TestCase):
         container_ref = self.store_container(public_ref, private_ref)
         secrets = self.get_container(container_ref)
         self.verify_container_keys_equal(secrets)
-
-    @testcase.attr('positive')
-    @testtools.skipIf(utils.is_pkcs11_enabled(),
-                      "PKCS11 does not support this operation")
-    def test_rsa_order_certificate_from_ordered_container(self):
-        """Post an order for a certificate"""
-        order_ref = self.order_container()
-        container_ref = self.get_container_order(order_ref)
-        secrets = self.get_container(container_ref)
-        self.verify_container_keys_valid(secrets)
-        order_ref = self.order_certificate(container_ref)
-        order_status = self.get_certificate_order(order_ref)
-        self.verify_certificate_order_status(order_status)
-
-    @testcase.attr('positive')
-    @testtools.skipIf(utils.is_kmip_enabled() or utils.is_vault_enabled()
-                      or utils.is_pkcs11_enabled(),
-                      "PyKMIP does not support this operation")
-    def test_rsa_order_certificate_from_ordered_container_with_pass(self):
-        """Post an order for a certificate"""
-        order_ref = self.order_container(with_passphrase=True)
-        container_ref = self.get_container_order(order_ref)
-        secrets = self.get_container(container_ref)
-        self.verify_container_keys_valid(secrets, with_passphrase=True)
-        order_ref = self.order_certificate(container_ref)
-        order_status = self.get_certificate_order(order_ref)
-        self.verify_certificate_order_status(order_status)
-
-    @testcase.attr('positive')
-    def test_rsa_order_certificate_from_stored_container(self):
-        """Post an order for a certificate"""
-        public_ref = self.create_public_key()
-        self.update_public_key(public_ref)
-        private_ref = self.create_private_key()
-        self.update_private_key(private_ref)
-        container_ref = self.store_container(public_ref, private_ref)
-        secrets = self.get_container(container_ref)
-        self.verify_container_keys_equal(secrets)
-        order_ref = self.order_certificate(container_ref)
-        order_status = self.get_certificate_order(order_ref)
-        self.verify_certificate_order_status(order_status)
-
-    @testcase.attr('positive')
-    @testtools.skipIf(utils.is_kmip_enabled(),
-                      "PyKMIP does not support this operation")
-    def test_rsa_order_certificate_from_stored_container_with_pass(self):
-        """Post an order for a certificate"""
-        public_ref = self.store_public_key()
-        private_ref = self.store_encrypted_private_key()
-        phrase_ref = self.store_passphrase()
-        container_ref = self.store_container(
-            public_ref, private_ref, phrase_ref)
-        secrets = self.get_container(container_ref)
-        self.verify_container_keys_equal(secrets, with_passphrase=True)
-        order_ref = self.order_certificate(container_ref)
-        order_status = self.get_certificate_order(order_ref)
-        self.verify_certificate_order_status(order_status)
-
-    @testcase.attr('positive')
-    def test_rsa_order_certificate_from_csr(self):
-        """Post an order for a certificate"""
-        order_ref = self.order_certificate_from_csr()
-        order_status = self.get_certificate_order(order_ref)
-        self.verify_certificate_order_status(order_status)
 
 # ----------------------- Helper Functions ---------------------------
     def store_private_key(self):
@@ -583,29 +500,3 @@ class RSATestCase(base.TestCase):
         resp = self.order_behaviors.get_order(order_ref)
         self.assertEqual(200, resp.status_code)
         return resp.model.container_ref
-
-    def order_certificate(self, container_ref):
-        test_model = order_models.OrderModel(
-            **get_order_certificate(container_ref))
-        resp, order_ref = self.order_behaviors.create_order(test_model)
-        self.assertEqual(202, resp.status_code)
-        return order_ref
-
-    def get_certificate_order(self, order_ref):
-        resp = self.order_behaviors.get_order(order_ref)
-        self.assertEqual(200, resp.status_code)
-        order_status = (resp.model.status,
-                        resp.model.sub_status)
-        return order_status
-
-    def verify_certificate_order_status(self, order_status):
-        self.assertEqual(("PENDING", "cert_request_pending"),
-                         order_status)
-
-    def order_certificate_from_csr(self):
-        csr = keys.get_csr_pem()
-        test_model = order_models.OrderModel(
-            **get_order_certificate_simple_cmc(base64.b64encode(csr)))
-        resp, order_ref = self.order_behaviors.create_order(test_model)
-        self.assertEqual(202, resp.status_code)
-        return order_ref
