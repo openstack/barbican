@@ -15,8 +15,6 @@
 
 import testtools
 
-from barbican.plugin.interface import certificate_manager as cert_interface
-
 from functionaltests.api import base
 from functionaltests.api.v1.behaviors import consumer_behaviors
 from functionaltests.api.v1.behaviors import container_behaviors
@@ -34,11 +32,6 @@ from functionaltests.common import config
 CONF = config.get_config()
 admin_b = CONF.rbac_users.admin_b
 service_admin = CONF.identity.service_admin
-
-
-def is_ca_backend_snakeoil():
-    return 'snakeoil_ca' in\
-           cert_interface.CONF.certificate.enabled_certificate_plugins
 
 
 @testtools.testcase.attr('no_parallel')

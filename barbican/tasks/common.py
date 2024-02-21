@@ -39,16 +39,10 @@ class RetryTasks(object):
 
     NO_ACTION_REQUIRED - To retry/scheduling actions are required
 
-
-    The following task/context-specific actions are available:
-
-    INVOKE_CERT_STATUS_CHECK_TASK - Check certificate status later
-
     """
 
     INVOKE_SAME_TASK = "Invoke Same Task Again Later"
     NO_ACTION_REQUIRED = "No Retry/Schedule Actions Are Needed"
-    INVOKE_CERT_STATUS_CHECK_TASK = "Check Certificate Status Later"
 
 
 class FollowOnProcessingStatusDTO(object):

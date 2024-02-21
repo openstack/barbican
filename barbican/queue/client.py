@@ -46,13 +46,6 @@ class TaskClient(object):
                    project_id=project_id,
                    request_id=request_id)
 
-    def check_certificate_status(self, order_id, project_id, request_id):
-        """Check the status of a certificate order."""
-        self._cast('check_certificate_status',
-                   order_id=order_id,
-                   project_id=project_id,
-                   request_id=request_id)
-
     def _cast(self, name, **kwargs):
         """Asynchronous call handler. Barbican probably only needs casts.
 

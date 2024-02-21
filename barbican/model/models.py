@@ -52,7 +52,6 @@ class States(object):
 class OrderType(object):
     KEY = 'key'
     ASYMMETRIC = 'asymmetric'
-    CERTIFICATE = 'certificate'
 
     @classmethod
     def is_valid(cls, order_type):

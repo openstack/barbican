@@ -15,10 +15,10 @@ storage keys that are stored either in a software NSS database or in an HSM.  It
 can serve as a secret store for barbican, and interacts with barbican core through
 the Dogtag KRA plugin.
 
-In this guide, we will provide instructions on how to set up a basic Dogtag instance
-containing a CA and a KRA, and how to configure barbican to use this instance for a
-secret store and a certificate plugin.  Much more detail about Dogtag, its deployment
-options and its administration are available in the `RHCS documentation
+In this guide, we will provide instructions on how to set up a basic Dogtag
+instance containing a CA and a KRA, and how to configure barbican to use this
+instance for a secret store.  Much more detail about Dogtag, its deployment
+options and its  administration are available in the `RHCS documentation
 <https://access.redhat.com/documentation/en-US/Red_Hat_Certificate_System>`_.
 
 **Note:** The code below is taken from the devstack Barbican-Dogtag gate job.  You can
@@ -166,8 +166,8 @@ created with trusted agent credentials.
     chown $USER $BARBICAN_CONF_DIR/kra_admin_cert.pem
 
 The barbican config file (/etc/barbican/barbican.conf) needs to be modified.
-The modifications below set the Dogtag plugins as the only enabled secret store and
-certificate plugins.  Be sure to restart barbican once these changes are made.
+The modifications below set the Dogtag plugins as the only enabled secret store.
+Makee sure to restart barbican once these changes are made.
 
 Note that the actual hostname of the machine should be used in the script (rather
 than localhost) because the hostname is used in the subject name for the SSL
@@ -188,10 +188,6 @@ server certificate for the CA.
     [secretstore]
     namespace = barbican.secretstore.plugin
     enabled_secretstore_plugins = dogtag_crypto
-
-    [certificate]
-    namespace = barbican.certificate.plugin
-    enabled_certificate_plugins = dogtag
 
 
 Testing the Setup
