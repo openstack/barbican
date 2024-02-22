@@ -33,13 +33,3 @@ class RequestContext(oslo_context.context.RequestContext):
             policy.init()
             self.policy_enforcer = policy.get_enforcer()
         super(RequestContext, self).__init__(**kwargs)
-
-    def to_dict(self):
-        out_dict = super(RequestContext, self).to_dict()
-        out_dict['roles'] = self.roles
-
-        return out_dict
-
-    @classmethod
-    def from_dict(cls, values):
-        return cls(**values)
