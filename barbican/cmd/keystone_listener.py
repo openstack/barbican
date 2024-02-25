@@ -54,11 +54,6 @@ from oslo_log import log
 from oslo_service import service
 
 
-def fail(returncode, e):
-    sys.stderr.write("ERROR: {0}\n".format(e))
-    sys.exit(returncode)
-
-
 def main():
     try:
         config.setup_remote_pydev_debug()
@@ -85,7 +80,8 @@ def main():
         else:
             LOG.info("Exiting as Barbican Keystone listener is not enabled...")
     except RuntimeError as e:
-        fail(1, e)
+        sys.stderr.write("ERROR: {0}\n".format(e))
+        sys.exit(1)
 
 
 if __name__ == '__main__':
