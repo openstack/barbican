@@ -20,7 +20,6 @@ import re
 import jsonschema as schema
 from ldap3.core import exceptions as ldap_exceptions
 from ldap3.utils.dn import parse_dn
-from OpenSSL import crypto
 from oslo_utils import timeutils
 
 from barbican.api import controllers
@@ -449,7 +448,7 @@ class TypeOrderValidator(ValidatorBase, CACommonHelpersMixin):
                 "type": {
                     "type": "string",
                     "required": True,
-                    "enum": ['key', 'asymmetric', 'certificate']
+                    "enum": ['key', 'asymmetric']
                 }
             }
         }
@@ -461,11 +460,7 @@ class TypeOrderValidator(ValidatorBase, CACommonHelpersMixin):
 
         order_type = json_data.get('type').lower()
 
-        if order_type == models.OrderType.CERTIFICATE:
-            certificate_meta = json_data.get('meta')
-            self._validate_certificate_meta(certificate_meta, schema_name)
-
-        elif order_type == models.OrderType.ASYMMETRIC:
+        if order_type == models.OrderType.ASYMMETRIC:
             asymmetric_meta = json_data.get('meta')
             self._validate_asymmetric_meta(asymmetric_meta, schema_name)
 
@@ -514,122 +509,6 @@ class TypeOrderValidator(ValidatorBase, CACommonHelpersMixin):
         if data is None:
             raise exception.MissingMetadataField(required=key)
         return data
-
-    def _validate_certificate_meta(self, certificate_meta, schema_name):
-        """Validation specific to meta for certificate type order."""
-
-        self._assert_validity(certificate_meta.get('payload') is None,
-                              schema_name,
-                              u._("'payload' not allowed "
-                                  "for certificate type order"), "meta")
-
-        if 'profile' in certificate_meta:
-            if 'ca_id' not in certificate_meta:
-                raise exception.MissingMetadataField(required='ca_id')
-
-        jump_table = {
-            'simple-cmc': self._validate_simple_cmc_request,
-            'full-cmc': self._validate_full_cmc_request,
-            'stored-key': self._validate_stored_key_request,
-            'custom': self._validate_custom_request
-        }
-
-        request_type = certificate_meta.get("request_type", "custom")
-        if request_type not in jump_table:
-            raise exception.InvalidCertificateRequestType(request_type)
-
-        jump_table[request_type](certificate_meta)
-
-    def _validate_simple_cmc_request(self, certificate_meta):
-        """Validates simple CMC (which are PKCS10 requests)."""
-        request_data = self._get_required_metadata_value(
-            certificate_meta, "request_data")
-        self._validate_pkcs10_data(request_data)
-
-    def _validate_full_cmc_request(self, certificate_meta):
-        """Validate full CMC request.
-
-        :param certificate_meta: request data from the order
-        :raises: FullCMCNotSupported
-        """
-        raise exception.FullCMCNotSupported()
-
-    def _validate_stored_key_request(self, certificate_meta):
-        """Validate stored-key cert request."""
-        self._get_required_metadata_value(
-            certificate_meta, "container_ref")
-        subject_dn = self._get_required_metadata_value(
-            certificate_meta, "subject_dn")
-        self._validate_subject_dn_data(subject_dn)
-        # container will be validated by validate_stored_key_rsa_container()
-
-        extensions = certificate_meta.get("extensions", None)
-        if extensions:
-            self._validate_extensions_data(extensions)
-
-    def _validate_custom_request(self, certificate_meta):
-        """Validate custom data request
-
-        We cannot do any validation here because the request
-        parameters are custom.  Validation will be done by the
-        plugin.  We may choose to select the relevant plugin and
-        call the supports() method to raise validation errors.
-        """
-        pass
-
-    def _validate_pkcs10_data(self, request_data):
-        """Confirm that the request_data is valid base64 encoded PKCS#10.
-
-        Base64 decode the request, if it fails raise PayloadDecodingError.
-        Then parse data into the ASN.1 structure defined by PKCS10 and
-        verify the signing information.
-        If parsing of verifying fails, raise InvalidPKCS10Data.
-        """
-        try:
-            csr_pem = base64.b64decode(request_data)
-        except Exception:
-            raise exception.PayloadDecodingError()
-
-        try:
-            csr = crypto.load_certificate_request(crypto.FILETYPE_PEM,
-                                                  csr_pem)
-        except Exception:
-            reason = u._("Bad format")
-            raise exception.InvalidPKCS10Data(reason=reason)
-
-        try:
-            pubkey = csr.get_pubkey()
-            csr.verify(pubkey)
-        except Exception:
-            reason = u._("Signing key incorrect")
-            raise exception.InvalidPKCS10Data(reason=reason)
-
-    def _validate_full_cmc_data(self, request_data):
-        """Confirm that request_data is valid Full CMC data."""
-        """
-        TODO(alee-3) complete this function
-
-        Parse data into the ASN.1 structure defined for full CMC.
-        If parsing fails, raise InvalidCMCData
-        """
-        pass
-
-    def _validate_extensions_data(self, extensions):
-        """Confirm that the extensions data is valid.
-
-        :param extensions: base 64 encoded ASN.1 string of extension data
-        :raises: CertificateExtensionsNotSupported
-        """
-        """
-        TODO(alee-3) complete this function
-
-        Parse the extensions data into the correct ASN.1 structure.
-        If the parsing fails, throw InvalidExtensionsData.
-
-        For now, fail this validation because extensions parsing is not
-        supported.
-        """
-        raise exception.CertificateExtensionsNotSupported()
 
     def _validate_meta_parameters(self, meta, order_type, schema_name):
         self._assert_validity(meta.get('algorithm'),
