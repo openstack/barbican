@@ -1,7 +1,0 @@
----
-deprecations:
-  - |
-    The Symantec certificate plugin has been deprecated, because lack of
-    maintenance activity of the plugin. Also the symantecssl python library
-    is not generally available and the plugin has never been tested in
-    upstream.

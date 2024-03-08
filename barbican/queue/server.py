@@ -43,9 +43,7 @@ LOG = utils.getLogger(__name__)
 
 # Maps the common/shared RetryTasks (returned from lower-level business logic
 # and plugin processing) to top-level RPC tasks in the Tasks class below.
-MAP_RETRY_TASKS = {
-    common.RetryTasks.INVOKE_CERT_STATUS_CHECK_TASK: 'check_certificate_status'
-}
+MAP_RETRY_TASKS = {}
 
 
 def find_function_name(func, if_no_name=None):
@@ -209,20 +207,6 @@ class Tasks(object):
                   "request ID is '%(request)s'"
         LOG.info(message, {'order': order_id, 'request': request_id})
         return resources.BeginTypeOrder().process_and_suppress_exceptions(
-            order_id, project_id)
-
-    @monitored
-    @transactional
-    @retryable_order
-    def check_certificate_status(self, context, order_id,
-                                 project_id, request_id):
-        """Check the status of a certificate order."""
-        message = "Processing check certificate status on order: " \
-                  "order ID is '%(order)s' and request ID is '%(request)s'"
-
-        LOG.info(message, {'order': order_id, 'request': request_id})
-        check_cert_order = resources.CheckCertificateStatusOrder()
-        return check_cert_order.process_and_suppress_exceptions(
             order_id, project_id)
 
 

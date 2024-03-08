@@ -18,8 +18,6 @@ from oslo_config import cfg
 from barbican.common import config
 from barbican import i18n as u
 
-import barbican.plugin.interface.certificate_manager as cm
-
 CONF = config.new_config()
 
 dogtag_plugin_group = cfg.OptGroup(name='dogtag_plugin',
@@ -40,18 +38,6 @@ dogtag_plugin_opts = [
     cfg.StrOpt('nss_password',
                help=u._('Password for the NSS certificate databases'),
                secret=True),
-    cfg.StrOpt('simple_cmc_profile',
-               default='caOtherCert',
-               help=u._('Profile for simple CMC requests')),
-    cfg.StrOpt('auto_approved_profiles',
-               default="caServerCert",
-               help=u._('List of automatically approved enrollment profiles')),
-    cfg.IntOpt('ca_expiration_time',
-               default=cm.CA_INFO_DEFAULT_EXPIRATION_DAYS,
-               help=u._('Time in days for CA entries to expire')),
-    cfg.StrOpt('plugin_working_dir',
-               default='/etc/barbican/dogtag',
-               help=u._('Working directory for Dogtag plugin')),
     cfg.StrOpt('plugin_name',
                help=u._('User friendly plugin name'),
                default='Dogtag KRA'),

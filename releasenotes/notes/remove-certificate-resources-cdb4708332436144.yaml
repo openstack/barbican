@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The certificate plugin and the certificate event plugin were both removed,
+    because these were used for deprecated certificate resources.

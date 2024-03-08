@@ -222,25 +222,6 @@ class WhenCallingScheduleOrderRetryTasks(database_utils.RepositoryTestCase):
         self.assertEqual(
             'test_should_schedule_invoking_task_for_retry', retry_rpc_method)
 
-    def test_should_schedule_certificate_status_task_for_retry(self):
-        self.result.retry_task = (
-            common.RetryTasks.INVOKE_CERT_STATUS_CHECK_TASK
-        )
-
-        # Schedule this test method as the passed-in 'retry' function.
-        retry_rpc_method = server.schedule_order_retry_tasks(
-            None,  # Should be ignored for non-self retries.
-            self.result,
-            None,  # Not used.
-            *self.args,
-            **self.kwargs)
-        database_utils.get_session().commit()  # Flush to the database.
-
-        self.assertEqual(
-            'check_certificate_status', retry_rpc_method)
-        self._verify_retry_task_entity(
-            'check_certificate_status')
-
     def _verify_retry_task_entity(self, retry_task):
         # Retrieve the task retry entity created above and verify it.
         entities, offset, limit, total = self.repo.get_by_create_date()
@@ -298,24 +279,6 @@ class WhenCallingTasksMethod(utils.BaseTestCase):
         mock_process = mock_begin_order.return_value
         mock_process.process_and_suppress_exceptions.assert_called_with(
             self.order_id, self.external_project_id)
-        mock_schedule.assert_called_with(
-            mock.ANY, 'result', None, 'order1234',
-            'keystone1234', 'request1234')
-
-    @mock.patch('barbican.queue.server.schedule_order_retry_tasks')
-    @mock.patch('barbican.tasks.resources.CheckCertificateStatusOrder')
-    def test_should_check_certificate_order(
-            self, mock_check_cert, mock_schedule):
-        method = mock_check_cert.return_value.process_and_suppress_exceptions
-        method.return_value = 'result'
-
-        self.tasks.check_certificate_status(
-            None, self.order_id, self.external_project_id, self.request_id)
-
-        mock_process = mock_check_cert.return_value
-        mock_process.process_and_suppress_exceptions.assert_called_with(
-            self.order_id, self.external_project_id
-        )
         mock_schedule.assert_called_with(
             mock.ANY, 'result', None, 'order1234',
             'keystone1234', 'request1234')
