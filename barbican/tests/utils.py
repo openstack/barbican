@@ -21,7 +21,6 @@ import time
 import types
 from unittest import mock
 
-from OpenSSL import crypto
 from oslo_config import cfg
 from oslo_utils import uuidutils
 import oslotest.base as oslotest
@@ -655,25 +654,6 @@ def get_symmetric_key():
 def get_triple_des_key():
     s = b"AQIDBAUGBwgBAgMEBQYHCAECAwQFBgcI"
     return s
-
-
-def is_cert_valid(expected, observed):
-    c1 = crypto.load_certificate(crypto.FILETYPE_PEM, expected)
-    c2 = crypto.load_certificate(crypto.FILETYPE_PEM, observed)
-    return (crypto.dump_certificate(crypto.FILETYPE_PEM, c1) ==
-            crypto.dump_certificate(crypto.FILETYPE_PEM, c2))
-
-
-def is_private_key_valid(expected, observed):
-    k1 = crypto.load_privatekey(crypto.FILETYPE_PEM, expected)
-    k2 = crypto.load_privatekey(crypto.FILETYPE_PEM, observed)
-    return (crypto.dump_privatekey(crypto.FILETYPE_PEM, k1) ==
-            crypto.dump_privatekey(crypto.FILETYPE_PEM, k2))
-
-
-def is_public_key_valid(expected, observed):
-    # TODO(alee) fill in the relevant test here
-    return True
 
 
 def is_kmip_enabled():
