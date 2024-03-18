@@ -16,7 +16,7 @@ import base64
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-from OpenSSL import crypto
+from cryptography import x509
 import testtools
 from testtools import testcase
 
@@ -122,7 +122,7 @@ class RSATestCase(base.TestCase):
 
         # prove pyOpenSSL can parse the original private key
         pem = keys.get_private_key_pem()
-        crypto.load_privatekey(crypto.FILETYPE_PEM, pem)
+        serialization.load_pem_private_key(pem, None)
 
         # prove cryptography can parse the original public key
         serialization.load_pem_public_key(
@@ -133,13 +133,11 @@ class RSATestCase(base.TestCase):
         # prove pyOpenSSL can parse the original encrypted private key
         pem = keys.get_encrypted_private_key_pem()
         passphrase = keys.get_passphrase_txt()
-        crypto.load_privatekey(crypto.FILETYPE_PEM,
-                               pem,
-                               passphrase)
+        serialization.load_pem_private_key(pem, passphrase)
 
         # prove OpenSSL can parse the original certificate
         pem = keys.get_certificate_pem()
-        crypto.load_certificate(crypto.FILETYPE_PEM, pem)
+        x509.load_pem_x509_certificate(pem)
 
     @testcase.attr('positive')
     def test_rsa_store_and_get_private_key(self):
@@ -471,15 +469,14 @@ class RSATestCase(base.TestCase):
                                     with_passphrase=False):
         # verify generated keys can be parsed
         if with_passphrase:
-            crypto.load_privatekey(
-                crypto.FILETYPE_PEM,
+            serialization.load_pem_private_key(
                 secret_dict['private_key'],
                 secret_dict['private_key_passphrase'])
         else:
             self.assertNotIn('private_key_passphrase', secret_dict)
-            crypto.load_privatekey(
-                crypto.FILETYPE_PEM,
-                secret_dict['private_key'])
+            serialization.load_pem_private_key(
+                secret_dict['private_key'],
+                None)
         serialization.load_pem_public_key(
             secret_dict['public_key'],
             backend=default_backend()
