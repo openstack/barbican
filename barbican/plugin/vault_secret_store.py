@@ -28,10 +28,13 @@ DEFAULT_MOUNTPOINT = "secret"
 vault_opt_group = cfg.OptGroup(name='vault_plugin', title='Vault Plugin')
 vault_opts = [
     cfg.StrOpt('root_token_id',
+               secret=True,
                help='root token for vault'),
     cfg.StrOpt('approle_role_id',
+               secret=True,
                help='AppRole role_id for authentication with vault'),
     cfg.StrOpt('approle_secret_id',
+               secret=True,
                help='AppRole secret_id for authentication with vault'),
     cfg.StrOpt('kv_mountpoint',
                default=DEFAULT_MOUNTPOINT,
