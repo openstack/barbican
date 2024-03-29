@@ -51,6 +51,8 @@ p11_crypto_plugin_opts = [
     cfg.StrOpt('mkek_label',
                help=u._('Master KEK label (as stored in the HSM)')),
     cfg.IntOpt('mkek_length',
+               default=32,
+               min=1,
                help=u._('Master KEK length in bytes.')),
     cfg.StrOpt('hmac_label',
                help=u._('Master HMAC Key label (as stored in the HSM)')),

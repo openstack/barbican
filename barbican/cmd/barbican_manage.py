@@ -225,7 +225,7 @@ class HSMCommands(object):
             label = conf.p11_crypto_plugin.mkek_label or 'primarymkek'
         self._verify_label_does_not_exist(self._CKK_AES, label, self.session)
         if length is None:
-            length = conf.p11_crypto_plugin.mkek_length or 32
+            length = conf.p11_crypto_plugin.mkek_length
         if type(length) is not int:
             length = int(length)
         self.pkcs11.generate_key(self._CKK_AES, length, CKM_AES_KEY_GEN,

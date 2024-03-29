@@ -387,7 +387,7 @@ The PKCS#11 plugin configuration looks like:
         mkek_label = 'my_mkek'
 
         # Master KEK length in bytes. (integer value)
-        #mkek_length = <None>
+        #mkek_length = 32
 
         # Master HMAC Key label (as stored in the HSM) (string value)
         hmac_label = 'my_hmac_key'
