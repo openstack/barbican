@@ -14,7 +14,6 @@ from unittest import mock
 
 from alembic import script as alembic_script
 from oslo_config import cfg
-import sqlalchemy
 
 from barbican.common import config
 from barbican.common import exception
@@ -194,28 +193,6 @@ class WhenTestingBaseRepository(database_utils.RepositoryTestCase):
             str(exception_result))
 
 
-class WhenTestingWrapDbError(utils.BaseTestCase):
-
-    def setUp(self):
-        super(WhenTestingWrapDbError, self).setUp()
-        repositories.CONF.set_override("max_retries", 0, "database")
-        repositories.CONF.set_override("retry_interval", 0, "database")
-
-    @mock.patch('barbican.model.repositories.is_db_connection_error')
-    def test_should_raise_operational_error_is_connection_error(
-            self, mock_is_db_error):
-        mock_is_db_error.return_value = True
-
-        @repositories.wrap_db_error
-        def test_function():
-            raise sqlalchemy.exc.OperationalError(
-                'statement', 'params', 'orig')
-
-        self.assertRaises(
-            sqlalchemy.exc.OperationalError,
-            test_function)
-
-
 class WhenTestingGetEnginePrivate(utils.BaseTestCase):
 
     def setUp(self):
@@ -240,6 +217,7 @@ class WhenTestingGetEnginePrivate(utils.BaseTestCase):
             'Error configuring registry database with supplied '
             'database connection. Got error: Abort!',
             str(exception_result))
+        engine.connect.assert_called_once_with()
 
     @mock.patch('barbican.model.repositories._create_engine')
     def test_should_complete_with_no_alembic_create_default_configs(
@@ -253,12 +231,7 @@ class WhenTestingGetEnginePrivate(utils.BaseTestCase):
         repositories._get_engine(None)
 
         engine.connect.assert_called_once_with()
-        mock_create_engine.assert_called_once_with(
-            'connection',
-            connection_recycle_time=3600,
-            max_pool_size=repositories.CONF.database.max_pool_size,
-            max_overflow=repositories.CONF.database.max_overflow
-        )
+        mock_create_engine.assert_called_once_with()
 
     @mock.patch('barbican.model.repositories._create_engine')
     def test_should_complete_with_no_alembic_create_pool_configs(
@@ -277,12 +250,7 @@ class WhenTestingGetEnginePrivate(utils.BaseTestCase):
         repositories._get_engine(None)
 
         engine.connect.assert_called_once_with()
-        mock_create_engine.assert_called_once_with(
-            'connection',
-            connection_recycle_time=3600,
-            max_pool_size=22,
-            max_overflow=11
-        )
+        mock_create_engine.assert_called_once_with()
 
 
 class WhenTestingAutoGenerateTables(utils.BaseTestCase):

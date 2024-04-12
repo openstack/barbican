@@ -1,0 +1,17 @@
+---
+features:
+  - |
+    Now Barbican uses oslo.db for database connection. The features implemented
+    in oslo.db can be now leveraged in Barbican.
+
+upgrade:
+  - |
+    The following deprecated database options were effectively removed. Use
+    the equivalent oslo.db library options instead.
+
+    - ``[DEFAULT] sql_connection``
+    - ``[DEFAULT] sql_idle_timeout``
+    - ``[DEFAULT] sql_max_retries``
+    - ``[DEFAULT] sql_retry_interval``
+    - ``[DEFAULT] sql_pool_size``
+    - ``[DEFAULT] sql_pool_max_overflow``
