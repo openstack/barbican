@@ -467,7 +467,7 @@ The configuration for this plugin in ``/etc/barbican/barbican.conf`` is as follo
 
        [secretstore]
        ..
-       enabled_secretstore_plugins = kmip_crypto
+       enabled_secretstore_plugins = kmip_plugin
 
        [kmip_plugin]
        username = 'admin'
