@@ -88,7 +88,7 @@ class ContextMiddleware(BaseContextMiddleware):
 
         if ctx.project_id is None:
             LOG.debug("X_PROJECT_ID not found in request")
-            return webob.exc.HTTPUnauthorized()
+            raise webob.exc.HTTPUnauthorized()
 
         ctx.is_admin = CONF.admin_role.strip().lower() in ctx.roles
 
