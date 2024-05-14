@@ -1,17 +1,16 @@
-# Copyright (C) 2013 Hewlett-Packard Development Company, L.P.
-# All Rights Reserved.
+#   Copyright 2024 SAP SE
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+#   Licensed under the Apache License, Version 2.0 (the "License"); you may
+#   not use this file except in compliance with the License. You may obtain
+#   a copy of the License at
 #
-#         http://www.apache.org/licenses/LICENSE-2.0
+#       http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#   License for the specific language governing permissions and limitations
+#   under the License.
 
 """
 Handles all requests relating to transferring ownership of secrets.
@@ -46,10 +45,15 @@ class SecretTransferController(base.BaseController):
         self.transport_key_repo = repo.get_transport_key_repository()
         self.secret_repo = repo.get_secret_repository()
 
+    @index.when(method='PUT')
+    @utils.allow_all_content_types
+    @controllers.handle_exceptions(u._('Secret transfer'))
+    @controllers.enforce_rbac('secret:transfer')
     def transfer_secret(self, consumer_data):
         """
         Transfers the secret to the specified consumer.
         """
+
         # Generate a random auth key and salt
         salt = self._get_random_string(CONF.secret_transfer_salt_length)
         auth_key = self._get_random_string(CONF.secret_transfer_key_length)
@@ -92,6 +96,10 @@ class SecretTransferController(base.BaseController):
                 'target_project': target_project,
                 'secret_metadata': secret_fields}
 
+    @index.when(method='GET')
+    @utils.allow_all_content_types
+    @controllers.handle_exceptions(u._('Secret retrieval'))
+    @controllers.enforce_rbac('secret:get')
     def retrieve_secret(self, consumer_id, auth_key):
         """
         Retrieves the secret for the specified consumer.
@@ -116,6 +124,10 @@ class SecretTransferController(base.BaseController):
         LOG.info('Retrieved secret %s for consumer %s', self.secret.id, consumer_id)
         return secret_fields
 
+    @index.when(method='DELETE')
+    @utils.allow_all_content_types
+    @controllers.handle_exceptions(u._('Secret deletion'))
+    @controllers.enforce_rbac('secret:delete')
     def delete_secret(self, consumer_id):
         """
         Deletes the secret for the specifiedconsumer.
