@@ -8,15 +8,16 @@
 # Andi Chandler <andi@gowling.com>, 2021. #zanata
 # Andi Chandler <andi@gowling.com>, 2022. #zanata
 # Andi Chandler <andi@gowling.com>, 2023. #zanata
+# Andi Chandler <andi@gowling.com>, 2024. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: barbican VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2023-07-21 14:59+0000\n"
+"POT-Creation-Date: 2024-05-17 17:05+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2023-07-07 09:06+0000\n"
+"PO-Revision-Date: 2024-04-14 06:49+0000\n"
 "Last-Translator: Andi Chandler <andi@gowling.com>\n"
 "Language-Team: English (United Kingdom)\n"
 "Language: en_GB\n"
@@ -25,19 +26,19 @@ msgstr ""
 
 msgid ""
 "# The maximum overflow size of the pool used by SQLAlchemy. When the number "
-"of checked-out connections reaches the size set in sql_pool_size, additional "
+"of checked-out connections reaches the size set in max_pool_size, additional "
 "connections will be returned up to this limit. It follows then that the "
 "total number of simultaneous connections the pool will allow is "
-"sql_pool_size + sql_pool_max_overflow. Can be set to -1 to indicate no "
-"overflow limit, so no limit will be placed on the total number of concurrent "
+"max_pool_size + max_overflow. Can be set to -1 to indicate no overflow "
+"limit, so no limit will be placed on the total number of concurrent "
 "connections. Comment out to allow SQLAlchemy to select the default."
 msgstr ""
 "# The maximum overflow size of the pool used by SQLAlchemy. When the number "
-"of checked-out connections reaches the size set in sql_pool_size, additional "
+"of checked-out connections reaches the size set in max_pool_size, additional "
 "connections will be returned up to this limit. It follows then that the "
 "total number of simultaneous connections the pool will allow is "
-"sql_pool_size + sql_pool_max_overflow. Can be set to -1 to indicate no "
-"overflow limit, so no limit will be placed on the total number of concurrent "
+"max_pool_size + max_overflow. Can be set to -1 to indicate no overflow "
+"limit, so no limit will be placed on the total number of concurrent "
 "connections. Comment out to allow SQLAlchemy to select the default."
 
 msgid "'algorithm' is required field for {0} type order"
@@ -51,9 +52,6 @@ msgstr "'expiration' is before current time"
 
 msgid "'payload' not allowed for asymmetric type order"
 msgstr "'payload' not allowed for asymmetric type order"
-
-msgid "'payload' not allowed for certificate type order"
-msgstr "'payload' not allowed for certificate type order"
 
 msgid "'payload' not allowed for key type order"
 msgstr "'payload' not allowed for key type order"
@@ -130,9 +128,6 @@ msgstr "Apparent RNG self-test failure."
 msgid "Bad Container Reference {ref}"
 msgstr "Bad Container Reference {ref}"
 
-msgid "Bad format"
-msgstr "Bad format"
-
 msgid "Bad key file permissions found, expected 400 for path: {file_path}"
 msgstr "Bad key file permissions found, expected 400 for path: {file_path}"
 
@@ -146,30 +141,6 @@ msgstr "Cannot generate a fullname for a null instance"
 
 msgid "Cannot modify order type."
 msgstr "Cannot modify order type."
-
-msgid "Certificate event plugin \"{name}\" not found."
-msgstr "Certificate event plugin \"{name}\" not found."
-
-msgid "Certificate event plugin not found."
-msgstr "Certificate event plugin not found."
-
-msgid "Certificate not found for cert_id: {cert_id}"
-msgstr "Certificate not found for cert_id: {cert_id}"
-
-msgid "Certificate plugin \"{name}\" not found."
-msgstr "Certificate plugin \"{name}\" not found."
-
-msgid "Certificate plugin not found for \"{ca_id}\"."
-msgstr "Certificate plugin not found for \"{ca_id}\"."
-
-msgid "Certificate plugin not found or configured."
-msgstr "Certificate plugin not found or configured."
-
-msgid "Certificate status of {status} not supported"
-msgstr "Certificate status of {status} not supported"
-
-msgid "Check Certificate Order Status"
-msgstr "Check Certificate Order Status"
 
 msgid ""
 "Conflict. A secret with that name and ID is already stored in this "
@@ -290,13 +261,6 @@ msgid "Crypto plugin not found."
 msgstr "Crypto plugin not found."
 
 msgid ""
-"DEPRECATED: Use token_labels instead. Token label used to identify the token "
-"to be used."
-msgstr ""
-"DEPRECATED: Use token_labels instead. Token label used to identify the token "
-"to be used."
-
-msgid ""
 "DSA keys should not have a passphrase in the database, for being used during "
 "retrieval."
 msgstr ""
@@ -315,16 +279,6 @@ msgid ""
 msgstr ""
 "Define the number of max threads to be used for notification server "
 "processing functionality."
-
-msgid "Directory in which to store certs/keys for subcas"
-msgstr "Directory in which to store certs/keys for subcas"
-
-#, python-format
-msgid "Dogtag plugin does not support %s request type"
-msgstr "Dogtag plugin does not support %s request type"
-
-msgid "Domain of Symantec API"
-msgstr "Domain of Symantec API"
 
 msgid "Duplicate reference names are not allowed"
 msgstr "Duplicate reference names are not allowed"
@@ -351,11 +305,11 @@ msgid "Entity ID {entity_id} not found"
 msgstr "Entity ID {entity_id} not found"
 
 msgid ""
-"Error configuring registry database with supplied sql_connection. Got error: "
-"{error}"
+"Error configuring registry database with supplied database connection. Got "
+"error: {error}"
 msgstr ""
-"Error configuring registry database with supplied sql_connection. Got error: "
-"{error}"
+"Error configuring registry database with supplied database connection. Got "
+"error: {error}"
 
 #, python-format
 msgid "Error deleting project entities for project_id=%s"
@@ -378,12 +332,6 @@ msgid ""
 "Errors returned by CA when attempting to delete subordinate CA: %(reason)s"
 msgstr ""
 "Errors returned by CA when attempting to delete subordinate CA: %(reason)s"
-
-msgid "Exception thrown by enroll_cert: {message}"
-msgstr "Exception thrown by enroll_cert: {message}"
-
-msgid "Extension namespace to search for eventing plugins."
-msgstr "Extension namespace to search for eventing plugins."
 
 msgid "Extension namespace to search for plugins."
 msgstr "Extension namespace to search for plugins."
@@ -534,17 +482,8 @@ msgstr "Invalid date for 'expiration'"
 msgid "Invalid extensions data."
 msgstr "Invalid extensions data."
 
-msgid "Invalid operation requested - Reason: {reason}"
-msgstr "Invalid operation requested - Reason: {reason}"
-
 msgid "Invalid payload for payload_content_encoding"
 msgstr "Invalid payload for payload_content_encoding"
-
-msgid "Invalid request_status returned by CA"
-msgstr "Invalid request_status returned by CA"
-
-msgid "Invalid request_status {status} for request_id {request_id}"
-msgstr "Invalid request_status {status} for request_id {request_id}"
 
 msgid "Invalid status '{status}' for {entity_name}."
 msgstr "Invalid status '{status}' for {entity_name}."
@@ -598,12 +537,6 @@ msgstr ""
 
 msgid "List available secret stores"
 msgstr "List available secret stores"
-
-msgid "List of automatically approved enrollment profiles"
-msgstr "List of automatically approved enrollment profiles"
-
-msgid "List of certificate plugins to load."
-msgstr "List of certificate plugins to load."
 
 msgid "List of crypto plugins to load."
 msgstr "List of crypto plugins to load."
@@ -664,9 +597,6 @@ msgstr "Missing required argument."
 #, python-format
 msgid "Missing required metadata field for %(required)s"
 msgstr "Missing required metadata field for %(required)s"
-
-msgid "Modify request: unable to cancel: {message}"
-msgstr "Modify request: unable to cancel: {message}"
 
 msgid "More than one key found for label"
 msgstr "More than one key found for label"
@@ -754,18 +684,6 @@ msgstr "No key handle was found"
 
 msgid "No plugin was found that could support your request"
 msgstr "No plugin was found that could support your request"
-
-msgid "No profile_id specified"
-msgstr "No profile_id specified"
-
-msgid "No request found for request_id {request_id} for order {order_id}"
-msgstr "No request found for request_id {request_id} for order {order_id}"
-
-msgid "No request returned in enrollment_results"
-msgstr "No request returned in enrollment_results"
-
-msgid "No request_data specified"
-msgstr "No request_data specified"
 
 msgid "No secret found with secret-ID {id}"
 msgstr "No secret found with secret-ID {id}"
@@ -880,9 +798,6 @@ msgstr "Order retrieval"
 msgid "Order type \"{order_type}\" not implemented."
 msgstr "Order type \"{order_type}\" not implemented."
 
-msgid "Order type \"{order_type}\" not supported."
-msgstr "Order type \"{order_type}\" not supported."
-
 msgid "Order update"
 msgstr "Order update"
 
@@ -910,18 +825,6 @@ msgstr "Password for the NSS certificate databases"
 
 msgid "Password to login to PKCS11 session"
 msgstr "Password to login to PKCS11 session"
-
-msgid "Path to CA certificate chain file"
-msgstr "Path to CA certificate chain file"
-
-msgid "Path to CA certificate file"
-msgstr "Path to CA certificate file"
-
-msgid "Path to CA certificate key file"
-msgstr "Path to CA certificate key file"
-
-msgid "Path to CA chain pkcs7 file"
-msgstr "Path to CA chain pkcs7 file"
 
 msgid "Path to PEM file for authentication"
 msgstr "Path to PEM file for authentication"
@@ -989,23 +892,14 @@ msgstr ""
 msgid "Problem decoding payload"
 msgstr "Problem decoding payload"
 
-msgid "Problem seen during certificate processing - Reason: {reason}"
-msgstr "Problem seen during certificate processing - Reason: {reason}"
-
 msgid "Problem seen during crypto processing - Reason: {reason}"
 msgstr "Problem seen during crypto processing - Reason: {reason}"
-
-msgid "Problem with data in certificate request - Reason: {reason}"
-msgstr "Problem with data in certificate request - Reason: {reason}"
 
 msgid "Process TypeOrder"
 msgstr "Process TypeOrder"
 
 msgid "Process TypeOrder failure seen - please contact site administrator."
 msgstr "Process TypeOrder failure seen - please contact site administrator."
-
-msgid "Profile for simple CMC requests"
-msgstr "Profile for simple CMC requests"
 
 msgid "Project KEK Cache Item Limit"
 msgstr "Project KEK Cache Item Limit"
@@ -1067,13 +961,6 @@ msgstr "Read Error"
 
 msgid "Removing preferred secret store"
 msgstr "Removing preferred secret store"
-
-msgid ""
-"Request {request_id} reports status_complete, but no cert_id has been "
-"returned"
-msgstr ""
-"Request {request_id} reports status_complete, but no cert_id has been "
-"returned"
 
 msgid "Requested algorithm is not supported"
 msgstr "Requested algorithm is not supported"
@@ -1267,9 +1154,6 @@ msgstr ""
 "Show SQLAlchemy pool-related debugging output in logs (sets DEBUG log level "
 "output) if specified."
 
-msgid "Signing key incorrect"
-msgstr "Signing key incorrect"
-
 msgid ""
 "Size of pool used by SQLAlchemy. This is the largest number of connections "
 "that will be kept persistently in the pool. Can be set to 0 to indicate no "
@@ -1286,12 +1170,6 @@ msgstr "Status: {status}, Reason: {reason}, Message: {message}"
 
 msgid "Subordinate CA is not owned by this project"
 msgstr "Subordinate CA is not owned by this project"
-
-msgid "Symantec password for authentication"
-msgstr "Symantec password for authentication"
-
-msgid "Symantec username for authentication"
-msgstr "Symantec username for authentication"
 
 msgid "System"
 msgstr "System"
@@ -1360,9 +1238,6 @@ msgstr ""
 msgid "There was an error with the PKCS#11 library."
 msgstr "There was an error with the PKCS#11 library."
 
-msgid "Time in days for CA entries to expire"
-msgstr "Time in days for CA entries to expire"
-
 msgid "Token serial number used to identify the token to be used."
 msgstr "Token serial number used to identify the token to be used."
 
@@ -1425,12 +1300,6 @@ msgstr "Unknown attribute type provided."
 msgid "Unsupported decryption mechanism"
 msgstr "Unsupported decryption mechanism"
 
-msgid "Update Order"
-msgstr "Update Order"
-
-msgid "Update Order failure seen - please contact site administrator."
-msgstr "Update Order failure seen - please contact site administrator."
-
 msgid "User friendly plugin name"
 msgstr "User friendly plugin name"
 
@@ -1453,9 +1322,6 @@ msgstr "Version of tasks invoked via queue"
 msgid "Version retrieval"
 msgstr "Version retrieval"
 
-msgid "Working directory for Dogtag plugin"
-msgstr "Working directory for Dogtag plugin"
-
 msgid "Wrong payload content-type"
 msgstr "Wrong payload content-type"
 
@@ -1474,9 +1340,6 @@ msgstr "key_label must be set for master_keys"
 msgid "library_path is required"
 msgstr "library_path is required"
 
-msgid "no request found for this order"
-msgstr "no request found for this order"
-
 msgid "nss_password is required"
 msgstr "nss_password is required"
 
@@ -1494,9 +1357,6 @@ msgstr ""
 "only 'private_key', 'public_key' and 'private_key_passphrase' reference "
 "names are allowed for RSA type"
 
-msgid "password is required"
-msgstr "password is required"
-
 msgid "payload must be provided when payload_content_type is specified"
 msgstr "payload must be provided when payload_content_type is specified"
 
@@ -1512,9 +1372,6 @@ msgstr "pem_path is required"
 msgid "plugin_name must be provided"
 msgstr "plugin_name must be provided"
 
-msgid "request_id {req_id} returns COMPLETE but no cert returned"
-msgstr "request_id {req_id} returns COMPLETE but no cert returned"
-
 msgid "retrieve a secret from plugin: {plugin}"
 msgstr "retrieve a secret from plugin: {plugin}"
 
@@ -1527,12 +1384,6 @@ msgstr ""
 
 msgid "transport_key must be provided"
 msgstr "transport_key must be provided"
-
-msgid "url is required"
-msgstr "URL is required"
-
-msgid "username is required"
-msgstr "username is required"
 
 msgid "{entity_name} is missing query build method for get project entities."
 msgstr "{entity_name} is missing query build method for get project entities."
@@ -1550,9 +1401,6 @@ msgstr "{operation} failure seen - please contact site administrator."
 
 msgid "{operation} issue seen - {reason}."
 msgstr "{operation} issue seen - {reason}."
-
-msgid "{request} not found for {operation} for order_id {order_id}"
-msgstr "{request} not found for {operation} for order_id {order_id}"
 
 msgid "{schema_name}' within '{parent_schema_name}"
 msgstr "{schema_name}' within '{parent_schema_name}"

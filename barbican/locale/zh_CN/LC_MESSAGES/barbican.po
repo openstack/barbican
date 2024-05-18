@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: barbican VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2020-10-28 22:42+0000\n"
+"POT-Creation-Date: 2024-05-17 17:05+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -34,9 +34,6 @@ msgstr "'expiration'早于当前时间"
 
 msgid "'payload' not allowed for asymmetric type order"
 msgstr "'payload'不被非对称密钥类型的order允许"
-
-msgid "'payload' not allowed for certificate type order"
-msgstr "'payload'不被证书类型的order允许"
 
 msgid "'payload' not allowed for key type order"
 msgstr "'payload'不被key类型的order允许"
@@ -74,9 +71,6 @@ msgstr "明显的RNG自我测试失败。"
 msgid "Bad Container Reference {ref}"
 msgstr "错误的容器引用{ref}"
 
-msgid "Bad format"
-msgstr "错误的格式"
-
 msgid "Bad key file permissions found, expected 400 for path: {file_path}"
 msgstr "发现错误的密钥文件权限，路径：{file_path}期望400"
 
@@ -89,30 +83,6 @@ msgstr "不能为空实例生成全名"
 
 msgid "Cannot modify order type."
 msgstr "不能修改order类型。"
-
-msgid "Certificate event plugin \"{name}\" not found."
-msgstr "证书事件插件“{name}”未发现。"
-
-msgid "Certificate event plugin not found."
-msgstr "证书事件插件未发现。"
-
-msgid "Certificate not found for cert_id: {cert_id}"
-msgstr "未找到cert_id为{cert_id}的证书"
-
-msgid "Certificate plugin \"{name}\" not found."
-msgstr "证书插件“{name}”未发现"
-
-msgid "Certificate plugin not found for \"{ca_id}\"."
-msgstr "未发现CA:“{ca_id}”的证书插件。"
-
-msgid "Certificate plugin not found or configured."
-msgstr "证书插件未发现，或未配置。"
-
-msgid "Certificate status of {status} not supported"
-msgstr "证书状态{status}不支持"
-
-msgid "Check Certificate Order Status"
-msgstr "检查证书order状态"
 
 msgid ""
 "Conflict. A secret with that name and ID is already stored in this "
@@ -213,16 +183,6 @@ msgid ""
 "processing functionality."
 msgstr "定义通知服务器处理功能所使用的最大线程数量。"
 
-msgid "Directory in which to store certs/keys for subcas"
-msgstr "为子CA存储证书/密钥的目录"
-
-#, python-format
-msgid "Dogtag plugin does not support %s request type"
-msgstr "Dogtag插件不支持%s类型的请求"
-
-msgid "Domain of Symantec API"
-msgstr "Symantec API的域名"
-
 msgid "Duplicate reference names are not allowed"
 msgstr "不允许重复的引用名称"
 
@@ -240,11 +200,6 @@ msgstr "当检索一个{secret_type}类型的密钥时，不支持使用会话�
 msgid "Entity ID {entity_id} not found"
 msgstr "未找到Entity ID：{entity_id}"
 
-msgid ""
-"Error configuring registry database with supplied sql_connection. Got error: "
-"{error}"
-msgstr "使用提供的sql_connection配置注册数据库出错。捕获错误：{error}"
-
 #, python-format
 msgid "Error deleting project entities for project_id=%s"
 msgstr "为id为%s的项目删除实体出错"
@@ -254,12 +209,6 @@ msgstr "试图解码负载时出错。"
 
 msgid "Errors in creating subordinate CA: %(name)"
 msgstr "创建子CA：%(name)时出错"
-
-msgid "Exception thrown by enroll_cert: {message}"
-msgstr "enroll_cert抛出异常：{message}"
-
-msgid "Extension namespace to search for eventing plugins."
-msgstr "用于搜索事件插件的扩展命名空间"
 
 msgid "Extension namespace to search for plugins."
 msgstr "用于搜索插件的扩展命名空间"
@@ -352,17 +301,8 @@ msgstr "无效的'expiration'数据"
 msgid "Invalid extensions data."
 msgstr "无效的扩展数据。"
 
-msgid "Invalid operation requested - Reason: {reason}"
-msgstr "无效的操作请求。原因：{reason}"
-
 msgid "Invalid payload for payload_content_encoding"
 msgstr "payload_content_encoding对应的payload无效"
-
-msgid "Invalid request_status returned by CA"
-msgstr "CA返回了无效的请求状态"
-
-msgid "Invalid request_status {status} for request_id {request_id}"
-msgstr "请求:{request_id}的无效的请求状态{status}"
 
 msgid "Invalid status '{status}' for {entity_name}."
 msgstr "无效的{entity_name}状态'{status}'"
@@ -385,12 +325,6 @@ msgstr "KMIP插件当前不支持使用密码保护私钥"
 msgid "Key encryption key to be used by Simple Crypto Plugin"
 msgstr "被简单密码插件所使用的KEK"
 
-msgid "List of automatically approved enrollment profiles"
-msgstr "自动通过的注册信息列表"
-
-msgid "List of certificate plugins to load."
-msgstr "待加载的证书插件列表。"
-
 msgid "List of crypto plugins to load."
 msgstr "待加载的密码插件列表。"
 
@@ -412,9 +346,6 @@ msgstr "缺少必须的参数"
 #, python-format
 msgid "Missing required metadata field for %(required)s"
 msgstr "%(required)s缺少所需的元数据"
-
-msgid "Modify request: unable to cancel: {message}"
-msgstr "修改请求：无法取消：{message}"
 
 msgid "More than one key found for label"
 msgstr "找到不止一个该标签对应的key"
@@ -490,18 +421,6 @@ msgstr "未发现密钥操作"
 
 msgid "No plugin was found that could support your request"
 msgstr "没有找到可以支持你的请求的插件"
-
-msgid "No profile_id specified"
-msgstr "未指定profile_id"
-
-msgid "No request found for request_id {request_id} for order {order_id}"
-msgstr "未找到order:{order_id}的request_id为{request_id}的请求"
-
-msgid "No request returned in enrollment_results"
-msgstr "注册结果未返回请求"
-
-msgid "No request_data specified"
-msgstr "未指定请求数据"
 
 msgid "No secret found with secret-ID {id}"
 msgstr "未发现secret-ID为{id}的秘密"
@@ -583,9 +502,6 @@ msgstr "检索order"
 msgid "Order type \"{order_type}\" not implemented."
 msgstr "order类型“{order_type}”未实现。"
 
-msgid "Order type \"{order_type}\" not supported."
-msgstr "order类型“{order_type}”不支持"
-
 msgid "Order update"
 msgstr "更新order"
 
@@ -612,12 +528,6 @@ msgstr "NSS证书数据库的密码"
 msgid "Password to login to PKCS11 session"
 msgstr "登录到PKCS11会话的密码"
 
-msgid "Path to CA certificate key file"
-msgstr "CA证书密钥文件的路径"
-
-msgid "Path to CA chain pkcs7 file"
-msgstr "CA链pkcs7文件的路径"
-
 msgid "Path to PEM file for authentication"
 msgstr "认证所需的PEM文件的路径"
 
@@ -639,23 +549,14 @@ msgstr "KMIP服务器的端口"
 msgid "Problem decoding payload"
 msgstr "解码负载时出错"
 
-msgid "Problem seen during certificate processing - Reason: {reason}"
-msgstr "证书处理似乎有问题。原因：{reason}"
-
 msgid "Problem seen during crypto processing - Reason: {reason}"
 msgstr "加密处理似乎出现问题。原因：{reason}"
-
-msgid "Problem with data in certificate request - Reason: {reason}"
-msgstr "证书请求中的数据有问题。原因：{reason}"
 
 msgid "Process TypeOrder"
 msgstr "处理TypeOrder"
 
 msgid "Process TypeOrder failure seen - please contact site administrator."
 msgstr "处理order失败。请联系站点管理员。"
-
-msgid "Profile for simple CMC requests"
-msgstr "simple-CMC请求的信息"
 
 msgid "Project KEK Cache Item Limit"
 msgstr "项目KEK缓存条目限制"
@@ -712,11 +613,6 @@ msgstr "读取错误"
 
 msgid "Removing preferred secret store"
 msgstr "移除首选秘密存储"
-
-msgid ""
-"Request {request_id} reports status_complete, but no cert_id has been "
-"returned"
-msgstr "请求{request_id}报告了status_complete状态，但是未返回cert_id。"
 
 msgid "Requested algorithm is not supported"
 msgstr "请求的算法不支持"
@@ -837,20 +733,11 @@ msgstr "RPC任务服务器的名称"
 msgid "Setting preferred secret store"
 msgstr "设置首选秘密存储"
 
-msgid "Signing key incorrect"
-msgstr "密钥签发错误"
-
 msgid "Status: {status}, Reason: {reason}, Message: {message}"
 msgstr "状态：{status}，原因：{reason}，消息：{message}"
 
 msgid "Subordinate CA is not owned by this project"
 msgstr "该项目没有子CA"
-
-msgid "Symantec password for authentication"
-msgstr "认证的Symantec密码"
-
-msgid "Symantec username for authentication"
-msgstr "认证的Symantec用户名"
 
 msgid "System"
 msgstr "系统"
@@ -895,9 +782,6 @@ msgstr "未发现你请求的版本"
 
 msgid "There was an error with the PKCS#11 library."
 msgstr "PKCS#11库有一个错误。"
-
-msgid "Time in days for CA entries to expire"
-msgstr "CA条目失效的天数"
 
 msgid "Transport Key Creation"
 msgstr "创建传输密钥"
@@ -949,12 +833,6 @@ msgstr "未知"
 msgid "Unknown attribute type provided."
 msgstr "提供的属性类型未知"
 
-msgid "Update Order"
-msgstr "更新order"
-
-msgid "Update Order failure seen - please contact site administrator."
-msgstr "更新order失败。请联系站点管理员。"
-
 msgid "Username for authenticating with KMIP server"
 msgstr "KMIP服务器的认证用户名"
 
@@ -966,9 +844,6 @@ msgstr "通过队列引用的任务的版本"
 
 msgid "Version retrieval"
 msgstr "检索版本"
-
-msgid "Working directory for Dogtag plugin"
-msgstr "Dogtag插件的工作目录"
 
 msgid "Wrong payload content-type"
 msgstr "错误的负载内容类型"
@@ -988,9 +863,6 @@ msgstr "必须为主密钥设置密钥标签"
 msgid "library_path is required"
 msgstr "需要library_path"
 
-msgid "no request found for this order"
-msgstr "未找到这个order的请求"
-
 msgid "nss_password is required"
 msgstr "需要nss_password"
 
@@ -1008,9 +880,6 @@ msgstr ""
 "RSA类型允许的引用名称只"
 "有'private_key'，'public_key'和'private_key_passphrase'"
 
-msgid "password is required"
-msgstr "需要密码"
-
 msgid "payload must be provided when payload_content_type is specified"
 msgstr "当指定了'payload_content_type'，就必须提供'payload'"
 
@@ -1026,17 +895,8 @@ msgstr "需要pem_path"
 msgid "plugin_name must be provided"
 msgstr "必须提供plugin_name"
 
-msgid "request_id {req_id} returns COMPLETE but no cert returned"
-msgstr "请求{req_id}返回了完成状态，但是没有证书被返回"
-
 msgid "transport_key must be provided"
 msgstr "必须提供transport_key"
-
-msgid "url is required"
-msgstr "需要url"
-
-msgid "username is required"
-msgstr "需要用户名"
 
 msgid "{entity_name} is missing query build method for get project entities."
 msgstr "{entity_name}缺少用于获取项目实体的查询构建方法。"
@@ -1053,9 +913,6 @@ msgstr "{operation}失败 - 请联系网站管理员。"
 
 msgid "{operation} issue seen - {reason}."
 msgstr "{operation}出现问题 - {reason}。"
-
-msgid "{request} not found for {operation} for order_id {order_id}"
-msgstr "未找到order_id为{order_id}的{operation}操作的{request}请求"
 
 msgid "{schema_name}' within '{parent_schema_name}"
 msgstr "带有{parent_schema_name}的{schema_name}'"
