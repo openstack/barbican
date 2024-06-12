@@ -154,7 +154,7 @@ function configure_barbican {
     fi
 
     # Set the database connection url
-    iniset $BARBICAN_CONF DEFAULT sql_connection `database_connection_url barbican`
+    iniset $BARBICAN_CONF database connection `database_connection_url barbican`
 
     # Disable auto-migration when deploying Barbican
     iniset $BARBICAN_CONF DEFAULT db_auto_create False

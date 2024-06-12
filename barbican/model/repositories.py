@@ -26,7 +26,7 @@ import sys
 import time
 
 from oslo_db import exception as db_exc
-from oslo_db.sqlalchemy import session
+from oslo_db.sqlalchemy import enginefacade
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 import sqlalchemy
@@ -167,25 +167,9 @@ def get_session():
 
 def _get_engine(engine):
     if not engine:
-        connection = CONF.database.connection
-        if not connection:
-            raise exception.BarbicanException(
-                u._('No SQL connection configured'))
-
-    # TODO(jfwood):
-    # connection_dict = sqlalchemy.engine.url.make_url(_CONNECTION)
-
-        engine_args = {
-            'connection_recycle_time': CONF.database.connection_recycle_time
-        }
-        if CONF.database.max_pool_size:
-            engine_args['max_pool_size'] = CONF.database.max_pool_size
-        if CONF.database.max_overflow:
-            engine_args['max_overflow'] = CONF.database.max_overflow
-
         db_connection = None
         try:
-            engine = _create_engine(connection, **engine_args)
+            engine = _create_engine()
             db_connection = engine.connect()
         except Exception as err:
             msg = u._(
@@ -207,6 +191,10 @@ def _get_engine(engine):
             LOG.info('Not auto-creating barbican registry DB')
 
     return engine
+
+
+def _create_engine():
+    return enginefacade.writer.get_engine()
 
 
 def model_query(model, *args, **kwargs):
@@ -239,22 +227,6 @@ def is_db_connection_error(args):
     return False
 
 
-def _create_engine(connection, **engine_args):
-    LOG.debug('Sql connection: please check "sql_connection" property in '
-              'barbican configuration file; Args: %s', engine_args)
-
-    engine = session.create_engine(connection, **engine_args)
-
-    # TODO(jfwood): if 'mysql' in connection_dict.drivername:
-    # TODO(jfwood): sqlalchemy.event.listen(_ENGINE, 'checkout',
-    # TODO(jfwood):                         ping_listener)
-
-    # Wrap the engine's connect method with a retry decorator.
-    engine.connect = wrap_db_error(engine.connect)
-
-    return engine
-
-
 def _auto_generate_tables(engine, tables):
     if tables and 'alembic_version' in tables:
         # Upgrade the database to the latest version.
@@ -267,35 +239,6 @@ def _auto_generate_tables(engine, tables):
 
         # Sync the alembic version 'head' with current models.
         commands.stamp()
-
-
-def wrap_db_error(f):
-    """Retry DB connection. Copied from nova and modified."""
-    def _wrap(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except sqlalchemy.exc.OperationalError as e:
-            if not is_db_connection_error(e.args[0]):
-                raise
-
-            remaining_attempts = CONF.database.max_retries
-            while True:
-                LOG.warning('SQL connection failed. %d attempts left.',
-                            remaining_attempts)
-                remaining_attempts -= 1
-                time.sleep(CONF.database.retry_interval)
-                try:
-                    return f(*args, **kwargs)
-                except sqlalchemy.exc.OperationalError as e:
-                    if (remaining_attempts <= 0 or not
-                            is_db_connection_error(e.args[0])):
-                        raise
-                except sqlalchemy.exc.DBAPIError:
-                    raise
-        except sqlalchemy.exc.DBAPIError:
-            raise
-    _wrap.__name__ = f.__name__
-    return _wrap
 
 
 def clean_paging_values(offset_arg=0, limit_arg=CONF.default_limit_paging):

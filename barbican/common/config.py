@@ -21,6 +21,7 @@ import logging
 import os
 
 from oslo_config import cfg
+from oslo_db import options as db_options
 from oslo_log import log
 from oslo_middleware import cors
 from oslo_policy import opts as policy_opts
@@ -62,68 +63,6 @@ host_opts = [
                         "needed to override default config value which is "
                         "'http://localhost:9311'")),
 ]
-
-core_db_opts = [
-    cfg.StrOpt('connection',
-               default="sqlite:///barbican.sqlite",
-               secret=True,
-               deprecated_opts=[cfg.DeprecatedOpt('sql_connection',
-                                                  group='DEFAULT')],
-               help=u._("SQLAlchemy connection string for the reference "
-                        "implementation registry server. Any valid "
-                        "SQLAlchemy connection string is fine. See: "
-                        "http://www.sqlalchemy.org/docs/05/reference/"
-                        "sqlalchemy/connections.html#sqlalchemy."
-                        "create_engine. Note: For absolute addresses, use "
-                        "'////' slashes after 'sqlite:'.")),
-    cfg.IntOpt('connection_recycle_time', default=3600,
-               deprecated_opts=[cfg.DeprecatedOpt('sql_idle_timeout',
-                                                  group='DEFAULT')],
-               help=u._("Period in seconds after which SQLAlchemy should "
-                        "reestablish its connection to the database. MySQL "
-                        "uses a default `wait_timeout` of 8 hours, after "
-                        "which it will drop idle connections. This can result "
-                        "in 'MySQL Gone Away' exceptions. If you notice this, "
-                        "you can lower this value to ensure that SQLAlchemy "
-                        "reconnects before MySQL can drop the connection.")),
-    cfg.IntOpt('max_retries', default=60,
-               deprecated_opts=[cfg.DeprecatedOpt('sql_max_retries',
-                                                  group='DEFAULT')],
-               help=u._("Maximum number of database connection retries "
-                        "during startup. Set to -1 to specify an infinite "
-                        "retry count.")),
-    cfg.IntOpt('retry_interval', default=1,
-               deprecated_opts=[cfg.DeprecatedOpt('sql_retry_interval',
-                                                  group='DEFAULT')],
-               help=u._("Interval between retries of opening a SQL "
-                        "connection.")),
-    cfg.IntOpt('max_pool_size', default=5,
-               deprecated_opts=[cfg.DeprecatedOpt('sql_pool_size',
-                                                  group='DEFAULT')],
-               help=u._("Size of pool used by SQLAlchemy. This is the largest "
-                        "number of connections that will be kept persistently "
-                        "in the pool. Can be set to 0 to indicate no size "
-                        "limit. To disable pooling, use a NullPool with "
-                        "sql_pool_class instead. Comment out to allow "
-                        "SQLAlchemy to select the default.")),
-    cfg.IntOpt('max_overflow', default=10,
-               deprecated_opts=[cfg.DeprecatedOpt('sql_pool_max_overflow',
-                                                  group='DEFAULT')],
-               help=u._("# The maximum overflow size of the pool used by "
-                        "SQLAlchemy. When the number of checked-out "
-                        "connections reaches the size set in max_pool_size, "
-                        "additional connections will be returned up to this "
-                        "limit. It follows then that the total number of "
-                        "simultaneous connections the pool will allow is "
-                        "max_pool_size + max_overflow. Can be set to -1 to "
-                        "indicate no overflow limit, so no limit will be "
-                        "placed on the total number of concurrent "
-                        "connections. Comment out to allow SQLAlchemy to "
-                        "select the default.")),
-]
-
-db_opt_group = cfg.OptGroup(name='database',
-                            title='Database Options')
 
 db_opts = [
     cfg.BoolOpt('db_auto_create', default=False,
@@ -255,7 +194,6 @@ def list_opts():
     yield None, common_opts
     yield None, host_opts
     yield None, db_opts
-    yield db_opt_group, core_db_opts
     yield retry_opt_group, retry_opts
     yield queue_opt_group, queue_opts
     yield ks_queue_opt_group, ks_queue_opts
@@ -288,13 +226,12 @@ def parse_args(conf, args=None, usage=None, default_config_files=None):
 def new_config():
     conf = cfg.ConfigOpts()
     log.register_options(conf)
+    db_options.set_defaults(conf, connection='sqlite:///barbican.sqlite')
+
     conf.register_opts(context_opts)
     conf.register_opts(common_opts)
     conf.register_opts(host_opts)
     conf.register_opts(db_opts)
-
-    conf.register_group(db_opt_group)
-    conf.register_opts(core_db_opts, group=db_opt_group)
 
     conf.register_group(retry_opt_group)
     conf.register_opts(retry_opts, group=retry_opt_group)
