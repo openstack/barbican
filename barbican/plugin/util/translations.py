@@ -13,7 +13,7 @@
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-from OpenSSL import crypto
+from cryptography import x509
 from oslo_serialization import base64
 
 from barbican import i18n as u  # noqa
@@ -188,12 +188,12 @@ def _convert_public_der_to_pem(der):
 
 
 def _convert_certificate_pem_to_der(pem):
-    cert = crypto.load_certificate(crypto.FILETYPE_PEM, pem)
-    der = crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)
+    cert = x509.load_pem_x509_certificate(pem)
+    der = cert.public_bytes(serialization.Encoding.DER)
     return der
 
 
 def _convert_certificate_der_to_pem(der):
-    cert = crypto.load_certificate(crypto.FILETYPE_ASN1, der)
-    pem = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
+    cert = x509.load_der_x509_certificate(der)
+    pem = cert.public_bytes(serialization.Encoding.PEM)
     return pem
