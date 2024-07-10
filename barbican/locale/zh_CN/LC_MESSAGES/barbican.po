@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: barbican VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2024-05-17 17:05+0000\n"
+"POT-Creation-Date: 2024-06-17 15:33+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -403,9 +403,6 @@ msgstr "必须提供非空的{entity_name}"
 
 msgid "Must supply {entity_name} with id=None (i.e. new entity)."
 msgstr "必须提供id为None的{entity_name}（i.e. new entity）。"
-
-msgid "No SQL connection configured"
-msgstr "没有配置SQL连接"
 
 msgid "No container found with container-ID {id}"
 msgstr "未发现container-ID为{id}的容器"
