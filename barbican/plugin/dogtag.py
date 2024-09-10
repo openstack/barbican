@@ -74,10 +74,6 @@ def _setup_nss_db_services(conf):
     """
     nss_db_path, nss_password = (conf.dogtag_plugin.nss_db_path,
                                  conf.dogtag_plugin.nss_password)
-    if nss_db_path is None:
-        LOG.warning("nss_db_path was not provided so the crypto "
-                    "provider functions were not initialized.")
-        return None
     if nss_password is None:
         raise ValueError(u._("nss_password is required"))
     if type(nss_password) is not bytes:
