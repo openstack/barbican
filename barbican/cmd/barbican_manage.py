@@ -25,6 +25,8 @@ import sys
 from oslo_config import cfg
 from oslo_log import log as logging
 
+from sqlalchemy import create_engine, text
+
 from barbican.cmd import pkcs11_kek_rewrap as pkcs11_rewrap
 from barbican.cmd import simple_crypto
 from barbican.common import config
@@ -349,6 +351,74 @@ class HSMCommands(object):
             sys.exit(1)
 
 
+class SAPCommands(object):
+
+    description = (
+        "Move all secrets associated with the old_project_id to the "
+        "new_project_id."
+    )
+
+    @args(
+        '--db-url', '-d',
+        metavar='<db-url>',
+        dest='dburl',
+        help='Barbican database URL'
+    )
+    @args(
+        '--old-project-id', '-o',
+        metavar='<old-project-id>',
+        dest='old_project_id',
+        help='The old project ID to move secrets from.'
+    )
+    @args(
+        '--new-project-id', '-n',
+        metavar='<new-project-id>',
+        dest='new_project_id',
+        help='The new project ID to move secrets to.'
+    )
+    @args(
+        '--verbose', '-V',
+        action='store_true',
+        dest='verbose',
+        default=False,
+        help='Show full information about the secret movement.'
+    )
+    def move_secrets(
+            self, conf, dburl=None, old_project_id=None,
+            new_project_id=None, verbose=None):
+
+        if dburl is None:
+            dburl = conf.sql_connection
+
+        engine = create_engine(dburl)
+        with engine.connect() as connection:
+            try:
+                query = text(
+                    "UPDATE secrets "
+                    "SET project_id = :new_project_id "
+                    "WHERE project_id = :old_project_id"
+                )
+                connection.execute(
+                    query,
+                    new_project_id=new_project_id,
+                    old_project_id=old_project_id
+                )
+
+                print(
+                    "All secrets associated with old project ID were moved "
+                    "to the new project ID."
+                )
+
+                if verbose:
+                    print(
+                        f"Moved secrets from project ID {old_project_id} "
+                        f"to {new_project_id}."
+                    )
+
+            except Exception as exc:
+                print(f"An error occurred: {exc}")
+
+
 class SimpleCryptoCommands:
     """Class for mananging SimpleCryptoPlugin backend"""
 
@@ -386,6 +456,7 @@ CATEGORIES = {
     'db': DbCommands,
     'hsm': HSMCommands,
     'simple_crypto': SimpleCryptoCommands,
+    'sap': SAPCommands,
 }
 
 
