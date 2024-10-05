@@ -15,6 +15,8 @@
 import datetime
 import time
 
+from oslo_utils import timeutils
+
 from barbican.common import config
 from barbican.common import exception
 from barbican.model import models
@@ -27,7 +29,7 @@ class WhenTestingOrderRetryTaskRepository(database_utils.RepositoryTestCase):
     def setUp(self):
         super(WhenTestingOrderRetryTaskRepository, self).setUp()
 
-        self.date_time_now = datetime.datetime.utcnow()
+        self.date_time_now = timeutils.utcnow()
         self.test_args = ['test', 'args']
         self.test_kwargs = {'test': 1, 'kwargs': 2}
 
@@ -78,7 +80,7 @@ class WhenTestingOrderRetryTaskRepository(database_utils.RepositoryTestCase):
 
         # Now, a retrieve by the current time should return our entry.
         entities, offset, limit, total = self.repo.get_by_create_date(
-            only_at_or_before_this_date=datetime.datetime.utcnow(),
+            only_at_or_before_this_date=timeutils.utcnow(),
             session=session,
             suppress_exception=True
         )

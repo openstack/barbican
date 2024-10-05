@@ -17,6 +17,7 @@ import datetime
 import unittest
 
 from oslo_serialization import base64
+from oslo_utils import timeutils
 
 from barbican.common import exception as excep
 from barbican.common import validators
@@ -1203,7 +1204,7 @@ class WhenTestingKeyTypeOrderValidator(utils.BaseTestCase):
     def test_should_pass_good_exp_meta_in_order_refs(self):
         self.key_order_req['meta']['algorithm'] = 'AES'
         ony_year_factor = datetime.timedelta(days=1 * 365)
-        date_after_year = datetime.datetime.utcnow() + ony_year_factor
+        date_after_year = timeutils.utcnow() + ony_year_factor
         date_after_year_str = date_after_year.strftime('%Y-%m-%d %H:%M:%S')
         self.key_order_req['meta']['expiration'] = date_after_year_str
         result = self.validator.validate(self.key_order_req)

@@ -17,9 +17,8 @@ Supports database/repositories oriented unit testing.
 Warning: Do not merge this content with the utils.py module, as doing so will
 break the DevStack functional test discovery process.
 """
-import datetime
+from oslo_utils import timeutils
 import oslotest.base as oslotest
-
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
 
@@ -168,7 +167,7 @@ def create_order_retry(order=None, retry_task="", retry_args=[],
     order_retry.retry_args = retry_args
     order_retry.retry_kwargs = retry_kwargs
     if not retry_at:
-        order_retry.retry_at = datetime.datetime.utcnow()
+        order_retry.retry_at = timeutils.utcnow()
     order_retry.order_id = order.id
     order_retry_task_repo = repositories.get_order_retry_tasks_repository()
     order_retry_task_repo.create_from(order_retry, session)

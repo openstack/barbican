@@ -12,6 +12,8 @@
 
 import datetime
 
+from oslo_utils import timeutils
+
 from barbican.common import exception
 from barbican.common import resources as res
 from barbican.model import models
@@ -24,8 +26,7 @@ class WhenTestingCertificateAuthorityRepo(database_utils.RepositoryTestCase):
     def setUp(self):
         super(WhenTestingCertificateAuthorityRepo, self).setUp()
         self.ca_repo = repositories.CertificateAuthorityRepo()
-        expiration = (datetime.datetime.utcnow() +
-                      datetime.timedelta(minutes=10))
+        expiration = timeutils.utcnow() + datetime.timedelta(minutes=10)
         self.parsed_ca = {'plugin_name': 'dogtag_plugin',
                           'plugin_ca_id': 'ca_master',
                           'name': 'Dogtag CA',
@@ -182,8 +183,7 @@ class WhenTestingProjectCARepo(database_utils.RepositoryTestCase):
         super(WhenTestingProjectCARepo, self).setUp()
         self.ca_repo = repositories.CertificateAuthorityRepo()
         self.project_ca_repo = repositories.ProjectCertificateAuthorityRepo()
-        expiration = (datetime.datetime.utcnow() +
-                      datetime.timedelta(minutes=10))
+        expiration = timeutils.utcnow() + datetime.timedelta(minutes=10)
         self.parsed_ca = {'plugin_name': 'dogtag_plugin',
                           'plugin_ca_id': 'ca_master',
                           'expiration': expiration.isoformat(),
@@ -305,11 +305,9 @@ class WhenTestingPreferredCARepo(database_utils.RepositoryTestCase):
         self.preferred_ca_repo = (
             repositories.PreferredCertificateAuthorityRepo())
 
-        expiration = (datetime.datetime.utcnow() +
-                      datetime.timedelta(minutes=10))
+        expiration = timeutils.utcnow() + datetime.timedelta(minutes=10)
 
-        expiration_later = (datetime.datetime.utcnow() +
-                            datetime.timedelta(days=10))
+        expiration_later = timeutils.utcnow() + datetime.timedelta(days=10)
         self.parsed_ca = {'plugin_name': 'dogtag_plugin',
                           'plugin_ca_id': 'ca_master',
                           'expiration': expiration.isoformat(),

@@ -15,6 +15,8 @@
 import datetime
 from unittest import mock
 
+from oslo_utils import timeutils
+
 from barbican.model import models
 from barbican.model import repositories
 from barbican.queue import server
@@ -189,10 +191,8 @@ class WhenCallingScheduleOrderRetryTasks(database_utils.RepositoryTestCase):
 
         self.args = ['args-foo', 'args-bar']
         self.kwargs = {'order_id': self.order.id, 'foo': 1, 'bar': 2}
-        self.date_to_retry_at = (
-            datetime.datetime.utcnow() + datetime.timedelta(
-                milliseconds=self.result.retry_msec)
-        )
+        self.date_to_retry_at = timeutils.utcnow() + datetime.timedelta(
+            milliseconds=self.result.retry_msec)
 
     def test_should_not_schedule_task_due_to_no_result(self):
         retry_rpc_method = server.schedule_order_retry_tasks(None, None, None)

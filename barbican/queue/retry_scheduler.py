@@ -16,10 +16,10 @@
 """
 Retry/scheduler classes and logic.
 """
-import datetime
 import random
 
 from oslo_service import service
+from oslo_utils import timeutils
 
 from barbican.common import config
 from barbican.common import utils
@@ -118,7 +118,7 @@ class PeriodicServer(service.Service):
         repositories.start()
         try:
             entities, _, _, total = self.order_retry_repo.get_by_create_date(
-                only_at_or_before_this_date=datetime.datetime.utcnow(),
+                only_at_or_before_this_date=timeutils.utcnow(),
                 suppress_exception=True)
         finally:
             repositories.clear()

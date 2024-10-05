@@ -13,6 +13,7 @@
 import datetime
 
 import fixtures
+from oslo_utils import timeutils
 import testtools
 
 from barbican.common import exception
@@ -222,7 +223,7 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
         self.assertEqual(1, count)
 
     def test_should_get_count_one_after_expiration(self):
-        current_time = datetime.datetime.utcnow()
+        current_time = timeutils.utcnow()
         tomorrow = current_time + datetime.timedelta(days=1)
         yesterday = current_time - datetime.timedelta(days=1)
 
