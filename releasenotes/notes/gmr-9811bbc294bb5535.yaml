@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Barbican now supports generation of Guru Meditation Reports using
+    oslo.reports libary.
