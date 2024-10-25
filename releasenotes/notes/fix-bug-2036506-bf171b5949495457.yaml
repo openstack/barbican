@@ -1,0 +1,22 @@
+---
+deprecations:
+  - |
+    The `[p11_crypto_plugin]hmac_keywrap_mechanism` option has been replaced
+    by `[p11_crypto_plugin]hmac_mechanism`.  This option was renamed to avoid
+    confusion since this mechanism is only used to sign encrypted data and
+    never used for key wrap encryption.
+security:
+  - |
+    The PKCS#11 backend driver has been updated to support newer Key Wrap
+    mechanisms.  New deployments should use CKM_AES_KEY_WRAP_KWP, but
+    CKM_AES_KEY_WRAP_PAD and CKM_AES_CBC_PAD are also supported for
+    compatibility with older devices that have not yet implemented PKCS#11
+    Version 3.0.
+fixes:
+  - |
+    Fixed Bug #2036506 - This patch replaces the hard-coded CKM_AES_CBC_PAD
+    mechanism used to wrap pKEKs with an option to configure this mechanism.
+    Two new options have been added to the [p11_crypto_plugin] section of the
+    configuration file: `key_wrap_mechanism` and `key_wrap_generate_iv`.  These
+    options default to `CKM_AES_CBC_PAD` and `True` respectively to preserve
+    backwards compatibility.

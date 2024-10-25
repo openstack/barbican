@@ -326,13 +326,16 @@ class HSMCommands(object):
         elif type(slotid) is not int:
             slotid = int(slotid)
         if hmacwrap is None:
-            hmacwrap = conf.p11_crypto_plugin.hmac_keywrap_mechanism
+            hmacwrap = conf.p11_crypto_plugin.hmac_mechanism
 
         self.pkcs11 = pkcs11.PKCS11(
-            library_path=libpath, login_passphrase=passphrase,
-            rw_session=True, slot_id=slotid,
-            encryption_mechanism='CKM_AES_CBC',
-            hmac_keywrap_mechanism=hmacwrap,
+            library_path=libpath,
+            login_passphrase=passphrase,
+            rw_session=conf.p11_crypto_plugin.rw_session,
+            slot_id=slotid,
+            encryption_mechanism=conf.p11_crypto_plugin.encryption_mechanism,
+            hmac_mechanism=hmacwrap,
+            key_wrap_mechanism=conf.p11_crypto_plugin.key_wrap_mechanism,
             token_serial_number=conf.p11_crypto_plugin.token_serial_number,
             token_labels=conf.p11_crypto_plugin.token_labels
         )

@@ -59,18 +59,22 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.cfg_mock.rw_session = False
         self.cfg_mock.slot_id = 1
         self.cfg_mock.encryption_mechanism = 'CKM_AES_CBC'
-        self.cfg_mock.hmac_keywrap_mechanism = 'CKM_SHA256_HMAC'
+        self.cfg_mock.hmac_mechanism = 'CKM_SHA256_HMAC'
+        self.cfg_mock.key_wrap_mechanism = 'CKM_AES_KEY_WRAP_KWP'
 
         self.token_mock = mock.MagicMock()
         self.token_mock.label = b'myLabel'
         self.token_mock.serial_number = b'111111'
 
         self.pkcs11 = pkcs11.PKCS11(
-            self.cfg_mock.library_path, self.cfg_mock.login_passphrase,
-            self.cfg_mock.rw_session, self.cfg_mock.slot_id,
-            self.cfg_mock.encryption_mechanism,
+            self.cfg_mock.library_path,
+            self.cfg_mock.login_passphrase,
+            slot_id=self.cfg_mock.slot_id,
+            rw_session=self.cfg_mock.rw_session,
+            encryption_mechanism=self.cfg_mock.encryption_mechanism,
+            hmac_mechanism=self.cfg_mock.hmac_mechanism,
+            key_wrap_mechanism=self.cfg_mock.key_wrap_mechanism,
             ffi=self.ffi,
-            hmac_keywrap_mechanism=self.cfg_mock.hmac_keywrap_mechanism
         )
 
     def _generate_random(self, session, buf, length):
@@ -140,7 +144,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         return pkcs11.CKR_OK
 
     def _encrypt(self, session, pt, pt_len, ct, ct_len):
-        if self.pkcs11.generate_iv:
+        if self.pkcs11.encrypt_gen_iv:
             self.ffi.buffer(ct)[:] = pt[::-1] + b'0' * self.pkcs11.gcmtagsize
         else:
             self.ffi.buffer(ct)[:] = pt[::-1] + b'0' * (self.pkcs11.gcmtagsize
@@ -173,6 +177,33 @@ class WhenTestingPKCS11(utils.BaseTestCase):
 
     def _verify(self, *args, **kwargs):
         return pkcs11.CKR_OK
+
+    def test_init_raises_invalid_encryption_mechanism(self):
+        self.assertRaises(
+            ValueError,
+            pkcs11.PKCS11,
+            self.cfg_mock.library_path,
+            self.cfg_mock.login_passphrase,
+            encryption_mechanism='CKM_BOGUS')
+
+    def test_init_raises_invalid_hmac_mechanism(self):
+        self.assertRaises(
+            ValueError,
+            pkcs11.PKCS11,
+            self.cfg_mock.library_path,
+            self.cfg_mock.login_passphrase,
+            encryption_mechanism='CKM_AES_GCM',
+            hmac_mechanism='CKM_BOGUS')
+
+    def test_init_raises_invalid_key_wrap_mechanism(self):
+        self.assertRaises(
+            ValueError,
+            pkcs11.PKCS11,
+            self.cfg_mock.library_path,
+            self.cfg_mock.login_passphrase,
+            encryption_mechanism='CKM_AES_GCM',
+            hmac_mechanism='CKM_SHA256_HMAC',
+            key_wrap_mechanism='CKM_BOGUS')
 
     def test_get_slot_id_from_serial_number(self):
         slot_id = self.pkcs11._get_slot_id('111111', None, 2)
@@ -313,7 +344,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
 
     def test_encrypt_with_no_iv_generation(self):
         pt = b'0123456789ABCDEF'
-        self.pkcs11.generate_iv = False
+        self.pkcs11.encrypt_gen_iv = False
         ct = self.pkcs11._VENDOR_SAFENET_CKM_AES_GCM_encrypt(
             mock.MagicMock(),
             pt, mock.MagicMock()
@@ -328,7 +359,7 @@ class WhenTestingPKCS11(utils.BaseTestCase):
 
     def test_encrypt_with_iv_generation(self):
         pt = b'0123456789ABCDEF'
-        self.pkcs11.generate_iv = True
+        self.pkcs11.encrypt_gen_iv = True
         ct = self.pkcs11._VENDOR_SAFENET_CKM_AES_GCM_encrypt(
             mock.MagicMock(), pt, mock.MagicMock()
         )
@@ -412,7 +443,8 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertEqual(1, self.lib.C_DecryptInit.call_count)
         self.assertEqual(1, self.lib.C_Decrypt.call_count)
 
-    def test_wrap_key(self):
+    def test_wrap_key_with_iv_generation(self):
+        self.pkcs11.key_wrap_gen_iv = True
         wkek = self.pkcs11.wrap_key(mock.Mock(), mock.Mock(), mock.Mock())
         self.assertGreater(len(wkek['iv']), 0)
         self.assertEqual(b'0' * 16, wkek['wrapped_key'])
@@ -420,9 +452,22 @@ class WhenTestingPKCS11(utils.BaseTestCase):
         self.assertEqual(2, self.lib.C_GenerateRandom.call_count)
         self.assertEqual(2, self.lib.C_WrapKey.call_count)
 
+    def test_wrap_key_no_iv_generation(self):
+        self.pkcs11.key_wrap_gen_iv = False
+        wkek = self.pkcs11.wrap_key(mock.Mock(), mock.Mock(), mock.Mock())
+        self.assertIsNone(wkek['iv'])
+        self.assertEqual(b'0' * 16, wkek['wrapped_key'])
+
+        self.assertEqual(1, self.lib.C_GenerateRandom.call_count)
+        self.assertEqual(2, self.lib.C_WrapKey.call_count)
+
     def test_unwrap_key(self):
-        kek = self.pkcs11.unwrap_key(mock.Mock(), b'0' * 16,
-                                     b'0' * 16, mock.Mock())
+        kek = self.pkcs11.unwrap_key(
+            'CKM_AES_CBC_PAD',
+            b'0' * 16,
+            b'0' * 16,
+            b'0' * 16,
+            mock.Mock())
         self.assertEqual(1, kek)
 
         self.assertEqual(self.lib.C_UnwrapKey.call_count, 1)
