@@ -50,7 +50,7 @@ p11_crypto_plugin_opts = [
                          'devices may require more than one label for Load '
                          'Balancing or High Availability configurations.')),
     cfg.StrOpt('login',
-               help=u._('Password to login to PKCS11 session'),
+               help=u._('Password (PIN) to login to PKCS11 session'),
                secret=True),
     cfg.StrOpt('mkek_label',
                help=u._('Master KEK label (as stored in the HSM)')),
@@ -81,11 +81,19 @@ p11_crypto_plugin_opts = [
                help=u._('HMAC Key Type'),
                default='CKK_AES'),
     cfg.StrOpt('hmac_keygen_mechanism',
-               help=u._('HMAC Key Generation Algorithm'),
+               help=u._('HMAC Key Generation Algorithm used to create the '
+                        'master HMAC Key.'),
                default='CKM_AES_KEY_GEN'),
-    cfg.StrOpt('hmac_keywrap_mechanism',
-               help=u._('HMAC key wrap mechanism'),
-               default='CKM_SHA256_HMAC'),
+    cfg.StrOpt('hmac_mechanism',
+               help=u._('HMAC algorithm used to sign encrypted data.'),
+               default='CKM_SHA256_HMAC',
+               deprecated_name='hmac_keywrap_mechanism'),
+    cfg.StrOpt('key_wrap_mechanism',
+               help=u._('Key Wrapping algorithm used to wrap Project KEKs.'),
+               default='CKM_AES_CBC_PAD'),
+    cfg.BoolOpt('key_wrap_generate_iv',
+                help=u._('Generate IVs for Key Wrapping mechanism.'),
+                default=True),
     cfg.StrOpt('seed_file',
                help=u._('File to pull entropy for seeding RNG'),
                default=''),
@@ -138,33 +146,31 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         if plugin_conf.library_path is None:
             raise ValueError(u._("library_path is required"))
         self.library_path = plugin_conf.library_path
+        self.login = plugin_conf.login
+
+        self.token_serial_number = plugin_conf.token_serial_number
+        self.token_labels = plugin_conf.token_labels
+        self.slot_id = plugin_conf.slot_id
+
+        self.rw_session = plugin_conf.rw_session
+        self.seed_file = plugin_conf.seed_file
+        self.seed_length = plugin_conf.seed_length
 
         self.encryption_mechanism = plugin_conf.encryption_mechanism
-        self.generate_iv = plugin_conf.aes_gcm_generate_iv
+        self.encryption_gen_iv = plugin_conf.aes_gcm_generate_iv
         self.cka_sensitive = plugin_conf.always_set_cka_sensitive
         self.mkek_key_type = 'CKK_AES'
         self.mkek_length = plugin_conf.mkek_length
         self.mkek_label = plugin_conf.mkek_label
-        self.hmac_label = plugin_conf.hmac_label
         self.hmac_key_type = plugin_conf.hmac_key_type
-        self.hmac_keygen_mechanism = plugin_conf.hmac_keygen_mechanism
-        self.hmac_keywrap_mechanism = plugin_conf.hmac_keywrap_mechanism
+        self.hmac_label = plugin_conf.hmac_label
+        self.hmac_mechanism = plugin_conf.hmac_mechanism
+        self.key_wrap_mechanism = plugin_conf.key_wrap_mechanism
+        self.key_wrap_gen_iv = plugin_conf.key_wrap_generate_iv
         self.os_locking_ok = plugin_conf.os_locking_ok
         self.pkek_length = plugin_conf.pkek_length
         self.pkek_cache_ttl = plugin_conf.pkek_cache_ttl
         self.pkek_cache_limit = plugin_conf.pkek_cache_limit
-        self.rw_session = plugin_conf.rw_session
-        self.seed_file = plugin_conf.seed_file
-        self.seed_length = plugin_conf.seed_length
-        self.slot_id = plugin_conf.slot_id
-        self.login = plugin_conf.login
-        self.token_serial_number = plugin_conf.token_serial_number
-        self.token_labels = plugin_conf.token_labels or list()
-        if plugin_conf.token_label:
-            LOG.warning('Using deprecated option "token_label". Please update '
-                        'your configuration file.')
-            if plugin_conf.token_label not in self.token_labels:
-                self.token_labels.append(plugin_conf.token_label)
 
         # Use specified or create new pkcs11 object
         self.pkcs11 = pkcs11 or self._create_pkcs11(ffi)
@@ -346,17 +352,19 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         return pkcs11.PKCS11(
             library_path=self.library_path,
             login_passphrase=self.login,
-            rw_session=self.rw_session,
-            slot_id=self.slot_id,
-            encryption_mechanism=self.encryption_mechanism,
-            ffi=ffi,
-            seed_random_buffer=seed_random_buffer,
-            generate_iv=self.generate_iv,
-            always_set_cka_sensitive=self.cka_sensitive,
-            hmac_keywrap_mechanism=self.hmac_keywrap_mechanism,
             token_serial_number=self.token_serial_number,
             token_labels=self.token_labels,
-            os_locking_ok=self.os_locking_ok
+            slot_id=self.slot_id,
+            rw_session=self.rw_session,
+            seed_random_buffer=seed_random_buffer,
+            encryption_mechanism=self.encryption_mechanism,
+            encryption_gen_iv=self.encryption_gen_iv,
+            always_set_cka_sensitive=self.cka_sensitive,
+            hmac_mechanism=self.hmac_mechanism,
+            key_wrap_mechanism=self.key_wrap_mechanism,
+            key_wrap_gen_iv=self.key_wrap_gen_iv,
+            os_locking_ok=self.os_locking_ok,
+            ffi=ffi
         )
 
     def _reinitialize_pkcs11(self):
@@ -397,23 +405,33 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         return key
 
     def _load_kek_from_meta_dto(self, kek_meta_dto):
+        # If plugin_meta is missing the keywrap_mechanism, we default
+        # to the previously hard-coded CKM_AES_CBC_PAD
+        _DEFAULT_KEYWRAP_MECHANISM = 'CKM_AES_CBC_PAD'
         meta = json.loads(kek_meta_dto.plugin_meta)
+        keywrap_mechanism = meta.get('key_wrap_mechanism',
+                                     _DEFAULT_KEYWRAP_MECHANISM)
+        LOG.debug("Key Wrap mechanism: %s", keywrap_mechanism)
         kek = self._load_kek(
             kek_meta_dto.kek_label, meta['iv'], meta['wrapped_key'],
-            meta['hmac'], meta['mkek_label'], meta['hmac_label']
+            meta['hmac'], meta['mkek_label'], meta['hmac_label'],
+            keywrap_mechanism
         )
         return kek
 
     def _load_kek(self, key_label, iv, wrapped_key, hmac,
-                  mkek_label, hmac_label):
+                  mkek_label, hmac_label, keywrap_mechanism):
         with self.pkek_cache_lock:
             kek = self._pkek_cache_get(key_label)
             if kek is None:
                 # Decode data
-                iv = base64.b64decode(iv)
                 wrapped_key = base64.b64decode(wrapped_key)
+                if iv is None:
+                    kek_data = wrapped_key
+                else:
+                    iv = base64.b64decode(iv)
+                    kek_data = iv + wrapped_key
                 hmac = base64.b64decode(hmac)
-                kek_data = iv + wrapped_key
 
                 with self.caching_session_lock:
                     session = self.caching_session
@@ -425,8 +443,12 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
                     self.pkcs11.verify_hmac(mkhk, hmac, kek_data, session)
 
                     # Unwrap KEK
-                    kek = self.pkcs11.unwrap_key(mkek, iv, wrapped_key,
-                                                 session)
+                    kek = self.pkcs11.unwrap_key(
+                        keywrap_mechanism,
+                        mkek,
+                        iv,
+                        wrapped_key,
+                        session)
 
                 self._pkek_cache_add(kek, key_label)
 
@@ -448,16 +470,21 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
             wkek = self.pkcs11.wrap_key(mkek, kek, session)
 
             # HMAC Wrapped KEK
-            wkek_data = wkek['iv'] + wkek['wrapped_key']
+            if wkek['iv'] is None:
+                wkek_data = wkek['wrapped_key']
+            else:
+                wkek_data = wkek['iv'] + wkek['wrapped_key']
+
             wkek_hmac = self.pkcs11.compute_hmac(mkhk, wkek_data, session)
 
         # Cache KEK
         self._pkek_cache_add(kek, key_label)
 
         return {
-            'iv': base64.b64encode(wkek['iv']),
+            'iv': wkek['iv'] and base64.b64encode(wkek['iv']),
             'wrapped_key': base64.b64encode(wkek['wrapped_key']),
             'hmac': base64.b64encode(wkek_hmac),
             'mkek_label': self.mkek_label,
-            'hmac_label': self.hmac_label
+            'hmac_label': self.hmac_label,
+            'key_wrap_mechanism': wkek['key_wrap_mechanism']
         }
