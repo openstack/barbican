@@ -141,7 +141,8 @@ CKM_AES_CBC = 0x1082
 CKM_AES_MAC = 0x1083
 CKM_AES_CBC_PAD = 0x1085
 CKM_AES_GCM = 0x1087
-CKM_AES_KEY_WRAP = 0x1090
+CKM_AES_KEY_WRAP_PAD = 0x210A
+CKM_AES_KEY_WRAP_KWP = 0x210B
 CKM_GENERIC_SECRET_KEY_GEN = 0x350
 VENDOR_SAFENET_CKM_AES_GCM = 0x8000011c
 
@@ -157,20 +158,30 @@ _ENCRYPTION_MECHANISMS = {
 _CBC_IV_SIZE = 16  # bytes
 _CBC_BLOCK_SIZE = 128  # bits
 
+# ----- Supported Mechanisms -----
+# Barbican only supports the PKCS#11 mechanisms below
+
 _KEY_GEN_MECHANISMS = {
     'CKM_AES_KEY_GEN': CKM_AES_KEY_GEN,
     'CKM_NC_SHA256_HMAC_KEY_GEN': CKM_NC_SHA256_HMAC_KEY_GEN,
     'CKM_GENERIC_SECRET_KEY_GEN': CKM_GENERIC_SECRET_KEY_GEN,
 }
 
-_KEY_WRAP_MECHANISMS = {
+_HMAC_MECHANISMS = {
     'CKM_SHA256_HMAC': CKM_SHA256_HMAC,
     'CKM_AES_MAC': CKM_AES_MAC
+}
+
+_KEY_WRAP_MECHANISMS = {
+    'CKM_AES_CBC_PAD': CKM_AES_CBC_PAD,
+    'CKM_AES_KEY_WRAP_PAD': CKM_AES_KEY_WRAP_PAD,
+    'CKM_AES_KEY_WRAP_KWP': CKM_AES_KEY_WRAP_KWP
 }
 
 CKM_NAMES = dict()
 CKM_NAMES.update(_ENCRYPTION_MECHANISMS)
 CKM_NAMES.update(_KEY_GEN_MECHANISMS)
+CKM_NAMES.update(_HMAC_MECHANISMS)
 CKM_NAMES.update(_KEY_WRAP_MECHANISMS)
 
 ERROR_CODES = {
@@ -324,6 +335,16 @@ def build_ffi():
         CK_BYTE minor;
     } CK_VERSION;
 
+    typedef struct CK_INFO {
+        CK_VERSION  cryptokiVersion;
+        CK_UTF8CHAR manufacturerID[32];
+        CK_FLAGS flags;
+        CK_UTF8CHAR libraryDescription[32];
+        CK_VERSION  libraryVersion;
+    } CK_INFO;
+
+    typedef CK_INFO * CK_INFO_PTR;
+
     typedef struct CK_SLOT_INFO {
         CK_UTF8CHAR slotDescription[64];
         CK_UTF8CHAR manufacturerID[32];
@@ -384,6 +405,7 @@ def build_ffi():
     CK_RV C_GetSessionInfo(CK_SESSION_HANDLE, CK_SESSION_INFO_PTR);
     CK_RV C_Login(CK_SESSION_HANDLE, CK_USER_TYPE, CK_UTF8CHAR_PTR,
                   CK_ULONG);
+    CK_RV C_GetInfo(CK_INFO_PTR);
     CK_RV C_GetSlotList(CK_BBOOL, CK_SLOT_ID_PTR, CK_ULONG_PTR);
     CK_RV C_GetSlotInfo(CK_SLOT_ID, CK_SLOT_INFO_PTR);
     CK_RV C_GetTokenInfo(CK_SLOT_ID, CK_TOKEN_INFO_PTR);
@@ -426,41 +448,31 @@ def build_ffi():
 
 
 class PKCS11(object):
-    def __init__(self, library_path, login_passphrase, rw_session, slot_id,
-                 encryption_mechanism=None,
-                 ffi=None, algorithm=None,
-                 seed_random_buffer=None,
-                 generate_iv=None, always_set_cka_sensitive=None,
-                 hmac_keywrap_mechanism='CKM_SHA256_HMAC',
+    def __init__(self, library_path, login_passphrase,
                  token_serial_number=None,
                  token_labels=None,
-                 os_locking_ok=False):
-        if algorithm:
-            LOG.warning("WARNING: Using deprecated 'algorithm' argument.")
-            encryption_mechanism = encryption_mechanism or algorithm
-
+                 slot_id=None,
+                 rw_session=True,
+                 seed_random_buffer=None,
+                 encryption_mechanism=None,
+                 encryption_gen_iv=True,
+                 always_set_cka_sensitive=True,
+                 hmac_mechanism=None,
+                 key_wrap_mechanism=None,
+                 key_wrap_gen_iv=False,
+                 os_locking_ok=False,
+                 ffi=None):
+        # Validate all mechanisms are supported
         if encryption_mechanism not in _ENCRYPTION_MECHANISMS:
-            raise ValueError("Invalid encryption_mechanism.")
-        self.encrypt_mech = _ENCRYPTION_MECHANISMS[encryption_mechanism]
-        self.encrypt = getattr(
-            self,
-            '_{}_encrypt'.format(encryption_mechanism)
-        )
-
-        if hmac_keywrap_mechanism not in _KEY_WRAP_MECHANISMS:
-            raise ValueError("Invalid HMAC keywrap mechanism")
+            raise ValueError("Invalid Encryption mechanism.")
+        if hmac_mechanism not in _HMAC_MECHANISMS:
+            raise ValueError("Invalid HMAC signing mechanism.")
+        if key_wrap_mechanism not in _KEY_WRAP_MECHANISMS:
+            raise ValueError("Invalid Key Wrapping mechanism.")
 
         self.ffi = ffi or build_ffi()
         self.lib = self.ffi.dlopen(library_path)
-
-        if os_locking_ok:
-            init_arg_pt = self.ffi.new("CK_C_INITIALIZE_ARGS *")
-            init_arg_pt.flags = CKF_OS_LOCKING_OK
-        else:
-            init_arg_pt = self.ffi.NULL
-
-        rv = self.lib.C_Initialize(init_arg_pt)
-        self._check_error(rv)
+        self._initialize_library(os_locking_ok)
 
         # Session options
         self.login_passphrase = _to_bytes(login_passphrase)
@@ -471,13 +483,19 @@ class PKCS11(object):
             slot_id)
 
         # Algorithm options
-        self.algorithm = CKM_NAMES[encryption_mechanism]
+        self.encrypt_mech = CKM_NAMES[encryption_mechanism]
+        self.encrypt = getattr(
+            self,
+            '_{}_encrypt'.format(encryption_mechanism)
+        )
+        self.encrypt_gen_iv = encryption_gen_iv
         self.blocksize = 16
         self.noncesize = 12
         self.gcmtagsize = 16
-        self.generate_iv = generate_iv
         self.always_set_cka_sensitive = always_set_cka_sensitive
-        self.hmac_keywrap_mechanism = CKM_NAMES[hmac_keywrap_mechanism]
+        self.hmac_mechanism = CKM_NAMES[hmac_mechanism]
+        self.key_wrap_mechanism = key_wrap_mechanism
+        self.key_wrap_gen_iv = key_wrap_gen_iv
 
         # Validate configuration and RNG
         session = self.get_session()
@@ -486,6 +504,16 @@ class PKCS11(object):
         self._rng_self_test(session)
         self.return_session(session)
         LOG.debug("Connected to PCKS#11 Token in Slot %s", self.slot_id)
+
+    def _initialize_library(self, os_locking_ok):
+        if os_locking_ok:
+            init_arg_pt = self.ffi.new("CK_C_INITIALIZE_ARGS *")
+            init_arg_pt.flags = CKF_OS_LOCKING_OK
+        else:
+            init_arg_pt = self.ffi.NULL
+
+        rv = self.lib.C_Initialize(init_arg_pt)
+        self._check_error(rv)
 
     def _get_slot_id(self, token_serial_number, token_labels, slot_id):
         # First find out how many slots with tokens are available
@@ -640,14 +668,14 @@ class PKCS11(object):
 
     def _VENDOR_SAFENET_CKM_AES_GCM_encrypt(self, key, pt_data, session):
         iv = None
-        if self.generate_iv:
+        if self.encrypt_gen_iv:
             iv = self._generate_random(self.noncesize, session)
         ck_mechanism = self._build_gcm_mechanism(iv)
         rv = self.lib.C_EncryptInit(session, ck_mechanism.mech, key)
         self._check_error(rv)
 
         pt_len = len(pt_data)
-        if self.generate_iv:
+        if self.encrypt_gen_iv:
             ct_len = self.ffi.new("CK_ULONG *", pt_len + self.gcmtagsize)
         else:
             ct_len = self.ffi.new("CK_ULONG *", pt_len + self.gcmtagsize * 2)
@@ -655,7 +683,7 @@ class PKCS11(object):
         rv = self.lib.C_Encrypt(session, pt_data, pt_len, ct, ct_len)
         self._check_error(rv)
 
-        if self.generate_iv:
+        if self.encrypt_gen_iv:
             return {
                 "iv": self.ffi.buffer(iv)[:],
                 "ct": self.ffi.buffer(ct, ct_len[0])[:]
@@ -669,7 +697,7 @@ class PKCS11(object):
 
     def _build_gcm_mechanism(self, iv=None):
         mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = self.algorithm
+        mech.mechanism = self.encrypt_mech
         gcm = self.ffi.new("CK_AES_GCM_PARAMS *")
 
         if iv:
@@ -774,11 +802,19 @@ class PKCS11(object):
         return obj_handle_ptr[0]
 
     def wrap_key(self, wrapping_key, key_to_wrap, session):
-        mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = CKM_AES_CBC_PAD
-        iv = self._generate_random(16, session)
-        mech.parameter = iv
-        mech.parameter_len = 16
+        if self.key_wrap_gen_iv:
+            iv_len = {
+                'CKM_AES_CBC_PAD': 16,  # bytes
+                'CKM_AES_WRAP_PAD': 8,  # bytes
+                'CKM_AES_KEY_WRAP_KWP': 4  # bytes
+            }.get(self.key_wrap_mechanism)
+            iv = self._generate_random(iv_len, session)
+        else:
+            iv = None
+        mech = self._build_key_wrap_mechanism(
+            CKM_NAMES[self.key_wrap_mechanism],
+            iv
+        )
 
         # Ask for length of the wrapped key
         wrapped_key_len = self.ffi.new("CK_ULONG *")
@@ -797,18 +833,27 @@ class PKCS11(object):
         self._check_error(rv)
 
         return {
-            'iv': self.ffi.buffer(iv)[:],
-            'wrapped_key': self.ffi.buffer(wrapped_key, wrapped_key_len[0])[:]
+            'iv': iv and self.ffi.buffer(iv)[:],
+            'wrapped_key': self.ffi.buffer(wrapped_key, wrapped_key_len[0])[:],
+            'key_wrap_mechanism': self.key_wrap_mechanism
         }
 
-    def unwrap_key(self, wrapping_key, iv, wrapped_key, session):
-        ck_iv = self.ffi.new("CK_BYTE[]", iv)
-        ck_wrapped_key = self.ffi.new("CK_BYTE[]", wrapped_key)
-        unwrapped_key = self.ffi.new("CK_OBJECT_HANDLE *")
+    def _build_key_wrap_mechanism(self, mechanism, iv):
         mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = CKM_AES_CBC_PAD
-        mech.parameter = ck_iv
-        mech.parameter_len = len(iv)
+        mech.mechanism = mechanism
+        if iv is not None:
+            mech.parameter = iv
+            mech.parameter_len = len(iv)
+        return mech
+
+    def unwrap_key(self, mechanism, wrapping_key, iv, wrapped_key, session):
+        ck_wrapped_key = self.ffi.new("CK_BYTE[]", wrapped_key)
+        ck_iv = iv and self.ffi.new("CK_BYTE[{}]".format(len(iv)), iv)
+        unwrapped_key = self.ffi.new("CK_OBJECT_HANDLE *")
+        mech = self._build_key_wrap_mechanism(
+            CKM_NAMES[mechanism],
+            ck_iv
+        )
 
         ck_attributes = self._build_attributes([
             Attribute(CKA_CLASS, CKO_SECRET_KEY),
@@ -830,7 +875,7 @@ class PKCS11(object):
 
     def compute_hmac(self, hmac_key, data, session):
         mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = self.hmac_keywrap_mechanism
+        mech.mechanism = self.hmac_mechanism
         rv = self.lib.C_SignInit(session, mech, hmac_key)
         self._check_error(rv)
 
@@ -843,7 +888,7 @@ class PKCS11(object):
 
     def verify_hmac(self, hmac_key, sig, data, session):
         mech = self.ffi.new("CK_MECHANISM *")
-        mech.mechanism = self.hmac_keywrap_mechanism
+        mech.mechanism = self.hmac_mechanism
 
         rv = self.lib.C_VerifyInit(session, mech, hmac_key)
         self._check_error(rv)
