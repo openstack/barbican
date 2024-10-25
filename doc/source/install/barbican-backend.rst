@@ -91,70 +91,65 @@ and signed with HMAC key. Both MKEK and HMAC resides in the HSM.
 The configuration for this plugin in ``/etc/barbican/barbican.conf``.
 Settings for some different HSMs are provided below:
 
-Thales Luna Network HSM (Safenet)
-+++++++++++++++++++++++++++++++++
+Thales Luna Network HSM
++++++++++++++++++++++++
 
 The PKCS#11 plugin configuration for Luna Network HSM looks like:
 
     .. code-block:: ini
 
-       # ================= Secret Store Plugin ===================
        [secretstore]
-       ..
-       enabled_secretstore_plugins = store_crypto
+       enable_multiple_secret_stores = True
+       stores_lookup_suffix = luna
+
+       # ========== Secret Store configuration ==========
+       [secretstore:luna]
+       secret_store_plugin = store_crypto
+       crypto_plugin = p11_crypto
 
        # ================= Crypto plugin ===================
-       [crypto]
-       ..
-       enabled_crypto_plugins = p11_crypto
-
        [p11_crypto_plugin]
        # Path to vendor PKCS11 library
        library_path = '/usr/lib/libCryptoki2_64.so'
 
-       # Token serial number used to identify the token to be used.  Required
-       # when the device has multiple tokens with the same label. (string
-       # value)
+       # Token serial number for the token to be used.  Required
+       # when the device has multiple tokens with the same label.
+       # (string value)
        #token_serial_number = 12345678
 
-       # Token label used to identify the token to be used.  Required when
+       # Token label for the token to be used.  Required when
        # token_serial_number is not specified. (string value)
-       #token_label = <None>
+       token_labels = myPCKS11Token
 
-       # Password to login to PKCS11 session
+       # (Optional) HSM Slot ID that contains the token device to be used.
+       # Required when token_serial_number and token_labels are not specified.
+       # (integer value)
+       #slot_id = 0
+
+       # Password (PIN) to login to PKCS11 session
        login = 'mypassword'
+
+       # Encryption algorithm used to encrypt secrets
+       encryption_mechanism = CKM_AES_CBC_GCM
 
        # Label to identify master KEK in the HSM (must not be the same as HMAC label)
        mkek_label = 'my_mkek_label'
 
-       # Length in bytes of master KEK
-       mkek_length = 32
-
-       # Label to identify HMAC key in the HSM (must not be the same as MKEK label)
+       # Label to identify master HMAC key in the HSM (must not be the same as MKEK label)
        hmac_label = 'my_hmac_label'
 
-       # (Optional) HSM Slot ID that contains the token device to be used.
-       # (integer value)
-       slot_id = 1
+       # Key Type for the master HMAC key
+       hmac_key_type = CKK_GENERIC_SECRET
 
+       # HMAC Key Generation Algorithm used to create the master HMAC Key
+       hmac_keygen_mechanism = CKM_GENERIC_SECRET_KEY_GEN
 
-       # Enable Read/Write session with the HSM?
-       # rw_session = True
+       # HMAC algorith used to sign ecnrypted data
+       hmac_mechanism = CKM_SHA256_HMAC
 
-       # Length of Project KEKs to create
-       # pkek_length = 32
+       # Key Wrap algorithm used to wrap Project KEKs
+       key_wrap_mechanism = CKM_AES_KEY_WRAP_KWP
 
-       # How long to cache unwrapped Project KEKs
-       # pkek_cache_ttl = 900
-
-       # Max number of items in pkek cache
-       # pkek_cache_limit = 100
-
-.. note::
-
-   Barbican does not support FIPS mode enabled for SafeNet Luna HSM or
-   Data Protection on Demand HSM. Make sure that it's operating in non-FIPS
-   mode while integrating with Barbican.
 
 The HMAC and MKEK keys can be generated as follows:
 
