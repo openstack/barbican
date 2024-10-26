@@ -1,3 +1,7 @@
+# Requirements lower bounds listed here are our best effort to keep them up to
+# date but we do not test them so no guarantee of having them all correct. If
+# you find any incorrect lower bounds, let us know or propose a fix.
+
 alembic>=0.8.10 # MIT
 cffi>=1.7.0 # MIT
 cryptography>=2.1 # BSD/Apache-2.0
