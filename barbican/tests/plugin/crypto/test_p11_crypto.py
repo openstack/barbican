@@ -41,7 +41,10 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.pkcs11.encrypt.return_value = {'iv': b'0', 'ct': b'0'}
         self.pkcs11.decrypt.return_value = b'0'
         self.pkcs11.generate_key.return_value = int(3)
-        self.pkcs11.wrap_key.return_value = {'iv': b'1', 'wrapped_key': b'1'}
+        self.pkcs11.wrap_key.return_value = {
+            'iv': b'1',
+            'wrapped_key': b'1',
+            'key_wrap_mechanism': 'CKM_AES_CBC_PAD'}
         self.pkcs11.unwrap_key.return_value = int(4)
         self.pkcs11.compute_hmac.return_value = b'1'
         self.pkcs11.verify_hmac.return_value = None
@@ -63,8 +66,11 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         self.cfg_mock.p11_crypto_plugin.encryption_mechanism = 'CKM_AES_CBC'
         self.cfg_mock.p11_crypto_plugin.seed_file = ''
         self.cfg_mock.p11_crypto_plugin.seed_length = 32
-        self.cfg_mock.p11_crypto_plugin.hmac_keywrap_mechanism = \
+        self.cfg_mock.p11_crypto_plugin.hmac_mechanism = \
             'CKM_SHA256_HMAC'
+        self.cfg_mock.p11_crypto_plugin.key_wrap_mechanism = \
+            'CKM_AES_CBC_PAD'
+        self.cfg_mock.p11_crypto_plugin.key_wrap_gen_iv = True
 
         self.plugin_name = 'Test PKCS11 plugin'
         self.cfg_mock.p11_crypto_plugin.plugin_name = self.plugin_name
@@ -157,7 +163,9 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
 
     def test_decrypt(self):
         ct = b'ctct'
-        kek_meta_extended = '{"iv":"AAAA","mechanism":"CKM_AES_CBC"}'
+        kek_meta_extended = ('{"iv":"AAAA",'
+                             '"mechanism":"CKM_AES_CBC",'
+                             '"key_wrap_mechanism":"CKM_AES_CBC_PAD"}')
         decrypt_dto = plugin_import.DecryptDTO(ct)
         kek_meta = mock.MagicMock()
         kek_meta.kek_label = 'pkek'
