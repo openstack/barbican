@@ -88,10 +88,10 @@ p11_crypto_plugin_opts = [
                deprecated_name='hmac_keywrap_mechanism'),
     cfg.StrOpt('key_wrap_mechanism',
                help=u._('Key Wrapping algorithm used to wrap Project KEKs.'),
-               default='CKM_AES_KEY_WRAP_KWP'),
+               default='CKM_AES_CBC_PAD'),
     cfg.BoolOpt('key_wrap_generate_iv',
                 help=u._('Generate IVs for Key Wrapping mechanism.'),
-                default=False),
+                default=True),
     cfg.StrOpt('seed_file',
                help=u._('File to pull entropy for seeding RNG'),
                default=''),
@@ -153,13 +153,13 @@ class P11CryptoPlugin(plugin.CryptoPluginBase):
         self.rw_session = plugin_conf.rw_session
         self.seed_file = plugin_conf.seed_file
         self.seed_length = plugin_conf.seed_length
-
         self.encryption_mechanism = plugin_conf.encryption_mechanism
         self.encryption_gen_iv = plugin_conf.aes_gcm_generate_iv
         self.cka_sensitive = plugin_conf.always_set_cka_sensitive
         self.mkek_key_type = 'CKK_AES'
         self.mkek_length = plugin_conf.mkek_length
         self.mkek_label = plugin_conf.mkek_label
+
         self.hmac_key_type = plugin_conf.hmac_key_type
         self.hmac_label = plugin_conf.hmac_label
         self.hmac_mechanism = plugin_conf.hmac_mechanism
