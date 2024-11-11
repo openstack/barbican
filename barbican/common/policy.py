@@ -24,14 +24,10 @@ ENFORCER = None
 
 
 # TODO(gmann): Remove setting the default value of config:
-# - policy_file once oslo_policy change the default value to 'policy.yaml'.
-# https://github.com/openstack/oslo.policy/blob/a626ad12fe5a3abd49d70e3e5b95589d279ab578/oslo_policy/opts.py#L49
 # - 'enforce_scope', and 'enforce_new_defaults' once barbican is ready with the
 # new RBAC (oslo_policy enable them by default)
-DEFAULT_POLICY_FILE = 'policy.yaml'
 opts.set_defaults(
     CONF,
-    DEFAULT_POLICY_FILE,
     enforce_scope=False,
     enforce_new_defaults=False)
 
