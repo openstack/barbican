@@ -805,8 +805,8 @@ class PKCS11(object):
         if self.key_wrap_gen_iv:
             iv_len = {
                 'CKM_AES_CBC_PAD': 16,  # bytes
-                'CKM_AES_WRAP_PAD': 8,  # bytes
-                'CKM_AES_KEY_WRAP_KWP': 4  # bytes
+                'CKM_AES_KEY_WRAP_PAD': 8,  # bytes
+                'CKM_AES_KEY_WRAP_KWP': 4   # bytes
             }.get(self.key_wrap_mechanism)
             iv = self._generate_random(iv_len, session)
         else:
