@@ -391,3 +391,25 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
         load_mock.assert_called_with(
             'test_kek', None, key, hmac,
             'test_mkek', 'test_hmac', 'CKM_AES_CBC_PAD')
+
+    def test_load_kek_no_iv(self):
+        key = os.urandom(32)
+        wrapped = base64.b64encode(key).decode('UTF-8')
+        hmac = base64.b64encode(os.urandom(16)).decode('UTF-8')
+
+        self.plugin._load_kek('test_key', None, wrapped, hmac, 'mkek_label',
+                              'hmac_label', 'CKM_AES_KEY_WRAP_KWP')
+
+        key in self.pkcs11.verify_hmac.call_args.args
+
+    def test_generate_wrapped_kek_no_iv(self):
+        wrapped = base64.b64encode(os.urandom(32))
+        self.pkcs11.wrap_key.return_value = {
+            'iv': None,
+            'wrapped_key': wrapped,
+            'key_wrap_mechanism': 'CKM_AES_KEY_WRAP_KWP'
+        }
+
+        _ = self.plugin._generate_wrapped_kek(32, 'test_kek')
+
+        wrapped in self.pkcs11.compute_hmac.call_args.args

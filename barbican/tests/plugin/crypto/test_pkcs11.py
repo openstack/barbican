@@ -178,6 +178,33 @@ class WhenTestingPKCS11(utils.BaseTestCase):
     def _verify(self, *args, **kwargs):
         return pkcs11.CKR_OK
 
+    def test_init_raises_invalid_encryption_mechanism(self):
+        self.assertRaises(
+            ValueError,
+            pkcs11.PKCS11,
+            self.cfg_mock.library_path,
+            self.cfg_mock.login_passphrase,
+            encryption_mechanism='CKM_BOGUS')
+
+    def test_init_raises_invalid_hmac_mechanism(self):
+        self.assertRaises(
+            ValueError,
+            pkcs11.PKCS11,
+            self.cfg_mock.library_path,
+            self.cfg_mock.login_passphrase,
+            encryption_mechanism='CKM_AES_GCM',
+            hmac_mechanism='CKM_BOGUS')
+
+    def test_init_raises_invalid_key_wrap_mechanism(self):
+        self.assertRaises(
+            ValueError,
+            pkcs11.PKCS11,
+            self.cfg_mock.library_path,
+            self.cfg_mock.login_passphrase,
+            encryption_mechanism='CKM_AES_GCM',
+            hmac_mechanism='CKM_SHA256_HMAC',
+            key_wrap_mechanism='CKM_BOGUS')
+
     def test_get_slot_id_from_serial_number(self):
         slot_id = self.pkcs11._get_slot_id('111111', None, 2)
         self.assertEqual(1, slot_id)
