@@ -27,6 +27,7 @@ except ImportError:
     newrelic_loaded = False
 
 from oslo_service import service
+from oslo_utils import timeutils
 
 from barbican.common import utils
 from barbican.model import models
@@ -166,7 +167,7 @@ def schedule_order_retry_tasks(
         LOG.debug(
             'Scheduling RPC method for retry: {0}'.format(retry_rpc_method))
 
-        date_to_retry_at = datetime.datetime.utcnow() + datetime.timedelta(
+        date_to_retry_at = timeutils.utcnow() + datetime.timedelta(
             milliseconds=retry_result.retry_msec)
 
         retry_model = models.OrderRetryTask()

@@ -11,11 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
 import time
 from unittest import mock
 
 import eventlet
+from oslo_utils import timeutils
 
 from barbican.model import models
 from barbican.model import repositories
@@ -136,7 +136,7 @@ class WhenRunningPeriodicServerRetryLogic(database_utils.RepositoryTestCase):
 
         retry = models.OrderRetryTask()
         retry.order_id = order.id
-        retry.retry_at = datetime.datetime.utcnow()
+        retry.retry_at = timeutils.utcnow()
         retry.retry_task = task
         retry.retry_args = args
         retry.retry_kwargs = kwargs

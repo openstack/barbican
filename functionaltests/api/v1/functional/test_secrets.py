@@ -14,12 +14,13 @@
 # limitations under the License.
 
 import datetime
-from oslo_serialization import base64 as oslo_base64
-from oslo_serialization import jsonutils as json
 import sys
-import testtools
 import time
 
+from oslo_serialization import base64 as oslo_base64
+from oslo_serialization import jsonutils as json
+from oslo_utils import timeutils
+import testtools
 from testtools import testcase
 
 from barbican.plugin.interface import secret_store as ss
@@ -1151,10 +1152,8 @@ class ListingSecretsTestCase(base.TestCase):
     })
     @testcase.attr('positive')
     def test_secret_list_with_date_filter(self, date_type):
-        expiration_1 = str(
-            datetime.datetime.utcnow() + datetime.timedelta(days=3))
-        expiration_2 = str(
-            datetime.datetime.utcnow() + datetime.timedelta(days=5))
+        expiration_1 = str(timeutils.utcnow() + datetime.timedelta(days=3))
+        expiration_2 = str(timeutils.utcnow() + datetime.timedelta(days=5))
 
         two_phase_model = secret_models.SecretModel(expiration=expiration_1)
         resp, secret_ref_1 = self.behaviors.create_secret(two_phase_model)

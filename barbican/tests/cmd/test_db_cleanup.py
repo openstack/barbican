@@ -17,6 +17,7 @@ import datetime
 from unittest import mock
 
 from oslo_db import exception as db_exc
+from oslo_utils import timeutils
 from sqlalchemy.exc import IntegrityError
 
 from barbican.model import clean
@@ -237,7 +238,7 @@ class WhenTestingDBCleanUpCommand(utils.RepositoryTestCase):
         """Test cleaning up entries within date"""
         secret = _setup_entry('secret', project=project)
         order = order = _setup_entry('order', project=project, secret=secret)
-        current_time = datetime.datetime.utcnow()
+        current_time = timeutils.utcnow()
         tomorrow = current_time + datetime.timedelta(days=1)
         yesterday = current_time - datetime.timedelta(days=1)
         secret.delete()
@@ -261,7 +262,7 @@ class WhenTestingDBCleanUpCommand(utils.RepositoryTestCase):
     def test_soft_deleting_expired_secrets(self, project):
         """Test soft deleting secrets that are expired"""
 
-        current_time = datetime.datetime.utcnow()
+        current_time = timeutils.utcnow()
         tomorrow = current_time + datetime.timedelta(days=1)
         yesterday = current_time - datetime.timedelta(days=1)
 
