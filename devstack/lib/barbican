@@ -232,11 +232,6 @@ function start_barbican {
 
 # stop_barbican - Stop running processes
 function stop_barbican {
-    # This will eventually be refactored to work like
-    # Solum and Manila (script to kick off a wsgiref server)
-    # For now, this will stop uWSGI rather than have it hang
-    killall -9 uwsgi
-
     # This cleans up the PID file, but uses pkill so Barbican
     # uWSGI emperor process doesn't actually stop
     stop_process barbican-svc
