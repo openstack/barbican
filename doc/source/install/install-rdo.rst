@@ -16,7 +16,7 @@ Install and configure components
 
    .. code-block:: console
 
-      # yum install openstack-barbican-api
+      # dnf install openstack-barbican-api
 
 .. include:: common_configure.rst
 
@@ -39,7 +39,7 @@ Finalize installation
           WSGIApplicationGroup %{GLOBAL}
           WSGIDaemonProcess barbican-api display-name=barbican-api group=barbican processes=2 threads=8 user=barbican
           WSGIProcessGroup barbican-api
-          WSGIScriptAlias / "/usr/lib/python2.7/site-packages/barbican/api/app.wsgi"
+          WSGIScriptAlias / "/usr/lib/python3.9/site-packages/barbican/api/app.wsgi"
           WSGIPassAuthorization On
       </VirtualHost>
 

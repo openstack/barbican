@@ -21,7 +21,7 @@ Verify operation of the Key Manager (barbican) service.
 
      .. code-block:: console
 
-        $ yum install python-barbicanclient
+        $ dnf install python-barbicanclient
 
    * For Ubuntu:
 
