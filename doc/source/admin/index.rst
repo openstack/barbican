@@ -9,7 +9,8 @@ management of secrets.
 .. toctree::
    :maxdepth: 1
 
-   access_control.rst
-   barbican_manage.rst
-   database_cleaning.rst
-   upgrade.rst
+   access_control
+   barbican_manage
+   database_cleaning
+   upgrade
+   pkcs11keygeneration

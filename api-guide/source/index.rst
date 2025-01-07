@@ -9,8 +9,6 @@ Contents
    secret_metadata
    containers
    acls
-   pkcs11keygeneration
-   dogtag_setup
    quotas
    consumers
    orders
