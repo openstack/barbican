@@ -53,16 +53,36 @@
         kmip: true
 
 - job:
-    name: barbican-simple-crypto-devstack-tempest
+    name: barbican-tempest-plugin-simple-crypto-zed
     parent: barbican-tempest-plugin-simple-crypto
-    description: |
-      Compatibility alias for barbican-tempest-plugin-simple-crypto
+    nodeset: openstack-single-node-focal
+    override-checkout: unmaintained/zed
+    required-projects:
+      - name: openstack/barbican-tempest-plugin
+        override-checkout: zed-last
+    vars:
+      devstack_local_conf:
+        test-config:
+          $TEMPEST_CONFIG:
+            key_manager:
+              min_microversion: '1.0'
+              max_microversion: '1.1'
 
 - job:
-    name: barbican-simple-crypto-devstack-tempest-ipv6-only
+    name: barbican-tempest-plugin-simple-crypto-ipv6-only-zed
     parent: barbican-tempest-plugin-simple-crypto-ipv6-only
-    description: |
-      Compatibility alias for barbican-tempest-plugin-simple-crypto-ipv6-only
+    nodeset: openstack-single-node-focal
+    override-checkout: unmaintained/zed
+    required-projects:
+      - name: openstack/barbican-tempest-plugin
+        override-checkout: a31f9ef3a68e58fe970783d1b7b4cff45e4ee78b
+    vars:
+      devstack_local_conf:
+        test-config:
+          $TEMPEST_CONFIG:
+            key_manager:
+              min_microversion: '1.0'
+              max_microversion: '1.0'
 
 - job:
     name: barbican-simple-crypto-devstack-tempest-castellan-from-git
@@ -82,7 +102,8 @@
     required-projects:
       - opendev.org/openstack/grenade
       - opendev.org/openstack/barbican
-      - opendev.org/openstack/barbican-tempest-plugin
+      - name: opendev.org/openstack/barbican-tempest-plugin
+        override-checkout: zed-last
       - opendev.org/openstack/python-barbicanclient
     vars:
       devstack_plugins:
@@ -110,9 +131,11 @@
             voting: false
         - barbican-grenade:
             voting: false
-        - barbican-tempest-plugin-simple-crypto
-        - barbican-tempest-plugin-simple-crypto-secure-rbac
-        - barbican-tempest-plugin-simple-crypto-ipv6-only
+        - barbican-tempest-plugin-simple-crypto-zed
+        - barbican-tempest-plugin-simple-crypto-secure-rbac:
+            voting: false
+        - barbican-tempest-plugin-simple-crypto-ipv6-only-zed:
+            voting: false
         - barbican-tox-functional-fips
         - octavia-v2-dsvm-tls-barbican
     gate:
