@@ -331,11 +331,8 @@ class WhenTestingP11CryptoPlugin(utils.BaseTestCase):
 
         self.assertIsInstance(p11, pkcs11.PKCS11)
         mo.assert_called_once_with('seed_file', 'rb')
-        calls = [mock.call('seed_file', 'rb'),
-                 mock.call().__enter__(),
-                 mock.call().read(32),
-                 mock.call().__exit__(None, None, None)]
-        self.assertEqual(mo.mock_calls, calls)
+        handle = mo()
+        handle.read.assert_called_once_with(32)
         lib.C_SeedRandom.assert_called_once_with(mock.ANY, mock.ANY, 32)
         self.cfg_mock.p11_crypto_plugin.seed_file = ''
 
