@@ -24,7 +24,6 @@ from oslo_config import cfg
 from oslo_db import options as db_options
 from oslo_log import log
 from oslo_middleware import cors
-from oslo_policy import opts as policy_opts
 
 from barbican import i18n as u
 import barbican.version
@@ -286,13 +285,6 @@ def set_lib_defaults():
     """
 
     set_middleware_defaults()
-
-    # TODO(gmann): Remove setting the default value of the RBAC
-    # config options once barbican is ready for new RBAC.
-    policy_opts.set_defaults(
-        CONF,
-        enforce_scope=False,
-        enforce_new_defaults=False)
 
 
 def set_middleware_defaults():
