@@ -32,10 +32,13 @@ LOG = utils.getLogger(__name__)
 simple_crypto_plugin_group = cfg.OptGroup(name='simple_crypto_plugin',
                                           title="Simple Crypto Plugin Options")
 simple_crypto_plugin_opts = [
-    cfg.StrOpt('kek',
-               default='dGhpcnR5X3R3b19ieXRlX2tleWJsYWhibGFoYmxhaGg=',
-               help=u._('Key encryption key to be used by Simple Crypto '
-                        'Plugin'), secret=True),
+    cfg.MultiStrOpt(
+        'kek',
+        default=['dGhpcnR5X3R3b19ieXRlX2tleWJsYWhibGFoYmxhaGg='],
+        secret=True,
+        help=u._('Fernet Key-Encryption Key (KEK) to be used by SimpleCrypto '
+                 'Plugin to encrypt Project-specific KEKs.'),
+    ),
     cfg.StrOpt('plugin_name',
                help=u._('User friendly plugin name'),
                default='Software Only Crypto'),
@@ -53,7 +56,9 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
     """Insecure implementation of the crypto plugin."""
 
     def __init__(self, conf=CONF):
-        self.master_kek = conf.simple_crypto_plugin.kek
+        if len(conf.simple_crypto_plugin.kek) < 1:
+            raise ValueError(u._("SimpleCrypto KEK is undefined"))
+        self.master_keys = conf.simple_crypto_plugin.kek
         self.plugin_name = conf.simple_crypto_plugin.plugin_name
         LOG.info("{} initialized".format(self.plugin_name))
 
@@ -64,7 +69,9 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         if not kek_meta_dto.plugin_meta:
             raise ValueError(u._('KEK not yet created.'))
         # the kek is stored encrypted. Need to decrypt.
-        encryptor = fernet.Fernet(self.master_kek)
+        encryptor = fernet.MultiFernet(
+            [fernet.Fernet(x) for x in self.master_keys]
+        )
         # Note : If plugin_meta type is unicode, encode to byte.
         if isinstance(kek_meta_dto.plugin_meta, str):
             kek_meta_dto.plugin_meta = kek_meta_dto.plugin_meta.encode('utf-8')
@@ -100,7 +107,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         kek_meta_dto.mode = 'cbc'
         if not kek_meta_dto.plugin_meta:
             # the kek is stored encrypted in the plugin_meta field
-            encryptor = fernet.Fernet(self.master_kek)
+            encryptor = fernet.Fernet(self.master_keys[0])
             key = fernet.Fernet.generate_key()
             kek_meta_dto.plugin_meta = encryptor.encrypt(key)
         return kek_meta_dto

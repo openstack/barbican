@@ -1,0 +1,18 @@
+---
+security:
+  - |
+    The configuration for Simple Crypto Plugin has been updated to allow more
+    than one Key-Encryption-Key (KEK) to be defined.  This enables the ability
+    to rotate in new KEKs on demand.  If there is more than one KEK specified
+    in the config file, then the first KEK is considered "active", which means
+    it will be used to encrypt any new Project-specific KEKs.  Any additional
+    KEKs will only be used to decrypt existing pKEKs when necessary.  .e.g.
+
+    .. code-block::
+
+       [simple_crypto_plugin]
+       # First key is used for ecnrypting new data
+       kek = Yl1EKQ5e4VpK3X7lbWF249GDsk0mrL929P-Mnnz-bdc=
+       # Additionak keys used for decrypting existing data
+       kek = AfXmy1NEfzmtJEYVGrQJ0C2-dr8S0lFoNBX5Vb7MC44=
+       kek = Ua4Y8ryfamShYT_TzxSjok9Tl11OWFSk3whOSY-TIaw=

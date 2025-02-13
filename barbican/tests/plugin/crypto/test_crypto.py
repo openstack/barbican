@@ -65,7 +65,7 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
                 Compare with unencrypted
         """
         project_kek = fernet.Fernet.generate_key()
-        encryptor = fernet.Fernet(self.plugin.master_kek)
+        encryptor = fernet.Fernet(self.plugin.master_keys[0])
         ENC_project_kek = encryptor.encrypt(project_kek)
         UENC_project_kek = ENC_project_kek
         kek_meta_dto = self._get_mocked_kek_meta_dto()
