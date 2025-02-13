@@ -169,6 +169,9 @@ function configure_barbican {
         echo_summary "Barbican requires that the RabbitMQ service is enabled"
     fi
 
+    # SimpleCryptoPlugin settings
+    iniset $BARBICAN_CONF simple_crypto_plugin kek "$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode('UTF-8'))")"
+
     write_uwsgi_config "$BARBICAN_UWSGI_CONF" "$BARBICAN_WSGI" "/key-manager"
     ## Set up keystone
 

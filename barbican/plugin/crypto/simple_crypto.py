@@ -34,7 +34,6 @@ simple_crypto_plugin_group = cfg.OptGroup(name='simple_crypto_plugin',
 simple_crypto_plugin_opts = [
     cfg.MultiStrOpt(
         'kek',
-        default=['dGhpcnR5X3R3b19ieXRlX2tleWJsYWhibGFoYmxhaGg='],
         secret=True,
         help=u._('Fernet Key-Encryption Key (KEK) to be used by SimpleCrypto '
                  'Plugin to encrypt Project-specific KEKs.'),
