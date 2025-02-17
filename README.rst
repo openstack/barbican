@@ -8,6 +8,7 @@ Team and repository tags
 
 .. Change things from this point on
 
+========
 Barbican
 ========
 
@@ -17,7 +18,7 @@ including large ephemeral Clouds.
 
 Barbican is an OpenStack project developed by the `Barbican Project Team
 <https://wiki.openstack.org/wiki/Barbican>`_ with support from
-`Rackspace Hosting <http://www.rackspace.com/`>_, EMC, Ericsson,
+`Rackspace Hosting <https://www.rackspace.com/>`_, EMC, Ericsson,
 Johns Hopkins University, HP, Red Hat, Cisco Systems, and many more.
 
 The full documentation can be found on the `Barbican Developer Documentation
@@ -33,7 +34,7 @@ Future design work is tracked at
 https://specs.openstack.org/openstack/barbican-specs.
 
 For development questions or discussion, use the `OpenStack-discuss
-mailing list <http://lists.openstack.org/pipermail/openstack-discuss/>`_
+mailing list <https://lists.openstack.org/mailman3/lists/openstack-discuss.lists.openstack.org/>`_
 at `openstack-discuss@lists.openstack.org` and let us know what you
 think, just add
 `[barbican]` to the subject. You can also join our IRC channel
@@ -43,8 +44,8 @@ Client Libraries
 ----------------
 
 * `python-barbicanclient
-  <https://opendev.org/openstack/python-barbicanclient>`_ -
-  A convenient Python-based library to interact with the Barbican API.
+  <https://opendev.org/openstack/python-barbicanclient>`_ - A convenient Python-based library
+  to interact with the Barbican API.
 
 Getting Started
 ---------------
@@ -62,7 +63,7 @@ application use.
 
 Barbican was designed to solve this problem. The system was motivated by
 internal Rackspace needs, requirements from
-`OpenStack <http://www.openstack.org/>`_ and a realization that the
+`OpenStack <https://www.openstack.org/>`_ and a realization that the
 current state
 of the art could use some help.
 
@@ -71,11 +72,10 @@ Barbican will handle many types of secrets, including:
 * **Symmetric Keys** - Used to perform reversible encryption of data at rest,
   typically using the AES algorithm set. This type of key is required to enable
   features like `encrypted Swift containers and Cinder
-  volumes <http://www.openstack.org/software/openstack-storage/>`_, `encrypted
-  Cloud Backups <http://www.rackspace.com/cloud/backup/>`_, etc.
+  volumes <https://www.openstack.org/software/>`_, encrypted Cloud Backups etc.
 * **Asymmetric Keys** - Asymmetric key pairs (sometimes referred to as
   `public / private keys
-  <http://en.wikipedia.org/wiki/Public-key_cryptography>`_) are used in
+  <https://en.wikipedia.org/wiki/Public-key_cryptography>`_) are used in
   many scenarios where communication between untrusted parties is
   desired. The most common case is with SSL/TLS certificates, but also
   is used in solutions like SSH keys, S/MIME (mail) encryption and
