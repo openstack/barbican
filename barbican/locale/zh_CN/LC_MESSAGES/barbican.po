@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: barbican VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2024-06-17 15:33+0000\n"
+"POT-Creation-Date: 2025-02-19 16:28+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -521,9 +521,6 @@ msgstr "KMIP服务器的认证密码"
 
 msgid "Password for the NSS certificate databases"
 msgstr "NSS证书数据库的密码"
-
-msgid "Password to login to PKCS11 session"
-msgstr "登录到PKCS11会话的密码"
 
 msgid "Path to PEM file for authentication"
 msgstr "认证所需的PEM文件的路径"

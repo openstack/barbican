@@ -13,11 +13,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: barbican VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2024-06-17 15:33+0000\n"
+"POT-Creation-Date: 2025-02-19 16:28+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2024-04-14 06:49+0000\n"
+"PO-Revision-Date: 2024-12-04 03:03+0000\n"
 "Last-Translator: Andi Chandler <andi@gowling.com>\n"
 "Language-Team: English (United Kingdom)\n"
 "Language: en_GB\n"
@@ -378,17 +378,20 @@ msgstr "General exception"
 msgid "Generate IVs for CKM_AES_GCM mechanism."
 msgstr "Generate IVs for CKM_AES_GCM mechanism."
 
+msgid "Generate IVs for Key Wrapping mechanism."
+msgstr "Generate IVs for Key Wrapping mechanism."
+
 msgid "Generating keys encrypted with passphrases is not supported"
 msgstr "Generating keys encrypted with passphrases is not supported"
 
-msgid "HMAC Key Generation Algorithm"
-msgstr "HMAC Key Generation Algorithm"
+msgid "HMAC Key Generation Algorithm used to create the master HMAC Key."
+msgstr "HMAC Key Generation Algorithm used to create the master HMAC Key."
 
 msgid "HMAC Key Type"
 msgstr "HMAC Key Type"
 
-msgid "HMAC key wrap mechanism"
-msgstr "HMAC key wrap mechanism"
+msgid "HMAC algorithm used to sign encrypted data."
+msgstr "HMAC algorithm used to sign encrypted data."
 
 msgid "HSM returned response code: {code}"
 msgstr "HSM returned response code: {code}"
@@ -484,6 +487,9 @@ msgid ""
 msgstr ""
 "KMIP plugin does not currently support protecting the private key with a "
 "passphrase"
+
+msgid "Key Wrapping algorithm used to wrap Project KEKs."
+msgstr "Key Wrapping algorithm used to wrap Project KEKs."
 
 msgid "Key archival failed.  Error returned from KRA."
 msgstr "Key archival failed.  Error returned from KRA."
@@ -787,14 +793,14 @@ msgstr ""
 "Passphrase encryption is not supported for symmetric key generating "
 "algorithms."
 
+msgid "Password (PIN) to login to PKCS11 session"
+msgstr "Password (PIN) to login to PKCS11 session"
+
 msgid "Password for authenticating with KMIP server"
 msgstr "Password for authenticating with KMIP server"
 
 msgid "Password for the NSS certificate databases"
 msgstr "Password for the NSS certificate databases"
-
-msgid "Password to login to PKCS11 session"
-msgstr "Password to login to PKCS11 session"
 
 msgid "Path to PEM file for authentication"
 msgstr "Path to PEM file for authentication"
