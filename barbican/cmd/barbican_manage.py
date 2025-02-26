@@ -26,6 +26,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 
 from barbican.cmd import pkcs11_kek_rewrap as pkcs11_rewrap
+from barbican.cmd import simple_crypto_kek_rewrap
 from barbican.common import config
 from barbican.model import clean
 from barbican.model.migration import commands
@@ -348,9 +349,26 @@ class HSMCommands(object):
             sys.exit(1)
 
 
+class SimpleCryptoCommands:
+    """Class for mananging SimpleCryptoPlugin backend"""
+
+    description = "Subcommands for managing SimpleCryptoPlugin backend"
+
+    rewrap_pkek_description = "Re-wrap project KEKs"
+
+    @args('--dry-run', action='store_true', dest='dryrun', default=False,
+          help="Displays changes that will be made (non-destructive)")
+    def rewrap_pkek(self, conf, dryrun=True):
+        rewrapper = simple_crypto_kek_rewrap.SimpleCryptoKEKRewrap(
+            simple_crypto_kek_rewrap.CONF
+        )
+        rewrapper.execute(dryrun)
+
+
 CATEGORIES = {
     'db': DbCommands,
     'hsm': HSMCommands,
+    'simple_crypto': SimpleCryptoCommands,
 }
 
 

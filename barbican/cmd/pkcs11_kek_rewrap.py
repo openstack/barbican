@@ -14,32 +14,23 @@
 
 import argparse
 import base64
-import traceback
 
-from oslo_db.sqlalchemy import session
 from oslo_serialization import jsonutils as json
-from sqlalchemy import orm
-from sqlalchemy.orm import scoping
 
+from barbican.cmd import kek_rewrap
 from barbican.common import utils
-from barbican.model import models
 from barbican.plugin.crypto import p11_crypto
+
 
 # Use config values from p11_crypto
 CONF = p11_crypto.CONF
 
 
-class KekRewrap(object):
+class KekRewrap(kek_rewrap.BaseKEKRewrap):
 
     def __init__(self, conf):
+        super().__init__(conf)
         self.dry_run = False
-        self.db_engine = session.create_engine(conf.database.connection)
-        self._session_creator = scoping.scoped_session(
-            orm.sessionmaker(
-                bind=self.db_engine,
-                autocommit=True
-            )
-        )
         self.crypto_plugin = p11_crypto.P11CryptoPlugin(conf)
         self.pkcs11 = self.crypto_plugin.pkcs11
         self.plugin_name = utils.generate_fullname_for(self.crypto_plugin)
@@ -127,47 +118,6 @@ class KekRewrap(object):
 
             # Update KEK metadata in DB
             kek.plugin_meta = p11_crypto.json_dumps_compact(updated_meta)
-
-    def get_keks_for_project(self, project):
-        keks = []
-        with self.db_session.begin() as transaction:
-            print('Retrieving KEKs for Project {}'.format(project.id))
-            query = transaction.session.query(models.KEKDatum)
-            query = query.filter_by(project_id=project.id)
-            query = query.filter_by(plugin_name=self.plugin_name)
-
-            keks = query.all()
-
-        return keks
-
-    def get_projects(self):
-        print('Retrieving all available projects')
-
-        projects = []
-        with self.db_session.begin() as transaction:
-            projects = transaction.session.query(models.Project).all()
-
-        return projects
-
-    @property
-    def db_session(self):
-        return self._session_creator()
-
-    def execute(self, dry_run=True):
-        self.dry_run = dry_run
-        if self.dry_run:
-            print('-- Running in dry-run mode --')
-
-        projects = self.get_projects()
-        for project in projects:
-            keks = self.get_keks_for_project(project)
-            for kek in keks:
-                try:
-                    self.rewrap_kek(project, kek)
-                except Exception:
-                    print('Error occurred! SQLAlchemy automatically rolled-'
-                          'back the transaction')
-                    traceback.print_exc()
 
 
 def main():

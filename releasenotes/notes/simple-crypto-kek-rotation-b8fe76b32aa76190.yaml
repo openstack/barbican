@@ -1,0 +1,22 @@
+---
+features:
+  - |
+    Key-encryption-key rotation has been implemented for for the Simple Crypto
+    plugin backend.  A new symmetric Fernet key can be created and added to
+    the configuration file at any time.  The `kek` option in the
+    `[simple_crypto_plugin]` section can now be specified multiple times.
+    When more than one KEK is configured, the first key is used to encrypt
+    new project-specific keys (pKEKs) and the rest of the keys are only used
+    to decrypt existing data.
+
+    A new sub-command has been added to `barbican-manage` to re-encrypt
+    existing pKEKs using the first `kek` in the config file.  This command
+    can be executed to ensure that all pKEKs in the database are re-encrypted
+    with a specific key.
+
+    To fully rotate an existing KEK, you can now generate a new KEK to replace
+    ane existing key.  You can add the new key as the first `kek` in the
+    configuration file, and keep the existing key as the second `kek`.  Then
+    you can execute `barbican-manage simple_crypto rewrap_pkek` to re-encrypt
+    all existing pKEKs with the new key.  After the command executes, you can
+    remove any previous keys from the config file.
