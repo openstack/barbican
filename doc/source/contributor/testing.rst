@@ -75,11 +75,7 @@ you need to make sure you have all necessary packages installed.
 
     sudo apt-get install python3-dev
 
-- On Fedora 21/RHEL7/CensOS7::
-
-    sudo yum install python3-devel
-
-- On Fedora 22 and higher::
+- On Fedora::
 
     sudo dnf install python3-devel
 
