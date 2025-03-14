@@ -74,7 +74,7 @@ p11_crypto_plugin_opts = [
                default=100),
     cfg.StrOpt('encryption_mechanism',
                help=u._('Secret encryption mechanism'),
-               default='CKM_AES_CBC', deprecated_name='algorithm'),
+               default='CKM_AES_CBC'),
     cfg.StrOpt('hmac_key_type',
                help=u._('HMAC Key Type'),
                default='CKK_AES'),

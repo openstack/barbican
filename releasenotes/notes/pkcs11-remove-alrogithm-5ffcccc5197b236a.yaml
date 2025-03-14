@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    The ``[p11_crypto_plugin] algorithm`` option, which is effectively
+    a deprecated alias of the ``[p11_crypto_plugin] encryption_mechanism``
+    option, has been removed.
