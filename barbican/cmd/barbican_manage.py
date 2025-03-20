@@ -27,6 +27,7 @@ from oslo_log import log as logging
 
 from barbican.cmd import pkcs11_kek_rewrap as pkcs11_rewrap
 from barbican.cmd import simple_crypto_kek_rewrap
+from barbican.cmd import simple_crypto_pkek
 from barbican.common import config
 from barbican.model import clean
 from barbican.model.migration import commands
@@ -363,6 +364,15 @@ class SimpleCryptoCommands:
             simple_crypto_kek_rewrap.CONF
         )
         rewrapper.execute(dryrun)
+
+    new_pkek_description = ("Create a new Project-specific Key-Encryption-Key "
+                            "(pKEK) for the given project-id.")
+
+    @args('--project', dest='project_id', metavar='<project_id>',
+          help="External Project ID e.g. Keystone Project ID.")
+    def new_pkek(self, conf, project_id):
+        pkek_cmd = simple_crypto_pkek.SimpleCryptoPKEK(simple_crypto_pkek.CONF)
+        pkek_cmd.new_pkek(project_id)
 
 
 CATEGORIES = {

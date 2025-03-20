@@ -1,0 +1,11 @@
+---
+security:
+  - |
+    Added a new subcommand to `barbican-manage`:
+
+        barbican-manage simple_crypto new_pkek --project $PROJECT_ID
+
+    This new command creates a new Project-specific Key-encryption-key (pKEK)
+    for the specified project.  New secrets created in that project will be
+    encrypted with this new pKEK.  Existing secrets are not modified by this
+    command.
