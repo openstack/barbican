@@ -29,7 +29,7 @@ from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
-import sqlalchemy
+import sqlalchemy as sa
 from sqlalchemy import func as sa_func
 from sqlalchemy import or_
 import sqlalchemy.orm as sa_orm
@@ -111,7 +111,7 @@ def setup_database_engine_and_factory(initialize_secret_stores=False):
     # Utilize SQLAlchemy's scoped_session to ensure that we only have one
     # session instance per thread.
     session_maker = sa_orm.sessionmaker(bind=_ENGINE)
-    _SESSION_FACTORY = sqlalchemy.orm.scoped_session(session_maker)
+    _SESSION_FACTORY = sa.orm.scoped_session(session_maker)
     if initialize_secret_stores:
         _initialize_secret_stores_data()
 
@@ -182,7 +182,7 @@ def _get_engine(engine):
                 db_connection.close()
 
         if CONF.db_auto_create:
-            meta = sqlalchemy.MetaData()
+            meta = sa.MetaData()
             meta.reflect(bind=engine)
             tables = meta.tables
 
@@ -532,7 +532,7 @@ class BaseRepo(object):
             for entity in query:
                 # Its a soft delete so its more like entity update
                 entity.delete(session=session)
-        except sqlalchemy.exc.SQLAlchemyError:
+        except sa.exc.SQLAlchemyError:
             LOG.exception('Problem finding project related entity to delete')
             if not suppress_exception:
                 raise exception.BarbicanException(u._('Error deleting project '
@@ -929,7 +929,21 @@ class KEKDatumRepo(BaseRepo):
                                  plugin_name,
                                  suppress_exception=False,
                                  session=None):
-        """Find or create a KEK datum instance."""
+        """Find or create a KEK datum instance
+
+        Returns the active KEK datum for the given project.  This method also
+        ensures there is only one active KEK.  If more than one active KEK
+        is found, the newest KEK will be used and all others will be
+        deactivated.
+
+        :param project: Project instance to be associated with the new KEK
+        :type project: :py:class:`barbican.model.models.Project`
+        :param str plugin_name: Fully qualified class name to identify
+            the encryption plugin.
+        :param bool supress_exception: ? - not used
+        :param session:
+        :type session: :py:class:`sqlalchemy.orm.Session` or None
+        """
         if not plugin_name:
             raise exception.BarbicanException(
                 u._('Tried to register crypto plugin with null or empty '
@@ -937,47 +951,69 @@ class KEKDatumRepo(BaseRepo):
 
         kek_datum = None
 
-        session = self.get_session(session)
-
-        query = session.query(models.KEKDatum)
-        query = query.filter_by(project_id=project.id,
-                                plugin_name=plugin_name,
-                                active=True,
-                                deleted=False)
-
-        query = query.order_by(models.KEKDatum.created_at)
-
-        kek_datums = query.all()
+        kek_datums = self._get_active_kek_datums(project.id, plugin_name)
 
         if not kek_datums:
-            kek_datum = models.KEKDatum()
-
-            kek_datum.kek_label = "project-{0}-key-{1}".format(
-                project.external_id, uuidutils.generate_uuid())
-            kek_datum.project_id = project.id
-            kek_datum.plugin_name = plugin_name
-            kek_datum.status = models.States.ACTIVE
-
-            self.save(kek_datum)
+            kek_datum = self.create_kek_datum(project, plugin_name)
         else:
-            kek_datum = kek_datums.pop()
-
             # (alee)  There should be only one active KEKDatum.
             # Due to a race condition with many threads or
             # many barbican processes, its possible to have
             # multiple active KEKDatum.  The code below makes
             # all the extra KEKDatum inactive
             # See LP#1726378
-            for kd in kek_datums:
-                LOG.debug(
-                    "Multiple active KEKDatum found for %s."
-                    "Setting %s to be inactive.",
-                    project.external_id,
-                    kd.kek_label)
-                kd.active = False
-                self.save(kd)
+            kek_datum = kek_datums.pop()
+            self._deactivate_kek_datums(kek_datums)
 
         return kek_datum
+
+    def create_kek_datum(self, project, plugin_name):
+        """Create a new KEK instance
+
+        Creates a new KEK instance associated with the given project and
+        plugin, and also deactivates any existing KEKs.
+
+        :param project: Project instance to be associated with the new KEK
+        :type project: :py:class:`barbican.model.models.Project`
+        :param str plugin_name: Fully qualified class name to identify
+            the encryption plugin.
+        """
+        if not plugin_name:
+            raise exception.BarbicanException(
+                u._('Tried to register crypto plugin with null or empty '
+                    'name.'))
+        # Deactivate any existing KEKs
+        kek_datums = self._get_active_kek_datums(project.id, plugin_name)
+        self._deactivate_kek_datums(kek_datums)
+
+        # Create new unbound KEK
+        new_kek = models.KEKDatum()
+        new_kek_id = uuidutils.generate_uuid()
+        new_kek.kek_label = f"project-{project.external_id}-key-{new_kek_id}"
+        new_kek.project_id = project.id
+        new_kek.plugin_name = plugin_name
+        new_kek.status = models.States.ACTIVE
+        LOG.info(f"Created new KEK {new_kek.kek_label}")
+        self.save(new_kek)
+        return new_kek
+
+    def _get_active_kek_datums(self, project_id, plugin_name):
+        session = self.get_session()
+        stmt = sa.select(models.KEKDatum).where(
+            sa.and_(
+                models.KEKDatum.project_id == project_id,
+                models.KEKDatum.plugin_name == plugin_name,
+                models.KEKDatum.active.is_(True),
+                models.KEKDatum.deleted.is_(False)
+            )
+        ).order_by(models.KEKDatum.created_at)
+        return session.execute(stmt).scalars().all()
+
+    def _deactivate_kek_datums(self, kek_datums):
+        for kek in kek_datums:
+            LOG.info(f"Deactivating KEK {kek.kek_label}")
+            kek.active = False
+            self.save(kek)
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""
