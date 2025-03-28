@@ -34,6 +34,7 @@ import barbican.context
 from barbican.model import repositories
 from barbican.plugin.crypto import manager as cm
 from barbican.plugin.crypto import p11_crypto
+from barbican.plugin.crypto import simple_crypto
 from barbican.plugin.interface import secret_store
 from barbican.plugin import kmip_secret_store as kss
 from barbican.tests import database_utils
@@ -73,6 +74,11 @@ class BarbicanAPIBaseTestCase(oslotest.BaseTestCase):
         context.policy_enforcer = policy_enforcer
         return context
 
+    def _setup_kek_conf(self):
+        kek = "dGhpcnR5X3R3b19ieXRlX2tleWJsYWhibGFoYmxhaGg="
+        conf = simple_crypto.CONF
+        conf.simple_crypto_plugin.kek = [kek]
+
     def setUp(self):
         super().setUp()
         self.useFixture(barbican_fixture.StandardLogging())
@@ -83,6 +89,7 @@ class BarbicanAPIBaseTestCase(oslotest.BaseTestCase):
         # Generic project id to perform actions under
         self.project_id = generate_test_valid_uuid()
 
+        self._setup_kek_conf()
         # Build the test app
         wsgi_app = app.build_wsgi_app(
             controller=self.root_controller,
