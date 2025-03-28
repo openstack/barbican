@@ -106,34 +106,34 @@ class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
             p11_crypto.register_opts(conf)
 
         # Store partition-specific config
-        self.hsm_partition_conf = conf.hsm_partition_crypto_plugin
+        self.conf = conf.hsm_partition_crypto_plugin
 
         # Initialize basic attributes that parent needs
         self.library_path = None
         self.login = None
-        self.rw_session = self.hsm_partition_conf.rw_session
+        self.rw_session = self.conf.rw_session
         self.slot_id = None
         self.token_labels = None
         self.token_serial_number = None
-        self.seed_file = self.hsm_partition_conf.seed_file
-        self.seed_length = self.hsm_partition_conf.seed_length
+        self.seed_file = self.conf.seed_file
+        self.seed_length = self.conf.seed_length
 
         # Encryption related configs from parent
-        self.encryption_mechanism = self.hsm_partition_conf.encryption_mechanism
-        self.encryption_gen_iv = self.hsm_partition_conf.aes_gcm_generate_iv
-        self.cka_sensitive = self.hsm_partition_conf.always_set_cka_sensitive
+        self.encryption_mechanism = self.conf.encryption_mechanism
+        self.encryption_gen_iv = self.conf.aes_gcm_generate_iv
+        self.cka_sensitive = self.conf.always_set_cka_sensitive
         self.mkek_key_type = 'CKK_AES'  # TODO: Make this also configurable
-        self.mkek_length = self.hsm_partition_conf.mkek_length
-        self.mkek_label = self.hsm_partition_conf.mkek_label
-        self.hmac_key_type = self.hsm_partition_conf.hmac_key_type
-        self.hmac_label = self.hsm_partition_conf.hmac_label
-        self.hmac_mechanism = self.hsm_partition_conf.hmac_mechanism
-        self.key_wrap_mechanism = self.hsm_partition_conf.key_wrap_mechanism
-        self.key_wrap_gen_iv = self.hsm_partition_conf.key_wrap_generate_iv
-        self.os_locking_ok = self.hsm_partition_conf.os_locking_ok
-        self.pkek_length = self.hsm_partition_conf.pkek_length
-        self.pkek_cache_ttl = self.hsm_partition_conf.pkek_cache_ttl
-        self.pkek_cache_limit = self.hsm_partition_conf.pkek_cache_limit
+        self.mkek_length = self.conf.mkek_length
+        self.mkek_label = self.conf.mkek_label
+        self.hmac_key_type = self.conf.hmac_key_type
+        self.hmac_label = self.conf.hmac_label
+        self.hmac_mechanism = self.conf.hmac_mechanism
+        self.key_wrap_mechanism = self.conf.key_wrap_mechanism
+        self.key_wrap_gen_iv = self.conf.key_wrap_generate_iv
+        self.os_locking_ok = self.conf.os_locking_ok
+        self.pkek_length = self.conf.pkek_length
+        self.pkek_cache_ttl = self.conf.pkek_cache_ttl
+        self.pkek_cache_limit = self.conf.pkek_cache_limit
 
         # Initialize repository interfaces
         self.hsm_partition_repo = repositories.get_hsm_partition_repository()
@@ -191,6 +191,9 @@ class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
         # Create new PKCS11 instance
         self.pkcs11 = self._create_pkcs11(None)
         self._configure_object_cache()
+
+    def get_plugin_name(self):
+        return self.conf.plugin_name
 
     def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
         self._configure_pkcs11(project_id)
