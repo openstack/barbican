@@ -94,21 +94,32 @@ class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
     keys and credentials.
     """
     
-    def __init__(self, conf=None, ffi=None, pkcs11=None):
-        """Initialize plugin using standard P11CryptoPlugin init."""
-        # Always use our module-level CONF if no config is provided
+    def __init__(self, conf=None, ffi=None, pkcs11=None, store_plugin_name=None):
+        """Initialize plugin using dynamic config based on secret store name."""
+
+        # Use the global CONF if none provided
         if conf is None:
             conf = CONF
- 
-        # Make sure p11_crypto_plugin group is accessible
-        if not hasattr(conf, 'p11_crypto_plugin'):
-            # Register p11 options if not already registered
-            p11_crypto.register_opts(conf)
 
-        # Store partition-specific config
-        self.conf = conf.hsm_partition_crypto_plugin
+        # Store name of the secret store that uses this plugin
+        self.store_plugin_name = store_plugin_name or 'default'
 
-        # Initialize basic attributes that parent needs
+        # Build dynamic group name based on secret store
+        group_name = f'hsm_partition_crypto_plugin:{self.store_plugin_name}'
+
+        # If group isn't already registered, register it dynamically
+        if group_name not in conf:
+            group = cfg.OptGroup(
+                name=group_name,
+                title=f"HSM Partition Crypto Plugin Options for {self.store_plugin_name}"
+            )
+            conf.register_group(group)
+            conf.register_opts(hsm_partition_crypto_plugin_opts, group=group)
+
+        # Load config for this store's plugin instance
+        self.conf = conf[group_name]
+
+        # Initialize basic attributes from config
         self.library_path = None
         self.login = None
         self.rw_session = self.conf.rw_session
@@ -118,11 +129,11 @@ class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
         self.seed_file = self.conf.seed_file
         self.seed_length = self.conf.seed_length
 
-        # Encryption related configs from parent
+        # Crypto configuration
         self.encryption_mechanism = self.conf.encryption_mechanism
         self.encryption_gen_iv = self.conf.aes_gcm_generate_iv
         self.cka_sensitive = self.conf.always_set_cka_sensitive
-        self.mkek_key_type = 'CKK_AES'  # TODO: Make this also configurable
+        self.mkek_key_type = 'CKK_AES'  # Optional: make configurable
         self.mkek_length = self.conf.mkek_length
         self.mkek_label = self.conf.mkek_label
         self.hmac_key_type = self.conf.hmac_key_type
@@ -139,16 +150,9 @@ class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
         self.hsm_partition_repo = repositories.get_hsm_partition_repository()
         self.project_hsm_repo = repositories.get_project_hsm_repository()
 
-        # Initialize as None - will be set when first operation occurs
-        # TODO: This implies just one operation at a time
+        # Runtime variables
         self.current_project_id = None
         self.current_partition = None
-
-        # Create PKCS11 instance
-        # self.pkcs11 = pkcs11 or self._create_pkcs11(ffi)
-    
-        # self._configure_object_cache()
-        # super(HSMPartitionCryptoPlugin, self).__init__(conf, ffi=ffi, pkcs11=None)
 
     def _get_partition_for_project(self, project_id):
         """Get HSM partition configuration for a project."""
