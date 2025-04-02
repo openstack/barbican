@@ -79,6 +79,30 @@ hsm_partition_crypto_plugin_opts = [
                 default=False),
  ]
 
+# Register Vendor-specific sections
+def register_hsm_vendor_sections():
+    # Define vendor HSMs that you want to support
+    vendors = ['thales_hsm', 'utimaco_hsm']
+    
+    for vendor in vendors:
+        # Construct the section name
+        section_name = f'hsm_partition_crypto_plugin:{vendor}'
+        
+        # Create a new option group for the vendor
+        vendor_group = cfg.OptGroup(
+            name=section_name,
+            title=f"HSM Partition Crypto Plugin Options for {vendor}"
+        )
+        
+        # Register the group and options
+        CONF.register_group(vendor_group)
+        CONF.register_opts(hsm_partition_crypto_plugin_opts, group=vendor_group)
+        
+        LOG.debug(f"Registered HSM vendor configuration section: {section_name}")
+
+# Register all vendor sections
+register_hsm_vendor_sections()
+
 CONF.register_group(hsm_partition_crypto_plugin_group)
 CONF.register_opts(hsm_partition_crypto_plugin_opts, group=hsm_partition_crypto_plugin_group)
 config.parse_args(CONF)
@@ -104,20 +128,31 @@ class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
         # Store name of the secret store that uses this plugin
         self.store_plugin_name = store_plugin_name or 'default'
 
-        # Build dynamic group name based on secret store
-        group_name = f'hsm_partition_crypto_plugin:{self.store_plugin_name}'
+        # Build section name based on secret store
+        self.section_name = f'hsm_partition_crypto_plugin:{self.store_plugin_name}'
 
-        # If group isn't already registered, register it dynamically
-        if group_name not in conf:
-            group = cfg.OptGroup(
-                name=group_name,
-                title=f"HSM Partition Crypto Plugin Options for {self.store_plugin_name}"
-            )
-            conf.register_group(group)
-            conf.register_opts(hsm_partition_crypto_plugin_opts, group=group)
-
-        # Load config for this store's plugin instance
-        self.conf = conf[group_name]
+        # If this is a default instance (no specific store), use base config
+        if self.store_plugin_name == 'default':
+            self.section_name = 'hsm_partition_crypto_plugin'
+        
+        # Get config for this section
+        try:
+            self.conf = conf[self.section_name]
+            LOG.info(f"Using HSM configuration section: {self.section_name}")
+        except KeyError:
+            # Section doesn't exist - either create dynamically or use base
+            if self.store_plugin_name != 'default':
+                LOG.warning(f"No config found for {self.section_name}, registering dynamically")
+                group = cfg.OptGroup(
+                    name=self.section_name,
+                    title=f"HSM Partition Crypto Plugin Options for {self.store_plugin_name}"
+                )
+                conf.register_group(group)
+                conf.register_opts(hsm_partition_crypto_plugin_opts, group=group)
+                self.conf = conf[self.section_name]
+            else:
+                LOG.warning("Using default HSM configuration section")
+                self.conf = conf['hsm_partition_crypto_plugin']
 
         # Initialize basic attributes from config
         self.library_path = None
@@ -197,6 +232,7 @@ class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
         self._configure_object_cache()
 
     def get_plugin_name(self):
+        """Gets user friendly plugin name."""
         return self.conf.plugin_name
 
     def encrypt(self, encrypt_dto, kek_meta_dto, project_id):
@@ -237,3 +273,29 @@ class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
         self._configure_pkcs11(project_id)
         return super(HSMPartitionCryptoPlugin, self).generate_symmetric(
             generate_dto, kek_meta_dto, project_id)
+
+
+class ThalesHSMPartitionCryptoPlugin(HSMPartitionCryptoPlugin):
+    """Thales HSM Partition Crypto Plugin.
+    
+    This is a specialized version of HSMPartitionCryptoPlugin configured
+    for Thales HSMs. It uses the hsm_partition_crypto_plugin:thales_hsm 
+    configuration section.
+    """
+    def __init__(self, *args, **kwargs):
+        """Initialize with the thales_hsm store plugin name."""
+        kwargs['store_plugin_name'] = 'thales_hsm'
+        super(ThalesHSMPartitionCryptoPlugin, self).__init__(*args, **kwargs)
+
+
+class UtimacoHSMPartitionCryptoPlugin(HSMPartitionCryptoPlugin):
+    """Utimaco HSM Partition Crypto Plugin.
+    
+    This is a specialized version of HSMPartitionCryptoPlugin configured
+    for Utimaco HSMs. It uses the hsm_partition_crypto_plugin:utimaco_hsm 
+    configuration section.
+    """
+    def __init__(self, *args, **kwargs):
+        """Initialize with the utimaco_hsm store plugin name."""
+        kwargs['store_plugin_name'] = 'utimaco_hsm'
+        super(UtimacoHSMPartitionCryptoPlugin, self).__init__(*args, **kwargs)
