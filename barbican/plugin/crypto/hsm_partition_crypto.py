@@ -195,15 +195,22 @@ class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
             raise ValueError(u._("Project ID is required"))
 
         # Check for project-specific mapping
-        proj_mapping = self.project_hsm_repo.get_by_project_id(project_id) 
-        if proj_mapping:
+        try:
+            proj_mapping = self.project_hsm_repo.get_by_project_id(project_id) 
             return self.hsm_partition_repo.get_by_id(proj_mapping.partition_id)
+        except Exception as e:
+            LOG.warning(f"Error finding default partition: {e}, {type(e).__name__}")
 
         # Fall back to default if configured
-        if self.hsm_partition_conf.default_partition_id:
-            return self.hsm_partition_repo.get_by_id(self.hsm_partition_conf.default_partition_id)
+        if self.conf.default_partition_id:
+            try:
+                return self.hsm_partition_repo.get_by_id(self.conf.default_partition_id)
+            except exception.NotFound:
+                LOG.warning(f"Default partition ID {self.conf.default_partition_id} not found")
+                pass
 
-        return None
+        # Nothing found
+        raise ValueError(u._("No HSM partition mapping found for project and no valid default configured"))
 
     def _configure_pkcs11(self, project_id):
         """Configure PKCS11 for the specified project if needed."""
@@ -273,19 +280,6 @@ class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
         self._configure_pkcs11(project_id)
         return super(HSMPartitionCryptoPlugin, self).generate_symmetric(
             generate_dto, kek_meta_dto, project_id)
-
-
-class ThalesHSMPartitionCryptoPlugin(HSMPartitionCryptoPlugin):
-    """Thales HSM Partition Crypto Plugin.
-    
-    This is a specialized version of HSMPartitionCryptoPlugin configured
-    for Thales HSMs. It uses the hsm_partition_crypto_plugin:thales_hsm 
-    configuration section.
-    """
-    def __init__(self, *args, **kwargs):
-        """Initialize with the thales_hsm store plugin name."""
-        kwargs['store_plugin_name'] = 'thales_hsm'
-        super(ThalesHSMPartitionCryptoPlugin, self).__init__(*args, **kwargs)
 
 
 class UtimacoHSMPartitionCryptoPlugin(HSMPartitionCryptoPlugin):
