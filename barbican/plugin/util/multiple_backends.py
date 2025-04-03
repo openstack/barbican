@@ -134,9 +134,14 @@ def sync_secret_stores(secretstore_manager, crypto_manager=None):
     def get_friendly_name_dict(ext_manager):
         """Returns dict of plugin internal name and friendly name entries."""
         names_dict = {}
+
         for ext in ext_manager.extensions:
             if ext.obj and hasattr(ext.obj, 'get_plugin_name'):
-                names_dict[ext.name] = ext.obj.get_plugin_name()
+                friendly_name = ext.obj.get_plugin_name()
+                # Always add the plugin's internal name to ensure uniqueness
+                unique_name = f"{friendly_name} [{ext.name}]"
+                names_dict[ext.name] = unique_name
+
         return names_dict
 
     ss_friendly_names = get_friendly_name_dict(secretstore_manager)
