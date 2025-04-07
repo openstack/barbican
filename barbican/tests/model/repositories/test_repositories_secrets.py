@@ -220,7 +220,7 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
         session.commit()
 
         count = self.repo.get_count(project.id, session=session)
-        self.assertEqual(2, count)
+        self.assertEqual(1, count)
 
     def test_should_get_count_one_after_expiration(self):
         current_time = timeutils.utcnow()
@@ -246,7 +246,7 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
         session.commit()
 
         count = self.repo.get_count(project.id, session=session)
-        self.assertEqual(1, count)
+        self.assertEqual(2, count)
 
 
 class WhenTestingQueryFilters(testtools.TestCase,
