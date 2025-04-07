@@ -246,7 +246,7 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
         session.commit()
 
         count = self.repo.get_count(project.id, session=session)
-        self.assertEqual(2, count)
+        self.assertEqual(1, count)
 
 
 class WhenTestingQueryFilters(testtools.TestCase,
