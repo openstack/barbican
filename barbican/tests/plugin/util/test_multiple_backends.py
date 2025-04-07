@@ -49,6 +49,17 @@ class MockedManager(object):
         self.global_default_store_dict = None
         self.parsed_stores = multiple_backends.read_multiple_backends_config()
 
+    def _friendly_name_dict(self, ext_manager):
+        """Returns dict of plugin internal name and friendly name entries."""
+        names_dict = {}
+        for ext in ext_manager.extensions:
+            if ext.obj and hasattr(ext.obj, 'get_plugin_name'):
+                friendly_name = ext.obj.get_plugin_name()
+                # Always add the plugin's internal name to ensure uniqueness
+                unique_name = f"{friendly_name} [{ext.name}]"
+                names_dict[ext.name] = unique_name
+        return names_dict
+
 
 class WhenReadingMultipleBackendsConfig(test_utils.MultipleBackendsTestCase):
 
@@ -168,8 +179,9 @@ class WhenInvokingSyncSecretStores(test_utils.MultipleBackendsTestCase):
             get_global_default_secret_store()
         self.assertEqual('ss_p1', default_secret_store.store_plugin)
         self.assertEqual('cr_p1', default_secret_store.crypto_plugin)
-        self.assertEqual(MockedManager.NAME_PREFIX + 'cr_p1',
-                         default_secret_store.name)
+
+        expected_name = f"{MockedManager.NAME_PREFIX}cr_p1 [cr_p1]"
+        self.assertEqual(expected_name, default_secret_store.name)
 
         ss_db_entries = repositories.get_secret_stores_repository().get_all()
         self.assertEqual(5, len(ss_db_entries))
@@ -190,7 +202,7 @@ class WhenInvokingSyncSecretStores(test_utils.MultipleBackendsTestCase):
         # check friendly name for the case when crypto plugin is not there
         ss_db_entry = self._get_secret_store_entry('ss_p2', None)
         self.assertIsNotNone(ss_db_entry)
-        self.assertEqual(MockedManager.NAME_PREFIX + 'ss_p2',
+        self.assertEqual(f"{MockedManager.NAME_PREFIX}ss_p2 [ss_p2]",
                          ss_db_entry.name)
 
         ss_plugins = ['ss_p3', 'ss_p4', 'ss_p5', 'ss_p6']
@@ -213,7 +225,7 @@ class WhenInvokingSyncSecretStores(test_utils.MultipleBackendsTestCase):
             get_global_default_secret_store()
         self.assertEqual('ss_p3', default_secret_store.store_plugin)
         self.assertEqual('cr_p3', default_secret_store.crypto_plugin)
-        self.assertEqual(MockedManager.NAME_PREFIX + 'cr_p3',
+        self.assertEqual(f"{MockedManager.NAME_PREFIX}cr_p3 [cr_p3]",
                          default_secret_store.name)
         ss_db_entries = repositories.get_secret_stores_repository().get_all()
         self.assertEqual(4, len(ss_db_entries))
@@ -232,7 +244,7 @@ class WhenInvokingSyncSecretStores(test_utils.MultipleBackendsTestCase):
             get_global_default_secret_store()
         self.assertEqual('ss_p1', global_secret_store.store_plugin)
         self.assertEqual('cr_p1', global_secret_store.crypto_plugin)
-        self.assertEqual(MockedManager.NAME_PREFIX + 'cr_p1',
+        self.assertEqual(f"{MockedManager.NAME_PREFIX}cr_p1 [cr_p1]",
                          global_secret_store.name)
 
         ss_plugins = ['ss_p9', 'ss_p4', 'ss_p5']
@@ -248,7 +260,7 @@ class WhenInvokingSyncSecretStores(test_utils.MultipleBackendsTestCase):
             get_global_default_secret_store()
         self.assertEqual('ss_p9', global_secret_store.store_plugin)
         self.assertEqual('cr_p9', global_secret_store.crypto_plugin)
-        self.assertEqual(MockedManager.NAME_PREFIX + 'cr_p9',
+        self.assertEqual(f"{MockedManager.NAME_PREFIX}cr_p9 [cr_p9]",
                          global_secret_store.name)
 
     def test_syncup_with_store_and_crypto_plugins_count_mismatch(self):
@@ -488,13 +500,19 @@ class TestPluginsGenerateStoreAPIMultipleBackend(
 
             # make sure secret store name is same as crypto class friendly name
             # as store_plugin class is not direct impl of SecretStoreBase
-            self.assertEqual(global_secret_store.name,
-                             crypto_plugin.get_plugin_name())
+            # The friendly name now includes plugin ID in brackets to ensure uniqueness
+            plugin_name = crypto_plugin.get_plugin_name()
+            plugin_id = dataset['crypto_plugins'][0]  # First crypto plugin in the dataset
+            expected_name = f"{plugin_name} [{plugin_id}]"
+            self.assertEqual(expected_name, global_secret_store.name)
         else:  # crypto class is not used
             # make sure secret store name is same as store plugin class
             # friendly name
-            self.assertEqual(global_secret_store.name,
-                             plugin_found.get_plugin_name())
+            # The friendly name now includes plugin ID in brackets to ensure uniqueness
+            plugin_name = plugin_found.get_plugin_name()
+            plugin_id = dataset['store_plugins'][0]  # First store plugin in the dataset
+            expected_name = f"{plugin_name} [{plugin_id}]"
+            self.assertEqual(expected_name, global_secret_store.name)
             # error raised for no crypto plugin
             self.assertRaises(base.CryptoPluginNotFound,
                               cm.get_manager().get_plugin_store_generate,
