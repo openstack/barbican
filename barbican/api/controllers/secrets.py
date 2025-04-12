@@ -418,6 +418,18 @@ class SecretsController(controllers.ACLMixin):
             sort=kw.get('sort')
         )
 
+        # Get the query parameters
+        query_param = pecan.request.GET.mixed()
+
+        # filter out offset and limit
+        filtered_query = {
+            key: val for key, val in query_param.items()
+            if key not in ['limit', 'offset']
+        }
+
+        # parsed into url string
+        query_string = parse.urlencode(filtered_query, doseq=True)
+
         secrets, offset, limit, total = result
 
         if not secrets:
@@ -428,9 +440,11 @@ class SecretsController(controllers.ACLMixin):
                 hrefs.convert_to_hrefs(secret_fields(s))
                 for s in secrets
             ]
+            # Add filtered query_string to pagination link
             secrets_resp_overall = hrefs.add_nav_hrefs(
                 'secrets', offset, limit, total,
-                {'secrets': secrets_resp}
+                {'secrets': secrets_resp},
+                query_string=query_string
             )
             secrets_resp_overall.update({'total': total})
 

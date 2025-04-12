@@ -85,7 +85,8 @@ def convert_to_hrefs(fields):
     return fields
 
 
-def convert_list_to_href(resources_name, offset, limit):
+def convert_list_to_href(resources_name, offset, limit,
+                         query_string=None):
     """Supports pretty output of paged-list hrefs.
 
     Convert the offset/limit info to a HATEOAS-style href
@@ -93,10 +94,18 @@ def convert_list_to_href(resources_name, offset, limit):
     """
     resource = '{0}?limit={1}&offset={2}'.format(resources_name, limit,
                                                  offset)
+    # Append urlencoded query_String
+    if query_string:
+        # checks for existing query parameters
+        if '?' in resource:
+            resource += '&' + query_string
+        else:
+            resource += '?' + query_string
+
     return utils.hostname_for_refs(resource=resource)
 
 
-def previous_href(resources_name, offset, limit):
+def previous_href(resources_name, offset, limit, query_string=None):
     """Supports pretty output of previous-page hrefs.
 
     Create a HATEOAS-style 'previous' href suitable for use in a list
@@ -104,10 +113,11 @@ def previous_href(resources_name, offset, limit):
     currently viewed page.
     """
     offset = max(0, offset - limit)
-    return convert_list_to_href(resources_name, offset, limit)
+    return convert_list_to_href(resources_name, offset,
+                                limit, query_string)
 
 
-def next_href(resources_name, offset, limit):
+def next_href(resources_name, offset, limit, query_string=None):
     """Supports pretty output of next-page hrefs.
 
     Create a HATEOAS-style 'next' href suitable for use in a list
@@ -115,27 +125,29 @@ def next_href(resources_name, offset, limit):
     currently viewed page.
     """
     offset = offset + limit
-    return convert_list_to_href(resources_name, offset, limit)
+    return convert_list_to_href(resources_name, offset,
+                                limit, query_string)
 
 
 def add_nav_hrefs(resources_name, offset, limit,
-                  total_elements, data):
+                  total_elements, data, query_string=None):
     """Adds next and/or previous hrefs to paged list responses.
 
     :param resources_name: Name of api resource
     :param offset: Element number (ie. index) where current page starts
     :param limit: Max amount of elements listed on current page
     :param total_elements: Total number of elements
+    :param query_string: Additional query parameters passed or None is empty
     :returns: augmented dictionary with next and/or previous hrefs
     """
     if offset > 0:
         data.update({'previous': previous_href(resources_name,
                                                offset,
-                                               limit)})
+                                               limit, query_string)})
     if total_elements > (offset + limit):
         data.update({'next': next_href(resources_name,
                                        offset,
-                                       limit)})
+                                       limit, query_string)})
     return data
 
 
