@@ -293,3 +293,15 @@ class UtimacoHSMPartitionCryptoPlugin(HSMPartitionCryptoPlugin):
         """Initialize with the utimaco_hsm store plugin name."""
         kwargs['store_plugin_name'] = 'utimaco_hsm'
         super(UtimacoHSMPartitionCryptoPlugin, self).__init__(*args, **kwargs)
+
+
+class ThalesHSMPartitionCryptoPlugin(HSMPartitionCryptoPlugin):
+    """Thales HSM Partition Crypto Plugin.
+    
+    This is a specialized version of HSMPartitionCryptoPlugin configured
+    for Thales HSMs. It uses the hsm_partition_crypto_plugin:thales_hsm 
+    configuration section.
+    """
+    def __init__(self, *args, **kwargs):
+        """Initialize with the utimaco_hsm store plugin name."""
+        kwargs['store_plugin_name'] = 'thales_hsm'
