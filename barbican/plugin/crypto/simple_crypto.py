@@ -93,12 +93,24 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
         cyphertext = encryptor.encrypt(unencrypted)
         return c.ResponseDTO(cyphertext, None)
 
-    def decrypt(self, encrypted_dto, kek_meta_dto, kek_meta_extended,
+    def decrypt(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
                 project_id):
         kek = self._get_kek(kek_meta_dto)
-        encrypted = encrypted_dto.encrypted
+        encrypted = decrypt_dto.encrypted
         decryptor = fernet.Fernet(kek)
         return decryptor.decrypt(encrypted)
+
+    def rewrap(self, decrypt_dto, kek_meta_dto, kek_meta_extended,
+               rewrap_kek_meta, project_id):
+        kek = self._get_kek(kek_meta_dto)
+        rewrap_kek = self._get_kek(rewrap_kek_meta)
+
+        encryptor = fernet.MultiFernet(
+            [fernet.Fernet(rewrap_kek), fernet.Fernet(kek)]
+        )
+        rewrapped = encryptor.rotate(decrypt_dto.encrypted)
+
+        return c.ResponseDTO(rewrapped, None)
 
     def bind_kek_metadata(self, kek_meta_dto):
         kek_meta_dto.algorithm = 'aes'

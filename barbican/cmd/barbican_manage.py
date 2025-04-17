@@ -26,8 +26,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 
 from barbican.cmd import pkcs11_kek_rewrap as pkcs11_rewrap
-from barbican.cmd import simple_crypto_kek_rewrap
-from barbican.cmd import simple_crypto_pkek
+from barbican.cmd import simple_crypto
 from barbican.common import config
 from barbican.model import clean
 from barbican.model.migration import commands
@@ -360,8 +359,8 @@ class SimpleCryptoCommands:
     @args('--dry-run', action='store_true', dest='dryrun', default=False,
           help="Displays changes that will be made (non-destructive)")
     def rewrap_pkek(self, conf, dryrun=True):
-        rewrapper = simple_crypto_kek_rewrap.SimpleCryptoKEKRewrap(
-            simple_crypto_kek_rewrap.CONF
+        rewrapper = simple_crypto.SimpleCryptoKEKRewrap(
+            simple_crypto.CONF
         )
         rewrapper.execute(dryrun)
 
@@ -371,8 +370,16 @@ class SimpleCryptoCommands:
     @args('--project', dest='project_id', metavar='<project_id>',
           help="External Project ID e.g. Keystone Project ID.")
     def new_pkek(self, conf, project_id):
-        pkek_cmd = simple_crypto_pkek.SimpleCryptoPKEK(simple_crypto_pkek.CONF)
+        pkek_cmd = simple_crypto.SimpleCryptoCmd(simple_crypto.CONF)
         pkek_cmd.new_pkek(project_id)
+
+    rewrap_secrets_description = "Re-wrap secrets for the given Project-Id"
+
+    @args('--project', dest='project_id', metavar='<project_id>',
+          help="External Project ID e.g. Keystone Project ID.")
+    def rewrap_secrets(self, conf, project_id):
+        simple_crypto_cmd = simple_crypto.SimpleCryptoCmd(simple_crypto.CONF)
+        simple_crypto_cmd.rewrap_secrets(project_id)
 
 
 CATEGORIES = {
