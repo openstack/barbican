@@ -38,9 +38,9 @@ class TestUnauthenticatedContextMiddleware(utils.BaseTestCase):
                 user_id=None,
                 roles=['admin'],
                 request_id=request.request_id,
-                project_domain=None,
-                domain=None,
-                user_domain=None
+                project_domain_id=None,
+                domain_id=None,
+                user_domain_id=None
             )
 
     def test_role_used_from_header(self):
@@ -56,7 +56,7 @@ class TestUnauthenticatedContextMiddleware(utils.BaseTestCase):
                 user_id=None,
                 roles=['something'],
                 request_id=request.request_id,
-                project_domain=None,
-                domain=None,
-                user_domain=None
+                project_domain_id=None,
+                domain_id=None,
+                user_domain_id=None
             )
