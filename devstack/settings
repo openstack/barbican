@@ -22,7 +22,7 @@ else
     BARBICAN_BIN_DIR=$(get_python_exec_prefix)
 fi
 # WSGI variables
-BARBICAN_WSGI=$BARBICAN_BIN_DIR/barbican-wsgi-api
+BARBICAN_WSGI=barbican.wsgi.api:application
 BARBICAN_UWSGI_CONF=$BARBICAN_CONF_DIR/barbican-uwsgi.ini
 
 # Set Barbican repository

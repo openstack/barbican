@@ -5,6 +5,7 @@ omit = barbican/tests/*,
        barbican/model/migration/alembic_migrations/versions/,
        barbican/plugin/dogtag.py,
        barbican/plugin/symantec.py
+       barbican/wsgi/api.py
 
 [report]
 ignore_errors = True
