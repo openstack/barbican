@@ -28,7 +28,7 @@ LOG = utils.getLogger(__name__)
 def main():
     parser = argparse.ArgumentParser(
         description='Create HSM partition configurations in Barbican.')
-    
+
     parser.add_argument(
         '--external-project-id', '-p',
         help='External project ID',
@@ -76,12 +76,12 @@ def main():
         help='Enable debug output',
         action='store_true'
     )
-    
+
     args = parser.parse_args()
-    
+
     if args.debug:
         LOG.logger.setLevel('DEBUG')
-    
+
     try:
         setup_database()
         create_hsm_partition(args)
@@ -89,7 +89,7 @@ def main():
     except Exception as e:
         LOG.exception("Error creating HSM partition configuration: %s", e)
         return 1
-    
+
     return 0
 
 def setup_database():
@@ -100,7 +100,7 @@ def setup_database():
 
 def create_hsm_partition(args):
     """Create HSM partition configuration and map to project."""
-    
+
     # Initialize session
     session = repositories.get_session()
 
@@ -116,27 +116,27 @@ def create_hsm_partition(args):
         if project:
             LOG.error("External ID already exists: %s", args.external_project_id)
             raise ValueError("External ID already exists: {}".format(args.external_project_id))
-        
+
         # Step 2: Check if external_id is already a project ID
         project_id_query = session.query(models.Project).filter_by(
             id=args.external_project_id,
             deleted=False
         ).first()
-        
+
         if project_id_query:
             LOG.error("External ID is already a project ID: %s", args.external_project_id)
             raise ValueError("External ID is already a project ID: {}".format(args.external_project_id))
-        
-        # Step 3: Create new project 
+
+        # Step 3: Create new project
         LOG.debug("Project doesn't exist, creating new one")
         project = models.Project()
         project.external_id = args.external_project_id
         project.status = models.States.ACTIVE
         project.deleted = False
         session.add(project)
-        session.flush()  
+        session.flush()
         LOG.debug("Created new project with id: %s", project.id)
-        
+
         # Step 3: Create HSM partition config
         LOG.debug("Creating HSM partition config")
         partition = models.HSMPartitionConfig()
@@ -149,7 +149,7 @@ def create_hsm_partition(args):
         partition.partition_label = args.partition_label
         partition.token_label = args.token_label
         partition.slot_id = args.slot_id
-        
+
         # Set credentials
         partition.credentials = {
             'library_path': args.library_path,
@@ -157,14 +157,14 @@ def create_hsm_partition(args):
         }
         partition.status = models.States.ACTIVE
         partition.deleted = False
-        
+
         session.add(partition)
         session.flush()  # This will assign an ID to the partition if needed
         LOG.debug("Created HSM partition config with id: %s", partition.id)
-        
+
         # Step 5: Create project to HSM partition mapping
         LOG.debug("Creating project to HSM partition mapping")
-        
+
         # Use the constructor correctly by providing required arguments
         mapping = models.ProjectHSMPartition(
             project_id=project.id,
@@ -177,19 +177,19 @@ def create_hsm_partition(args):
         mapping.updated_at = timeutils.utcnow()
         mapping.status = models.States.ACTIVE
         mapping.deleted = False
-        
+
         session.add(mapping)
         session.flush()  # This will assign an ID to the mapping if needed
         LOG.debug("Created mapping with id: %s", mapping.id)
-        
+
         # Commit all changes
         session.commit()
-        
+
         LOG.info("Successfully created HSM partition configuration:")
         LOG.info("  Project ID: %s (External ID: %s)", project.id, args.external_project_id)
         LOG.info("  Partition ID: %s (Label: %s)", partition.id, args.partition_label)
         LOG.info("  Mapping ID: %s", mapping.id)
-        
+
     except Exception as e:
         LOG.exception("Error creating HSM partition configuration: %s", e)
         session.rollback()
