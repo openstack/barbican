@@ -105,32 +105,42 @@ def create_hsm_partition(args):
     session = repositories.get_session()
 
     try:
-        # Step 1: Get or create project
-        LOG.debug("Looking for project with external_id: %s", args.external_project_id)
-        
-        # Use SQLAlchemy directly to query and create
+
+        # Step 1: Check for existing external_id conflict
         project_query = session.query(models.Project).filter_by(
-            external_id=args.external_project_id, 
+            external_id=args.external_project_id,
             deleted=False
         )
-        
-        project = project_query.first()
-        
-        if not project:
-            LOG.debug("Project doesn't exist, creating new one")
-            project = models.Project()
-            project.external_id = args.external_project_id
-            project.status = models.States.ACTIVE
-            project.deleted = False
-            session.add(project)
-            session.flush()  # This will assign an ID to the project
-            LOG.debug("Created new project with id: %s", project.id)
-        else:
-            LOG.debug("Found existing project with id: %s", project.id)
 
-        # Step 2: Create HSM partition config
+        project = project_query.first()
+        if project:
+            LOG.error("External ID already exists: %s", args.external_project_id)
+            raise ValueError("External ID already exists: {}".format(args.external_project_id))
+        
+        # Step 2: Check if external_id is already a project ID
+        project_id_query = session.query(models.Project).filter_by(
+            id=args.external_project_id,
+            deleted=False
+        ).first()
+        
+        if project_id_query:
+            LOG.error("External ID is already a project ID: %s", args.external_project_id)
+            raise ValueError("External ID is already a project ID: {}".format(args.external_project_id))
+        
+        # Step 3: Create new project 
+        LOG.debug("Project doesn't exist, creating new one")
+        project = models.Project()
+        project.external_id = args.external_project_id
+        project.status = models.States.ACTIVE
+        project.deleted = False
+        session.add(project)
+        session.flush()  
+        LOG.debug("Created new project with id: %s", project.id)
+        
+        # Step 3: Create HSM partition config
         LOG.debug("Creating HSM partition config")
         partition = models.HSMPartitionConfig()
+
         # Always set the id explicitly for HSMPartitionConfig
         partition.id = args.partition_id or str(uuid.uuid4())
         partition.created_at = timeutils.utcnow()
@@ -152,8 +162,9 @@ def create_hsm_partition(args):
         session.flush()  # This will assign an ID to the partition if needed
         LOG.debug("Created HSM partition config with id: %s", partition.id)
         
-        # Step 3: Create project to HSM partition mapping
+        # Step 5: Create project to HSM partition mapping
         LOG.debug("Creating project to HSM partition mapping")
+        
         # Use the constructor correctly by providing required arguments
         mapping = models.ProjectHSMPartition(
             project_id=project.id,
