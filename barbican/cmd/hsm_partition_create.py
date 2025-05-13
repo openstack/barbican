@@ -105,7 +105,6 @@ def create_hsm_partition(args):
     session = repositories.get_session()
 
     try:
-
         # Step 1: Check for existing external_id conflict
         project_query = session.query(models.Project).filter_by(
             external_id=args.external_project_id,
@@ -114,61 +113,50 @@ def create_hsm_partition(args):
 
         project = project_query.first()
         if project:
-            LOG.error("External ID already exists: %s", args.external_project_id)
-            raise ValueError("External ID already exists: {}".format(args.external_project_id))
+            LOG.warning("Project (external_id: %s) already exists!", args.external_project_id)
+        else:
+            # Create project
+            LOG.debug("Project doesn't exist, creating new one")
+            project = models.Project()
+            project.external_id = args.external_project_id
+            project.status = models.States.ACTIVE
+            project.deleted = False
+            session.add(project)
+            session.flush()
+            LOG.debug("Created new project with id: %s", project.id)
 
-        # Step 2: Check if external_id is already a project ID
-        project_id_query = session.query(models.Project).filter_by(
-            id=args.external_project_id,
-            deleted=False
-        ).first()
-
-        if project_id_query:
-            LOG.error("External ID is already a project ID: %s", args.external_project_id)
-            raise ValueError("External ID is already a project ID: {}".format(args.external_project_id))
-
-        # Step 3: Create new project
-        LOG.debug("Project doesn't exist, creating new one")
-        project = models.Project()
-        project.external_id = args.external_project_id
-        project.status = models.States.ACTIVE
-        project.deleted = False
-        session.add(project)
-        session.flush()
-        LOG.debug("Created new project with id: %s", project.id)
-
-        # Step 3: Create HSM partition config
+        # Step: Create HSM partition config
         LOG.debug("Creating HSM partition config")
-        partition = models.HSMPartitionConfig()
+        hsm_partition_config = models.HSMPartitionConfig()
 
         # Always set the id explicitly for HSMPartitionConfig
-        partition.id = args.partition_id or str(uuid.uuid4())
-        partition.created_at = timeutils.utcnow()
-        partition.updated_at = timeutils.utcnow()
-        partition.project_id = project.id
-        partition.partition_label = args.partition_label
-        partition.token_label = args.token_label
-        partition.slot_id = args.slot_id
+        hsm_partition_config.id = args.partition_id or str(uuid.uuid4())
+        hsm_partition_config.created_at = timeutils.utcnow()
+        hsm_partition_config.updated_at = timeutils.utcnow()
+        hsm_partition_config.project_id = project.id
+        hsm_partition_config.partition_label = args.partition_label
+        hsm_partition_config.token_label = args.token_label
+        hsm_partition_config.slot_id = args.slot_id
 
         # Set credentials
-        partition.credentials = {
+        hsm_partition_config.credentials = {
             'library_path': args.library_path,
             'password': args.password
         }
-        partition.status = models.States.ACTIVE
-        partition.deleted = False
+        hsm_partition_config.status = models.States.ACTIVE
+        hsm_partition_config.deleted = False
 
-        session.add(partition)
+        session.add(hsm_partition_config)
         session.flush()  # This will assign an ID to the partition if needed
-        LOG.debug("Created HSM partition config with id: %s", partition.id)
+        LOG.debug("Created HSM partition config with id: %s", hsm_partition_config.id)
 
-        # Step 5: Create project to HSM partition mapping
+        # Step: Create project to HSM partition mapping
         LOG.debug("Creating project to HSM partition mapping")
 
         # Use the constructor correctly by providing required arguments
         mapping = models.ProjectHSMPartition(
             project_id=project.id,
-            partition_id=partition.id,
+            partition_id=hsm_partition_config.id,
             check_exc=False
         )
         # Set additional attributes
@@ -187,7 +175,7 @@ def create_hsm_partition(args):
 
         LOG.info("Successfully created HSM partition configuration:")
         LOG.info("  Project ID: %s (External ID: %s)", project.id, args.external_project_id)
-        LOG.info("  Partition ID: %s (Label: %s)", partition.id, args.partition_label)
+        LOG.info("  Partition ID: %s (Label: %s)", hsm_partition_config.id, args.partition_label)
         LOG.info("  Mapping ID: %s", mapping.id)
 
     except Exception as e:
