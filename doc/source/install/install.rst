@@ -17,9 +17,6 @@ Note that installation and configuration vary by distribution.
 .. toctree::
    :maxdepth: 2
 
-   install-obs.rst
    install-rdo.rst
    install-ubuntu.rst
    barbican-backend.rst
-
-
