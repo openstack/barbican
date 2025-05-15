@@ -83,21 +83,21 @@ hsm_partition_crypto_plugin_opts = [
 def register_hsm_vendor_sections():
     # Define vendor HSMs that you want to support
     vendors = ['thales_hsm', 'utimaco_hsm']
-    
+
     for vendor in vendors:
         # Construct the section name
         section_name = f'hsm_partition_crypto_plugin:{vendor}'
-        
+
         # Create a new option group for the vendor
         vendor_group = cfg.OptGroup(
             name=section_name,
             title=f"HSM Partition Crypto Plugin Options for {vendor}"
         )
-        
+
         # Register the group and options
         CONF.register_group(vendor_group)
         CONF.register_opts(hsm_partition_crypto_plugin_opts, group=vendor_group)
-        
+
         LOG.debug(f"Registered HSM vendor configuration section: {section_name}")
 
 # Register all vendor sections
@@ -113,11 +113,11 @@ def list_opts():
 class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
     """PKCS11 crypto plugin for HSMaaS. Inherits from P11CryptoPlugin
 
-    This plugin extends the base PKCS11 plugin to support per-project HSM 
+    This plugin extends the base PKCS11 plugin to support per-project HSM
     partitions. Each project is mapped to its own HSM partition with isolated
     keys and credentials.
     """
-    
+
     def __init__(self, conf=None, ffi=None, pkcs11=None, store_plugin_name=None):
         """Initialize plugin using dynamic config based on secret store name."""
 
@@ -134,7 +134,11 @@ class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
         # If this is a default instance (no specific store), use base config
         if self.store_plugin_name == 'default':
             self.section_name = 'hsm_partition_crypto_plugin'
-        
+
+
+        # Make sure PKCS11 object is available
+        self.pkcs11 = None
+
         # Get config for this section
         try:
             self.conf = conf[self.section_name]
@@ -196,7 +200,7 @@ class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
 
         # Check for project-specific mapping
         try:
-            proj_mapping = self.project_hsm_repo.get_by_project_id(project_id) 
+            proj_mapping = self.project_hsm_repo.get_by_project_id(project_id)
             return self.hsm_partition_repo.get_by_id(proj_mapping.partition_id)
         except Exception as e:
             LOG.warning(f"Error finding default partition: {e}, {type(e).__name__}")
@@ -265,7 +269,7 @@ class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
                     project_id = label_parts[1]
                 else:
                     # If we can't determine project_id, use default partition
-                    LOG.warning("Cannot determine project_id from kek_label: %s, using default partition", 
+                    LOG.warning("Cannot determine project_id from kek_label: %s, using default partition",
                                 kek_meta_dto.kek_label)
                     project_id = None
             except (AttributeError, IndexError):
@@ -284,9 +288,9 @@ class HSMPartitionCryptoPlugin(p11_crypto.P11CryptoPlugin):
 
 class UtimacoHSMPartitionCryptoPlugin(HSMPartitionCryptoPlugin):
     """Utimaco HSM Partition Crypto Plugin.
-    
+
     This is a specialized version of HSMPartitionCryptoPlugin configured
-    for Utimaco HSMs. It uses the hsm_partition_crypto_plugin:utimaco_hsm 
+    for Utimaco HSMs. It uses the hsm_partition_crypto_plugin:utimaco_hsm
     configuration section.
     """
     def __init__(self, *args, **kwargs):
@@ -297,9 +301,9 @@ class UtimacoHSMPartitionCryptoPlugin(HSMPartitionCryptoPlugin):
 
 class ThalesHSMPartitionCryptoPlugin(HSMPartitionCryptoPlugin):
     """Thales HSM Partition Crypto Plugin.
-    
+
     This is a specialized version of HSMPartitionCryptoPlugin configured
-    for Thales HSMs. It uses the hsm_partition_crypto_plugin:thales_hsm 
+    for Thales HSMs. It uses the hsm_partition_crypto_plugin:thales_hsm
     configuration section.
     """
     def __init__(self, *args, **kwargs):
