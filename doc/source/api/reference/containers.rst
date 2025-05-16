@@ -332,7 +332,7 @@ well, especially in regards to the secret references that can be provided.
 +------+-----------------------------------------------------------------------------+
 | Code | Description                                                                 |
 +======+=============================================================================+
-| 201  | Successful update of the container                                          |
+| 201  | Successful creation of the container secret                                 |
 +------+-----------------------------------------------------------------------------+
 | 400  | Missing secret_ref                                                          |
 +------+-----------------------------------------------------------------------------+
@@ -341,6 +341,8 @@ well, especially in regards to the secret references that can be provided.
 | 403  | Forbidden.  The user has been authenticated, but is not authorized to       |
 |      | add the secret to the specified container.  This can be based on the user's |
 |      | role or the project's quota.                                                |
++------+-----------------------------------------------------------------------------+
+| 409  | Conflict with the existing secrets in the container                         |
 +------+-----------------------------------------------------------------------------+
 
 DELETE /v1/containers/{container_uuid}/secrets
