@@ -108,7 +108,7 @@ Response:
 
 .. code-block:: javascript
 
-    201 OK
+    201 Created
     {
         "metadata_ref": "https://{barbican_host}/v1/secrets/{secret_uuid}/metadata"
     }

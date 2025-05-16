@@ -340,7 +340,7 @@ Request/Response:
 
         Response:
 
-          204 OK
+          204 No Content
 
 .. _put_project_quotas_request_attributes:
 

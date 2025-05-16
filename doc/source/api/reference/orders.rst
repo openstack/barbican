@@ -44,7 +44,7 @@ Response:
 
 .. code-block:: bash
 
-    200 Success
+    200 OK
 
     {
         "orders": [
@@ -178,7 +178,7 @@ Response:
 
 .. code-block:: bash
 
-    202 Created
+    202 Accepted
 
     {
         "order_ref": "http://{barbican_host}/v1/orders/{order_uuid}"
@@ -203,7 +203,7 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | Code | Description                                                                 |
 +======+=============================================================================+
-| 202  | Successfully created an order                                               |
+| 202  | Successfully accepted the creation of an order                              |
 +------+-----------------------------------------------------------------------------+
 | 400  | Bad Request                                                                 |
 +------+-----------------------------------------------------------------------------+
@@ -242,7 +242,7 @@ Response:
 
 .. code-block:: javascript
 
-    200 Success
+    200 OK
 
     {
         "created": "2015-10-20T18:49:02",
@@ -343,7 +343,7 @@ Response:
 
 .. code-block:: javascript
 
-    204 Success
+    204 No Content
 
 
 .. _delete_order_status_codes:
