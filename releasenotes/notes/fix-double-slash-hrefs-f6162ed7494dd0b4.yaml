@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fix href construction where depending on the barbican deployment and
+    configuration the url may contain "//".

@@ -99,7 +99,7 @@ def get_base_url_from_request():
 
 def hostname_for_refs(resource=None):
     """Return the HATEOAS-style return URI reference for this service."""
-    base_url = get_base_url_from_request()
+    base_url = get_base_url_from_request().rstrip("/")
     ref = ['{base}/{version}'.format(base=base_url, version=API_VERSION)]
     if resource:
         ref.append('/' + resource)
