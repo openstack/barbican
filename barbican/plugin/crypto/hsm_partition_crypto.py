@@ -309,3 +309,4 @@ class ThalesHSMPartitionCryptoPlugin(HSMPartitionCryptoPlugin):
     def __init__(self, *args, **kwargs):
         """Initialize with the utimaco_hsm store plugin name."""
         kwargs['store_plugin_name'] = 'thales_hsm'
+        super(ThalesHSMPartitionCryptoPlugin, self).__init__(*args, **kwargs)
