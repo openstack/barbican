@@ -104,7 +104,15 @@ def denormalize_after_decryption(unencrypted, content_type):
 
     # Process binary type.
     elif content_type in mime_types.BINARY:
-        unencrypted = base64.decode_as_bytes(unencrypted)
+        # Some backends (e.g. Castellan / Vault) don't store their secrets
+        # in base64, causing a failure here.  There's still a chance that
+        # raw format data could be valid base64 input, but at least this
+        # will work for most cases.
+        try:
+            unencrypted = base64.decode_as_bytes(unencrypted)
+        except Exception:
+            # Just using "pass" here won't pass PEP8.
+            return unencrypted
     else:
         raise s.SecretContentTypeNotSupportedException(content_type)
 
