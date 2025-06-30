@@ -22,7 +22,6 @@ from oslo_serialization import jsonutils as json
 from oslo_utils import timeutils
 import sqlalchemy as sa
 from sqlalchemy.ext import compiler
-from sqlalchemy.ext import declarative
 from sqlalchemy import orm
 from sqlalchemy.orm import collections as col
 from sqlalchemy import types as sql_types
@@ -31,7 +30,7 @@ from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
 
-BASE = declarative.declarative_base()
+BASE = orm.declarative_base()
 ERROR_REASON_LENGTH = 255
 SUB_STATUS_LENGTH = 36
 SUB_STATUS_MESSAGE_LENGTH = 255
