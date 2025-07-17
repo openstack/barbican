@@ -16,25 +16,9 @@
 # limitations under the License.
 
 """
-Barbican worker server, running a periodic retry/scheduler process.
+Server startup application for barbican-retry-scheduler
 """
-
-import eventlet
-import os
 import sys
-
-# Oslo messaging RPC server uses eventlet.
-eventlet.monkey_patch()
-
-# 'Borrowed' from the Glance project:
-# If ../barbican/__init__.py exists, add ../ to Python search path, so that
-# it will override what happens to be installed in /usr/(local/)lib/python...
-possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
-                                   os.pardir,
-                                   os.pardir))
-if os.path.exists(os.path.join(possible_topdir, 'barbican', '__init__.py')):
-    sys.path.insert(0, possible_topdir)
-
 
 from barbican.common import config
 from barbican import queue

@@ -14,7 +14,6 @@
 import time
 from unittest import mock
 
-import eventlet
 from oslo_utils import timeutils
 
 from barbican.model import models
@@ -22,10 +21,6 @@ from barbican.model import repositories
 from barbican.queue import retry_scheduler
 from barbican.tests import database_utils
 from barbican.tests import utils
-
-
-# Oslo messaging RPC server uses eventlet.
-eventlet.monkey_patch()
 
 
 INITIAL_DELAY_SECONDS = 5.0
@@ -60,12 +55,16 @@ class WhenRunningPeriodicServerRetryLogic(database_utils.RepositoryTestCase):
 
         self.queue_client = mock.MagicMock()
 
+        self.timer_patcher = mock.patch(
+            'oslo_service.threadgroup.ThreadGroup.add_dynamic_timer')
+        self.timer_patcher.start()
+
         self.periodic_server = retry_scheduler.PeriodicServer(
             queue_resource=self.queue_client)
 
     def tearDown(self):
         super(WhenRunningPeriodicServerRetryLogic, self).tearDown()
-        self.periodic_server.stop()
+        self.timer_patcher.stop()
 
     def test_should_perform_retry_processing_no_tasks(self):
         interval = self.periodic_server._check_retry_tasks()
@@ -185,7 +184,9 @@ class WhenRunningPeriodicServer(utils.BaseTestCase):
 
     def test_should_have_invoked_periodic_task_twice(self):
         # Wait a bit longer than the initial delay plus retry interval.
-        time.sleep(INITIAL_DELAY_SECONDS + 2 * NEXT_RETRY_SECONDS)
+        # Use a small epsilon to avoid crossing into a third invocation on
+        # slower runtimes (e.g., Python 3.10 scheduling jitter).
+        time.sleep(INITIAL_DELAY_SECONDS + 2 * NEXT_RETRY_SECONDS - 0.2)
 
         self.assertEqual(2, self.periodic_server.invoke_count)
 

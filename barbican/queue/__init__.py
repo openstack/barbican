@@ -81,7 +81,6 @@ def get_server(target, endpoints, serializer=None):
     return messaging.get_rpc_server(TRANSPORT,
                                     target,
                                     endpoints,
-                                    executor='eventlet',
                                     serializer=serializer,
                                     access_policy=access_policy)
 
@@ -110,8 +109,6 @@ def get_notification_server(targets, endpoints, serializer=None):
     TRANSPORT._require_driver_features(requeue=allow_requeue)
     dispatcher = notify_dispatcher.NotificationDispatcher(endpoints,
                                                           serializer)
-    # we don't want blocking executor so use eventlet as executor choice
     return listener.NotificationServer(TRANSPORT, targets, dispatcher,
-                                       executor='eventlet',
                                        pool=pool_name,
                                        allow_requeue=allow_requeue)

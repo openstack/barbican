@@ -15,28 +15,9 @@
 # limitations under the License.
 
 """
-Barbican Keystone notification listener server.
+Server startup application for barbican-keystone-listener
 """
-
-import eventlet
-import os
 import sys
-
-# Oslo messaging notification server uses eventlet.
-#
-# To have remote debugging, thread module needs to be disabled.
-# eventlet.monkey_patch(thread=False)
-eventlet.monkey_patch()
-
-# 'Borrowed' from the Glance project:
-# If ../barbican/__init__.py exists, add ../ to Python search path, so that
-# it will override what happens to be installed in /usr/(local/)lib/python...
-possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
-                                   os.pardir,
-                                   os.pardir))
-if os.path.exists(os.path.join(possible_topdir, 'barbican', '__init__.py')):
-    sys.path.insert(0, possible_topdir)
-
 
 from barbican.common import config
 from barbican import queue
@@ -44,6 +25,8 @@ from barbican.queue import keystone_listener
 from barbican import version
 
 from oslo_log import log
+from oslo_service.backend import BackendType
+from oslo_service.backend import init_backend
 from oslo_service import service
 
 
@@ -55,6 +38,9 @@ def fail(returncode, e):
 def main():
     try:
         config.setup_remote_pydev_debug()
+
+        # Ensure oslo.service uses the threading backend early
+        init_backend(BackendType.THREADING)
 
         CONF = config.CONF
         CONF(sys.argv[1:], project='barbican',

@@ -24,6 +24,8 @@ from oslo_config import cfg
 from oslo_db import options as db_options
 from oslo_log import log
 from oslo_middleware import cors
+from oslo_service.backend import BackendType
+from oslo_service.backend import register_backend_default_hook
 
 from barbican import i18n as u
 import barbican.version
@@ -321,6 +323,10 @@ def set_middleware_defaults():
 CONF = new_config()
 LOG = logging.getLogger(__name__)
 parse_args(CONF)
+
+# Register default backend hook to prefer threading if not initialized
+# elsewhere
+register_backend_default_hook(lambda: BackendType.THREADING)
 
 # Adding global scope dict for all different configs created in various
 # modules. In barbican, each plugin module creates its own *new* config
