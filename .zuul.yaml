@@ -14,7 +14,6 @@
 
 - job:
     name: barbican-dogtag-tox-functional
-    nodeset: devstack-single-node-fedora-latest
     parent: barbican-tox-functional
     description: |
       Functional testing for DogTag backend
