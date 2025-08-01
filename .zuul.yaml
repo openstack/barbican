@@ -14,7 +14,6 @@
 
 - job:
     name: barbican-dogtag-tox-functional
-    nodeset: devstack-single-node-fedora-latest
     parent: barbican-tox-functional
     description: |
       Functional testing for DogTag backend
@@ -137,7 +136,14 @@
         - barbican-tempest-plugin-simple-crypto-ipv6-only-zed:
             voting: false
         - barbican-tox-functional-fips
-        - octavia-v2-dsvm-tls-barbican
+        - octavia-v2-dsvm-tls-barbican:
+            voting: false
+            required-projects:
+              - name: openstack/barbican-tempest-plugin
+                override-checkout: zed-last
+              - openstack/octavia
+              - name: openstack/octavia-tempest-plugin
+                override-checkout: zed-last
     gate:
       jobs:
         - barbican-tox-functional
