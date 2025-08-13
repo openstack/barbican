@@ -23,11 +23,15 @@ fi
 echo "Successfully contacted the Barbican API"
 
 plugin=$1
+backend=$2
 
 if [[ "$plugin" == "kmip" ]]; then
     export KMIP_PLUGIN_ENABLED=1
 elif [[ "$plugin" == "vault" ]]; then
     export VAULT_PLUGIN_ENABLED=1
+    if [[ "$backend" == "openbao" ]]; then
+        export VAULT_PLUGIN_BACKEND=openbao
+    fi
 elif [[ "$plugin" == "pkcs11" ]]; then
     export PKCS11_PLUGIN_ENABLED=1
 fi
