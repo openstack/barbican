@@ -563,14 +563,11 @@ function install_dogtag_components {
 # Vault functions
 # ----------------
 
-HASHICORP_VAULT_VERSION=1.13.2
-OPENBAO_VERSION=2.3.2
-
 function _install_hashicorp_vault {
     if [[ ! -x "$(command -v vault)" ]]; then
-        echo "Installing Hashicorp Vault ${HASHICORP_VAULT_VERSION}"
-        wget https://releases.hashicorp.com/vault/${HASHICORP_VAULT_VERSION}/vault_${HASHICORP_VAULT_VERSION}_linux_amd64.zip
-        unzip vault_${HASHICORP_VAULT_VERSION}_linux_amd64.zip
+        echo "Installing Hashicorp Vault ${VAULT_PLUGIN_HASHICORP_VAULT_VERSION}"
+        wget https://releases.hashicorp.com/vault/${VAULT_PLUGIN_HASHICORP_VAULT_VERSION}/vault_${VAULT_PLUGIN_HASHICORP_VAULT_VERSION}_linux_amd64.zip
+        unzip vault_${VAULT_PLUGIN_HASHICORP_VAULT_VERSION}_linux_amd64.zip
         sudo mv vault /usr/bin
     else
         echo "Hashicorp Vault already installed:"
@@ -580,9 +577,9 @@ function _install_hashicorp_vault {
 
 function _install_openbao {
     if [[ ! -x "$(command -v bao)" ]]; then
-        echo "Installing OpenBao v${OPENBAO_VERSION}"
-        wget https://github.com/openbao/openbao/releases/download/v${OPENBAO_VERSION}/bao_${OPENBAO_VERSION}_Linux_x86_64.tar.gz
-        tar xf bao_${OPENBAO_VERSION}_Linux_x86_64.tar.gz
+        echo "Installing OpenBao v${VAULT_PLUGIN_OPENBAO_VERSION}"
+        wget https://github.com/openbao/openbao/releases/download/v${VAULT_PLUGIN_OPENBAO_VERSION}/bao_${VAULT_PLUGIN_OPENBAO_VERSION}_Linux_x86_64.tar.gz
+        tar xf bao_${VAULT_PLUGIN_OPENBAO_VERSION}_Linux_x86_64.tar.gz
         sudo mv bao /usr/bin
     else
         echo "OpenBao already installed:"

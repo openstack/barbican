@@ -39,6 +39,8 @@
     vars:
       devstack_services:
         barbican-vault: true
+      devstack_localrc:
+        VAULT_PLUGIN_HASHICORP_VAULT_VERSION: 1.13.2
       tox_environment:
         VAULT_PLUGIN_ENABLED: 1
 
@@ -52,6 +54,7 @@
         barbican-vault: true
       devstack_localrc:
         VAULT_PLUGIN_BACKEND: openbao
+        VAULT_PLUGIN_OPENBAO_VERSION: 2.3.2
       tox_environment:
         VAULT_PLUGIN_ENABLED: 1
 
