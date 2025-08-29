@@ -179,7 +179,7 @@ function configure_barbican {
     iniset $BARBICAN_PASTE_CONF 'pipeline:barbican_api' pipeline 'barbican-api-keystone'
 
     # Set the keystone parameters
-    configure_keystone_authtoken_middleware $BARBICAN_CONF barbican
+    configure_keystone_authtoken_middleware $BARBICAN_CONF barbican keystone_authtoken key-manager
 
     # Enable the keystone listener
     iniset $BARBICAN_CONF keystone_notifications enable True
