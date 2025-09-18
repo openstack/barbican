@@ -10,6 +10,7 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
+from oslo_utils import strutils
 from oslo_utils import timeutils
 import pecan
 from urllib import parse
@@ -259,6 +260,19 @@ class SecretController(controllers.ACLMixin):
             self.secret.id,
             suppress_exception=True
         )
+
+        no_delete_if_consumers = versions.is_supported(
+            pecan.request, min_version='1.2')
+        if no_delete_if_consumers:
+            force = False
+            if 'force' in kwargs:
+                try:
+                    force = strutils.bool_from_string(
+                        kwargs['force'], strict=True)
+                except ValueError:
+                    _bad_query_string_parameters()
+            if len(secret_consumers[0]) > 0 and not force:
+                raise exception.SecretHasConsumers()
 
         # With ACL support, the user token project does not have to be same as
         # project associated with secret. The lookup project_id needs to be

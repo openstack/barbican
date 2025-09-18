@@ -168,6 +168,12 @@ class NoDataToProcess(BarbicanHTTPException):
     status_code = 400
 
 
+class SecretHasConsumers(BarbicanHTTPException):
+    message = u._("Secret cannot be deleted as it has consumers.")
+    client_message = message
+    status_code = 400
+
+
 class LimitExceeded(BarbicanHTTPException):
     message = u._("The request returned a 413 Request Entity Too Large. This "
                   "generally means that rate limiting or a quota threshold "

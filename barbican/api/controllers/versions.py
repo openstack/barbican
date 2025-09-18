@@ -27,8 +27,8 @@ from barbican import version
 LOG = utils.getLogger(__name__)
 
 _MIN_MICROVERSION = 0
-_MAX_MICROVERSION = 1
-_LAST_UPDATED = '2021-02-10T00:00:00Z'
+_MAX_MICROVERSION = 2
+_LAST_UPDATED = '2025-09-18T00:00:00Z'
 
 # NOTE(xek): The above defines the minimum and maximum version of the API
 # across all of the v1 REST API.
