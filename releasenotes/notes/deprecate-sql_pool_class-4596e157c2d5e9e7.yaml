@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    The ``[DEFAULT] sql_pool_class`` option has been deprecated, because it has
+    been unused since 5.0.0 release.

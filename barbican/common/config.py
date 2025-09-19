@@ -75,6 +75,8 @@ db_opts = [
                help=u._("Default page size for the 'limit' paging URL "
                         "parameter.")),
     cfg.StrOpt('sql_pool_class', default="QueuePool",
+               deprecated_for_removal=True,
+               deprecated_reason='This option has been ineffective',
                help=u._("Accepts a class imported from the sqlalchemy.pool "
                         "module, and handles the details of building the "
                         "pool for you. If commented out, SQLAlchemy will "
