@@ -11,12 +11,6 @@ Verify operation of the Key Manager (barbican) service.
 
 #. Install python-barbicanclient package:
 
-   * For openSUSE and SUSE Linux Enterprise:
-
-     .. code-block:: console
-
-        $ zypper install python-barbicanclient
-
    * For Red Hat Enterprise Linux and CentOS:
 
      .. code-block:: console
