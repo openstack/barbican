@@ -88,6 +88,12 @@ class WhenTestingHostByWsgiRequestForRefsGetter(test_utils.BaseTestCase):
         uri = utils.hostname_for_refs()
         self.assertEqual("{0}/{1}".format(self.host, self.version), uri)
 
+    def test_hostname_for_refs_trailing_slash(self):
+        test_utils.mock_pecan_request(self, host=(self.host + "/"))
+        uri = utils.hostname_for_refs(resource=self.resource)
+        self.assertEqual("{0}/{1}/{2}".format(self.host, self.version,
+                                              self.resource), uri)
+
 
 class WhenTestingAcceptEncodingGetter(test_utils.BaseTestCase):
 
