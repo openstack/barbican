@@ -1,16 +1,10 @@
-========================
-Team and repository tags
-========================
-
-
-.. image:: https://governance.openstack.org/tc/badges/barbican.svg
-    :target: https://governance.openstack.org/tc/reference/tags/index.html
-
-.. Change things from this point on
-
 ========
 Barbican
 ========
+
+.. image:: https://governance.openstack.org/tc/badges/barbican.svg
+
+.. Change things from this point on
 
 Barbican is a REST API designed for the secure storage, provisioning and
 management of secrets. It is aimed at being useful for all environments,
