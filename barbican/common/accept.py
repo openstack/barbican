@@ -14,18 +14,6 @@
 from webob import acceptparse
 
 
-if hasattr(acceptparse, 'create_accept_header'):
-    # WebOb >= 1.8.0
-    NoHeaderType = getattr(acceptparse, 'AcceptNoHeader')
-    ValidHeaderType = getattr(acceptparse, 'AcceptValidHeader')
-    create_accept_header = getattr(acceptparse, 'create_accept_header')
-else:
-    # WebOb < 1.8.0
-    NoHeaderType = getattr(acceptparse, 'MIMENilAccept')
-    ValidHeaderType = getattr(acceptparse, 'MIMEAccept')
-
-    def create_accept_header(header_value):
-        if not header_value:
-            return NoHeaderType()
-        else:
-            return ValidHeaderType(header_value)
+NoHeaderType = getattr(acceptparse, 'AcceptNoHeader')
+ValidHeaderType = getattr(acceptparse, 'AcceptValidHeader')
+create_accept_header = getattr(acceptparse, 'create_accept_header')
