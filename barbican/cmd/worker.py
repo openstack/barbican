@@ -31,11 +31,6 @@ from oslo_service.backend import init_backend
 from oslo_service import service
 
 
-def fail(returncode, e):
-    sys.stderr.write("ERROR: {0}\n".format(e))
-    sys.exit(returncode)
-
-
 def main():
     try:
         # Ensure oslo.service uses the threading backend early
@@ -60,7 +55,8 @@ def main():
             restart_method='mutate'
         ).wait()
     except RuntimeError as e:
-        fail(1, e)
+        sys.stderr.write("ERROR: {0}\n".format(e))
+        sys.exit(1)
 
 
 if __name__ == '__main__':

@@ -485,7 +485,8 @@ def main():
     try:
         return fn(CONF, *fn_args, **fn_kwargs)
     except Exception as e:
-        sys.exit("ERROR: %s" % e)
+        sys.stderr.write("ERROR: {0}\n".format(e))
+        sys.exit(1)
 
 
 if __name__ == '__main__':
