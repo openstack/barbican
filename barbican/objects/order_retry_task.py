@@ -11,9 +11,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from oslo_utils import uuidutils
 from oslo_versionedobjects import base as object_base
 
-from barbican.common import utils
 from barbican.model import models
 from barbican.model import repositories as repos
 from barbican.objects import base
@@ -23,7 +23,7 @@ from barbican.objects import fields
 class OrderRetryTask(base.BarbicanObject, base.BarbicanPersistentObject,
                      object_base.VersionedObjectDictCompat):
     fields = {
-        'id': fields.StringField(default=utils.generate_uuid()),
+        'id': fields.StringField(default=uuidutils.generate_uuid()),
         'order_id': fields.StringField(),
         'retry_task': fields.StringField(),
         'retry_at': fields.DateTimeField(nullable=True, default=None),

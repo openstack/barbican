@@ -20,12 +20,11 @@ import builtins
 import collections
 import importlib
 import mimetypes
+import re
 import uuid
 
 from oslo_log import log
-from oslo_utils import uuidutils
 import pecan
-import re
 from urllib import parse
 
 from barbican.common import config
@@ -193,10 +192,6 @@ def get_class_for(module_name, class_name):
     # Load and return the resolved Python class, raising AttributeError if
     # class cannot be found.
     return getattr(python_module, class_name)
-
-
-def generate_uuid():
-    return uuidutils.generate_uuid()
 
 
 def is_multiple_backends_enabled():

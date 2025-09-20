@@ -20,6 +20,7 @@ import hashlib
 
 from oslo_serialization import jsonutils as json
 from oslo_utils import timeutils
+from oslo_utils import uuidutils
 import sqlalchemy as sa
 from sqlalchemy.ext import compiler
 from sqlalchemy.ext import declarative
@@ -96,7 +97,7 @@ class ModelBase(object):
     id = sa.Column(
         sa.String(36),
         primary_key=True,
-        default=utils.generate_uuid)
+        default=uuidutils.generate_uuid)
     created_at = sa.Column(
         sa.DateTime,
         default=timeutils.utcnow,
@@ -787,7 +788,7 @@ class OrderRetryTask(BASE, SoftDeleteMixIn, ModelBase):
     id = sa.Column(
         sa.String(36),
         primary_key=True,
-        default=utils.generate_uuid)
+        default=uuidutils.generate_uuid)
     order_id = sa.Column(
         sa.String(36),
         sa.ForeignKey("orders.id"),
