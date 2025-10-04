@@ -205,7 +205,6 @@ function install_barbican {
     fi
     # TODO(ravips): We need this until barbican gets into devstack
     setup_develop $BARBICAN_DIR
-    pip_install 'uwsgi'
 }
 
 # install_barbicanclient - Collect source and prepare
@@ -219,7 +218,7 @@ function install_barbicanclient {
 # start_barbican - Start running processes, including screen
 function start_barbican {
     # Start the Barbican service up.
-    run_process barbican-svc "$BARBICAN_BIN_DIR/uwsgi --ini $BARBICAN_UWSGI_CONF"
+    run_process barbican-svc "$(which uwsgi) --ini $BARBICAN_UWSGI_CONF"
 
     # Pause while the barbican-svc populates the database, otherwise the retry
     # service below might try to do this at the same time, leading to race
