@@ -13,16 +13,6 @@
       tox_install_siblings: true
 
 - job:
-    name: barbican-dogtag-tox-functional
-    nodeset: devstack-single-node-fedora-latest
-    parent: barbican-tox-functional
-    description: |
-      Functional testing for DogTag backend
-    vars:
-      devstack_services:
-        barbican-dogtag: true
-
-- job:
     name: barbican-tox-functional-fips
     nodeset: devstack-single-node-centos-9-stream
     parent: barbican-tox-functional
@@ -42,24 +32,6 @@
         barbican-vault: true
       tox_environment:
         VAULT_PLUGIN_ENABLED: 1
-
-# Temporary job until SQLAlchemy 2.0 is no longer blocked by upper-requirements
-- job:
-    name: barbican-tox-py310-with-sqlalchemy-2x
-    parent: openstack-tox-py310
-    description: |
-      Run unit tests with main branch of SQLAlchemy, alembic and oslo.db.
-      Takes advantage of the base tox job's install-siblings feature.
-    # The job only tests the latest and shouldn't be run on the stable branches
-    branches:
-      regex: ^stable
-      negate: true
-    required-projects:
-      - name: github.com/sqlalchemy/sqlalchemy
-        override-checkout: main
-      - name: github.com/sqlalchemy/alembic
-        override-checkout: main
-      - name: openstack/oslo.db
 
 - job:
     name: barbican-kmip-tox-functional
@@ -142,13 +114,10 @@
             voting: false
         - octavia-v2-dsvm-tls-barbican
         - octavia-v2-dsvm-tls-barbican-secure-rbac
-        - barbican-tox-py310-with-sqlalchemy-2x
     gate:
       jobs:
         - barbican-tox-functional
-        - barbican-tox-py310-with-sqlalchemy-2x
     experimental:
       jobs:
-        - barbican-dogtag-tox-functional
         - barbican-kmip-tox-functional
 
