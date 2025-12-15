@@ -27,16 +27,10 @@ CONF = config.CONF
 class BaseContextMiddleware(mw.Middleware):
     def process_request(self, req):
         request_id = req.headers.get('x-openstack-request-id')
-        if not request_id:
-            request_id = 'req-' + utils.generate_uuid()
-        setattr(req, 'request_id', request_id)
         LOG.info('Begin processing request %(request_id)s',
                  {'request_id': request_id})
 
     def process_response(self, resp):
-
-        resp.headers['x-openstack-request-id'] = resp.request.request_id
-
         LOG.info('Processed request: %(status)s - %(method)s %(url)s',
                  {"status": resp.status,
                   "method": resp.request.method,
