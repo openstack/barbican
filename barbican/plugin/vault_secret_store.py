@@ -24,6 +24,8 @@ LOG = log.getLogger(__name__)
 
 DEFAULT_VAULT_URL = "http://127.0.0.1:8200"
 DEFAULT_MOUNTPOINT = "secret"
+DEFAULT_VERSION = 2
+
 
 vault_opt_group = cfg.OptGroup(name='vault_plugin', title='Vault Plugin')
 vault_opts = [
@@ -38,12 +40,16 @@ vault_opts = [
                help='AppRole secret_id for authentication with vault'),
     cfg.StrOpt('kv_mountpoint',
                default=DEFAULT_MOUNTPOINT,
-               help='Mountpoint of KV store in Vault to use, for example: '
-                    '{}'.format(DEFAULT_MOUNTPOINT)),
+               help='Mountpoint of KV store in Vault to use.'),
+    cfg.StrOpt('kv_path',
+               help='Path relative to root of KV store in Vault to use.'),
+    cfg.IntOpt('kv_version',
+               default=DEFAULT_VERSION,
+               choices=(1, 2),
+               help='Version of KV store in Vault to use.'),
     cfg.StrOpt('vault_url',
                default=DEFAULT_VAULT_URL,
-               help='Use this endpoint to connect to Vault, for example: '
-                    '"%s"' % DEFAULT_VAULT_URL),
+               help='Use this endpoint to connect to Vault.'),
     cfg.StrOpt('ssl_ca_crt_file',
                help='Absolute path to ca cert file'),
     cfg.BoolOpt('use_ssl',
@@ -91,7 +97,9 @@ class VaultSecretStore(css.CastellanSecretStore):
             vault_url=conf.vault_plugin.vault_url,
             vault_ssl_ca_crt_file=conf.vault_plugin.ssl_ca_crt_file,
             vault_use_ssl=conf.vault_plugin.use_ssl,
-            vault_namespace=conf.vault_plugin.namespace
+            vault_namespace=conf.vault_plugin.namespace,
+            vault_kv_path=conf.vault_plugin.kv_path,
+            vault_kv_version=conf.vault_plugin.kv_version,
         )
         return vault_conf
 
