@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    The ``[vault_plugin] use_ssl`` option has been deprecated, because it has
+    had no effect.

@@ -539,5 +539,4 @@ follows:
        approle_secret_id =
        kv_mountpoint = secret
        vault_url = https://127.0.0.1:8200
-       use_ssl = True
        ssl_ca_crt_file = /opt/vault/tls/tls-ca.crt

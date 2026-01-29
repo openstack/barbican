@@ -603,7 +603,6 @@ function configure_vault_plugin {
     iniset $BARBICAN_CONF secretstore enabled_secretstore_plugins vault_plugin
     iniset $BARBICAN_CONF vault_plugin root_token_id $root_token_id
     iniset $BARBICAN_CONF vault_plugin vault_url "http://127.0.0.1:8200"
-    iniset $BARBICAN_CONF vault_plugin use_ssl "false"
 }
 
 # Restore xtrace
