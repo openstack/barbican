@@ -47,6 +47,7 @@ class WhenTestingVaultSecretStore(utils.BaseTestCase):
 
         self.cfg_mock = mock.MagicMock(name='config mock')
         self.cfg_mock.vault_plugin = mock.MagicMock(
+            vault_url='http://127.0.0.1:8200',
             use_ssl=False,
             root_token_id='12345'
         )
