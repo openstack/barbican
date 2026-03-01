@@ -27,7 +27,7 @@ class WhenTestingHostnameForRefsGetter(test_utils.BaseTestCase):
     def setUp(self):
         super(WhenTestingHostnameForRefsGetter, self).setUp()
 
-        self.host = 'host'
+        self.host = 'http://my_host:9311'
         self.version = 'version'
         self.external_project_id = 'external_project_id'
         self.resource = 'resource'

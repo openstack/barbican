@@ -153,9 +153,6 @@ function configure_barbican {
     # Enable DEBUG
     iniset $BARBICAN_CONF DEFAULT debug $ENABLE_DEBUG_LOG_LEVEL
 
-    # Set the host_href
-    iniset $BARBICAN_CONF DEFAULT host_href "$BARBICAN_HOST_HREF"
-
     # Set the log file location
     iniset $BARBICAN_CONF DEFAULT log_file "$BARBICAN_API_LOG_DIR/barbican.log"
 
@@ -181,6 +178,10 @@ function configure_barbican {
         iniset $BARBICAN_CONF DEFAULT transport_url rabbit://$RABBIT_USERID:$RABBIT_PASSWORD@$RABBIT_HOST:5672
     else
         echo_summary "Barbican requires that the RabbitMQ service is enabled"
+    fi
+
+    if is_service_enabled tls-proxy; then
+        iniset $BARBICAN_CONF oslo_middleware enable_proxy_headers_parsing True
     fi
 
     # SimpleCryptoPlugin settings

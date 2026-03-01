@@ -228,6 +228,7 @@ class WhenTestingVersionsResource(BaseTestCase):
     """RBAC tests for the barbican.api.resources.VersionsResource class."""
     def setUp(self):
         super(WhenTestingVersionsResource, self).setUp()
+        config.CONF.set_override('host_href', 'http://localhost:9311')
 
         self.resource = VersionsResource()
 
@@ -262,6 +263,7 @@ class WhenTestingSecretsResource(BaseTestCase):
     """RBAC tests for the barbican.api.resources.SecretsResource class."""
     def setUp(self):
         super(WhenTestingSecretsResource, self).setUp()
+        config.CONF.set_override('host_href', 'http://localhost:9311')
 
         self.external_project_id = '12345'
 

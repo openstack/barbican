@@ -28,6 +28,7 @@ import webtest
 from barbican import api
 from barbican.api import app
 from barbican.api import controllers
+from barbican.common import config
 from barbican.common import exception as excep
 from barbican.common import hrefs
 from barbican.common import utils as barbican_utils
@@ -288,6 +289,7 @@ class WhenGettingPuttingOrDeletingSecretUsingSecretResource(FunctionalTest):
         super(
             WhenGettingPuttingOrDeletingSecretUsingSecretResource, self
         ).setUp()
+        config.CONF.set_override('host_href', 'http://localhost:9311')
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
@@ -671,6 +673,7 @@ class WhenAddingNavigationHrefs(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenAddingNavigationHrefs, self).setUp()
+        config.CONF.set_override('host_href', 'http://localhost:9311')
 
         self.resource_name = 'orders'
         self.external_project_id = '12345'
@@ -751,6 +754,7 @@ class WhenCreatingContainerConsumersUsingResource(FunctionalTest):
         super(
             WhenCreatingContainerConsumersUsingResource, self
         ).setUp()
+        config.CONF.set_override('host_href', 'http://localhost:9311')
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
@@ -865,6 +869,7 @@ class WhenGettingOrDeletingContainerConsumersUsingResource(FunctionalTest):
         super(
             WhenGettingOrDeletingContainerConsumersUsingResource, self
         ).setUp()
+        config.CONF.set_override('host_href', 'http://localhost:9311')
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
@@ -1051,6 +1056,7 @@ class WhenPerformingUnallowedOperationsOnContainerConsumers(FunctionalTest):
         super(
             WhenPerformingUnallowedOperationsOnContainerConsumers, self
         ).setUp()
+        config.CONF.set_override('host_href', 'http://localhost:9311')
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
@@ -1178,6 +1184,7 @@ class WhenOwnershipMismatchForContainerConsumer(FunctionalTest):
         super(
             WhenOwnershipMismatchForContainerConsumer, self
         ).setUp()
+        config.CONF.set_override('host_href', 'http://localhost:9311')
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
@@ -1249,6 +1256,7 @@ class WhenCreatingSecretConsumersUsingResource(FunctionalTest):
         super(
             WhenCreatingSecretConsumersUsingResource, self
         ).setUp()
+        config.CONF.set_override('host_href', 'http://localhost:9311')
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
@@ -1373,6 +1381,7 @@ class WhenGettingOrDeletingSecretConsumersUsingResource(FunctionalTest):
         super(
             WhenGettingOrDeletingSecretConsumersUsingResource, self
         ).setUp()
+        config.CONF.set_override('host_href', 'http://localhost:9311')
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
@@ -1601,6 +1610,7 @@ class WhenPerformingUnallowedOperationsOnSecretConsumers(FunctionalTest):
         super(
             WhenPerformingUnallowedOperationsOnSecretConsumers, self
         ).setUp()
+        config.CONF.set_override('host_href', 'http://localhost:9311')
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
@@ -1700,6 +1710,7 @@ class WhenOwnershipMismatchForSecretConsumer(FunctionalTest):
         super(
             WhenOwnershipMismatchForSecretConsumer, self
         ).setUp()
+        config.CONF.set_override('host_href', 'http://localhost:9311')
         self.app = webtest.TestApp(app.build_wsgi_app(self.root))
         self.app.extra_environ = get_barbican_env(self.external_project_id)
 
