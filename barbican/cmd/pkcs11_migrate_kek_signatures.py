@@ -21,10 +21,10 @@ from oslo_serialization import jsonutils as json
 from sqlalchemy import orm
 from sqlalchemy.orm import scoping
 
+from barbican.common.exception import P11CryptoPluginException
 from barbican.common import utils
 from barbican.model import models
 from barbican.plugin.crypto import p11_crypto
-from barbican.plugin.crypto.pkcs11 import P11CryptoPluginException
 
 # Use config values from p11_crypto
 CONF = p11_crypto.CONF
