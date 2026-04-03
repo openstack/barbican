@@ -1358,6 +1358,50 @@ class WhenTestingAsymmetricTypeOrderValidator(utils.BaseTestCase):
                                       self.asymmetric_order_req)
         self.assertEqual("bit_length", exception.invalid_property)
 
+    def test_should_pass_ec_with_bit_length_256(self):
+        self.asymmetric_order_req['meta']['algorithm'] = 'EC'
+        self.asymmetric_order_req['meta']['bit_length'] = 256
+        result = self.validator.validate(self.asymmetric_order_req)
+        self.assertIsNone(result['meta']['expiration'])
+
+    def test_should_pass_ec_with_bit_length_384(self):
+        self.asymmetric_order_req['meta']['algorithm'] = 'EC'
+        self.asymmetric_order_req['meta']['bit_length'] = 384
+        result = self.validator.validate(self.asymmetric_order_req)
+        self.assertIsNone(result['meta']['expiration'])
+
+    def test_should_pass_ec_with_bit_length_521(self):
+        self.asymmetric_order_req['meta']['algorithm'] = 'EC'
+        self.asymmetric_order_req['meta']['bit_length'] = 521
+        result = self.validator.validate(self.asymmetric_order_req)
+        self.assertIsNone(result['meta']['expiration'])
+
+    def test_should_raise_ec_with_non_standard_odd_bit_length(self):
+        self.asymmetric_order_req['meta']['algorithm'] = 'EC'
+        self.asymmetric_order_req['meta']['bit_length'] = 519
+
+        self.assertRaises(excep.UnsupportedField,
+                          self.validator.validate,
+                          self.asymmetric_order_req)
+
+    def test_should_raise_ec_with_non_curve_multiple_of_eight(self):
+        # 512 is a multiple of 8 but is not a valid EC curve bit length;
+        # it must still be rejected for EC algorithms.
+        self.asymmetric_order_req['meta']['algorithm'] = 'EC'
+        self.asymmetric_order_req['meta']['bit_length'] = 512
+
+        self.assertRaises(excep.UnsupportedField,
+                          self.validator.validate,
+                          self.asymmetric_order_req)
+
+    def test_should_raise_non_ec_with_bit_length_521(self):
+        self.asymmetric_order_req['meta']['algorithm'] = 'RSA'
+        self.asymmetric_order_req['meta']['bit_length'] = 521
+
+        self.assertRaises(excep.UnsupportedField,
+                          self.validator.validate,
+                          self.asymmetric_order_req)
+
 
 @utils.parameterized_test_case
 class WhenTestingAclValidator(utils.BaseTestCase):
