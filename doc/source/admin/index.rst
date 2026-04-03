@@ -13,4 +13,3 @@ management of secrets.
    barbican_manage
    database_cleaning
    upgrade
-   pkcs11keygeneration
