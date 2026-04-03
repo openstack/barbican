@@ -30,6 +30,8 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
 
     def setUp(self):
         super(WhenTestingSimpleCryptoPlugin, self).setUp()
+        kek = "dGhpcnR5X3R3b19ieXRlX2tleWJsYWhibGFoYmxhaGg="
+        simple.CONF.simple_crypto_plugin.kek = [kek]
         self.plugin = simple.SimpleCryptoPlugin()
 
     def _get_mocked_kek_meta_dto(self):

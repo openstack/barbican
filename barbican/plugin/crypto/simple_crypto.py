@@ -55,7 +55,7 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
     """Insecure implementation of the crypto plugin."""
 
     def __init__(self, conf=CONF):
-        if len(conf.simple_crypto_plugin.kek) < 1:
+        if not conf.simple_crypto_plugin.kek:
             raise ValueError(u._("SimpleCrypto KEK is undefined"))
         self.master_keys = conf.simple_crypto_plugin.kek
         self.plugin_name = conf.simple_crypto_plugin.plugin_name
