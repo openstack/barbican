@@ -15,6 +15,14 @@ Policy configuration
 Configuration
 ~~~~~~~~~~~~~
 
+.. note::
+
+   The auto-generated configuration reference may show the default values of
+   ``enforce_new_defaults`` and ``enforce_scope`` as ``True`` (the oslo.policy
+   library default). However, Barbican overrides both to ``False`` at runtime.
+   To opt in to the new secure RBAC defaults, explicitly set both options to
+   ``True`` in the ``[oslo_policy]`` section of ``barbican.conf``.
+
 The following is an overview of all available policies in Barbican. For a sample
 configuration file.
 
