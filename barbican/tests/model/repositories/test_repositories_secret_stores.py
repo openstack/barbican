@@ -168,7 +168,7 @@ class WhenTestingSecretStoresRepo(database_utils.RepositoryTestCase):
         self._create_secret_store(name, store_plugin, crypto_plugin, False)
         try:
             self._create_secret_store(name, store_plugin, crypto_plugin, False)
-            self.assertFail()
+            self.fail()
         except exception.ConstraintCheck as ex:
             self.assertIn("SQL constraint check failed", str(ex))
 
@@ -312,7 +312,7 @@ class WhenTestingProjectSecretStoreRepo(database_utils.RepositoryTestCase):
             s_store2 = self._create_secret_store(name, store_plugin,
                                                  crypto_plugin, False)
             self._create_project_store(project1.id, s_store2.id)
-            self.assertFail()
+            self.fail()
         except exception.ConstraintCheck as ex:
             self.assertIn("SQL constraint check failed", str(ex))
 
