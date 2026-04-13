@@ -201,8 +201,7 @@ function configure_barbican {
     iniset $BARBICAN_CONF keystone_notifications control_exchange 'keystone'
 
     # Set the Secure RBAC options
-    iniset $BARBICAN_CONF oslo_policy enforce_scope $BARBICAN_ENFORCE_SCOPE
-    iniset $BARBICAN_CONF oslo_policy enforce_new_defaults $BARBICAN_ENFORCE_SCOPE
+    iniset $BARBICAN_CONF oslo_policy enforce_new_defaults $BARBICAN_ENFORCE_NEW_DEFAULTS
 }
 
 # init_barbican - Initialize etc.

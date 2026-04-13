@@ -1,0 +1,31 @@
+---
+upgrade:
+  - |
+    The ``enforce_scope`` and ``enforce_new_defaults`` options in the
+    ``[oslo_policy]`` section of ``barbican.conf`` now default to ``True``
+    (as set by ``oslo.policy``). The previous barbican-level overrides that
+    forced these options to ``False`` have been removed.
+
+    Operators using the legacy RBAC roles (``admin``, ``creator``,
+    ``observer``, ``audit``) must migrate to the new SRBAC roles:
+
+    * ``admin`` — project-scoped administrative operations
+    * ``member`` — general read/write access within a project
+    * ``reader`` — read-only access within a project
+
+    To temporarily opt out and continue using the legacy policy defaults,
+    set the following in ``barbican.conf``::
+
+      [oslo_policy]
+      enforce_scope = False
+      enforce_new_defaults = False
+
+    Note that the legacy policy defaults are deprecated and will be removed
+    in a future release.
+security:
+  - |
+    Barbican now enforces Secure RBAC (SRBAC) by default. Tokens must be
+    project-scoped and carry the appropriate new roles (``reader``,
+    ``member``, or ``admin``) to access Key Manager resources. System-scoped
+    and domain-scoped tokens are rejected for all project-scoped API
+    operations.

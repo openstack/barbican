@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_policy import opts
 from oslo_policy import policy
 
 from barbican.common import config
@@ -21,15 +20,6 @@ from barbican.common import policies
 
 CONF = config.CONF
 ENFORCER = None
-
-
-# TODO(gmann): Remove setting the default value of config:
-# - 'enforce_scope', and 'enforce_new_defaults' once barbican is ready with the
-# new RBAC (oslo_policy enable them by default)
-opts.set_defaults(
-    CONF,
-    enforce_scope=False,
-    enforce_new_defaults=False)
 
 
 def reset():

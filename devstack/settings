@@ -42,7 +42,7 @@ GITBRANCH["barbican-tempest-plugin"]=${BARBICANTEMPEST_BRANCH:-master}
 GITDIR["barbican-tempest-plugin"]=$DEST/barbican-tempest-plugin
 
 # Secure RBAC
-BARBICAN_ENFORCE_SCOPE=$(trueorfalse True ENFORCE_SCOPE)
+BARBICAN_ENFORCE_NEW_DEFAULTS=$(trueorfalse True ENFORCE_NEW_DEFAULTS)
 
 # Vault plugin
 VAULT_PLUGIN_BACKEND=${VAULT_PLUGIN_BACKEND:-}

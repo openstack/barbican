@@ -288,7 +288,7 @@ class WhenTestingSecretsResource(BaseTestCase):
         self.assertIsNotNone(self.policy_enforcer.rules)
 
     def test_should_pass_create_secret(self):
-        self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_post,
+        self._assert_pass_rbac(['member'], self._invoke_on_post,
                                content_type='application/json')
 
     def test_should_raise_create_secret(self):
@@ -297,7 +297,7 @@ class WhenTestingSecretsResource(BaseTestCase):
                                content_type='application/json')
 
     def test_should_pass_get_secrets(self):
-        self._assert_pass_rbac(['admin', 'observer', 'creator'],
+        self._assert_pass_rbac(['member'],
                                self._invoke_on_get,
                                content_type='application/json')
 
@@ -373,7 +373,7 @@ class WhenTestingSecretResource(BaseTestCase):
     def test_should_pass_decrypt_secret_for_same_project_with_no_acl(self):
         """Token and secret project needs to be same in no ACL defined case."""
         self.acl_list.pop()  # remove read acl from default setup
-        self._assert_pass_rbac(['admin', 'observer', 'creator'],
+        self._assert_pass_rbac(['admin', 'member'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype',
                                content_type='application/json',
@@ -527,21 +527,23 @@ class WhenTestingSecretResource(BaseTestCase):
         """Should raise error when secret and token's project is different."""
         self.acl_list.pop()  # remove read acl from default setup
         # token project_id is different from secret's project id so should fail
-        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+        # Note: admin role has global access in SRBAC policy (bare role:admin
+        # check)
+        self._assert_fail_rbac(['observer', 'creator', 'audit'],
                                self._invoke_on_get,
                                user_id=self.user_id,
                                project_id='different_id')
 
     def test_should_pass_get_secret_for_same_project_but_different_user(self):
         # user id should not matter as long token and secret's project match
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['admin', 'member'],
                                self._invoke_on_get,
                                user_id='different_user_id',
                                project_id=self.external_project_id)
 
     def test_should_pass_get_secret_for_same_project_with_no_acl(self):
         self.acl_list.pop()  # remove read acl from default setup
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['admin', 'member'],
                                self._invoke_on_get,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
@@ -628,7 +630,9 @@ class WhenTestingSecretResource(BaseTestCase):
         self.acl_list.append(acl_read)
         # token project_id is different from secret's project id but another
         # user (from different project) has read acl for secret so should pass
-        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+        # Note: admin role has global access in SRBAC policy (bare role:admin
+        # check)
+        self._assert_fail_rbac(['observer', 'creator', 'audit'],
                                self._invoke_on_get,
                                user_id='aclUser1',
                                project_id='different_project_id')
@@ -643,8 +647,9 @@ class WhenTestingSecretResource(BaseTestCase):
         self.acl_list.pop()  # remove read acl from default setup
         self.resource.controller.secret.creator_id = 'creatorUserX'
 
-        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit',
-                                'bogusRole'],
+        # Note: admin role has global access in SRBAC policy (bare role:admin
+        # check)
+        self._assert_fail_rbac(['observer', 'creator', 'audit', 'bogusRole'],
                                self._invoke_on_get,
                                user_id='creatorUserX',
                                project_id='different_project_id')
@@ -654,7 +659,7 @@ class WhenTestingSecretResource(BaseTestCase):
                                self._invoke_on_get)
 
     def test_should_pass_put_secret(self):
-        self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_put,
+        self._assert_pass_rbac(['admin', 'member'], self._invoke_on_put,
                                content_type="application/octet-stream",
                                user_id=self.user_id,
                                project_id=self.external_project_id)
@@ -665,7 +670,7 @@ class WhenTestingSecretResource(BaseTestCase):
                                content_type="application/octet-stream")
 
     def test_should_pass_delete_secret(self):
-        self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_delete,
+        self._assert_pass_rbac(['admin', 'member'], self._invoke_on_delete,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
 
@@ -695,7 +700,7 @@ class WhenTestingSecretResource(BaseTestCase):
 
         Secret creator_id should match with token user to establish ownership.
         """
-        self._assert_pass_rbac(['creator'], self._invoke_on_delete,
+        self._assert_pass_rbac(['member'], self._invoke_on_delete,
                                user_id=self.creator_user_id,
                                project_id=self.external_project_id)
 
@@ -787,14 +792,14 @@ class WhenTestingContainerResource(BaseTestCase):
 
         User id should not matter as long token and container's project match.
         """
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['admin', 'member'],
                                self._invoke_on_get,
                                user_id='different_user_id',
                                project_id=self.external_project_id)
 
     def test_should_pass_get_container_for_same_project_with_no_acl(self):
         self.acl_list.pop()  # remove read acl from default setup
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['admin', 'member'],
                                self._invoke_on_get,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
@@ -904,17 +909,17 @@ class WhenTestingContainerResource(BaseTestCase):
                                project_id='differet_project_id')
 
     def test_pass_get_container_for_creator_user_project_access_disabled(self):
-        """Should pass authz for creator user when container is marked private.
+        """Should pass authz for member user who owns container when private.
 
         As container is private so user who created the container can still
-        access it as long as user has 'creator' role in container project.
+        access it as long as user has 'member' role in container project.
         """
         self.acl_list.pop()  # remove read acl from default setup
         acl_read = models.ContainerACL(
             container_id=self.container_id, operation='read',
             project_access=False, user_ids=['anyRandomUserX', 'aclUser1'])
         self.acl_list.append(acl_read)
-        self._assert_pass_rbac(['creator'],
+        self._assert_pass_rbac(['member'],
                                self._invoke_on_get,
                                user_id=self.creator_user_id,
                                project_id=self.external_project_id)
@@ -944,7 +949,7 @@ class WhenTestingContainerResource(BaseTestCase):
         Container creator_id should match with token user to establish
         ownership.
         """
-        self._assert_pass_rbac(['creator'], self._invoke_on_delete,
+        self._assert_pass_rbac(['member'], self._invoke_on_delete,
                                user_id=self.creator_user_id,
                                project_id=self.external_project_id)
 
@@ -987,7 +992,7 @@ class WhenTestingOrdersResource(BaseTestCase):
         self.assertIsNotNone(self.policy_enforcer.rules)
 
     def test_should_pass_create_order(self):
-        self._assert_pass_rbac(['admin', 'creator'], self._invoke_on_post,
+        self._assert_pass_rbac(['member'], self._invoke_on_post,
                                content_type='application/json')
 
     def test_should_raise_create_order(self):
@@ -995,7 +1000,7 @@ class WhenTestingOrdersResource(BaseTestCase):
                                self._invoke_on_post)
 
     def test_should_pass_get_orders(self):
-        self._assert_pass_rbac(['admin', 'observer', 'creator'],
+        self._assert_pass_rbac(['member'],
                                self._invoke_on_get,
                                project_id=self.external_project_id)
 
@@ -1042,7 +1047,7 @@ class WhenTestingOrderResource(BaseTestCase):
         self.assertIsNotNone(self.policy_enforcer.rules)
 
     def test_should_pass_get_order(self):
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['member'],
                                self._invoke_on_get,
                                project_id=self.external_project_id)
 
@@ -1051,7 +1056,7 @@ class WhenTestingOrderResource(BaseTestCase):
                                self._invoke_on_get)
 
     def test_should_pass_delete_order(self):
-        self._assert_pass_rbac(['admin'], self._invoke_on_delete,
+        self._assert_pass_rbac(['member'], self._invoke_on_delete,
                                project_id=self.external_project_id)
 
     def test_should_raise_delete_order(self):
@@ -1121,7 +1126,7 @@ class WhenTestingConsumersResource(BaseTestCase):
                                self._invoke_on_delete)
 
     def test_should_pass_get_consumers(self):
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['admin', 'member'],
                                self._invoke_on_get,
                                content_type='application/json',
                                project_id=self.external_project_id)
@@ -1175,7 +1180,7 @@ class WhenTestingConsumerResource(BaseTestCase):
         self.assertIsNotNone(self.policy_enforcer.rules)
 
     def test_should_pass_get_consumer(self):
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['admin'],
                                self._invoke_on_get)
 
     def test_should_raise_get_consumer(self):
@@ -1214,17 +1219,17 @@ class WhenTestingSecretStoresResource(BaseTestCase):
 
     def test_should_pass_get_all_secret_stores(self):
         self._assert_pass_rbac(
-            ['admin', 'observer', 'audit', 'creator'],
+            ['reader'],
             self._invoke_on_get)
 
     def test_should_pass_get_global_default(self):
         self._assert_pass_rbac(
-            ['admin', 'observer', 'audit', 'creator'],
+            ['reader'],
             self._invoke_get_global_default)
 
     def test_should_pass_get_preferred(self):
         self._assert_pass_rbac(
-            ['admin', 'observer', 'audit', 'creator'],
+            ['reader'],
             self._invoke_get_preferred)
 
     def _invoke_on_get(self):
@@ -1276,7 +1281,7 @@ class WhenTestingSecretStoreResource(BaseTestCase):
 
     def test_should_pass_get_a_secret_store(self):
         self._assert_pass_rbac(
-            ['admin', 'observer', 'audit', 'creator'],
+            ['reader'],
             self._invoke_on_get)
 
     def _invoke_on_get(self):
@@ -1375,7 +1380,7 @@ class WhenTestingSecretConsumersResource(BaseTestCase):
                                self._invoke_on_delete)
 
     def test_should_pass_get_consumers(self):
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['admin', 'member'],
                                self._invoke_on_get,
                                content_type='application/json',
                                project_id=self.external_project_id)
@@ -1424,7 +1429,7 @@ class WhenTestingSecretConsumerResource(BaseTestCase):
         self.assertIsNotNone(self.policy_enforcer.rules)
 
     def test_should_pass_get_consumer(self):
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['admin'],
                                self._invoke_on_get)
 
     def test_should_raise_get_consumer(self):
