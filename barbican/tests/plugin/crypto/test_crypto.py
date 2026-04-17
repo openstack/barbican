@@ -18,6 +18,8 @@ from unittest import mock
 
 from cryptography import fernet
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import ec
+
 from cryptography.hazmat.primitives import serialization
 
 from barbican.model import models
@@ -235,6 +237,21 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
                 plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
                 "RSA", 1024)
         )
+        self.assertTrue(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                "EC", 256)
+        )
+        self.assertTrue(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                "EC", 384)
+        )
+        self.assertTrue(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                "EC", 521)
+        )
         self.assertFalse(
             self.plugin.supports(
                 plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
@@ -244,6 +261,44 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
             self.plugin.supports(
                 plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
                 "RSA", 64)
+        )
+        self.assertFalse(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                "EC", 128)
+        )
+
+    def test_supports_rejects_cross_algorithm_bit_lengths(self):
+        """Verify that bit_length validation is per-algorithm, not global."""
+        self.assertFalse(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                "RSA", 256)
+        )
+        self.assertFalse(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                "RSA", 521)
+        )
+        self.assertFalse(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                "EC", 1024)
+        )
+        self.assertFalse(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                "EC", 2048)
+        )
+        self.assertFalse(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                "DSA", 256)
+        )
+        self.assertFalse(
+            self.plugin.supports(
+                plugin.PluginSupportTypes.ASYMMETRIC_KEY_GENERATION,
+                "DSA", 521)
         )
 
     def test_generate_asymmetric_1024_bit_key(self):
@@ -436,6 +491,172 @@ class WhenTestingSimpleCryptoPlugin(utils.BaseTestCase):
                                   response_dto.kek_meta_extended,
                                   mock.MagicMock())
         self.assertEqual(16, len(key))
+
+    def test_generate_EC_256_bit_key(self):
+        generate_dto = plugin.GenerateDTO('ec', 256, None, None)
+        kek_meta_dto = self._get_mocked_kek_meta_dto()
+
+        private_dto, public_dto, passwd_dto = self.plugin.generate_asymmetric(
+            generate_dto, kek_meta_dto, mock.MagicMock())
+
+        decrypt_dto = plugin.DecryptDTO(private_dto.cypher_text)
+        private_dto = self.plugin.decrypt(decrypt_dto,
+                                          kek_meta_dto,
+                                          private_dto.kek_meta_extended,
+                                          mock.MagicMock())
+
+        decrypt_dto = plugin.DecryptDTO(public_dto.cypher_text)
+        public_dto = self.plugin.decrypt(decrypt_dto,
+                                         kek_meta_dto,
+                                         public_dto.kek_meta_extended,
+                                         mock.MagicMock())
+
+        private_key = serialization.load_pem_private_key(
+            data=private_dto,
+            password=None,
+            backend=default_backend()
+        )
+
+        public_key = serialization.load_pem_public_key(
+            data=public_dto,
+            backend=default_backend()
+        )
+
+        self.assertIsInstance(private_key.curve, ec.SECP256R1)
+        self.assertEqual(256, private_key.key_size)
+        self.assertEqual(256, public_key.key_size)
+
+        public_key_bytes = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        recovered_key = private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        self.assertEqual(public_key_bytes, recovered_key)
+
+    def test_generate_EC_384_bit_key(self):
+        generate_dto = plugin.GenerateDTO('ec', 384, None, None)
+        kek_meta_dto = self._get_mocked_kek_meta_dto()
+
+        private_dto, public_dto, passwd_dto = self.plugin.generate_asymmetric(
+            generate_dto, kek_meta_dto, mock.MagicMock())
+
+        decrypt_dto = plugin.DecryptDTO(private_dto.cypher_text)
+        private_bytes = self.plugin.decrypt(decrypt_dto,
+                                            kek_meta_dto,
+                                            private_dto.kek_meta_extended,
+                                            mock.MagicMock())
+
+        private_key = serialization.load_pem_private_key(
+            data=private_bytes,
+            password=None,
+            backend=default_backend()
+        )
+
+        self.assertIsInstance(private_key.curve, ec.SECP384R1)
+        self.assertEqual(384, private_key.key_size)
+
+    def test_generate_EC_521_bit_key(self):
+        generate_dto = plugin.GenerateDTO('ec', 521, None, None)
+        kek_meta_dto = self._get_mocked_kek_meta_dto()
+
+        private_dto, public_dto, passwd_dto = self.plugin.generate_asymmetric(
+            generate_dto, kek_meta_dto, mock.MagicMock())
+
+        decrypt_dto = plugin.DecryptDTO(private_dto.cypher_text)
+        private_bytes = self.plugin.decrypt(decrypt_dto,
+                                            kek_meta_dto,
+                                            private_dto.kek_meta_extended,
+                                            mock.MagicMock())
+
+        private_key = serialization.load_pem_private_key(
+            data=private_bytes,
+            password=None,
+            backend=default_backend()
+        )
+
+        self.assertIsInstance(private_key.curve, ec.SECP521R1)
+        self.assertEqual(521, private_key.key_size)
+
+    def test_generate_EC_key_with_passphrase(self):
+        generate_dto = plugin.GenerateDTO('ec', 256, None, 'changeme')
+        kek_meta_dto = self._get_mocked_kek_meta_dto()
+
+        private_dto, public_dto, passwd_dto = self.plugin.generate_asymmetric(
+            generate_dto, kek_meta_dto, mock.MagicMock())
+
+        decrypt_dto = plugin.DecryptDTO(private_dto.cypher_text)
+        private_bytes = self.plugin.decrypt(decrypt_dto,
+                                            kek_meta_dto,
+                                            private_dto.kek_meta_extended,
+                                            mock.MagicMock())
+
+        private_key = serialization.load_pem_private_key(
+            data=private_bytes,
+            password=b'changeme',
+            backend=default_backend()
+        )
+
+        self.assertIsInstance(private_key.curve, ec.SECP256R1)
+        self.assertIsNotNone(passwd_dto)
+
+    def test_generate_EC_key_with_passphrase_negative(self):
+        """Verify passphrase-protected key cannot be loaded without it."""
+        generate_dto = plugin.GenerateDTO('ec', 256, None, 'changeme')
+        kek_meta_dto = self._get_mocked_kek_meta_dto()
+
+        private_dto, public_dto, passwd_dto = self.plugin.generate_asymmetric(
+            generate_dto, kek_meta_dto, mock.MagicMock())
+
+        decrypt_dto = plugin.DecryptDTO(private_dto.cypher_text)
+        private_bytes = self.plugin.decrypt(decrypt_dto,
+                                            kek_meta_dto,
+                                            private_dto.kek_meta_extended,
+                                            mock.MagicMock())
+
+        self.assertRaises(
+            TypeError,
+            serialization.load_pem_private_key,
+            private_bytes, None, default_backend()
+        )
+
+        self.assertRaises(
+            ValueError,
+            serialization.load_pem_private_key,
+            private_bytes, b'wrongpassword', default_backend()
+        )
+
+    def test_generate_EC_key_unsupported_bit_length_raises(self):
+        generate_dto = plugin.GenerateDTO('ec', 1024, None, None)
+        kek_meta_dto = self._get_mocked_kek_meta_dto()
+
+        self.assertRaises(
+            plugin.CryptoPrivateKeyFailureException,
+            self.plugin.generate_asymmetric,
+            generate_dto, kek_meta_dto, mock.MagicMock()
+        )
+
+    def test_generate_unsupported_algorithm_raises(self):
+        generate_dto = plugin.GenerateDTO('blowfish', 256, None, None)
+        kek_meta_dto = self._get_mocked_kek_meta_dto()
+
+        self.assertRaises(
+            plugin.CryptoPrivateKeyFailureException,
+            self.plugin.generate_asymmetric,
+            generate_dto, kek_meta_dto, mock.MagicMock()
+        )
+
+    def test_generate_asymmetric_no_algorithm_raises(self):
+        generate_dto = plugin.GenerateDTO(None, 2048, None, None)
+        kek_meta_dto = self._get_mocked_kek_meta_dto()
+
+        self.assertRaises(
+            plugin.CryptoPrivateKeyFailureException,
+            self.plugin.generate_asymmetric,
+            generate_dto, kek_meta_dto, mock.MagicMock()
+        )
 
     def test_get_plugin_name(self):
         self.assertIsNotNone(self.plugin.get_plugin_name())

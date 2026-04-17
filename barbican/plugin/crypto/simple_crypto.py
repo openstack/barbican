@@ -15,6 +15,7 @@ import os
 from cryptography import fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import dsa
+from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from oslo_config import cfg
@@ -28,6 +29,24 @@ from barbican.plugin.crypto import base as c
 
 CONF = config.new_config()
 LOG = utils.getLogger(__name__)
+
+_EC_CURVE_MAP = {
+    256: ec.SECP256R1(),
+    384: ec.SECP384R1(),
+    521: ec.SECP521R1(),
+}
+
+_ASYMMETRIC_KEY_LENGTHS_BY_ALGO = {
+    'rsa': {1024, 2048, 4096},
+    'dsa': {1024, 2048, 4096},
+    'ec': {256, 384, 521},
+}
+
+_SERIALIZATION_ENCODING = {
+    'rsa': serialization.Encoding.PEM,
+    'dsa': serialization.Encoding.DER,
+    'ec': serialization.Encoding.PEM,
+}
 
 simple_crypto_plugin_group = cfg.OptGroup(name='simple_crypto_plugin',
                                           title="Simple Crypto Plugin Options")
@@ -133,60 +152,38 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
                             project_id)
 
     def generate_asymmetric(self, generate_dto, kek_meta_dto, project_id):
-        """Generate asymmetric keys based on below rules:
+        """Generate asymmetric keys.
 
-        - RSA, with passphrase (supported)
-        - RSA, without passphrase (supported)
-        - DSA, without passphrase (supported)
-        - DSA, with passphrase (supported)
+        Supported algorithms: RSA, DSA, EC.
+        The algorithm must be specified in the API request.
         """
-        if (generate_dto.algorithm is None or generate_dto
-                .algorithm.lower() == 'rsa'):
-            private_key = rsa.generate_private_key(
-                public_exponent=65537,
-                key_size=generate_dto.bit_length,
-                backend=default_backend()
-            )
-        elif generate_dto.algorithm.lower() == 'dsa':
-            private_key = dsa.generate_private_key(
-                key_size=generate_dto.bit_length,
-                backend=default_backend()
-            )
-        else:
+        if not generate_dto.algorithm:
             raise c.CryptoPrivateKeyFailureException()
+        algorithm = generate_dto.algorithm.lower()
 
+        private_key = self._generate_private_key(algorithm, generate_dto)
         public_key = private_key.public_key()
 
-        if generate_dto.algorithm.lower() == 'rsa':
-            private_key = private_key.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=self._get_encryption_algorithm(
-                    generate_dto.passphrase)
-            )
+        encoding = _SERIALIZATION_ENCODING.get(algorithm)
+        if encoding is None:
+            raise c.CryptoPrivateKeyFailureException()
 
-            public_key = public_key.public_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo
-            )
+        private_key_bytes = private_key.private_bytes(
+            encoding=encoding,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=self._get_encryption_algorithm(
+                generate_dto.passphrase)
+        )
+        public_key_bytes = public_key.public_bytes(
+            encoding=encoding,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
 
-        if generate_dto.algorithm.lower() == 'dsa':
-            private_key = private_key.private_bytes(
-                encoding=serialization.Encoding.DER,
-                format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=self._get_encryption_algorithm(
-                    generate_dto.passphrase)
-            )
-            public_key = public_key.public_bytes(
-                encoding=serialization.Encoding.DER,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo
-            )
-
-        private_dto = self.encrypt(c.EncryptDTO(private_key),
+        private_dto = self.encrypt(c.EncryptDTO(private_key_bytes),
                                    kek_meta_dto,
                                    project_id)
 
-        public_dto = self.encrypt(c.EncryptDTO(public_key),
+        public_dto = self.encrypt(c.EncryptDTO(public_key_bytes),
                                   kek_meta_dto,
                                   project_id)
 
@@ -202,6 +199,34 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
                                           project_id)
 
         return private_dto, public_dto, passphrase_dto
+
+    def _generate_private_key(self, algorithm, generate_dto):
+        """Dispatch private key generation by algorithm.
+
+        This method is the single extension point for adding new asymmetric
+        algorithms (e.g. ML-KEM, ML-DSA when pyca/cryptography supports them).
+        """
+        if algorithm == 'rsa':
+            return rsa.generate_private_key(
+                public_exponent=65537,
+                key_size=generate_dto.bit_length,
+                backend=default_backend()
+            )
+        elif algorithm == 'dsa':
+            return dsa.generate_private_key(
+                key_size=generate_dto.bit_length,
+                backend=default_backend()
+            )
+        elif algorithm == 'ec':
+            curve = _EC_CURVE_MAP.get(generate_dto.bit_length)
+            if curve is None:
+                raise c.CryptoPrivateKeyFailureException()
+            return ec.generate_private_key(
+                curve=curve,
+                backend=default_backend()
+            )
+
+        raise c.CryptoPrivateKeyFailureException()
 
     def supports(self, type_enum, algorithm=None, bit_length=None,
                  mode=None):
@@ -254,8 +279,8 @@ class SimpleCryptoPlugin(c.CryptoPluginBase):
             and bit_length / length_factor
                 in c.PluginSupportTypes.SYMMETRIC_KEY_LENGTHS):
             return True
-        elif (algorithm.lower() in c.PluginSupportTypes.ASYMMETRIC_ALGORITHMS
-              and bit_length in c.PluginSupportTypes.ASYMMETRIC_KEY_LENGTHS):
-            return True
+        elif algorithm.lower() in _ASYMMETRIC_KEY_LENGTHS_BY_ALGO:
+            return bit_length in _ASYMMETRIC_KEY_LENGTHS_BY_ALGO[
+                algorithm.lower()]
         else:
             return False
