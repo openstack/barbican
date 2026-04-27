@@ -146,7 +146,7 @@ class TestProjectSecretStore(test_ovo_base.OVOTestCase):
                                                            crypto_plugin,
                                                            False)
             self._create_project_secret_store(project1.id, secret_stores2.id)
-            self.assertFail()
+            self.fail()
         except exception.ConstraintCheck as ex:
             self.assertIn("SQL constraint check failed", str(ex))
 
