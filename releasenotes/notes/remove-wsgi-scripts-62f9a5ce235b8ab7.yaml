@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    The ``barbican-wsgi-api`` WSGI script has been removed. Deployment tooling
+    should instead reference the Python module paths for this services,
+    ``barbican.wsgi.api``, if their chosen WSGI server supports this (gunicorn,
+    uWSGI) or implement a ``.wsgi`` script themselves if not (mod_wsgi).
