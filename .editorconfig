@@ -1,0 +1,32 @@
+# EditorConfig helps maintain consistent coding styles between different editors and IDEs
+# Recommended placement: repository root (not .github) so it applies to the entire working tree
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Python defaults
+[*.py]
+indent_style = space
+indent_size = 4
+
+# YAML uses 2-space indentation
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# ReST and INI/CNF-style files
+[*.{rst,ini,cfg,conf}]
+indent_style = space
+indent_size = 4
+
+# Makefiles require tabs
+[Makefile]
+indent_style = tab
+
+# Allow trailing spaces in Markdown (used for soft line breaks)
+[*.md]
+trim_trailing_whitespace = false

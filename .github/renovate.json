@@ -1,0 +1,84 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "timezone": "Asia/Kolkata",
+  "dependencyDashboard": true,
+  "semanticCommits": "enabled",
+  "rebaseWhen": "behind-base-branch",
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 5,
+  "labels": [
+    "dependencies",
+    "renovate"
+  ],
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "rangeStrategy": "bump",
+  "packageRules": [
+    {
+      "description": "Automerge safe updates for GitHub Actions and Docker",
+      "matchManagers": [
+        "github-actions",
+        "dockerfile"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "description": "Conservative policy for Python requirements: disable majors",
+      "matchManagers": [
+        "pip_requirements",
+        "pip_setup",
+        "poetry"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Do not automerge Python minor updates (require review)",
+      "matchManagers": [
+        "pip_requirements",
+        "pip_setup",
+        "poetry"
+      ],
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "Automerge Python patch updates when CI passes",
+      "matchManagers": [
+        "pip_requirements",
+        "pip_setup",
+        "poetry"
+      ],
+ "matchUpdateTypes": [
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "description": "Group Python minor/patch updates to reduce PR noise",
+      "matchManagers": [
+        "pip_requirements"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "python requirements (minor/patch)",
+      "separateMultipleMajor": true
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+# Normalize line endings to LF across the repository
+* text=auto eol=lf
+
+# Common text file overrides (explicit LF)
+*.sh text eol=lf
+*.py text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+*.conf eol=lf
+*.rst text eol=lf
+*.md text eol=lf
+Makefile text eol=lf
+
+# Binary files (no EOL conversion)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.tgz binary
+*.xz binary
+*.bz2 binary
+*.7z binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.so binary
+*.dylib binary
