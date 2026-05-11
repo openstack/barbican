@@ -1,0 +1,10 @@
+---
+fixes:
+  - |
+    Fixed a bug where ``SecretACLsController`` and ``ContainerACLsController``
+    overrode ``ACLMixin.get_acl_tuple()``, returning incomplete target data
+    that was missing ACL fields such as ``read_project_access``.  This caused
+    the ``secret_is_not_private`` policy rule to always evaluate to False,
+    resulting in HTTP 403 for project members who are not the secret owner
+    when ``enforce_new_defaults`` is enabled.
+    See `bug 2069378 <https://bugs.launchpad.net/barbican/+bug/2069378>`__.
