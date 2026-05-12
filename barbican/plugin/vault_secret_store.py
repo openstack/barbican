@@ -55,6 +55,8 @@ vault_opts = [
                help='Absolute path to ca cert file'),
     cfg.BoolOpt('use_ssl',
                 default=False,
+                deprecated_for_removal=True,
+                deprecated_reason='This option has no effect.',
                 help=_('SSL Enabled/Disabled')),
     cfg.StrOpt("namespace",
                help=_("Vault Namespace to use for all requests. "
@@ -97,7 +99,6 @@ class VaultSecretStore(css.CastellanSecretStore):
             vault_kv_mountpoint=conf.vault_plugin.kv_mountpoint,
             vault_url=conf.vault_plugin.vault_url,
             vault_ssl_ca_crt_file=conf.vault_plugin.ssl_ca_crt_file,
-            vault_use_ssl=conf.vault_plugin.use_ssl,
             vault_namespace=conf.vault_plugin.namespace,
             vault_kv_path=conf.vault_plugin.kv_path,
             vault_kv_version=conf.vault_plugin.kv_version,
