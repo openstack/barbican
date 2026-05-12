@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    The following options have been added to the ``vault_plugin`` section.
+
+    - ``kv_path``
+    - ``kv_version``
