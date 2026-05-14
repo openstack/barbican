@@ -428,9 +428,9 @@ function install_389_directory_server {
 
     dscreate create-template ds.tmp
     sed -e 's/;root_password = .*/root_password = PASSWORD/g' \
-	-e 's/;full_machine_name = .*/full_machine_name = localhost.localdomain/g' \
-	-e 's/;instance_name =.*/instance_name = pki-tomcat/g' \
-	ds.tmp > ds.inf
+        -e 's/;full_machine_name = .*/full_machine_name = localhost.localdomain/g' \
+        -e 's/;instance_name =.*/instance_name = pki-tomcat/g' \
+        ds.tmp > ds.inf
     rm ds.tmp
 
     sudo mv ds.inf /etc/389-ds/ds.inf
