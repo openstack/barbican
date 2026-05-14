@@ -9,24 +9,27 @@
 # Andi Chandler <andi@gowling.com>, 2022. #zanata
 # Andi Chandler <andi@gowling.com>, 2023. #zanata
 # Andi Chandler <andi@gowling.com>, 2024. #zanata
+# Andi Chandler <andi@gowling.com>, 2026. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: barbican VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2025-02-19 16:28+0000\n"
+"POT-Creation-Date: 2026-05-12 09:41+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2024-12-04 03:03+0000\n"
+"PO-Revision-Date: 2026-01-07 04:03+0000\n"
 "Last-Translator: Andi Chandler <andi@gowling.com>\n"
 "Language-Team: English (United Kingdom)\n"
 "Language: en_GB\n"
 "X-Generator: Zanata 4.3.3\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
+#, python-brace-format
 msgid "'algorithm' is required field for {0} type order"
 msgstr "'algorithm' is required field for {0} type order"
 
+#, python-brace-format
 msgid "'bit_length' is required field for {0} type order"
 msgstr "'bit_length' is required field for {0} type order"
 
@@ -49,6 +52,7 @@ msgstr ""
 ">>>>> Task exception seen for synchronous task invocation, so handling "
 "exception to mimic asynchronous behaviour."
 
+#, python-brace-format
 msgid "A Content-Type of '{content_type}' for secrets is not supported"
 msgstr "A Content-Type of '{content_type}' for secrets is not supported"
 
@@ -98,6 +102,7 @@ msgstr "An object with the specified identifier was not found."
 msgid "An unknown exception occurred"
 msgstr "An unknown exception occurred"
 
+#, python-brace-format
 msgid ""
 "An unsupported algorithm {algorithm} was passed to the "
 "'generate_symmetric_key' method"
@@ -108,9 +113,11 @@ msgstr ""
 msgid "Apparent RNG self-test failure."
 msgstr "Apparent RNG self-test failure."
 
+#, python-brace-format
 msgid "Bad Container Reference {ref}"
 msgstr "Bad Container Reference {ref}"
 
+#, python-brace-format
 msgid "Bad key file permissions found, expected 400 for path: {file_path}"
 msgstr "Bad key file permissions found, expected 400 for path: {file_path}"
 
@@ -201,9 +208,11 @@ msgstr "ContainerConsumers(s) retrieval"
 msgid "Containers(s) retrieval"
 msgstr "Containers(s) retrieval"
 
+#, python-brace-format
 msgid "Content-Type of '{content_type}' is not supported for PUT."
 msgstr "Content-Type of '{content_type}' is not supported for PUT."
 
+#, python-brace-format
 msgid ""
 "Could not find a secret store plugin for generating secret with algorithm "
 "'{alg}' and bit-length '{len}'."
@@ -211,6 +220,7 @@ msgstr ""
 "Could not find a secret store plugin for generating secret with algorithm "
 "'{alg}' and bit-length '{len}'."
 
+#, python-brace-format
 msgid ""
 "Could not find a secret store plugin for storing secret with algorithm "
 "'{alg}' and bit-length '{len}'."
@@ -218,6 +228,7 @@ msgstr ""
 "Could not find a secret store plugin for storing secret with algorithm "
 "'{alg}' and bit-length '{len}'."
 
+#, python-brace-format
 msgid ""
 "Could not find an enabled crypto plugin backend that supports the requested "
 "operation: {operation}"
@@ -225,9 +236,11 @@ msgstr ""
 "Could not find an enabled crypto plugin backend that supports the requested "
 "operation: {operation}"
 
+#, python-brace-format
 msgid "Could not find key labeled {0}"
 msgstr "Could not find key labelled {0}"
 
+#, python-brace-format
 msgid "Could not find {entity_name}"
 msgstr "Could not find {entity_name}"
 
@@ -277,6 +290,7 @@ msgstr ""
 msgid "Encoding type must be 'base64' for text-based payloads."
 msgstr "Encoding type must be 'base64' for text-based payloads."
 
+#, python-brace-format
 msgid ""
 "Encryption using session key is not supported when retrieving a "
 "{secret_type} key."
@@ -284,9 +298,11 @@ msgstr ""
 "Encryption using session key is not supported when retrieving a "
 "{secret_type} key."
 
+#, python-brace-format
 msgid "Entity ID {entity_id} not found"
 msgstr "Entity ID {entity_id} not found"
 
+#, python-brace-format
 msgid ""
 "Error configuring registry database with supplied database connection. Got "
 "error: {error}"
@@ -322,12 +338,14 @@ msgstr "Extension namespace to search for plugins."
 msgid "Extensions are not yet supported.  Specify a valid profile instead."
 msgstr "Extensions are not yet supported.  Specify a valid profile instead."
 
+#, python-brace-format
 msgid "Failed to bind kek metadata for plugin: {name}"
 msgstr "Failed to bind KEK metadata for plugin: {name}"
 
 msgid "Failed to validate JSON information: "
 msgstr "Failed to validate JSON information: "
 
+#, python-brace-format
 msgid "Feature not implemented for '{0}' order type"
 msgstr "Feature not implemented for '{0}' order type"
 
@@ -341,6 +359,13 @@ msgid ""
 msgstr ""
 "Feature not implemented for value set on field '%(field)s' on schema "
 "'%(schema)s': %(reason)s"
+
+msgid ""
+"Fernet Key-Encryption Key (KEK) to be used by SimpleCrypto Plugin to encrypt "
+"Project-specific KEKs."
+msgstr ""
+"Fernet Key-Encryption Key (KEK) to be used by the SimpleCrypto Plugin to "
+"encrypt Project-specific KEKs."
 
 msgid "File path to concatenated \"certification authority\" certificates"
 msgstr "File path to concatenated \"certification authority\" certificates"
@@ -393,6 +418,7 @@ msgstr "HMAC Key Type"
 msgid "HMAC algorithm used to sign encrypted data."
 msgstr "HMAC algorithm used to sign encrypted data."
 
+#, python-brace-format
 msgid "HSM returned response code: {code}"
 msgstr "HSM returned response code: {code}"
 
@@ -419,6 +445,7 @@ msgstr ""
 msgid "If 'payload' specified, must be non empty"
 msgstr "If 'payload' specified, must be non empty"
 
+#, python-brace-format
 msgid "In section '{0}', secret_store_plugin value is missing"
 msgstr "In section '{0}', secret_store_plugin value is missing"
 
@@ -468,6 +495,7 @@ msgstr "Invalid extensions data."
 msgid "Invalid payload for payload_content_encoding"
 msgstr "Invalid payload for payload_content_encoding"
 
+#, python-brace-format
 msgid "Invalid status '{status}' for {entity_name}."
 msgstr "Invalid status '{status}' for {entity_name}."
 
@@ -493,9 +521,6 @@ msgstr "Key Wrapping algorithm used to wrap Project KEKs."
 
 msgid "Key archival failed.  Error returned from KRA."
 msgstr "Key archival failed.  Error returned from KRA."
-
-msgid "Key encryption key to be used by Simple Crypto Plugin"
-msgstr "Key encryption key to be used by Simple Crypto Plugin"
 
 msgid "Key generation failed.  Error returned from KRA."
 msgstr "Key generation failed.  Error returned from KRA."
@@ -583,75 +608,96 @@ msgstr "More than one key found for label"
 msgid "Must be a positive integer that is a multiple of 8"
 msgstr "Must be a positive integer that is a multiple of 8"
 
+#, python-brace-format
 msgid "Must supply Non-None {0} argument for CertificateAuthority entry."
 msgstr "Must supply Non-None {0} argument for CertificateAuthority entry."
 
+#, python-brace-format
 msgid "Must supply non-Blank {0} argument for SecretStores entry."
 msgstr "Must supply non-Blank {0} argument for SecretStores entry."
 
+#, python-brace-format
 msgid ""
 "Must supply non-None {0} argument for CertificateAuthorityMetadatum entry."
 msgstr ""
 "Must supply non-None {0} argument for CertificateAuthorityMetadatum entry."
 
+#, python-brace-format
 msgid "Must supply non-None {0} argument for ContainerACL entry."
 msgstr "Must supply non-None {0} argument for ContainerACL entry."
 
+#, python-brace-format
 msgid "Must supply non-None {0} argument for ContainerACLUser entry."
 msgstr "Must supply non-None {0} argument for ContainerACLUser entry."
 
+#, python-brace-format
 msgid "Must supply non-None {0} argument for OrderBarbicanMetadatum entry."
 msgstr "Must supply non-None {0} argument for OrderBarbicanMetadatum entry."
 
+#, python-brace-format
 msgid "Must supply non-None {0} argument for OrderPluginMetadatum entry."
 msgstr "Must supply non-None {0} argument for OrderPluginMetadatum entry."
 
+#, python-brace-format
 msgid ""
 "Must supply non-None {0} argument for PreferredCertificateAuthority entry."
 msgstr ""
 "Must supply non-None {0} argument for PreferredCertificateAuthority entry."
 
+#, python-brace-format
 msgid ""
 "Must supply non-None {0} argument for ProjectCertificateAuthority entry."
 msgstr ""
 "Must supply non-None {0} argument for ProjectCertificateAuthority entry."
 
+#, python-brace-format
 msgid "Must supply non-None {0} argument for ProjectQuotas entry."
 msgstr "Must supply non-None {0} argument for ProjectQuotas entry."
 
+#, python-brace-format
 msgid "Must supply non-None {0} argument for ProjectSecretStore  entry."
 msgstr "Must supply non-None {0} argument for ProjectSecretStore  entry."
 
+#, python-brace-format
 msgid "Must supply non-None {0} argument for SecretACL entry."
 msgstr "Must supply non-None {0} argument for SecretACL entry."
 
+#, python-brace-format
 msgid "Must supply non-None {0} argument for SecretACLUser entry."
 msgstr "Must supply non-None {0} argument for SecretACLUser entry."
 
+#, python-brace-format
 msgid "Must supply non-None {0} argument for SecretConsumerMetadatum entry."
 msgstr "Must supply non-None {0} argument for SecretConsumerMetadatum entry."
 
+#, python-brace-format
 msgid "Must supply non-None {0} argument for SecretStoreMetadatum entry."
 msgstr "Must supply non-None {0} argument for SecretStoreMetadatum entry."
 
+#, python-brace-format
 msgid "Must supply non-None {0} argument for SecretUserMetadatum entry."
 msgstr "Must supply non-None {0} argument for SecretUserMetadatum entry."
 
+#, python-brace-format
 msgid "Must supply non-None {0} argument for TransportKey entry."
 msgstr "Must supply non-None {0} argument for TransportKey entry."
 
+#, python-brace-format
 msgid "Must supply non-None {entity_name}."
 msgstr "Must supply non-None {entity_name}."
 
+#, python-brace-format
 msgid "Must supply {entity_name} with id=None (i.e. new entity)."
 msgstr "Must supply {entity_name} with id=None (i.e. new entity)."
 
+#, python-brace-format
 msgid "No container found with container-ID {id}"
 msgstr "No container found with container-ID {id}"
 
 msgid "No data supplied to process."
 msgstr "No data supplied to process."
 
+#, python-brace-format
 msgid "No entities of type {entity_name} found"
 msgstr "No entities of type {entity_name} found"
 
@@ -661,6 +707,7 @@ msgstr "No key handle was found"
 msgid "No plugin was found that could support your request"
 msgstr "No plugin was found that could support your request"
 
+#, python-brace-format
 msgid "No secret found with secret-ID {id}"
 msgstr "No secret found with secret-ID {id}"
 
@@ -685,9 +732,11 @@ msgstr ""
 msgid "No token was found in slot %(slot_id)s"
 msgstr "No token was found in slot %(slot_id)s"
 
+#, python-brace-format
 msgid "No {entity_name} found with keystone-ID {id}"
 msgstr "No {entity_name} found with keystone-ID {id}"
 
+#, python-brace-format
 msgid "No {entity} found with ID {id}"
 msgstr "No {entity} found with ID {id}"
 
@@ -744,6 +793,7 @@ msgstr "Number of secrets allowed per project"
 msgid "Only 'generic' containers can be modified."
 msgstr "Only 'generic' containers can be modified."
 
+#, python-brace-format
 msgid "Only PENDING orders can be updated. Order is in the{0} state."
 msgstr "Only PENDING orders can be updated. Order is in the{0} state."
 
@@ -771,6 +821,7 @@ msgstr "Order not found."
 msgid "Order retrieval"
 msgstr "Order retrieval"
 
+#, python-brace-format
 msgid "Order type \"{order_type}\" not implemented."
 msgstr "Order type \"{order_type}\" not implemented."
 
@@ -845,6 +896,7 @@ msgstr "Port for the Dogtag instance"
 msgid "Port for the KMIP server"
 msgstr "Port for the KMIP server"
 
+#, python-brace-format
 msgid ""
 "Preferred Secret Store plugin '{store_name}' is not currently set in service "
 "configuration. This is probably a server misconfiguration."
@@ -855,6 +907,7 @@ msgstr ""
 msgid "Problem decoding payload"
 msgstr "Problem decoding payload"
 
+#, python-brace-format
 msgid "Problem seen during crypto processing - Reason: {reason}"
 msgstr "Problem seen during crypto processing - Reason: {reason}"
 
@@ -892,6 +945,7 @@ msgstr "Provided field value is not supported"
 msgid "Provided information too large to process"
 msgstr "Provided information too large to process"
 
+#, python-brace-format
 msgid ""
 "Provided object does not match schema '{schema}': {reason}. Invalid "
 "property: '{property}'"
@@ -952,15 +1006,19 @@ msgstr "Seconds (float) to wait before starting retry scheduler"
 msgid "Seconds (float) to wait between periodic schedule events"
 msgstr "Seconds (float) to wait between periodic schedule events"
 
+#, python-brace-format
 msgid "Secret '{secret_name}' with reference '{secret_ref}' doesn't exist."
 msgstr "Secret '{secret_name}' with reference '{secret_ref}' doesn't exist."
 
+#, python-brace-format
 msgid "Secret Accept of '{accept}' not supported"
 msgstr "Secret Accept of '{accept}' not supported"
 
+#, python-brace-format
 msgid "Secret Content-Encoding of '{content_encoding}' not supported"
 msgstr "Secret Content-Encoding of '{content_encoding}' not supported"
 
+#, python-brace-format
 msgid ""
 "Secret Store plugin '{store_name}' is still in use and can not be removed. "
 "Its missing in service configuration. This is probably a server "
@@ -970,6 +1028,7 @@ msgstr ""
 "Its missing in service configuration. This is probably a server "
 "misconfiguration."
 
+#, python-brace-format
 msgid "Secret algorithm of '{algorithm}' not supported"
 msgstr "Secret algorithm of '{algorithm}' not supported"
 
@@ -1015,6 +1074,7 @@ msgstr "Secret metadatum update"
 msgid "Secret not found."
 msgstr "Secret not found."
 
+#, python-brace-format
 msgid "Secret object type {object_type} is not supported"
 msgstr "Secret object type {object_type} is not supported"
 
@@ -1024,6 +1084,7 @@ msgstr "Secret payload retrieval"
 msgid "Secret provided doesn't exist."
 msgstr "Secret provided doesn't exist."
 
+#, python-brace-format
 msgid "Secret provided for '{secret_name}' doesn't exist."
 msgstr "Secret provided for '{secret_name}' doesn't exist."
 
@@ -1033,6 +1094,7 @@ msgstr "Secret provided is not in the container"
 msgid "Secret retrieval"
 msgstr "Secret retrieval"
 
+#, python-brace-format
 msgid "Secret store plugin \"{name}\" not found."
 msgstr "Secret store plugin \"{name}\" not found."
 
@@ -1084,6 +1146,7 @@ msgstr "Secret_ref does not match the configured hostname, please try again"
 msgid "Secrets container not found."
 msgstr "Secrets container not found."
 
+#, python-brace-format
 msgid ""
 "Secrets of type {secret_type} should not have a passphrase in the database, "
 "for being used during retrieval."
@@ -1104,6 +1167,10 @@ msgstr ""
 "Show SQLAlchemy pool-related debugging output in logs (sets DEBUG log level "
 "output) if specified."
 
+msgid "SimpleCrypto KEK is undefined"
+msgstr "SimpleCrypto KEK is undefined"
+
+#, python-brace-format
 msgid "Status: {status}, Reason: {reason}, Message: {message}"
 msgstr "Status: {status}, Reason: {reason}, Message: {message}"
 
@@ -1150,6 +1217,7 @@ msgstr ""
 "The request returned a 413 Request Entity Too Large. This generally means "
 "that rate limiting or a quota threshold was breached."
 
+#, python-brace-format
 msgid ""
 "The requested Store Plugin {plugin_name} is not currently available. This is "
 "probably a server misconfiguration."
@@ -1160,6 +1228,7 @@ msgstr ""
 msgid "The version you requested wasn't found"
 msgstr "The version you requested wasn't found"
 
+#, python-brace-format
 msgid ""
 "There are {count} plugins with global default as True in service "
 "configuration. Only one plugin can have this as True"
@@ -1224,9 +1293,11 @@ msgstr "URI provided invalid query string parameters."
 msgid "Unable to decode request data."
 msgstr "Unable to decode request data."
 
+#, python-brace-format
 msgid "Unencrypted data must be a byte type, but was {unencrypted_type}"
 msgstr "Unencrypted data must be a byte type, but was {unencrypted_type}"
 
+#, python-brace-format
 msgid "Unexpected content type. Expected content types are: {expected}"
 msgstr "Unexpected content type. Expected content types are: {expected}"
 
@@ -1264,9 +1335,11 @@ msgstr "Version retrieval"
 msgid "Wrong payload content-type"
 msgstr "Wrong payload content-type"
 
+#, python-brace-format
 msgid "content-encoding of '{content_encoding}' not supported"
 msgstr "content-encoding of '{content_encoding}' not supported"
 
+#, python-brace-format
 msgid "content-type of '{content_type}' not supported"
 msgstr "content-type of '{content_type}' not supported"
 
@@ -1299,9 +1372,11 @@ msgstr ""
 msgid "payload must be provided when payload_content_type is specified"
 msgstr "payload must be provided when payload_content_type is specified"
 
+#, python-brace-format
 msgid "payload_content_encoding is not one of {supported}"
 msgstr "payload_content_encoding is not one of {supported}"
 
+#, python-brace-format
 msgid "payload_content_type is not one of {supported}"
 msgstr "payload_content_type is not one of {supported}"
 
@@ -1311,9 +1386,11 @@ msgstr "pem_path is required"
 msgid "plugin_name must be provided"
 msgstr "plugin_name must be provided"
 
+#, python-brace-format
 msgid "retrieve a secret from plugin: {plugin}"
 msgstr "retrieve a secret from plugin: {plugin}"
 
+#, python-brace-format
 msgid ""
 "store or generate a secret of type {secret_type} with algorithm {algorithm}, "
 "bit length {bit_length}, and mode {mode}"
@@ -1324,22 +1401,28 @@ msgstr ""
 msgid "transport_key must be provided"
 msgstr "transport_key must be provided"
 
+#, python-brace-format
 msgid "{entity_name} is missing query build method for get project entities."
 msgstr "{entity_name} is missing query build method for get project entities."
 
+#, python-brace-format
 msgid "{entity_name} status is required."
 msgstr "{entity_name} status is required."
 
+#, python-brace-format
 msgid ""
 "{operation} attempt not allowed - please review your user/project privileges"
 msgstr ""
 "{operation} attempt not allowed - please review your user/project privileges"
 
+#, python-brace-format
 msgid "{operation} failure seen - please contact site administrator."
 msgstr "{operation} failure seen - please contact site administrator."
 
+#, python-brace-format
 msgid "{operation} issue seen - {reason}."
 msgstr "{operation} issue seen - {reason}."
 
+#, python-brace-format
 msgid "{schema_name}' within '{parent_schema_name}"
 msgstr "{schema_name}' within '{parent_schema_name}"
