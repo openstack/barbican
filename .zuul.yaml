@@ -128,10 +128,8 @@
     check:
       jobs:
         - barbican-tox-functional
-        - barbican-vault-tox-functional:
-            voting: false
-        - barbican-openbao-tox-functional:
-            voting: false
+        - barbican-vault-tox-functional
+        - barbican-openbao-tox-functional
         - barbican-grenade:
             voting: false
         - barbican-tempest-plugin-simple-crypto
