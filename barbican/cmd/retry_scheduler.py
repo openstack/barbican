@@ -20,13 +20,15 @@ Server startup application for barbican-retry-scheduler
 """
 import sys
 
+from oslo_log import log
+from oslo_reports import guru_meditation_report as gmr
+from oslo_reports import opts as gmr_opts
+from oslo_service import service
+
 from barbican.common import config
 from barbican import queue
 from barbican.queue import retry_scheduler
 from barbican import version
-
-from oslo_log import log
-from oslo_service import service
 
 
 def main():
@@ -39,6 +41,9 @@ def main():
         log.setup(CONF, 'barbican-retry-scheduler')
         LOG = log.getLogger(__name__)
         LOG.debug("Booting up Barbican worker retry/scheduler node...")
+
+        gmr_opts.set_defaults(CONF)
+        gmr.TextGuruMeditation.setup_autorun(version)
 
         # Queuing initialization (as a client only).
         queue.init(CONF, is_server_side=False)
