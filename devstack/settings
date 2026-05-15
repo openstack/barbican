@@ -44,4 +44,7 @@ GITDIR["barbican-tempest-plugin"]=$DEST/barbican-tempest-plugin
 # Secure RBAC
 BARBICAN_ENFORCE_SCOPE=$(trueorfalse True ENFORCE_SCOPE)
 
+# Vault plugin
+VAULT_PLUGIN_BACKEND=${VAULT_PLUGIN_BACKEND:-}
+
 enable_service barbican

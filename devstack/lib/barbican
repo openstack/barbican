@@ -66,6 +66,21 @@ function is_barbican-keystone-listener_enabled {
 #    return 1
 #}
 
+# _is_vault_backend_openbao - Is the Vault backend configured to be OpenBao
+function _is_vault_backend_openbao {
+    [[ "$VAULT_PLUGIN_BACKEND" == "openbao" ]]
+}
+
+# _get_vault_command - Figure out what vault command to use based
+# on the configured Vault backend
+function _get_vault_command {
+    if _is_vault_backend_openbao; then
+        echo "bao"
+    else
+        echo "vault"
+    fi
+}
+
 # cleanup_barbican - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
 function cleanup_barbican {
@@ -78,7 +93,8 @@ function cleanup_barbican {
         if [[ -n "${existing_ses}" ]]; then
             screen -S ${existing_ses} -X quit
         fi
-        sudo pkill -f -9 "vault server"
+        VAULT_COMMAND=$(_get_vault_command)
+        sudo pkill -f -9 "${VAULT_COMMAND} server"
         sudo rm -f ${vault_token_file} vault.log
     fi
 }
@@ -539,13 +555,41 @@ function install_dogtag_components {
 # Vault functions
 # ----------------
 
-function install_vault {
-    # Install vault if needed
+HASHICORP_VAULT_VERSION=1.13.2
+OPENBAO_VERSION=2.3.2
+
+function _install_hashicorp_vault {
     if [[ ! -x "$(command -v vault)" ]]; then
-        wget https://releases.hashicorp.com/vault/1.13.2/vault_1.13.2_linux_amd64.zip
-        unzip vault_1.13.2_linux_amd64.zip
+        echo "Installing Hashicorp Vault ${HASHICORP_VAULT_VERSION}"
+        wget https://releases.hashicorp.com/vault/${HASHICORP_VAULT_VERSION}/vault_${HASHICORP_VAULT_VERSION}_linux_amd64.zip
+        unzip vault_${HASHICORP_VAULT_VERSION}_linux_amd64.zip
         sudo mv vault /usr/bin
+    else
+        echo "Hashicorp Vault already installed:"
+        vault version
     fi
+}
+
+function _install_openbao {
+    if [[ ! -x "$(command -v bao)" ]]; then
+        echo "Installing OpenBao v${OPENBAO_VERSION}"
+        wget https://github.com/openbao/openbao/releases/download/v${OPENBAO_VERSION}/bao_${OPENBAO_VERSION}_Linux_x86_64.tar.gz
+        tar xf bao_${OPENBAO_VERSION}_Linux_x86_64.tar.gz
+        sudo mv bao /usr/bin
+    else
+        echo "OpenBao already installed:"
+        bao version
+    fi
+}
+
+function install_vault_backend {
+    if _is_vault_backend_openbao; then
+        _install_openbao
+    else
+        _install_hashicorp_vault
+    fi
+
+    VAULT_COMMAND=$(_get_vault_command)
 
     install_package screen
     TOKEN_ID_FILE="${BARBICAN_DIR}/vault_root_token_id"
@@ -559,7 +603,7 @@ function install_vault {
     rm -f ${TOKEN_ID_FILE} vault.log
 
     screen -dmS ${session_name}
-    screen -S ${session_name} -p bash -X stuff 'vault server -dev 2>&1 >vault.log\n'
+    screen -S ${session_name} -p bash -X stuff "$VAULT_COMMAND server -dev 2>&1 >vault.log\n"
 
     # get the root_token_id, use tempfile for counter
     touch $TOKEN_ID_FILE
@@ -579,15 +623,14 @@ function install_vault {
     export VAULT_ADDR="http://127.0.0.1:8200"
 
     # Enable kv version 1
-    vault secrets disable secret/
-    vault secrets enable -version=1 -path=secret -description "kv version 1" kv
+    $VAULT_COMMAND secrets disable secret/
+    $VAULT_COMMAND secrets enable -version=1 -path=secret -description "kv version 1" kv
 
     #debug code follows:
-    vault status
-    vault kv put secret/hello foo=world
-    vault kv get secret/hello
-    vault kv delete secret/hello
-
+    $VAULT_COMMAND status
+    $VAULT_COMMAND kv put secret/hello foo=world
+    $VAULT_COMMAND kv get secret/hello
+    $VAULT_COMMAND kv delete secret/hello
 }
 
 function configure_vault_plugin {

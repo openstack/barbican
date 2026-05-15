@@ -35,10 +35,23 @@
     name: barbican-vault-tox-functional
     parent: barbican-tox-functional
     description: |
-      Functional testing for Hashicorp Vault backend
+      Functional testing for Vault plugin using Hashicorp Vault backend
     vars:
       devstack_services:
         barbican-vault: true
+      tox_environment:
+        VAULT_PLUGIN_ENABLED: 1
+
+- job:
+    name: barbican-openbao-tox-functional
+    parent: barbican-tox-functional
+    description: |
+      Functional testing for Vault plugin using OpenBao backend
+    vars:
+      devstack_services:
+        barbican-vault: true
+      devstack_localrc:
+        VAULT_PLUGIN_BACKEND: openbao
       tox_environment:
         VAULT_PLUGIN_ENABLED: 1
 
@@ -113,6 +126,8 @@
       jobs:
         - barbican-tox-functional
         - barbican-vault-tox-functional:
+            voting: false
+        - barbican-openbao-tox-functional:
             voting: false
         - barbican-grenade:
             voting: false
