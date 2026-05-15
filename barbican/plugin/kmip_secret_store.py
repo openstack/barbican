@@ -32,6 +32,7 @@ from kmip.pie import objects
 
 from oslo_config import cfg
 from oslo_log import log
+from oslo_utils import uuidutils
 
 from barbican.common import config
 from barbican.common import exception
@@ -467,6 +468,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :param secret_dto: SecretDTO of secret to be stored
         :returns: KMIP object
         """
+        name = uuidutils.generate_uuid()
         secret_type = secret_dto.type
         key_spec = secret_dto.key_spec
         object_type, key_format_type = (
@@ -476,31 +478,33 @@ class KMIPSecretStore(ss.SecretStoreBase):
                                                    secret_type)
         kmip_object = None
         if object_type == enums.ObjectType.CERTIFICATE:
-            kmip_object = objects.X509Certificate(normalized_secret)
+            kmip_object = objects.X509Certificate(normalized_secret,
+                                                  name=name)
         elif object_type == enums.ObjectType.OPAQUE_DATA:
             opaque_type = enums.OpaqueDataType.NONE
             kmip_object = objects.OpaqueObject(normalized_secret,
-                                               opaque_type)
+                                               opaque_type, name=name)
         elif object_type == enums.ObjectType.PRIVATE_KEY:
             algorithm = self._get_kmip_algorithm(key_spec.alg)
             length = key_spec.bit_length
             format_type = enums.KeyFormatType.PKCS_8
             kmip_object = objects.PrivateKey(
-                algorithm, length, normalized_secret, format_type)
+                algorithm, length, normalized_secret, format_type, name=name)
         elif object_type == enums.ObjectType.PUBLIC_KEY:
             algorithm = self._get_kmip_algorithm(key_spec.alg)
             length = key_spec.bit_length
             format_type = enums.KeyFormatType.X_509
             kmip_object = objects.PublicKey(
-                algorithm, length, normalized_secret, format_type)
+                algorithm, length, normalized_secret, format_type, name=name)
         elif object_type == enums.ObjectType.SYMMETRIC_KEY:
             algorithm = self._get_kmip_algorithm(key_spec.alg)
             length = key_spec.bit_length
             kmip_object = objects.SymmetricKey(algorithm, length,
-                                               normalized_secret)
+                                               normalized_secret, name=name)
         elif object_type == enums.ObjectType.SECRET_DATA:
             data_type = enums.SecretDataType.PASSWORD
-            kmip_object = objects.SecretData(normalized_secret, data_type)
+            kmip_object = objects.SecretData(normalized_secret, data_type,
+                                             name=name)
 
         return kmip_object
 
