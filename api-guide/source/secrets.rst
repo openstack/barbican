@@ -140,6 +140,11 @@ How to Delete a Secret
 To delete a secret we will need to know the secret reference provided via
 the initial creation (See :ref:`How to Create a Secret <create_secret>`.)
 
+Starting with microversion 1.2 deleting a secret that has secret consumers
+registered will result in 400 Bad Request and the secret consumers must be
+deleted before deleting the secret. This can be overridden by passing the
+``force`` query parameter in the URL.
+
 .. code-block:: bash
 
     curl -X DELETE -H "X-Auth-Token: $TOKEN" \

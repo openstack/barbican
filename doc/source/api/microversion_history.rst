@@ -28,3 +28,9 @@ Added Secret Consumers to Secrets.
 
 When requesting Secrets (individual Secret or a list), the results contain an
 additional ``consumers`` key, which contains references to Secret Consumers.
+
+1.2 (Maximum in Hibiscus)
+---
+
+Deleting a secret that has consumers is rejected in the
+API unless the ``force`` query parameter is sent.

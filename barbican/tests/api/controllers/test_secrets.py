@@ -662,6 +662,111 @@ class WhenGettingPuttingOrDeletingSecret(utils.BarbicanAPIBaseTestCase):
 
         self.assertEqual(204, delete_resp.status_int)
 
+    def test_delete_secret_with_consumers_version_1_1(self):
+        utils.set_version(self.app, '1.1')
+        resp, secret_uuid = create_secret(self.app)
+        self.assertEqual(201, resp.status_int)
+
+        consumer_dict = {
+            'service': 'service_a',
+            'resource_type': 'resource_type_a',
+            'resource_id': 'resource_id_a'}
+        consumer_resp, consumer = create_secret_consumer(
+            self.app,
+            secret_id=secret_uuid,
+            service=consumer_dict["service"],
+            resource_type=consumer_dict["resource_type"],
+            resource_id=consumer_dict["resource_id"],
+        )
+        self.assertEqual(200, consumer_resp.status_int)
+        self.assertEqual([consumer_dict], consumer)
+
+        # Pass an invalid force parameter to make sure it's
+        # ignored when not using microversion 1.2
+        params = {'force': 'abc'}
+        delete_resp = self.app.delete(
+            '/secrets/{0}/'.format(secret_uuid), params
+        )
+        self.assertEqual(204, delete_resp.status_int)
+
+    def _test_delete_secret_with_consumers_version_1_2(self, force=False):
+        utils.set_version(self.app, '1.2')
+        resp, secret_uuid = create_secret(self.app)
+        self.assertEqual(201, resp.status_int)
+
+        consumer_dict = {
+            'service': 'service_a',
+            'resource_type': 'resource_type_a',
+            'resource_id': 'resource_id_a'}
+        consumer_resp, consumer = create_secret_consumer(
+            self.app,
+            secret_id=secret_uuid,
+            service=consumer_dict["service"],
+            resource_type=consumer_dict["resource_type"],
+            resource_id=consumer_dict["resource_id"],
+        )
+        self.assertEqual(200, consumer_resp.status_int)
+        self.assertEqual([consumer_dict], consumer)
+
+        if force:
+            # Test with invalid force value
+            params = {'force': 'abc'}
+            delete_resp = self.app.delete(
+                '/secrets/{0}/'.format(secret_uuid), params,
+                expect_errors=True
+            )
+            self.assertIn(
+                'URI provided invalid query string parameters',
+                delete_resp.text)
+            self.assertEqual(400, delete_resp.status_int)
+
+            # Test with valid truthy force value
+            params = {'force': 1}
+            delete_resp = self.app.delete(
+                '/secrets/{0}/'.format(secret_uuid), params
+            )
+            self.assertEqual(204, delete_resp.status_int)
+        else:
+            # Test with value falsy force value
+            params = {'force': False}
+            delete_resp = self.app.delete(
+                '/secrets/{0}/'.format(secret_uuid), params,
+                expect_errors=True
+            )
+            self.assertIn(
+                'Secret cannot be deleted as it has consumers',
+                delete_resp.text)
+            self.assertEqual(400, delete_resp.status_int)
+
+            # Test without force
+            delete_resp = self.app.delete(
+                '/secrets/{0}/'.format(secret_uuid),
+                expect_errors=True
+            )
+            self.assertIn(
+                'Secret cannot be deleted as it has consumers',
+                delete_resp.text)
+            self.assertEqual(400, delete_resp.status_int)
+
+            # Delete consumer
+            consumer_del_resp = self.app.delete_json(
+                '/secrets/{secret_id}/consumers/'.format(
+                    secret_id=secret_uuid
+                ), consumer_dict, headers={'Content-Type': 'application/json'})
+            self.assertEqual(200, consumer_del_resp.status_int)
+
+            # Deleting without force should work
+            delete_resp = self.app.delete(
+                '/secrets/{0}/'.format(secret_uuid)
+            )
+            self.assertEqual(204, delete_resp.status_int)
+
+    def test_delete_secret_with_consumers_version_1_2(self):
+        self._test_delete_secret_with_consumers_version_1_2()
+
+    def test_delete_secret_with_consumers_version_1_2_force(self):
+        self._test_delete_secret_with_consumers_version_1_2(force=True)
+
     def test_raise_404_for_delete_secret_not_found(self):
         delete_resp = self.app.delete(
             '/secrets/98c876d9-aaac-44e4-8ea8-441932962b05',
@@ -871,3 +976,27 @@ def create_secret(app, name=None, algorithm=None, bit_length=None, mode=None,
         _, created_uuid = os.path.split(secret_ref)
 
     return resp, created_uuid
+
+
+def create_secret_consumer(app, secret_id=None, service=None,
+                           resource_type=None, resource_id=None,
+                           expect_errors=False, headers=None):
+    request = {
+        "service": service,
+        "resource_type": resource_type,
+        "resource_id": resource_id,
+    }
+    request = {k: v for k, v in request.items() if v is not None}
+
+    resp = app.post_json(
+        "/secrets/{}/consumers/".format(secret_id),
+        request,
+        expect_errors=expect_errors,
+        headers=headers
+    )
+
+    consumers = None
+    if resp.status_int == 200:
+        consumers = resp.json.get('consumers', '')
+
+    return resp, consumers
