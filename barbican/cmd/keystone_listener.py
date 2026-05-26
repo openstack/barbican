@@ -22,8 +22,6 @@ import sys
 from oslo_log import log
 from oslo_reports import guru_meditation_report as gmr
 from oslo_reports import opts as gmr_opts
-from oslo_service.backend import BackendType
-from oslo_service.backend import init_backend
 from oslo_service import service
 
 from barbican.common import config
@@ -35,9 +33,6 @@ from barbican import version
 def main():
     try:
         config.setup_remote_pydev_debug()
-
-        # Ensure oslo.service uses the threading backend early
-        init_backend(BackendType.THREADING)
 
         CONF = config.CONF
         CONF(sys.argv[1:], project='barbican',
