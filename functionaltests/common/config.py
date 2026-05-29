@@ -78,7 +78,7 @@ def setup_config(config_file=''):
         cfg.StrOpt('override_url', default=''),
         cfg.StrOpt('override_url_version', default=''),
         cfg.BoolOpt('verify_ssl', default=True),
-        cfg.BoolOpt('server_host_href_set', default=True),
+        cfg.BoolOpt('server_host_href_set', default=False),
         cfg.BoolOpt('server_multiple_backends_enabled', default=False)
     ]
     TEST_CONF.register_group(keymanager_group)

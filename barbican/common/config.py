@@ -21,6 +21,7 @@ import logging
 import os
 
 from oslo_config import cfg
+from oslo_config import types
 from oslo_db import options as db_options
 from oslo_log import log
 from oslo_middleware import cors
@@ -29,6 +30,8 @@ from oslo_service.backend import register_backend_default_hook
 
 from barbican import i18n as u
 import barbican.version
+
+LOG = logging.getLogger(__name__)
 
 MAX_BYTES_REQUEST_INPUT_ACCEPTED = 25000
 DEFAULT_MAX_SECRET_BYTES = 20000
@@ -54,15 +57,23 @@ common_opts = [
                help=u._("Maximum allowed secret size in bytes.")),
 ]
 
+
+class OptionalURI(types.URI):
+    def __call__(self, value):
+        if value == '':
+            LOG.warning('Using an empty string is deprecated. '
+                        'Unset the option instead')
+            return None
+        return super(OptionalURI, self).__call__(value)
+
+
 host_opts = [
-    cfg.StrOpt('host_href', default='http://localhost:9311',
-               help=u._("Host name, for use in HATEOAS-style references Note: "
-                        "Typically this would be the load balanced endpoint "
-                        "that clients would use to communicate back with this "
-                        "service. If a deployment wants to derive host from "
-                        "wsgi request instead then make this blank. Blank is "
-                        "needed to override default config value which is "
-                        "'http://localhost:9311'")),
+    # TODO(tkajinam): Replace this by URIOpt after 2027.1 release
+    cfg.Opt('host_href',
+            type=OptionalURI(schemes=['http', 'https']),
+            sample_default='http://localhost:9311',
+            help=u._("Host name, for use in HATEOAS-style references. "
+                     "When unset the endpoint is derived from wsgi request."))
 ]
 
 db_opts = [
@@ -323,7 +334,6 @@ def set_middleware_defaults():
 
 
 CONF = new_config()
-LOG = logging.getLogger(__name__)
 parse_args(CONF)
 
 # Register default backend hook to prefer threading if not initialized

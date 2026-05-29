@@ -1,0 +1,10 @@
+---
+upgrade:
+  - |
+    The ``[DEFAULT] host_href`` option now defaults to None, which makes
+    barbican-api to detect the base url according to the WSGI environments.
+
+deprecations:
+  - |
+    Using an empty string for the ``[DEFAULT] host_href`` option is deprecated.
+    Unset the option instead.
