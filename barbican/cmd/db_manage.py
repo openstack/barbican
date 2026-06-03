@@ -127,6 +127,13 @@ class DatabaseManager(object):
                                    help='Set log file location. '
                                         'Default value for log_file can be '
                                         'found in barbican.conf')
+        create_parser.add_argument(
+            '--batch-size', '-b',
+            type=int,
+            default=clean.DEFAULT_CLEANUP_BATCH_SIZE,
+            help='Number of rows to delete per committed batch. '
+                 'Reduce this value on memory-constrained databases. '
+                 'Default is %(default)s.')
         create_parser.set_defaults(func=self.clean)
 
     def revision(self, args):
@@ -153,7 +160,8 @@ class DatabaseManager(object):
             do_clean_unassociated_projects=args.clean_unassociated_projects,
             do_soft_delete_expired_secrets=args.soft_delete_expired_secrets,
             verbose=args.verbose,
-            log_file=args.log_file)
+            log_file=args.log_file,
+            batch_size=args.batch_size)
 
     def execute(self):
         """Parse the command line arguments."""

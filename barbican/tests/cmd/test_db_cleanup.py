@@ -435,3 +435,186 @@ class WhenTestingDBCleanUpCommand(utils.RepositoryTestCase):
         secret_metadatum.deleted = False
 
         self.assertRaises(db_exc.DBReferenceError, clean.cleanup_all)
+
+    # ------------------------------------------------------------------
+    # Tests for batched cleanup behaviour
+    # ------------------------------------------------------------------
+
+    def test_cleanup_softdeletes_runs_multiple_batches(self):
+        """Process more rows than batch_size, committing per batch.
+
+        Verifies that cleanup_softdeletes re-queries for each batch and
+        commits between batches rather than deleting in a single shot.
+        """
+        # 5 soft-deleted transport keys, batch_size=2 -> expect >=3 batches.
+        keys = [_setup_entry('transport_key') for _ in range(5)]
+        for k in keys:
+            k.delete()
+
+        with mock.patch('barbican.model.clean.repo.commit',
+                        wraps=repos.commit) as mock_commit:
+            total = clean.cleanup_softdeletes(models.TransportKey,
+                                              batch_size=2)
+
+        self.assertEqual(5, total)
+        # ceil(5/2) = 3 successful batches, plus the loop exits without
+        # calling commit() for the empty trailing query -> exactly 3.
+        self.assertEqual(3, mock_commit.call_count)
+        for k in keys:
+            self.assertFalse(_entry_exists(k))
+
+    def test_cleanup_softdeletes_returns_zero_when_nothing_to_do(self):
+        """cleanup_softdeletes is a safe no-op when nothing matches."""
+        with mock.patch('barbican.model.clean.repo.commit',
+                        wraps=repos.commit) as mock_commit:
+            total = clean.cleanup_softdeletes(models.TransportKey,
+                                              batch_size=10)
+        self.assertEqual(0, total)
+        self.assertEqual(0, mock_commit.call_count)
+
+    @_create_project("batch parent no child project")
+    def test_cleanup_parent_with_no_child_runs_multiple_batches(self, project):
+        """Verify cleanup_parent_with_no_child batches its DELETE."""
+        # 5 soft-deleted secrets with no order child.
+        secrets = [_setup_entry('secret', project=project) for _ in range(5)]
+        for s in secrets:
+            s.delete()
+
+        with mock.patch('barbican.model.clean.repo.commit',
+                        wraps=repos.commit) as mock_commit:
+            total = clean.cleanup_parent_with_no_child(
+                models.Secret, models.Order, batch_size=2)
+
+        self.assertEqual(5, total)
+        self.assertEqual(3, mock_commit.call_count)
+        for s in secrets:
+            self.assertFalse(_entry_exists(s))
+
+    def test_cleanup_softdeletes_partial_progress_is_durable(self):
+        """Verify partial progress is durable on mid-loop failure.
+
+        If an exception strikes mid-loop, batches already committed
+        before the failure remain deleted -- they are NOT rolled back.
+        """
+        keys = [_setup_entry('transport_key') for _ in range(5)]
+        for k in keys:
+            k.delete()
+        ids = [k.id for k in keys]
+
+        # Make the third commit raise. The first two batches (4 rows) must
+        # remain durably deleted.
+        original_commit = repos.commit
+        call_state = {'n': 0}
+
+        def flaky_commit():
+            call_state['n'] += 1
+            if call_state['n'] == 3:
+                raise RuntimeError("boom")
+            original_commit()
+
+        with mock.patch('barbican.model.clean.repo.commit',
+                        side_effect=flaky_commit):
+            self.assertRaises(RuntimeError,
+                              clean.cleanup_softdeletes,
+                              models.TransportKey, batch_size=2)
+
+        # The in-flight (uncommitted) DELETE of the failing batch is still
+        # visible to subsequent queries on the same session. Roll it back
+        # so the count below reflects only what is durably persisted.
+        repos.rollback()
+
+        # 2 batches × 2 rows = 4 rows must be gone, 1 row remains.
+        session = repos.get_session()
+        remaining = session.query(models.TransportKey).filter(
+            models.TransportKey.id.in_(ids)).count()
+        self.assertEqual(1, remaining)
+
+    def test_hard_delete_acls_for_soft_deleted_secrets_batches(self):
+        """The ACL hard-delete path must batch its DELETEs.
+
+        Creates 4 soft-deleted secrets each with one SecretACL and two
+        SecretACLUser children. With batch_size=2 we expect:
+          - SecretACLUser: 8 rows -> ceil(8/2) = 4 batches
+          - SecretACL:    4 rows -> ceil(4/2) = 2 batches
+          - total commits: 6, total rows deleted: 12
+
+        Note: this test inlines its own project setup rather than using the
+        @_create_project decorator because the ACL cleanup path calls
+        ``session.expunge_all()`` which would detach the decorator's
+        project fixture and break its post-test cleanup.
+        """
+        project = _setup_entry('project', external_id="acl batch project")
+        session = repos.get_session()
+        for i in range(4):
+            secret = _setup_entry('secret', project=project)
+            acl = models.SecretACL(secret.id, "read")
+            acl.secret_id = secret.id
+            session.add(acl)
+            session.flush()
+            for u in ("alice-%d" % i, "bob-%d" % i):
+                acl_user = models.SecretACLUser(acl.id, u)
+                session.add(acl_user)
+            secret.deleted = True
+        repos.commit()
+
+        with mock.patch('barbican.model.clean.repo.commit',
+                        wraps=repos.commit) as mock_commit:
+            acl_total = clean._hard_delete_acls_for_soft_deleted_secrets(
+                batch_size=2)
+
+        self.assertEqual(12, acl_total)
+        self.assertEqual(6, mock_commit.call_count)
+
+    def test_cleanup_unassociated_projects_runs_multiple_batches(self):
+        """cleanup_unassociated_projects must batch its DELETEs.
+
+        Creates 5 projects with no child resources and cleans them up
+        with batch_size=2. Expects ceil(5/2)=3 committed batches.
+        """
+        projects = [
+            _setup_entry('project', external_id="orphan-proj-%d" % i)
+            for i in range(5)
+        ]
+        repos.commit()
+        # Save IDs before expunge_all() detaches the objects.
+        project_ids = [p.id for p in projects]
+
+        with mock.patch('barbican.model.clean.repo.commit',
+                        wraps=repos.commit) as mock_commit:
+            total = clean.cleanup_unassociated_projects(batch_size=2)
+
+        self.assertEqual(5, total)
+        self.assertEqual(3, mock_commit.call_count)
+        session = repos.get_session()
+        for pid in project_ids:
+            count = session.query(models.Project).filter(
+                models.Project.id == pid).count()
+            self.assertEqual(0, count)
+
+    def test_batch_size_plumbed_through_clean_command(self):
+        """batch_size passed to cleanup_all must reach cleanup helpers.
+
+        Uses a small batch_size and verifies that the number of commits
+        is consistent with batching (more than one commit for > batch_size
+        rows), proving the value was not silently dropped.
+        """
+        keys = [_setup_entry('transport_key') for _ in range(5)]
+        for k in keys:
+            k.delete()
+        key_ids = [k.id for k in keys]
+        repos.commit()
+
+        with mock.patch('barbican.model.clean.repo.commit',
+                        wraps=repos.commit) as mock_commit:
+            # Call cleanup_all directly with a small batch_size to verify
+            # plumbing (clean_command sets up DB engine which is already done
+            # in the test environment).
+            clean.cleanup_all(batch_size=2)
+
+        # At least 3 commits for the 5 transport keys alone (ceil(5/2)=3).
+        self.assertGreaterEqual(mock_commit.call_count, 3)
+        session = repos.get_session()
+        for kid in key_ids:
+            count = session.query(models.TransportKey).filter(
+                models.TransportKey.id == kid).count()
+            self.assertEqual(0, count)
