@@ -153,16 +153,10 @@ function configure_barbican {
     # Enable DEBUG
     iniset $BARBICAN_CONF DEFAULT debug $ENABLE_DEBUG_LOG_LEVEL
 
-    # Set the log file location
-    iniset $BARBICAN_CONF DEFAULT log_file "$BARBICAN_API_LOG_DIR/barbican.log"
+    # Set up logging
+    iniset $BARBICAN_CONF DEFAULT use_syslog $SYSLOG
 
-    # Enable logging to stderr to have log also in the screen window
-    iniset $BARBICAN_CONF DEFAULT use_stderr True
-
-    # Format logging
-    if [ "$LOG_COLOR" == "True" ] && [ "$SYSLOG" == "False" ]; then
-        setup_colorized_logging $BARBICAN_CONF DEFAULT project user
-    fi
+    setup_logging $BARBICAN_CONF
 
     # Set the database connection url
     iniset $BARBICAN_CONF database connection `database_connection_url barbican`
