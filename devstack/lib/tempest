@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 function configure_barbican_tempest() {
 
     iniset $TEMPEST_CONFIG service_available barbican True
