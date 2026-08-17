@@ -238,7 +238,7 @@ class WhenTestingVersionsResource(BaseTestCase):
     def test_should_pass_get_versions(self):
         # Can't use base method that short circuits post-RBAC processing here,
         # as version GET is trivial
-        for role in ['admin', 'observer', 'creator', 'audit']:
+        for role in ['admin', 'member', 'reader']:
             self.req = self._generate_req(roles=[role] if role else [])
             self._invoke_on_get()
 
@@ -251,8 +251,7 @@ class WhenTestingVersionsResource(BaseTestCase):
         self._invoke_on_get()
 
     def test_should_pass_get_versions_multiple_roles(self):
-        self.req = self._generate_req(roles=['admin', 'observer', 'creator',
-                                             'audit'])
+        self.req = self._generate_req(roles=['admin', 'member', 'reader'])
         self._invoke_on_get()
 
     def _invoke_on_get(self):
@@ -292,7 +291,7 @@ class WhenTestingSecretsResource(BaseTestCase):
                                content_type='application/json')
 
     def test_should_raise_create_secret(self):
-        self._assert_fail_rbac([None, 'audit', 'observer', 'bogus'],
+        self._assert_fail_rbac([None, 'reader', 'bogus'],
                                self._invoke_on_post,
                                content_type='application/json')
 
@@ -302,7 +301,7 @@ class WhenTestingSecretsResource(BaseTestCase):
                                content_type='application/json')
 
     def test_should_raise_get_secrets(self):
-        self._assert_fail_rbac([None, 'audit', 'bogus'],
+        self._assert_fail_rbac([None, 'reader', 'bogus'],
                                self._invoke_on_get,
                                content_type='application/json')
 
@@ -357,7 +356,7 @@ class WhenTestingSecretResource(BaseTestCase):
         self.assertIsNotNone(self.policy_enforcer.rules)
 
     def test_should_pass_decrypt_secret(self):
-        self._assert_pass_rbac(['admin', 'observer', 'creator'],
+        self._assert_pass_rbac(['admin', 'member'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype',
                                content_type='application/json',
@@ -365,8 +364,7 @@ class WhenTestingSecretResource(BaseTestCase):
                                project_id=self.external_project_id)
 
     def test_should_raise_decrypt_secret(self):
-
-        self._assert_fail_rbac([None, 'audit', 'bogus'],
+        self._assert_fail_rbac([None, 'reader', 'bogus'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype')
 
@@ -391,7 +389,7 @@ class WhenTestingSecretResource(BaseTestCase):
                                     project_access=False,
                                     user_ids=['anyRandomUserX', 'aclUser1'])
         self.acl_list.append(acl_read)
-        self._assert_fail_rbac(['observer', 'creator', 'audit'],
+        self._assert_fail_rbac(['reader', 'bogus'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype',
                                content_type='application/json',
@@ -428,7 +426,7 @@ class WhenTestingSecretResource(BaseTestCase):
                                     project_access=False,
                                     user_ids=[])
         self.acl_list.append(acl_read)
-        self._assert_fail_rbac(['observer', 'creator', 'audit'],
+        self._assert_fail_rbac(['member', 'reader', 'bogus'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype',
                                content_type='application/json',
@@ -446,8 +444,7 @@ class WhenTestingSecretResource(BaseTestCase):
                                     project_access=False,
                                     user_ids=['anyRandomUserX', 'aclUser1'])
         self.acl_list.append(acl_read)
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
-                                'bogusRole'],
+        self._assert_pass_rbac(['admin', 'member', 'reader'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype',
                                content_type='application/json',
@@ -462,8 +459,7 @@ class WhenTestingSecretResource(BaseTestCase):
         self.acl_list.append(acl_read)
         # token project_id is different from secret's project id but another
         # user (from different project) has read acl for secret so should pass
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
-                                'bogusRole'],
+        self._assert_pass_rbac(['admin', 'member', 'reader'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype',
                                content_type='application/json',
@@ -479,7 +475,7 @@ class WhenTestingSecretResource(BaseTestCase):
         self.acl_list.append(acl_read)
         # token project_id is different from secret's project id but another
         # user (from different project) has read acl for secret so should pass
-        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_fail_rbac(['admin', 'member', 'reader', 'bogus'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype',
                                content_type='application/json',
@@ -502,8 +498,7 @@ class WhenTestingSecretResource(BaseTestCase):
         self.resource.controller.secret.creator_id = 'creatorUserX'
         # token user is creator but scoped to project different from secret
         # project so don't allow decrypt secret call to creator of that secret
-        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit',
-                                'bogusRole'],
+        self._assert_fail_rbac(['admin', 'member', 'reader', 'bogus'],
                                self._invoke_on_get,
                                accept='notjsonaccepttype',
                                content_type='application/json',
@@ -511,14 +506,14 @@ class WhenTestingSecretResource(BaseTestCase):
                                project_id='different_project_id')
 
     def test_should_pass_get_secret(self):
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['admin', 'member', 'reader'],
                                self._invoke_on_get,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
 
     def test_should_pass_get_secret_with_no_context(self):
         """In unauthenticated flow, get secret should work."""
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['admin', 'member', 'reader'],
                                self._invoke_on_get_without_context,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
@@ -529,7 +524,7 @@ class WhenTestingSecretResource(BaseTestCase):
         # token project_id is different from secret's project id so should fail
         # Note: admin role has global access in SRBAC policy (bare role:admin
         # check)
-        self._assert_fail_rbac(['observer', 'creator', 'audit'],
+        self._assert_fail_rbac(['member', 'reader', 'bogus'],
                                self._invoke_on_get,
                                user_id=self.user_id,
                                project_id='different_id')
@@ -559,7 +554,7 @@ class WhenTestingSecretResource(BaseTestCase):
                                     project_access=False,
                                     user_ids=['anyRandomUserX', 'aclUser1'])
         self.acl_list.append(acl_read)
-        self._assert_fail_rbac(['observer', 'creator', 'audit'],
+        self._assert_fail_rbac(['reader', 'bogus'],
                                self._invoke_on_get,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
@@ -591,8 +586,7 @@ class WhenTestingSecretResource(BaseTestCase):
                                     project_access=False,
                                     user_ids=['anyRandomUserX', 'aclUser1'])
         self.acl_list.append(acl_read)
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
-                                'bogusRole'],
+        self._assert_pass_rbac(['admin', 'member', 'reader'],
                                self._invoke_on_get,
                                user_id='aclUser1',
                                project_id=self.external_project_id)
@@ -610,8 +604,7 @@ class WhenTestingSecretResource(BaseTestCase):
         self.acl_list.append(acl_read)
         # token project_id is different from secret's project id but another
         # user (from different project) has read acl for secret so should pass
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
-                                'bogusRole'],
+        self._assert_pass_rbac(['admin', 'member', 'reader'],
                                self._invoke_on_get,
                                user_id='aclUser1',
                                project_id='different_project_id')
@@ -632,7 +625,7 @@ class WhenTestingSecretResource(BaseTestCase):
         # user (from different project) has read acl for secret so should pass
         # Note: admin role has global access in SRBAC policy (bare role:admin
         # check)
-        self._assert_fail_rbac(['observer', 'creator', 'audit'],
+        self._assert_fail_rbac(['member', 'reader', 'bogus'],
                                self._invoke_on_get,
                                user_id='aclUser1',
                                project_id='different_project_id')
@@ -649,7 +642,7 @@ class WhenTestingSecretResource(BaseTestCase):
 
         # Note: admin role has global access in SRBAC policy (bare role:admin
         # check)
-        self._assert_fail_rbac(['observer', 'creator', 'audit', 'bogusRole'],
+        self._assert_fail_rbac(['member', 'reader', 'bogus'],
                                self._invoke_on_get,
                                user_id='creatorUserX',
                                project_id='different_project_id')
@@ -665,7 +658,7 @@ class WhenTestingSecretResource(BaseTestCase):
                                project_id=self.external_project_id)
 
     def test_should_raise_put_secret(self):
-        self._assert_fail_rbac([None, 'audit', 'observer', 'bogus'],
+        self._assert_fail_rbac([None, 'reader', 'bogus'],
                                self._invoke_on_put,
                                content_type="application/octet-stream")
 
@@ -679,7 +672,7 @@ class WhenTestingSecretResource(BaseTestCase):
 
         User id is different from initial user who has created the secret.
         """
-        self._assert_fail_rbac([None, 'audit', 'observer', 'bogus'],
+        self._assert_fail_rbac([None, 'reader', 'bogus'],
                                self._invoke_on_delete,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
@@ -690,7 +683,7 @@ class WhenTestingSecretResource(BaseTestCase):
                                     project_access=False,
                                     user_ids=['anyRandomUserX', 'aclUser1'])
         self.acl_list.append(acl_read)
-        self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
+        self._assert_fail_rbac([None, 'member', 'reader', 'bogus'],
                                self._invoke_on_delete,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
@@ -738,6 +731,7 @@ class WhenTestingContainerResource(BaseTestCase):
 
         # Force an error on GET and DELETE calls that pass RBAC,
         #   as we are not testing such flows in this test module.
+        self.consumer_repo = mock.MagicMock()
         self.container_repo = mock.MagicMock()
         fail_method = mock.MagicMock(return_value=None,
                                      side_effect=self._generate_get_error())
@@ -755,8 +749,10 @@ class WhenTestingContainerResource(BaseTestCase):
         container.project.external_id = self.external_project_id
         container.creator_id = self.creator_user_id
 
-        self.container_repo.get_container_by_id.return_value = container
+        self.consumer_repo.get_by_container_id.return_value = ([], 0, 0, 0)
+        self.setup_container_consumer_repository_mock(self.consumer_repo)
 
+        self.container_repo.get_container_by_id.return_value = container
         self.setup_container_repository_mock(self.container_repo)
 
         self.resource = ContainerResource(container)
@@ -765,14 +761,14 @@ class WhenTestingContainerResource(BaseTestCase):
         self.assertIsNotNone(self.policy_enforcer.rules)
 
     def test_should_pass_get_container(self):
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['admin', 'member', 'reader'],
                                self._invoke_on_get,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
 
     def test_should_pass_get_container_with_no_context(self):
         """In unauthenticated flow, get container should work."""
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_pass_rbac(['admin', 'member', 'reader'],
                                self._invoke_on_get_without_context,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
@@ -781,7 +777,7 @@ class WhenTestingContainerResource(BaseTestCase):
         """Raise error when container and token's project is different."""
         self.acl_list.pop()  # remove read acl from default setup
         # token project_id is different from secret's project id so should fail
-        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_fail_rbac(['admin', 'member', 'reader', 'bogus'],
                                self._invoke_on_get,
                                user_id=self.user_id,
                                project_id='different_id')
@@ -815,7 +811,7 @@ class WhenTestingContainerResource(BaseTestCase):
             container_id=self.container_id, operation='read',
             project_access=False, user_ids=['anyRandomUserX', 'aclUser1'])
         self.acl_list.append(acl_read)
-        self._assert_fail_rbac(['observer', 'creator', 'audit'],
+        self._assert_fail_rbac(['member', 'reader', 'bogus'],
                                self._invoke_on_get,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
@@ -847,8 +843,7 @@ class WhenTestingContainerResource(BaseTestCase):
             container_id=self.container_id, operation='read',
             project_access=False, user_ids=['anyRandomUserX', 'aclUser1'])
         self.acl_list.append(acl_read)
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
-                                'bogusRole'],
+        self._assert_pass_rbac(['admin', 'member', 'reader'],
                                self._invoke_on_get,
                                user_id='aclUser1',
                                project_id=self.external_project_id)
@@ -866,8 +861,7 @@ class WhenTestingContainerResource(BaseTestCase):
             container_id=self.container_id, operation='read',
             project_access=True, user_ids=['anyRandomUserX', 'aclUser1'])
         self.acl_list.append(acl_read)
-        self._assert_pass_rbac(['admin', 'observer', 'creator', 'audit',
-                                'bogusRole'],
+        self._assert_pass_rbac(['admin', 'member', 'reader'],
                                self._invoke_on_get,
                                user_id='aclUser1',
                                project_id='different_project_id')
@@ -886,7 +880,7 @@ class WhenTestingContainerResource(BaseTestCase):
         self.acl_list.append(acl_read)
         # token project_id is different from secret's project id but another
         # user (from different project) has read acl for secret so should pass
-        self._assert_fail_rbac(['admin', 'observer', 'creator', 'audit'],
+        self._assert_fail_rbac(['admin', 'member', 'reader', 'bogus'],
                                self._invoke_on_get,
                                user_id='aclUser1',
                                project_id='different_project_id')
@@ -903,7 +897,7 @@ class WhenTestingContainerResource(BaseTestCase):
             container_id=self.container_id, operation='read',
             project_access=False, user_ids=['anyRandomUserX', 'aclUser1'])
         self.acl_list.append(acl_read)
-        self._assert_fail_rbac(['creator'],
+        self._assert_fail_rbac(['member', 'bogus'],
                                self._invoke_on_get,
                                user_id=self.creator_user_id,
                                project_id='differet_project_id')
@@ -929,7 +923,7 @@ class WhenTestingContainerResource(BaseTestCase):
                                self._invoke_on_get)
 
     def test_should_pass_delete_container(self):
-        self._assert_pass_rbac(['admin'], self._invoke_on_delete,
+        self._assert_pass_rbac(['admin', 'member'], self._invoke_on_delete,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
 
@@ -938,7 +932,32 @@ class WhenTestingContainerResource(BaseTestCase):
 
         User id is different from initial user who has created the container.
         """
-        self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
+        self._assert_fail_rbac(['reader'],
+                               self._invoke_on_delete,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_pass_delete_container_project_access_disabled(self):
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.ContainerACL(
+            container_id=self.container_id, operation='read',
+            project_access=False, user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        self._assert_pass_rbac(['admin'], self._invoke_on_delete,
+                               user_id=self.user_id,
+                               project_id=self.external_project_id)
+
+    def test_should_raise_delete_container_project_access_disabled(self):
+        """A non-admin user cannot delete other user's container when private.
+
+        User id is different from initial user who has created the container.
+        """
+        self.acl_list.pop()  # remove read acl from default setup
+        acl_read = models.ContainerACL(
+            container_id=self.container_id, operation='read',
+            project_access=False, user_ids=['anyRandomUserX', 'aclUser1'])
+        self.acl_list.append(acl_read)
+        self._assert_fail_rbac(['member', 'reader'],
                                self._invoke_on_delete,
                                user_id=self.user_id,
                                project_id=self.external_project_id)
@@ -996,7 +1015,7 @@ class WhenTestingOrdersResource(BaseTestCase):
                                content_type='application/json')
 
     def test_should_raise_create_order(self):
-        self._assert_fail_rbac([None, 'audit', 'observer', 'bogus'],
+        self._assert_fail_rbac([None, 'reader'],
                                self._invoke_on_post)
 
     def test_should_pass_get_orders(self):
@@ -1005,7 +1024,7 @@ class WhenTestingOrdersResource(BaseTestCase):
                                project_id=self.external_project_id)
 
     def test_should_raise_get_orders(self):
-        self._assert_fail_rbac([None, 'audit', 'bogus'],
+        self._assert_fail_rbac([None, 'reader'],
                                self._invoke_on_get)
 
     def _invoke_on_post(self):
@@ -1060,7 +1079,7 @@ class WhenTestingOrderResource(BaseTestCase):
                                project_id=self.external_project_id)
 
     def test_should_raise_delete_order(self):
-        self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
+        self._assert_fail_rbac([None, 'member', 'reader'],
                                self._invoke_on_delete)
 
     def _invoke_on_get(self):
@@ -1110,7 +1129,7 @@ class WhenTestingConsumersResource(BaseTestCase):
                                project_id=self.external_project_id)
 
     def test_should_raise_create_consumer(self):
-        self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
+        self._assert_fail_rbac([None, 'member', 'reader'],
                                self._invoke_on_post,
                                content_type='application/json',
                                user_id='some_other_user',
@@ -1122,7 +1141,7 @@ class WhenTestingConsumersResource(BaseTestCase):
                                project_id=self.external_project_id)
 
     def test_should_raise_delete_consumer(self):
-        self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
+        self._assert_fail_rbac([None, 'member', 'reader'],
                                self._invoke_on_delete)
 
     def test_should_pass_get_consumers(self):
@@ -1321,7 +1340,7 @@ class WhenTestingPreferredSecretStoreResource(BaseTestCase):
 
     def test_should_raise_set_preferred_secret_store(self):
         self._assert_fail_rbac(
-            [None, 'creator', 'observer', 'audit'],
+            [None, 'member', 'reader'],
             self._invoke_on_post)
 
     def _invoke_on_post(self):
@@ -1365,7 +1384,7 @@ class WhenTestingSecretConsumersResource(BaseTestCase):
                                project_id=self.external_project_id)
 
     def test_should_raise_create_consumer(self):
-        self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
+        self._assert_fail_rbac([None, 'member', 'reader', 'bogus'],
                                self._invoke_on_post,
                                content_type='application/json',
                                project_id='some_other_id')
@@ -1376,7 +1395,7 @@ class WhenTestingSecretConsumersResource(BaseTestCase):
                                project_id=self.external_project_id)
 
     def test_should_raise_delete_consumer(self):
-        self._assert_fail_rbac([None, 'audit', 'observer', 'creator', 'bogus'],
+        self._assert_fail_rbac([None, 'member', 'reader'],
                                self._invoke_on_delete)
 
     def test_should_pass_get_consumers(self):
