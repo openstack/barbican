@@ -22,7 +22,7 @@ from functionaltests.common import config
 
 
 CONF = config.get_config()
-service_admin = CONF.identity.service_admin
+admin = CONF.identity.username
 
 
 def get_set_project_quotas_request():
@@ -68,11 +68,11 @@ class QuotasTestCase(base.TestCase):
             **get_set_project_quotas_request())
         resp = self.behaviors.set_project_quotas('44444',
                                                  request_model,
-                                                 user_name=service_admin)
+                                                 user_name=admin)
         self.assertEqual(204, resp.status_code)
 
         resp = self.behaviors.get_project_quotas('44444',
-                                                 user_name=service_admin)
+                                                 user_name=admin)
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual(50, resp.model.project_quotas.secrets)
@@ -84,7 +84,7 @@ class QuotasTestCase(base.TestCase):
     def test_get_project_quotas_by_project_id_not_found(self):
         """Get project quota information for specific project"""
         resp = self.behaviors.get_project_quotas('dummy',
-                                                 user_name=service_admin)
+                                                 user_name=admin)
         self.assertEqual(404, resp.status_code)
 
     def test_delete_project_quotas(self):
@@ -93,17 +93,17 @@ class QuotasTestCase(base.TestCase):
             **get_set_project_quotas_request())
         resp = self.behaviors.set_project_quotas('55555',
                                                  request_model,
-                                                 user_name=service_admin)
+                                                 user_name=admin)
         self.assertEqual(204, resp.status_code)
 
         resp = self.behaviors.delete_project_quotas('55555',
-                                                    user_name=service_admin)
+                                                    user_name=admin)
         self.assertEqual(204, resp.status_code)
 
     def test_delete_project_quotas_not_found(self):
         """Get project quota information"""
         resp = self.behaviors.delete_project_quotas('dummy',
-                                                    user_name=service_admin)
+                                                    user_name=admin)
         self.assertEqual(404, resp.status_code)
 
 
@@ -114,7 +114,7 @@ class ProjectQuotasPagingTestCase(base.PagingTestCase):
         super(ProjectQuotasPagingTestCase, self).setUp()
         self.behaviors = quota_behaviors.QuotaBehaviors(self.client)
         resp, project_quotas_list, _, _ =\
-            self.behaviors.get_project_quotas_list(user_name=service_admin)
+            self.behaviors.get_project_quotas_list(user_name=admin)
         self.original_project_quota_count = len(project_quotas_list)
 
     def tearDown(self):
@@ -129,11 +129,11 @@ class ProjectQuotasPagingTestCase(base.PagingTestCase):
     def create_resources(self, count=0, model=None):
         for x in range(0, count):
             self.behaviors.set_project_quotas(str(x), model,
-                                              user_name=service_admin)
+                                              user_name=admin)
 
     def get_resources(self, limit=10, offset=0, filter=None):
         return self.behaviors.get_project_quotas_list(
-            limit=limit, offset=offset, user_name=service_admin)
+            limit=limit, offset=offset, user_name=admin)
 
     def set_filter_field(self, unique_str, model):
         """ProjectQuotas API does not support filter """
@@ -143,7 +143,7 @@ class ProjectQuotasPagingTestCase(base.PagingTestCase):
         """Get list of all project quotas, when there are none"""
 
         resp, project_quotas_list, _, _ =\
-            self.behaviors.get_project_quotas_list(user_name=service_admin)
+            self.behaviors.get_project_quotas_list(user_name=admin)
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual(self.original_project_quota_count,
@@ -156,11 +156,11 @@ class ProjectQuotasPagingTestCase(base.PagingTestCase):
             **get_set_project_quotas_request())
         resp = self.behaviors.set_project_quotas('11111',
                                                  request_model,
-                                                 user_name=service_admin)
+                                                 user_name=admin)
         self.assertEqual(204, resp.status_code)
 
         resp, project_quotas_list, _, _ =\
-            self.behaviors.get_project_quotas_list(user_name=service_admin)
+            self.behaviors.get_project_quotas_list(user_name=admin)
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual(self.original_project_quota_count + 1,
@@ -173,15 +173,15 @@ class ProjectQuotasPagingTestCase(base.PagingTestCase):
             **get_set_project_quotas_request())
         resp = self.behaviors.set_project_quotas('22222',
                                                  request_model,
-                                                 user_name=service_admin)
+                                                 user_name=admin)
         self.assertEqual(204, resp.status_code)
         resp = self.behaviors.set_project_quotas('33333',
                                                  request_model,
-                                                 user_name=service_admin)
+                                                 user_name=admin)
         self.assertEqual(204, resp.status_code)
 
         resp, project_quotas_list, _, _ =\
-            self.behaviors.get_project_quotas_list(user_name=service_admin)
+            self.behaviors.get_project_quotas_list(user_name=admin)
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual(self.original_project_quota_count + 2,

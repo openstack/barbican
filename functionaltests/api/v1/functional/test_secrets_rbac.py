@@ -23,78 +23,65 @@ from functionaltests.common import config
 
 CONF = config.get_config()
 admin_a = CONF.rbac_users.admin_a
-creator_a = CONF.rbac_users.creator_a
-creator_a_2 = CONF.rbac_users.creator_a_2
-observer_a = CONF.rbac_users.observer_a
-auditor_a = CONF.rbac_users.auditor_a
+member_a = CONF.rbac_users.member_a
+member_a_2 = CONF.rbac_users.member_a_2
+reader_a = CONF.rbac_users.reader_a
 
 
 test_data_rbac_store_secret = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 201},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 201},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 403},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 201},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 test_data_rbac_update_secret = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 204},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 204},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 403},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 204},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 test_data_rbac_get_secret_metadata = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 200},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 test_data_rbac_get_decrypted_secret = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 403},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 test_data_rbac_get_list_of_secrets = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 403},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 test_data_rbac_delete_secret = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 204},
-    'with_creator_a': {'user': creator_a, 'admin': creator_a,
-                       'expected_return': 204},
-    'with_creator_a_2': {'user': creator_a_2, 'admin': creator_a,
-                         'expected_return': 204},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 403},
+    'with_member_a': {'user': member_a, 'admin': member_a,
+                      'expected_return': 204},
+    'with_member_a_2': {'user': member_a_2, 'admin': member_a,
+                        'expected_return': 204},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 
@@ -173,7 +160,8 @@ class RBACSecretsTestCase(base.TestCase):
         resp, secret_ref = self.secret_behaviors.create_secret(
             test_model, user_name=user, admin=admin)
         self.assertEqual(expected_return, resp.status_code)
-        self.assertEqual(expected_return == 201, secret_ref is not None)
+        if expected_return == 201:
+            self.assertIsNotNone(secret_ref)
 
     @utils.parameterized_dataset(test_data_rbac_update_secret)
     def test_rbac_update_secret(self, user, admin, expected_return):
@@ -219,7 +207,8 @@ class RBACSecretsTestCase(base.TestCase):
         resp = self.secret_behaviors.get_secret_metadata(
             secret_ref, user_name=user)
         self.assertEqual(expected_return, resp.status_code)
-        self.assertEqual(expected_return == 200, resp.content is not None)
+        if expected_return == 200:
+            self.assertIsNotNone(resp.content)
 
     @utils.parameterized_dataset(test_data_rbac_get_decrypted_secret)
     def test_rbac_get_decrypted_secret(self, user, admin, expected_return):
@@ -242,9 +231,9 @@ class RBACSecretsTestCase(base.TestCase):
             secret_ref, payload_content_type='application/octet-stream',
             user_name=user)
         self.assertEqual(expected_return, resp.status_code)
-        self.assertEqual(expected_return == 200,
-                         resp.content == base64.b64decode(
-                             get_default_payload()))
+        if expected_return == 200:
+            self.assertEqual(base64.b64decode(get_default_payload()),
+                             resp.content)
 
     @utils.parameterized_dataset(test_data_rbac_get_list_of_secrets)
     def test_rbac_get_list_of_secrets(self, user, admin, expected_return):

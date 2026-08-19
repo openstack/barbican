@@ -52,18 +52,9 @@ class BarbicanClient(object):
             project_name=identity.project_name,
             project_domain=identity.domain_name)
 
-        self._auth[identity.service_admin] = auth.FunctionalTestAuth(
-            endpoint=identity.uri,
-            version=identity.version,
-            username=identity.service_admin,
-            password=identity.service_admin_password,
-            project_name=identity.service_admin_project,
-            project_domain=identity.service_admin_domain)
-
         rbac = CONF.rbac_users
 
-        for user in ['admin_a', 'creator_a', 'creator_a_2',
-                     'observer_a', 'auditor_a']:
+        for user in ['admin_a', 'member_a', 'member_a_2', 'reader_a']:
             self._auth[getattr(rbac, user)] = auth.FunctionalTestAuth(
                 endpoint=identity.uri,
                 version=identity.version,
@@ -72,7 +63,7 @@ class BarbicanClient(object):
                 project_name=rbac.project_a,
                 project_domain=rbac.project_domain)
 
-        for user in ['admin_b', 'creator_b', 'observer_b', 'auditor_b']:
+        for user in ['admin_b', 'member_b', 'reader_b']:
             self._auth[getattr(rbac, user)] = auth.FunctionalTestAuth(
                 endpoint=identity.uri,
                 version=identity.version,

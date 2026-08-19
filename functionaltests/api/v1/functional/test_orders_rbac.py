@@ -22,55 +22,46 @@ from functionaltests.common import config
 
 CONF = config.get_config()
 admin_a = CONF.rbac_users.admin_a
-creator_a = CONF.rbac_users.creator_a
-observer_a = CONF.rbac_users.observer_a
-auditor_a = CONF.rbac_users.auditor_a
+member_a = CONF.rbac_users.member_a
+reader_a = CONF.rbac_users.reader_a
 
 
 test_data_rbac_create_order = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 202},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 202},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 403},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 202},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 
 test_data_rbac_get_order = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 200},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 
 test_data_rbac_get_list_of_orders = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 403},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 test_data_rbac_delete_order = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 204},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 403},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 403},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 204},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 
@@ -112,7 +103,8 @@ class RBACOrdersTestCase(base.TestCase):
                                                             user_name=user,
                                                             admin=admin)
         self.assertEqual(expected_return, resp.status_code)
-        self.assertEqual(expected_return == 202, order_ref is not None)
+        if expected_return == 202:
+            self.assertIsNotNone(order_ref)
 
     @utils.parameterized_dataset(test_data_rbac_get_order)
     def test_rbac_get_order(self, user, admin, expected_return):
@@ -133,7 +125,8 @@ class RBACOrdersTestCase(base.TestCase):
 
         resp = self.order_behaviors.get_order(order_ref, user_name=user)
         self.assertEqual(expected_return, resp.status_code)
-        self.assertEqual(expected_return == 200, resp.content is not None)
+        if expected_return == 200:
+            self.assertIsNotNone(resp.content)
 
     @utils.parameterized_dataset(test_data_rbac_get_list_of_orders)
     def test_rbac_get_list_of_orders(self, user, admin, expected_return):

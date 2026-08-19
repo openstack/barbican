@@ -25,11 +25,10 @@ from functionaltests.common import config
 
 CONF = config.get_config()
 admin_a = CONF.rbac_users.admin_a
-creator_a = CONF.rbac_users.creator_a
-observer_a = CONF.rbac_users.observer_a
-auditor_a = CONF.rbac_users.auditor_a
+member_a = CONF.rbac_users.member_a
+reader_a = CONF.rbac_users.reader_a
 admin_b = CONF.rbac_users.admin_b
-observer_b = CONF.rbac_users.observer_b
+reader_b = CONF.rbac_users.reader_b
 
 
 def get_acl_default():
@@ -46,74 +45,66 @@ def get_acl_two():
 
 test_data_set_secret_acl = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_reader_b': {'user': reader_b, 'expected_return': 403},
 }
 
 test_data_get_secret_acl = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_reader_b': {'user': reader_b, 'expected_return': 403},
 }
 
 test_data_update_secret_acl = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_reader_b': {'user': reader_b, 'expected_return': 403},
 }
 
 test_data_delete_secret_acl = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_reader_b': {'user': reader_b, 'expected_return': 403},
 }
 
 test_data_set_container_acl = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_reader_b': {'user': reader_b, 'expected_return': 403},
 }
 
 test_data_get_container_acl = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_reader_b': {'user': reader_b, 'expected_return': 403},
 }
 
 test_data_update_container_acl = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_reader_b': {'user': reader_b, 'expected_return': 403},
 }
 
 test_data_delete_container_acl = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_reader_b': {'user': reader_b, 'expected_return': 403},
 }
 
 
@@ -248,7 +239,7 @@ class RBACAclsTestCase(base.TestCase):
 
 # ----------------------- Helper Functions ---------------------------
 
-    def store_secret(self, user_name=creator_a, admin=admin_a):
+    def store_secret(self, user_name=member_a, admin=admin_a):
         test_model = secret_models.SecretModel(
             **get_default_secret_data())
         resp, secret_ref = self.secret_behaviors.create_secret(
@@ -256,19 +247,19 @@ class RBACAclsTestCase(base.TestCase):
         self.assertEqual(201, resp.status_code)
         return secret_ref
 
-    def set_secret_acl(self, secret_ref, acl, user_name=creator_a):
+    def set_secret_acl(self, secret_ref, acl, user_name=member_a):
         test_model = acl_models.AclModel(**acl)
         resp = self.acl_behaviors.create_acl(
             secret_ref, test_model, user_name=user_name)
         return resp.status_code
 
-    def update_secret_acl(self, secret_ref, acl, user_name=creator_a):
+    def update_secret_acl(self, secret_ref, acl, user_name=member_a):
         test_model = acl_models.AclModel(**acl)
         resp = self.acl_behaviors.update_acl(
             secret_ref + '/acl', test_model, user_name=user_name)
         return resp.status_code, resp.model
 
-    def store_container(self, user_name=creator_a, admin=admin_a):
+    def store_container(self, user_name=member_a, admin=admin_a):
         secret_ref = self.store_secret(user_name=user_name, admin=admin)
 
         test_model = container_models.ContainerModel(
@@ -278,13 +269,13 @@ class RBACAclsTestCase(base.TestCase):
         self.assertEqual(201, resp.status_code)
         return container_ref
 
-    def set_container_acl(self, container_ref, acl, user_name=creator_a):
+    def set_container_acl(self, container_ref, acl, user_name=member_a):
         test_model = acl_models.AclModel(**acl)
         resp = self.acl_behaviors.create_acl(
             container_ref, test_model, user_name=user_name)
         return resp.status_code
 
-    def update_container_acl(self, container_ref, acl, user_name=creator_a):
+    def update_container_acl(self, container_ref, acl, user_name=member_a):
         test_model = acl_models.AclModel(**acl)
         resp = self.acl_behaviors.update_acl(
             container_ref + '/acl', test_model, user_name=user_name)

@@ -29,11 +29,10 @@ from functionaltests.common import config
 
 CONF = config.get_config()
 admin_a = CONF.rbac_users.admin_a
-creator_a = CONF.rbac_users.creator_a
-observer_a = CONF.rbac_users.observer_a
-auditor_a = CONF.rbac_users.auditor_a
+member_a = CONF.rbac_users.member_a
+reader_a = CONF.rbac_users.reader_a
 admin_b = CONF.rbac_users.admin_b
-observer_b = CONF.rbac_users.observer_b
+reader_b = CONF.rbac_users.reader_b
 
 
 def get_rbac_only():
@@ -55,103 +54,92 @@ def get_rbac_plus_acl(reader_id):
 
 test_data_read_secret_rbac_only = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_reader_b': {'user': reader_b, 'expected_return': 403},
 }
 
 test_data_read_secret_private = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_reader_b': {'user': reader_b, 'expected_return': 403},
 }
 
 test_data_read_secret_acl_only = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 200},
+    'with_reader_b': {'user': reader_b, 'expected_return': 200},
 }
 
 test_data_read_secret_rbac_plus_acl = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 200},
+    'with_reader_b': {'user': reader_b, 'expected_return': 200},
 }
 
 test_data_read_container_rbac_only = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 200},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_reader_b': {'user': reader_b, 'expected_return': 403},
 }
 
 test_data_read_container_private = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_reader_b': {'user': reader_b, 'expected_return': 403},
 }
 
 test_data_read_container_acl_only = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 403},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 200},
+    'with_reader_b': {'user': reader_b, 'expected_return': 200},
 }
 
 test_data_read_container_rbac_plus_acl = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 200},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 403},
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 200},
+    'with_reader_b': {'user': reader_b, 'expected_return': 200},
 }
 
 test_data_read_container_consumer_acl_only = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 200},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 200},
     'with_admin_b': {'user': admin_b, 'expected_return': 200},
-    'with_observer_b': {'user': observer_b, 'expected_return': 200},
+    'with_reader_b': {'user': reader_b, 'expected_return': 200},
 }
 
 test_data_delete_container_consumer_acl_only = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 200},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 200},
     # the consumer being deleted is owned by project a, so attempts
     # to remove it with users from project b below should fail
     'with_admin_b': {'user': admin_b, 'expected_return': 403},
-    'with_observer_b': {'user': observer_b, 'expected_return': 403},
+    'with_reader_b': {'user': reader_b, 'expected_return': 403},
 }
 
 test_data_create_container_consumer_acl_only = {
     'with_admin_a': {'user': admin_a, 'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'expected_return': 200},
+    'with_member_a': {'user': member_a, 'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'expected_return': 200},
     'with_admin_b': {'user': admin_b, 'expected_return': 200},
-    'with_observer_b': {'user': observer_b, 'expected_return': 200},
+    'with_reader_b': {'user': reader_b, 'expected_return': 200},
 }
 
 
@@ -197,7 +185,7 @@ class AclTestCase(base.TestCase):
     @utils.parameterized_dataset(test_data_read_secret_acl_only)
     def test_secret_read_acl_only(self, user, expected_return):
         secret_ref = self.store_secret()
-        user_id = self.secret_behaviors.get_user_id_from_name(observer_b)
+        user_id = self.secret_behaviors.get_user_id_from_name(reader_b)
         self.set_secret_acl(secret_ref, get_acl_only(user_id))
         status = self.get_secret(secret_ref, user_name=user)
         self.assertEqual(expected_return, status)
@@ -205,7 +193,7 @@ class AclTestCase(base.TestCase):
     @utils.parameterized_dataset(test_data_read_secret_rbac_plus_acl)
     def test_secret_read_rbac_plus_acl(self, user, expected_return):
         secret_ref = self.store_secret()
-        user_id = self.secret_behaviors.get_user_id_from_name(observer_b)
+        user_id = self.secret_behaviors.get_user_id_from_name(reader_b)
         self.set_secret_acl(secret_ref, get_rbac_plus_acl(user_id))
         status = self.get_secret(secret_ref, user_name=user)
         self.assertEqual(expected_return, status)
@@ -233,7 +221,7 @@ class AclTestCase(base.TestCase):
     @utils.parameterized_dataset(test_data_read_container_acl_only)
     def test_container_read_acl_only(self, user, expected_return):
         container_ref = self.store_container()
-        user_id = self.container_behaviors.get_user_id_from_name(observer_b)
+        user_id = self.container_behaviors.get_user_id_from_name(reader_b)
         self.set_container_acl(container_ref, get_acl_only(user_id))
         status = self.get_container(container_ref, user_name=user)
         self.assertEqual(expected_return, status)
@@ -241,7 +229,7 @@ class AclTestCase(base.TestCase):
     @utils.parameterized_dataset(test_data_read_container_rbac_plus_acl)
     def test_container_read_rbac_plus_acl(self, user, expected_return):
         container_ref = self.store_container()
-        user_id = self.container_behaviors.get_user_id_from_name(observer_b)
+        user_id = self.container_behaviors.get_user_id_from_name(reader_b)
         self.set_container_acl(container_ref, get_rbac_plus_acl(user_id))
         status = self.get_container(container_ref, user_name=user)
         self.assertEqual(expected_return, status)
@@ -249,7 +237,7 @@ class AclTestCase(base.TestCase):
     @utils.parameterized_dataset(test_data_read_container_consumer_acl_only)
     def test_container_acl_read_consumers(self, user, expected_return):
         """Acl access will not allow you to see the list of consumers"""
-        container_ref = self.store_container(user_name=creator_a,
+        container_ref = self.store_container(user_name=member_a,
                                              admin=admin_a)
         consumer_model = get_consumer_model()
 
@@ -277,12 +265,12 @@ class AclTestCase(base.TestCase):
         """Test DELETE /v1/containers/{container-id}/consumers
 
         Test default policy for deleting a consumer set by admin_a
-        from a private container owned by creator_a.
+        from a private container owned by member_a.
 
         Each user in the data set is added to the ACL and then used
         to delete the consumer set by admin_a.
         """
-        container_ref = self.store_container(user_name=creator_a,
+        container_ref = self.store_container(user_name=member_a,
                                              admin=admin_a)
         consumer_model = get_consumer_model()
 
@@ -310,12 +298,12 @@ class AclTestCase(base.TestCase):
         """Test POST /v1/containers/{container_id}/consumers
 
         Test default policy for adding consumers to a container owned by
-        creator_a and set to private.
+        member_a and set to private.
 
         Each user in the data set is added to the ACL and then used
         to POST a new consumer.
         """
-        container_ref = self.store_container(user_name=creator_a,
+        container_ref = self.store_container(user_name=member_a,
                                              admin=admin_a)
 
         user_id = self.container_behaviors.get_user_id_from_name(user)
@@ -334,17 +322,6 @@ class AclTestCase(base.TestCase):
         self.assertEqual(expected_return, resp.status_code)
 
     @testcase.attr('negative')
-    def test_secret_acl_auditor_with_acl_cannot_read(self):
-        """Auditor granted access to a secret cannot read that secret"""
-
-        secret_ref = self.store_secret()
-        self.set_secret_acl(secret_ref, get_rbac_plus_acl(auditor_a))
-
-        status_code = self.get_secret(secret_ref=secret_ref,
-                                      user_name=auditor_a)
-        self.assertEqual(403, status_code)
-
-    @testcase.attr('negative')
     def test_secret_acl_put_as_observer(self):
         """Observer can not put to a secret when granted access via acl"""
 
@@ -358,9 +335,9 @@ class AclTestCase(base.TestCase):
         secret_model = secret_models.SecretModel(**secret_no_payload)
         resp, secret_ref = self.secret_behaviors.create_secret(
             model=secret_model,
-            user_name=creator_a)
+            user_name=member_a)
 
-        self.set_secret_acl(secret_ref, get_rbac_plus_acl(observer_a))
+        self.set_secret_acl(secret_ref, get_rbac_plus_acl(reader_a))
 
         # Update
         payload = "gF6+lLoF3ohA9aPRpt+6bQ=="
@@ -369,7 +346,7 @@ class AclTestCase(base.TestCase):
 
         update_resp = self.secret_behaviors.update_secret_payload(
             secret_ref,
-            user_name=observer_a,
+            user_name=reader_a,
             payload=payload,
             payload_content_type=payload_content_type,
             payload_content_encoding=payload_content_encoding)
@@ -445,7 +422,7 @@ class AclTestCase(base.TestCase):
 
 # ----------------------- Helper Functions ---------------------------
 
-    def store_secret(self, user_name=creator_a, admin=admin_a):
+    def store_secret(self, user_name=member_a, admin=admin_a):
         test_model = secret_models.SecretModel(
             **get_default_secret_data())
         resp, secret_ref = self.secret_behaviors.create_secret(
@@ -453,14 +430,14 @@ class AclTestCase(base.TestCase):
         self.assertEqual(201, resp.status_code)
         return secret_ref
 
-    def get_secret(self, secret_ref, user_name=creator_a):
+    def get_secret(self, secret_ref, user_name=member_a):
         resp = self.secret_behaviors.get_secret(
             secret_ref, 'application/octet-stream',
             user_name=user_name)
         return resp.status_code
 
     def set_secret_acl(self, secret_ref, acl, use_auth=True,
-                       user_name=creator_a):
+                       user_name=member_a):
         test_model = acl_models.AclModel(**acl)
         resp = self.acl_behaviors.create_acl(
             secret_ref, test_model, use_auth=use_auth, user_name=user_name)
@@ -468,7 +445,7 @@ class AclTestCase(base.TestCase):
             self.assertEqual(200, resp.status_code)
         return resp
 
-    def store_container(self, user_name=creator_a, admin=admin_a):
+    def store_container(self, user_name=member_a, admin=admin_a):
         secret_ref = self.store_secret(user_name=user_name, admin=admin)
 
         test_model = container_models.ContainerModel(
@@ -478,13 +455,13 @@ class AclTestCase(base.TestCase):
         self.assertEqual(201, resp.status_code)
         return container_ref
 
-    def get_container(self, container_ref, user_name=creator_a):
+    def get_container(self, container_ref, user_name=member_a):
         resp = self.container_behaviors.get_container(
             container_ref, user_name=user_name)
         return resp.status_code
 
     def set_container_acl(self, container_ref, acl, use_auth=True,
-                          user_name=creator_a):
+                          user_name=member_a):
         test_model = acl_models.AclModel(**acl)
         resp = self.acl_behaviors.create_acl(
             container_ref, test_model, use_auth=use_auth, user_name=user_name)

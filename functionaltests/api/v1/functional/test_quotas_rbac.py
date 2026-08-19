@@ -23,64 +23,48 @@ from functionaltests.common import config
 
 
 CONF = config.get_config()
+admin = CONF.identity.username
+
 admin_a = CONF.rbac_users.admin_a
-creator_a = CONF.rbac_users.creator_a
-observer_a = CONF.rbac_users.observer_a
-auditor_a = CONF.rbac_users.auditor_a
-service_admin = CONF.identity.service_admin
+member_a = CONF.rbac_users.member_a
+reader_a = CONF.rbac_users.reader_a
 
 test_data_rbac_get_quotas = {
-    'with_service_admin': {'user': service_admin, 'admin': service_admin,
-                           'expected_return': 200},
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 200},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 200},
 }
 
 
 test_data_rbac_get_project_quotas = {
-    'with_service_admin': {'user': service_admin, 'admin': service_admin,
-                           'expected_return': 200},
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
-                     'expected_return': 403},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 403},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 403},
+                     'expected_return': 200},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 403},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 test_data_rbac_set_project_quotas = {
-    'with_service_admin': {'user': service_admin, 'admin': service_admin,
-                           'expected_return': 204},
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
-                     'expected_return': 403},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 403},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 403},
+                     'expected_return': 204},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 403},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 
 test_data_rbac_delete_project_quotas = {
-    'with_service_admin': {'user': service_admin, 'admin': service_admin,
-                           'expected_return': 204},
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
-                     'expected_return': 403},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 403},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 403},
+                     'expected_return': 204},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 403},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 
@@ -165,7 +149,7 @@ class RBACQuotasTestCase(base.TestCase):
         project_id = uuidutils.generate_uuid()
         resp = self.behaviors.set_project_quotas(project_id,
                                                  request_model,
-                                                 user_name=service_admin)
+                                                 user_name=admin)
         resp = self.behaviors.delete_project_quotas(project_id,
                                                     user_name=user)
         self.assertEqual(expected_return, resp.status_code)

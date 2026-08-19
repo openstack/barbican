@@ -11,10 +11,6 @@
       devstack_plugins:
         barbican: https://opendev.org/openstack/barbican
       tox_install_siblings: true
-      devstack_localrc:
-        # TODO(tkajinam): We should update the functional tests to use
-        # new default roles
-        ENFORCE_NEW_DEFAULTS: False
 
 - job:
     name: barbican-dogtag-tox-functional
