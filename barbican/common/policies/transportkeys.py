@@ -49,7 +49,7 @@ rules = [
         description='Get a specific transport key.',
         operations=[
             {
-                'path': '/v1/transport_keys/{key-id}}',
+                'path': '/v1/transport_keys/{transport-key-id}',
                 'method': 'GET'
             }
         ],
@@ -62,7 +62,7 @@ rules = [
         description='Delete a specific transport key.',
         operations=[
             {
-                'path': '/v1/transport_keys/{key-id}',
+                'path': '/v1/transport_keys/{transport-key-id}',
                 'method': 'DELETE'
             }
         ],

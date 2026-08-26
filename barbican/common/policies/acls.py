@@ -76,8 +76,8 @@ rules = [
             "(rule:secret_project_member and rule:secret_owner) or "
             "(rule:secret_project_member and rule:secret_is_not_private))"),
         scope_types=['project'],
-        description='Retrieve the ACL settings for a given secret.'
-                    'If no ACL is defined for that secret, then Default ACL '
+        description='Retrieve the ACL settings for a given secret. '
+                    'If no ACL is defined for that secret, the default ACL '
                     'is returned.',
         operations=[
             {
@@ -112,8 +112,8 @@ rules = [
             "(rule:secret_project_member and rule:secret_owner) or "
             "(rule:secret_project_member and rule:secret_is_not_private))"),
         scope_types=['project'],
-        description='Create new, replaces, or updates existing ACL for a ' +
-                    'given secret.',
+        description='Create a new ACL, or replace or update an existing ' +
+                    'ACL, for a given secret.',
         operations=[
             {
                 'path': '/v1/secrets/{secret-id}/acl',
@@ -172,8 +172,8 @@ rules = [
             "(rule:container_project_member and "
             " rule:container_is_not_private))"),
         scope_types=['project'],
-        description='Create new or replaces existing ACL for a given '
-                    'container.',
+        description='Create a new ACL, or replace an existing ACL, for a '
+                    'given container.',
         operations=[
             {
                 'path': '/v1/containers/{container-id}/acl',

@@ -52,7 +52,7 @@ rules = [
         name='orders:get',
         check_str="True:%(enforce_new_defaults)s and role:member",
         scope_types=['project'],
-        description='Gets list of all orders associated with a project.',
+        description='List all orders associated with a project.',
         operations=[
             {
                 'path': '/v1/orders',
@@ -65,7 +65,7 @@ rules = [
         name='orders:post',
         check_str="True:%(enforce_new_defaults)s and role:member",
         scope_types=['project'],
-        description='Creates an order.',
+        description='Create an order.',
         operations=[
             {
                 'path': '/v1/orders',
@@ -94,7 +94,7 @@ rules = [
             "True:%(enforce_new_defaults)s and "
             "rule:order_project_member"),
         scope_types=['project'],
-        description='Retrieves an orders metadata.',
+        description="Retrieve an order's metadata.",
         operations=[
             {
                 'path': '/v1/orders/{order-id}',
@@ -109,7 +109,7 @@ rules = [
             "True:%(enforce_new_defaults)s and "
             "rule:order_project_member"),
         scope_types=['project'],
-        description='Deletes an order.',
+        description='Delete an order.',
         operations=[
             {
                 'path': '/v1/orders/{order-id}',

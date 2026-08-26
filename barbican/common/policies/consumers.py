@@ -90,7 +90,7 @@ rules = [
         scope_types=['project'],
         # This API is unusable.  There is no way for a user to get
         # the consumer-id they would need to send a request.
-        description='DEPRECATED: show information for a specific consumer',
+        description='DEPRECATED: Show information for a specific consumer.',
         operations=[{
             'path': '/v1/containers/{container-id}/consumers/{consumer-id}',
             'method': 'GET'
@@ -107,7 +107,7 @@ rules = [
             ' rule:container_is_not_private) or '
             'rule:container_acl_read)'),
         scope_types=['project'],
-        description='List a containers consumers.',
+        description="List a container's consumers.",
         operations=[
             {
                 'path': '/v1/containers/{container-id}/consumers',
@@ -126,7 +126,7 @@ rules = [
             ' rule:container_is_not_private) or '
             'rule:container_acl_read)'),
         scope_types=['project'],
-        description='Creates a consumer.',
+        description='Create a consumer.',
         operations=[
             {
                 'path': '/v1/containers/{container-id}/consumers',
@@ -145,7 +145,7 @@ rules = [
             ' rule:container_is_not_private) or '
             'rule:container_acl_read)'),
         scope_types=['project'],
-        description='Deletes a consumer.',
+        description='Delete a consumer.',
         operations=[
             {
                 'path': '/v1/containers/{container-id}/consumers',
@@ -181,10 +181,10 @@ rules = [
             '(rule:secret_project_member and rule:secret_is_not_private) or '
             'rule:secret_acl_read)'),
         scope_types=['project'],
-        description='Creates a consumer.',
+        description='Create a consumer.',
         operations=[
             {
-                'path': '/v1/secrets/{secrets-id}/consumers',
+                'path': '/v1/secrets/{secret-id}/consumers',
                 'method': 'POST'
             }
         ],
@@ -199,10 +199,10 @@ rules = [
             '(rule:secret_project_member and rule:secret_is_not_private) or '
             'rule:secret_acl_read)'),
         scope_types=['project'],
-        description='Deletes a consumer.',
+        description='Delete a consumer.',
         operations=[
             {
-                'path': '/v1/secrets/{secrets-id}/consumers',
+                'path': '/v1/secrets/{secret-id}/consumers',
                 'method': 'DELETE'
             }
         ],

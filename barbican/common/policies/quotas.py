@@ -91,10 +91,10 @@ rules = [
         check_str='True:%(enforce_new_defaults)s and role:admin',
         scope_types=['project'],
         description='Delete the project quotas configuration for the '
-                    'project with the requested UUID.',
+                    'project with the specified UUID.',
         operations=[
             {
-                'path': '/v1/quotas}',
+                'path': '/v1/project-quotas/{uuid}',
                 'method': 'DELETE'
             }
         ],

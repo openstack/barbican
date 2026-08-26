@@ -58,7 +58,7 @@ rules = [
         name='secretstores:get',
         check_str='True:%(enforce_new_defaults)s and role:reader',
         scope_types=['project'],
-        description='Get list of available secret store backends.',
+        description='Get a list of available secret store backends.',
         operations=[
             {
                 'path': '/v1/secret-stores',
@@ -71,7 +71,7 @@ rules = [
         name='secretstores:get_global_default',
         check_str='True:%(enforce_new_defaults)s and role:reader',
         scope_types=['project'],
-        description='Get a reference to the secret store that is used as ' +
+        description='Get a reference to the secret store used as the ' +
                     'default secret store backend for the deployment.',
         operations=[
             {
@@ -85,8 +85,8 @@ rules = [
         name='secretstores:get_preferred',
         check_str='True:%(enforce_new_defaults)s and role:reader',
         scope_types=['project'],
-        description='Get a reference to the preferred secret store if ' +
-                    'assigned previously.',
+        description='Get a reference to the preferred secret store, if ' +
+                    'one has been assigned previously.',
         operations=[
             {
                 'path': '/v1/secret-stores/preferred',
@@ -99,11 +99,11 @@ rules = [
         name='secretstore_preferred:post',
         check_str='True:%(enforce_new_defaults)s and role:admin',
         scope_types=['project'],
-        description='Set a secret store backend to be preferred store ' +
-                    'backend for their project.',
+        description='Set a secret store backend as the preferred backend ' +
+                    'for the project.',
         operations=[
             {
-                'path': '/v1/secret-stores/{ss-id}/preferred',
+                'path': '/v1/secret-stores/{secret-store-id}/preferred',
                 'method': 'POST'
             }
         ],
@@ -113,11 +113,11 @@ rules = [
         name='secretstore_preferred:delete',
         check_str='True:%(enforce_new_defaults)s and role:admin',
         scope_types=['project'],
-        description='Remove preferred secret store backend setting for ' +
-                    'their project.',
+        description='Remove the preferred secret store backend setting ' +
+                    'for the project.',
         operations=[
             {
-                'path': '/v1/secret-stores/{ss-id}/preferred',
+                'path': '/v1/secret-stores/{secret-store-id}/preferred',
                 'method': 'DELETE'
             }
         ],
@@ -127,10 +127,10 @@ rules = [
         name='secretstore:get',
         check_str='True:%(enforce_new_defaults)s and role:reader',
         scope_types=['project'],
-        description='Get details of secret store by its ID.',
+        description='Get the details of a secret store by its ID.',
         operations=[
             {
-                'path': '/v1/secret-stores/{ss-id}',
+                'path': '/v1/secret-stores/{secret-store-id}',
                 'method': 'GET'
             }
         ],
