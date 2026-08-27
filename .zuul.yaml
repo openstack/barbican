@@ -11,6 +11,10 @@
       devstack_plugins:
         barbican: https://opendev.org/openstack/barbican
       tox_install_siblings: true
+      devstack_localrc:
+        # TODO(tkajinam): We should update the functional tests to use
+        # new default roles
+        ENFORCE_NEW_DEFAULTS: False
 
 - job:
     name: barbican-dogtag-tox-functional
@@ -110,13 +114,6 @@
       tempest_test_regex: '\[.*\bsmoke\b.*\]|^(barbican_tempest_plugin.tests)'
       tox_envlist: all
 
-- job:
-    name: octavia-v2-dsvm-tls-barbican-secure-rbac
-    parent: octavia-v2-dsvm-tls-barbican
-    vars:
-      devstack_localrc:
-        ENFORCE_SCOPE: True
-
 - project:
     queue: barbican
     templates:
@@ -133,17 +130,19 @@
         - barbican-grenade:
             voting: false
         - barbican-tempest-plugin-simple-crypto
-        - barbican-tempest-plugin-simple-crypto-secure-rbac
         - barbican-tempest-plugin-simple-crypto-ipv6-only
         - barbican-tox-functional-fips:
             voting: false
         - octavia-v2-dsvm-tls-barbican
-        - octavia-v2-dsvm-tls-barbican-secure-rbac
     gate:
       jobs:
         - barbican-tox-functional
+        - barbican-vault-tox-functional
+        - barbican-openbao-tox-functional
+        - barbican-tempest-plugin-simple-crypto
+        - barbican-tempest-plugin-simple-crypto-ipv6-only
+        - octavia-v2-dsvm-tls-barbican
     experimental:
       jobs:
         - barbican-dogtag-tox-functional
         - barbican-kmip-tox-functional
-

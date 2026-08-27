@@ -110,13 +110,13 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
 
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='create',
-            entity_id=secret_uuid, roles=['creator'], user='NotSecretCreator',
+            entity_id=secret_uuid, roles=['member'], user='NotSecretCreator',
             expect_errors=False)
         self.assertEqual(200, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='create',
-            entity_id=secret_uuid, roles=['creator'],
+            entity_id=secret_uuid, roles=['member'],
             user=creator_user_id, expect_errors=False)
         self.assertEqual(200, resp.status_int)
 
@@ -378,13 +378,13 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
 
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='update',
-            entity_id=secret_uuid, roles=['creator'], user='NotSecretCreator',
+            entity_id=secret_uuid, roles=['member'], user='NotSecretCreator',
             expect_errors=False)
         self.assertEqual(200, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='update',
-            entity_id=secret_uuid, roles=['creator'],
+            entity_id=secret_uuid, roles=['member'],
             user=creator_user_id)
         self.assertEqual(200, resp.status_int)
 
@@ -459,14 +459,14 @@ class WhenTestingSecretACLsResource(utils.BarbicanAPIBaseTestCase,
 
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='delete',
-            entity_id=secret_uuid, roles=['creator'], user='NotSecretCreator',
+            entity_id=secret_uuid, roles=['member'], user='NotSecretCreator',
             expect_errors=False)
 
         self.assertEqual(200, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='secrets', op_type='delete',
-            entity_id=secret_uuid, roles=['creator'],
+            entity_id=secret_uuid, roles=['member'],
             user=creator_user_id)
 
         self.assertEqual(200, resp.status_int)
@@ -566,13 +566,13 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
 
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='create',
-            entity_id=container_id, roles=['creator'],
+            entity_id=container_id, roles=['member'],
             user='NotContainerCreator', expect_errors=False)
         self.assertEqual(200, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='create',
-            entity_id=container_id, roles=['creator'],
+            entity_id=container_id, roles=['member'],
             user=creator_user_id, expect_errors=False)
         self.assertEqual(200, resp.status_int)
 
@@ -870,13 +870,13 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
 
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='update',
-            entity_id=container_id, roles=['creator'], user='NotCreator',
+            entity_id=container_id, roles=['member'], user='NotCreator',
             expect_errors=False)
         self.assertEqual(200, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='update',
-            entity_id=container_id, roles=['creator'],
+            entity_id=container_id, roles=['member'],
             user=creator_user_id)
         self.assertEqual(200, resp.status_int)
 
@@ -930,14 +930,14 @@ class WhenTestingContainerAclsResource(utils.BarbicanAPIBaseTestCase,
 
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='delete',
-            entity_id=container_id, roles=['creator'], user='NotCreator',
+            entity_id=container_id, roles=['member'], user='NotCreator',
             expect_errors=False)
 
         self.assertEqual(200, resp.status_int)
 
         resp = self._set_acls_with_context(
             self.app, entity_type='containers', op_type='delete',
-            entity_id=container_id, roles=['creator'],
+            entity_id=container_id, roles=['member'],
             user=creator_user_id)
 
         self.assertEqual(200, resp.status_int)
