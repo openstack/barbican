@@ -1,0 +1,10 @@
+---
+security:
+  - |
+    Bug `#2165908 <https://bugs.launchpad.net/barbican/+bug/2165908>`_:
+    The ``barbican-manage db`` command no longer prepends the current working
+    directory to ``sys.path``. Previously, a Python module placed in the
+    invocation directory could shadow a module that barbican or one of its
+    transitive dependencies imports, causing it to be imported and executed
+    with the privileges of the operator running the command. Removing the
+    ``sys.path`` insertion closes this module-shadowing path.

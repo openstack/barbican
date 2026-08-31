@@ -16,10 +16,7 @@
 # limitations under the License.
 
 import argparse
-import os
 import sys
-
-sys.path.insert(0, os.getcwd())
 
 from barbican.common import config
 from barbican.model import clean
