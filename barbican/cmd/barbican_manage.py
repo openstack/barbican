@@ -354,7 +354,11 @@ class SimpleCryptoCommands:
 
     description = "Subcommands for managing SimpleCryptoPlugin backend"
 
-    rewrap_pkek_description = "Re-wrap project KEKs"
+    rewrap_pkek_description = (
+        "Re-wrap project KEKs with the first key in "
+        "[simple_crypto_plugin]/kek (must be prepended, not appended, "
+        "to actually rotate)"
+    )
 
     @args('--dry-run', action='store_true', dest='dryrun', default=False,
           help="Displays changes that will be made (non-destructive)")
