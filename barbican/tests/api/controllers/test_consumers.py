@@ -14,6 +14,7 @@
 
 import os
 
+from barbican.model import repositories as repo
 from barbican.tests import utils
 
 
@@ -107,6 +108,51 @@ class WhenTestingContainerConsumersResource(utils.BarbicanAPIBaseTestCase):
                       consumer_get_resp.json["consumers"][2]["name"])
         self.assertIn(consumers[2]["URL"],
                       consumer_get_resp.json["consumers"][2]["URL"])
+
+    def test_cannot_get_consumer_via_unrelated_container(self):
+        """A consumer must not be retrievable through an unrelated container.
+
+        BOLA/IDOR: RBAC is enforced against the URL's own container, but
+        the consumer is looked up purely by its own id.
+        """
+        resp, owning_container_uuid = create_container(
+            self.app,
+            name=self.container_name,
+            container_type=self.container_type
+        )
+        self.assertEqual(201, resp.status_int)
+
+        consumer_resp, _ = create_container_consumer(
+            self.app,
+            container_id=owning_container_uuid,
+            name=self.consumer_a["name"],
+            url=self.consumer_a["URL"]
+        )
+        self.assertEqual(200, consumer_resp.status_int)
+
+        consumer_repo = repo.get_container_consumer_repository()
+        consumer_session = consumer_repo.get_session()
+        consumer_id = consumer_repo.get_by_values(
+            owning_container_uuid,
+            self.consumer_a["name"],
+            self.consumer_a["URL"],
+            session=consumer_session,
+        ).id
+
+        resp, other_container_uuid = create_container(
+            self.app,
+            name="a_different_container",
+            container_type=self.container_type
+        )
+        self.assertEqual(201, resp.status_int)
+
+        get_resp = self.app.get(
+            '/containers/{container_id}/consumers/{consumer_id}'.format(
+                container_id=other_container_uuid,
+                consumer_id=consumer_id),
+            expect_errors=True)
+
+        self.assertEqual(404, get_resp.status_int)
 
     def test_can_get_consumers_with_limit_and_offset(self):
         resp, container_uuid = create_container(
@@ -422,6 +468,45 @@ class WhenTestingSecretConsumersResource(utils.BarbicanAPIBaseTestCase):
                       consumer_get_resp.json["consumers"][2]["resource_type"])
         self.assertIn(consumers[2]["resource_id"],
                       consumer_get_resp.json["consumers"][2]["resource_id"])
+
+    def test_cannot_get_consumer_via_unrelated_secret(self):
+        """A consumer must not be retrievable through an unrelated secret.
+
+        BOLA/IDOR: RBAC is enforced against the URL's own secret, but the
+        consumer is looked up purely by its own id.
+        """
+        resp, owning_secret_id = create_secret(self.app)
+        self.assertEqual(201, resp.status_int)
+
+        consumer_resp, _ = create_secret_consumer(
+            self.app,
+            secret_id=owning_secret_id,
+            service=self.consumer_a["service"],
+            resource_type=self.consumer_a["resource_type"],
+            resource_id=self.consumer_a["resource_id"],
+        )
+        self.assertEqual(200, consumer_resp.status_int)
+
+        consumer_repo = repo.get_secret_consumer_repository()
+        consumer_session = consumer_repo.get_session()
+        consumer_id = consumer_repo.get_by_values(
+            owning_secret_id,
+            self.consumer_a["service"],
+            self.consumer_a["resource_type"],
+            self.consumer_a["resource_id"],
+            session=consumer_session,
+        ).id
+
+        resp, other_secret_id = create_secret(self.app)
+        self.assertEqual(201, resp.status_int)
+
+        get_resp = self.app.get(
+            '/secrets/{secret_id}/consumers/{consumer_id}'.format(
+                secret_id=other_secret_id,
+                consumer_id=consumer_id),
+            expect_errors=True)
+
+        self.assertEqual(404, get_resp.status_int)
 
     def test_can_get_consumers_with_limit_and_offset(self):
         resp, secret_id = create_secret(self.app)

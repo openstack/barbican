@@ -65,7 +65,7 @@ class ContainerConsumerController(controllers.ACLMixin):
         consumer = self.consumer_repo.get(
             entity_id=self.consumer_id,
             suppress_exception=True)
-        if not consumer:
+        if not consumer or consumer.container_id != self.container.id:
             _consumer_not_found()
 
         dict_fields = consumer.to_dict_fields()
@@ -236,7 +236,7 @@ class SecretConsumerController(controllers.ACLMixin):
         consumer = self.consumer_repo.get(
             entity_id=self.consumer_id,
             suppress_exception=True)
-        if not consumer:
+        if not consumer or consumer.secret_id != self.secret.id:
             _consumer_not_found()
 
         dict_fields = consumer.to_dict_fields()
