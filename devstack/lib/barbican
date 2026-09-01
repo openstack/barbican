@@ -99,11 +99,6 @@ function cleanup_barbican {
     fi
 }
 
-# configure_barbicanclient - Set config files, create data dirs, etc
-function configure_barbicanclient {
-    setup_dev_lib "python-barbicanclient"
-}
-
 # Set the correct config options in Nova, Cinder and Glance
 function configure_core_services {
     if is_service_enabled n-cpu; then
