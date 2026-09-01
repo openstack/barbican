@@ -170,7 +170,7 @@ function configure_barbican {
     fi
 
     # SimpleCryptoPlugin settings
-    iniset $BARBICAN_CONF simple_crypto_plugin kek "$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode('UTF-8'))")"
+    iniset $BARBICAN_CONF simple_crypto_plugin kek 'dGhpcnR5X3R3b19ieXRlX2tleWJsYWhibGFoYmxhaGg='
 
     write_uwsgi_config "$BARBICAN_UWSGI_CONF" "$BARBICAN_WSGI" "/key-manager" "" "barbican-api"
     ## Set up keystone
