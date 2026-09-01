@@ -527,9 +527,28 @@ class TypeOrderValidator(ValidatorBase):
 
         return expiration
 
+    # EC curve bit lengths that are not multiples of 8 (e.g. 521 for P-521)
+    _EC_BIT_LENGTHS = frozenset([256, 384, 521])
+
     def _validate_bit_length(self, meta, schema_name):
 
         bit_length = int(meta.get('bit_length'))
+        algorithm = meta.get('algorithm', '').lower()
+
+        # EC keys use specific curve bit lengths that are not necessarily
+        # multiples of 8 (e.g. 521 for P-521), so validate them against the
+        # known set of curve sizes first. This must happen before the generic
+        # multiple-of-8 check, otherwise an EC bit length that happens to be a
+        # multiple of 8 (e.g. 512) would slip through unvalidated.
+        if algorithm == 'ec':
+            if bit_length not in self._EC_BIT_LENGTHS:
+                raise exception.UnsupportedField(
+                    field="bit_length",
+                    schema=schema_name,
+                    reason=u._("Must be a valid EC curve bit length"
+                               " (256, 384, or 521)"))
+            return
+
         if bit_length % 8 != 0:
             raise exception.UnsupportedField(field="bit_length",
                                              schema=schema_name,
