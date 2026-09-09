@@ -115,6 +115,27 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
             secret.id, for_update=True)
         self.assertEqual(secret.id, db_secret.id)
 
+    def test_get_secret_by_id_excludes_expired_by_default(self):
+        from datetime import timedelta
+        from oslo_utils import timeutils
+
+        session = self.repo.get_session()
+        project = models.Project()
+        project.external_id = "expired-keystone-id"
+        project.save(session=session)
+        secret_model = models.Secret()
+        secret_model.project_id = project.id
+        secret = self.repo.create_from(secret_model, session=session)
+        session.commit()
+
+        secret.expiration = timeutils.utcnow() - timedelta(hours=1)
+        self.repo.save(secret)
+
+        self.assertIsNone(self.repo.get_secret_by_id(
+            secret.id, suppress_exception=True))
+        self.assertRaises(exception.NotFound, self.repo.get_secret_by_id,
+                          secret.id, suppress_exception=False)
+
     def test_should_raise_notfound_exception(self):
         self.assertRaises(exception.NotFound, self.repo.get_secret_by_id,
                           "invalid_id", suppress_exception=False)

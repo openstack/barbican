@@ -18,12 +18,14 @@ The standard pattern for executing a barbican-manage command is:
 ``barbican-manage <category> <command> [<args>]``
 
 Running ``barbican-manage`` without arguments shows a list of available command
-categories. Currently, there are 2 supported categories: *db* and *hsm*.
+categories. Supported categories include *db*, *hsm*, *secret*, and
+*simple_crypto*.
 
 Running with a category argument shows a list of commands in that category:
 
 * ``barbican-manage db --help``
 * ``barbican-manage hsm --help``
+* ``barbican-manage secret --help``
 * ``barbican-manage --version`` shows the version number of barbican service.
 
 The following sections describe the available categories and arguments for
@@ -85,5 +87,23 @@ Barbican PKCS11/HSM
     using the above commands. The user will have to configure new MKEK and HMAC
     key labels in /etc/barbican/barbican.conf and restart barbican server before
     executing this command.
+
+    This rewraps project KEKs on the **same** PKCS#11 HSM after MKEK or HMAC
+    rotation. To move secret payloads onto a different secret store, use
+    ``barbican-manage secret migrate`` (see
+    :doc:`/cli/barbican-manage-secret-migrate`).
+
+Barbican secret stores
+~~~~~~~~~~~~~~~~~~~~~~
+
+``barbican-manage secret migrate [--dest-store-id] [--source-store-id] [--project-id] [--secret-id] [--secret-ids-file] [--yes] [--dry-run] [--error-file]``
+
+    Migrate secret payloads onto another configured secret store without
+    changing secret UUIDs. Discovers candidates from the Barbican database
+    and calls ``plugin.resources.rewrap_secret`` in-process. Bulk
+    migrates prompt for confirmation unless ``--yes`` or ``--dry-run``
+    is set. Full flags, examples, and exit codes:
+    :doc:`/cli/barbican-manage-secret-migrate`. Overview:
+    :doc:`/admin/secret_store_migrate`.
 
 .. _Database Migration: https://docs.openstack.org/barbican/latest/contributor/database_migrations.html

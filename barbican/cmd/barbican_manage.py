@@ -26,6 +26,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 
 from barbican.cmd import pkcs11_kek_rewrap as pkcs11_rewrap
+from barbican.cmd import secret_store_migrate
 from barbican.cmd import simple_crypto
 from barbican.common import config
 from barbican.model import clean
@@ -349,6 +350,52 @@ class HSMCommands(object):
             sys.exit(1)
 
 
+class SecretCommands(object):
+    """Class for managing secrets"""
+
+    description = "Subcommands for managing secrets"
+
+    migrate_description = (
+        "Migrate secret payloads onto another secret store")
+
+    @args('--dest-store-id', metavar='<uuid>',
+          dest='dest_store_id', required=True,
+          help='Destination secret store UUID')
+    @args('--source-store-id', metavar='<uuid>', dest='source_store_id',
+          help='Only secrets whose current backend is this store UUID')
+    @args('--project-id', metavar='<uuid>', dest='project_id',
+          help='Keystone project id whose secrets should be migrated')
+    @args('--secret-id', metavar='<uuid-or-href>', dest='secret_id',
+          action='append', default=[],
+          help='Secret UUID or href (repeatable)')
+    @args('--secret-ids-file', metavar='<path>', dest='secret_ids_file',
+          help='File of secret UUIDs/hrefs, one per line')
+    @args('--yes', action='store_true', dest='yes', default=False,
+          help='Skip the confirmation prompt for bulk migrates')
+    @args('--dry-run', action='store_true', dest='dry_run', default=False,
+          help='List secrets that would be migrated; do not rewrap')
+    @args('--error-file', metavar='<path>', dest='error_file',
+          help='JSONL file for failures')
+    def migrate(self, conf, dest_store_id=None, source_store_id=None,
+                project_id=None, secret_id=None, secret_ids_file=None,
+                yes=False, dry_run=False, error_file=None):
+        """Migrate secret payloads onto another configured store."""
+        try:
+            args = secret_store_migrate.args_from_manage_kwargs(
+                dest_store_id=dest_store_id,
+                source_store_id=source_store_id,
+                project_id=project_id,
+                secret_id=secret_id,
+                secret_ids_file=secret_ids_file,
+                yes=yes,
+                dry_run=dry_run,
+                error_file=error_file)
+        except ValueError as exc:
+            sys.stderr.write('ERROR: %s\n' % exc)
+            return 2
+        return secret_store_migrate.main_from_args(args)
+
+
 class SimpleCryptoCommands:
     """Class for mananging SimpleCryptoPlugin backend"""
 
@@ -389,6 +436,7 @@ class SimpleCryptoCommands:
 CATEGORIES = {
     'db': DbCommands,
     'hsm': HSMCommands,
+    'secret': SecretCommands,
     'simple_crypto': SimpleCryptoCommands,
 }
 

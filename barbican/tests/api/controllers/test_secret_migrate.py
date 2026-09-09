@@ -169,6 +169,34 @@ class WhenTestingSecretMigrateStore(utils.BarbicanAPIBaseTestCase):
             expect_errors=True)
         self.assertEqual(404, resp.status_int)
 
+    def test_migrate_expired_secret_returns_404(self):
+        # Expired secrets are treated as deleted for the HTTP API.
+        from datetime import timedelta
+
+        from oslo_utils import timeutils
+
+        secret_uuid = self._create_secret_with_payload()
+        store = self._create_store()
+        store_id = store.id
+
+        secret_repo = repos.get_secret_repository()
+        session = secret_repo.get_session()
+        secret = secret_repo.get_secret_by_id(
+            secret_uuid, session=session)
+        secret.expiration = timeutils.utcnow() - timedelta(hours=1)
+        session.add(secret)
+        session.commit()
+
+        get_resp = self.app.get(
+            '/secrets/{0}'.format(secret_uuid),
+            headers={'Accept': 'application/json'},
+            expect_errors=True)
+        self.assertEqual(404, get_resp.status_int)
+
+        resp = self._put_migrate(
+            secret_uuid, store_id, expect_errors=True)
+        self.assertEqual(404, resp.status_int)
+
     def test_migrate_without_store_id_returns_404(self):
         secret_uuid = self._create_secret_with_payload()
         with mock.patch(

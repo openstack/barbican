@@ -5,3 +5,4 @@ CLI Reference
    :maxdepth: 1
 
    barbican-status
+   barbican-manage-secret-migrate

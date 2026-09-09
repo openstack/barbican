@@ -312,3 +312,28 @@ class TestBarbicanManage(TestBarbicanManageBase):
         self._main_test_helper(
             ['barbican.cmd.barbican_manage', 'hsm', 'rewrap_pkek',
              '--dry-run'], mock_execute, True)
+
+    def test_secret_category_registered(self):
+        self.assertIn('secret', manager.CATEGORIES)
+        self.assertIs(manager.SecretCommands, manager.CATEGORIES['secret'])
+
+    @mock.patch(
+        'barbican.cmd.secret_store_migrate.main_from_args',
+        autospec=True)
+    def test_secret_migrate_parses_flags_via_oslo(self, mock_main):
+        mock_main.return_value = 0
+        dest = 'dc22fcf8-d97f-4c40-a8eb-bc3e3608eb1f'
+        secret = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+        self.useFixture(fixtures.MonkeyPatch(
+            'sys.argv',
+            ['barbican-manage', 'secret', 'migrate',
+             '--dest-store-id', dest,
+             '--secret-id', secret,
+             '--dry-run']))
+        rc = manager.main()
+        self.assertEqual(0, rc)
+        mock_main.assert_called_once()
+        args = mock_main.call_args[0][0]
+        self.assertEqual(dest, args.dest_store_id)
+        self.assertEqual([secret], args.secret_id)
+        self.assertTrue(args.dry_run)

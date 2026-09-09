@@ -42,14 +42,6 @@ Prerequisites
 * The destination store listed by ``GET /v1/secret-stores``.
   See :doc:`/api/reference/store_backends`.
 
-The migrate API does not persist a ``secret_store_id`` on the secret
-row. After a successful migrate, the payload is stored only on the
-destination plugin. Secret metadata GET (microversion 1.3) always
-returns computed ``secret_store_id`` / ``secret_store_ref`` (``null``
-when multiple backends are disabled or the secret has no payload).
-A live payload that cannot be mapped to exactly one catalogue store
-is an error (HTTP 500).
-
 Which tool to use
 =================
 
@@ -69,17 +61,25 @@ any other backend returns HTTP **403**. Project **admins** may target
 any configured store.
 
 This requires python-barbicanclient with microversion 1.3 support.
-python-barbicanclient accepts either a secret UUID or an HREF; prefer
-the UUID form shown above.
 
-Operator command (bulk)
------------------------
+Operator command (one project, or one backend)
+----------------------------------------------
 
-For bulk work on the Barbican API node (every payload in a project, or
-every payload on a source backend), use the
-``barbican-manage secret migrate`` subcommand. That command is added in
-a follow-on change; it calls the same HTTP API, continues after
-per-secret failures, and never prints payloads.
+``barbican-manage secret migrate`` runs on the Barbican API node. It
+reads ``barbican.conf``, queries the database for the secrets to
+move, then calls ``plugin.resources.rewrap_secret``
+in-process (the same code path as the HTTP migrate API, without
+Keystone or HTTP).
+
+Use it to:
+
+* migrate every payload secret in a specified Keystone project
+* migrate every payload secret currently on a specified backend
+  (all projects)
+
+It continues after per-secret failures and never prints payloads.
+CLI flags, examples, and exit codes are in
+:doc:`/cli/barbican-manage-secret-migrate`.
 
 API
 ---
@@ -92,23 +92,41 @@ Microversion 1.3::
 The request body is empty. Success is ``204 No Content``. See
 :doc:`/api/microversion_history`.
 
+The migrate API does not persist a ``secret_store_id`` on the secret
+row. After a successful migrate, the payload is stored only on the
+destination plugin. Secret metadata GET (microversion 1.3) always
+returns computed ``secret_store_id`` / ``secret_store_ref`` (``null``
+when multiple backends are disabled or the secret has no payload).
+A live payload that cannot be mapped to exactly one catalogue store
+is an error (HTTP 500).
+
 Failure handling
 ================
 
-* A secret that is already on the destination store succeeds (no-op).
+* A secret that is already on the destination store succeeds as a
+  no-op on the API. The operator command skips those secrets and does
+  not rewrap them.
 * Concurrent migrates of the same secret UUID are serialized with a
   ``SELECT ... FOR UPDATE`` row lock. The second request re-checks
   after the lock and no-ops when the first already moved the payload.
-* Metadata-only secrets return ``400``.
+* Metadata-only secrets return ``400``. The operator command records
+  them as failures and continues.
 * Decrypt or destination ``store_secret`` failures leave the secret on
   the source store (no database rewrite has started yet).
 * If a migrate fails after the destination plugin accepted the payload,
   the API rolls back the Barbican database change and deletes the new
   plugin object. The secret remains on the source store.
+* ``barbican-manage secret migrate`` continues with remaining secrets.
+  It writes one JSON object per failure to
+  ``barbican-manage-secret-migrate-errors.jsonl`` (or ``--error-file``)
+  and exits ``1`` if any secret failed on a live run. ``--dry-run``
+  still records discover failures in that file but exits ``0``.
 
 See also
 ========
 
+* :doc:`/cli/barbican-manage-secret-migrate`
 * :doc:`/admin/barbican_manage`
 * :doc:`/configuration/plugin_backends`
 * :doc:`/api/reference/store_backends`
+

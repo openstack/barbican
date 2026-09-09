@@ -101,3 +101,9 @@ Multiple backend can be useful in following type of usage scenarios.
   client services have strict compliance requirements (e.g. FIPS) so will use
   HSM backed plugins whereas others may be okay storing keys in software-only
   crypto plugin.
+
+Changing the global default or a project's preferred store only affects
+secrets created after that change. Existing payloads remain on the store
+that created them. To move an existing payload onto another configured
+store without changing the secret UUID, see
+:doc:`/admin/secret_store_migrate`.
