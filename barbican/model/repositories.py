@@ -814,6 +814,8 @@ class SecretStoreMetadatumRepo(BaseRepo):
         now = timeutils.utcnow()
 
         for k, v in metadata.items():
+            if v is None:
+                continue
             meta_model = models.SecretStoreMetadatum(k, v)
             meta_model.updated_at = now
             meta_model.secret = secret_model
