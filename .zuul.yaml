@@ -30,7 +30,7 @@
     nodeset: devstack-single-node-centos-9-stream
     parent: barbican-tox-functional
     description: |
-      Functional testing for a FIPS enabled Centos 8 system
+      Functional testing for a FIPS enabled CentOS Stream 9 system
     pre-run: playbooks/enable-fips.yaml
     vars:
       nslookup_target: 'opendev.org'
