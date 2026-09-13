@@ -72,7 +72,7 @@ mailing list
 
     More information about the mailing list, including how to subscribe
     and read the archives, can be found at:
-    http://lists.openstack.org/cgi-bin/mailman/listinfo/openstack-discuss
+    https://lists.openstack.org/mailman3/lists/openstack-discuss.lists.openstack.org/
 
 meet-ups
     The Barbican project usually has a presence at the OpenDev/OpenStack
