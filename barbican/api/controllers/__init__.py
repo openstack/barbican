@@ -11,6 +11,7 @@
 #  under the License.
 
 import collections.abc
+from urllib import parse
 
 from oslo_policy import policy
 import pecan
@@ -174,6 +175,18 @@ def flatten(d, parent_key=''):
         else:
             items.append((new_key, v))
     return dict(items)
+
+
+def pagination_query_string():
+    """Build URL-encoded query string from the current request.
+
+    Excludes 'limit' and 'offset' which are managed by pagination logic.
+    """
+    return parse.urlencode(
+        {k: v for k, v in pecan.request.GET.mixed().items()
+         if k not in ('limit', 'offset')},
+        doseq=True
+    )
 
 
 class ACLMixin(object):

@@ -162,6 +162,40 @@ class WhenTestingContainerConsumersResource(utils.BarbicanAPIBaseTestCase):
 
         self.assertEqual(3, consumer_get_resp.json["total"])
 
+    def test_pagination_next_and_previous_links(self):
+        resp, container_uuid = create_container(
+            self.app,
+            name=self.container_name,
+            container_type=self.container_type
+        )
+        self.assertEqual(201, resp.status_int)
+
+        for consumer in [self.consumer_a, self.consumer_b, self.consumer_c]:
+            consumer_resp, _ = create_container_consumer(
+                self.app,
+                container_id=container_uuid,
+                name=consumer["name"],
+                url=consumer["URL"]
+            )
+            self.assertEqual(200, consumer_resp.status_int)
+
+        params = {'limit': '1', 'offset': '1'}
+        consumer_get_resp = self.app.get(
+            '/containers/{container_id}/consumers/'.format(
+                container_id=container_uuid),
+            params
+        )
+
+        self.assertEqual(200, consumer_get_resp.status_int)
+        next_ref = consumer_get_resp.json.get('next')
+        self.assertIsNotNone(next_ref)
+        self.assertIn('limit=1', next_ref)
+        self.assertIn('offset=2', next_ref)
+        previous_ref = consumer_get_resp.json.get('previous')
+        self.assertIsNotNone(previous_ref)
+        self.assertIn('limit=1', previous_ref)
+        self.assertIn('offset=0', previous_ref)
+
     def test_can_delete_consumer(self):
         resp, container_uuid = create_container(
             self.app,
@@ -483,6 +517,36 @@ class WhenTestingSecretConsumersResource(utils.BarbicanAPIBaseTestCase):
         )
 
         self.assertEqual(3, consumer_get_resp.json["total"])
+
+    def test_pagination_next_and_previous_links(self):
+        resp, secret_id = create_secret(self.app)
+        self.assertEqual(201, resp.status_int)
+
+        for consumer in [self.consumer_a, self.consumer_b, self.consumer_c]:
+            consumer_resp, _ = create_secret_consumer(
+                self.app,
+                secret_id=secret_id,
+                service=consumer["service"],
+                resource_type=consumer["resource_type"],
+                resource_id=consumer["resource_id"],
+            )
+            self.assertEqual(200, consumer_resp.status_int)
+
+        params = {'limit': '1', 'offset': '1'}
+        consumer_get_resp = self.app.get(
+            '/secrets/{secret_id}/consumers/'.format(secret_id=secret_id),
+            params
+        )
+
+        self.assertEqual(200, consumer_get_resp.status_int)
+        next_ref = consumer_get_resp.json.get('next')
+        self.assertIsNotNone(next_ref)
+        self.assertIn('limit=1', next_ref)
+        self.assertIn('offset=2', next_ref)
+        previous_ref = consumer_get_resp.json.get('previous')
+        self.assertIsNotNone(previous_ref)
+        self.assertIn('limit=1', previous_ref)
+        self.assertIn('offset=0', previous_ref)
 
     def test_can_delete_consumer(self):
         resp, secret_id = create_secret(self.app)

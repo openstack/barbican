@@ -157,6 +157,29 @@ class WhenGettingOrdersListUsingOrdersResource(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(200, resp.status_int)
         self.assertEqual(0, len(resp.json.get('orders')))
 
+    def test_pagination_next_and_previous_links(self):
+        # Note: filter preservation for the 'meta' parameter is not tested
+        # here because the meta filter uses a JSON contains() query that is
+        # not supported in the SQLite unit test environment. Filter
+        # preservation for orders is covered by functional tests.
+        for _ in range(11):
+            resp, _ = create_order(
+                self.app, order_type='key', meta=generic_key_meta)
+            self.assertEqual(202, resp.status_int)
+        params = {'limit': '2', 'offset': '2'}
+
+        resp = self.app.get('/orders/', params)
+
+        self.assertEqual(200, resp.status_int)
+        next_ref = resp.json.get('next')
+        self.assertIsNotNone(next_ref)
+        self.assertIn('limit=2', next_ref)
+        self.assertIn('offset=4', next_ref)
+        previous_ref = resp.json.get('previous')
+        self.assertIsNotNone(previous_ref)
+        self.assertIn('limit=2', previous_ref)
+        self.assertIn('offset=0', previous_ref)
+
 
 class WhenGettingOrDeletingOrders(utils.BarbicanAPIBaseTestCase):
     def test_can_get_order(self):

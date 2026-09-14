@@ -135,6 +135,8 @@ class OrdersController(controllers.ACLMixin):
             suppress_exception=True)
         orders, offset, limit, total = result
 
+        query_string = controllers.pagination_query_string()
+
         if not orders:
             orders_resp_overall = {'orders': [],
                                    'total': total}
@@ -143,9 +145,10 @@ class OrdersController(controllers.ACLMixin):
                 hrefs.convert_to_hrefs(o.to_dict_fields())
                 for o in orders
             ]
-            orders_resp_overall = hrefs.add_nav_hrefs('orders',
-                                                      offset, limit, total,
-                                                      {'orders': orders_resp})
+            orders_resp_overall = hrefs.add_nav_hrefs(
+                'orders', offset, limit, total,
+                {'orders': orders_resp},
+                query_string=query_string)
             orders_resp_overall.update({'total': total})
 
         return orders_resp_overall

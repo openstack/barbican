@@ -150,6 +150,8 @@ class ContainersController(controllers.ACLMixin):
 
         containers, offset, limit, total = result
 
+        query_string = controllers.pagination_query_string()
+
         if not containers:
             resp_ctrs_overall = {'containers': [], 'total': total}
         else:
@@ -167,7 +169,8 @@ class ContainersController(controllers.ACLMixin):
                 offset,
                 limit,
                 total,
-                {'containers': resp_ctrs}
+                {'containers': resp_ctrs},
+                query_string=query_string
             )
             resp_ctrs_overall.update({'total': total})
 
