@@ -70,10 +70,10 @@ rules = [
             "(rule:secret_project_member and rule:secret_is_not_private) or "
             "rule:secret_acl_read)"),
         scope_types=['project'],
-        description='Retrieve a secrets payload.',
+        description="Retrieve a secret's payload.",
         operations=[
             {
-                'path': '/v1/secrets/{uuid}/payload',
+                'path': '/v1/secrets/{secret-id}/payload',
                 'method': 'GET'
             }
         ],
@@ -89,7 +89,7 @@ rules = [
             "(rule:secret_project_member and rule:secret_is_not_private) or "
             "rule:secret_acl_read)"),
         scope_types=['project'],
-        description='Retrieves a secrets metadata.',
+        description="Retrieve a secret's metadata.",
         operations=[
             {
                 'path': '/v1/secrets/{secret-id}',
@@ -124,7 +124,7 @@ rules = [
             "(rule:secret_project_member and rule:secret_owner) or "
             "(rule:secret_project_member and rule:secret_is_not_private))"),
         scope_types=['project'],
-        description='Delete a secret by uuid.',
+        description='Delete a secret.',
         operations=[
             {
                 'path': '/v1/secrets/{secret-id}',
@@ -137,7 +137,7 @@ rules = [
         name='secrets:post',
         check_str='True:%(enforce_new_defaults)s and role:member',
         scope_types=['project'],
-        description='Creates a Secret entity.',
+        description='Create a secret.',
         operations=[
             {
                 'path': '/v1/secrets',
@@ -150,7 +150,7 @@ rules = [
         name='secrets:get',
         check_str='True:%(enforce_new_defaults)s and role:member',
         scope_types=['project'],
-        description='Lists a projects secrets.',
+        description="List a project's secrets.",
         operations=[
             {
                 'path': '/v1/secrets',

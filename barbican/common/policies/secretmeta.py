@@ -62,8 +62,9 @@ rules = [
             "(rule:secret_project_member and rule:secret_is_not_private) or "
             "rule:secret_acl_read)"),
         scope_types=['project'],
-        description='metadata/: Lists a secrets user-defined metadata. || ' +
-                    'metadata/{key}: Retrieves a secrets user-added metadata.',
+        description=(
+            "List a secret's user-defined metadata, or retrieve a single "
+            "item from a secret's user-defined metadata by key."),
         operations=[
             {
                 'path': '/v1/secrets/{secret-id}/metadata',
@@ -84,11 +85,12 @@ rules = [
             "(rule:secret_project_member and rule:secret_owner) or "
             "(rule:secret_project_member and rule:secret_is_not_private))"),
         scope_types=['project'],
-        description='Adds a new key/value pair to the secrets user-defined ' +
-                    'metadata.',
+        description=(
+            "Add a new key/value pair to the secret's user-defined "
+            "metadata."),
         operations=[
             {
-                'path': '/v1/secrets/{secret-id}/metadata/{meta-key}',
+                'path': '/v1/secrets/{secret-id}/metadata',
                 'method': 'POST'
             }
         ],
@@ -102,9 +104,9 @@ rules = [
             "(rule:secret_project_member and rule:secret_owner) or "
             "(rule:secret_project_member and rule:secret_is_not_private))"),
         scope_types=['project'],
-        description='metadata/: Sets the user-defined metadata for a secret ' +
-                    '|| metadata/{key}: Updates an existing key/value pair ' +
-                    'in the secrets user-defined metadata.',
+        description=(
+            "Set a secret's user-defined metadata, or update a single "
+            "item in a secret's user-defined metadata by key."),
         operations=[
             {
                 'path': '/v1/secrets/{secret-id}/metadata',
@@ -125,7 +127,7 @@ rules = [
             "(rule:secret_project_member and rule:secret_owner) or "
             "(rule:secret_project_member and rule:secret_is_not_private))"),
         scope_types=['project'],
-        description='Delete secret user-defined metadata by key.',
+        description="Delete a secret's user-defined metadata by key.",
         operations=[
             {
                 'path': '/v1/secrets/{secret-id}/metadata/{meta-key}',

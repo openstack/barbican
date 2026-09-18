@@ -68,7 +68,7 @@ rules = [
         name='containers:post',
         check_str='True:%(enforce_new_defaults)s and role:member',
         scope_types=['project'],
-        description='Creates a container.',
+        description='Create a container.',
         operations=[
             {
                 'path': '/v1/containers',
@@ -81,7 +81,7 @@ rules = [
         name='containers:get',
         check_str='True:%(enforce_new_defaults)s and role:member',
         scope_types=['project'],
-        description='Lists a projects containers.',
+        description="List a project's containers.",
         operations=[
             {
                 'path': '/v1/containers',
@@ -100,7 +100,7 @@ rules = [
             ' rule:container_is_not_private) or '
             'rule:container_acl_read)'),
         scope_types=['project'],
-        description='Retrieves a single container.',
+        description='Retrieve a single container.',
         operations=[
             {
                 'path': '/v1/containers/{container-id}',
@@ -118,10 +118,10 @@ rules = [
             '(rule:container_project_member and '
             ' rule:container_is_not_private))'),
         scope_types=['project'],
-        description='Deletes a container.',
+        description='Delete a container.',
         operations=[
             {
-                'path': '/v1/containers/{uuid}',
+                'path': '/v1/containers/{container-id}',
                 'method': 'DELETE'
             }
         ],
