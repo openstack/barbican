@@ -1,0 +1,11 @@
+---
+security:
+  - |
+    Bug `#2165913 <https://bugs.launchpad.net/barbican/+bug/2165913>`_:
+    The container-consumer and secret-consumer ``GET`` endpoints now verify
+    that the requested consumer actually belongs to the container or secret
+    named in the URL before returning it. Previously a consumer was looked
+    up only by its own id while authorization was checked against the
+    URL's container/secret, allowing an authenticated user to read another
+    tenant's consumer metadata by pairing their own container/secret id
+    with an arbitrary consumer id. A mismatch now returns 404.
