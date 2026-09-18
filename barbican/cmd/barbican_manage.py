@@ -457,7 +457,6 @@ def main():
 
     try:
         logging.register_options(CONF)
-        logging.setup(CONF, "barbican-manage")
         cfg_files = cfg.find_config_files(project='barbican')
 
         CONF(args=sys.argv[1:],
@@ -465,6 +464,8 @@ def main():
              prog='barbican-manage',
              version=barbican.version.__version__,
              default_config_files=cfg_files)
+
+        logging.setup(CONF, "barbican-manage")
 
     except RuntimeError as e:
         sys.exit("ERROR: %s" % e)

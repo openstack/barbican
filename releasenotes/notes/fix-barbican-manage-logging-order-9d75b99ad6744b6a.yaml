@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Fixed ``barbican-manage`` calling ``logging.setup()`` before ``CONF`` was
+    populated from the configuration files, causing logging to be configured
+    with default settings instead of the ones from ``barbican.conf``.
+    ``logging.setup()`` is now called after config parsing.
