@@ -1,0 +1,15 @@
+---
+features:
+  - |
+    The SimpleCrypto plugin now supports Elliptic Curve (EC) asymmetric key
+    generation in addition to RSA and DSA.  Supported EC curves are SECP256R1
+    (P-256), SECP384R1 (P-384), and SECP521R1 (P-521), selected by the
+    ``bit_length`` parameter in the API request (256, 384, or 521
+    respectively).
+upgrade:
+  - |
+    Asymmetric key generation requests that do not specify an ``algorithm``
+    parameter will now be rejected with an error.  Previously, these requests
+    defaulted to RSA.  To avoid disruption, ensure all Order and key
+    generation API calls include an explicit ``algorithm`` value (``RSA``,
+    ``DSA``, or ``EC``).
