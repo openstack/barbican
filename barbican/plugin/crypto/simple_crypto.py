@@ -55,8 +55,19 @@ simple_crypto_plugin_opts = [
         'kek',
         default=[],
         secret=True,
-        help=u._('Fernet Key-Encryption Key (KEK) to be used by SimpleCrypto '
-                 'Plugin to encrypt Project-specific KEKs.'),
+        help=u._('Fernet Key-Encryption Key(s) (KEK) to be used by '
+                 'SimpleCrypto Plugin to encrypt Project-specific KEKs. '
+                 'The FIRST key in this list is always the one used to '
+                 'encrypt (both for new secrets and for "barbican-manage '
+                 'simple_crypto rewrap_pkek"). Additional keys after it '
+                 'are only used to decrypt data already encrypted under '
+                 'them. To rotate to a new key, PREPEND it to the front '
+                 'of this list -- keep the old key(s) after it until '
+                 '"rewrap_pkek" has been run, otherwise existing secrets '
+                 'become undecryptable. Appending a new key to the end '
+                 'instead of the front will NOT rotate anything: '
+                 '"rewrap_pkek" will silently re-encrypt with the '
+                 'unchanged first key.'),
     ),
     cfg.StrOpt('plugin_name',
                help=u._('User friendly plugin name'),
