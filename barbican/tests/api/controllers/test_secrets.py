@@ -270,6 +270,23 @@ class WhenGettingSecretsList(utils.BarbicanAPIBaseTestCase):
         self.assertIn('offset=0', previous_ref)
         self.assertIn('offset=4', next_ref)
 
+    def test_pagination_preserves_filters_in_next_and_previous(self):
+        for _ in range(11):
+            create_resp, _ = create_secret(
+                self.app, name='filtered_secret')
+            self.assertEqual(201, create_resp.status_int)
+        params = {'limit': '2', 'offset': '2', 'name': 'filtered_secret'}
+
+        get_resp = self.app.get('/secrets/', params)
+
+        self.assertEqual(200, get_resp.status_int)
+        next_ref = get_resp.json.get('next')
+        self.assertIsNotNone(next_ref)
+        self.assertIn('name=filtered_secret', next_ref)
+        previous_ref = get_resp.json.get('previous')
+        self.assertIsNotNone(previous_ref)
+        self.assertIn('name=filtered_secret', previous_ref)
+
     def test_empty_list_of_secrets(self):
         params = {'name': 'Austin Powers'}
 

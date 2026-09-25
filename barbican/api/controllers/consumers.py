@@ -118,6 +118,8 @@ class ContainerConsumersController(controllers.ACLMixin):
 
         consumers, offset, limit, total = result
 
+        query_string = controllers.pagination_query_string()
+
         if not consumers:
             resp_ctrs_overall = {'consumers': [], 'total': total}
         else:
@@ -133,7 +135,8 @@ class ContainerConsumersController(controllers.ACLMixin):
                 offset,
                 limit,
                 total,
-                {'consumers': resp_ctrs}
+                {'consumers': resp_ctrs},
+                query_string=query_string
             )
             resp_ctrs_overall.update({'total': total})
 
@@ -288,6 +291,8 @@ class SecretConsumersController(controllers.ACLMixin):
 
         consumers, offset, limit, total = result
 
+        query_string = controllers.pagination_query_string()
+
         if not consumers:
             resp_ctrs_overall = {'consumers': [], 'total': total}
         else:
@@ -303,7 +308,8 @@ class SecretConsumersController(controllers.ACLMixin):
                 offset,
                 limit,
                 total,
-                {'consumers': resp_ctrs}
+                {'consumers': resp_ctrs},
+                query_string=query_string
             )
             resp_ctrs_overall.update({'total': total})
 

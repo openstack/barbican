@@ -202,6 +202,17 @@ class WhenGettingTransKeysListUsingTransportKeysResource(FunctionalTest):
         else:
             return '/transport_keys'
 
+    def test_pagination_preserves_plugin_name_filter(self):
+        params = {'offset': self.offset, 'limit': self.limit,
+                  'plugin_name': self.plugin_name}
+
+        resp = self.app.get('/transport_keys/', params)
+
+        self.assertIn('next', resp.namespace)
+        self.assertIn(self.plugin_name, resp.namespace['next'])
+        self.assertIn('previous', resp.namespace)
+        self.assertIn(self.plugin_name, resp.namespace['previous'])
+
 
 class WhenCreatingTransKeysListUsingTransportKeysResource(FunctionalTest):
     def setUp(self):

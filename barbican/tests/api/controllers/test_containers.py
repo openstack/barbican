@@ -217,6 +217,21 @@ class WhenGettingContainersListUsingContainersResource(
             self.assertEqual(200, resp.status_int)
             self.assertEqual(self.num_containers, resp.namespace.get('total'))
 
+    def test_pagination_preserves_type_filter(self):
+        self._create_containers(type='generic')
+        self._create_containers(type='rsa')
+        params = {'limit': '2', 'offset': '2', 'type': 'generic'}
+
+        resp = self.app.get('/containers/', params)
+
+        self.assertEqual(200, resp.status_int)
+        next_ref = resp.namespace.get('next')
+        self.assertIsNotNone(next_ref)
+        self.assertIn('type=generic', next_ref)
+        previous_ref = resp.namespace.get('previous')
+        self.assertIsNotNone(previous_ref)
+        self.assertIn('type=generic', previous_ref)
+
     def test_response_should_include_total(self):
         self._create_containers()
 
