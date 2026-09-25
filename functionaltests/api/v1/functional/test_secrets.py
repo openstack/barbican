@@ -1660,7 +1660,7 @@ class SecretsMultipleBackendTestCase(base.TestCase):
         'passphrase_type_preferred_store': [
             admin_a,
             'passphrase',
-            'mysecretpassphrase',
+            b'mysecretpassphrase',
             get_passphrase_req()
         ],
         'symmetric_type_no_preferred_store': [

@@ -16,9 +16,13 @@ graphviz [doc test]
 # pki-ca [platform:rpm]
 # pki-kra [platform:rpm]
 
-#Required for cryptography lib
+# Required for cryptography lib
 libssl-dev [platform:dpkg]
 openssl-devel [platform:rpm]
+
+# Required for PKCS#11 functional testing with SoftHSM
+softhsm [platform:rpm]
+softhsm2 [platform:dpkg]
 
 # libsrvg2 is needed for sphinxcontrib-svg2pdfconverter in docs builds.
 librsvg2-tools [doc platform:rpm]

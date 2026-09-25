@@ -22,6 +22,10 @@ if is_service_enabled barbican; then
             echo_summary "Installing Vault backend"
             install_vault_backend
         fi
+        if is_service_enabled barbican-softhsm; then
+            echo_summary "Initializing SoftHSM"
+            initialize_softhsm
+        fi
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring Barbican"
         configure_barbican
@@ -37,6 +41,11 @@ if is_service_enabled barbican; then
             echo_summary "Configuring Vault plugin"
             configure_vault_plugin
         fi
+        if is_service_enabled barbican-softhsm; then
+            echo_summary "Configuring PKCS#11 plugin with SoftHSM"
+            configure_softhsm_plugin
+            generate_softhsm_master_keys
+        fi
 
         # Configure Cinder, Nova and Glance to use Barbican
         configure_core_services
@@ -51,6 +60,10 @@ if is_service_enabled barbican; then
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
         echo_summary "Initializing Barbican"
         init_barbican
+        if is_service_enabled barbican-softhsm; then
+            echo_summary "Syncing secret stores for PKCS#11 dual-store config"
+            $BARBICAN_BIN_DIR/barbican-manage db sync_secret_stores
+        fi
         start_barbican
         if is_service_enabled pykmip-server; then
             echo_summary "Starting PyKMIP server"

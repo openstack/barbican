@@ -626,5 +626,146 @@ function configure_vault_plugin {
     iniset $BARBICAN_CONF vault_plugin vault_url "http://127.0.0.1:8200"
 }
 
+# SoftHSM functions for Barbican PKCS#11 functional testing
+# ---------------------------------------------------------
+
+BARBICAN_SOFTHSM2_CONF=${BARBICAN_SOFTHSM2_CONF:-$DEST/softhsm2/softhsm2.conf}
+BARBICAN_SOFTHSM_TOKEN_DIR=${BARBICAN_SOFTHSM_TOKEN_DIR:-$DEST/softhsm2/tokens}
+BARBICAN_SOFTHSM_TOKEN_LABEL=${BARBICAN_SOFTHSM_TOKEN_LABEL:-SoftHSMToken}
+BARBICAN_SOFTHSM_PIN=${BARBICAN_SOFTHSM_PIN:-1234}
+BARBICAN_SOFTHSM_SO_PIN=${BARBICAN_SOFTHSM_SO_PIN:-1234}
+BARBICAN_PKCS11_MKEK_LABEL=${BARBICAN_PKCS11_MKEK_LABEL:-devstack_mkek}
+BARBICAN_PKCS11_HMAC_LABEL=${BARBICAN_PKCS11_HMAC_LABEL:-devstack_hmac}
+
+# _get_softhsm_library_path - Locate the SoftHSM PKCS#11 shared library.
+function _get_softhsm_library_path {
+    local libpath
+    for libpath in \
+        /usr/lib64/pkcs11/libsofthsm2.so \
+        /usr/lib64/softhsm/libsofthsm2.so \
+        /usr/lib/softhsm/libsofthsm2.so \
+        /usr/lib/pkcs11/libsofthsm2.so; do
+        if [[ -f "$libpath" ]]; then
+            echo "$libpath"
+            return 0
+        fi
+    done
+    die $LINENO "Could not find libsofthsm2.so"
+}
+
+# _export_softhsm_env - Export SOFTHSM2_CONF for the current shell and openrc.
+function _export_softhsm_env {
+    export SOFTHSM2_CONF=$BARBICAN_SOFTHSM2_CONF
+    if [[ -f $DEST/openrc ]]; then
+        if ! grep -q '^export SOFTHSM2_CONF=' $DEST/openrc; then
+            echo "export SOFTHSM2_CONF=$BARBICAN_SOFTHSM2_CONF" >> $DEST/openrc
+        fi
+    fi
+}
+
+# _configure_softhsm_systemd_env - Pass SOFTHSM2_CONF to Barbican systemd units.
+function _configure_softhsm_systemd_env {
+    local unit
+    for unit in barbican-svc barbican-retry barbican-keystone-listener; do
+        sudo mkdir -p "/etc/systemd/system/devstack@${unit}.service.d"
+        sudo tee "/etc/systemd/system/devstack@${unit}.service.d/softhsm.conf" > /dev/null <<EOF
+[Service]
+Environment=SOFTHSM2_CONF=$BARBICAN_SOFTHSM2_CONF
+EOF
+    done
+    sudo systemctl daemon-reload
+}
+
+# initialize_softhsm - Initialize a SoftHSM token for Barbican PKCS#11 testing.
+function initialize_softhsm {
+    echo_summary "Initializing SoftHSM token for Barbican PKCS#11"
+    local libpath
+    libpath=$(_get_softhsm_library_path)
+
+    mkdir -p "$(dirname $BARBICAN_SOFTHSM2_CONF)"
+    mkdir -p "$BARBICAN_SOFTHSM_TOKEN_DIR"
+    cat <<EOF > "$BARBICAN_SOFTHSM2_CONF"
+directories.tokendir = $BARBICAN_SOFTHSM_TOKEN_DIR
+objectstore.backend = file
+log.level = INFO
+EOF
+    _export_softhsm_env
+
+    if ! softhsm2-util --show-slots 2>/dev/null | grep -q "$BARBICAN_SOFTHSM_TOKEN_LABEL"; then
+        softhsm2-util --init-token --free \
+            --label "$BARBICAN_SOFTHSM_TOKEN_LABEL" \
+            --pin "$BARBICAN_SOFTHSM_PIN" \
+            --so-pin "$BARBICAN_SOFTHSM_SO_PIN"
+    fi
+}
+
+# configure_softhsm_plugin - Configure dual-store Barbican with PKCS#11 default.
+function configure_softhsm_plugin {
+    echo_summary "Configuring Barbican PKCS#11 backend with SoftHSM"
+    local libpath
+    libpath=$(_get_softhsm_library_path)
+    _export_softhsm_env
+
+    iniset $BARBICAN_CONF secretstore enable_multiple_secret_stores True
+    iniset $BARBICAN_CONF secretstore stores_lookup_suffix "software, pkcs11"
+    iniset $BARBICAN_CONF crypto enabled_crypto_plugins "simple_crypto, p11_crypto"
+
+    iniset $BARBICAN_CONF "secretstore:software" secret_store_plugin store_crypto
+    iniset $BARBICAN_CONF "secretstore:software" crypto_plugin simple_crypto
+
+    iniset $BARBICAN_CONF "secretstore:pkcs11" secret_store_plugin store_crypto
+    iniset $BARBICAN_CONF "secretstore:pkcs11" crypto_plugin p11_crypto
+    iniset $BARBICAN_CONF "secretstore:pkcs11" global_default True
+
+    iniset $BARBICAN_CONF p11_crypto_plugin library_path "$libpath"
+    iniset $BARBICAN_CONF p11_crypto_plugin token_labels "$BARBICAN_SOFTHSM_TOKEN_LABEL"
+    iniset $BARBICAN_CONF p11_crypto_plugin login "$BARBICAN_SOFTHSM_PIN"
+    iniset $BARBICAN_CONF p11_crypto_plugin mkek_label "$BARBICAN_PKCS11_MKEK_LABEL"
+    iniset $BARBICAN_CONF p11_crypto_plugin hmac_label "$BARBICAN_PKCS11_HMAC_LABEL"
+    iniset $BARBICAN_CONF p11_crypto_plugin encryption_mechanism CKM_AES_CBC
+    iniset $BARBICAN_CONF p11_crypto_plugin hmac_key_type CKK_GENERIC_SECRET
+    iniset $BARBICAN_CONF p11_crypto_plugin hmac_keygen_mechanism CKM_GENERIC_SECRET_KEY_GEN
+    iniset $BARBICAN_CONF p11_crypto_plugin hmac_mechanism CKM_SHA256_HMAC
+    iniset $BARBICAN_CONF p11_crypto_plugin key_wrap_mechanism CKM_AES_KEY_WRAP_PAD
+    iniset $BARBICAN_CONF p11_crypto_plugin key_wrap_generate_iv False
+
+    iniset $BARBICAN_DIR/etc/barbican/barbican-functional.conf keymanager \
+        server_multiple_backends_enabled True
+    iniset $BARBICAN_CONF_DIR/barbican-functional.conf keymanager \
+        server_multiple_backends_enabled True
+
+    _configure_softhsm_systemd_env
+}
+
+# generate_softhsm_master_keys - Create MKEK and HMAC keys in SoftHSM if needed.
+function generate_softhsm_master_keys {
+    echo_summary "Generating PKCS#11 master keys in SoftHSM"
+    _export_softhsm_env
+    local libpath
+    libpath=$(_get_softhsm_library_path)
+
+    $BARBICAN_BIN_DIR/barbican-manage hsm check_mkek \
+        --library-path "$libpath" \
+        --passphrase "$BARBICAN_SOFTHSM_PIN" \
+        --slot-id 0 \
+        --label "$BARBICAN_PKCS11_MKEK_LABEL" 2>/dev/null \
+        || $BARBICAN_BIN_DIR/barbican-manage hsm gen_mkek \
+            --library-path "$libpath" \
+            --passphrase "$BARBICAN_SOFTHSM_PIN" \
+            --slot-id 0 \
+            --label "$BARBICAN_PKCS11_MKEK_LABEL"
+
+    $BARBICAN_BIN_DIR/barbican-manage hsm check_hmac \
+        --library-path "$libpath" \
+        --passphrase "$BARBICAN_SOFTHSM_PIN" \
+        --slot-id 0 \
+        --label "$BARBICAN_PKCS11_HMAC_LABEL" 2>/dev/null \
+        || $BARBICAN_BIN_DIR/barbican-manage hsm gen_hmac \
+            --library-path "$libpath" \
+            --passphrase "$BARBICAN_SOFTHSM_PIN" \
+            --slot-id 0 \
+            --label "$BARBICAN_PKCS11_HMAC_LABEL"
+}
+
 # Restore xtrace
 $XTRACE
