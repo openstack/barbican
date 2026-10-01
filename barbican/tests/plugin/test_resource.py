@@ -15,9 +15,12 @@
 import base64
 from unittest import mock
 
+from sqlalchemy import exc as sa_exc
 import testtools
 
+from barbican.common import exception
 from barbican.model import models
+from barbican.plugin.crypto import base as crypto_base
 from barbican.plugin.interface import secret_store
 from barbican.plugin import resources
 from barbican.plugin import store_crypto
@@ -223,3 +226,438 @@ class WhenTestingPluginResource(testtools.TestCase,
 
         self.secret_repo.delete_entity_by_id.assert_called_once_with(
             entity_id=secret_model.id, external_project_id=project_id)
+
+    def _make_secret_store(self, store_plugin='kmip_plugin',
+                           crypto_plugin=None):
+        secret_store_model = mock.MagicMock()
+        secret_store_model.id = 'ss-1'
+        secret_store_model.store_plugin = store_plugin
+        secret_store_model.crypto_plugin = crypto_plugin
+        return secret_store_model
+
+    def _make_secret(self, encrypted_data=None, secret_id='sid'):
+        secret_model = mock.MagicMock()
+        secret_model.id = secret_id
+        secret_model.encrypted_data = encrypted_data or []
+        secret_model.secret_store_metadata = {}
+        self.secret_repo.get_secret_by_id.return_value = secret_model
+        return secret_model
+
+    @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
+                autospec=True)
+    def test_rewrap_secret_already_on_target_is_noop(self, mock_fullname):
+        mock_fullname.return_value = 'plugin.Full.Name'
+        self.moc_plugin_manager.return_value.get_plugin_by_name.return_value \
+            = self.moc_plugin
+        self.secret_meta_repo.get_metadata_for_secret.return_value = {
+            'plugin_name': 'plugin.Full.Name',
+            'content_type': 'application/octet-stream',
+        }
+        secret_model = self._make_secret()
+
+        resources.rewrap_secret(
+            secret_model, self.project_model, self._make_secret_store())
+
+        self.secret_repo.get_secret_by_id.assert_called_once_with(
+            'sid', for_update=True)
+        self.moc_plugin.store_secret.assert_not_called()
+        self.moc_plugin.delete_secret.assert_not_called()
+
+    def test_rewrap_secret_without_payload_raises(self):
+        self.secret_meta_repo.get_metadata_for_secret.return_value = {}
+        secret_model = self._make_secret()
+
+        self.assertRaises(
+            exception.SecretPayloadNotFound,
+            resources.rewrap_secret,
+            secret_model,
+            self.project_model,
+            self._make_secret_store())
+
+    @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
+                autospec=True)
+    def test_rewrap_secret_concurrent_second_migrate_is_noop(
+            self, mock_fullname):
+        """After FOR UPDATE, a finished peer migrate makes this a no-op."""
+        mock_fullname.return_value = 'NewPlugin'
+        self.moc_plugin_manager.return_value.get_plugin_by_name.return_value \
+            = self.moc_plugin
+        # Locked row already reflects the destination plugin.
+        self.secret_meta_repo.get_metadata_for_secret.return_value = {
+            'plugin_name': 'NewPlugin',
+            'content_type': 'application/octet-stream',
+            'secret_id': 'already-moved',
+        }
+        secret_model = self._make_secret()
+
+        resources.rewrap_secret(
+            secret_model, self.project_model, self._make_secret_store())
+
+        self.secret_repo.get_secret_by_id.assert_called_once_with(
+            'sid', for_update=True)
+        self.moc_plugin.store_secret.assert_not_called()
+        self.moc_plugin.delete_secret.assert_not_called()
+
+    @mock.patch('barbican.plugin.resources._get_secret', autospec=True)
+    @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
+                autospec=True)
+    def test_rewrap_secret_raises_when_decrypt_fails(
+            self, mock_fullname, mock_get):
+        mock_fullname.return_value = 'NewPlugin'
+        mock_get.side_effect = RuntimeError('decrypt failed')
+        self.moc_plugin_manager.return_value.get_plugin_by_name.return_value \
+            = self.moc_plugin
+        self.secret_meta_repo.get_metadata_for_secret.return_value = {
+            'plugin_name': 'OldPlugin',
+            'content_type': 'application/octet-stream',
+            'secret_id': 'old-obj',
+        }
+        secret_model = self._make_secret()
+
+        self.assertRaises(
+            RuntimeError,
+            resources.rewrap_secret,
+            secret_model,
+            self.project_model,
+            self._make_secret_store())
+
+        self.moc_plugin.store_secret.assert_not_called()
+        self.moc_plugin.delete_secret.assert_not_called()
+
+    @mock.patch('barbican.plugin.resources._get_secret', autospec=True)
+    @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
+                autospec=True)
+    def test_rewrap_secret_raises_when_store_plugin_fails(
+            self, mock_fullname, mock_get):
+        mock_fullname.return_value = 'NewPlugin'
+        dto = secret_store.SecretDTO(
+            secret_store.SecretType.OPAQUE,
+            'c2VjcmV0',
+            secret_store.KeySpec(),
+            'application/octet-stream')
+        mock_get.return_value = dto
+        self.moc_plugin_manager.return_value.get_plugin_by_name.return_value \
+            = self.moc_plugin
+        self.moc_plugin.store_secret.side_effect = (
+            exception.BarbicanException('store plugin failed'))
+        self.secret_meta_repo.get_metadata_for_secret.return_value = {
+            'plugin_name': 'OldPlugin',
+            'content_type': 'application/octet-stream',
+            'secret_id': 'old-obj',
+        }
+        secret_model = self._make_secret()
+
+        self.assertRaises(
+            exception.BarbicanException,
+            resources.rewrap_secret,
+            secret_model,
+            self.project_model,
+            self._make_secret_store())
+
+        self.moc_plugin.store_secret.assert_called_once()
+        # Nothing was stored successfully, so no rollback delete and
+        # the source plugin object must remain.
+        self.moc_plugin.delete_secret.assert_not_called()
+        self.secret_meta_repo.delete_for_secret.assert_not_called()
+
+    @mock.patch('barbican.plugin.resources._get_secret', autospec=True)
+    @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
+                autospec=True)
+    def test_rewrap_secret_stores_then_deletes_old_object(
+            self, mock_fullname, mock_get):
+        mock_fullname.return_value = 'NewPlugin'
+        dto = secret_store.SecretDTO(
+            secret_store.SecretType.OPAQUE,
+            'c2VjcmV0',
+            secret_store.KeySpec(),
+            'application/octet-stream')
+        mock_get.return_value = dto
+        self.moc_plugin_manager.return_value.get_plugin_by_name.return_value \
+            = self.moc_plugin
+        self.moc_plugin.store_secret.return_value = {'secret_id': 'new-obj'}
+        old_meta = {
+            'plugin_name': 'OldPlugin',
+            'content_type': 'application/octet-stream',
+            'secret_id': 'old-obj',
+        }
+        new_meta = {
+            'plugin_name': 'NewPlugin',
+            'content_type': 'application/octet-stream',
+            'secret_id': 'new-obj',
+        }
+        # already-on-target check, current_meta, then saved_meta
+        self.secret_meta_repo.get_metadata_for_secret.side_effect = [
+            old_meta, old_meta, new_meta,
+        ]
+        old_datum = mock.MagicMock()
+        old_datum.id = 'd1'
+        old_datum.deleted = False
+        secret_model = self._make_secret(encrypted_data=[old_datum])
+
+        resources.rewrap_secret(
+            secret_model, self.project_model, self._make_secret_store())
+
+        self.secret_repo.get_secret_by_id.assert_called_once_with(
+            'sid', for_update=True)
+        self.moc_plugin.store_secret.assert_called_once()
+        self.secret_meta_repo.delete_for_secret.assert_called_once_with('sid')
+        old_datum.delete.assert_called_once()
+        self.moc_plugin.delete_secret.assert_called_once_with({
+            'plugin_name': 'OldPlugin',
+            'content_type': 'application/octet-stream',
+            'secret_id': 'old-obj',
+        })
+
+    @mock.patch('barbican.plugin.resources._get_secret', autospec=True)
+    @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
+                autospec=True)
+    def test_rewrap_secret_skips_delete_when_object_identity_matches(
+            self, mock_fullname, mock_get):
+        mock_fullname.return_value = 'NewPlugin'
+        dto = secret_store.SecretDTO(
+            secret_store.SecretType.OPAQUE,
+            'c2VjcmV0',
+            secret_store.KeySpec(),
+            'application/octet-stream')
+        mock_get.return_value = dto
+        self.moc_plugin_manager.return_value.get_plugin_by_name.return_value \
+            = self.moc_plugin
+        self.moc_plugin.store_secret.return_value = None
+        old_meta = {
+            'plugin_name': 'OldPlugin',
+            'content_type': 'application/octet-stream',
+        }
+        new_meta = {
+            'plugin_name': 'NewPlugin',
+            'content_type': 'application/octet-stream',
+        }
+        self.secret_meta_repo.get_metadata_for_secret.side_effect = [
+            old_meta, old_meta, new_meta,
+        ]
+        old_datum = mock.MagicMock()
+        old_datum.id = 'd1'
+        old_datum.deleted = False
+        secret_model = self._make_secret(encrypted_data=[old_datum])
+
+        resources.rewrap_secret(
+            secret_model, self.project_model, self._make_secret_store())
+
+        self.moc_plugin.store_secret.assert_called_once()
+        self.moc_plugin.delete_secret.assert_not_called()
+
+    @mock.patch('barbican.plugin.resources._get_secret', autospec=True)
+    @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
+                autospec=True)
+    def test_rewrap_secret_rolls_back_new_object_on_failure(
+            self, mock_fullname, mock_get):
+        mock_fullname.return_value = 'NewPlugin'
+        dto = secret_store.SecretDTO(
+            secret_store.SecretType.OPAQUE,
+            'c2VjcmV0',
+            secret_store.KeySpec(),
+            'application/octet-stream')
+        mock_get.return_value = dto
+        self.moc_plugin_manager.return_value.get_plugin_by_name.return_value \
+            = self.moc_plugin
+        self.moc_plugin.store_secret.return_value = {'secret_id': 'new-obj'}
+        self.secret_meta_repo.get_metadata_for_secret.return_value = {
+            'plugin_name': 'OldPlugin',
+            'content_type': 'application/octet-stream',
+            'secret_id': 'old-obj',
+        }
+        self.secret_meta_repo.save.side_effect = sa_exc.SQLAlchemyError(
+            'db fail')
+        secret_model = self._make_secret()
+
+        self.assertRaises(
+            sa_exc.SQLAlchemyError,
+            resources.rewrap_secret,
+            secret_model,
+            self.project_model,
+            self._make_secret_store())
+
+        self.moc_plugin.delete_secret.assert_called_once_with(
+            {'secret_id': 'new-obj'})
+
+    @mock.patch('barbican.plugin.resources._get_secret', autospec=True)
+    @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
+                autospec=True)
+    def test_rewrap_secret_does_not_rollback_unexpected_errors(
+            self, mock_fullname, mock_get):
+        mock_fullname.return_value = 'NewPlugin'
+        dto = secret_store.SecretDTO(
+            secret_store.SecretType.OPAQUE,
+            'c2VjcmV0',
+            secret_store.KeySpec(),
+            'application/octet-stream')
+        mock_get.return_value = dto
+        self.moc_plugin_manager.return_value.get_plugin_by_name.return_value \
+            = self.moc_plugin
+        self.moc_plugin.store_secret.return_value = {'secret_id': 'new-obj'}
+        self.secret_meta_repo.get_metadata_for_secret.return_value = {
+            'plugin_name': 'OldPlugin',
+            'content_type': 'application/octet-stream',
+            'secret_id': 'old-obj',
+        }
+        self.secret_meta_repo.save.side_effect = RuntimeError('unexpected')
+        secret_model = self._make_secret()
+
+        self.assertRaises(
+            RuntimeError,
+            resources.rewrap_secret,
+            secret_model,
+            self.project_model,
+            self._make_secret_store())
+
+        self.moc_plugin.delete_secret.assert_not_called()
+
+    @mock.patch('barbican.plugin.resources.crypto_mgr.get_manager',
+                autospec=True)
+    def test_rewrap_secret_raises_crypto_plugin_not_found(
+            self, mock_crypto_mgr):
+        mock_crypto_mgr.return_value.get_plugin_by_name.side_effect = (
+            crypto_base.CryptoPluginNotFound())
+        self.moc_plugin_manager.return_value.get_plugin_by_name.return_value \
+            = self.moc_plugin
+        self.secret_meta_repo.get_metadata_for_secret.return_value = {
+            'plugin_name': 'OldPlugin',
+            'content_type': 'application/octet-stream',
+        }
+        secret_model = self._make_secret()
+
+        self.assertRaises(
+            crypto_base.CryptoPluginNotFound,
+            resources.rewrap_secret,
+            secret_model,
+            self.project_model,
+            self._make_secret_store(crypto_plugin='missing_crypto'))
+
+        self.moc_plugin.store_secret.assert_not_called()
+
+    @mock.patch('barbican.plugin.resources._get_secret', autospec=True)
+    @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
+                autospec=True)
+    def test_rewrap_secret_drops_none_metadata_and_defaults_content_type(
+            self, mock_fullname, mock_get):
+        """store_crypto returns None; k8s retrieve may omit content_type."""
+        mock_fullname.return_value = 'NewPlugin'
+        dto = secret_store.SecretDTO(
+            secret_store.SecretType.OPAQUE,
+            'c2VjcmV0',
+            secret_store.KeySpec(),
+            None)
+        mock_get.return_value = dto
+        self.moc_plugin_manager.return_value.get_plugin_by_name.return_value \
+            = self.moc_plugin
+        self.moc_plugin.store_secret.return_value = {
+            'secret_id': 'new-obj',
+            'optional': None,
+        }
+        old_meta = {
+            'plugin_name': 'K8sSecretStore',
+            'namespace': 'barbican-secrets',
+            'secret_name': 'barbican-secret-1',
+        }
+        new_meta = {
+            'plugin_name': 'NewPlugin',
+            'content_type': 'application/octet-stream',
+            'secret_id': 'new-obj',
+        }
+        # payload check (no datums), already-on-target,
+        # current_meta, then saved_meta
+        self.secret_meta_repo.get_metadata_for_secret.side_effect = [
+            old_meta, old_meta, old_meta, new_meta,
+        ]
+        secret_model = self._make_secret()
+
+        resources.rewrap_secret(
+            secret_model, self.project_model, self._make_secret_store())
+
+        saved = self.secret_meta_repo.save.call_args[0][0]
+        self.assertNotIn(None, saved.values())
+        self.assertEqual('application/octet-stream', saved['content_type'])
+        self.assertEqual('new-obj', saved['secret_id'])
+        self.assertNotIn('optional', saved)
+        self.secret_meta_repo.delete_for_secret.assert_called_once_with('sid')
+
+    @mock.patch('barbican.plugin.resources._get_secret', autospec=True)
+    @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
+                autospec=True)
+    def test_rewrap_secret_kmip_style_metadata(self, mock_fullname, mock_get):
+        """KMIP keeps the payload remotely; local DB has object metadata."""
+        mock_fullname.return_value = 'NewPlugin'
+        dto = secret_store.SecretDTO(
+            secret_store.SecretType.OPAQUE,
+            'c2VjcmV0',
+            secret_store.KeySpec(),
+            'application/octet-stream')
+        mock_get.return_value = dto
+        self.moc_plugin_manager.return_value.get_plugin_by_name.return_value \
+            = self.moc_plugin
+        self.moc_plugin.store_secret.return_value = {
+            'secret_id': 'kmip-new',
+        }
+        old_meta = {
+            'plugin_name': 'KMIPSecretStore',
+            'content_type': 'application/octet-stream',
+            'secret_id': 'kmip-old',
+        }
+        new_meta = {
+            'plugin_name': 'NewPlugin',
+            'content_type': 'application/octet-stream',
+            'secret_id': 'kmip-new',
+        }
+        # payload check (no datums), already-on-target,
+        # current_meta, then saved_meta
+        self.secret_meta_repo.get_metadata_for_secret.side_effect = [
+            old_meta, old_meta, old_meta, new_meta,
+        ]
+        secret_model = self._make_secret()
+
+        resources.rewrap_secret(
+            secret_model, self.project_model,
+            self._make_secret_store(store_plugin='kmip_plugin'))
+
+        self.moc_plugin.store_secret.assert_called_once()
+        self.moc_plugin.delete_secret.assert_called_once_with(old_meta)
+
+    @mock.patch('barbican.plugin.resources._get_secret', autospec=True)
+    @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
+                autospec=True)
+    def test_rewrap_secret_vault_style_metadata(self, mock_fullname, mock_get):
+        """Vault/OpenBao keep the payload remotely like KMIP."""
+        mock_fullname.return_value = 'NewPlugin'
+        dto = secret_store.SecretDTO(
+            secret_store.SecretType.OPAQUE,
+            'c2VjcmV0',
+            secret_store.KeySpec(),
+            'application/octet-stream')
+        mock_get.return_value = dto
+        self.moc_plugin_manager.return_value.get_plugin_by_name.return_value \
+            = self.moc_plugin
+        self.moc_plugin.store_secret.return_value = {
+            'secret_id': 'vault-new',
+        }
+        old_meta = {
+            'plugin_name': 'VaultSecretStore',
+            'content_type': 'application/octet-stream',
+            'secret_id': 'vault-old',
+        }
+        new_meta = {
+            'plugin_name': 'NewPlugin',
+            'content_type': 'application/octet-stream',
+            'secret_id': 'vault-new',
+        }
+        # payload check (no datums), already-on-target,
+        # current_meta, then saved_meta
+        self.secret_meta_repo.get_metadata_for_secret.side_effect = [
+            old_meta, old_meta, old_meta, new_meta,
+        ]
+        secret_model = self._make_secret()
+
+        resources.rewrap_secret(
+            secret_model, self.project_model,
+            self._make_secret_store(store_plugin='vault_plugin'))
+
+        self.moc_plugin.store_secret.assert_called_once()
+        self.moc_plugin.delete_secret.assert_called_once_with(old_meta)

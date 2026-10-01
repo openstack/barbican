@@ -84,6 +84,10 @@ class SecretResource(TestableResource):
     controller_cls = secrets.SecretController
 
 
+class SecretMigrateStoreResource(TestableResource):
+    controller_cls = secrets.SecretMigrateStoreController
+
+
 class OrdersResource(TestableResource):
     controller_cls = orders.OrdersController
 
@@ -1290,7 +1294,7 @@ class WhenTestingSecretStoreResource(BaseTestCase):
         self.setup_project_repository_mock(self.project_repo)
 
         secret_store_res = mock.MagicMock()
-        secret_store_res.to_dict_fields = mock.MagicMock(side_effect=IOError)
+        secret_store_res.to_api_dict = mock.MagicMock(side_effect=IOError)
         secret_store_res.id = self.store_id
 
         self.resource = SecretStoreResource(secret_store_res)
@@ -1457,3 +1461,147 @@ class WhenTestingSecretConsumerResource(BaseTestCase):
 
     def _invoke_on_get(self):
         self.resource.on_get(self.req, self.resp)
+
+
+class WhenTestingSecretMigrateStoreResource(BaseTestCase):
+    """RBAC tests for SecretMigrateStoreController."""
+
+    def setUp(self):
+        super(WhenTestingSecretMigrateStoreResource, self).setUp()
+
+        self.external_project_id = '12345project'
+        self.secret_id = '12345secret'
+        self.store_id = '93869b0f-60eb-4830-adb9-e2f7154a080b'
+        self.user_id = '123456user'
+        self.creator_user_id = '123456CreatorUser'
+
+        self.mock_enable_patcher = mock.patch(
+            'barbican.common.utils.is_multiple_backends_enabled',
+            autospec=True,
+            return_value=True)
+        self.mock_enable_patcher.start()
+        self.addCleanup(self.mock_enable_patcher.stop)
+
+        config.CONF.set_override(
+            'enforce_new_defaults', True, group='oslo_policy')
+
+        self.resolve_store_patcher = mock.patch(
+            'barbican.plugin.resources.resolve_secret_store_for_secret',
+            autospec=True,
+            return_value=None)
+        self.resolve_store_patcher.start()
+        self.addCleanup(self.resolve_store_patcher.stop)
+
+        self.preferred_store_patcher = mock.patch(
+            'barbican.plugin.resources.'
+            'get_effective_secret_store_id_for_project',
+            autospec=True,
+            return_value=None)
+        self.preferred_store_patcher.start()
+        self.addCleanup(self.preferred_store_patcher.stop)
+
+        # Force an error on PUT calls that pass RBAC; business logic is tested
+        # elsewhere.
+        self.secret_stores_repo = mock.MagicMock()
+        fail_method = mock.MagicMock(
+            return_value=None,
+            side_effect=self._generate_get_error())
+        self.secret_stores_repo.get = fail_method
+        self.setup_secret_stores_repository_mock(self.secret_stores_repo)
+
+        secret = mock.MagicMock()
+        secret.id = self.secret_id
+        secret.project.external_id = self.external_project_id
+        secret.creator_id = self.creator_user_id
+        self.resource = SecretMigrateStoreResource(secret, self.store_id)
+
+    def _set_preferred_store_id(self, preferred_store_id):
+        self.preferred_store_patcher.stop()
+        self.preferred_store_patcher = mock.patch(
+            'barbican.plugin.resources.'
+            'get_effective_secret_store_id_for_project',
+            autospec=True,
+            return_value=preferred_store_id)
+        self.preferred_store_patcher.start()
+
+    def test_admin_passes_migrate_to_preferred_store(self):
+        self._set_preferred_store_id(self.store_id)
+        self._assert_pass_rbac(
+            ['admin'],
+            self._invoke_on_put,
+            user_id=self.user_id,
+            project_id=self.external_project_id)
+
+    def test_admin_passes_migrate_to_global_default_store(self):
+        global_default_id = '77777777-7777-7777-7777-777777777777'
+        self._set_preferred_store_id(global_default_id)
+        self.resource = SecretMigrateStoreResource(
+            self.resource.controller.secret, global_default_id)
+        self._assert_pass_rbac(
+            ['admin'],
+            self._invoke_on_put,
+            user_id=self.user_id,
+            project_id=self.external_project_id)
+
+    def test_admin_passes_migrate_to_non_preferred_store(self):
+        other_store_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+        self._set_preferred_store_id(self.store_id)
+        self.resource = SecretMigrateStoreResource(
+            self.resource.controller.secret, other_store_id)
+        self._assert_pass_rbac(
+            ['admin'],
+            self._invoke_on_put,
+            user_id=self.user_id,
+            project_id=self.external_project_id)
+
+    def test_member_passes_migrate_to_preferred_store(self):
+        self._set_preferred_store_id(self.store_id)
+        self._assert_pass_rbac(
+            ['member'],
+            self._invoke_on_put,
+            user_id=self.user_id,
+            project_id=self.external_project_id)
+
+    def test_member_passes_migrate_to_global_default_store(self):
+        """Member may migrate when helper resolves global default as target."""
+        global_default_id = '77777777-7777-7777-7777-777777777777'
+        self._set_preferred_store_id(global_default_id)
+        self.resource = SecretMigrateStoreResource(
+            self.resource.controller.secret, global_default_id)
+        self._assert_pass_rbac(
+            ['member'],
+            self._invoke_on_put,
+            user_id=self.user_id,
+            project_id=self.external_project_id)
+
+    def test_member_fails_migrate_to_non_preferred_store(self):
+        other_store_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+        self._set_preferred_store_id(self.store_id)
+        self.resource = SecretMigrateStoreResource(
+            self.resource.controller.secret, other_store_id)
+        self._assert_fail_rbac(
+            ['member'],
+            self._invoke_on_put,
+            user_id=self.user_id,
+            project_id=self.external_project_id)
+
+    def test_member_fails_migrate_when_no_preferred_or_default(self):
+        self._set_preferred_store_id(None)
+        self._assert_fail_rbac(
+            ['member'],
+            self._invoke_on_put,
+            user_id=self.user_id,
+            project_id=self.external_project_id)
+
+    def test_should_raise_migrate_secretstore(self):
+        # Preferred store is unset in setUp, so member is denied here too.
+        # Stick to SRBAC roles (admin/member/reader); legacy creator/observer/
+        # audit coverage is being removed upstream.
+        self._assert_fail_rbac(
+            [None, 'reader', 'member', 'bogus'],
+            self._invoke_on_put,
+            user_id=self.user_id,
+            project_id=self.external_project_id)
+
+    def _invoke_on_put(self):
+        self.resource.on_put(self.req, self.resp)

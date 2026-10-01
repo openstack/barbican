@@ -12,6 +12,7 @@
 
 from oslo_utils import strutils
 from oslo_utils import timeutils
+from oslo_utils import uuidutils
 import pecan
 from urllib import parse
 
@@ -19,6 +20,7 @@ from barbican import api
 from barbican.api import controllers
 from barbican.api.controllers import acls
 from barbican.api.controllers import consumers
+from barbican.api.controllers import secret_views
 from barbican.api.controllers import secretmeta
 from barbican.api.controllers import versions
 from barbican.common import accept
@@ -32,7 +34,6 @@ from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repo
 from barbican.plugin import resources as plugin
-from barbican.plugin import util as putil
 
 
 LOG = utils.getLogger(__name__)
@@ -40,7 +41,7 @@ LOG = utils.getLogger(__name__)
 
 def _secret_not_found():
     """Throw exception indicating secret not found."""
-    pecan.abort(404, u._('Secret not found.'))
+    secret_views.secret_not_found()
 
 
 def _invalid_secret_id():
@@ -86,25 +87,33 @@ class SecretController(controllers.ACLMixin):
 
     @pecan.expose()
     def _lookup(self, sub_resource, *remainder):
-        if sub_resource == 'acl':
-            return acls.SecretACLsController(self.secret), remainder
-        elif sub_resource == 'metadata':
-            if len(remainder) == 0 or remainder == ('',):
-                return secretmeta.SecretMetadataController(self.secret), \
-                    remainder
-            else:
+        match sub_resource:
+            case 'acl':
+                return acls.SecretACLsController(self.secret), remainder
+            case 'metadata':
+                if len(remainder) == 0 or remainder == ('',):
+                    return (secretmeta.SecretMetadataController(self.secret),
+                            remainder)
                 request_method = pecan.request.method
                 allowed_methods = ['GET', 'PUT', 'DELETE']
-
                 if request_method in allowed_methods:
-                    return secretmeta.SecretMetadatumController(self.secret), \
-                        remainder
-                else:
-                    # methods cannot be handled at controller level
-                    pecan.abort(405)
-        else:
-            # only 'acl' and 'metadata' as sub-resource is supported
-            pecan.abort(404)
+                    return (
+                        secretmeta.SecretMetadatumController(self.secret),
+                        remainder)
+                # methods cannot be handled at controller level
+                pecan.abort(405)
+            case 'secret-store':
+                if not versions.is_supported(pecan.request,
+                                             min_version='1.3'):
+                    pecan.abort(404)
+                # Spec: PUT /v1/secrets/{id}/secret-store/{secret-store-id}
+                if not remainder or remainder == ('',):
+                    pecan.abort(404)
+                store_id = remainder[0]
+                return (SecretMigrateStoreController(self.secret, store_id),
+                        remainder[1:])
+            case _:
+                pecan.abort(404)
 
     @pecan.expose(generic=True)
     def index(self, **kwargs):
@@ -120,9 +129,6 @@ class SecretController(controllers.ACLMixin):
 
             LOG.info('Retrieved secret metadata for project: %s',
                      external_project_id)
-            if versions.is_supported(pecan.request, max_version='1.0'):
-                # NOTE(xek): consumers are being introduced in 1.1
-                del resp['consumers']
             return resp
         else:
             LOG.warning('Decrypted secret %s requested using deprecated '
@@ -135,16 +141,10 @@ class SecretController(controllers.ACLMixin):
         """GET Metadata-only for a secret."""
         pecan.override_template('json', 'application/json')
 
-        secret_fields = putil.mime_types.augment_fields_with_content_types(
-            secret)
-
         transport_key_id = self._get_transport_key_id_if_needed(
             kwargs.get('transport_key_needed'), secret)
-
-        if transport_key_id:
-            secret_fields['transport_key_id'] = transport_key_id
-
-        return hrefs.convert_to_hrefs(secret_fields)
+        return secret_views.secret_to_response(
+            secret, pecan.request, transport_key_id=transport_key_id)
 
     def _get_transport_key_id_if_needed(self, transport_key_needed, secret):
         if transport_key_needed and transport_key_needed.lower() == 'true':
@@ -290,6 +290,63 @@ class SecretController(controllers.ACLMixin):
                 pass
 
 
+class SecretMigrateStoreController(controllers.ACLMixin):
+    """Handles PUT /v1/secrets/{id}/secret-store/{ss-id} (microversion 1.3)."""
+
+    def __init__(self, secret, secret_store_id):
+        LOG.debug('=== Creating SecretMigrateStoreController ===')
+        super().__init__()
+        self.secret = secret
+        self.secret_store_id = secret_store_id
+        self.secret_stores_repo = repo.get_secret_stores_repository()
+
+    def get_acl_tuple(self, req, **kwargs):
+        entity, acl = super().get_acl_tuple(req, **kwargs)
+        if acl is None:
+            acl = {}
+            entity = 'secret'
+        preferred_store_id = (
+            plugin.get_effective_secret_store_id_for_project(
+                getattr(self.secret, 'project', None)))
+        # Destination id from the URL. Copied onto credentials as
+        # secret_store_id in _do_enforce_rbac so the rule can compare
+        # secret_store_id:%(target.secret.preferred_secret_store_id)s
+        acl['req_secret_store_id'] = self.secret_store_id
+        acl['preferred_secret_store_id'] = preferred_store_id
+        return entity, acl
+
+    @pecan.expose(generic=True)
+    def index(self, **kwargs):
+        pecan.abort(405)
+
+    @index.when(method='PUT')
+    @utils.allow_all_content_types
+    @controllers.handle_exceptions(u._('Secret store migration'))
+    @controllers.enforce_rbac('secret:migrate_secretstore')
+    def on_put(self, external_project_id, **kwargs):
+        if not utils.is_multiple_backends_enabled():
+            raise exception.MultipleBackendsNotEnabled()
+
+        store_id = self.secret_store_id
+        if not uuidutils.is_uuid_like(store_id):
+            pecan.abort(400, u._('Provided secret store id is invalid.'))
+
+        secret_store = self.secret_stores_repo.get(
+            entity_id=store_id, suppress_exception=True)
+        if not secret_store:
+            pecan.abort(404, u._('Not Found. Secret store not found.'))
+
+        # Use the secret owner project, not the token project, so
+        # rewrap_secret resolves KEKs on the owning project.
+        owner_project_id = self.secret.project.external_id
+        project = res.get_or_create_project(owner_project_id)
+        plugin.rewrap_secret(self.secret, project, secret_store)
+        pecan.response.status = 204
+        LOG.info('Migrated secret %s for project: %s',
+                 self.secret.id, owner_project_id)
+        return ''
+
+
 class SecretsController(controllers.ACLMixin):
     """Handles Secret creation requests."""
 
@@ -378,15 +435,6 @@ class SecretsController(controllers.ACLMixin):
     @controllers.handle_exceptions(u._('Secret(s) retrieval'))
     @controllers.enforce_rbac('secrets:get')
     def on_get(self, external_project_id, **kw):
-        no_consumers = versions.is_supported(pecan.request, max_version='1.0')
-        # NOTE(xek): consumers are being introduced in 1.1
-
-        def secret_fields(field):
-            resp = putil.mime_types.augment_fields_with_content_types(field)
-            if no_consumers:
-                del resp['consumers']
-            return resp
-
         LOG.debug('Start secrets on_get '
                   'for project-ID %s:', external_project_id)
 
@@ -451,7 +499,7 @@ class SecretsController(controllers.ACLMixin):
                                     'total': total}
         else:
             secrets_resp = [
-                hrefs.convert_to_hrefs(secret_fields(s))
+                secret_views.secret_to_response(s, pecan.request)
                 for s in secrets
             ]
             # Add filtered query_string to pagination link

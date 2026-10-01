@@ -640,6 +640,19 @@ class SecretStorePluginManager(named.NamedExtensionManager):
                 return plugin
         raise SecretGenerateSupportedPluginNotFound(key_spec)
 
+    def get_plugin_by_name(self, store_plugin_name):
+        """Get a loaded plugin by its stevedore/config name.
+
+        ``store_plugin_name`` is the value stored on
+        ``secret_stores.store_plugin`` (for example ``store_crypto``
+        or ``kmip_plugin``), not the Python class path saved on secret
+        metadata.
+        """
+        for ext in self.extensions:
+            if ext.obj and ext.name == store_plugin_name:
+                return ext.obj
+        raise SecretStorePluginNotFound(store_plugin_name)
+
     def _get_internal_plugin_names(self, secretstore_conf):
         """Gets plugin names used for loading via stevedore.
 

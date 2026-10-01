@@ -404,3 +404,26 @@ class MultipleStorePluginValueMissing(BarbicanException):
                 ).format(section_name)
         )
         self.section_name = section_name
+
+
+class SecretPayloadNotFound(BarbicanHTTPException):
+    """Raised when a secret has no payload to migrate."""
+    message = u._("Secret has no stored payload to migrate.")
+    client_message = message
+    status_code = 400
+
+
+class SecretStoreNotResolved(BarbicanHTTPException):
+    """Raised when a secret has a payload but no catalogue store matches."""
+    message = u._(
+        "Could not resolve the secret store for secret %(secret_id)s.")
+    client_message = u._(
+        "Could not resolve the secret store for this secret.")
+    status_code = 500
+
+
+class MultipleBackendsNotEnabled(BarbicanHTTPException):
+    """Raised when migrate is requested but multiple backends are off."""
+    message = u._("Multiple secret store backends are not enabled.")
+    client_message = message
+    status_code = 400

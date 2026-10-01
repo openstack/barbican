@@ -28,6 +28,7 @@ from sqlalchemy.orm import collections as col
 from sqlalchemy import types as sql_types
 
 from barbican.common import exception
+from barbican.common import hrefs
 from barbican.common import utils
 from barbican import i18n as u
 
@@ -204,6 +205,14 @@ class ModelBase(object):
             expiration = timeutils.normalize_time(expiration_iso)
 
         return expiration
+
+
+def _microversion_at_least(requested, minimum):
+    """Compare OpenStack-style major.minor microversions."""
+    def _parts(ver):
+        major, minor = str(ver).split('.')
+        return int(major), int(minor)
+    return _parts(requested) >= _parts(minimum)
 
 
 class SoftDeleteMixIn(object):
@@ -1607,6 +1616,23 @@ class SecretStores(BASE, ModelBase):
                 'crypto_plugin': self.crypto_plugin,
                 'global_default': self.global_default,
                 'name': self.name}
+
+    def to_api_dict(self, microversion='1.0'):
+        """Return this store as a public API response dict.
+
+        ``to_dict_fields`` remains the version-agnostic DB dump
+        (``store_plugin``, always includes ``secret_store_id``). This
+        method applies API field names and microversion 1.3 visibility
+        of ``secret_store_id``.
+        """
+        data = self.to_dict_fields()
+        store_id = data['secret_store_id']
+        data['secret_store_plugin'] = data.pop('store_plugin')
+        data['secret_store_ref'] = hrefs.convert_secret_stores_to_href(
+            store_id)
+        if not _microversion_at_least(microversion, '1.3'):
+            data.pop('secret_store_id', None)
+        return data
 
 
 class ProjectSecretStore(BASE, ModelBase):

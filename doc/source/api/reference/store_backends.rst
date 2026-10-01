@@ -49,6 +49,7 @@ Request/Response:
                   "updated": "2016-08-22T23:46:45.114283",
                   "name": "PKCS11 HSM",
                   "created": "2016-08-22T23:46:45.114283",
+                  "secret_store_id": "4d27b7a7-b82f-491d-88c0-746bd67dadc8",
                   "secret_store_ref": "http://localhost:9311/v1/secret-stores/4d27b7a7-b82f-491d-88c0-746bd67dadc8",
                   "global_default": True,
                   "crypto_plugin": "p11_crypto",
@@ -59,6 +60,7 @@ Request/Response:
                   "updated": "2016-08-22T23:46:45.124554",
                   "name": "KMIP HSM",
                   "created": "2016-08-22T23:46:45.124554",
+                  "secret_store_id": "93869b0f-60eb-4830-adb9-e2f7154a080b",
                   "secret_store_ref": "http://localhost:9311/v1/secret-stores/93869b0f-60eb-4830-adb9-e2f7154a080b",
                   "global_default": False,
                   "crypto_plugin": None,
@@ -69,6 +71,7 @@ Request/Response:
                   "updated": "2016-08-22T23:46:45.127866",
                   "name": "Software Only Crypto",
                   "created": "2016-08-22T23:46:45.127866",
+                  "secret_store_id": "0da45858-9420-42fe-a269-011f5f35deaa",
                   "secret_store_ref": "http://localhost:9311/v1/secret-stores/0da45858-9420-42fe-a269-011f5f35deaa",
                   "global_default": False,
                   "crypto_plugin": "simple_crypto",
@@ -76,23 +79,30 @@ Request/Response:
                }
          }
 
+.. note::
+
+   ``secret_store_id`` is included when the request asks for
+   microversion **1.3** or newer. Older microversions omit it and
+   return only ``secret_store_ref``.
+
 
 .. _get_secret_stores_response_attributes:
 
 Response Attributes
 *******************
 
-+---------------+--------+---------------------------------------------+
-| Name          | Type   | Description                                 |
-+===============+========+=============================================+
-| secret_stores | list   | A list of secret store references           |
-+---------------+--------+---------------------------------------------+
-| name          | string | store and crypto plugin name delimited by + |
-|               |        | (plus) sign.                                |
-+---------------+--------+---------------------------------------------+
-| secret_store  | string | URL for referencing a specific secret store |
-| _ref          |        |                                             |
-+---------------+--------+---------------------------------------------+
++------------------+--------+------------------------------------------------+
+| Name             | Type   | Description                                    |
++==================+========+================================================+
+| secret_stores    | list   | A list of secret store references              |
++------------------+--------+------------------------------------------------+
+| name             | string | store and crypto plugin name delimited by +    |
+|                  |        | (plus) sign.                                   |
++------------------+--------+------------------------------------------------+
+| secret_store_ref | string | URL for referencing a specific secret store    |
++------------------+--------+------------------------------------------------+
+| secret_store_id  | string | UUID of the secret store (microversion 1.3+)   |
++------------------+--------+------------------------------------------------+
 
 .. _get_secret_stores_status_codes:
 
@@ -153,21 +163,23 @@ Request/Response:
 Response Attributes
 *******************
 
-+------------------+---------+---------------------------------------------------------------+
-| Name             | Type    | Description                                                   |
-+==================+=========+===============================================================+
-| name             | string  | store and crypto plugin name delimited by '+' (plus) sign     |
-+------------------+---------+---------------------------------------------------------------+
-| global_default   | boolean | flag indicating if this secret store is global default or not |
-+------------------+---------+---------------------------------------------------------------+
-| status           | list    | Status of the secret store                                    |
-+------------------+---------+---------------------------------------------------------------+
-| updated          | time    | Date and time secret store was last updated                   |
-+------------------+---------+---------------------------------------------------------------+
-| created          | time    | Date and time secret store was created                        |
-+------------------+---------+---------------------------------------------------------------+
-| secret_store_ref | string  | URL for referencing a specific secret store                   |
-+------------------+---------+---------------------------------------------------------------+
++------------------+---------+----------------------------------------------------+
+| Name             | Type    | Description                                        |
++==================+=========+====================================================+
+| name             | string  | store and crypto plugin name delimited by '+'      |
++------------------+---------+----------------------------------------------------+
+| global_default   | boolean | flag indicating if this store is global default    |
++------------------+---------+----------------------------------------------------+
+| status           | list    | Status of the secret store                         |
++------------------+---------+----------------------------------------------------+
+| updated          | time    | Date and time secret store was last updated        |
++------------------+---------+----------------------------------------------------+
+| created          | time    | Date and time secret store was created             |
++------------------+---------+----------------------------------------------------+
+| secret_store_ref | string  | URL for referencing a specific secret store        |
++------------------+---------+----------------------------------------------------+
+| secret_store_id  | string  | UUID of the secret store (microversion 1.3+)       |
++------------------+---------+----------------------------------------------------+
 
 
 .. _get_secret_stores_id_status_codes:
@@ -238,6 +250,8 @@ Response Attributes
 | Name             | Type   | Description                                   |
 +==================+========+===============================================+
 | secret_store_ref | string | A URL that references a specific secret store |
++------------------+--------+-----------------------------------------------+
+| secret_store_id  | string | UUID of the secret store (microversion 1.3+)  |
 +------------------+--------+-----------------------------------------------+
 
 .. _get_secret_stores_preferred_status_codes:
@@ -395,6 +409,8 @@ Response Attributes
 | Name             | Type   | Description                                   |
 +==================+========+===============================================+
 | secret_store_ref | string | A URL that references a specific secret store |
++------------------+--------+-----------------------------------------------+
+| secret_store_id  | string | UUID of the secret store (microversion 1.3+)  |
 +------------------+--------+-----------------------------------------------+
 
 .. _get_secret_stores_global_default_status_codes:

@@ -14,6 +14,7 @@ import pecan
 
 from barbican import api
 from barbican.api import controllers
+from barbican.api.controllers import secret_views
 from barbican.common import exception
 from barbican.common import hrefs
 from barbican.common import quota
@@ -23,7 +24,6 @@ from barbican.common import validators
 from barbican import i18n as u
 from barbican.model import models
 from barbican.model import repositories as repo
-from barbican.plugin import util as putil
 
 LOG = utils.getLogger(__name__)
 
@@ -391,13 +391,11 @@ class SecretConsumersController(controllers.ACLMixin):
         secret = self.secret_repo.get_secret_by_id(
             secret_id, suppress_exception=True)
         if not secret:
-            controllers.secrets.secret_not_found()
+            secret_views.secret_not_found()
         return secret
 
     def _return_secret_data(self, secret_id):
         secret = self._get_secret(secret_id)
 
-        secret_fields = putil.mime_types.augment_fields_with_content_types(
-            secret)
-
-        return hrefs.convert_to_hrefs(secret_fields)
+        return secret_views.secret_to_response(
+            secret, pecan.request)

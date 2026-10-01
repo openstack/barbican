@@ -32,10 +32,10 @@ from barbican.api import app
 from barbican.common import config
 import barbican.context
 from barbican.model import repositories
-from barbican.plugin.crypto import manager as cm
+from barbican.plugin.crypto import manager as crypto_manager
 from barbican.plugin.crypto import p11_crypto
 from barbican.plugin.crypto import simple_crypto
-from barbican.plugin.interface import secret_store
+from barbican.plugin.interface import secret_store as secret_store_plugin
 from barbican.plugin import kmip_secret_store as kss
 from barbican.tests import database_utils
 from barbican.tests import fixture as barbican_fixture
@@ -90,6 +90,8 @@ class BarbicanAPIBaseTestCase(oslotest.BaseTestCase):
         self.project_id = generate_test_valid_uuid()
 
         self._setup_kek_conf()
+        secret_store_plugin._SECRET_STORE = None
+        crypto_manager._PLUGIN_MANAGER = None
         # Build the test app
         wsgi_app = app.build_wsgi_app(
             controller=self.root_controller,
@@ -102,6 +104,11 @@ class BarbicanAPIBaseTestCase(oslotest.BaseTestCase):
         }
 
     def tearDown(self):
+        ss_conf = config.get_module_config('secretstore')
+        ss_conf.clear_override("enable_multiple_secret_stores",
+                               group='secretstore')
+        secret_store_plugin._SECRET_STORE = None
+        crypto_manager._PLUGIN_MANAGER = None
         database_utils.in_memory_cleanup()
         super().tearDown()
 
@@ -584,8 +591,8 @@ class MultipleBackendsTestCase(database_utils.RepositoryTestCase):
             multiple_support_enabled=enabled)
 
         # clear globals if already set in previous tests
-        secret_store._SECRET_STORE = None  # clear secret store manager
-        cm._PLUGIN_MANAGER = None  # clear crypto manager
+        secret_store_plugin._SECRET_STORE = None  # clear secret store manager
+        crypto_manager._PLUGIN_MANAGER = None  # clear crypto manager
         self._mock_plugin_settings()
 
     def _get_secret_store_entry(self, store_plugin, crypto_plugin):

@@ -158,6 +158,27 @@ rules = [
             }
         ],
         deprecated_rule=deprecated_secrets_get
+    ),
+    policy.DocumentedRuleDefault(
+        name='secret:migrate_secretstore',
+        check_str=(
+            "True:%(enforce_new_defaults)s and "
+            "(role:admin or "
+            "(rule:secret_project_member and "
+            "secret_store_id:%(target.secret."
+            "preferred_secret_store_id)s))"),
+        scope_types=['project', 'domain', 'system'],
+        description=(
+            'Migrate a secret to a named secret store. Admins may '
+            'target any store; members may migrate only to the '
+            'project preferred store (or the global default).'),
+        operations=[
+            {
+                'path': ('/v1/secrets/{secret-id}/secret-store/'
+                         '{secret-store-id}'),
+                'method': 'PUT'
+            }
+        ]
     )
 ]
 

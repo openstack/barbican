@@ -15,11 +15,12 @@
 import pecan
 
 from barbican.api import controllers
-from barbican.common import hrefs
+from barbican.api.controllers import versions
 from barbican.common import resources as res
 from barbican.common import utils
 from barbican import i18n as u
 from barbican.model import repositories as repo
+from barbican.plugin import resources as plugin
 from barbican.plugin.util import multiple_backends
 
 LOG = utils.getLogger(__name__)
@@ -43,13 +44,9 @@ def _multiple_backends_not_enabled():
 
 
 def convert_secret_store_to_response_format(secret_store):
-    data = secret_store.to_dict_fields()
-    data['secret_store_plugin'] = data.pop('store_plugin')
-    data['secret_store_ref'] = hrefs.convert_secret_stores_to_href(
-        data['secret_store_id'])
-    # no need to pass store id as secret_store_ref is returned
-    data.pop('secret_store_id', None)
-    return data
+    requested = str(pecan.request.environ.get(
+        'key-manager.microversion', versions.MIN_API_VERSION))
+    return secret_store.to_api_dict(microversion=requested)
 
 
 class PreferredSecretStoreController(controllers.ACLMixin):
@@ -207,11 +204,8 @@ class SecretStoresController(controllers.ACLMixin):
 
         project = res.get_or_create_project(external_project_id)
 
-        project_store = self.proj_store_repo.get_secret_store_for_project(
-            project.id, None, suppress_exception=True)
-
-        if project_store is None:
+        preferred = plugin.get_preferred_secret_store_for_project(project)
+        if preferred is None:
             _preferred_secret_store_not_found()
 
-        return convert_secret_store_to_response_format(
-            project_store.secret_store)
+        return convert_secret_store_to_response_format(preferred)

@@ -757,8 +757,12 @@ class SecretRepo(BaseRepo):
         return query.order_by(*ordering)
 
     def get_secret_by_id(self, entity_id, suppress_exception=False,
-                         session=None):
-        """Gets secret by its entity id without project id check."""
+                         session=None, for_update=False):
+        """Gets secret by its entity id without project id check.
+
+        :param for_update: When True, issue SELECT ... FOR UPDATE so
+            concurrent migrates of the same secret are serialized.
+        """
         session = self.get_session(session)
         try:
             utcnow = timeutils.utcnow()
@@ -768,6 +772,8 @@ class SecretRepo(BaseRepo):
             query = session.query(models.Secret)
             query = query.filter_by(id=entity_id, deleted=False)
             query = query.filter(expiration_filter)
+            if for_update:
+                query = query.with_for_update()
             entity = query.one()
         except sa_orm.exc.NoResultFound:
             entity = None
@@ -834,6 +840,16 @@ class SecretStoreMetadatumRepo(BaseRepo):
 
         metadata = query.all()
         return {m.key: m.value for m in metadata}
+
+    def delete_for_secret(self, secret_id):
+        """Soft-delete all store metadata rows for a secret."""
+        session = get_session()
+        query = session.query(models.SecretStoreMetadatum)
+        query = query.filter_by(deleted=False)
+        query = query.filter(
+            models.SecretStoreMetadatum.secret_id == secret_id)
+        for metadatum in query.all():
+            metadatum.delete(session=session)
 
     def _do_entity_name(self):
         """Sub-class hook: return entity name, such as for debugging."""

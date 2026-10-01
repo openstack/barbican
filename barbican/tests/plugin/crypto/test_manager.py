@@ -100,6 +100,18 @@ class WhenTestingManager(utils.BaseTestCase):
             self.manager.get_plugin_retrieve,
             self.plugin_name)
 
+    def test_get_plugin_by_name(self):
+        self.plugin_loaded.name = 'simple_crypto'
+        self.assertEqual(
+            self.plugin_returned,
+            self.manager.get_plugin_by_name('simple_crypto'))
+
+    def test_get_plugin_by_name_not_found(self):
+        self.assertRaises(
+            base.CryptoPluginNotFound,
+            self.manager.get_plugin_by_name,
+            'missing-plugin')
+
     def test_get_manager_with_multi_threads(self):
         self.manager.extensions = []
         self.manager = None

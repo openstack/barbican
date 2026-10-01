@@ -99,6 +99,22 @@ class WhenTestingSecretRepository(database_utils.RepositoryTestCase):
         db_secret = self.repo.get_secret_by_id(secret.id)
         self.assertIsNotNone(db_secret)
 
+    def test_get_secret_by_id_with_for_update(self):
+        session = self.repo.get_session()
+
+        project = models.Project()
+        project.external_id = "my keystone id"
+        project.save(session=session)
+
+        secret_model = models.Secret()
+        secret_model.project_id = project.id
+        secret = self.repo.create_from(secret_model, session=session)
+        session.commit()
+
+        db_secret = self.repo.get_secret_by_id(
+            secret.id, for_update=True)
+        self.assertEqual(secret.id, db_secret.id)
+
     def test_should_raise_notfound_exception(self):
         self.assertRaises(exception.NotFound, self.repo.get_secret_by_id,
                           "invalid_id", suppress_exception=False)

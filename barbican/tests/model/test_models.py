@@ -15,6 +15,7 @@
 
 import datetime
 import unittest
+from unittest import mock
 
 from oslo_utils import timeutils
 
@@ -702,6 +703,42 @@ class WhenCreatingNewSecretStores(utils.BaseTestCase):
         self.assertEqual(models.States.ACTIVE,
                          ss.to_dict_fields()['status'])
         self.assertEqual(name, ss.to_dict_fields()['name'])
+
+    @mock.patch(
+        'barbican.common.hrefs.convert_secret_stores_to_href',
+        autospec=True,
+        return_value='https://example/v1/secret-stores/ss-id')
+    def test_secret_stores_to_api_dict_hides_id_before_1_3(
+            self, mock_href):
+        ss = models.SecretStores(
+            'pkcs11 backend', 'store_crypto', 'p11_crypto',
+            global_default=True)
+        ss.id = 'ss-id'
+        data = ss.to_api_dict(microversion='1.2')
+        self.assertEqual('store_crypto', data['secret_store_plugin'])
+        self.assertNotIn('store_plugin', data)
+        self.assertNotIn('secret_store_id', data)
+        self.assertEqual(
+            'https://example/v1/secret-stores/ss-id',
+            data['secret_store_ref'])
+        mock_href.assert_called_once_with('ss-id')
+
+    @mock.patch(
+        'barbican.common.hrefs.convert_secret_stores_to_href',
+        autospec=True,
+        return_value='https://example/v1/secret-stores/ss-id')
+    def test_secret_stores_to_api_dict_keeps_id_at_1_3(self, mock_href):
+        ss = models.SecretStores(
+            'pkcs11 backend', 'store_crypto', 'p11_crypto',
+            global_default=True)
+        ss.id = 'ss-id'
+        data = ss.to_api_dict(microversion='1.3')
+        self.assertEqual('ss-id', data['secret_store_id'])
+        self.assertEqual('store_crypto', data['secret_store_plugin'])
+        self.assertNotIn('store_plugin', data)
+        self.assertEqual(
+            'https://example/v1/secret-stores/ss-id',
+            data['secret_store_ref'])
 
 
 class WhenCreatingNewProjectSecretStore(utils.BaseTestCase):

@@ -131,6 +131,18 @@ class _CryptoPluginManager(named.NamedExtensionManager):
 
         return decrypting_plugin
 
+    def get_plugin_by_name(self, plugin_name):
+        """Get a loaded crypto plugin by its stevedore/config name.
+
+        ``plugin_name`` is the value stored on
+        ``secret_stores.crypto_plugin`` (for example ``simple_crypto``),
+        not the Python class path saved on KEK metadata.
+        """
+        for ext in self.extensions:
+            if ext.obj and ext.name == plugin_name:
+                return ext.obj
+        raise base.CryptoPluginNotFound()
+
     def _get_internal_plugin_names(self, crypto_conf):
         """Gets plugin names used for loading via stevedore.
 

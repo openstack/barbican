@@ -414,6 +414,9 @@ class WhenTestingSecretConsumersResource(utils.BarbicanAPIBaseTestCase):
 
     def setUp(self):
         super(WhenTestingSecretConsumersResource, self).setUp()
+        # Consumers landed in microversion 1.1; POST/DELETE return a
+        # secret body shaped by that version (includes consumers).
+        utils.set_version(self.app, '1.1')
 
         self.consumer_a = {
             "service": "service_a",

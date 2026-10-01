@@ -88,6 +88,23 @@ class WhenTestingSecretStores(utils.BarbicanAPIBaseTestCase,
             self.assertIsNotNone(secret_data['updated'])
             self.assertEqual(models.States.ACTIVE, secret_data['status'])
 
+    def test_should_get_all_secret_stores_with_id_on_microversion_1_3(self):
+
+        g_index = 2
+        self._init_multiple_backends(global_default_index=g_index)
+        utils.set_version(self.app, '1.3')
+
+        resp = self.app.get('/secret-stores', expect_errors=False)
+        self.assertEqual(200, resp.status_int)
+        secret_stores_data = resp.json.get('secret_stores')
+        self.assertEqual(3, len(secret_stores_data))
+
+        for secret_data in secret_stores_data:
+            store_id = secret_data.get('secret_store_id')
+            self.assertIsNotNone(store_id)
+            self.assertIn(store_id, secret_data['secret_store_ref'])
+            self.assertIsNone(secret_data.get('id'))
+
     def test_get_all_secret_stores_when_multiple_backends_not_enabled(self):
 
         self._init_multiple_backends(enabled=False)
@@ -120,11 +137,27 @@ class WhenTestingSecretStores(utils.BarbicanAPIBaseTestCase,
         self.assertTrue(resp_data['global_default'])
         self.assertIn('kmip', resp_data['name'].lower())
         self.assertIsNotNone(resp_data['secret_store_ref'])
+        self.assertIsNone(resp_data.get('secret_store_id'))
         self.assertIsNotNone(resp_data['secret_store_plugin'])
         self.assertIsNone(resp_data['crypto_plugin'])
         self.assertIsNotNone(resp_data['created'])
         self.assertIsNotNone(resp_data['updated'])
         self.assertEqual(models.States.ACTIVE, resp_data['status'])
+
+    def test_should_get_global_default_with_id_on_microversion_1_3(self):
+
+        self._init_multiple_backends(global_default_index=1)
+        utils.set_version(self.app, '1.3')
+        stores = self.secret_store_repo.get_all()
+        expected_id = stores[1].id
+
+        resp = self.app.get('/secret-stores/global-default',
+                            expect_errors=False)
+        self.assertEqual(200, resp.status_int)
+        resp_data = resp.json
+        self.assertTrue(resp_data['global_default'])
+        self.assertEqual(expected_id, resp_data.get('secret_store_id'))
+        self.assertIn(expected_id, resp_data['secret_store_ref'])
 
     def test_get_global_default_when_multiple_backends_not_enabled(self):
 
@@ -159,9 +192,29 @@ class WhenTestingSecretStores(utils.BarbicanAPIBaseTestCase,
                          resp_data['global_default'])
         self.assertIn('/secret-stores/{0}'.format(secret_stores[0].id),
                       resp_data['secret_store_ref'])
+        self.assertIsNone(resp_data.get('secret_store_id'))
         self.assertIsNotNone(resp_data['created'])
         self.assertIsNotNone(resp_data['updated'])
         self.assertEqual(models.States.ACTIVE, resp_data['status'])
+
+    def test_get_preferred_with_id_on_microversion_1_3(self):
+        self._init_multiple_backends(global_default_index=1)
+
+        secret_stores = self.secret_store_repo.get_all()
+        project1 = self._create_project()
+        self._create_project_store(project1.id, secret_stores[0].id)
+
+        self.app.extra_environ = {
+            'barbican.context': self._build_context(project1.external_id)
+        }
+        utils.set_version(self.app, '1.3')
+        resp = self.app.get('/secret-stores/preferred',
+                            expect_errors=False)
+        self.assertEqual(200, resp.status_int)
+        resp_data = resp.json
+        self.assertEqual(secret_stores[0].id,
+                         resp_data.get('secret_store_id'))
+        self.assertIn(secret_stores[0].id, resp_data['secret_store_ref'])
 
     def test_get_preferred_when_preferred_is_not_set(self):
         self._init_multiple_backends(global_default_index=1)
@@ -211,10 +264,24 @@ class WhenTestingSecretStore(utils.BarbicanAPIBaseTestCase,
         self.assertEqual(store.name, data['name'])
         self.assertIn('/secret-stores/{0}'.format(store.id),
                       data['secret_store_ref'])
+        self.assertIsNone(data.get('secret_store_id'))
         self.assertIsNotNone(data['secret_store_plugin'])
         self.assertIsNotNone(data['created'])
         self.assertIsNotNone(data['updated'])
         self.assertEqual(models.States.ACTIVE, data['status'])
+
+    def test_get_a_secret_store_with_id_on_microversion_1_3(self):
+
+        self._init_multiple_backends()
+        utils.set_version(self.app, '1.3')
+        store = self.secret_store_repo.get_all()[0]
+
+        resp = self.app.get('/secret-stores/{0}'.format(store.id),
+                            expect_errors=False)
+        self.assertEqual(200, resp.status_int)
+        data = resp.json
+        self.assertEqual(store.id, data.get('secret_store_id'))
+        self.assertIn(store.id, data['secret_store_ref'])
 
     def test_invalid_uri_for_secret_stores_subresource(self):
         self._init_multiple_backends()

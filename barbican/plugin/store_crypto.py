@@ -38,13 +38,15 @@ class StoreCryptoContext(object):
             private_secret_model=None,
             public_secret_model=None,
             passphrase_secret_model=None,
-            content_type=None):
+            content_type=None,
+            crypto_plugin=None):
         self.secret_model = secret_model
         self.private_secret_model = private_secret_model
         self.public_secret_model = public_secret_model
         self.passphrase_secret_model = passphrase_secret_model
         self.project_model = project_model
         self.content_type = content_type
+        self.crypto_plugin = crypto_plugin
 
 
 class StoreCryptoAdapterPlugin(object):
@@ -73,10 +75,15 @@ class StoreCryptoAdapterPlugin(object):
         """
 
         # Find HSM-style 'crypto' plugin.
-        encrypting_plugin = manager.get_manager().get_plugin_store_generate(
-            base.PluginSupportTypes.ENCRYPT_DECRYPT,
-            project_id=context.project_model.id
-        )
+        if context.crypto_plugin:
+            encrypting_plugin = context.crypto_plugin
+        else:
+            encrypting_plugin = (
+                manager.get_manager().get_plugin_store_generate(
+                    base.PluginSupportTypes.ENCRYPT_DECRYPT,
+                    project_id=context.project_model.id
+                )
+            )
 
         # Find or create a key encryption key metadata.
         kek_datum_model, kek_meta_dto = _find_or_create_kek_objects(
@@ -116,7 +123,13 @@ class StoreCryptoAdapterPlugin(object):
             raise sstore.SecretNotFoundException()
 
         # TODO(john-wood-w) Need to revisit 1 to many datum relationship.
-        datum_model = context.secret_model.encrypted_data[0]
+        datums = [
+            datum for datum in context.secret_model.encrypted_data
+            if not getattr(datum, 'deleted', False)
+        ]
+        if not datums:
+            raise sstore.SecretNotFoundException()
+        datum_model = datums[0]
 
         # Find HSM-style 'crypto' plugin.
         decrypting_plugin = manager.get_manager().get_plugin_retrieve(

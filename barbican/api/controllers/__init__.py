@@ -68,8 +68,10 @@ def _do_enforce_rbac(inst, req, action_name, ctx, **kwargs):
         # Enforce access controls.
         if ctx.policy_enforcer:
             target = flatten(policy_dict)
+            creds = _credentials_for_policy(
+                ctx, action_name, target_data)
             ctx.policy_enforcer.authorize(action_name, target,
-                                          ctx, do_raise=True)
+                                          creds, do_raise=True)
 
 
 def enforce_rbac(action_name='default'):
@@ -158,6 +160,23 @@ def enforce_content_types(valid_content_types=[]):
         return content_types_enforcer
 
     return content_types_decorator
+
+
+def _credentials_for_policy(ctx, action_name, target_data):
+    """Return credentials for oslo.policy, without mutating ``ctx``.
+
+    GenericCheck is always ``creds[left] == target[right]``. The
+    migrate rule compares the destination store id from the URL with
+    the project's preferred (or global-default) store on the target.
+    The path id is stored on the target as ``req_secret_store_id``
+    and copied onto credentials as ``secret_store_id`` so the rule
+    can stay ``secret_store_id:%(target.secret.preferred_secret_store_id)s``.
+    """
+    if action_name != 'secret:migrate_secretstore' or not target_data:
+        return ctx
+    creds = dict(ctx.to_policy_values())
+    creds['secret_store_id'] = target_data.get('req_secret_store_id')
+    return creds
 
 
 def flatten(d, parent_key=''):

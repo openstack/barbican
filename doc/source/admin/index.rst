@@ -11,6 +11,7 @@ management of secrets.
 
    access_control
    barbican_manage
+   secret_store_migrate
    database_cleaning
    upgrade
    pkcs11keygeneration

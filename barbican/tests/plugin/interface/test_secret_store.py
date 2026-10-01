@@ -122,6 +122,22 @@ class WhenTestingSecretStorePluginManager(utils.BaseTestCase):
             None, plugin_name=common_utils.generate_fullname_for(plugin))
         self.assertEqual(plugin, plugin_found)
 
+    def test_get_plugin_by_name(self):
+        plugin = TestSecretStore([ss.KeyAlgorithm.AES])
+        plugin_mock = mock.Mock()
+        plugin_mock.obj = plugin
+        plugin_mock.name = 'store_crypto'
+        self.manager.extensions = [plugin_mock]
+        self.assertEqual(
+            plugin, self.manager.get_plugin_by_name('store_crypto'))
+
+    def test_get_plugin_by_name_not_found(self):
+        self.manager.extensions = []
+        self.assertRaises(
+            ss.SecretStorePluginNotFound,
+            self.manager.get_plugin_by_name,
+            'missing-plugin')
+
     def test_get_generate_supported_plugin(self):
         plugin = TestSecretStore([ss.KeyAlgorithm.AES])
         plugin_mock = mock.MagicMock(obj=plugin)
