@@ -52,6 +52,11 @@ class WhenUsingAsyncTaskClient(utils.BaseTestCase):
             project_id=self.external_project_id,
             request_id=self.request_id)
 
+    def test_should_cleanup_secret_store_object(self):
+        self.client.cleanup_secret_store_object(task_id='task-1')
+        self.mock_client.cast.assert_called_with(
+            {}, 'cleanup_secret_store_object', task_id='task-1')
+
 
 class WhenCreatingDirectTaskClient(utils.BaseTestCase):
     """Test using the synchronous task client (i.e. standalone mode)."""

@@ -11,8 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
+
+from oslo_utils import timeutils
 from sqlalchemy import exc as sa_exc
 
+from barbican.common import config
 from barbican.common import exception
 from barbican.common import utils
 from barbican import i18n as u
@@ -25,9 +29,7 @@ from barbican.plugin import store_crypto
 from barbican.plugin.util import translations as tr
 
 LOG = utils.getLogger(__name__)
-
-# Metadata keys that identify the plugin, not the stored object.
-_PLUGIN_META_KEYS = ('plugin_name', 'content_type')
+CONF = config.CONF
 
 
 def _get_transport_key_model(key_spec, transport_key_needed, project_id):
@@ -350,8 +352,9 @@ def rewrap_secret(secret_model, project_model, secret_store_model):
     """Move a secret payload onto a different secret store.
 
     Decrypts via the plugin currently associated with ``secret_model``,
-    stores onto the target store, then retires the previous backend
-    object only when it is a different plugin object.
+    stores onto the target store, then always schedules asynchronous
+    cleanup of the previous backend object (``store_crypto`` deletes
+    are a no-op; external plugins such as KMIP destroy the old object).
 
     Takes a ``SELECT ... FOR UPDATE`` row lock on the secret so two
     concurrent migrates of the same UUID are serialized. The loser
@@ -390,7 +393,6 @@ def rewrap_secret(secret_model, project_model, secret_store_model):
 
     old_meta = current_meta
     old_datums = _get_encrypted_datums(locked)
-    old_datum_ids = {datum.id for datum in old_datums}
     # Keep the type from retrieve, else the type already stored.
     # Default MIME is applied only in _save_secret_metadata_in_repo
     # when both are missing (None is not persisted).
@@ -424,22 +426,14 @@ def rewrap_secret(secret_model, project_model, secret_store_model):
         # Plugin or DB failure after a new backend object may exist.
         LOG.exception('Failed to migrate secret %s to store %s',
                       locked.id, secret_store_model.id)
-        _rollback_failed_migrate(
-            store_plugin, locked, rollback_meta, old_datum_ids)
+        _schedule_rollback_cleanup(
+            locked.id, rollback_meta, store_plugin)
         raise
 
-    saved_meta = _get_secret_meta(locked)
-    if _plugin_object_identity_matches(old_meta, saved_meta):
-        return
-
-    try:
-        retrieve_plugin.delete_secret(old_meta)
-    except Exception:
-        # Best-effort: a completed migrate must not fail because the
-        # source plugin object could not be deleted.
-        LOG.warning(
-            'Failed to delete old plugin object for secret %s',
-            locked.id, exc_info=True)
+    _schedule_plugin_cleanup(
+        locked.id,
+        old_meta,
+        models.SecretStoreCleanupReason.SOURCE_AFTER_SUCCESS)
 
 
 def _store_secret_using_plugin(store_plugin, secret_dto, secret_model,
@@ -520,40 +514,115 @@ def _secret_is_already_on_target(secret_model, store_plugin, crypto_plugin):
             utils.generate_fullname_for(crypto_plugin))
 
 
-def _plugin_object_identity_matches(old_meta, new_meta):
-    """Return True when old/new metadata name the same plugin object."""
-    if not old_meta or not new_meta:
-        return False
-    old_ids = {k: v for k, v in old_meta.items()
-               if k not in _PLUGIN_META_KEYS}
-    new_ids = {k: v for k, v in new_meta.items()
-               if k not in _PLUGIN_META_KEYS}
-    # store_crypto metadata is only plugin_name + content_type.
-    if not old_ids and not new_ids:
-        return True
-    return old_ids == new_ids
+def _schedule_rollback_cleanup(secret_id, plugin_meta, store_plugin):
+    """Roll back migrate DB changes, then persist dest-plugin cleanup.
+
+    A destination plugin object may already exist. Rollback undoes the
+    mapped metadata; the cleanup-task row is inserted in a new
+    transaction for the retry scheduler to enqueue without a catch-all
+    on the failed HTTP path.
+    """
+    repos.rollback()
+    try:
+        _schedule_plugin_cleanup(
+            secret_id,
+            plugin_meta,
+            models.SecretStoreCleanupReason.DEST_AFTER_ROLLBACK,
+            store_plugin=store_plugin)
+    except (exception.BarbicanException, sa_exc.SQLAlchemyError):
+        LOG.warning(
+            'Failed to schedule dest plugin cleanup for secret %s',
+            secret_id, exc_info=True)
 
 
-def _rollback_failed_migrate(store_plugin, secret_model, new_meta,
-                             old_datum_ids):
-    if new_meta:
-        try:
-            store_plugin.delete_secret(new_meta)
-        except Exception:
-            # Best-effort: do not replace the original migrate error.
-            LOG.warning(
-                'Failed to clean up new plugin object for secret %s',
-                secret_model.id, exc_info=True)
-    for datum in _get_encrypted_datums(secret_model):
-        if datum.id in old_datum_ids:
-            continue
-        try:
-            datum.delete()
-        except Exception:
-            # Best-effort: do not replace the original migrate error.
-            LOG.warning(
-                'Failed to clean up new encrypted datum %s',
-                datum.id, exc_info=True)
+def _schedule_plugin_cleanup(secret_id, plugin_meta, reason,
+                             store_plugin=None):
+    """Persist a cleanup-task row for the retry scheduler.
+
+    Commits so the row is durable after migrate success or rollback.
+    The retry scheduler enqueues barbican-worker; only plugin_name and
+    plugin metadata are stored (never the secret payload).
+    """
+    if not plugin_meta:
+        return
+    meta = dict(plugin_meta)
+    plugin_name = meta.get('plugin_name')
+    if not plugin_name and store_plugin is not None:
+        plugin_name = utils.generate_fullname_for(store_plugin)
+        meta['plugin_name'] = plugin_name
+    if not plugin_name:
+        LOG.warning(
+            'Cannot schedule plugin cleanup for secret %s: missing '
+            'plugin_name', secret_id)
+        return
+
+    task = models.SecretStoreCleanupTask()
+    task.secret_id = secret_id
+    task.plugin_name = plugin_name
+    task.plugin_meta = meta
+    task.reason = reason
+    task.retry_at = timeutils.utcnow()
+    task.retry_count = 0
+
+    cleanup_repo = repos.get_secret_store_cleanup_tasks_repository()
+    cleanup_repo.create_from(task)
+    repos.commit()
+
+
+def process_secret_store_cleanup(task_id):
+    """Delete a leftover secret-store plugin object for one cleanup task.
+
+    Takes ``SELECT ... FOR UPDATE`` on the cleanup-task row so two
+    workers cannot interleave soft-delete and reschedule on the same
+    row (e.g. KMIP destroy succeeding on one worker and failing on the
+    other).
+    """
+    cleanup_repo = repos.get_secret_store_cleanup_tasks_repository()
+    task = cleanup_repo.get_for_update(
+        entity_id=task_id, suppress_exception=True)
+    if not task:
+        return
+    if task.status == models.States.ERROR:
+        return
+
+    try:
+        plugin = secret_store.get_manager().get_plugin_retrieve_delete(
+            task.plugin_name)
+        plugin.delete_secret(task.plugin_meta)
+    except secret_store.SecretNotFoundException:
+        LOG.info(
+            'Cleanup task %s: plugin object already gone', task_id)
+    except exception.BarbicanException as err:
+        _reschedule_cleanup_task(task, cleanup_repo, err)
+        return
+
+    task.delete()
+    LOG.info('Completed secret-store plugin cleanup task %s', task_id)
+
+
+def _reschedule_cleanup_task(task, cleanup_repo, err):
+    max_retries = (
+        CONF.retry_scheduler.secret_store_cleanup_max_retries)
+    task.retry_count = (task.retry_count or 0) + 1
+    task.last_error = str(err)[:models.ERROR_REASON_LENGTH]
+    if task.retry_count >= max_retries:
+        task.status = models.States.ERROR
+        LOG.error(
+            'Cleanup task %s exhausted retries: %s', task.id, err)
+    else:
+        task.retry_at = _next_cleanup_retry_at(task.retry_count)
+        LOG.warning(
+            'Cleanup task %s failed (attempt %s), retry at %s: %s',
+            task.id, task.retry_count, task.retry_at, err)
+    cleanup_repo.save(task)
+
+
+def _next_cleanup_retry_at(retry_count):
+    base = CONF.retry_scheduler.secret_store_cleanup_retry_msec
+    cap = CONF.retry_scheduler.secret_store_cleanup_retry_max_msec
+    delay_msec = min(base * (2 ** max(retry_count - 1, 0)), cap)
+    return timeutils.utcnow() + datetime.timedelta(
+        milliseconds=delay_msec)
 
 
 def _generate_symmetric_key(

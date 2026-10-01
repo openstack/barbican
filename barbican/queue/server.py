@@ -32,6 +32,7 @@ from oslo_utils import timeutils
 from barbican.common import utils
 from barbican.model import models
 from barbican.model import repositories
+from barbican.plugin import resources as plugin
 from barbican import queue
 from barbican.tasks import common
 from barbican.tasks import resources
@@ -209,6 +210,14 @@ class Tasks(object):
         LOG.info(message, {'order': order_id, 'request': request_id})
         return resources.BeginTypeOrder().process_and_suppress_exceptions(
             order_id, project_id)
+
+    @monitored
+    @transactional
+    def cleanup_secret_store_object(self, context, task_id):
+        """Delete a leftover secret-store plugin object."""
+        LOG.info("Cleaning secret-store plugin object: task ID is '%s'",
+                 task_id)
+        plugin.process_secret_store_cleanup(task_id)
 
 
 class TaskServer(Tasks, service.Service):

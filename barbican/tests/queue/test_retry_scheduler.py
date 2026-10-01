@@ -14,6 +14,7 @@
 import time
 from unittest import mock
 
+import oslo_messaging as messaging
 from oslo_utils import timeutils
 
 from barbican.model import models
@@ -92,6 +93,69 @@ class WhenRunningPeriodicServerRetryLogic(database_utils.RepositoryTestCase):
         self.queue_client.test_task.assert_called_once_with(
             *args, **kwargs
         )
+
+    def test_should_enqueue_cleanup_task_without_deleting_row(self):
+        cleanup_repo = repositories.get_secret_store_cleanup_tasks_repository()
+        task = database_utils.create_secret_store_cleanup_task(
+            secret_id='secret-id',
+            plugin_meta={'secret_id': 'obj-1'},
+            retry_at=timeutils.utcnow())
+        database_utils.get_session().commit()
+
+        _, _, _, total = cleanup_repo.get_due()
+        self.assertEqual(1, total)
+
+        interval = self.periodic_server._check_retry_tasks()
+
+        fetched = cleanup_repo.get(task.id)
+        self.assertFalse(fetched.deleted)
+        self.assertNotEqual(models.States.ERROR, fetched.status)
+        _, _, _, later_total = cleanup_repo.get_due(
+            only_at_or_before_this_date=timeutils.utcnow(),
+            suppress_exception=True)
+        self.assertEqual(0, later_total)
+
+        self.assertTrue(is_interval_in_expected_range(interval))
+        self.queue_client.cleanup_secret_store_object.assert_called_once_with(
+            task_id=task.id)
+
+    def test_cleanup_enqueue_swallows_messaging_error(self):
+        cleanup_repo = repositories.get_secret_store_cleanup_tasks_repository()
+        task = database_utils.create_secret_store_cleanup_task(
+            secret_id='secret-id',
+            plugin_meta={'secret_id': 'obj-1'},
+            retry_at=timeutils.utcnow())
+        database_utils.get_session().commit()
+        task_id = task.id
+
+        self.queue_client.cleanup_secret_store_object.side_effect = (
+            messaging.MessagingException('rpc down'))
+
+        interval = self.periodic_server._check_retry_tasks()
+
+        self.assertTrue(is_interval_in_expected_range(interval))
+        fetched = cleanup_repo.get(task_id)
+        self.assertFalse(fetched.deleted)
+
+    def test_cleanup_enqueue_propagates_unexpected_error(self):
+        task = database_utils.create_secret_store_cleanup_task(
+            secret_id='secret-id',
+            plugin_meta={'secret_id': 'obj-1'},
+            retry_at=timeutils.utcnow())
+        database_utils.get_session().commit()
+        # Re-load so the instance is bound for _enqueue_cleanup_task.
+        cleanup_repo = repositories.get_secret_store_cleanup_tasks_repository()
+        task = cleanup_repo.get(task.id)
+
+        self.queue_client.cleanup_secret_store_object.side_effect = (
+            ValueError('bug'))
+
+        # Outer _check_retry_tasks still catches Exception for the loop,
+        # so call the per-task helper directly.
+        self.assertRaises(
+            ValueError,
+            self.periodic_server._enqueue_cleanup_task,
+            task)
 
     @mock.patch('barbican.model.repositories.commit')
     def test_should_fail_and_force_a_rollback(self, mock_commit):

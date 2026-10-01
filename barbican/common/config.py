@@ -111,6 +111,18 @@ retry_opts = [
     cfg.FloatOpt(
         'periodic_interval_max_seconds', default=10.0,
         help=u._('Seconds (float) to wait between periodic schedule events')),
+    cfg.IntOpt(
+        'secret_store_cleanup_max_retries', default=10,
+        help=u._('Maximum retries for asynchronous secret-store plugin '
+                 'object cleanup after migrate')),
+    cfg.IntOpt(
+        'secret_store_cleanup_retry_msec', default=60 * 1000,
+        help=u._('Initial backoff in milliseconds between secret-store '
+                 'cleanup retries')),
+    cfg.IntOpt(
+        'secret_store_cleanup_retry_max_msec', default=60 * 60 * 1000,
+        help=u._('Maximum backoff in milliseconds between secret-store '
+                 'cleanup retries')),
 ]
 
 queue_opt_group = cfg.OptGroup(name='queue',

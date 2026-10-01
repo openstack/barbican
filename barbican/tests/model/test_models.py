@@ -291,6 +291,31 @@ class WhenCreatingOrderRetryTask(utils.BaseTestCase):
         )
 
 
+class WhenCreatingSecretStoreCleanupTask(utils.BaseTestCase):
+
+    def test_create_new_cleanup_task(self):
+        at = timeutils.utcnow()
+        task = models.SecretStoreCleanupTask()
+        task.secret_id = 'secret-id'
+        task.plugin_name = 'plugin.Name'
+        task.plugin_meta = {'secret_id': 'obj-1'}
+        task.reason = models.SecretStoreCleanupReason.SOURCE_AFTER_SUCCESS
+        task.retry_at = at
+        task.retry_count = 0
+
+        self.assertEqual('secret-id', task.secret_id)
+        self.assertEqual('plugin.Name', task.plugin_name)
+        self.assertEqual({'secret_id': 'obj-1'}, task.plugin_meta)
+        self.assertEqual(
+            models.SecretStoreCleanupReason.SOURCE_AFTER_SUCCESS,
+            task.reason)
+        self.assertEqual(at, task.retry_at)
+        self.assertEqual(0, task.retry_count)
+        fields = task._do_extra_dict_fields()
+        self.assertEqual('secret-id', fields['secret_id'])
+        self.assertEqual('plugin.Name', fields['plugin_name'])
+
+
 class WhenCreatingNewCertificateAuthority(utils.BaseTestCase):
     def setUp(self):
         super(WhenCreatingNewCertificateAuthority, self).setUp()

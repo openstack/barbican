@@ -113,9 +113,20 @@ Failure handling
   them as failures and continues.
 * Decrypt or destination ``store_secret`` failures leave the secret on
   the source store (no database rewrite has started yet).
-* If a migrate fails after the destination plugin accepted the payload,
-  the API rolls back the Barbican database change and deletes the new
-  plugin object. The secret remains on the source store.
+* If a migrate fails after the destination plugin accepted the payload
+  (plugin or database error), the API rolls back the Barbican database
+  change. The leftover destination plugin object is recorded as a
+  ``secret_store_cleanup_tasks`` row. The retry scheduler enqueues
+  ``barbican-worker`` to delete it (with further retries on failure).
+  The secret remains on the source store.
+* After a successful migrate, a cleanup task is always scheduled for
+  the source plugin object (including ``store_crypto``, where
+  ``delete_secret`` is a no-op). The HTTP response does not wait for
+  that delete; the retry scheduler drives worker cleanup, and a plugin
+  delete failure is retried rather than failing the migrate.
+* Unexpected errors outside the plugin/database path do not schedule
+  destination cleanup. The secret remains on the source store if the
+  request transaction rolls back.
 * ``barbican-manage secret migrate`` continues with remaining secrets.
   It writes one JSON object per failure to
   ``barbican-manage-secret-migrate-errors.jsonl`` (or ``--error-file``)

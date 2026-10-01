@@ -46,6 +46,11 @@ class TaskClient(object):
                    project_id=project_id,
                    request_id=request_id)
 
+    def cleanup_secret_store_object(self, task_id):
+        """Delete a leftover secret-store plugin object."""
+
+        self._cast('cleanup_secret_store_object', task_id=task_id)
+
     def _cast(self, name, **kwargs):
         """Asynchronous call handler. Barbican probably only needs casts.
 

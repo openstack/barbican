@@ -812,6 +812,51 @@ class OrderRetryTask(BASE, SoftDeleteMixIn, ModelBase):
         super(OrderRetryTask, self).__init__()
 
 
+class SecretStoreCleanupReason(object):
+    """Why a secret-store plugin object needs asynchronous delete."""
+
+    SOURCE_AFTER_SUCCESS = 'source_after_success'
+    DEST_AFTER_ROLLBACK = 'dest_after_rollback'
+
+
+class SecretStoreCleanupTask(BASE, SoftDeleteMixIn, ModelBase):
+    """Retryable delete of a leftover secret-store plugin object.
+
+    After a successful migrate the source plugin object is no longer
+    referenced by secret metadata. After a failed migrate the destination
+    plugin may have accepted a payload that the database rolled back.
+    Both deletes must not change the HTTP result, so they are persisted
+    here for the retry scheduler to enqueue and barbican-worker to
+    complete.
+    """
+
+    __tablename__ = 'secret_store_cleanup_tasks'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+    __table_initialized__ = False
+
+    secret_id = sa.Column(sa.String(36), nullable=True, index=True)
+    plugin_name = sa.Column(sa.String(255), nullable=False)
+    plugin_meta = sa.Column(JsonBlob(), nullable=False)
+    reason = sa.Column(sa.String(64), nullable=False)
+    retry_at = sa.Column(sa.DateTime, nullable=False, index=True)
+    retry_count = sa.Column(sa.Integer, nullable=False, default=0)
+    last_error = sa.Column(sa.String(ERROR_REASON_LENGTH), nullable=True)
+
+    def __init__(self, check_exc=True):
+        super(SecretStoreCleanupTask, self).__init__()
+
+    def _do_extra_dict_fields(self):
+        return {
+            'secret_id': self.secret_id,
+            'plugin_name': self.plugin_name,
+            'plugin_meta': self.plugin_meta,
+            'reason': self.reason,
+            'retry_at': self.retry_at,
+            'retry_count': self.retry_count,
+            'last_error': self.last_error,
+        }
+
+
 class Container(BASE, SoftDeleteMixIn, ModelBase):
     """Represents a Container for Secrets in the datastore.
 

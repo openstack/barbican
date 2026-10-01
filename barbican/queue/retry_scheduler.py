@@ -16,12 +16,16 @@
 """
 Retry/scheduler classes and logic.
 """
+import datetime
 import random
 
+import oslo_messaging as messaging
 from oslo_service import service
 from oslo_utils import timeutils
+from sqlalchemy import exc as sa_exc
 
 from barbican.common import config
+from barbican.common import exception
 from barbican.common import utils
 from barbican.model import models
 from barbican.model import repositories
@@ -68,6 +72,8 @@ class PeriodicServer(service.Service):
             periodic_interval_max=periodic_interval)
 
         self.order_retry_repo = repositories.get_order_retry_tasks_repository()
+        self.cleanup_repo = (
+            repositories.get_secret_store_cleanup_tasks_repository())
 
     def start(self):
         LOG.info("Starting the PeriodicServer")
@@ -111,7 +117,11 @@ class PeriodicServer(service.Service):
         for task in entities:
             self._enqueue_task(task)
 
-        return total
+        cleanup_entities, cleanup_total = self._retrieve_cleanup_tasks()
+        for task in cleanup_entities:
+            self._enqueue_cleanup_task(task)
+
+        return total + cleanup_total
 
     def _retrieve_tasks(self):
         """Retrieve a list of tasks to retry."""
@@ -160,6 +170,62 @@ class PeriodicServer(service.Service):
                               'kwargs': retry_kwargs
                           }
                           )
+            repositories.rollback()
+        finally:
+            repositories.clear()
+
+    def _retrieve_cleanup_tasks(self):
+        """Retrieve due secret-store plugin cleanup-task rows."""
+        repositories.start()
+        try:
+            entities, _, _, total = self.cleanup_repo.get_due(
+                only_at_or_before_this_date=timeutils.utcnow(),
+                suppress_exception=True)
+        finally:
+            repositories.clear()
+
+        return entities, total
+
+    def _enqueue_cleanup_task(self, task):
+        """Re-enqueue a cleanup task without deleting the task row.
+
+        The worker owns completion (soft-delete or ERROR). retry_at is
+        bumped here so a later scheduler pass does not stampede while
+        the worker is still running.
+        """
+        task_id = task.id
+        repositories.start()
+        try:
+            live = self.cleanup_repo.get(
+                entity_id=task_id, suppress_exception=True)
+            if (not live or live.deleted or
+                    live.status == models.States.ERROR):
+                repositories.commit()
+                return
+
+            delay_msec = (
+                CONF.retry_scheduler.secret_store_cleanup_retry_msec)
+            live.retry_at = timeutils.utcnow() + datetime.timedelta(
+                milliseconds=delay_msec)
+            self.cleanup_repo.save(live)
+            repositories.commit()
+
+            self.queue.cleanup_secret_store_object(task_id=task_id)
+            # When [queue] enable=False, TaskClient uses DirectTaskInvoker
+            # in this process with is_server_side=False, so @transactional
+            # does not commit. Persist soft-delete / reschedule here.
+            # With RPC enabled this is an empty commit (worker commits).
+            repositories.commit()
+            LOG.debug(
+                "Enqueued secret-store cleanup task '%s'", task_id)
+        except (messaging.MessagingException, sa_exc.SQLAlchemyError,
+                exception.BarbicanException):
+            # Narrower than Exception: unexpected bugs should surface.
+            # Messaging/DB failures roll back this task's transaction;
+            # the cleanup-task row remains for a later scheduler pass.
+            LOG.exception(
+                "Problem enqueuing secret-store cleanup task '%s'",
+                task_id)
             repositories.rollback()
         finally:
             repositories.clear()

@@ -76,6 +76,7 @@ _TRANSPORT_KEY_REPOSITORY = None
 _SECRET_STORES_REPOSITORY = None
 _PROJECT_SECRET_STORE_REPOSITORY = None
 _SECRET_CONSUMER_REPOSITORY = None
+_SECRET_STORE_CLEANUP_TASK_REPOSITORY = None
 
 
 CONF = config.CONF
@@ -1297,6 +1298,78 @@ class OrderRetryTaskRepo(BaseRepo):
     def _do_build_get_query(self, entity_id, external_project_id, session):
         """Sub-class hook: build a retrieve query."""
         query = session.query(models.OrderRetryTask)
+        query = query.filter_by(id=entity_id, deleted=False)
+        return query
+
+    def _do_validate(self, values):
+        """Sub-class hook: validate values."""
+        pass
+
+
+class SecretStoreCleanupTaskRepo(BaseRepo):
+    """Repository for SecretStoreCleanupTask entities."""
+
+    def get_due(
+            self, only_at_or_before_this_date=None,
+            offset_arg=None, limit_arg=None,
+            suppress_exception=False,
+            session=None):
+        """Return pending cleanup tasks whose retry_at is due.
+
+        Exhausted ERROR rows are skipped so operators can inspect them
+        without the scheduler spinning on them.
+        """
+        offset, limit = clean_paging_values(offset_arg, limit_arg)
+        session = self.get_session(session)
+
+        query = session.query(models.SecretStoreCleanupTask)
+        query = query.order_by(models.SecretStoreCleanupTask.retry_at)
+        query = query.filter_by(deleted=False)
+        query = query.filter(
+            models.SecretStoreCleanupTask.status != models.States.ERROR)
+        if only_at_or_before_this_date:
+            query = query.filter(
+                models.SecretStoreCleanupTask.retry_at <=
+                only_at_or_before_this_date)
+
+        start = offset
+        end = offset + limit
+        LOG.debug('Retrieving cleanup tasks from %s to %s', start, end)
+        total = query.count()
+        entities = query.offset(start).limit(limit).all()
+        LOG.debug('Number cleanup tasks retrieved: %s out of %s',
+                  len(entities), total)
+
+        if total <= 0 and not suppress_exception:
+            _raise_no_entities_found(self._do_entity_name())
+
+        return entities, offset, limit, total
+
+    def get_for_update(self, entity_id, suppress_exception=False,
+                       session=None):
+        """Get a cleanup task with SELECT ... FOR UPDATE.
+
+        Serializes concurrent workers on the same row so a successful
+        soft-delete is visible to the waiter before it proceeds.
+        """
+        session = self.get_session(session)
+        try:
+            query = session.query(models.SecretStoreCleanupTask)
+            query = query.filter_by(id=entity_id, deleted=False)
+            query = query.with_for_update()
+            return query.one()
+        except sa_orm.exc.NoResultFound:
+            if not suppress_exception:
+                _raise_entity_not_found(self._do_entity_name(), entity_id)
+            return None
+
+    def _do_entity_name(self):
+        """Sub-class hook: return entity name, such as for debugging."""
+        return "SecretStoreCleanupTask"
+
+    def _do_build_get_query(self, entity_id, external_project_id, session):
+        """Sub-class hook: build a retrieve query."""
+        query = session.query(models.SecretStoreCleanupTask)
         query = query.filter_by(id=entity_id, deleted=False)
         return query
 
@@ -2730,6 +2803,13 @@ def get_secret_stores_repository():
     """Returns a singleton Secret Stores repository instance."""
     global _SECRET_STORES_REPOSITORY
     return _get_repository(_SECRET_STORES_REPOSITORY, SecretStoresRepo)
+
+
+def get_secret_store_cleanup_tasks_repository():
+    """Returns a singleton secret-store cleanup task repository."""
+    global _SECRET_STORE_CLEANUP_TASK_REPOSITORY
+    return _get_repository(_SECRET_STORE_CLEANUP_TASK_REPOSITORY,
+                           SecretStoreCleanupTaskRepo)
 
 
 def get_project_secret_store_repository():

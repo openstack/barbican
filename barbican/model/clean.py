@@ -239,6 +239,9 @@ def cleanup_all(threshold_date=None, batch_size=DEFAULT_CLEANUP_BATCH_SIZE):
     total += cleanup_softdeletes(models.OrderRetryTask,
                                  threshold_date=threshold_date,
                                  batch_size=batch_size)
+    total += cleanup_softdeletes(models.SecretStoreCleanupTask,
+                                 threshold_date=threshold_date,
+                                 batch_size=batch_size)
     total += cleanup_softdeletes(models.OrderPluginMetadatum,
                                  threshold_date=threshold_date,
                                  batch_size=batch_size)

@@ -283,6 +283,12 @@ class WhenCallingTasksMethod(utils.BaseTestCase):
             mock.ANY, 'result', None, 'order1234',
             'keystone1234', 'request1234')
 
+    @mock.patch('barbican.plugin.resources.process_secret_store_cleanup',
+                autospec=True)
+    def test_should_cleanup_secret_store_object(self, mock_process):
+        self.tasks.cleanup_secret_store_object(None, 'task-1')
+        mock_process.assert_called_once_with('task-1')
+
     @mock.patch('barbican.tasks.resources.BeginTypeOrder')
     def test_process_order_catch_exception(self, mock_begin_order):
         """Test that BeginTypeOrder's process() handles all exceptions."""

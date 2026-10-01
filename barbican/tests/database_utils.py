@@ -174,6 +174,25 @@ def create_order_retry(order=None, retry_task="", retry_args=[],
     return order_retry
 
 
+def create_secret_store_cleanup_task(
+        secret_id=None, plugin_name='plugin.Name', plugin_meta=None,
+        reason=None, retry_at=None, retry_count=0, status=None,
+        session=None):
+    task = models.SecretStoreCleanupTask()
+    task.secret_id = secret_id
+    task.plugin_name = plugin_name
+    task.plugin_meta = plugin_meta or {'plugin_name': plugin_name}
+    task.reason = (
+        reason or models.SecretStoreCleanupReason.SOURCE_AFTER_SUCCESS)
+    task.retry_at = retry_at or timeutils.utcnow()
+    task.retry_count = retry_count
+    if status:
+        task.status = status
+    cleanup_repo = repositories.get_secret_store_cleanup_tasks_repository()
+    cleanup_repo.create_from(task, session=session)
+    return task
+
+
 def create_order_plugin_metadatum(order=None, key="key", value="value",
                                   session=None):
     order_plugin_metadatum = models.OrderPluginMetadatum(key, value)

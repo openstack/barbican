@@ -360,6 +360,19 @@ class MockModelRepositoryMixin(object):
             mock_repo_obj=mock_project_secret_store_repo,
             patcher_obj=self.mock_proj_secret_store_repo_patcher)
 
+    def setup_secret_store_cleanup_tasks_repository_mock(
+            self, mock_cleanup_repo=mock.MagicMock()):
+        """Mocks the secret-store cleanup task repository factory function
+
+        :param mock_cleanup_repo: The pre-configured mock cleanup repo to
+                                  be returned.
+        """
+        self.mock_cleanup_repo_patcher = None
+        self._setup_repository_mock(
+            repo_factory='get_secret_store_cleanup_tasks_repository',
+            mock_repo_obj=mock_cleanup_repo,
+            patcher_obj=self.mock_cleanup_repo_patcher)
+
     def setup_project_ca_repository_mock(
             self, mock_project_ca_repo=mock.MagicMock()):
         """Mocks the project repository factory function

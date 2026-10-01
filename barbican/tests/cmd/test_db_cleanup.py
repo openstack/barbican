@@ -210,6 +210,12 @@ class WhenTestingDBCleanUpCommand(utils.RepositoryTestCase):
         self.assertFalse(_entry_exists(order_retry_task))
         self.assertFalse(_entry_exists(order_barbican_meta_data))
 
+    def test_cleanup_soft_deletes_secret_store_cleanup_tasks(self):
+        task = _setup_entry('secret_store_cleanup_task')
+        task.delete()
+        clean.cleanup_all()
+        self.assertFalse(_entry_exists(task))
+
     @_create_project("my clean order with child keystone id")
     def test_cleanup_order_with_child(self, project):
         """Test cleaning up an order with a child"""

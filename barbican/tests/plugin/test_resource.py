@@ -82,6 +82,27 @@ class WhenTestingPluginResource(testtools.TestCase,
         self.secret_meta_repo.create_from.return_value = None
         self.setup_secret_meta_repository_mock(self.secret_meta_repo)
 
+        self.cleanup_repo = mock.MagicMock()
+
+        def _assign_cleanup_id(entity, session=None):
+            if not getattr(entity, 'id', None):
+                entity.id = 'cleanup-task-id'
+            return entity
+
+        self.cleanup_repo.create_from.side_effect = _assign_cleanup_id
+        self.setup_secret_store_cleanup_tasks_repository_mock(
+            self.cleanup_repo)
+
+        self.commit_patcher = mock.patch(
+            'barbican.model.repositories.commit', autospec=True)
+        self.commit_mock = self.commit_patcher.start()
+        self.addCleanup(self.commit_patcher.stop)
+
+        self.rollback_patcher = mock.patch(
+            'barbican.model.repositories.rollback', autospec=True)
+        self.rollback_mock = self.rollback_patcher.start()
+        self.addCleanup(self.rollback_patcher.stop)
+
     def tearDown(self):
         super(WhenTestingPluginResource, self).tearDown()
 
@@ -243,6 +264,18 @@ class WhenTestingPluginResource(testtools.TestCase,
         self.secret_repo.get_secret_by_id.return_value = secret_model
         return secret_model
 
+    def _assert_source_cleanup_scheduled(self, old_meta):
+        self.moc_plugin.delete_secret.assert_not_called()
+        self.cleanup_repo.create_from.assert_called_once()
+        task = self.cleanup_repo.create_from.call_args[0][0]
+        self.assertEqual(
+            models.SecretStoreCleanupReason.SOURCE_AFTER_SUCCESS,
+            task.reason)
+        self.assertEqual(old_meta.get('secret_id'),
+                         task.plugin_meta.get('secret_id'))
+        self.assertEqual(old_meta.get('plugin_name'), task.plugin_name)
+        self.commit_mock.assert_called()
+
     @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
                 autospec=True)
     def test_rewrap_secret_already_on_target_is_noop(self, mock_fullname):
@@ -355,10 +388,12 @@ class WhenTestingPluginResource(testtools.TestCase,
             self._make_secret_store())
 
         self.moc_plugin.store_secret.assert_called_once()
-        # Nothing was stored successfully, so no rollback delete and
-        # the source plugin object must remain.
+        # Nothing was stored successfully, so no dest cleanup is scheduled
+        # and the source plugin object must remain.
         self.moc_plugin.delete_secret.assert_not_called()
+        self.cleanup_repo.create_from.assert_not_called()
         self.secret_meta_repo.delete_for_secret.assert_not_called()
+        self.rollback_mock.assert_called_once()
 
     @mock.patch('barbican.plugin.resources._get_secret', autospec=True)
     @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
@@ -380,14 +415,9 @@ class WhenTestingPluginResource(testtools.TestCase,
             'content_type': 'application/octet-stream',
             'secret_id': 'old-obj',
         }
-        new_meta = {
-            'plugin_name': 'NewPlugin',
-            'content_type': 'application/octet-stream',
-            'secret_id': 'new-obj',
-        }
-        # already-on-target check, current_meta, then saved_meta
+        # already-on-target check, then current_meta for retrieve
         self.secret_meta_repo.get_metadata_for_secret.side_effect = [
-            old_meta, old_meta, new_meta,
+            old_meta, old_meta,
         ]
         old_datum = mock.MagicMock()
         old_datum.id = 'd1'
@@ -402,17 +432,15 @@ class WhenTestingPluginResource(testtools.TestCase,
         self.moc_plugin.store_secret.assert_called_once()
         self.secret_meta_repo.delete_for_secret.assert_called_once_with('sid')
         old_datum.delete.assert_called_once()
-        self.moc_plugin.delete_secret.assert_called_once_with({
-            'plugin_name': 'OldPlugin',
-            'content_type': 'application/octet-stream',
-            'secret_id': 'old-obj',
-        })
+        self._assert_source_cleanup_scheduled(old_meta)
 
     @mock.patch('barbican.plugin.resources._get_secret', autospec=True)
     @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
                 autospec=True)
-    def test_rewrap_secret_skips_delete_when_object_identity_matches(
+    def test_rewrap_secret_schedules_cleanup_for_store_crypto_metadata(
             self, mock_fullname, mock_get):
+        # store_crypto metadata has no remote object id; still schedule
+        # a source cleanup task (plugin delete_secret is a no-op).
         mock_fullname.return_value = 'NewPlugin'
         dto = secret_store.SecretDTO(
             secret_store.SecretType.OPAQUE,
@@ -427,12 +455,8 @@ class WhenTestingPluginResource(testtools.TestCase,
             'plugin_name': 'OldPlugin',
             'content_type': 'application/octet-stream',
         }
-        new_meta = {
-            'plugin_name': 'NewPlugin',
-            'content_type': 'application/octet-stream',
-        }
         self.secret_meta_repo.get_metadata_for_secret.side_effect = [
-            old_meta, old_meta, new_meta,
+            old_meta, old_meta,
         ]
         old_datum = mock.MagicMock()
         old_datum.id = 'd1'
@@ -444,6 +468,7 @@ class WhenTestingPluginResource(testtools.TestCase,
 
         self.moc_plugin.store_secret.assert_called_once()
         self.moc_plugin.delete_secret.assert_not_called()
+        self._assert_source_cleanup_scheduled(old_meta)
 
     @mock.patch('barbican.plugin.resources._get_secret', autospec=True)
     @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
@@ -476,8 +501,16 @@ class WhenTestingPluginResource(testtools.TestCase,
             self.project_model,
             self._make_secret_store())
 
-        self.moc_plugin.delete_secret.assert_called_once_with(
-            {'secret_id': 'new-obj'})
+        self.moc_plugin.delete_secret.assert_not_called()
+        self.rollback_mock.assert_called_once()
+        self.cleanup_repo.create_from.assert_called_once()
+        task = self.cleanup_repo.create_from.call_args[0][0]
+        self.assertEqual(
+            models.SecretStoreCleanupReason.DEST_AFTER_ROLLBACK,
+            task.reason)
+        self.assertEqual('new-obj', task.plugin_meta.get('secret_id'))
+        self.assertEqual('NewPlugin', task.plugin_name)
+        self.commit_mock.assert_called()
 
     @mock.patch('barbican.plugin.resources._get_secret', autospec=True)
     @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
@@ -510,6 +543,8 @@ class WhenTestingPluginResource(testtools.TestCase,
             self._make_secret_store())
 
         self.moc_plugin.delete_secret.assert_not_called()
+        self.cleanup_repo.create_from.assert_not_called()
+        self.rollback_mock.assert_not_called()
 
     @mock.patch('barbican.plugin.resources.crypto_mgr.get_manager',
                 autospec=True)
@@ -558,15 +593,9 @@ class WhenTestingPluginResource(testtools.TestCase,
             'namespace': 'barbican-secrets',
             'secret_name': 'barbican-secret-1',
         }
-        new_meta = {
-            'plugin_name': 'NewPlugin',
-            'content_type': 'application/octet-stream',
-            'secret_id': 'new-obj',
-        }
-        # payload check (no datums), already-on-target,
-        # current_meta, then saved_meta
+        # payload check (no datums), already-on-target, current_meta
         self.secret_meta_repo.get_metadata_for_secret.side_effect = [
-            old_meta, old_meta, old_meta, new_meta,
+            old_meta, old_meta, old_meta,
         ]
         secret_model = self._make_secret()
 
@@ -602,15 +631,9 @@ class WhenTestingPluginResource(testtools.TestCase,
             'content_type': 'application/octet-stream',
             'secret_id': 'kmip-old',
         }
-        new_meta = {
-            'plugin_name': 'NewPlugin',
-            'content_type': 'application/octet-stream',
-            'secret_id': 'kmip-new',
-        }
-        # payload check (no datums), already-on-target,
-        # current_meta, then saved_meta
+        # payload check (no datums), already-on-target, current_meta
         self.secret_meta_repo.get_metadata_for_secret.side_effect = [
-            old_meta, old_meta, old_meta, new_meta,
+            old_meta, old_meta, old_meta,
         ]
         secret_model = self._make_secret()
 
@@ -619,7 +642,7 @@ class WhenTestingPluginResource(testtools.TestCase,
             self._make_secret_store(store_plugin='kmip_plugin'))
 
         self.moc_plugin.store_secret.assert_called_once()
-        self.moc_plugin.delete_secret.assert_called_once_with(old_meta)
+        self._assert_source_cleanup_scheduled(old_meta)
 
     @mock.patch('barbican.plugin.resources._get_secret', autospec=True)
     @mock.patch('barbican.plugin.resources.utils.generate_fullname_for',
@@ -643,15 +666,9 @@ class WhenTestingPluginResource(testtools.TestCase,
             'content_type': 'application/octet-stream',
             'secret_id': 'vault-old',
         }
-        new_meta = {
-            'plugin_name': 'NewPlugin',
-            'content_type': 'application/octet-stream',
-            'secret_id': 'vault-new',
-        }
-        # payload check (no datums), already-on-target,
-        # current_meta, then saved_meta
+        # payload check (no datums), already-on-target, current_meta
         self.secret_meta_repo.get_metadata_for_secret.side_effect = [
-            old_meta, old_meta, old_meta, new_meta,
+            old_meta, old_meta, old_meta,
         ]
         secret_model = self._make_secret()
 
@@ -660,4 +677,121 @@ class WhenTestingPluginResource(testtools.TestCase,
             self._make_secret_store(store_plugin='vault_plugin'))
 
         self.moc_plugin.store_secret.assert_called_once()
-        self.moc_plugin.delete_secret.assert_called_once_with(old_meta)
+        self._assert_source_cleanup_scheduled(old_meta)
+
+
+class WhenTestingSecretStoreCleanupProcessing(
+        utils.BaseTestCase, utils.MockModelRepositoryMixin):
+
+    def setUp(self):
+        super(WhenTestingSecretStoreCleanupProcessing, self).setUp()
+        self.cleanup_repo = mock.MagicMock()
+        self.setup_secret_store_cleanup_tasks_repository_mock(
+            self.cleanup_repo)
+        self.plugin = mock.MagicMock()
+        self.manager = mock.MagicMock()
+        self.manager.get_plugin_retrieve_delete.return_value = self.plugin
+        self.manager_patcher = mock.patch(
+            'barbican.plugin.interface.secret_store.get_manager',
+            autospec=True,
+            return_value=self.manager)
+        self.manager_patcher.start()
+        self.addCleanup(self.manager_patcher.stop)
+
+    def _make_task(self, retry_count=0, status=models.States.PENDING,
+                   deleted=False):
+        task = mock.MagicMock()
+        task.id = 'tid'
+        task.deleted = deleted
+        task.status = status
+        task.plugin_name = 'plugin.Name'
+        task.plugin_meta = {'plugin_name': 'plugin.Name', 'secret_id': 'x'}
+        task.retry_count = retry_count
+        task.last_error = None
+        return task
+
+    def test_process_cleanup_deletes_plugin_object(self):
+        task = self._make_task()
+        self.cleanup_repo.get_for_update.return_value = task
+
+        resources.process_secret_store_cleanup('tid')
+
+        self.cleanup_repo.get_for_update.assert_called_once_with(
+            entity_id='tid', suppress_exception=True)
+        self.manager.get_plugin_retrieve_delete.assert_called_once_with(
+            'plugin.Name')
+        self.plugin.delete_secret.assert_called_once_with(task.plugin_meta)
+        task.delete.assert_called_once()
+        self.cleanup_repo.save.assert_not_called()
+
+    def test_process_cleanup_missing_task_is_noop(self):
+        self.cleanup_repo.get_for_update.return_value = None
+
+        resources.process_secret_store_cleanup('missing')
+
+        self.manager.get_plugin_retrieve_delete.assert_not_called()
+
+    def test_process_cleanup_already_gone_is_success(self):
+        task = self._make_task()
+        self.cleanup_repo.get_for_update.return_value = task
+        self.plugin.delete_secret.side_effect = (
+            secret_store.SecretNotFoundException())
+
+        resources.process_secret_store_cleanup('tid')
+
+        task.delete.assert_called_once()
+        self.cleanup_repo.save.assert_not_called()
+
+    def test_process_cleanup_reschedules_named_plugin_error(self):
+        # Explicit override so this test is not affected by another test that
+        # lowers secret_store_cleanup_max_retries (stestr can interleave).
+        resources.CONF.set_override(
+            'secret_store_cleanup_max_retries', 10,
+            group='retry_scheduler')
+        self.addCleanup(
+            resources.CONF.clear_override,
+            'secret_store_cleanup_max_retries',
+            group='retry_scheduler')
+        task = self._make_task()
+        self.cleanup_repo.get_for_update.return_value = task
+        self.plugin.delete_secret.side_effect = (
+            exception.BarbicanException('plugin down'))
+
+        resources.process_secret_store_cleanup('tid')
+
+        task.delete.assert_not_called()
+        self.assertEqual(1, task.retry_count)
+        self.assertEqual(models.States.PENDING, task.status)
+        self.cleanup_repo.save.assert_called_once_with(task)
+
+    def test_process_cleanup_marks_error_after_max_retries(self):
+        resources.CONF.set_override(
+            'secret_store_cleanup_max_retries', 1,
+            group='retry_scheduler')
+        self.addCleanup(
+            resources.CONF.clear_override,
+            'secret_store_cleanup_max_retries',
+            group='retry_scheduler')
+        task = self._make_task(retry_count=0)
+        self.cleanup_repo.get_for_update.return_value = task
+        self.plugin.delete_secret.side_effect = (
+            exception.BarbicanException('still down'))
+
+        resources.process_secret_store_cleanup('tid')
+
+        self.assertEqual(1, task.retry_count)
+        self.assertEqual(models.States.ERROR, task.status)
+        task.delete.assert_not_called()
+        self.cleanup_repo.save.assert_called_once_with(task)
+
+    def test_process_cleanup_unexpected_error_propagates(self):
+        task = self._make_task()
+        self.cleanup_repo.get_for_update.return_value = task
+        self.plugin.delete_secret.side_effect = RuntimeError('boom')
+
+        self.assertRaises(
+            RuntimeError,
+            resources.process_secret_store_cleanup,
+            'tid')
+        task.delete.assert_not_called()
+        self.cleanup_repo.save.assert_not_called()
