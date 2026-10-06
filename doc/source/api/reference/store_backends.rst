@@ -83,7 +83,10 @@ Request/Response:
 
    ``secret_store_id`` is included when the request asks for
    microversion **1.3** or newer. Older microversions omit it and
-   return only ``secret_store_ref``.
+   return only ``secret_store_ref``. Clients that migrate secrets
+   (``PUT /v1/secrets/{id}/secret-store/{secret_store_id}``) should
+   prefer this UUID field so they do not need to parse the href.
+   See :ref:`migrate_secret_store`.
 
 
 .. _get_secret_stores_response_attributes:

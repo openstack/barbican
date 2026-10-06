@@ -163,6 +163,10 @@ Response Attributes
 |          |         | available when the request offset is greater than 0.         |
 +----------+---------+--------------------------------------------------------------+
 
+When the request asks for microversion **1.3** or newer, each secret
+object also includes the computed store fields described under
+:ref:`secret_store_response_attributes`.
+
 
 .. _secret_status_codes:
 
@@ -321,6 +325,41 @@ Response:
         }
     }
 
+Microversion 1.3 adds computed store fields (not shown above for
+brevity)::
+
+    OpenStack-API-Version: key-manager 1.3
+
+.. code-block:: javascript
+
+    {
+        "...": "...",
+        "secret_store_id": "93869b0f-60eb-4830-adb9-e2f7154a080b",
+        "secret_store_ref": "https://{barbican_host}/v1/secret-stores/93869b0f-60eb-4830-adb9-e2f7154a080b"
+    }
+
+.. _secret_store_response_attributes:
+
+Response Attributes (microversion 1.3+)
+***************************************
+
++------------------+--------------------------------------------------------------+
+| Name             | Description                                                  |
++==================+==============================================================+
+| secret_store_id  | UUID of the secret store that currently holds the payload,   |
+|                  | or ``null`` when multiple backends are disabled or the       |
+|                  | secret has no payload. Computed at request time; not         |
+|                  | persisted.                                                   |
++------------------+--------------------------------------------------------------+
+| secret_store_ref | Absolute URL for that store (same UUID as                    |
+|                  | ``secret_store_id``), or ``null`` in the same cases.         |
++------------------+--------------------------------------------------------------+
+
+Use ``secret_store_id`` from ``GET /v1/secret-stores`` (microversion
+1.3+) as the path parameter when migrating. See
+:doc:`/api/reference/store_backends` and
+:ref:`migrate_secret_store`.
+
 Payload Request:
 ****************
 
@@ -364,6 +403,9 @@ HTTP Status Codes
 | 404  | Not Found                                                                   |
 +------+-----------------------------------------------------------------------------+
 | 406  | Not Acceptable                                                              |
++------+-----------------------------------------------------------------------------+
+| 500  | Microversion 1.3+: the secret has a live payload that cannot be mapped to   |
+|      | exactly one configured secret store                                         |
 +------+-----------------------------------------------------------------------------+
 
 .. _put_secrets:
@@ -461,6 +503,76 @@ HTTP Status Codes
 +------+-----------------------------------------------------------------------------+
 | 404  | Not Found                                                                   |
 +------+-----------------------------------------------------------------------------+
+
+.. _migrate_secret_store:
+
+PUT /v1/secrets/{uuid}/secret-store/{secret_store_id}
+#####################################################
+
+Migrate an existing secret payload onto another configured secret store
+without changing the secret UUID, ACLs, consumers, or container
+membership.
+
+Requires microversion **1.3**
+(``OpenStack-API-Version: key-manager 1.3``). Multiple secret store
+backends must be enabled. The request body is empty.
+
+The destination ``secret_store_id`` is the catalogue UUID returned by
+``GET /v1/secret-stores`` under microversion 1.3 (field
+``secret_store_id``). Older catalogue responses expose only
+``secret_store_ref``; clients may parse the UUID from that href.
+
+Default policy (``secret:migrate_secretstore``) allows project
+**admins** to target any configured store, and project **members** to
+migrate only onto the project's preferred store (or the global default
+when the project has no preferred store).
+
+Request:
+********
+
+.. code-block:: javascript
+
+    PUT /v1/secrets/{uuid}/secret-store/{secret_store_id}
+    Headers:
+        OpenStack-API-Version: key-manager 1.3
+        X-Auth-Token: <token>
+        Content-Length: 0
+
+Response:
+*********
+
+.. code-block:: javascript
+
+    204 No Content
+
+A secret that is already on the destination store succeeds as a no-op
+(still ``204``).
+
+HTTP Status Codes
+*****************
+
++------+-----------------------------------------------------------------------------+
+| Code | Description                                                                 |
++======+=============================================================================+
+| 204  | Successful migrate (or already on the destination store)                    |
++------+-----------------------------------------------------------------------------+
+| 400  | Bad Request. Invalid store id shape, multiple backends not enabled, or a    |
+|      | metadata-only secret with no payload to migrate.                            |
++------+-----------------------------------------------------------------------------+
+| 401  | Invalid X-Auth-Token or the token doesn't have permissions to this resource |
++------+-----------------------------------------------------------------------------+
+| 403  | Forbidden. Authenticated but not authorized (for example a member           |
+|      | targeting a non-preferred store).                                           |
++------+-----------------------------------------------------------------------------+
+| 404  | Not Found. Secret or store not found (including nil UUID), or microversion  |
+|      | below 1.3.                                                                  |
++------+-----------------------------------------------------------------------------+
+| 405  | Method Not Allowed                                                          |
++------+-----------------------------------------------------------------------------+
+
+Operator bulk migration is documented in
+:doc:`/admin/secret_store_migrate`. Microversion summary:
+:doc:`/api/microversion_history`.
 
 .. _secret_payload:
 

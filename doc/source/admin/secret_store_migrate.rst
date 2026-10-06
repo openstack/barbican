@@ -89,7 +89,11 @@ Microversion 1.3::
   PUT /v1/secrets/{secret-id}/secret-store/{secret-store-id}
   OpenStack-API-Version: key-manager 1.3
 
-The request body is empty. Success is ``204 No Content``. See
+The request body is empty. Success is ``204 No Content``. Full API
+reference (including status codes and the computed
+``secret_store_id`` / ``secret_store_ref`` fields on secret GET/list):
+:ref:`migrate_secret_store` and
+:ref:`secret_store_response_attributes`. Microversion summary:
 :doc:`/api/microversion_history`.
 
 The migrate API does not persist a ``secret_store_id`` on the secret
@@ -139,5 +143,7 @@ See also
 * :doc:`/cli/barbican-manage-secret-migrate`
 * :doc:`/admin/barbican_manage`
 * :doc:`/configuration/plugin_backends`
+* :doc:`/api/reference/secrets`
 * :doc:`/api/reference/store_backends`
+* :doc:`/api/microversion_history`
 
