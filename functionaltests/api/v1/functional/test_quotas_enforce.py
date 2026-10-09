@@ -30,8 +30,8 @@ from functionaltests.common import config
 
 
 CONF = config.get_config()
+admin = CONF.identity.username
 admin_b = CONF.rbac_users.admin_b
-service_admin = CONF.identity.service_admin
 
 
 @testtools.testcase.attr('no_parallel')
@@ -155,7 +155,7 @@ class QuotaEnforcementTestCase(base.TestCase):
             **self.quota_data)
         resp = self.quota_behaviors.set_project_quotas(self.project_id,
                                                        request_model,
-                                                       user_name=service_admin)
+                                                       user_name=admin)
         self.assertEqual(204, resp.status_code)
 
     def get_default_secret_data(self):

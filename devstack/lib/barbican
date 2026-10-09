@@ -368,6 +368,21 @@ function create_deprecated_rbac_accounts {
     get_or_add_user_project_role "$ROLE_AUDIT_ID" "$USER_ID" "$PROJECT_B_ID"
 }
 
+# create_rbac_accounts() - Sets up additional rbac accounts for tests.
+function create_rbac_accounts {
+    get_or_create_user "demo_member" \
+        "$ADMIN_PASSWORD" "default" "demo_member@example.com"
+    get_or_add_user_project_role "member" "demo_member" "demo"
+
+    get_or_create_user "demo_admin" \
+        "$ADMIN_PASSWORD" "default" "demo_admin@example.com"
+    get_or_add_user_project_role "admin" "demo_admin" "demo"
+
+    get_or_create_user "alt_demo_admin" \
+        "$ADMIN_PASSWORD" "default" "alt_demo_admin@example.com"
+    get_or_add_user_project_role "admin" "alt_demo_admin" "alt_demo"
+}
+
 # PyKMIP functions
 # ----------------
 

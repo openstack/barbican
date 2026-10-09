@@ -23,71 +23,60 @@ from functionaltests.common import config
 
 CONF = config.get_config()
 admin_a = CONF.rbac_users.admin_a
-creator_a = CONF.rbac_users.creator_a
-creator_a_2 = CONF.rbac_users.creator_a_2
-observer_a = CONF.rbac_users.observer_a
-auditor_a = CONF.rbac_users.auditor_a
+member_a = CONF.rbac_users.member_a
+member_a_2 = CONF.rbac_users.member_a_2
+reader_a = CONF.rbac_users.reader_a
 
 
 test_data_rbac_store_container = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 201},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 201},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 403},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 201},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 
 test_data_rbac_update_container = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 405},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 405},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 405},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 405},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 405},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 405},
 }
 
 
 test_data_rbac_delete_container = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 204},
-    'with_creator_a': {'user': creator_a, 'admin': creator_a,
-                       'expected_return': 204},
-    'with_creator_a_2': {'user': creator_a_2, 'admin': creator_a,
-                         'expected_return': 403},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 403},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 403},
+    'with_member_a': {'user': member_a, 'admin': member_a,
+                      'expected_return': 204},
+    'with_member_a_2': {'user': member_a_2, 'admin': member_a,
+                        'expected_return': 204},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 
 test_data_rbac_get_container = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 200},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 403},
 }
 
 
 test_data_rbac_get_list_of_containers = {
     'with_admin_a': {'user': admin_a, 'admin': admin_a,
                      'expected_return': 200},
-    'with_creator_a': {'user': creator_a, 'admin': admin_a,
-                       'expected_return': 200},
-    'with_observer_a': {'user': observer_a, 'admin': admin_a,
-                        'expected_return': 200},
-    'with_auditor_a': {'user': auditor_a, 'admin': admin_a,
-                       'expected_return': 403},
+    'with_member_a': {'user': member_a, 'admin': admin_a,
+                      'expected_return': 200},
+    'with_reader_a': {'user': reader_a, 'admin': admin_a,
+                      'expected_return': 200},
 }
 
 
@@ -190,7 +179,8 @@ class RBACContainersTestCase(base.TestCase):
         resp = self.container_behaviors.get_container(
             container_href, user_name=user)
         self.assertEqual(expected_return, resp.status_code)
-        self.assertEqual(expected_return == 200, resp.content is not None)
+        if expected_return == 200:
+            self.assertIsNotNone(resp.content)
 
     @utils.parameterized_dataset(test_data_rbac_delete_container)
     def test_rbac_delete_container(self, user, admin, expected_return):

@@ -55,6 +55,8 @@ if is_service_enabled barbican; then
             create_barbican_endpoints
             if [[ "$BARBICAN_ENFORCE_NEW_DEFAULTS" == "False" ]]; then
                 create_deprecated_rbac_accounts
+            else
+                create_rbac_accounts
             fi
         fi
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
