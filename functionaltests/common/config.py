@@ -102,8 +102,13 @@ def setup_config(config_file=''):
         config_to_load.append(config_file)
     elif os.path.isfile(local_config):
         config_to_load.append(local_config)
-    else:
-        config_to_load.append('/etc/barbican/barbican-functional.conf')
+
+    etc_config = '/etc/barbican/barbican-functional.conf'
+    if os.path.isfile(etc_config):
+        if etc_config not in config_to_load:
+            config_to_load.append(etc_config)
+    elif not config_to_load:
+        config_to_load.append(etc_config)
 
     # Actually parse config
     TEST_CONF(

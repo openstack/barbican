@@ -1,0 +1,2 @@
+softhsm [platform:rpm]
+softhsm2 [platform:dpkg]

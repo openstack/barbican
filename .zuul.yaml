@@ -17,6 +17,18 @@
         ENFORCE_NEW_DEFAULTS: False
 
 - job:
+    name: barbican-pkcs11-tox-functional
+    parent: barbican-tox-functional
+    description: |
+      Functional testing for PKCS#11 backend using SoftHSM with
+      simple_crypto and p11_crypto dual secret stores enabled.
+    vars:
+      devstack_services:
+        barbican-softhsm: true
+      tox_environment:
+        PKCS11_PLUGIN_ENABLED: 1
+
+- job:
     name: barbican-dogtag-tox-functional
     parent: barbican-tox-functional
     description: |
@@ -125,6 +137,7 @@
     check:
       jobs:
         - barbican-tox-functional
+        - barbican-pkcs11-tox-functional
         - barbican-vault-tox-functional
         - barbican-openbao-tox-functional
         - barbican-grenade:
