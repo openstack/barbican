@@ -14,4 +14,3 @@ management of secrets.
    secret_store_migrate
    database_cleaning
    upgrade
-   pkcs11keygeneration

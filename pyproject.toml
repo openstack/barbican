@@ -72,7 +72,6 @@ barbican-db-manage = "barbican.cmd.db_manage:main"
 barbican-keystone-listener = "barbican.cmd.keystone_listener:main"
 barbican-worker = "barbican.cmd.worker:main"
 pkcs11-kek-rewrap = "barbican.cmd.pkcs11_kek_rewrap:main"
-pkcs11-key-generation = "barbican.cmd.pkcs11_key_generation:main"
 barbican-retry = "barbican.cmd.retry_scheduler:main"
 barbican-status = "barbican.cmd.status:main"
 

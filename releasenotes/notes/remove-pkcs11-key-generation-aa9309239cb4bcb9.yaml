@@ -1,0 +1,8 @@
+---
+upgrade:
+  - |
+    The ``pkcs11-key-generation`` console script has been removed. This script
+    was deprecated in the Mitaka release (2016) and has been broken since the
+    PKCS#11 plugin constructor was updated to require ``hmac_mechanism`` and
+    ``key_wrap_mechanism`` parameters. Use ``barbican-manage hsm gen_mkek``
+    and ``barbican-manage hsm gen_hmac`` instead.
