@@ -1,0 +1,9 @@
+---
+fixes:
+  - |
+    Secret metadatum deletion, project quota update and deletion, and
+    setting or removing the preferred secret store no longer send a
+    ``null`` JSON body with their ``204 No Content`` response. Proxies
+    which enforce HTTP/1.1 framing, such as Envoy, rejected these responses
+    and returned ``502 Bad Gateway`` to the client although the request had
+    been processed.

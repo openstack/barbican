@@ -80,7 +80,8 @@ class ProjectQuotasController(controllers.ACLMixin):
         else:
             _project_quotas_not_found()
 
-    @index.when(method='PUT', template='json')
+    @index.when(method='PUT')
+    @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('Project Quotas'))
     @controllers.enforce_rbac('project_quotas:put')
     @controllers.enforce_content_types(['application/json'])
@@ -95,7 +96,7 @@ class ProjectQuotasController(controllers.ACLMixin):
         LOG.info('Put Project Quotas')
         pecan.response.status = 204
 
-    @index.when(method='DELETE', template='json')
+    @index.when(method='DELETE')
     @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('Project Quotas'))
     @controllers.enforce_rbac('project_quotas:delete')

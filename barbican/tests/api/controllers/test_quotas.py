@@ -87,8 +87,10 @@ class WhenTestingQuotas(utils.BarbicanAPIBaseTestCase):
         resp = self.app.put_json(
             '/project-quotas/{0}'.format(self.project_id),
             request,
-            headers={'Content-Type': 'application/json'})
+            headers={'Content-Type': 'application/json',
+                     'Accept': 'application/json'})
         self.assertEqual(204, resp.status_int)
+        self.assertEqual(b'', resp.body)
 
     def test_should_return_bad_value_put_project_quotas(self):
         request = '{"project_quotas": {"secrets": "foo"}}'
@@ -133,8 +135,9 @@ class WhenTestingQuotas(utils.BarbicanAPIBaseTestCase):
         self.create_a_project_quotas()
         resp = self.app.delete(
             '/project-quotas/{0}'.format(self.get_test_project_id()),
-            params)
+            params, headers={'Accept': 'application/json'})
         self.assertEqual(204, resp.status_int)
+        self.assertEqual(b'', resp.body)
 
     def test_should_return_not_found_delete_specific_project_quotas(self):
         params = {}
@@ -185,6 +188,7 @@ class WhenTestingQuotas(utils.BarbicanAPIBaseTestCase):
         resp = self.app.put_json(
             '/project-quotas/{0}'.format(project_id), request)
         self.assertEqual(204, resp.status_int)
+        self.assertEqual(b'', resp.body)
 
     def create_project_quotas(self):
         for index in [1, 2, 3]:

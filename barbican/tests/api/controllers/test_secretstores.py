@@ -331,8 +331,10 @@ class WhenTestingProjectSecretStore(utils.BarbicanAPIBaseTestCase,
                 'barbican.context': self._build_context(proj_external_id)
             }
             resp = self.app.post('/secret-stores/{0}/preferred'.
-                                 format(store_id), expect_errors=False)
+                                 format(store_id), expect_errors=False,
+                                 headers={'Accept': 'application/json'})
             self.assertEqual(204, resp.status_int)
+            self.assertEqual(b'', resp.body)
 
             # Now make sure preferred store is set to store id via get call
             resp = self.app.get('/secret-stores/preferred')
@@ -352,13 +354,17 @@ class WhenTestingProjectSecretStore(utils.BarbicanAPIBaseTestCase,
                 'barbican.context': self._build_context(proj_external_id)
             }
             resp = self.app.post('/secret-stores/{0}/preferred'.
-                                 format(store_id), expect_errors=False)
+                                 format(store_id), expect_errors=False,
+                                 headers={'Accept': 'application/json'})
             self.assertEqual(204, resp.status_int)
+            self.assertEqual(b'', resp.body)
 
             # unset preferred store here
             resp = self.app.delete('/secret-stores/{0}/preferred'.
-                                   format(store_id), expect_errors=False)
+                                   format(store_id), expect_errors=False,
+                                   headers={'Accept': 'application/json'})
             self.assertEqual(204, resp.status_int)
+            self.assertEqual(b'', resp.body)
 
             # Now make sure that there is no longer a preferred store set
             resp = self.app.get('/secret-stores/preferred',
