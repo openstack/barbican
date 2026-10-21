@@ -1,0 +1,17 @@
+---
+prelude: >
+    Refactored the mapping of Barbican Secrets to KMIP Objects when using
+    the KMIP Secret Store backend.
+features:
+  - |
+    Refactored the mapping of Barbican Secrets to KMIP Objects. The KMIP Object
+    used to store Opqaue Secrets was changed from `OpaqueObject` to
+    `SecretData` for better compatibility and adherance to the KMIP standard.
+deprecations:
+  - |
+    Deprecated KMIP option `[kmip_plugin] pkcs1_only`.  The option was split
+    into two new options in the same group: `public_key_format` and
+    `private_key_format`.  This gives deployers more flexibility in choosing
+    the format used to store each asymmetric key type in its own format.
+    For backwards-compatibility, setting `pkcs1_only=True` overrides both new
+    options to use `public_key_format=pkcs1` and `private_key_format=pkcs1`.

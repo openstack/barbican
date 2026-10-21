@@ -44,6 +44,8 @@ LOG = log.getLogger(__name__)
 
 CONF = config.new_config()
 
+_PKCS_1 = 'pkcs1'
+
 kmip_opt_group = cfg.OptGroup(name='kmip_plugin', title='KMIP Plugin')
 kmip_opts = [
     cfg.StrOpt('username',
@@ -78,7 +80,22 @@ kmip_opts = [
     cfg.BoolOpt('pkcs1_only',
                 default=False,
                 help=u._('Only support PKCS#1 encoding of asymmetric keys'),
+                deprecated_for_removal=True,
                 ),
+    cfg.StrOpt('public_key_format',
+               default='x509',
+               choices=['pkcs1', 'x509'],
+               help=u._('Format used to store Public Key Objects. Available '
+                        'choices are "pkcs1" for PKCS#1 and "x509" for X.509 '
+                        'certficiates.'),
+               ),
+    cfg.StrOpt('private_key_format',
+               default='pkcs8',
+               choices=['pkcs8', 'pkcs1'],
+               help=u._('Format used to store Private Key Objects. Available '
+                        'choices are "pkcs8" for PKCS#8 and "pkcs1" for '
+                        'PKCS#1.'),
+               ),
     cfg.StrOpt('plugin_name',
                help=u._('User friendly plugin name'),
                default='KMIP HSM'),
@@ -207,9 +224,17 @@ class KMIPSecretStore(ss.SecretStoreBase):
                 KMIPSecretStore.KMIP_ALGORITHM_ENUM:
                 enums.CryptographicAlgorithm.RSA},
         }
-        self.pkcs1_only = conf.kmip_plugin.pkcs1_only
-        if self.pkcs1_only:
-            LOG.debug("KMIP secret store only supports PKCS#1")
+        if conf.kmip_plugin.pkcs1_only:
+            LOG.warning("Using deprecated option 'pkcs1_only'")
+            LOG.warning("KMIP secret store only supports PKCS#1")
+            self.public_key_format = _PKCS_1
+            self.private_key_format = _PKCS_1
+        else:
+            self.public_key_format = conf.kmip_plugin.public_key_format
+            self.private_key_format = conf.kmip_plugin.private_key_format
+        if (self.public_key_format == _PKCS_1 or
+                self.private_key_format == _PKCS_1):
+            # DSA keys can't be stored in PKCS#1 format
             del self.valid_alg_dict[ss.KeyAlgorithm.DSA]
         self.kmip_barbican_alg_map = {
             enums.CryptographicAlgorithm.AES: ss.KeyAlgorithm.AES,
@@ -388,7 +413,8 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :returns: SecretDTO of the retrieved Secret
         :raises: SecretGeneralException
         """
-        LOG.debug("Starting secret retrieval with KMIP plugin")
+        LOG.debug("Starting secret type %s retrieval with KMIP plugin",
+                  secret_type)
         uuid = str(secret_metadata[KMIPSecretStore.KEY_UUID])
         try:
             with self.client:
@@ -469,44 +495,74 @@ class KMIPSecretStore(ss.SecretStoreBase):
         :returns: KMIP object
         """
         name = uuidutils.generate_uuid()
-        secret_type = secret_dto.type
-        key_spec = secret_dto.key_spec
-        object_type, key_format_type = (
-            self._map_type_ss_to_kmip(secret_type))
+        normalized_secret = self._normalize_secret(
+            secret_dto.secret,
+            secret_dto.type)
 
-        normalized_secret = self._normalize_secret(secret_dto.secret,
-                                                   secret_type)
-        kmip_object = None
-        if object_type == enums.ObjectType.CERTIFICATE:
-            kmip_object = objects.X509Certificate(normalized_secret,
-                                                  name=name)
-        elif object_type == enums.ObjectType.OPAQUE_DATA:
-            opaque_type = enums.OpaqueDataType.NONE
-            kmip_object = objects.OpaqueObject(normalized_secret,
-                                               opaque_type, name=name)
-        elif object_type == enums.ObjectType.PRIVATE_KEY:
-            algorithm = self._get_kmip_algorithm(key_spec.alg)
-            length = key_spec.bit_length
-            format_type = enums.KeyFormatType.PKCS_8
-            kmip_object = objects.PrivateKey(
-                algorithm, length, normalized_secret, format_type, name=name)
-        elif object_type == enums.ObjectType.PUBLIC_KEY:
-            algorithm = self._get_kmip_algorithm(key_spec.alg)
-            length = key_spec.bit_length
-            format_type = enums.KeyFormatType.X_509
-            kmip_object = objects.PublicKey(
-                algorithm, length, normalized_secret, format_type, name=name)
-        elif object_type == enums.ObjectType.SYMMETRIC_KEY:
-            algorithm = self._get_kmip_algorithm(key_spec.alg)
-            length = key_spec.bit_length
-            kmip_object = objects.SymmetricKey(algorithm, length,
-                                               normalized_secret, name=name)
-        elif object_type == enums.ObjectType.SECRET_DATA:
-            data_type = enums.SecretDataType.PASSWORD
-            kmip_object = objects.SecretData(normalized_secret, data_type,
-                                             name=name)
+        match secret_dto.type:
 
-        return kmip_object
+            case ss.SecretType.SYMMETRIC:
+                return objects.SymmetricKey(
+                    self._get_kmip_algorithm(secret_dto.key_spec.alg),
+                    secret_dto.key_spec.bit_length,
+                    normalized_secret,
+                    name=name)
+
+            case ss.SecretType.PUBLIC:
+                if self.public_key_format == _PKCS_1:
+                    format_type = enums.KeyFormatType.PKCS_1
+                else:
+                    format_type = enums.KeyFormatType.X_509
+                return objects.PublicKey(
+                    self._get_kmip_algorithm(secret_dto.key_spec.alg),
+                    secret_dto.key_spec.bit_length,
+                    normalized_secret,
+                    format_type,
+                    name=name)
+
+            case ss.SecretType.PRIVATE:
+                if self.private_key_format == _PKCS_1:
+                    format_type = enums.KeyFormatType.PKCS_1
+                else:
+                    format_type = enums.KeyFormatType.PKCS_8
+                return objects.PrivateKey(
+                    self._get_kmip_algorithm(secret_dto.key_spec.alg),
+                    secret_dto.key_spec.bit_length,
+                    normalized_secret,
+                    format_type,
+                    name=name)
+
+            case ss.SecretType.PASSPHRASE:
+                return objects.SecretData(
+                    normalized_secret,
+                    enums.SecretDataType.PASSWORD,
+                    name=name,
+                    app_specific_info=[{
+                        "application_namespace": "org.openstack.barbican",
+                        "application_data": ss.SecretType.PASSPHRASE
+                    }])
+
+            case ss.SecretType.CERTIFICATE:
+                return objects.X509Certificate(
+                    normalized_secret,
+                    name=name)
+
+            case ss.SecretType.OPAQUE:
+                # KMIP OpaqueObject is not well defined in the spec and
+                # not well supported by vendors, so we opt to use
+                # SecretData instead and annotate it using app specific
+                # info to differentiate between Barbican Opaque and
+                # Barbican Passphrase Secrets.
+                return objects.SecretData(
+                    normalized_secret,
+                    enums.SecretDataType.PASSWORD,
+                    name=name,
+                    app_specific_info=[{
+                        "application_namespace": "org.openstack.barbican",
+                        "application_data": ss.SecretType.OPAQUE
+                    }])
+
+        return None
 
     def _get_kmip_algorithm(self, ss_algorithm):
         alg_entry = self.valid_alg_dict.get(ss_algorithm)
@@ -544,15 +600,17 @@ class KMIPSecretStore(ss.SecretStoreBase):
         if object_type == ss.SecretType.SYMMETRIC:
             return enums.ObjectType.SYMMETRIC_KEY, enums.KeyFormatType.RAW
         elif object_type == ss.SecretType.PRIVATE:
-            if self.pkcs1_only:
+            if self.private_key_format == _PKCS_1:
                 return enums.ObjectType.PRIVATE_KEY, enums.KeyFormatType.PKCS_1
             else:
                 return enums.ObjectType.PRIVATE_KEY, enums.KeyFormatType.PKCS_8
+
         elif object_type == ss.SecretType.PUBLIC:
-            if self.pkcs1_only:
+            if self.public_key_format == _PKCS_1:
                 return enums.ObjectType.PUBLIC_KEY, enums.KeyFormatType.PKCS_1
             else:
                 return enums.ObjectType.PUBLIC_KEY, enums.KeyFormatType.X_509
+
         elif object_type == ss.SecretType.CERTIFICATE:
             return enums.ObjectType.CERTIFICATE, enums.KeyFormatType.X_509
         elif object_type == ss.SecretType.PASSPHRASE:
@@ -594,12 +652,12 @@ class KMIPSecretStore(ss.SecretStoreBase):
     def _normalize_secret(self, secret, secret_type):
         """Normalizes secret for use by KMIP plugin"""
         data = base64.b64decode(secret)
-        if (self.pkcs1_only and
-                secret_type in [ss.SecretType.PUBLIC, ss.SecretType.PRIVATE]):
-            if secret_type == ss.SecretType.PUBLIC:
-                data = get_public_key_der_pkcs1(data)
-            elif secret_type == ss.SecretType.PRIVATE:
-                data = get_private_key_der_pkcs1(data)
+        if (self.public_key_format == _PKCS_1 and
+                secret_type == ss.SecretType.PUBLIC):
+            data = get_public_key_der_pkcs1(data)
+        elif (self.private_key_format == _PKCS_1 and
+                secret_type == ss.SecretType.PRIVATE):
+            data = get_private_key_der_pkcs1(data)
         elif secret_type in [ss.SecretType.PUBLIC,
                              ss.SecretType.PRIVATE,
                              ss.SecretType.CERTIFICATE]:

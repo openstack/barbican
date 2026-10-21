@@ -149,7 +149,8 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         CONF = kss.CONF
         CONF.kmip_plugin.pkcs1_only = True
         secret_store = kss.KMIPSecretStore(CONF)
-        self.assertTrue(secret_store.pkcs1_only)
+        self.assertEqual(secret_store.public_key_format, 'pkcs1')
+        self.assertEqual(secret_store.private_key_format, 'pkcs1')
 
     @testtools.skipIf(not getattr(ssl, "PROTOCOL_TLSv1_2", None),
                       "TLSv1.2 is not available on this system")
@@ -429,9 +430,9 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
                                             transport_key=None)
         self.secret_store.store_secret(secret_dto)
         self.secret_store.client.register.assert_called_once_with(
-            objects.OpaqueObject(
+            objects.SecretData(
                 base64.b64decode(opaque),
-                enums.OpaqueDataType.NONE))
+                enums.SecretDataType.PASSWORD))
 
     def test_store_opaque_secret_return_value(self):
         key_spec = secret_store.KeySpec(None, None, None)
@@ -482,7 +483,13 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
                                             secret_value,
                                             key_spec,
                                             'content_type')
-        self.secret_store.pkcs1_only = pkcs1_only
+        if pkcs1_only:
+            self.secret_store.public_key_format = 'pkcs1'
+            self.secret_store.private_key_format = 'pkcs1'
+        else:
+            self.secret_store.public_key_format = 'x509'
+            self.secret_store.private_key_format = 'pkcs8'
+
         self.secret_store.store_secret(secret_dto)
         secret_value = base64.b64decode(secret_value)
         if not pkcs1_only:
@@ -492,19 +499,25 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
         if kmip_type == enums.ObjectType.PUBLIC_KEY:
             if pkcs1_only:
                 secret_value = kss.get_public_key_der_pkcs1(secret_value)
+                format_type = enums.KeyFormatType.PKCS_1
+            else:
+                format_type = enums.KeyFormatType.X_509
             secret = objects.PublicKey(
                 enums.CryptographicAlgorithm.RSA,
                 2048,
                 secret_value,
-                enums.KeyFormatType.X_509)
+                format_type)
         else:
             if pkcs1_only:
                 secret_value = kss.get_private_key_der_pkcs1(secret_value)
+                format_type = enums.KeyFormatType.PKCS_1
+            else:
+                format_type = enums.KeyFormatType.PKCS_8
             secret = objects.PrivateKey(
                 enums.CryptographicAlgorithm.RSA,
                 2048,
                 secret_value,
-                enums.KeyFormatType.PKCS_8)
+                format_type)
 
         self.secret_store.client.register.assert_called_once_with(secret)
 
@@ -531,7 +544,13 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
                                             base64.b64encode(barbican_key),
                                             key_spec,
                                             'content_type')
-        self.secret_store.pkcs1_only = pkcs1_only
+        if pkcs1_only:
+            self.secret_store.public_key_format = 'pkcs1'
+            self.secret_store.private_key_format = 'pkcs1'
+        else:
+            self.secret_store.public_key_format = 'x509'
+            self.secret_store.private_key_format = 'pkcs8'
+
         return_value = self.secret_store.store_secret(secret_dto)
         expected = {kss.KMIPSecretStore.KEY_UUID: 'uuid'}
 
