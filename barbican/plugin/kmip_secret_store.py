@@ -18,9 +18,7 @@ An implementation of the SecretStore that uses the KMIP backend.
 """
 
 import base64
-import os
 import ssl
-import stat
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
@@ -252,9 +250,6 @@ class KMIPSecretStore(ss.SecretStoreBase):
         }
 
         self.plugin_name = conf.kmip_plugin.plugin_name
-
-        if conf.kmip_plugin.keyfile is not None:
-            self._validate_keyfile_permissions(conf.kmip_plugin.keyfile)
 
         if (conf.kmip_plugin.username is None) and (
                 conf.kmip_plugin.password is None):
@@ -631,23 +626,6 @@ class KMIPSecretStore(ss.SecretStoreBase):
         )
         LOG.error("ERROR from KMIP server: %s", msg)
         raise ss.SecretGeneralException(msg)
-
-    def _validate_keyfile_permissions(self, path):
-        """Check that file has permissions appropriate for a sensitive key
-
-        Key files are extremely sensitive, they should be owned by the user
-        who they relate to. They should be readable only (to avoid accidental
-        changes). They should not be readable or writable by any other user.
-
-        :raises: KMIPSecretStoreError
-        """
-        expected = (stat.S_IRUSR | stat.S_IFREG)  # 0o100400
-        st = os.stat(path)
-        if st.st_mode != expected:
-            raise KMIPSecretStoreError(
-                u._('Bad key file permissions found, expected 400 '
-                    'for path: {file_path}').format(file_path=path)
-            )
 
     def _normalize_secret(self, secret, secret_type):
         """Normalizes secret for use by KMIP plugin"""

@@ -14,7 +14,6 @@
 # limitations under the License.
 import base64
 import ssl
-import stat
 import testtools
 from unittest import mock
 
@@ -812,35 +811,6 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
             self.secret_store._map_type_ss_to_kmip('bad_type'))
         self.assertIsNone(object_type)
         self.assertIsNone(key_format_type)
-
-    def test_validate_keyfile_permissions_good(self):
-        config = {'return_value.st_mode':
-                  (stat.S_IRUSR | stat.S_IFREG)}
-
-        with mock.patch('os.stat', **config):
-            self.assertIsNone(
-                self.secret_store._validate_keyfile_permissions('/some/path/'))
-
-    def test_check_keyfile_permissions_bad(self):
-        config = {'return_value.st_mode':
-                  (stat.S_IWOTH | stat.S_IFREG)}
-
-        with mock.patch('os.stat', **config):
-            self.assertRaises(
-                kss.KMIPSecretStoreError,
-                self.secret_store._validate_keyfile_permissions,
-                '/some/path/')
-
-    def test_checks_keyfile_permissions(self):
-        config = {'return_value': True}
-        func = ("barbican.plugin.kmip_secret_store."
-                "KMIPSecretStore._validate_keyfile_permissions")
-
-        with mock.patch(func, **config) as m:
-            CONF = kss.CONF
-            CONF.kmip_plugin.keyfile = '/some/path'
-            kss.KMIPSecretStore(CONF)
-            self.assertEqual(1, len(m.mock_calls))
 
     def test_get_plugin_name(self):
         CONF = kss.CONF
