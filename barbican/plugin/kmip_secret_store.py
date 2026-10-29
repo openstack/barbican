@@ -19,6 +19,7 @@ An implementation of the SecretStore that uses the KMIP backend.
 
 import base64
 import ssl
+import threading
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
@@ -278,6 +279,12 @@ class KMIPSecretStore(ss.SecretStoreBase):
             ssl_version=config.ssl_version,
             username=config.username,
             password=config.password)
+        # PyKMIP's ProxyKmipClient is not thread-safe: its open()/close()
+        # cycle toggles a shared connection-open flag, so two worker
+        # threads entering `with self.client:` concurrently make one of
+        # them fail with ClientConnectionFailure('client connection
+        # already open'). Serialize all KMIP operations behind a lock.
+        self._kmip_lock = threading.Lock()
 
     def get_plugin_name(self):
         return self.plugin_name
@@ -305,7 +312,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
 
         algorithm = self._get_kmip_algorithm(key_spec.alg.lower())
         try:
-            with self.client:
+            with self._kmip_lock, self.client:
                 LOG.debug("Opened connection to KMIP client for secret "
                           "generation")
                 uuid = self.client.create(algorithm, key_spec.bit_length)
@@ -345,7 +352,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         length = key_spec.bit_length
 
         try:
-            with self.client:
+            with self._kmip_lock, self.client:
                 LOG.debug("Opened connection to KMIP client for "
                           "asymmetric secret generation")
                 public_uuid, private_uuid = self.client.create_key_pair(
@@ -390,7 +397,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         secret = self._get_kmip_secret(secret_dto)
 
         try:
-            with self.client:
+            with self._kmip_lock, self.client:
                 LOG.debug("Opened connection to KMIP client")
                 uuid = self.client.register(secret)
                 LOG.debug("SUCCESS: Key stored with uuid: %s", uuid)
@@ -412,7 +419,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
                   secret_type)
         uuid = str(secret_metadata[KMIPSecretStore.KEY_UUID])
         try:
-            with self.client:
+            with self._kmip_lock, self.client:
                 LOG.debug("Opened connection to KMIP client for secret "
                           "retrieval")
                 managed_object = self.client.get(uuid)
@@ -453,7 +460,7 @@ class KMIPSecretStore(ss.SecretStoreBase):
         LOG.debug("Starting secret deletion with KMIP plugin")
         uuid = str(secret_metadata[KMIPSecretStore.KEY_UUID])
         try:
-            with self.client:
+            with self._kmip_lock, self.client:
                 LOG.debug("Opened connection to KMIP client")
                 self.client.destroy(uuid)
         except Exception as e:

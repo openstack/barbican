@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Serialized KMIP secret store operations behind a lock. PyKMIP's
+    ``ProxyKmipClient`` is not thread-safe: when barbican-worker
+    processes orders concurrently, the shared client's connection-open
+    flag makes one thread fail with ``ClientConnectionFailure('client
+    connection already open')``.
