@@ -233,7 +233,7 @@ class WhenTestingVaultSecretStore(utils.BaseTestCase):
 
     def test_store_secret_supports(self):
         self.assertTrue(
-            self.plugin.generate_supports(mock.ANY)
+            self.plugin.store_secret_supports(mock.ANY)
         )
 
     def test_generate_supports(self):
