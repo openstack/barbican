@@ -355,8 +355,26 @@ class KMIPSecretStore(ss.SecretStoreBase):
             with self._kmip_lock, self.client:
                 LOG.debug("Opened connection to KMIP client for "
                           "asymmetric secret generation")
+                # Some KMIP appliances (e.g. Fortanix SDKMS) reject
+                # CreateKeyPair requests that lack a
+                # PrivateKeyTemplateAttribute. PyKMIP only emits the
+                # public/private template attributes when a name or usage
+                # mask is provided for each key, so always pass generated
+                # names, sharing one uuid so the two parts of the pair can
+                # be correlated on the appliance.
+                name_uuid = uuidutils.generate_uuid()
+                # Usage masks are needed too: some appliances (e.g.
+                # Fortanix SDKMS) deny Get requests for private keys
+                # created without an export usage mask, which would leave
+                # the generated private key unretrievable through
+                # barbican.
                 public_uuid, private_uuid = self.client.create_key_pair(
-                    algorithm, length)
+                    algorithm, length,
+                    public_name=f"public-{name_uuid}",
+                    private_name=f"private-{name_uuid}",
+                    public_usage_mask=[enums.CryptographicUsageMask.VERIFY],
+                    private_usage_mask=[enums.CryptographicUsageMask.SIGN,
+                                        enums.CryptographicUsageMask.EXPORT])
                 LOG.debug("SUCCESS: Asymmetric key pair generated with "
                           "public key uuid: %(public_uuid)s and "
                           "private key uuid: %(private_uuid)s" %

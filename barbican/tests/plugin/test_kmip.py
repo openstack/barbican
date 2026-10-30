@@ -288,7 +288,21 @@ class WhenTestingKMIPSecretStore(utils.BaseTestCase):
 
         self.secret_store.client.create_key_pair.assert_called_once_with(
             enums.CryptographicAlgorithm.RSA,
-            2048)
+            2048,
+            public_name=mock.ANY,
+            private_name=mock.ANY,
+            public_usage_mask=[enums.CryptographicUsageMask.VERIFY],
+            private_usage_mask=[enums.CryptographicUsageMask.SIGN,
+                                enums.CryptographicUsageMask.EXPORT])
+        # The two names must share one uuid so the parts of the pair can
+        # be correlated on the appliance.
+        _, kwargs = self.secret_store.client.create_key_pair.call_args
+        public_name = kwargs['public_name']
+        private_name = kwargs['private_name']
+        self.assertTrue(public_name.startswith('public-'))
+        self.assertTrue(private_name.startswith('private-'))
+        self.assertEqual(public_name[len('public-'):],
+                         private_name[len('private-'):])
 
     def test_generate_asymmetric_key_return_value(self):
         key_spec = secret_store.KeySpec(secret_store.KeyAlgorithm.RSA,

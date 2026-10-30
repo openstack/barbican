@@ -1,0 +1,12 @@
+---
+fixes:
+  - |
+    Asymmetric key pair generation now passes generated names and usage
+    masks to the KMIP CreateKeyPair operation. PyKMIP only emits the
+    PublicKeyTemplateAttribute/PrivateKeyTemplateAttribute structures
+    when a name or usage mask is provided for each key, and some KMIP
+    appliances (e.g. Fortanix SDKMS) reject CreateKeyPair requests that
+    lack a PrivateKeyTemplateAttribute. Usage masks are also needed
+    because some appliances deny Get requests for private keys created
+    without an export usage mask, which would leave the generated
+    private key unretrievable through barbican.
