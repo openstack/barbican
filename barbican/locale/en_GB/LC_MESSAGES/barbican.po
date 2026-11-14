@@ -14,11 +14,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: barbican VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2026-09-18 15:29+0000\n"
+"POT-Creation-Date: 2026-10-30 21:35+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2026-09-24 07:25+0000\n"
+"PO-Revision-Date: 2026-11-13 06:20+0000\n"
 "Last-Translator: Andi Chandler <andi@gowling.com>\n"
 "Language-Team: English (United Kingdom)\n"
 "Language: en_GB\n"
@@ -116,10 +116,6 @@ msgstr "Apparent RNG self-test failure."
 #, python-brace-format
 msgid "Bad Container Reference {ref}"
 msgstr "Bad Container Reference {ref}"
-
-#, python-brace-format
-msgid "Bad key file permissions found, expected 400 for path: {file_path}"
-msgstr "Bad key file permissions found, expected 400 for path: {file_path}"
 
 #, python-format
 msgid "CA specified by ca_id %(ca_id)s not defined for project: %(project_id)s"
@@ -247,11 +243,22 @@ msgstr "Could not find {entity_name}"
 msgid "Could not generate private key"
 msgstr "Could not generate private key"
 
+#, python-format
+msgid "Could not resolve the secret store for secret %(secret_id)s."
+msgstr "Could not resolve the secret store for secret %(secret_id)s."
+
+msgid "Could not resolve the secret store for this secret."
+msgstr "Could not resolve the secret store for this secret."
+
 msgid "Create the Barbican database on service startup."
 msgstr "Create the Barbican database on service startup."
 
 msgid "Creation not allowed because a quota has been reached"
 msgstr "Creation not allowed because a quota has been reached"
+
+#, python-brace-format
+msgid "Crypto plugin \"{name}\" not found."
+msgstr "Crypto plugin \"{name}\" not found."
 
 msgid "Crypto plugin not found."
 msgstr "Crypto plugin not found."
@@ -410,6 +417,20 @@ msgstr ""
 "Flag to indicate if this plugin is global default plugin for deployment. "
 "Default is False."
 
+msgid ""
+"Format used to store Private Key Objects. Available choices are \"pkcs8\" "
+"for PKCS#8 and \"pkcs1\" for PKCS#1."
+msgstr ""
+"Format used to store Private Key Objects. Available choices are \"pkcs8\" "
+"for PKCS#8 and \"pkcs1\" for PKCS#1."
+
+msgid ""
+"Format used to store Public Key Objects. Available choices are \"pkcs1\" for "
+"PKCS#1 and \"x509\" for X.509 certficiates."
+msgstr ""
+"Format used to store Public Key Objects. Available choices are \"pkcs1\" for "
+"PKCS#1 and \"x509\" for X.509 certficiates."
+
 msgid "Full CMC Requests are not yet supported."
 msgstr "Full CMC Requests are not yet supported."
 
@@ -458,6 +479,9 @@ msgstr "If 'payload' specified, must be non empty"
 #, python-brace-format
 msgid "In section '{0}', secret_store_plugin value is missing"
 msgstr "In section '{0}', secret_store_plugin value is missing"
+
+msgid "Initial backoff in milliseconds between secret-store cleanup retries"
+msgstr "Initial backoff in milliseconds between secret-store cleanup retries"
 
 msgid "Internal name used to identify crypto_plugin."
 msgstr "Internal name used to identify crypto_plugin."
@@ -599,8 +623,18 @@ msgstr "Maximum allowed HTTP request size against the Barbican-api."
 msgid "Maximum allowed secret size in bytes."
 msgstr "Maximum allowed secret size in bytes."
 
+msgid "Maximum backoff in milliseconds between secret-store cleanup retries"
+msgstr "Maximum backoff in milliseconds between secret-store cleanup retries"
+
 msgid "Maximum page size for the 'limit' paging URL parameter."
 msgstr "Maximum page size for the 'limit' paging URL parameter."
+
+msgid ""
+"Maximum retries for asynchronous secret-store plugin object cleanup after "
+"migrate"
+msgstr ""
+"Maximum retries for asynchronous secret-store plugin object cleanup after "
+"migrate"
 
 msgid "Missing X-Project-Id"
 msgstr "Missing X-Project-Id"
@@ -614,6 +648,9 @@ msgstr "Missing required metadata field for %(required)s"
 
 msgid "More than one key found for label"
 msgstr "More than one key found for label"
+
+msgid "Multiple secret store backends are not enabled."
+msgstr "Multiple secret store backends are not enabled."
 
 msgid "Must be a positive integer that is a multiple of 8"
 msgstr "Must be a positive integer that is a multiple of 8"
@@ -966,6 +1003,9 @@ msgstr ""
 "Provided object does not match schema '{schema}': {reason}. Invalid "
 "property: '{property}'"
 
+msgid "Provided secret store id is invalid."
+msgstr "Provided secret store id is invalid."
+
 msgid "Provided transport key was not found."
 msgstr "Provided transport key was not found."
 
@@ -1063,6 +1103,9 @@ msgstr "Secret encryption mechanism"
 msgid "Secret generate supported plugin not found."
 msgstr "Secret generate supported plugin not found."
 
+msgid "Secret has no stored payload to migrate."
+msgstr "Secret has no stored payload to migrate."
+
 msgid "Secret metadata creation"
 msgstr "Secret metadata creation"
 
@@ -1109,6 +1152,9 @@ msgstr "Secret provided is not in the container"
 
 msgid "Secret retrieval"
 msgstr "Secret retrieval"
+
+msgid "Secret store migration"
+msgstr "Secret store migration"
 
 #, python-brace-format
 msgid "Secret store plugin \"{name}\" not found."
