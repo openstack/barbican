@@ -160,9 +160,11 @@ class WhenTestingSecretMetadatumResource(utils.BarbicanAPIBaseTestCase):
         self.assertEqual(201, meta_resp.status_int)
 
         delete_resp = self.app.delete('/secrets/%s/metadata/access-limit' %
-                                      secret_id)
+                                      secret_id,
+                                      headers={'Accept': 'application/json'})
 
         self.assertEqual(204, delete_resp.status_int)
+        self.assertEqual(b'', delete_resp.body)
 
     @mock.patch('barbican.model.repositories.SecretUserMetadatumRepo.'
                 'get_metadata_for_secret')

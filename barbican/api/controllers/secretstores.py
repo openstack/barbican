@@ -62,7 +62,8 @@ class PreferredSecretStoreController(controllers.ACLMixin):
     def index(self, **kwargs):
         pecan.abort(405)  # HTTP 405 Method Not Allowed as default
 
-    @index.when(method='DELETE', template='json')
+    @index.when(method='DELETE')
+    @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('Removing preferred secret store'))
     @controllers.enforce_rbac('secretstore_preferred:delete')
     def on_delete(self, external_project_id, **kw):
@@ -81,7 +82,8 @@ class PreferredSecretStoreController(controllers.ACLMixin):
             external_project_id=external_project_id)
         pecan.response.status = 204
 
-    @index.when(method='POST', template='json')
+    @index.when(method='POST')
+    @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('Setting preferred secret store'))
     @controllers.enforce_rbac('secretstore_preferred:post')
     def on_post(self, external_project_id, **kwargs):

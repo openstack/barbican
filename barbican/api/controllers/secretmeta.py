@@ -166,7 +166,8 @@ class SecretMetadatumController(controllers.ACLMixin):
             pair = {'key': key, 'value': value}
             return collections.OrderedDict(sorted(pair.items()))
 
-    @index.when(method='DELETE', template='json')
+    @index.when(method='DELETE')
+    @utils.allow_all_content_types
     @controllers.handle_exceptions(u._('Secret metadatum removal'))
     @controllers.enforce_rbac('secret_meta:delete')
     def on_delete(self, external_project_id, remainder, **kwargs):
